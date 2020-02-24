@@ -10,6 +10,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
@@ -18,13 +19,19 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
 import org.osmdroid.config.Configuration;
+import org.osmdroid.events.MapListener;
+import org.osmdroid.events.ScrollEvent;
+import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.MapTileProviderBase;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -50,14 +57,13 @@ public class FlutterOsmView implements
         PlatformView,
         MethodChannel.MethodCallHandler {
     MapView map;
-    private  MyLocationNewOverlay locationNewOverlay;
+    private MyLocationNewOverlay locationNewOverlay;
     private Context context;
     private final MethodChannel methodChannel;
-    private final int
-            activityHashCode; // Do not use directly, use getActivityHashCode() instead to get correct hashCode for both v1 and v2 embedding.
+    private final int activityHashCode; // Do not use directly, use getActivityHashCode() instead to get correct hashCode for both v1 and v2 embedding.
     private final Lifecycle lifecycle;
-    private final Application
-            mApplication;
+    private final Application mApplication;
+    private Activity mActivity;
     private final AtomicInteger activityState;
     private PluginRegistry.Registrar registrar;
 
@@ -67,29 +73,25 @@ public class FlutterOsmView implements
                           int id,
                           AtomicInteger activityState,
                           Application application,
+                          Activity activity,
                           Lifecycle lifecycle,
                           int registrarActivityHashCode) {
 
         this.context = ctx;
-        this.registrar=registrar;
+        if (registrar != null)
+            this.registrar = registrar;
+        this.mActivity = activity;
 
 
         //LinearLayout view = (LinearLayout) getViewFromXML();
         Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context));
         map = new MapView(context);
+        map.setLayoutParams(new MapView.LayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)));
+        map.setTilesScaledToDpi(true);
+        //map.setZoomRounding(true);
         map.setTileSource(TileSourceFactory.MAPNIK);
         map.getZoomController().setVisibility(CustomZoomButtonsController.Visibility.NEVER);
-        /*
-        view.addView(map, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT));
 
-        Log.d("view map", "map");
-        if (map != null) {
-            map.removeAllViews();
-        }
-        //map.onResume();
-
-         */
 
         methodChannel = new MethodChannel(binaryMessenger, "plugins.dali.hamza/osmview_" + id);
         methodChannel.setMethodCallHandler(this);
@@ -125,10 +127,47 @@ public class FlutterOsmView implements
 
         result.success(null);
     }
-    private  void enableMyLocation(MethodCall methodCall,Result result){
-        this.locationNewOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(context),map);
-        this.locationNewOverlay.enableMyLocation();
-        map.getOverlays().add(this.locationNewOverlay);
+
+    private void initPosition(MethodCall methodCall, Result result) {
+        HashMap<String, Double> args = (HashMap) methodCall.arguments;
+        GeoPoint geoPoint = new GeoPoint(args.get("lat"), args.get("lon"));
+        Marker marker = new Marker(map);
+        marker.setDefaultIcon();
+        marker.setPosition(geoPoint);
+        map.getController().setZoom(10.);
+        map.getController().animateTo(geoPoint);
+        map.getOverlays().add(marker);
+        result.success(null);
+    }
+
+    private void enableMyLocation(MethodCall methodCall, Result result) {
+        if (this.locationNewOverlay == null) {
+            this.locationNewOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(getApplication()), map);
+            this.locationNewOverlay.enableMyLocation();
+            this.locationNewOverlay.runOnFirstFix(new Runnable() {
+                @Override
+                public void run() {
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                GeoPoint geo = new GeoPoint(locationNewOverlay.getLastFix().getLatitude(), locationNewOverlay.getLastFix().getLongitude());
+                                //map.getController().zoomToSpan(Math.abs(geo.getLatitude()),Math.abs(geo.getLongitude()));
+                                map.getController().setZoom(15.);
+                                map.getController().animateTo(geo);
+                            }
+                        });
+                    } else {
+                        Log.d("mActivity ", "null");
+                    }
+                }
+            });
+
+            map.getOverlays().add(this.locationNewOverlay);
+
+        }
+
+        result.success(null);
     }
 
     @Override
@@ -146,8 +185,14 @@ public class FlutterOsmView implements
                 setZoom(call, result);
                 break;
             case "currentLocation":
-                enableMyLocation(call,result);
+                enableMyLocation(call, result);
                 break;
+            case "showZoomController":
+                showZoomController(call, result);
+            case "initPosition":
+                initPosition(call, result);
+            case "trackMe":
+                enableTracking(call, result);
             case "Road":
                 result.notImplemented();
                 break;
@@ -157,21 +202,29 @@ public class FlutterOsmView implements
 
     }
 
-
-
-    private boolean hasLocationPermission() {
-        return checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED
-                || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED;
+    private void showZoomController(MethodCall call, Result result) {
+        boolean showZoom = (boolean) call.arguments;
+        map.getZoomController().setVisibility(showZoom ? CustomZoomButtonsController.Visibility.ALWAYS : CustomZoomButtonsController.Visibility.NEVER);
     }
 
-    private int checkSelfPermission(String permission) {
-        if (permission == null) {
-            throw new IllegalArgumentException("permission is null");
+    private void enableTracking(MethodCall call, Result result) {
+        if(this.locationNewOverlay!=null){
+            if (locationNewOverlay.isFollowLocationEnabled()) {
+                locationNewOverlay.disableFollowLocation();
+            } else {
+                locationNewOverlay.enableFollowLocation();
+            }
         }
-        return context.checkPermission(
-                permission, android.os.Process.myPid(), android.os.Process.myUid());
+        result.success(null);
+
+    }
+
+    private Activity getActivity() {
+        if (registrar != null && registrar.activity() != null) {
+            return registrar.activity();
+        } else {
+            return mActivity;
+        }
     }
 
     private Application getApplication() {
@@ -256,6 +309,7 @@ public class FlutterOsmView implements
     public void onDestroy(@NonNull LifecycleOwner owner) {
 
     }
+
     void init() {
         switch (activityState.get()) {
             case STOPPED:

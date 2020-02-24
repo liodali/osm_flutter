@@ -17,19 +17,21 @@ class _MyAppState extends State<MyApp> {
 
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext loncontext) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
         body: Container(
-          width: Size.infinite.width,
-          height: Size.infinite.height,
-          child: FlutterOsm()
+          child: OSMFlutter(
+            currentLocation: false,
+            initPosition: GeoPoint(latitude: 47.35387,longitude: 8.43609),
+          )
         ),
       ),
     );
   }
-  
+
 }
+  

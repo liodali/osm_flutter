@@ -70,7 +70,7 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_osm_plugin:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       path: ".."
       relative: true

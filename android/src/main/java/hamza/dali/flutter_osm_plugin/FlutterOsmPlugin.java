@@ -58,7 +58,7 @@ public class FlutterOsmPlugin implements
                 .registerViewFactory(
                         VIEW_TYPE,
                         new OsmFactory(plugin.state,
-                                registrar.messenger(),null,null,
+                                registrar.messenger(),null,null,null,
                                 -1, registrar));
     }
 
@@ -93,6 +93,7 @@ public class FlutterOsmPlugin implements
                                 pluginBinding.getBinaryMessenger(),
                                 binding.getActivity().getApplication(),
                                 lifecycle,
+                                binding.getActivity(),
                                 binding.getActivity().hashCode(),null)
                 );
     }
