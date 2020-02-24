@@ -11,11 +11,12 @@ class OSMFlutter extends StatefulWidget {
   final bool showZoomController;
   final GeoPoint initPosition;
   OSMFlutter({
+    Key key,
     this.currentLocation = true,
     this.trackMyPosition = false,
     this.showZoomController = false,
     this.initPosition,
-  }) ;
+  }) : super(key: key);
 
   static OSMFlutterState of<T>(BuildContext context, {bool nullOk = false}) {
     assert(context != null);
@@ -54,26 +55,36 @@ class OSMFlutterState extends State<OSMFlutter> {
           await _checkServiceLocation();
         }
       } else if (_permission == PermissionStatus.granted) {
-        if(widget.currentLocation)
-          await _checkServiceLocation();
+        if (widget.currentLocation) await _checkServiceLocation();
       }
       if (widget.initPosition != null) {
         print(widget.initPosition.longitude);
-        await initLocationPosition(widget.initPosition);
+        await changeLocation(widget.initPosition);
       }
     });
   }
 
-  Future<void> initLocationPosition(GeoPoint p) async {
-    this._osmController.initPosition(p);
+  ///initialise or change of position
+  Future<void> changeLocation(GeoPoint p) async {
+    assert(p != null);
+    this._osmController.addPosition(p);
   }
 
+  ///zoom in/out
+  /// positive value:zoomIN
+  /// negative value:zoomOut
   void zoom(int zoom) {
     this._osmController.zoom(zoom);
   }
 
-  void currentLocation() {
-    this._osmController.currentLocation();
+  ///activate current location position
+  Future<void> currentLocation() async {
+    await this._osmController.currentLocation();
+  }
+
+  ///enabled/disabled tracking user location
+  Future<void> trackMe() async {
+    await this._osmController.enableTracking();
   }
 
   Future<void> _checkServiceLocation() async {
@@ -148,11 +159,14 @@ class _OsmController {
     return await _channel.invokeMethod('currentLocation', null);
   }
 
+  ///enable tracking your location
   Future<void> enableTracking() async {
     return await _channel.invokeMethod('trackMe', null);
   }
 
-  Future<void> initPosition(GeoPoint p)async {
-    return await _channel.invokeListMethod("initPosition", {"lon":p.longitude,"lat":p.latitude});
+  ///change ana init position
+  Future<void> addPosition(GeoPoint p) async {
+    return await _channel.invokeListMethod(
+        "initPosition", {"lon": p.longitude, "lat": p.latitude});
   }
 }

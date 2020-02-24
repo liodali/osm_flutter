@@ -1,14 +1,64 @@
 # flutter_osm_plugin
+![pub](https://img.shields.io/badge/pub-v0.1.0-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
+* current position
+* change position 
+* tracking user location
+  
 ## Getting Started
 
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.dev/developing-packages/),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.dev/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+## Installing
+
+Add the following to your `pubspec.yaml` file:
+
+    dependencies:
+      osm_flutter: ^0.1.0
+## Simple Usage
+#### Creating a basic `OSMFlutter`
+
+    OSMFlutter(
+            key: osmKey,
+            currentLocation: false,
+            initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
+      );
+
+### Declare GlobalKey to get selection
+
+`  GlobalKey<OSMFlutterState> osmKey = GlobalKey<OSMFlutterState>();`
+
+### set current position
+
+` osmKey.currentState.currentPosition() `
+
+### zoomIN
+
+` osmKey.currentState.zoom(2.) `
+
+
+### zoomOut
+
+` osmKey.currentState.zoom(-2.) `
+
+### enabled track current position
+
+` osmKey.currentState.trackMe() `
+
+### initialise position
+
+` checkboxKey.currentState.initLocationPosition(GeoPoint(latitude: 47.35387, longitude: 8.43609)) `
+
+####  `OSMFlutter`
+| Properties           | Description                         |
+| -------------------- | ----------------------------------- |
+| `currentLocation`    | enable the current position.        |
+| `trackMyPosition`    | enbaled tracking user position.     |
+| `showZoomController` | show default zoom controller.       |
+| `initPosition`       | set default position showing in map |
+
+## NB:
+`for now the map working only for android,iOS will be available soon `
+
+#### MIT LICENCE

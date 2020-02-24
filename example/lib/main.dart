@@ -9,29 +9,34 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  
+  GlobalKey<OSMFlutterState> osmKey;
   @override
   void initState() {
     super.initState();
+    osmKey = GlobalKey<OSMFlutterState>();
   }
-
 
   @override
   Widget build(BuildContext loncontext) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('OSM Plugin  app'),
         ),
         body: Container(
           child: OSMFlutter(
+            key: osmKey,
             currentLocation: false,
-            initPosition: GeoPoint(latitude: 47.35387,longitude: 8.43609),
-          )
+            initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            await osmKey.currentState.currentLocation();
+          },
+          child: Icon(Icons.my_location),
         ),
       ),
     );
   }
-
 }
-  

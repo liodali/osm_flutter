@@ -129,7 +129,9 @@ public class FlutterOsmView implements
     }
 
     private void initPosition(MethodCall methodCall, Result result) {
+
         HashMap<String, Double> args = (HashMap) methodCall.arguments;
+        map.getOverlays().clear();
         GeoPoint geoPoint = new GeoPoint(args.get("lat"), args.get("lon"));
         Marker marker = new Marker(map);
         marker.setDefaultIcon();
@@ -141,7 +143,8 @@ public class FlutterOsmView implements
     }
 
     private void enableMyLocation(MethodCall methodCall, Result result) {
-        if (this.locationNewOverlay == null) {
+
+            map.getOverlays().clear();
             this.locationNewOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(getApplication()), map);
             this.locationNewOverlay.enableMyLocation();
             this.locationNewOverlay.runOnFirstFix(new Runnable() {
@@ -165,7 +168,7 @@ public class FlutterOsmView implements
 
             map.getOverlays().add(this.locationNewOverlay);
 
-        }
+
 
         result.success(null);
     }
