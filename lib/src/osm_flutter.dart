@@ -58,7 +58,6 @@ class OSMFlutterState extends State<OSMFlutter> {
         if (widget.currentLocation) await _checkServiceLocation();
       }
       if (widget.initPosition != null) {
-        print(widget.initPosition.longitude);
         await changeLocation(widget.initPosition);
       }
     });

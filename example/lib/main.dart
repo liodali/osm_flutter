@@ -21,7 +21,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('OSM Plugin  app'),
+          title: const Text('OSM Plugin app'),
         ),
         body: Container(
           child: OSMFlutter(
