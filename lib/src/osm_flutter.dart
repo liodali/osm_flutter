@@ -73,7 +73,7 @@ class OSMFlutterState extends State<OSMFlutter> {
   ///zoom in/out
   /// positive value:zoomIN
   /// negative value:zoomOut
-  void zoom(int zoom) {
+  void zoom(double zoom) {
     this._osmController.zoom(zoom);
   }
 
@@ -150,7 +150,7 @@ class _OsmController {
 
   final MethodChannel _channel;
 
-  Future<void> zoom(int zoom) async {
+  Future<void> zoom(double zoom) async {
     assert(zoom != null);
     return await _channel.invokeMethod('Zoom', zoom);
   }

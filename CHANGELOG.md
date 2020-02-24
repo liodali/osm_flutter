@@ -1,3 +1,6 @@
+## 0.1.0+3 [alpha-version]:
+
+* fix zoom parametre 
 ## 0.1.0+2 [alpha-version]:
 
 * fix readme

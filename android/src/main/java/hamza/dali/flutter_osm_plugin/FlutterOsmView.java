@@ -122,8 +122,8 @@ public class FlutterOsmView implements
     }
 
     private void setZoom(MethodCall methodCall, Result result) {
-        int zoom = (int) methodCall.arguments;
-        map.getController().setZoom((double) zoom);
+        double zoom = (double) methodCall.arguments;
+        map.getController().setZoom(zoom);
 
         result.success(null);
     }
