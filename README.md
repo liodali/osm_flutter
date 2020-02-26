@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.1.0%2B4-orange)
+![pub](https://img.shields.io/badge/pub-v0.1.1-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -15,21 +15,21 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.1.0+4
+      flutter_osm_plugin: ^0.1.1
 ## Simple Usage
 #### Creating a basic `OSMFlutter`
 
-    OSMFlutter(
-                  key: osmKey,
-                  currentLocation: false,
-                  initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
-            );
+  OSMFlutter(
+    key: osmKey,
+    currentLocation: false,
+    initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
+  );
 
-### Declare GlobalKey to get selection
+### Declare GlobalKey
 
 `  GlobalKey<OSMFlutterState> osmKey = GlobalKey<OSMFlutterState>();`
 
-### set current position
+### set map on user current position
 
 ` osmKey.currentState.currentPosition() `
 
@@ -42,13 +42,17 @@ Add the following to your `pubspec.yaml` file:
 
 ` osmKey.currentState.zoom(-2.) `
 
-### enabled track current position
+###  track user current position or disable tracking
 
-` osmKey.currentState.trackMe() `
+` osmKey.currentState.enableTracking() `
 
 ### initialise position
 
 ` osmKey.currentState.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609)) `
+
+### recuperation current position
+
+`GeoPoint geoPoint = osmKey.currentState.myLocation() `
 
 ####  `OSMFlutter`
 | Properties           | Description                         |

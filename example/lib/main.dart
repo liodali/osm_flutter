@@ -10,18 +10,50 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   GlobalKey<OSMFlutterState> osmKey;
+  GlobalKey<ScaffoldState> scaffoldKey;
   @override
   void initState() {
     super.initState();
     osmKey = GlobalKey<OSMFlutterState>();
+    scaffoldKey = GlobalKey<ScaffoldState>();
   }
 
   @override
   Widget build(BuildContext loncontext) {
     return MaterialApp(
       home: Scaffold(
+        key: scaffoldKey,
         appBar: AppBar(
           title: const Text('OSM Plugin app'),
+          actions: <Widget>[
+            IconButton(
+              onPressed: () async {
+                //get current position
+                GeoPoint p = await osmKey.currentState.myLocation();
+                if (p.getErr() == null) {
+                  scaffoldKey.currentState.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "lat:${p.latitude},lon:lat:${p.longitude}",
+                      ),
+                    ),
+                  );
+                } else {
+                  scaffoldKey.currentState.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "${p.getErr()}",
+                      ),
+                    ),
+                  );
+                }
+              },
+              icon: Icon(
+                Icons.location_on,
+                color: Colors.white,
+              ),
+            )
+          ],
         ),
         body: Container(
           child: OSMFlutter(

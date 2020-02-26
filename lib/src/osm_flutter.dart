@@ -81,8 +81,12 @@ class OSMFlutterState extends State<OSMFlutter> {
     await this._osmController.currentLocation();
   }
 
+  Future<GeoPoint> myLocation() async {
+    return await this._osmController.myLocation();
+  }
+
   ///enabled/disabled tracking user location
-  Future<void> trackMe() async {
+  Future<void> enableTracking() async {
     await this._osmController.enableTracking();
   }
 
@@ -146,8 +150,10 @@ class OSMFlutterState extends State<OSMFlutter> {
 class _OsmController {
   _OsmController._(int id)
       : _channel = new MethodChannel('plugins.dali.hamza/osmview_$id');
+  //_eventChannel=null;
 
   final MethodChannel _channel;
+  //final EventChannel _eventChannel;
 
   Future<void> zoom(double zoom) async {
     assert(zoom != null);
@@ -156,6 +162,18 @@ class _OsmController {
 
   Future<void> currentLocation() async {
     return await _channel.invokeMethod('currentLocation', null);
+  }
+
+  Future<GeoPoint> myLocation() async {
+    try {
+      Map<String, dynamic> map =
+          await _channel.invokeMapMethod("user#position", null);
+      return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
+    } on PlatformException catch (e) {
+      GeoPoint p = GeoPoint();
+      p.setErr(e.message);
+      return p;
+    }
   }
 
   ///enable tracking your location

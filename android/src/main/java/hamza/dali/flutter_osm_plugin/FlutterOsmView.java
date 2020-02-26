@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.PluginRegistry;
@@ -55,6 +56,7 @@ public class FlutterOsmView implements
         DefaultLifecycleObserver,
         ActivityPluginBinding.OnSaveInstanceStateListener,
         PlatformView,
+        EventChannel.StreamHandler,
         MethodChannel.MethodCallHandler {
     MapView map;
     private MyLocationNewOverlay locationNewOverlay;
@@ -196,12 +198,33 @@ public class FlutterOsmView implements
                 initPosition(call, result);
             case "trackMe":
                 enableTracking(call, result);
+            case "user#position":
+                userPosition(call,result);
             case "Road":
                 result.notImplemented();
                 break;
             default:
                 result.notImplemented();
         }
+
+    }
+
+    private void userPosition(MethodCall call, Result result) {
+        if(this.locationNewOverlay==null || !this.locationNewOverlay.isMyLocationEnabled()){
+            result.error("400","current location is not enabled yet!",null);
+        }else{
+            if(this.locationNewOverlay.getLastFix()!=null){
+                HashMap<String,Double> map=new HashMap<>();
+                GeoPoint geo = new GeoPoint(locationNewOverlay.getLastFix().getLatitude(), locationNewOverlay.getLastFix().getLongitude());
+                map.put("lat",geo.getLatitude());
+                map.put("lon",geo.getLongitude());
+                result.success(map);
+            }else
+                result.error("400","location not available yet!",null);
+        }
+
+
+
 
     }
 
@@ -339,6 +362,16 @@ public class FlutterOsmView implements
         } else {
             getApplication().registerActivityLifecycleCallbacks(this);
         }
+
+    }
+
+    @Override
+    public void onListen(Object arguments, EventChannel.EventSink events) {
+
+    }
+
+    @Override
+    public void onCancel(Object arguments) {
 
     }
 }

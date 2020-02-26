@@ -1,3 +1,6 @@
+## 0.1.1 [alpha-version]:
+
+* you can now ,recuperation your current location
 ## 0.1.0+4 [alpha-version]:
 
 * fix readme
