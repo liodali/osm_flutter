@@ -19,11 +19,13 @@ Add the following to your `pubspec.yaml` file:
 ## Simple Usage
 #### Creating a basic `OSMFlutter`
 
-  OSMFlutter(
-    key: osmKey,
-    currentLocation: false,
-    initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
-  );
+  ` 
+    OSMFlutter(
+      key: osmKey,
+      currentLocation: false,
+      initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
+    ); 
+  `
 
 ### Declare GlobalKey
 
