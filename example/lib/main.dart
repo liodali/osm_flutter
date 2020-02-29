@@ -59,6 +59,13 @@ class _MyAppState extends State<MyApp> {
           child: OSMFlutter(
             key: osmKey,
             currentLocation: false,
+            markerIcon: MarkerIcon(
+              icon: Icon(
+                Icons.person_pin_circle,
+                color: Colors.blue,
+                size: 56,
+              ),
+            ),
             initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
           ),
         ),
