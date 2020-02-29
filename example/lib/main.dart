@@ -52,7 +52,20 @@ class _MyAppState extends State<MyApp> {
                 Icons.location_on,
                 color: Colors.white,
               ),
-            )
+            ),
+            IconButton(
+              onPressed: () async {
+                GeoPoint p = await osmKey.currentState.selectPosition();
+                scaffoldKey.currentState.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      "the picked position:lat ${p.latitude},lon ${p.longitude}",
+                    ),
+                  ),
+                );
+              },
+              icon: Icon(Icons.search),
+            ),
           ],
         ),
         body: Container(

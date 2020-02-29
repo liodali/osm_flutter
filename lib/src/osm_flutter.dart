@@ -92,7 +92,7 @@ class OSMFlutterState extends State<OSMFlutter> {
   Future<void> currentLocation() async {
     await this._osmController.currentLocation();
   }
-
+  //recuperation of user current position
   Future<GeoPoint> myLocation() async {
     return await this._osmController.myLocation();
   }
@@ -100,6 +100,11 @@ class OSMFlutterState extends State<OSMFlutter> {
   ///enabled/disabled tracking user location
   Future<void> enableTracking() async {
     await this._osmController.enableTracking();
+  }
+  //pick Position in map
+  Future<GeoPoint> selectPosition()async{
+    GeoPoint p= await this._osmController.pickLocation();
+    return p;
   }
 
   Future<void> _checkServiceLocation() async {
@@ -188,6 +193,17 @@ class _OsmController {
     try {
       Map<String, dynamic> map =
           await _channel.invokeMapMethod("user#position", null);
+      return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
+    } on PlatformException catch (e) {
+      GeoPoint p = GeoPoint();
+      p.setErr(e.message);
+      return p;
+    }
+  }
+  Future<GeoPoint> pickLocation() async {
+    try {
+      Map<String, dynamic> map =
+          await _channel.invokeMapMethod("user#pickPosition", null);
       return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
     } on PlatformException catch (e) {
       GeoPoint p = GeoPoint();

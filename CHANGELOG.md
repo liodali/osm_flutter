@@ -1,3 +1,6 @@
+## 0.3.0 [alpha-version]:
+
+* pick position and recuperation of the position
 ## 0.2.0 [alpha-version]:
 
 * Custom Marker Icon

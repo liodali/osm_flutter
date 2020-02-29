@@ -25,6 +25,7 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
 import org.osmdroid.config.Configuration;
+import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.events.MapListener;
 import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
@@ -33,6 +34,7 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.MapEventsOverlay;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
@@ -79,9 +81,8 @@ public class FlutterOsmView implements
     private final AtomicInteger activityState;
     private PluginRegistry.Registrar registrar;
     private Bitmap customMarkerIcon;
-
-    private FlutterView flutterView;
-
+    MapEventsOverlay mapEventsOverlay;
+    private final double defaultZoom=10.;
 
     public FlutterOsmView(Context ctx,
                           PluginRegistry.Registrar registrar,
@@ -149,6 +150,11 @@ public class FlutterOsmView implements
         HashMap<String, Double> args = (HashMap) methodCall.arguments;
         map.getOverlays().clear();
         GeoPoint geoPoint = new GeoPoint(args.get("lat"), args.get("lon"));
+        addMarker(geoPoint,defaultZoom);
+        result.success(null);
+    }
+
+    void addMarker(GeoPoint geoPoint,double zoom){
         Marker marker = new Marker(map);
         Drawable iconDrawable;
         if (customMarkerIcon != null) {
@@ -167,7 +173,6 @@ public class FlutterOsmView implements
         map.getController().setZoom(10.);
         map.getController().animateTo(geoPoint);
         map.getOverlays().add(marker);
-        result.success(null);
     }
 
     private void enableMyLocation(MethodCall methodCall, Result result) {
@@ -219,31 +224,60 @@ public class FlutterOsmView implements
                 break;
             case "showZoomController":
                 showZoomController(call, result);
+                break;
             case "initPosition":
                 initPosition(call, result);
+                break;
             case "trackMe":
                 enableTracking(call, result);
+                break;
             case "user#position":
                 userPosition(call, result);
+                break;
+            case "user#pickPosition":
+                pickPosition(call, result);
+                break;
             case "Road":
                 result.notImplemented();
                 break;
             case "marker#icon":
                 changeIcon(call, result);
+                break;
             default:
                 result.notImplemented();
         }
 
     }
+    private void pickPosition(MethodCall call,Result result){
+        final Result _result = result;
+        if(mapEventsOverlay == null){
+            mapEventsOverlay =new MapEventsOverlay( new MapEventsReceiver() {
+                @Override
+                public boolean singleTapConfirmedHelper(GeoPoint p) {
+                    return false;
+                }
 
+                @Override
+                public boolean longPressHelper(GeoPoint p) {
+                    HashMap<String, Double> Hashmap = new HashMap<>();
+                    Hashmap.put("lat", p.getLatitude());
+                    Hashmap.put("lon", p.getLongitude());
+                    map.getOverlays().remove(0);
+                    addMarker(p,15.);
+                    mapEventsOverlay = null;
+                    _result.success(Hashmap);
+                    return false;
+                }
+            });
+            map.getOverlays().add(0, mapEventsOverlay);
+        }
+
+    }
     private void changeIcon(MethodCall call, Result result) {
         try {
             byte[] bytes = (byte[]) call.arguments;
-            Log.d("bytes",""+call.arguments.toString());
-            /*customMarkerIcon = Bitmap.createBitmap(32 , 32, Bitmap.Config.ARGB_8888);
-            ByteBuffer buffer = ByteBuffer.wrap(bytes);
-            customMarkerIcon.copyPixelsFromBuffer(buffer);*/
-            customMarkerIcon = BitmapFactory.decodeByteArray(bytes , 0, bytes .length);
+            Log.d("bytes", "" + call.arguments.toString());
+            customMarkerIcon = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
             //customMarkerIcon.recycle();
             result.success(null);
         } catch (Exception e) {

@@ -1,11 +1,12 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.2.0-orange)
+![pub](https://img.shields.io/badge/pub-v0.3.0-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
 * current position
 * change position 
 * tracking user location
+* customize Icon Marker
   
 ## Getting Started
 
@@ -15,7 +16,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.2.0
+      flutter_osm_plugin: ^0.3.0
 ## Simple Usage
 #### Creating a basic `OSMFlutter`:
   
@@ -60,6 +61,9 @@ Add the following to your `pubspec.yaml` file:
 ### recuperation current position
 
 `GeoPoint geoPoint = osmKey.currentState.myLocation() `
+### select new position
+
+`GeoPoint geoPoint = osmKey.currentState.selectPosition() `
 
 ####  `OSMFlutter`
 | Properties           | Description                         |
