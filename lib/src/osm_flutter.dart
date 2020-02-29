@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin/src/marker.dart';
 import 'package:location_permissions/location_permissions.dart';
 
 class OSMFlutter extends StatefulWidget {
@@ -10,12 +14,14 @@ class OSMFlutter extends StatefulWidget {
   final bool trackMyPosition;
   final bool showZoomController;
   final GeoPoint initPosition;
+  final MarkerIcon markerIcon;
   OSMFlutter({
     Key key,
     this.currentLocation = true,
     this.trackMyPosition = false,
     this.showZoomController = false,
     this.initPosition,
+    this.markerIcon,
   }) : super(key: key);
 
   static OSMFlutterState of<T>(BuildContext context, {bool nullOk = false}) {
@@ -42,9 +48,12 @@ class OSMFlutterState extends State<OSMFlutter> {
   PermissionStatus _permission;
   //_OsmCreatedCallback _osmCreatedCallback;
   _OsmController _osmController;
+  GlobalKey _key;
+
   @override
   void initState() {
     super.initState();
+    _key = GlobalKey();
     Future.delayed(Duration(milliseconds: 200), () async {
       //check location permission
       _permission = await LocationPermissions().checkPermissionStatus();
@@ -56,6 +65,9 @@ class OSMFlutterState extends State<OSMFlutter> {
         }
       } else if (_permission == PermissionStatus.granted) {
         if (widget.currentLocation) await _checkServiceLocation();
+      }
+      if (widget.markerIcon != null) {
+        await this._osmController.customMarker(_key);
       }
       if (widget.initPosition != null) {
         await changeLocation(widget.initPosition);
@@ -132,10 +144,18 @@ class OSMFlutterState extends State<OSMFlutter> {
   @override
   Widget build(BuildContext context) {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return AndroidView(
-        viewType: 'plugins.dali.hamza/osmview',
-        onPlatformViewCreated: _onPlatformViewCreated,
-        //creationParamsCodec:  StandardMessageCodec(),
+      return Stack(
+        children: <Widget>[
+          RepaintBoundary(
+            key: _key,
+            child: widget.markerIcon,
+          ),
+          AndroidView(
+            viewType: 'plugins.dali.hamza/osmview',
+            onPlatformViewCreated: _onPlatformViewCreated,
+            //creationParamsCodec:  StandardMessageCodec(),
+          ),
+        ],
       );
     }
     return Text(
@@ -176,9 +196,24 @@ class _OsmController {
     }
   }
 
+  Future<void> customMarker(GlobalKey globalKey) async {
+    Uint8List icon = await _capturePng(globalKey);
+    print(icon);
+    await _channel.invokeMapMethod("marker#icon", icon);
+  }
+
+  Future<Uint8List> _capturePng(GlobalKey globalKey) async {
+    RenderRepaintBoundary boundary =
+        globalKey.currentContext.findRenderObject();
+    ui.Image image = await boundary.toImage();
+    ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    Uint8List pngBytes = byteData.buffer.asUint8List();
+    return pngBytes;
+  }
+
   ///enable tracking your location
   Future<void> enableTracking() async {
-    return await _channel.invokeMethod('trackMe', null);
+     await _channel.invokeMethod('trackMe', null);
   }
 
   ///change ana init position

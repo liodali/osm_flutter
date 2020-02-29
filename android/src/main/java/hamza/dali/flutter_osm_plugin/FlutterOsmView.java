@@ -5,6 +5,11 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -14,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
@@ -31,9 +37,13 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.io.ByteArrayInputStream;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.flutter.embedding.android.FlutterView;
+import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.BinaryMessenger;
@@ -68,6 +78,10 @@ public class FlutterOsmView implements
     private Activity mActivity;
     private final AtomicInteger activityState;
     private PluginRegistry.Registrar registrar;
+    private Bitmap customMarkerIcon;
+
+    private FlutterView flutterView;
+
 
     public FlutterOsmView(Context ctx,
                           PluginRegistry.Registrar registrar,
@@ -136,7 +150,19 @@ public class FlutterOsmView implements
         map.getOverlays().clear();
         GeoPoint geoPoint = new GeoPoint(args.get("lat"), args.get("lon"));
         Marker marker = new Marker(map);
-        marker.setDefaultIcon();
+        Drawable iconDrawable;
+        if (customMarkerIcon != null) {
+            iconDrawable = new BitmapDrawable(getActivity().getResources(), customMarkerIcon);
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                iconDrawable = getActivity().getDrawable(R.drawable.ic_location_on_red_24dp);
+            } else {
+                iconDrawable = ContextCompat.getDrawable(getActivity(), R.drawable.ic_location_on_red_24dp);
+            }
+        }
+
+        marker.setIcon(iconDrawable);
+
         marker.setPosition(geoPoint);
         map.getController().setZoom(10.);
         map.getController().animateTo(geoPoint);
@@ -146,30 +172,29 @@ public class FlutterOsmView implements
 
     private void enableMyLocation(MethodCall methodCall, Result result) {
 
-            map.getOverlays().clear();
-            this.locationNewOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(getApplication()), map);
-            this.locationNewOverlay.enableMyLocation();
-            this.locationNewOverlay.runOnFirstFix(new Runnable() {
-                @Override
-                public void run() {
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                GeoPoint geo = new GeoPoint(locationNewOverlay.getLastFix().getLatitude(), locationNewOverlay.getLastFix().getLongitude());
-                                //map.getController().zoomToSpan(Math.abs(geo.getLatitude()),Math.abs(geo.getLongitude()));
-                                map.getController().setZoom(15.);
-                                map.getController().animateTo(geo);
-                            }
-                        });
-                    } else {
-                        Log.d("mActivity ", "null");
-                    }
+        map.getOverlays().clear();
+        this.locationNewOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(getApplication()), map);
+        this.locationNewOverlay.enableMyLocation();
+        this.locationNewOverlay.runOnFirstFix(new Runnable() {
+            @Override
+            public void run() {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            GeoPoint geo = new GeoPoint(locationNewOverlay.getLastFix().getLatitude(), locationNewOverlay.getLastFix().getLongitude());
+                            //map.getController().zoomToSpan(Math.abs(geo.getLatitude()),Math.abs(geo.getLongitude()));
+                            map.getController().setZoom(15.);
+                            map.getController().animateTo(geo);
+                        }
+                    });
+                } else {
+                    Log.d("mActivity ", "null");
                 }
-            });
+            }
+        });
 
-            map.getOverlays().add(this.locationNewOverlay);
-
+        map.getOverlays().add(this.locationNewOverlay);
 
 
         result.success(null);
@@ -199,31 +224,49 @@ public class FlutterOsmView implements
             case "trackMe":
                 enableTracking(call, result);
             case "user#position":
-                userPosition(call,result);
+                userPosition(call, result);
             case "Road":
                 result.notImplemented();
                 break;
+            case "marker#icon":
+                changeIcon(call, result);
             default:
                 result.notImplemented();
         }
 
     }
 
-    private void userPosition(MethodCall call, Result result) {
-        if(this.locationNewOverlay==null || !this.locationNewOverlay.isMyLocationEnabled()){
-            result.error("400","current location is not enabled yet!",null);
-        }else{
-            if(this.locationNewOverlay.getLastFix()!=null){
-                HashMap<String,Double> map=new HashMap<>();
-                GeoPoint geo = new GeoPoint(locationNewOverlay.getLastFix().getLatitude(), locationNewOverlay.getLastFix().getLongitude());
-                map.put("lat",geo.getLatitude());
-                map.put("lon",geo.getLongitude());
-                result.success(map);
-            }else
-                result.error("400","location not available yet!",null);
+    private void changeIcon(MethodCall call, Result result) {
+        try {
+            byte[] bytes = (byte[]) call.arguments;
+            Log.d("bytes",""+call.arguments.toString());
+            /*customMarkerIcon = Bitmap.createBitmap(32 , 32, Bitmap.Config.ARGB_8888);
+            ByteBuffer buffer = ByteBuffer.wrap(bytes);
+            customMarkerIcon.copyPixelsFromBuffer(buffer);*/
+            customMarkerIcon = BitmapFactory.decodeByteArray(bytes , 0, bytes .length);
+            //customMarkerIcon.recycle();
+            result.success(null);
+        } catch (Exception e) {
+            Log.d("err", e.getMessage());
+            customMarkerIcon = null;
+            result.error("500", "Cannot make markerIcon custom", "");
         }
 
+    }
 
+    private void userPosition(MethodCall call, Result result) {
+        if (this.locationNewOverlay == null || !this.locationNewOverlay.isMyLocationEnabled()) {
+            result.error("400", "current location is not enabled yet!", null);
+        } else {
+            if (this.locationNewOverlay.getLastFix() != null) {
+                HashMap<String, Double> map = new HashMap<>();
+                GeoPoint geo = new GeoPoint(locationNewOverlay.getLastFix().getLatitude(), locationNewOverlay.getLastFix().getLongitude());
+                map.put("lat", geo.getLatitude());
+                map.put("lon", geo.getLongitude());
+                result.success(map);
+            } else
+                result.error("400", "location not available yet!", null);
+        }
 
 
     }
@@ -234,15 +277,13 @@ public class FlutterOsmView implements
     }
 
     private void enableTracking(MethodCall call, Result result) {
-        if(this.locationNewOverlay!=null){
+        if (this.locationNewOverlay != null) {
             if (locationNewOverlay.isFollowLocationEnabled()) {
                 locationNewOverlay.disableFollowLocation();
             } else {
                 locationNewOverlay.enableFollowLocation();
             }
         }
-        result.success(null);
-
     }
 
     private Activity getActivity() {

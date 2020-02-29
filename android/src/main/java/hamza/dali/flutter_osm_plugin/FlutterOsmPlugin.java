@@ -119,39 +119,6 @@ public class FlutterOsmPlugin implements
         if (activity.hashCode() != registrarActivityHashCode) {
             return;
         }
-        boolean permissionAccessCoarseLocationApproved =
-                ActivityCompat.checkSelfPermission(activity,
-                        Manifest.permission.ACCESS_COARSE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED;
-
-        if (permissionAccessCoarseLocationApproved) {
-            boolean backgroundLocationPermissionApproved =
-                    ActivityCompat.checkSelfPermission(activity,
-                            Manifest.permission.ACCESS_FINE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED;
-
-            if (backgroundLocationPermissionApproved) {
-                // App can access location both in the foreground and in the background.
-                // Start your service that doesn't have a foreground service type
-                // defined.
-            } else {
-                // App can only access location in the foreground. Display a dialog
-                // warning the user that your app must have all-the-time access to
-                // location in order to function properly. Then, request background
-                // location.
-                ActivityCompat.requestPermissions(activity, new String[] {
-                                Manifest.permission.ACCESS_FINE_LOCATION},
-                        200);
-            }
-        } else {
-            // App doesn't have access to the device's location at all. Make full request
-            // for permission.
-            ActivityCompat.requestPermissions(activity, new String[] {
-                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                    },
-                    201);
-        }
         state.set(CREATED);
     }
 

@@ -1,3 +1,6 @@
+## 0.2.0 [alpha-version]:
+
+* Custom Marker Icon
 ## 0.1.1 [alpha-version]:
 
 * you can now ,recuperation your current location

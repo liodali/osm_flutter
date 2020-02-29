@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.1.1-orange)
+![pub](https://img.shields.io/badge/pub-v0.2.0-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -15,17 +15,22 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.1.1
+      flutter_osm_plugin: ^0.2.0
 ## Simple Usage
-#### Creating a basic `OSMFlutter`
-
-  ` 
-    OSMFlutter(
-      key: osmKey,
-      currentLocation: false,
-      initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
-    ); 
-  `
+#### Creating a basic `OSMFlutter`:
+  
+  
+    OSMFlutter( 
+          key: osmKey,
+          currentLocation: false,
+          markerIcon: MarkerIcon(
+              icon: Icon(
+                Icons.person_pin_circle,
+                color: Colors.blue,
+                size: 56,
+              ),
+          ),
+          initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609,);
 
 ### Declare GlobalKey
 
@@ -63,6 +68,7 @@ Add the following to your `pubspec.yaml` file:
 | `trackMyPosition`    | enbaled tracking user position.     |
 | `showZoomController` | show default zoom controller.       |
 | `initPosition`       | set default position showing in map |
+| `markerIcon`         | set icon Marker                     |
 
 ## NB:
 `for now the map working only for android,iOS will be available soon `
