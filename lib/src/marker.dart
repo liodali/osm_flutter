@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 class MarkerIcon extends StatelessWidget {
   final Icon icon;
   final AssetImage image;
-  MarkerIcon({this.icon, this.image})
-      : assert(icon != null || image != null);
+  MarkerIcon({this.icon, this.image}) : assert(icon != null || image != null);
 
- @override
+  @override
   Widget build(BuildContext context) {
     Widget child = SizedBox.shrink();
     if (icon != null) {
@@ -17,5 +16,4 @@ class MarkerIcon extends StatelessWidget {
       );
     return child;
   }
-  
 }

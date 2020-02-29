@@ -7,10 +7,11 @@ class GeoPoint {
     this.longitude,
   });
 
-  void setErr(String err){
-    _e=err;
+  void setErr(String err) {
+    _e = err;
   }
-  String getErr(){
+
+  String getErr() {
     return _e;
   }
 }

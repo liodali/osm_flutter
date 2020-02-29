@@ -92,6 +92,7 @@ class OSMFlutterState extends State<OSMFlutter> {
   Future<void> currentLocation() async {
     await this._osmController.currentLocation();
   }
+
   //recuperation of user current position
   Future<GeoPoint> myLocation() async {
     return await this._osmController.myLocation();
@@ -101,9 +102,10 @@ class OSMFlutterState extends State<OSMFlutter> {
   Future<void> enableTracking() async {
     await this._osmController.enableTracking();
   }
+
   //pick Position in map
-  Future<GeoPoint> selectPosition()async{
-    GeoPoint p= await this._osmController.pickLocation();
+  Future<GeoPoint> selectPosition() async {
+    GeoPoint p = await this._osmController.pickLocation();
     return p;
   }
 
@@ -200,6 +202,7 @@ class _OsmController {
       return p;
     }
   }
+
   Future<GeoPoint> pickLocation() async {
     try {
       Map<String, dynamic> map =
@@ -229,7 +232,7 @@ class _OsmController {
 
   ///enable tracking your location
   Future<void> enableTracking() async {
-     await _channel.invokeMethod('trackMe', null);
+    await _channel.invokeMethod('trackMe', null);
   }
 
   ///change ana init position
