@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin/src/geo_point_exception.dart';
 import 'package:flutter_osm_plugin/src/marker.dart';
+import 'package:flutter_osm_plugin/src/road_exception.dart';
 import 'package:location_permissions/location_permissions.dart';
 
 class OSMFlutter extends StatefulWidget {
@@ -67,7 +69,7 @@ class OSMFlutterState extends State<OSMFlutter> {
         if (widget.currentLocation) await _checkServiceLocation();
       }
       if (widget.markerIcon != null) {
-        await this._osmController.customMarker(_key);
+        await changeIconMarker(_key);
       }
       if (widget.initPosition != null) {
         await changeLocation(widget.initPosition);
@@ -81,6 +83,9 @@ class OSMFlutterState extends State<OSMFlutter> {
     this._osmController.addPosition(p);
   }
 
+Future changeIconMarker(GlobalKey key) async{
+    await this._osmController.customMarker(key);
+  }
   ///zoom in/out
   /// positive value:zoomIN
   /// negative value:zoomOut
@@ -108,7 +113,12 @@ class OSMFlutterState extends State<OSMFlutter> {
     GeoPoint p = await this._osmController.pickLocation();
     return p;
   }
-
+  //draw road
+  Future<void> drawRoad(GeoPoint start,GeoPoint end)async{
+      assert(start!=null&&end!=null,"you cannot make road without 2 point");
+      assert(start.latitude!=end.latitude || start.longitude!=end.longitude,"you cannot make road with same geopoint");
+      await this._osmController.drawRoad(start, end);
+  }
   Future<void> _checkServiceLocation() async {
     ServiceStatus serviceStatus =
         await LocationPermissions().checkServiceStatus();
@@ -197,9 +207,7 @@ class _OsmController {
           await _channel.invokeMapMethod("user#position", null);
       return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
     } on PlatformException catch (e) {
-      GeoPoint p = GeoPoint();
-      p.setErr(e.message);
-      return p;
+      throw GeoPointException(msg: e.message);
     }
   }
 
@@ -209,9 +217,7 @@ class _OsmController {
           await _channel.invokeMapMethod("user#pickPosition", null);
       return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
     } on PlatformException catch (e) {
-      GeoPoint p = GeoPoint();
-      p.setErr(e.message);
-      return p;
+     throw GeoPointException(msg: e.message);
     }
   }
 
@@ -235,9 +241,21 @@ class _OsmController {
     await _channel.invokeMethod('trackMe', null);
   }
 
-  ///change ana init position
+  ///change and init position
   Future<void> addPosition(GeoPoint p) async {
     return await _channel.invokeListMethod(
         "initPosition", {"lon": p.longitude, "lat": p.latitude});
+  }
+
+  ///draw road
+  Future<void> drawRoad(GeoPoint p, GeoPoint p2) async {
+    try{
+      return await _channel.invokeMethod("road", [
+      {"lon": p.longitude, "lat": p.latitude},
+      {"lon": p2.longitude, "lat": p2.latitude}
+    ]);
+    }on PlatformException catch(e){
+      throw RoadException(msg: e.message);
+    }
   }
 }

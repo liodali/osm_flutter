@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.3.0-orange)
+![pub](https://img.shields.io/badge/pub-v0.3.2-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -7,6 +7,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 * change position 
 * tracking user location
 * customize Icon Marker
+* draw Road
   
 ## Getting Started
 
@@ -16,22 +17,23 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.3.0
+      flutter_osm_plugin: ^0.3.2
 ## Simple Usage
 #### Creating a basic `OSMFlutter`:
   
   
     OSMFlutter( 
-          key: osmKey,
-          currentLocation: false,
-          markerIcon: MarkerIcon(
-              icon: Icon(
-                Icons.person_pin_circle,
-                color: Colors.blue,
-                size: 56,
-              ),
+        key: osmKey,
+        currentLocation: false,
+        markerIcon: MarkerIcon(
+        icon: Icon(
+          Icons.person_pin_circle,
+          color: Colors.blue,
+          size: 56,
           ),
-          initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609,);
+        ),
+        initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609,
+    );
 
 ### Declare GlobalKey
 
@@ -64,6 +66,9 @@ Add the following to your `pubspec.yaml` file:
 ### select new position
 
 `GeoPoint geoPoint = osmKey.currentState.selectPosition() `
+
+### draw road
+` osmKey.currentState.drawRoad( GeoPoint(latitude: 47.35387, longitude: 8.43609),GeoPoint(latitude: 47.4371, longitude: 8.6136)); `
 
 ####  `OSMFlutter`
 | Properties           | Description                         |

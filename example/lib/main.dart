@@ -29,29 +29,48 @@ class _MyAppState extends State<MyApp> {
             IconButton(
               onPressed: () async {
                 //get current position
-                GeoPoint p = await osmKey.currentState.myLocation();
-                if (p.getErr() == null) {
+                try {
+                  GeoPoint p = await osmKey.currentState.myLocation();
                   scaffoldKey.currentState.showSnackBar(
                     SnackBar(
                       content: Text(
-                        "lat:${p.latitude},lon:lat:${p.longitude}",
+                        "lat:${p.latitude},lon:${p.longitude}",
                       ),
                     ),
                   );
-                } else {
-                  scaffoldKey.currentState.showSnackBar(
+                } on GeoPointException  catch  (e) {
+                   scaffoldKey.currentState.showSnackBar(
                     SnackBar(
                       content: Text(
-                        "${p.getErr()}",
+                        "${e.errorMessage()}",
                       ),
                     ),
                   );
                 }
+                
               },
               icon: Icon(
                 Icons.location_on,
                 color: Colors.white,
               ),
+            ),
+            IconButton(
+              onPressed: () async {
+                try{
+                  await osmKey.currentState.drawRoad(
+                    GeoPoint(latitude: 47.35387, longitude: 8.43609),
+                    GeoPoint(latitude: 47.4371, longitude: 8.6136));
+                }on RoadException catch(e){
+                  scaffoldKey.currentState.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "${e.errorMessage()}",
+                      ),
+                    ),
+                  );
+                }
+              },
+              icon: Icon(Icons.map),
             ),
             IconButton(
               onPressed: () async {

@@ -1,3 +1,7 @@
+## 0.3.2 [alpha-version]:
+
+* draw road
+* handle geopoint and road exception 
 ## 0.3.0 [alpha-version]:
 
 * pick position and recuperation of the position
