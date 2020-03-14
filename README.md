@@ -89,7 +89,7 @@ Add the following to your `pubspec.yaml` file:
 | `initPosition`       | set default position showing in map |
 | `markerIcon`         | set icon Marker                     |
 | `road`               | set color and start/end/middle markers in road |
-| `useSecureURL`       | use https or http                   |
+| `useSecureURL`       | enabled secure urls                  |
 
 ## NOTICE:
 > `for now the map working only for android,iOS will be available soon `
