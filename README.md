@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.3.2%2B1-orange)
+![pub](https://img.shields.io/badge/pub-v0.3.3-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -17,7 +17,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.3.2+1
+      flutter_osm_plugin: ^0.3.3
 ## Simple Usage
 #### Creating a basic `OSMFlutter`:
   
@@ -25,6 +25,16 @@ Add the following to your `pubspec.yaml` file:
     OSMFlutter( 
         key: osmKey,
         currentLocation: false,
+        road: Road(
+                startIcon: MarkerIcon(
+                  icon: Icon(
+                    Icons.person,
+                    size: 64,
+                    color: Colors.brown,
+                  ),
+                ),
+                roadColor: Colors.yellowAccent,
+        ),
         markerIcon: MarkerIcon(
         icon: Icon(
           Icons.person_pin_circle,
@@ -78,8 +88,20 @@ Add the following to your `pubspec.yaml` file:
 | `showZoomController` | show default zoom controller.       |
 | `initPosition`       | set default position showing in map |
 | `markerIcon`         | set icon Marker                     |
+| `road`               | set color and start/end/middle markers in road |
+| `useSecureURL`       | use https or http                   |
 
-## NB:
-`for now the map working only for android,iOS will be available soon `
+## NOTICE:
+> `for now the map working only for android,iOS will be available soon `
+
+> ` if you get ssl certfiction exception,use can use http by following instruction below `
+
+> ` if you want to use http in Android PIE or above : `
+  * enable useSecureURL and add ` android:usesCleartextTraffic="true" `  in your manifest like example below :
+
+    * ` <application
+        ...
+        android:usesCleartextTraffic="true"> 
+        `
 
 #### MIT LICENCE

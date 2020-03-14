@@ -38,8 +38,8 @@ class _MyAppState extends State<MyApp> {
                       ),
                     ),
                   );
-                } on GeoPointException  catch  (e) {
-                   scaffoldKey.currentState.showSnackBar(
+                } on GeoPointException catch (e) {
+                  scaffoldKey.currentState.showSnackBar(
                     SnackBar(
                       content: Text(
                         "${e.errorMessage()}",
@@ -47,7 +47,6 @@ class _MyAppState extends State<MyApp> {
                     ),
                   );
                 }
-                
               },
               icon: Icon(
                 Icons.location_on,
@@ -56,11 +55,11 @@ class _MyAppState extends State<MyApp> {
             ),
             IconButton(
               onPressed: () async {
-                try{
+                try {
                   await osmKey.currentState.drawRoad(
-                    GeoPoint(latitude: 47.35387, longitude: 8.43609),
-                    GeoPoint(latitude: 47.4371, longitude: 8.6136));
-                }on RoadException catch(e){
+                      GeoPoint(latitude: 47.35387, longitude: 8.43609),
+                      GeoPoint(latitude: 47.4371, longitude: 8.6136));
+                } on RoadException catch (e) {
                   scaffoldKey.currentState.showSnackBar(
                     SnackBar(
                       content: Text(
@@ -91,6 +90,15 @@ class _MyAppState extends State<MyApp> {
           child: OSMFlutter(
             key: osmKey,
             currentLocation: false,
+            road: Road(
+                startIcon: MarkerIcon(
+                  icon: Icon(
+                    Icons.person,
+                    size: 64,
+                    color: Colors.brown,
+                  ),
+                ),
+                roadColor: Colors.yellowAccent),
             markerIcon: MarkerIcon(
               icon: Icon(
                 Icons.person_pin_circle,
@@ -99,6 +107,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
             initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
+            useSecureURL: false,
           ),
         ),
         floatingActionButton: FloatingActionButton(

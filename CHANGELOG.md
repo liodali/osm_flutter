@@ -1,3 +1,6 @@
+## 0.3.3 [alpha-version]:
+* widget road to modify marker in road and color of line
+* enable/disable https to get road in map
 ## 0.3.2+1 [alpha-version]:
 * fix readme
 ## 0.3.2 [alpha-version]:
