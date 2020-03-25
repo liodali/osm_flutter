@@ -75,14 +75,14 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.3.2+1"
+    version: "0.3.3"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
       name: flutter_plugin_android_lifecycle
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.5"
+    version: "1.0.6"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -101,7 +101,7 @@ packages:
       name: location_permissions
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.4+1"
+    version: "2.0.5"
   matcher:
     dependency: transitive
     description:

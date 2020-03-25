@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -26,6 +27,9 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+
+import com.androidnetworking.AndroidNetworking;
+import com.google.android.material.card.MaterialCardView;
 
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
@@ -192,11 +196,18 @@ public class FlutterOsmView implements
 
 
         marker.setIcon(iconDrawable);
+        marker.setInfoWindow(new FlutterInfoWindow(creatWindowInfoView(),map,geoPoint));
 
         marker.setPosition(geoPoint);
         map.getController().setZoom(10.);
         map.getController().animateTo(geoPoint);
         map.getOverlays().add(marker);
+
+    }
+    View creatWindowInfoView(){
+        LayoutInflater inflater = (LayoutInflater) getApplication().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View view=inflater.inflate(R.layout.infowindow,null);
+        return  view;
     }
 
     private Drawable getDefaultIconDrawable(@Nullable Integer color) {
@@ -487,7 +498,7 @@ public class FlutterOsmView implements
 
     @Override
     public void onActivityCreated(Activity activity, Bundle bundle) {
-
+        AndroidNetworking.initialize(getApplication());
     }
 
     @Override

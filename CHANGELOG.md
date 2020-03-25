@@ -1,3 +1,5 @@
+## 0.3.4 [alpha-version]: customisation infowindow of marker
+*show adresse from geopoint
 ## 0.3.3 [alpha-version]:
 * widget road to modify marker in road and color of line
 * enable/disable https to get road in map
