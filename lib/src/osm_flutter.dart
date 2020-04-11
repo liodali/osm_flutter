@@ -7,27 +7,35 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin/src/geo_point_exception.dart';
+import 'package:flutter_osm_plugin/src/geo_static.dart';
 import 'package:flutter_osm_plugin/src/job_alert_dialog.dart';
 import 'package:flutter_osm_plugin/src/marker.dart';
 import 'package:flutter_osm_plugin/src/road.dart';
 import 'package:flutter_osm_plugin/src/road_exception.dart';
 import 'package:location_permissions/location_permissions.dart';
 
+typedef OnGeoPointClicked = void Function(GeoPoint);
+
 class OSMFlutter extends StatefulWidget {
   final bool currentLocation;
   final bool trackMyPosition;
   final bool showZoomController;
   final GeoPoint initPosition;
+  final StaticPositionGeoPoint staticPoints;
+  final OnGeoPointClicked onGeoPointClicked;
   final MarkerIcon markerIcon;
   final Road road;
   final bool useSecureURL;
+
   OSMFlutter({
     Key key,
     this.currentLocation = true,
     this.trackMyPosition = false,
     this.showZoomController = false,
     this.initPosition,
+    this.staticPoints,
     this.markerIcon,
+    this.onGeoPointClicked,
     this.road,
     this.useSecureURL = true,
   }) : super(key: key);
@@ -54,9 +62,10 @@ class OSMFlutter extends StatefulWidget {
 class OSMFlutterState extends State<OSMFlutter> {
   //permission status
   PermissionStatus _permission;
+
   //_OsmCreatedCallback _osmCreatedCallback;
   _OsmController _osmController;
-  GlobalKey _key, _startIconKey, _endIconKey, _midddleIconKey;
+  GlobalKey _key, _startIconKey, _endIconKey, _midddleIconKey, _staticMarker;
 
   @override
   void initState() {
@@ -65,6 +74,7 @@ class OSMFlutterState extends State<OSMFlutter> {
     _startIconKey = GlobalKey();
     _endIconKey = GlobalKey();
     _midddleIconKey = GlobalKey();
+    _staticMarker = GlobalKey();
     Future.delayed(Duration(milliseconds: 150), () async {
       //check location permission
       _permission = await LocationPermissions().checkPermissionStatus();
@@ -78,13 +88,33 @@ class OSMFlutterState extends State<OSMFlutter> {
         if (widget.currentLocation) await _checkServiceLocation();
       }
 
-      await this._osmController.setSecureURL(widget.useSecureURL);
-
+      this._osmController.setSecureURL(widget.useSecureURL);
+      if (widget.onGeoPointClicked != null) {
+        this._osmController.startListen(widget.onGeoPointClicked, (err) {
+          print(err);
+        });
+      }
+      if (widget.trackMyPosition) {
+        await enableTracking();
+        await currentLocation();
+      }
       if (widget.markerIcon != null) {
         await changeIconMarker(_key);
       }
       if (widget.initPosition != null) {
         await changeLocation(widget.initPosition);
+      }
+
+      if (widget.staticPoints != null) {
+        if (widget.staticPoints.markerIcon != null) {
+          await this._osmController.customMarkerStaticPosition(_staticMarker);
+        }
+        if (widget.staticPoints.geoPoints != null &&
+            widget.staticPoints.geoPoints.isNotEmpty) {
+          await this
+              ._osmController
+              .staticPosition(widget.staticPoints.geoPoints);
+        }
       }
       if (widget.road != null) {
         await showDialog(
@@ -111,10 +141,15 @@ class OSMFlutterState extends State<OSMFlutter> {
     });
   }
 
+  @override
+  void dispose() {
+    this._osmController.closeListen();
+    super.dispose();
+  }
+
   ///initialise or change of position
   Future<void> changeLocation(GeoPoint p) async {
-    assert(p != null);
-    this._osmController.addPosition(p);
+    if (p != null) this._osmController.addPosition(p);
   }
 
   Future changeIconMarker(GlobalKey key) async {
@@ -124,8 +159,8 @@ class OSMFlutterState extends State<OSMFlutter> {
   ///zoom in/out
   /// positive value:zoomIN
   /// negative value:zoomOut
-  void zoom(double zoom) {
-    this._osmController.zoom(zoom);
+  void zoom(double zoom) async {
+    await this._osmController.zoom(zoom);
   }
 
   ///activate current location position
@@ -224,6 +259,12 @@ class OSMFlutterState extends State<OSMFlutter> {
             key: _key,
             child: widget.markerIcon,
           ),
+          if (widget.staticPoints.markerIcon != null) ...[
+            RepaintBoundary(
+              key: _staticMarker,
+              child: widget.staticPoints.markerIcon,
+            ),
+          ],
           if (widget.road?.endIcon != null) ...[
             RepaintBoundary(
               key: _endIconKey,
@@ -254,23 +295,43 @@ class OSMFlutterState extends State<OSMFlutter> {
 
 class _OsmController {
   _OsmController._(int id)
-      : _channel = new MethodChannel('plugins.dali.hamza/osmview_$id');
+      : _channel = new MethodChannel('plugins.dali.hamza/osmview_$id'),
+        _eventChannel =
+            new EventChannel("plugins.dali.hamza/osmview_stream_$id");
+
   //_eventChannel=null;
 
   final MethodChannel _channel;
+  final EventChannel _eventChannel;
+  StreamSubscription eventOSM;
+
   //final EventChannel _eventChannel;
+  void startListen(
+      OnGeoPointClicked geoPointClicked, Function(dynamic d) onError) {
+    eventOSM = _eventChannel.receiveBroadcastStream().listen((data) {
+      if (geoPointClicked != null) {
+        GeoPoint p = GeoPoint(latitude: data["lat"], longitude: data["lon"]);
+        geoPointClicked(p);
+      }
+    }, onError: (err) {
+      onError(err);
+    });
+  }
+
+  void closeListen() {
+    eventOSM.cancel();
+  }
 
   Future<void> setSecureURL(bool secure) async {
     return await _channel.invokeMethod('use#secure', secure);
   }
 
   Future<void> zoom(double zoom) async {
-    assert(zoom != null);
-    return await _channel.invokeMethod('Zoom', zoom);
+    if (zoom != null) await _channel.invokeMethod('Zoom', zoom);
   }
 
   Future<void> currentLocation() async {
-    return await _channel.invokeMethod('currentLocation', null);
+    await _channel.invokeMethod('currentLocation', null);
   }
 
   Future<GeoPoint> myLocation() async {
@@ -306,17 +367,14 @@ class _OsmController {
       GlobalKey startKey, GlobalKey endKey, GlobalKey middleKey) async {
     Map<String, Uint8List> bitmaps = {};
     if (startKey.currentContext != null) {
-      print("start");
       Uint8List marker = await _capturePng(startKey);
       bitmaps.putIfAbsent("START", () => marker);
     }
     if (endKey.currentContext != null) {
-      print("end");
       Uint8List marker = await _capturePng(endKey);
       bitmaps.putIfAbsent("END", () => marker);
     }
     if (middleKey.currentContext != null) {
-      print("end");
       Uint8List marker = await _capturePng(middleKey);
       bitmaps.putIfAbsent("MIDDLE", () => marker);
     }
@@ -352,6 +410,25 @@ class _OsmController {
       ]);
     } on PlatformException catch (e) {
       throw RoadException(msg: e.message);
+    }
+  }
+
+  /// static custom marker
+  Future<void> customMarkerStaticPosition(GlobalKey globalKey) async {
+    Uint8List icon = await _capturePng(globalKey);
+    await _channel.invokeMethod("staticPosition#IconMarker", icon);
+  }
+
+  ///static position
+  Future<void> staticPosition(List<GeoPoint> pList) async {
+    try {
+      List<Map<String, double>> listGeos = [];
+      for (GeoPoint p in pList) {
+        listGeos.add({"lon": p.longitude, "lat": p.latitude});
+      }
+      return await _channel.invokeMethod("staticPosition", listGeos);
+    } on PlatformException catch (e) {
+      print(e.message);
     }
   }
 }

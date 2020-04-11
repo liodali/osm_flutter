@@ -7,7 +7,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.PorterDuff;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -17,6 +19,7 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -36,10 +39,14 @@ import org.osmdroid.bonuspack.routing.Road;
 import org.osmdroid.bonuspack.routing.RoadManager;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapEventsReceiver;
+import org.osmdroid.events.MapListener;
+import org.osmdroid.events.ScrollEvent;
+import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.FolderOverlay;
 import org.osmdroid.views.overlay.MapEventsOverlay;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Overlay;
@@ -60,6 +67,7 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.platform.PlatformView;
 
+import static hamza.dali.flutter_osm_plugin.Constants.PositionMarker.START;
 import static hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.CREATED;
 import static hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.DESTROYED;
 import static hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.PAUSED;
@@ -67,13 +75,8 @@ import static hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.RESUMED;
 import static hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.STARTED;
 import static hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.STOPPED;
 import static io.flutter.plugin.common.MethodChannel.Result;
+import static org.apache.commons.lang3.ArrayUtils.toArray;
 
-
-enum PositionMarker {
-    START,
-    MIDDLE,
-    END;
-}
 
 public class FlutterOsmView implements
         Application.ActivityLifecycleCallbacks,
@@ -82,10 +85,14 @@ public class FlutterOsmView implements
         PlatformView,
         EventChannel.StreamHandler,
         MethodChannel.MethodCallHandler {
+
     private MapView map;
     private MyLocationNewOverlay locationNewOverlay;
     private Context context;
     private final MethodChannel methodChannel;
+    private final EventChannel eventChannel;
+    private EventChannel.EventSink eventSink;
+
     private final int activityHashCode; // Do not use directly, use getActivityHashCode() instead to get correct hashCode for both v1 and v2 embedding.
     private final Lifecycle lifecycle;
     private final Application mApplication;
@@ -93,7 +100,13 @@ public class FlutterOsmView implements
     private final AtomicInteger activityState;
     private PluginRegistry.Registrar registrar;
     private Bitmap customMarkerIcon;
+    private Bitmap staticMarkerIcon;
     private HashMap<String, Bitmap> customRoadMarkerIcon = new HashMap<>();
+    private List<GeoPoint> staticPoints;
+    private FolderOverlay folderStaticPosition;
+    private FlutterRoad flutterRoad;
+
+
     private MapEventsOverlay mapEventsOverlay;
     private OSRMRoadManager roadManager;
     private Integer roadColor = null;
@@ -116,20 +129,61 @@ public class FlutterOsmView implements
             this.registrar = registrar;
         this.mActivity = activity;
 
-
+        staticPoints = new ArrayList<>();
+        folderStaticPosition=new FolderOverlay();
+        folderStaticPosition.setName(Constants.nameFolderStatic);
         //LinearLayout view = (LinearLayout) getViewFromXML();
         Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context));
         map = new MapView(context);
         map.setLayoutParams(new MapView.LayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)));
         map.setTilesScaledToDpi(true);
         map.setMultiTouchControls(true);
+
+        map.addMapListener(new MapListener() {
+            @Override
+            public boolean onScroll(ScrollEvent event) {
+                /*Rect currentMapBoundsRect = new Rect();
+                map.getDrawingRect(currentMapBoundsRect);
+                for (Overlay overlay : map.getOverlays()) {
+                    if (overlay instanceof Marker) {
+                        Point currentDevicePosition = new Point();
+                        map.getProjection().toPixels(((Marker) overlay).getPosition(), currentDevicePosition);
+                        if (!currentMapBoundsRect.contains(currentDevicePosition.x, currentDevicePosition.y)) {
+                            map.getOverlays().remove(overlay);
+                        }
+                    }
+                }*/
+
+                return false;
+            }
+
+            @Override
+            public boolean onZoom(ZoomEvent event) {
+                if(event.getZoomLevel()<10.){
+                    Rect currentMapBoundsRect = new Rect();
+                    map.getDrawingRect(currentMapBoundsRect);
+
+                   map.getOverlays().remove(folderStaticPosition);
+                }else{
+
+                    if(!map.getOverlays().contains(folderStaticPosition)){
+                        map.getOverlays().add(folderStaticPosition);
+                    }
+                }
+                return false;
+            }
+        });
+
         //map.setZoomRounding(true);
         map.setTileSource(TileSourceFactory.MAPNIK);
         map.getZoomController().setVisibility(CustomZoomButtonsController.Visibility.NEVER);
 
 
         methodChannel = new MethodChannel(binaryMessenger, "plugins.dali.hamza/osmview_" + id);
+        eventChannel = new EventChannel(binaryMessenger, "plugins.dali.hamza/osmview_stream_" + id);
         methodChannel.setMethodCallHandler(this);
+        eventChannel.setStreamHandler(this);
+
         mApplication = application;
         this.lifecycle = lifecycle;
         this.activityHashCode = registrarActivityHashCode;
@@ -154,10 +208,14 @@ public class FlutterOsmView implements
     }
 
     private void setZoom(MethodCall methodCall, Result result) {
-        double zoom = (double) methodCall.arguments;
-        map.getController().setZoom(zoom);
+        try{
+            double zoom = (Double) methodCall.arguments;
+            map.getController().setZoom(zoom);
 
-        result.success(null);
+            result.success(null);
+        }catch (Exception e){
+
+        }
     }
 
     private void initPosition(MethodCall methodCall, Result result) {
@@ -169,46 +227,26 @@ public class FlutterOsmView implements
         result.success(null);
     }
 
-    private void addMarker(GeoPoint geoPoint, double zoom, @Nullable Integer color, @Nullable PositionMarker Posmarker) {
-        Marker marker = new Marker(map);
-        Drawable iconDrawable = null;
-        if (Posmarker != null) {
-            switch (Posmarker) {
-                case START:
-                    if (customRoadMarkerIcon.containsKey(Constants.STARTPOSITIONROAD)) {
-                        iconDrawable = new BitmapDrawable(getActivity().getResources(), customRoadMarkerIcon.get(Constants.STARTPOSITIONROAD));
-                    }
-                    break;
-                case MIDDLE:
-                    if (customRoadMarkerIcon.containsKey(Constants.MIDDLEPOSITIONROAD)) {
-                        iconDrawable = new BitmapDrawable(getActivity().getResources(), customRoadMarkerIcon.get(Constants.MIDDLEPOSITIONROAD));
-                    }
-                    break;
-                case END:
-                    if (customRoadMarkerIcon.containsKey(Constants.ENDPOSITIONROAD)) {
-                        iconDrawable = new BitmapDrawable(getActivity().getResources(), customRoadMarkerIcon.get(Constants.ENDPOSITIONROAD));
-                    }
-                    break;
-            }
-        }
-        if (iconDrawable == null)
-            iconDrawable = getDefaultIconDrawable(color);
+    private void addMarker(GeoPoint geoPoint, double zoom, @Nullable Integer color, @Nullable Constants.PositionMarker posmarker) {
+
+        map.getController().setZoom(zoom);
+        map.getController().animateTo(geoPoint);
+        map.getOverlays().add(createMarker(geoPoint, color, posmarker));
+
+    }
+
+    private Marker createMarker(GeoPoint geoPoint, @Nullable Integer color, @Nullable Constants.PositionMarker posmarker) {
+        FlutterMarker marker = new FlutterMarker(getApplication(), map);
+        Drawable iconDrawable = getDefaultIconDrawable(color);
 
 
         marker.setIcon(iconDrawable);
-        marker.setInfoWindow(new FlutterInfoWindow(creatWindowInfoView(),map,geoPoint));
+        //marker.setInfoWindow(new FlutterInfoWindow(creatWindowInfoView(),map,geoPoint));
 
         marker.setPosition(geoPoint);
-        map.getController().setZoom(10.);
-        map.getController().animateTo(geoPoint);
-        map.getOverlays().add(marker);
+        return marker;
+    }
 
-    }
-    View creatWindowInfoView(){
-        LayoutInflater inflater = (LayoutInflater) getApplication().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view=inflater.inflate(R.layout.infowindow,null);
-        return  view;
-    }
 
     private Drawable getDefaultIconDrawable(@Nullable Integer color) {
         Drawable iconDrawable = null;
@@ -229,6 +267,9 @@ public class FlutterOsmView implements
     private void enableMyLocation(Result result) {
 
         map.getOverlays().clear();
+        if (!staticPoints.isEmpty()) {
+            showStaticPosition();
+        }
         this.locationNewOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(getApplication()), map);
         this.locationNewOverlay.enableMyLocation();
         this.locationNewOverlay.runOnFirstFix(new Runnable() {
@@ -264,11 +305,13 @@ public class FlutterOsmView implements
 
     }
 
+
     @Override
     public void onMethodCall(MethodCall call, MethodChannel.Result result) {
         switch (call.method) {
             case "use#secure":
-                setSecureURL(call,result);
+                setSecureURL(call, result);
+                break;
             case "Zoom":
                 setZoom(call, result);
                 break;
@@ -302,14 +345,61 @@ public class FlutterOsmView implements
             case "road#markers":
                 setMarkerRoad(call, result);
                 break;
+            case "staticPosition":
+                setStaticPosition(call, result);
+                break;
+            case "staticPosition#IconMarker":
+                setStaticPositionIcon(call, result);
+                break;
             default:
+                Log.i("info method",call.method);
                 result.notImplemented();
         }
 
     }
 
+    private void setStaticPositionIcon(MethodCall call, Result result) {
+        try {
+            staticMarkerIcon = getBitmap((byte[]) call.arguments);
+            result.success(null);
+        } catch (Exception e) {
+            result.error("400", "error to getBitmap static POsition", "");
+            staticMarkerIcon = null;
+        }
+    }
+
+    private void setStaticPosition(MethodCall call, Result result) {
+        final List<HashMap<String, Double>> points = (List<HashMap<String, Double>>) call.arguments;
+
+        for (HashMap<String, Double> hashmap : points) {
+            staticPoints.add(new GeoPoint(hashmap.get("lat"), hashmap.get("lon")));
+        }
+        showStaticPosition();
+    }
+    private void  showStaticPosition(){
+        for (GeoPoint p : staticPoints) {
+            FlutterMarker marker = new FlutterMarker(getApplication(), map);
+            marker.setDefaultFlutterInfoWindow();
+            marker.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
+                @Override
+                public boolean onMarkerClick(Marker marker, MapView mapView) {
+                    marker.showInfoWindow();
+                    HashMap<String, Double> hashMap = new HashMap<>();
+                    hashMap.put("lon", marker.getPosition().getLongitude());
+                    hashMap.put("lat", marker.getPosition().getLatitude());
+                    eventSink.success(hashMap);
+                    return false;
+                }
+            });
+            marker.setPosition(p);
+            if (staticMarkerIcon != null)
+                marker.setIconMaker(staticMarkerIcon, null);
+            folderStaticPosition.getItems().add(marker);
+        }
+        map.getOverlays().add(folderStaticPosition);
+    }
     private void setSecureURL(MethodCall call, Result result) {
-        useScureURL=(boolean) call.arguments;
+        useScureURL = (boolean) call.arguments;
         result.success(null);
     }
 
@@ -318,11 +408,14 @@ public class FlutterOsmView implements
 
         if (roadManager == null) {
             roadManager = new OSRMRoadManager(getApplication());
-            if(useScureURL)
-            roadManager.setService("https://" + url);
+            if (useScureURL)
+                roadManager.setService("https://" + url);
         }
         for (int i = 0; i < map.getOverlays().size(); i++) {
-            if (map.getOverlays().get(i).getClass() == Polyline.class) {
+            if (map.getOverlays().get(i) instanceof Polyline) {
+                Polyline p = (Polyline) map.getOverlays().get(i);
+                map.getOverlays().remove(p.getPoints().get(p.getPoints().size()));
+                map.getOverlays().remove(p.getPoints().get(0));
                 map.getOverlays().remove(i);
             }
         }
@@ -345,19 +438,16 @@ public class FlutterOsmView implements
                 super.onPostExecute(road);
                 if (getActivity() != null) {
                     if (road.mRouteHigh.size() > 2) {
-                        for (Overlay overlay : map.getOverlays()) {
-                            if (overlay instanceof Marker || overlay instanceof Polyline) {
-                                map.getOverlays().remove(overlay);
-                            }
-                        }
+
                         Polyline roadOverlay = RoadManager.buildRoadOverlay(road);
                         roadOverlay.getOutlinePaint().setColor(Color.GREEN);
                         if (roadColor != null) {
                             roadOverlay.getOutlinePaint().setColor(roadColor);
                         }
-                        addMarker(waypoints.get(0), 14, Color.RED, PositionMarker.START);
-                        addMarker(waypoints.get(waypoints.size() - 1), 14, Color.RED, PositionMarker.END);
-                        map.getOverlays().add(roadOverlay);
+                        flutterRoad = new FlutterRoad(getApplication(), map);
+                        flutterRoad.setRoad(roadOverlay);
+                        flutterRoad.setCustomRoadMarkerIcon(customRoadMarkerIcon);
+                        flutterRoad.drawRoad();
                         map.invalidate();
                         result.success(null);
                     } else {
@@ -400,9 +490,8 @@ public class FlutterOsmView implements
 
     private void changeIcon(MethodCall call, Result result) {
         try {
-            byte[] bytes = (byte[]) call.arguments;
 
-            customMarkerIcon = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            customMarkerIcon = getBitmap((byte[]) call.arguments);
             //customMarkerIcon.recycle();
             result.success(null);
         } catch (Exception e) {
@@ -411,6 +500,10 @@ public class FlutterOsmView implements
             result.error("500", "Cannot make markerIcon custom", "");
         }
 
+    }
+
+    Bitmap getBitmap(byte[] bytes) {
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
     }
 
     private void setRoadColor(MethodCall call, Result result) {
@@ -478,6 +571,7 @@ public class FlutterOsmView implements
                 locationNewOverlay.enableFollowLocation();
             }
         }
+        result.success(null);
     }
 
     private Activity getActivity() {
@@ -603,12 +697,15 @@ public class FlutterOsmView implements
     }
 
     @Override
-    public void onListen(Object arguments, EventChannel.EventSink events) {
+    public void onListen(Object arguments, final EventChannel.EventSink events) {
+        Log.e("started listening","started");
+        this.eventSink=events;
+
 
     }
 
     @Override
     public void onCancel(Object arguments) {
-
+            eventSink=null;
     }
 }

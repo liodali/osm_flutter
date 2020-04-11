@@ -20,6 +20,7 @@ public class FlutterInfoWindow extends InfoWindow {
 
     private GeoPoint geoPoint;
     private ANRequest request;
+
     public FlutterInfoWindow(int layoutResId, MapView mapView) {
         super(layoutResId, mapView);
     }
@@ -38,45 +39,48 @@ public class FlutterInfoWindow extends InfoWindow {
                 close();
             }
         });
-        final ProgressBar progressBar=mView.findViewById(R.id.progress_circular_osm);
-        final TextView textView=mView.findViewById(R.id.adresse_infowindow);
-         request=AndroidNetworking.get("https://nominatim.openstreetmap.org/reverse")
+        final ProgressBar progressBar = mView.findViewById(R.id.progress_circular_osm);
+        final TextView textView = mView.findViewById(R.id.adresse_infowindow);
+        request = AndroidNetworking.get("https://nominatim.openstreetmap.org/reverse")
                 .addQueryParameter("format", "jsonv2")
                 .addQueryParameter("lat", String.valueOf(geoPoint.getLatitude()))
                 .addQueryParameter("lon", String.valueOf(geoPoint.getLongitude()))
                 .build();
-              request  .getAsJSONObject(new JSONObjectRequestListener() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.e("err nominatim",response.toString());
-                        progressBar.setVisibility(View.GONE);
-                        textView.setVisibility(View.VISIBLE);
-                        if(response.has("error")){
-                            textView.setText("unvailable addresse");
-                        }else{
-                            try {
-                                textView.setText(response.getString("display_name"));
-                            } catch (JSONException e) {
-                                Log.e("err parse",e.getMessage());
-                                textView.setText("unvailable addresse");
-                            }
-                        }
+        request.getAsJSONObject(new JSONObjectRequestListener() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.e("err nominatim", response.toString());
+                progressBar.setVisibility(View.GONE);
+                textView.setVisibility(View.VISIBLE);
+                if (response.has("error")) {
+                    textView.setText(Constants.unvailableAdress);
+                } else {
+                    try {
+                        if ((response.getString("lat").equals("0") && response.getString("lon").equals("0"))) {
+                            textView.setText(Constants.unvailableAdress);
+                        } else
+                            textView.setText(response.getString("display_name"));
+                    } catch (JSONException e) {
+                        Log.e("err parse", e.getMessage());
+                        textView.setText(Constants.unvailableAdress);
                     }
+                }
+            }
 
-                    @Override
-                    public void onError(ANError anError) {
-                        progressBar.setVisibility(View.GONE);
-                        textView.setVisibility(View.VISIBLE);
-                        textView.setText("unvailable addresse");
-                    }
-                });
+            @Override
+            public void onError(ANError anError) {
+                progressBar.setVisibility(View.GONE);
+                textView.setVisibility(View.VISIBLE);
+                textView.setText("unvailable addresse");
+            }
+        });
     }
 
     @Override
     public void onClose() {
-            mView.setOnClickListener(null);
-            if(request!=null && request.isRunning()){
-                request.cancel(true);
-            }
+        mView.setOnClickListener(null);
+        if (request != null && request.isRunning()) {
+            request.cancel(true);
+        }
     }
 }

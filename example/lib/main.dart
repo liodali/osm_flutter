@@ -11,6 +11,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   GlobalKey<OSMFlutterState> osmKey;
   GlobalKey<ScaffoldState> scaffoldKey;
+
   @override
   void initState() {
     super.initState();
@@ -90,6 +91,32 @@ class _MyAppState extends State<MyApp> {
           child: OSMFlutter(
             key: osmKey,
             currentLocation: false,
+            onGeoPointClicked: (geoPoint) {
+              scaffoldKey.currentState.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    "lat:${geoPoint.latitude},lon${geoPoint.longitude}",
+                  ),
+                  action: SnackBarAction(
+                    onPressed: () =>
+                        scaffoldKey.currentState.hideCurrentSnackBar(),
+                    label: "hide",
+                  ),
+                ),
+              );
+            },
+            staticPoints: StaticPositionGeoPoint(
+                MarkerIcon(
+                  icon: Icon(
+                    Icons.train,
+                    color: Colors.green,
+                    size: 48,
+                  ),
+                ),
+                [
+                  GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+                  GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
+                ]),
             road: Road(
                 startIcon: MarkerIcon(
                   icon: Icon(
@@ -106,7 +133,8 @@ class _MyAppState extends State<MyApp> {
                 size: 56,
               ),
             ),
-            initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
+            trackMyPosition: false,
+            initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
             useSecureURL: false,
           ),
         ),

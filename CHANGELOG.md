@@ -1,3 +1,8 @@
+## 0.3.5 [beta-version]: new feature
+* add static geoPoint
+* listener click for static geoPoint
+* fix error
+* improve more code
 ## 0.3.4 [alpha-version]: customisation infowindow of marker
 *show adresse from geopoint
 ## 0.3.3 [alpha-version]:
