@@ -223,22 +223,22 @@ public class FlutterOsmView implements
         HashMap<String, Double> args = (HashMap<String, Double>) methodCall.arguments;
         map.getOverlays().clear();
         GeoPoint geoPoint = new GeoPoint(args.get("lat"), args.get("lon"));
-        addMarker(geoPoint, defaultZoom, null, null);
+        addMarker(geoPoint, defaultZoom, null);
         result.success(null);
     }
 
-    private void addMarker(GeoPoint geoPoint, double zoom, @Nullable Integer color, @Nullable Constants.PositionMarker posmarker) {
+    private void addMarker(GeoPoint geoPoint, double zoom, @Nullable Integer color) {
 
         map.getController().setZoom(zoom);
         map.getController().animateTo(geoPoint);
-        map.getOverlays().add(createMarker(geoPoint, color, posmarker));
+        map.getOverlays().add(createMarker(geoPoint, color));
 
     }
 
-    private Marker createMarker(GeoPoint geoPoint, @Nullable Integer color, @Nullable Constants.PositionMarker posmarker) {
-        FlutterMarker marker = new FlutterMarker(getApplication(), map);
+    private Marker createMarker(GeoPoint geoPoint, @Nullable Integer color) {
+        FlutterMarker marker = new FlutterMarker(getApplication(), map,geoPoint);
         Drawable iconDrawable = getDefaultIconDrawable(color);
-
+        //marker.setPosition(geoPoint);
 
         marker.setIcon(iconDrawable);
         //marker.setInfoWindow(new FlutterInfoWindow(creatWindowInfoView(),map,geoPoint));
@@ -379,16 +379,16 @@ public class FlutterOsmView implements
     private void  showStaticPosition(){
         for (GeoPoint p : staticPoints) {
             FlutterMarker marker = new FlutterMarker(getApplication(), map);
+            marker.setPosition(p);
             marker.setDefaultFlutterInfoWindow();
-            marker.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
+            marker.setListener(new Marker.OnMarkerClickListener() {
                 @Override
                 public boolean onMarkerClick(Marker marker, MapView mapView) {
-                    marker.showInfoWindow();
                     HashMap<String, Double> hashMap = new HashMap<>();
                     hashMap.put("lon", marker.getPosition().getLongitude());
                     hashMap.put("lat", marker.getPosition().getLatitude());
                     eventSink.success(hashMap);
-                    return false;
+                    return true;
                 }
             });
             marker.setPosition(p);
@@ -477,7 +477,7 @@ public class FlutterOsmView implements
                     Hashmap.put("lat", p.getLatitude());
                     Hashmap.put("lon", p.getLongitude());
                     map.getOverlays().remove(0);
-                    addMarker(p, 15., null, null);
+                    addMarker(p, 15., null);
                     mapEventsOverlay = null;
                     _result.success(Hashmap);
                     return false;

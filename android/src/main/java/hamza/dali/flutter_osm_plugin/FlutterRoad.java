@@ -30,15 +30,16 @@ public class FlutterRoad extends Overlay {
     }
 
     private void drawEndPoint() {
-        endPoint = new FlutterRoadMarker(application, mapView);
+        endPoint = new FlutterRoadMarker(application, mapView,this.road.getPoints().get(this.road.getPoints().size()));
         endPoint.setRoadMarkers(customRoadMarkerIcon);
         endPoint.setIconPosition(Constants.PositionMarker.END);
         this.mapView.getOverlays().add(endPoint);
     }
 
     private void drawStartPoint() {
-        startPoint = new FlutterRoadMarker(application, mapView);
+        startPoint = new FlutterRoadMarker(application, mapView,this.road.getPoints().get(0));
         startPoint.setRoadMarkers(customRoadMarkerIcon);
+
         startPoint.setIconPosition(Constants.PositionMarker.START);
         this.mapView.getOverlays().add(startPoint);
     }

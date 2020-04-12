@@ -7,6 +7,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -18,25 +19,29 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow;
 
-public class FlutterMarker extends Marker {
+public class FlutterMarker extends Marker implements Marker.OnMarkerClickListener {
     MapView map;
     View infoWindow;
+    OnMarkerClickListener listener;
     Application application;
 
     public FlutterMarker(Application application,MapView mapView) {
         super(mapView);
         this.map=mapView;
         this.application=application;
+        setOnMarkerClickListener(this);
+
         //setInfoWindow(new FlutterInfoWindow(creatWindowInfoView(),mapView,this.mPosition));
     }
-    public FlutterMarker(MapView mapView, Drawable bitmap, View viewInfoWindow, GeoPoint p) {
+    public FlutterMarker(Application application,MapView mapView,GeoPoint p) {
         super(mapView);
         this.map=mapView;
-        this.infoWindow=viewInfoWindow;
-        setIcon(bitmap);
+        this.application=application;
         this.mPosition=p;
-        setInfoWindow(new FlutterInfoWindow(viewInfoWindow,mapView,this.mPosition));
+        setOnMarkerClickListener(this);
+        setInfoWindow(new FlutterInfoWindow(creatWindowInfoView(),mapView,this.mPosition));
     }
+
     public FlutterMarker(MapView mapView,View viewInfoWindow) {
         super(mapView);
         this.map=mapView;
@@ -86,4 +91,19 @@ public class FlutterMarker extends Marker {
         return iconDrawable;
     }
 
+    public void setListener(OnMarkerClickListener listener) {
+        this.listener = listener;
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker, MapView mapView) {
+        Log.e("clicked","CLicked");
+        showInfoWindow();
+        if(listener!=null){
+            return  this.listener.onMarkerClick(this,map);
+        }
+        return true;
+
+        //return false;
+    }
 }
