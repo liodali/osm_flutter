@@ -1,3 +1,5 @@
+## 0.3.5+1 [beta-version]:
+* fix problem show address when geoPoint clicked
 ## 0.3.5 [beta-version]: new feature
 * add static geoPoint
 * listener click for static geoPoint

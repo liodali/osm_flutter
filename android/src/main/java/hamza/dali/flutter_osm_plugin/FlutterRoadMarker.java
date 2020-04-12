@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 
 import java.util.HashMap;
@@ -12,8 +13,9 @@ import java.util.HashMap;
 public class FlutterRoadMarker extends  FlutterMarker {
     private HashMap<String, Bitmap> customRoadMarkerIcon;
 
-    public FlutterRoadMarker(Application application, MapView mapView) {
-        super(application, mapView);
+
+    public FlutterRoadMarker(Application application, MapView mapView, GeoPoint p) {
+        super(application, mapView,p);
         customRoadMarkerIcon = new HashMap<>();
     }
     void setRoadMarkers(HashMap<String, Bitmap> customRoadMarkerIcon){

@@ -21,9 +21,9 @@ public class FlutterInfoWindow extends InfoWindow {
     private GeoPoint geoPoint;
     private ANRequest request;
 
-    public FlutterInfoWindow(int layoutResId, MapView mapView) {
+    /*public FlutterInfoWindow(int layoutResId, MapView mapView) {
         super(layoutResId, mapView);
-    }
+    }*/
 
     public FlutterInfoWindow(View view, MapView mapView, GeoPoint p) {
         super(view, mapView);
@@ -49,7 +49,6 @@ public class FlutterInfoWindow extends InfoWindow {
         request.getAsJSONObject(new JSONObjectRequestListener() {
             @Override
             public void onResponse(JSONObject response) {
-                Log.e("err nominatim", response.toString());
                 progressBar.setVisibility(View.GONE);
                 textView.setVisibility(View.VISIBLE);
                 if (response.has("error")) {
