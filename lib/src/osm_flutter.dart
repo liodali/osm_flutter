@@ -21,7 +21,7 @@ class OSMFlutter extends StatefulWidget {
   final bool trackMyPosition;
   final bool showZoomController;
   final GeoPoint initPosition;
-  final StaticPositionGeoPoint staticPoints;
+  final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked onGeoPointClicked;
   final MarkerIcon markerIcon;
   final Road road;
@@ -33,7 +33,7 @@ class OSMFlutter extends StatefulWidget {
     this.trackMyPosition = false,
     this.showZoomController = false,
     this.initPosition,
-    this.staticPoints,
+    this.staticPoints = const [],
     this.markerIcon,
     this.onGeoPointClicked,
     this.road,
@@ -65,16 +65,35 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   //_OsmCreatedCallback _osmCreatedCallback;
   _OsmController _osmController;
-  GlobalKey _key, _startIconKey, _endIconKey, _midddleIconKey, _staticMarker;
+  GlobalKey _key, _startIconKey, _endIconKey, _midddleIconKey;
+  Map<String, GlobalKey> _staticMarkersKeys;
 
   @override
   void initState() {
     super.initState();
+
+    if (widget.staticPoints.isNotEmpty && widget.staticPoints.length > 1) {
+      List<String> ids = [];
+      for (int i = 0; i < widget.staticPoints.length; i++) {
+        ids.add(widget.staticPoints[i].id);
+      }
+
+      ids.asMap().forEach((i, id) {
+        var copy = ids.skipWhile((_id) => id == _id).toList();
+        if (copy.isNotEmpty && copy.firstWhere((x) => id == x).isNotEmpty) {
+          assert(false, "you have duplicated ids");
+        }
+      });
+      ids = null;
+    }
     _key = GlobalKey();
     _startIconKey = GlobalKey();
     _endIconKey = GlobalKey();
     _midddleIconKey = GlobalKey();
-    _staticMarker = GlobalKey();
+    _staticMarkersKeys = {};
+    widget.staticPoints.forEach((gs) {
+      _staticMarkersKeys.putIfAbsent(gs.id, () => GlobalKey());
+    });
     Future.delayed(Duration(milliseconds: 150), () async {
       //check location permission
       _permission = await LocationPermissions().checkPermissionStatus();
@@ -106,14 +125,18 @@ class OSMFlutterState extends State<OSMFlutter> {
       }
 
       if (widget.staticPoints != null) {
-        if (widget.staticPoints.markerIcon != null) {
-          await this._osmController.customMarkerStaticPosition(_staticMarker);
-        }
-        if (widget.staticPoints.geoPoints != null &&
-            widget.staticPoints.geoPoints.isNotEmpty) {
-          await this
-              ._osmController
-              .staticPosition(widget.staticPoints.geoPoints);
+        if (widget.staticPoints.isNotEmpty) {
+          widget.staticPoints.asMap().forEach((index, points) async {
+            if (points.markerIcon != null) {
+              await this._osmController.customMarkerStaticPosition(
+                  _staticMarkersKeys[points.id], points.id);
+            }
+            if (points.geoPoints != null && points.geoPoints.isNotEmpty) {
+              await this
+                  ._osmController
+                  .staticPosition(points.geoPoints, points.id);
+            }
+          });
         }
       }
       if (widget.road != null) {
@@ -152,8 +175,16 @@ class OSMFlutterState extends State<OSMFlutter> {
     if (p != null) this._osmController.addPosition(p);
   }
 
+  //change Icon Marker
   Future changeIconMarker(GlobalKey key) async {
     await this._osmController.customMarker(key);
+  }
+
+  //change static position
+  Future<void> setStaticPosition(List<GeoPoint> geos, String id) async {
+    assert(widget.staticPoints != null && widget.staticPoints.firstWhere((p)=>p.id==id)!=null,
+        "static points null,you should initialize them before you set their positions!");
+    await this._osmController.staticPosition(geos, id);
   }
 
   ///zoom in/out
@@ -255,15 +286,20 @@ class OSMFlutterState extends State<OSMFlutter> {
       top: -100,
       child: Stack(
         children: <Widget>[
-          RepaintBoundary(
-            key: _key,
-            child: widget.markerIcon,
-          ),
-          if (widget.staticPoints.markerIcon != null) ...[
+          if (widget.markerIcon != null) ...[
             RepaintBoundary(
-              key: _staticMarker,
-              child: widget.staticPoints.markerIcon,
+              key: _key,
+              child: widget.markerIcon,
             ),
+          ],
+          if (widget.staticPoints != null &&
+              widget.staticPoints.isNotEmpty) ...[
+            for (int i = 0; i < widget.staticPoints.length; i++) ...[
+              RepaintBoundary(
+                key: _staticMarkersKeys[widget.staticPoints[i].id],
+                child: widget.staticPoints[i].markerIcon,
+              ),
+            ]
           ],
           if (widget.road?.endIcon != null) ...[
             RepaintBoundary(
@@ -414,19 +450,22 @@ class _OsmController {
   }
 
   /// static custom marker
-  Future<void> customMarkerStaticPosition(GlobalKey globalKey) async {
+  Future<void> customMarkerStaticPosition(
+      GlobalKey globalKey, String id) async {
     Uint8List icon = await _capturePng(globalKey);
-    await _channel.invokeMethod("staticPosition#IconMarker", icon);
+    await _channel
+        .invokeMethod("staticPosition#IconMarker", {"id": id, "bitmap": icon});
   }
 
   ///static position
-  Future<void> staticPosition(List<GeoPoint> pList) async {
+  Future<void> staticPosition(List<GeoPoint> pList, String id) async {
     try {
       List<Map<String, double>> listGeos = [];
       for (GeoPoint p in pList) {
         listGeos.add({"lon": p.longitude, "lat": p.latitude});
       }
-      return await _channel.invokeMethod("staticPosition", listGeos);
+      return await _channel
+          .invokeMethod("staticPosition", {"id": id, "point": listGeos});
     } on PlatformException catch (e) {
       print(e.message);
     }
