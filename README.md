@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.3.5%2B1-orange)
+![pub](https://img.shields.io/badge/pub-v0.3.6-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -18,7 +18,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.3.5+1
+      flutter_osm_plugin: ^0.3.6
 ## Simple Usage
 #### Creating a basic `OSMFlutter`:
   
@@ -81,6 +81,13 @@ Add the following to your `pubspec.yaml` file:
 ### draw road
 ` osmKey.currentState.drawRoad( GeoPoint(latitude: 47.35387, longitude: 8.43609),GeoPoint(latitude: 47.4371, longitude: 8.6136)); `
 
+### change static geopoint position
+> you can use it if you don't have at first static position and you need to add  staticPoints with empty list of geoPoints
+> you can use it to change their position over time
+` osmKey.currentState.setStaticPosition(List<GeoPoint> geoPoints,String id ) `
+
+
+
 ####  `OSMFlutter`
 | Properties           | Description                         |
 | -------------------- | ----------------------------------- |
@@ -91,7 +98,7 @@ Add the following to your `pubspec.yaml` file:
 | `markerIcon`         | set icon Marker                     |
 | `road`               | set color and start/end/middle markers in road |
 | `useSecureURL`       | enabled secure urls                  |
-| `staticPoints`       | geopoint you want to show always     |
+| `staticPoints`       | List of Markers you want to show always ,should every marker have unique id |
 | `onGeoPointClicked`  | listener on static geoPoint          |
 
 ## NOTICE:

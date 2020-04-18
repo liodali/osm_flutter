@@ -1,3 +1,7 @@
+## 0.3.6 [beta-version]:
+* staticPoints become list of Markers with unique id
+* add callback setStaticPosition to set position if you don't have it or to change it over time
+* to use setStaticPosition correctly you need to initialize staticPoints with markers that have empty geoPoints and unique ids
 ## 0.3.5+1 [beta-version]:
 * fix problem show address when geoPoint clicked
 ## 0.3.5 [beta-version]: new feature

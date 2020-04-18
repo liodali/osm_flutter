@@ -11,7 +11,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   GlobalKey<OSMFlutterState> osmKey;
   GlobalKey<ScaffoldState> scaffoldKey;
-  
+
   @override
   void initState() {
     super.initState();
@@ -27,7 +27,6 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('OSM Plugin app'),
           actions: <Widget>[
-            
             IconButton(
               onPressed: () async {
                 try {
@@ -59,6 +58,20 @@ class _MyAppState extends State<MyApp> {
               },
               icon: Icon(Icons.search),
             ),
+            IconButton(
+              icon: Icon(Icons.refresh),
+              onPressed: () async {
+                await osmKey.currentState.setStaticPosition([
+                  GeoPoint(latitude: 47.434541, longitude: 8.467369),
+                  GeoPoint(latitude: 47.436207, longitude: 8.464072),
+                  GeoPoint(latitude: 47.437688, longitude: 8.460832),
+                ], "static");
+                scaffoldKey.currentState.showSnackBar(SnackBar(
+                  content: Text("static point changed"),
+                  duration: Duration(seconds: 10),
+                ));
+              },
+            )
           ],
         ),
         body: Container(
@@ -79,7 +92,9 @@ class _MyAppState extends State<MyApp> {
                 ),
               );
             },
-            staticPoints: StaticPositionGeoPoint(
+            staticPoints: [
+              StaticPositionGeoPoint(
+                "static",
                 MarkerIcon(
                   icon: Icon(
                     Icons.train,
@@ -90,7 +105,9 @@ class _MyAppState extends State<MyApp> {
                 [
                   GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
                   GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
-                ]),
+                ],
+              ),
+            ],
             road: Road(
                 startIcon: MarkerIcon(
                   icon: Icon(

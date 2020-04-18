@@ -56,7 +56,9 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -100,9 +102,9 @@ public class FlutterOsmView implements
     private final AtomicInteger activityState;
     private PluginRegistry.Registrar registrar;
     private Bitmap customMarkerIcon;
-    private Bitmap staticMarkerIcon;
+    private HashMap<String,Bitmap> staticMarkerIcon;
     private HashMap<String, Bitmap> customRoadMarkerIcon = new HashMap<>();
-    private List<GeoPoint> staticPoints;
+    private HashMap<String,List<GeoPoint>> staticPoints;
     private FolderOverlay folderStaticPosition;
     private FlutterRoad flutterRoad;
 
@@ -129,7 +131,10 @@ public class FlutterOsmView implements
             this.registrar = registrar;
         this.mActivity = activity;
 
-        staticPoints = new ArrayList<>();
+        staticPoints = new HashMap<>();
+        staticMarkerIcon = new HashMap<>();
+
+
         folderStaticPosition=new FolderOverlay();
         folderStaticPosition.setName(Constants.nameFolderStatic);
         //LinearLayout view = (LinearLayout) getViewFromXML();
@@ -159,7 +164,7 @@ public class FlutterOsmView implements
 
             @Override
             public boolean onZoom(ZoomEvent event) {
-                if(event.getZoomLevel()<10.){
+                if(event.getZoomLevel()<12.){
                     Rect currentMapBoundsRect = new Rect();
                     map.getDrawingRect(currentMapBoundsRect);
 
@@ -268,7 +273,12 @@ public class FlutterOsmView implements
 
         map.getOverlays().clear();
         if (!staticPoints.isEmpty()) {
-            showStaticPosition();
+            Iterator it=staticPoints.entrySet().iterator();
+            while (it.hasNext()){
+                Map.Entry m= (Map.Entry) it.next();
+                showStaticPosition((String) m.getKey());
+            }
+
         }
         this.locationNewOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(getApplication()), map);
         this.locationNewOverlay.enableMyLocation();
@@ -359,25 +369,50 @@ public class FlutterOsmView implements
     }
 
     private void setStaticPositionIcon(MethodCall call, Result result) {
+        HashMap<String,Object> hasmap= (HashMap<String, Object>) call.arguments;
         try {
-            staticMarkerIcon = getBitmap((byte[]) call.arguments);
+
+            Bitmap bitmap = getBitmap((byte[]) hasmap.get("bitmap"));
+            staticMarkerIcon.put((String) hasmap.get("id"),bitmap);
             result.success(null);
         } catch (Exception e) {
-            result.error("400", "error to getBitmap static POsition", "");
+
+            Log.e("id", (String) hasmap.get("id"));
+            Log.e("err", e.getMessage());
+            result.error("400", "error to getBitmap static Position", "");
             staticMarkerIcon = null;
         }
     }
 
     private void setStaticPosition(MethodCall call, Result result) {
-        final List<HashMap<String, Double>> points = (List<HashMap<String, Double>>) call.arguments;
-
+        final HashMap<String,Object> map= (HashMap<String, Object>) call.arguments;
+        final String id= (String) map.get("id");
+        final List<HashMap<String, Double>> points = (List<HashMap<String, Double>>) map.get("point");
+        List<GeoPoint> geoPoints=new ArrayList<>();
         for (HashMap<String, Double> hashmap : points) {
-            staticPoints.add(new GeoPoint(hashmap.get("lat"), hashmap.get("lon")));
+            geoPoints.add(new GeoPoint(hashmap.get("lat"), hashmap.get("lon")));
         }
-        showStaticPosition();
+        if(staticPoints.containsKey(id)){
+            Log.e(id,""+points.size());
+            staticPoints.get(id).clear();
+            staticPoints.get(id).addAll(geoPoints);
+        }else{
+            staticPoints.put(id,geoPoints);
+        }
+
+        showStaticPosition(id);
+        result.success(null);
     }
-    private void  showStaticPosition(){
-        for (GeoPoint p : staticPoints) {
+    private void  showStaticPosition(String id){
+        for(Overlay overlay:folderStaticPosition.getItems()){
+            if(((FolderOverlay)overlay).getName().equals(id)){
+                folderStaticPosition.getItems().remove(overlay);
+                break;
+            }
+        }
+        FolderOverlay overlay=new FolderOverlay();
+        overlay.setName(id);
+        for (GeoPoint p : staticPoints.get(id)) {
             FlutterMarker marker = new FlutterMarker(getApplication(), map);
             marker.setPosition(p);
             marker.setDefaultFlutterInfoWindow();
@@ -393,10 +428,18 @@ public class FlutterOsmView implements
             });
             marker.setPosition(p);
             if (staticMarkerIcon != null)
-                marker.setIconMaker(staticMarkerIcon, null);
-            folderStaticPosition.getItems().add(marker);
+                marker.setIconMaker(staticMarkerIcon.get(id), null);
+            overlay.getItems().add(marker);
         }
-        map.getOverlays().add(folderStaticPosition);
+        folderStaticPosition.getItems().add(overlay);
+        if(map.getZoomLevelDouble()>10.){
+            if(map.getOverlays().contains(folderStaticPosition)){
+                map.getOverlays().remove(folderStaticPosition);
+                map.getOverlays().add(folderStaticPosition);
+                map.invalidate();
+            }
+        }
+        //map.getOverlays().add(folderStaticPosition);
     }
     private void setSecureURL(MethodCall call, Result result) {
         useScureURL = (boolean) call.arguments;
