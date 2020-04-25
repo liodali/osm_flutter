@@ -1,3 +1,5 @@
+## 0.3.6+1 [beta-version]:
+* fix draw last point in draw
 ## 0.3.6 [beta-version]:
 * staticPoints become list of Markers with unique id
 * add callback setStaticPosition to set position if you don't have it or to change it over time
