@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.3.6%2B1-orange)
+![pub](https://img.shields.io/badge/pub-v0.3.6%2B2-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -18,7 +18,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.3.6+1
+      flutter_osm_plugin: ^0.3.6+2
 ## Simple Usage
 #### Creating a basic `OSMFlutter`:
   
@@ -74,7 +74,8 @@ Add the following to your `pubspec.yaml` file:
 ### recuperation current position
 
 `GeoPoint geoPoint = osmKey.currentState.myLocation() `
-### select new position
+
+### select/create new position
 
 `GeoPoint geoPoint = osmKey.currentState.selectPosition() `
 

@@ -278,7 +278,6 @@ public class FlutterOsmView implements
                 Map.Entry m= (Map.Entry) it.next();
                 showStaticPosition((String) m.getKey());
             }
-
         }
         this.locationNewOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(getApplication()), map);
         this.locationNewOverlay.enableMyLocation();
@@ -511,11 +510,6 @@ public class FlutterOsmView implements
             mapEventsOverlay = new MapEventsOverlay(new MapEventsReceiver() {
                 @Override
                 public boolean singleTapConfirmedHelper(GeoPoint p) {
-                    return false;
-                }
-
-                @Override
-                public boolean longPressHelper(GeoPoint p) {
                     HashMap<String, Double> Hashmap = new HashMap<>();
                     Hashmap.put("lat", p.getLatitude());
                     Hashmap.put("lon", p.getLongitude());
@@ -523,6 +517,12 @@ public class FlutterOsmView implements
                     addMarker(p, 15., null);
                     mapEventsOverlay = null;
                     _result.success(Hashmap);
+                    return false;
+                }
+
+                @Override
+                public boolean longPressHelper(GeoPoint p) {
+
                     return false;
                 }
             });

@@ -1,3 +1,6 @@
+## 0.3.6+2 [beta-version]:
+* change longPress in selectPosition to simplePress
+* fix error and behavior
 ## 0.3.6+1 [beta-version]:
 * fix draw last point in draw
 ## 0.3.6 [beta-version]:

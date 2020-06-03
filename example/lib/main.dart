@@ -18,7 +18,6 @@ class _MyAppState extends State<MyApp> {
     osmKey = GlobalKey<OSMFlutterState>();
     scaffoldKey = GlobalKey<ScaffoldState>();
   }
-
   @override
   Widget build(BuildContext loncontext) {
     return MaterialApp(
@@ -30,8 +29,10 @@ class _MyAppState extends State<MyApp> {
             IconButton(
               onPressed: () async {
                 try {
+                  ///selection geoPoint
+                  GeoPoint point=await osmKey.currentState.selectPosition();
                   await osmKey.currentState.drawRoad(
-                      GeoPoint(latitude: 47.35387, longitude: 8.43609),
+                      point,
                       GeoPoint(latitude: 47.4371, longitude: 8.6136));
                 } on RoadException catch (e) {
                   scaffoldKey.currentState.showSnackBar(

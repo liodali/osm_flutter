@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:after_layout/after_layout.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -59,7 +60,7 @@ class OSMFlutter extends StatefulWidget {
   OSMFlutterState createState() => OSMFlutterState();
 }
 
-class OSMFlutterState extends State<OSMFlutter> {
+class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter> {
   //permission status
   PermissionStatus _permission;
 
@@ -94,7 +95,7 @@ class OSMFlutterState extends State<OSMFlutter> {
     widget.staticPoints.forEach((gs) {
       _staticMarkersKeys.putIfAbsent(gs.id, () => GlobalKey());
     });
-    Future.delayed(Duration(milliseconds: 150), () async {
+    Future.delayed(Duration.zero, () async {
       //check location permission
       _permission = await LocationPermissions().checkPermissionStatus();
       if (_permission == PermissionStatus.denied) {
@@ -107,66 +108,13 @@ class OSMFlutterState extends State<OSMFlutter> {
         if (widget.currentLocation) await _checkServiceLocation();
       }
 
-      this._osmController.setSecureURL(widget.useSecureURL);
-      if (widget.onGeoPointClicked != null) {
-        this._osmController.startListen(widget.onGeoPointClicked, (err) {
-          print(err);
-        });
-      }
-      if (widget.trackMyPosition) {
-        await enableTracking();
-        await currentLocation();
-      }
-      if (widget.markerIcon != null) {
-        await changeIconMarker(_key);
-      }
-      if (widget.initPosition != null) {
-        await changeLocation(widget.initPosition);
-      }
 
-      if (widget.staticPoints != null) {
-        if (widget.staticPoints.isNotEmpty) {
-          widget.staticPoints.asMap().forEach((index, points) async {
-            if (points.markerIcon != null) {
-              await this._osmController.customMarkerStaticPosition(
-                  _staticMarkersKeys[points.id], points.id);
-            }
-            if (points.geoPoints != null && points.geoPoints.isNotEmpty) {
-              await this
-                  ._osmController
-                  .staticPosition(points.geoPoints, points.id);
-            }
-          });
-        }
-      }
-      if (widget.road != null) {
-        await showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (ctx) {
-              return JobAlertDialog(
-                callback: () async {
-                  await this._osmController.setColorRoad(
-                        widget.road.roadColor.red,
-                        widget.road.roadColor.green,
-                        widget.road.roadColor.blue,
-                      );
-                  await this._osmController.setMarkersRoad(
-                        _startIconKey,
-                        _endIconKey,
-                        _midddleIconKey,
-                      );
-                  Navigator.pop(ctx);
-                },
-              );
-            });
-      }
     });
   }
 
   @override
   void dispose() {
-    this._osmController.closeListen();
+    this._osmController?.closeListen();
     super.dispose();
   }
 
@@ -326,6 +274,67 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   void _onPlatformViewCreated(int id) {
     this._osmController = _OsmController._(id);
+  }
+
+  @override
+  void afterFirstLayout(BuildContext context) {
+    print("after layout");
+    Future.delayed(Duration(milliseconds: 500),() async{
+      this._osmController.setSecureURL(widget.useSecureURL);
+      if (widget.onGeoPointClicked != null) {
+        this._osmController.startListen(widget.onGeoPointClicked, (err) {
+          print(err);
+        });
+      }
+      if (widget.trackMyPosition) {
+        await enableTracking();
+        await currentLocation();
+      }
+      if (widget.markerIcon != null) {
+        await changeIconMarker(_key);
+      }
+      if (widget.initPosition != null) {
+        await changeLocation(widget.initPosition);
+      }
+
+      if (widget.staticPoints != null) {
+        if (widget.staticPoints.isNotEmpty) {
+          widget.staticPoints.asMap().forEach((index, points) async {
+            if (points.markerIcon != null) {
+              await this._osmController.customMarkerStaticPosition(
+                  _staticMarkersKeys[points.id], points.id);
+            }
+            if (points.geoPoints != null && points.geoPoints.isNotEmpty) {
+              await this
+                  ._osmController
+                  .staticPosition(points.geoPoints, points.id);
+            }
+          });
+        }
+      }
+      if (widget.road != null) {
+        await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) {
+              return JobAlertDialog(
+                callback: () async {
+                  await this._osmController.setColorRoad(
+                    widget.road.roadColor.red,
+                    widget.road.roadColor.green,
+                    widget.road.roadColor.blue,
+                  );
+                  await this._osmController.setMarkersRoad(
+                    _startIconKey,
+                    _endIconKey,
+                    _midddleIconKey,
+                  );
+                  Navigator.pop(ctx);
+                },
+              );
+            });
+      }
+    });
   }
 }
 
