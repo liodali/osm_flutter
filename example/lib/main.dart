@@ -31,9 +31,10 @@ class _MyAppState extends State<MyApp> {
                 try {
                   ///selection geoPoint
                   GeoPoint point=await osmKey.currentState.selectPosition();
+                  GeoPoint point2=await osmKey.currentState.selectPosition();
                   await osmKey.currentState.drawRoad(
                       point,
-                      GeoPoint(latitude: 47.4371, longitude: 8.6136));
+                      point2);
                 } on RoadException catch (e) {
                   scaffoldKey.currentState.showSnackBar(
                     SnackBar(
