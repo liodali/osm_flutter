@@ -1,3 +1,5 @@
+## 0.3.6+3 [beta-version]:
+* upgrade dependencies
 ## 0.3.6+2 [beta-version]:
 * change longPress in selectPosition to simplePress
 * fix error and behavior
