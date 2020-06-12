@@ -1,3 +1,5 @@
+## 0.3.6+4 [beta-version]:
+* request permission only when you want to activate tracking or get current location
 ## 0.3.6+3 [beta-version]:
 * upgrade dependencies
 ## 0.3.6+2 [beta-version]:
