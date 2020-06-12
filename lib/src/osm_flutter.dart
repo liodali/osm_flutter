@@ -97,21 +97,26 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
     });
     Future.delayed(Duration.zero, () async {
       //check location permission
-      _permission = await LocationPermissions().checkPermissionStatus();
-      if (_permission == PermissionStatus.denied) {
-        //request location permission
-        _permission = await LocationPermissions().requestPermissions();
-        if (_permission == PermissionStatus.granted) {
-          await _checkServiceLocation();
-        }
-      } else if (_permission == PermissionStatus.granted) {
-        if (widget.currentLocation) await _checkServiceLocation();
+      if(widget.currentLocation || widget.trackMyPosition){
+       await requestPermission();
       }
+
 
 
     });
   }
-
+  Future<void> requestPermission()async{
+    _permission = await LocationPermissions().checkPermissionStatus();
+    if (_permission == PermissionStatus.denied) {
+      //request location permission
+      _permission = await LocationPermissions().requestPermissions();
+      if (_permission == PermissionStatus.granted) {
+        await _checkServiceLocation();
+      }
+    } else if (_permission == PermissionStatus.granted) {
+      if (widget.currentLocation) await _checkServiceLocation();
+    }
+  }
   @override
   void dispose() {
     this._osmController?.closeListen();
@@ -144,6 +149,7 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
 
   ///activate current location position
   Future<void> currentLocation() async {
+    await requestPermission();
     await this._osmController.currentLocation();
   }
 
@@ -154,6 +160,7 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
 
   ///enabled/disabled tracking user location
   Future<void> enableTracking() async {
+    await requestPermission();
     await this._osmController.enableTracking();
   }
 

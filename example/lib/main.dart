@@ -134,6 +134,7 @@ class _MyAppState extends State<MyApp> {
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
             await osmKey.currentState.currentLocation();
+            await osmKey.currentState.enableTracking();
           },
           child: Icon(Icons.my_location),
         ),
