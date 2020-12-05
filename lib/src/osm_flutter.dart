@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+
 import 'package:after_layout/after_layout.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +19,18 @@ import 'package:location_permissions/location_permissions.dart';
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 
+/// Principal widget to show OSMMap using osm api
+/// you can track you current location,show static points like position of your stores
+/// show road between 2 points
+/// [currentLocation] : (bool) if is true, map will show your current location
+/// [trackMyPosition] : (bool) if is true, map will track your location
+/// [showZoomController] : (bool) if us true, you can zoomIn zoomOut directly in the map
+/// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
+/// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
+/// [onGeoPointClicked] : (callback) is trigger when you clicked on geoPoint
+/// [markerIcon] : (Icon/AssertImage) marker of geopoint
+/// [road] : set color and icons marker of road
+/// [useSecureURL] : use https or http when we get data from osm api
 class OSMFlutter extends StatefulWidget {
   final bool currentLocation;
   final bool trackMyPosition;
@@ -60,7 +74,8 @@ class OSMFlutter extends StatefulWidget {
   OSMFlutterState createState() => OSMFlutterState();
 }
 
-class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter> {
+class OSMFlutterState extends State<OSMFlutter>
+    with AfterLayoutMixin<OSMFlutter> {
   //permission status
   PermissionStatus _permission;
 
@@ -97,15 +112,13 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
     });
     Future.delayed(Duration.zero, () async {
       //check location permission
-      if(widget.currentLocation || widget.trackMyPosition){
-       await requestPermission();
+      if (widget.currentLocation || widget.trackMyPosition) {
+        await requestPermission();
       }
-
-
-
     });
   }
-  Future<void> requestPermission()async{
+  /// requestPermission callback to request location in your phone
+  Future<void> requestPermission() async {
     _permission = await LocationPermissions().checkPermissionStatus();
     if (_permission == PermissionStatus.denied) {
       //request location permission
@@ -117,6 +130,7 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
       if (widget.currentLocation) await _checkServiceLocation();
     }
   }
+
   @override
   void dispose() {
     this._osmController?.closeListen();
@@ -124,6 +138,7 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
   }
 
   ///initialise or change of position
+  /// [p] : geoPoint
   Future<void> changeLocation(GeoPoint p) async {
     if (p != null) this._osmController.addPosition(p);
   }
@@ -133,44 +148,50 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
     await this._osmController.customMarker(key);
   }
 
-  //change static position
+  /// change static position in runtime
+  ///  [geos] : list of static geoPoint
+  ///  [id] : String of that list of static geoPoint
   Future<void> setStaticPosition(List<GeoPoint> geos, String id) async {
-    assert(widget.staticPoints != null && widget.staticPoints.firstWhere((p)=>p.id==id)!=null,
+    assert(
+        widget.staticPoints != null &&
+            widget.staticPoints.firstWhere((p) => p.id == id) != null,
         "static points null,you should initialize them before you set their positions!");
     await this._osmController.staticPosition(geos, id);
   }
 
-  ///zoom in/out
+  /// zoom in/out
   /// positive value:zoomIN
   /// negative value:zoomOut
   void zoom(double zoom) async {
     await this._osmController.zoom(zoom);
   }
 
-  ///activate current location position
+  /// activate current location position
   Future<void> currentLocation() async {
     await requestPermission();
     await this._osmController.currentLocation();
   }
 
-  //recuperation of user current position
+  /// recuperation of user current position
   Future<GeoPoint> myLocation() async {
     return await this._osmController.myLocation();
   }
 
-  ///enabled/disabled tracking user location
+  /// enabled/disabled tracking user location
   Future<void> enableTracking() async {
     await requestPermission();
     await this._osmController.enableTracking();
   }
 
-  //pick Position in map
+  /// pick Position in map
   Future<GeoPoint> selectPosition() async {
     GeoPoint p = await this._osmController.pickLocation();
     return p;
   }
 
-  //draw road
+  /// draw road
+  ///  [start] : started point of your Road
+  ///  [end] : last point of your road
   Future<void> drawRoad(GeoPoint start, GeoPoint end) async {
     assert(
         start != null && end != null, "you cannot make road without 2 point");
@@ -286,7 +307,7 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
   @override
   void afterFirstLayout(BuildContext context) {
     print("after layout");
-    Future.delayed(Duration(milliseconds: 500),() async{
+    Future.delayed(Duration(milliseconds: 500), () async {
       this._osmController.setSecureURL(widget.useSecureURL);
       if (widget.onGeoPointClicked != null) {
         this._osmController.startListen(widget.onGeoPointClicked, (err) {
@@ -327,15 +348,15 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
               return JobAlertDialog(
                 callback: () async {
                   await this._osmController.setColorRoad(
-                    widget.road.roadColor.red,
-                    widget.road.roadColor.green,
-                    widget.road.roadColor.blue,
-                  );
+                        widget.road.roadColor.red,
+                        widget.road.roadColor.green,
+                        widget.road.roadColor.blue,
+                      );
                   await this._osmController.setMarkersRoad(
-                    _startIconKey,
-                    _endIconKey,
-                    _midddleIconKey,
-                  );
+                        _startIconKey,
+                        _endIconKey,
+                        _midddleIconKey,
+                      );
                   Navigator.pop(ctx);
                 },
               );
@@ -408,7 +429,11 @@ class _OsmController {
 
   Future<void> customMarker(GlobalKey globalKey) async {
     Uint8List icon = await _capturePng(globalKey);
-    await _channel.invokeMethod("marker#icon", icon);
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      var base64Str = base64.encode(icon);
+      await _channel.invokeMethod("marker#icon", base64Str);
+    } else
+      await _channel.invokeMethod("marker#icon", icon);
   }
 
   Future<void> setColorRoad(int r, int g, int b) async {
