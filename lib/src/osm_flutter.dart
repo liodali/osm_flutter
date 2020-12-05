@@ -19,6 +19,18 @@ import 'package:location_permissions/location_permissions.dart';
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 
+/// Principal widget to show OSMMap using osm api
+/// you can track you current location,show static points like position of your stores
+/// show road between 2 points
+/// [currentLocation] : (bool) if is true, map will show your current location
+/// [trackMyPosition] : (bool) if is true, map will track your location
+/// [showZoomController] : (bool) if us true, you can zoomIn zoomOut directly in the map
+/// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
+/// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
+/// [onGeoPointClicked] : (callback) is trigger when you clicked on geoPoint
+/// [markerIcon] : (Icon/AssertImage) marker of geopoint
+/// [road] : set color and icons marker of road
+/// [useSecureURL] : use https or http when we get data from osm api
 class OSMFlutter extends StatefulWidget {
   final bool currentLocation;
   final bool trackMyPosition;
@@ -105,7 +117,7 @@ class OSMFlutterState extends State<OSMFlutter>
       }
     });
   }
-
+  /// requestPermission callback to request location in your phone
   Future<void> requestPermission() async {
     _permission = await LocationPermissions().checkPermissionStatus();
     if (_permission == PermissionStatus.denied) {
@@ -126,6 +138,7 @@ class OSMFlutterState extends State<OSMFlutter>
   }
 
   ///initialise or change of position
+  /// [p] : geoPoint
   Future<void> changeLocation(GeoPoint p) async {
     if (p != null) this._osmController.addPosition(p);
   }
@@ -135,7 +148,9 @@ class OSMFlutterState extends State<OSMFlutter>
     await this._osmController.customMarker(key);
   }
 
-  //change static position
+  /// change static position in runtime
+  ///  [geos] : list of static geoPoint
+  ///  [id] : String of that list of static geoPoint
   Future<void> setStaticPosition(List<GeoPoint> geos, String id) async {
     assert(
         widget.staticPoints != null &&
@@ -144,37 +159,39 @@ class OSMFlutterState extends State<OSMFlutter>
     await this._osmController.staticPosition(geos, id);
   }
 
-  ///zoom in/out
+  /// zoom in/out
   /// positive value:zoomIN
   /// negative value:zoomOut
   void zoom(double zoom) async {
     await this._osmController.zoom(zoom);
   }
 
-  ///activate current location position
+  /// activate current location position
   Future<void> currentLocation() async {
     await requestPermission();
     await this._osmController.currentLocation();
   }
 
-  //recuperation of user current position
+  /// recuperation of user current position
   Future<GeoPoint> myLocation() async {
     return await this._osmController.myLocation();
   }
 
-  ///enabled/disabled tracking user location
+  /// enabled/disabled tracking user location
   Future<void> enableTracking() async {
     await requestPermission();
     await this._osmController.enableTracking();
   }
 
-  //pick Position in map
+  /// pick Position in map
   Future<GeoPoint> selectPosition() async {
     GeoPoint p = await this._osmController.pickLocation();
     return p;
   }
 
-  //draw road
+  /// draw road
+  ///  [start] : started point of your Road
+  ///  [end] : last point of your road
   Future<void> drawRoad(GeoPoint start, GeoPoint end) async {
     assert(
         start != null && end != null, "you cannot make road without 2 point");
