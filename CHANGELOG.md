@@ -1,3 +1,5 @@
+## 0.3.6+6 [beta-version]:
+* remove deprecated tag in pubspec
 ## 0.3.6+5 [beta-version]:
 * update dependencies
 * update docs
