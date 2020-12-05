@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+
 import 'package:after_layout/after_layout.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +62,8 @@ class OSMFlutter extends StatefulWidget {
   OSMFlutterState createState() => OSMFlutterState();
 }
 
-class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter> {
+class OSMFlutterState extends State<OSMFlutter>
+    with AfterLayoutMixin<OSMFlutter> {
   //permission status
   PermissionStatus _permission;
 
@@ -97,15 +100,13 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
     });
     Future.delayed(Duration.zero, () async {
       //check location permission
-      if(widget.currentLocation || widget.trackMyPosition){
-       await requestPermission();
+      if (widget.currentLocation || widget.trackMyPosition) {
+        await requestPermission();
       }
-
-
-
     });
   }
-  Future<void> requestPermission()async{
+
+  Future<void> requestPermission() async {
     _permission = await LocationPermissions().checkPermissionStatus();
     if (_permission == PermissionStatus.denied) {
       //request location permission
@@ -117,6 +118,7 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
       if (widget.currentLocation) await _checkServiceLocation();
     }
   }
+
   @override
   void dispose() {
     this._osmController?.closeListen();
@@ -135,7 +137,9 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
 
   //change static position
   Future<void> setStaticPosition(List<GeoPoint> geos, String id) async {
-    assert(widget.staticPoints != null && widget.staticPoints.firstWhere((p)=>p.id==id)!=null,
+    assert(
+        widget.staticPoints != null &&
+            widget.staticPoints.firstWhere((p) => p.id == id) != null,
         "static points null,you should initialize them before you set their positions!");
     await this._osmController.staticPosition(geos, id);
   }
@@ -286,7 +290,7 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
   @override
   void afterFirstLayout(BuildContext context) {
     print("after layout");
-    Future.delayed(Duration(milliseconds: 500),() async{
+    Future.delayed(Duration(milliseconds: 500), () async {
       this._osmController.setSecureURL(widget.useSecureURL);
       if (widget.onGeoPointClicked != null) {
         this._osmController.startListen(widget.onGeoPointClicked, (err) {
@@ -327,15 +331,15 @@ class OSMFlutterState extends State<OSMFlutter> with AfterLayoutMixin<OSMFlutter
               return JobAlertDialog(
                 callback: () async {
                   await this._osmController.setColorRoad(
-                    widget.road.roadColor.red,
-                    widget.road.roadColor.green,
-                    widget.road.roadColor.blue,
-                  );
+                        widget.road.roadColor.red,
+                        widget.road.roadColor.green,
+                        widget.road.roadColor.blue,
+                      );
                   await this._osmController.setMarkersRoad(
-                    _startIconKey,
-                    _endIconKey,
-                    _midddleIconKey,
-                  );
+                        _startIconKey,
+                        _endIconKey,
+                        _midddleIconKey,
+                      );
                   Navigator.pop(ctx);
                 },
               );
@@ -408,7 +412,11 @@ class _OsmController {
 
   Future<void> customMarker(GlobalKey globalKey) async {
     Uint8List icon = await _capturePng(globalKey);
-    await _channel.invokeMethod("marker#icon", icon);
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      var base64Str = base64.encode(icon);
+      await _channel.invokeMethod("marker#icon", base64Str);
+    } else
+      await _channel.invokeMethod("marker#icon", icon);
   }
 
   Future<void> setColorRoad(int r, int g, int b) async {
