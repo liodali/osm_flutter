@@ -18,7 +18,7 @@ import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
 
 open class FlutterMaker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClickListener {
     protected lateinit var application: Application
-    private var onClickListener: OnMarkerClickListener? = null
+     var onClickListener: OnMarkerClickListener? = null
         set(listener) {
             if (listener != null) field = listener
         }

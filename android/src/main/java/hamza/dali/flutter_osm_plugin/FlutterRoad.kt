@@ -20,7 +20,7 @@ open class FlutterRoad(val application: Application, val mapView: MapView) : Ove
                 field = value
             }
         }
-    private var markersIcons: HashMap<String, Bitmap> = HashMap()
+     var markersIcons: HashMap<String, Bitmap> = HashMap()
         get
         set(value) {
             if (value.isNotEmpty()) field = value
