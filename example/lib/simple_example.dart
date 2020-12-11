@@ -1,0 +1,95 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+
+class SimpleExample extends StatefulWidget {
+  SimpleExample({Key key}) : super(key: key);
+
+  @override
+  _SimpleExampleState createState() => _SimpleExampleState();
+}
+
+class _SimpleExampleState extends State<SimpleExample> {
+  PageController controller;
+  int indexPage;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = PageController(initialPage: 1);
+    indexPage = controller.initialPage;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("osm"),
+      ),
+      body: PageView(
+        children: <Widget>[
+          Center(
+            child: Text("page n1"),
+          ),
+          SimpleOSM(),
+        ],
+        controller: controller,
+        onPageChanged: (p) {
+          setState(() {
+            indexPage = p;
+          });
+        },
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: indexPage,
+        onTap: (p) {
+          controller.animateToPage(p,
+              duration: Duration(milliseconds: 500), curve: Curves.linear);
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.info),
+            title: Text("information"),
+          ),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.contacts), title: Text("contact")),
+        ],
+      ),
+    );
+  }
+}
+
+class SimpleOSM extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() =>SimpleOSMState();
+}
+
+class SimpleOSMState extends State<SimpleOSM> with AutomaticKeepAliveClientMixin {
+  GlobalKey<OSMFlutterState> osmKey;
+
+  @override
+  void initState() {
+    super.initState();
+    osmKey = GlobalKey<OSMFlutterState>();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OSMFlutter(
+      key: osmKey,
+      currentLocation: false,
+      markerIcon: MarkerIcon(
+        icon: Icon(
+          Icons.person_pin_circle,
+          color: Colors.blue,
+          size: 56,
+        ),
+      ),
+      trackMyPosition: false,
+      initPosition: GeoPoint(latitude: 42.151753, longitude: 24.769730),
+      useSecureURL: false,
+    );
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+}

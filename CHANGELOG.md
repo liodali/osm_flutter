@@ -1,3 +1,10 @@
+## 0.3.6+7 [beta-version]:
+* remove deprecated tag in pubspec
+## 0.3.6+6 [beta-version]:
+* remove deprecated tag in pubspec
+## 0.3.6+5 [beta-version]:
+* update dependencies
+* update docs
 ## 0.3.6+4 [beta-version]:
 * request permission only when you want to activate tracking or get current location
 ## 0.3.6+3 [beta-version]:

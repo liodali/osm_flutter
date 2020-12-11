@@ -1,16 +1,15 @@
 name: flutter_osm_plugin
 description: openStreetMap plugin for flutter apps (only Android for now, iOS will be supported in future)
-version: 0.3.6+4
+version: 0.3.6+7
 homepage: https://github.com/liodali/osm_flutter
-author: hamza.mohamedali93@gmail.com
 environment:
   sdk: ">=2.3.0 <3.0.0"
-
+  flutter: ">=1.12.0 <2.0.0"
 dependencies:
   flutter:
     sdk: flutter
-  flutter_plugin_android_lifecycle: ^1.0.8
-  location_permissions: ^3.0.0
+  flutter_plugin_android_lifecycle: ^1.0.11
+  location_permissions: ^3.0.0+1
   after_layout: ^1.0.7+2
 dev_dependencies:
   flutter_test:
@@ -26,8 +25,14 @@ flutter:
   # be modified. They are used by the tooling to maintain consistency when
   # adding or updating assets for this project.
   plugin:
-    androidPackage: hamza.dali.flutter_osm_plugin
-    pluginClass: FlutterOsmPlugin
+    platforms:
+      android:
+        package: hamza.dali.flutter_osm_plugin
+        pluginClass: FlutterOsmPlugin
+      ios:
+        pluginClass: FlutterOsmPlugin
+
+
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
