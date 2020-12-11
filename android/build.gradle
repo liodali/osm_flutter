@@ -2,7 +2,7 @@ group 'hamza.dali.flutter_osm_plugin'
 version '1.0'
 
 buildscript {
-    ext.kotlin_version = '1.4.20'
+    ext.kotlin_version = '1.4.21'
     repositories {
         google()
         jcenter()
@@ -61,11 +61,15 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-moshi:2.1.0'
 
 
+    //Preference
+    implementation 'androidx.preference:preference:1.1.1'
+
+
     // Coroutines
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
-    implementation 'org.osmdroid:osmdroid-android:6.1.5'
+    implementation 'org.osmdroid:osmdroid-android:6.1.8'
     implementation 'com.github.MKergall:osmbonuspack:6.6.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
