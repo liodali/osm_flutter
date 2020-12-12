@@ -15,7 +15,6 @@ import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
@@ -34,13 +33,8 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.platform.PlatformView
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
-import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -54,7 +48,6 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.FolderOverlay
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.concurrent.atomic.AtomicInteger
@@ -94,10 +87,13 @@ class FlutterOsmView(
     private val customRoadMarkerIcon = HashMap<String, Bitmap>()
     private val staticPoints: HashMap<String, MutableList<GeoPoint>> = HashMap()
     private val folderStaticPosition: FolderOverlay = FolderOverlay()
+    private val folderRoad: FolderOverlay = FolderOverlay().apply {
+        this.name = Constants.roadName
+    }
     private var flutterRoad: FlutterRoad? = null
     private var job: Job? = null
     private var jobFlow: Job? = null
-    private var scope:CoroutineScope?
+    private var scope: CoroutineScope?
 
 
     private var methodChannel: MethodChannel
@@ -153,7 +149,7 @@ class FlutterOsmView(
         } else {
             application!!.registerActivityLifecycleCallbacks(this)
         }
-        scope=lifecycle?.coroutineScope
+        scope = lifecycle?.coroutineScope
 
 
     }
@@ -188,9 +184,9 @@ class FlutterOsmView(
         val marker = FlutterMaker(application!!, map, geoPoint)
         val iconDrawable: Drawable = getDefaultIconDrawable(color)
         //marker.setPosition(geoPoint);
-        marker.setIcon(iconDrawable)
+        marker.icon = iconDrawable
         //marker.setInfoWindow(new FlutterInfoWindow(creatWindowInfoView(),map,geoPoint));
-        marker.setPosition(geoPoint)
+        marker.position = geoPoint
         return marker
     }
 
@@ -307,11 +303,13 @@ class FlutterOsmView(
 
     private fun drawRoad(call: MethodCall, result: MethodChannel.Result) {
         val listPointsArgs = call.arguments!! as List<HashMap<String, Double>>
-        flutterRoad?.let { 
-            
+        flutterRoad?.let {
+            map.overlays.remove(it.road!!)
         }
-        map.overlays.removeAll {
-            it is Polyline
+        if (!map.overlays.contains(folderRoad)) {
+            map.overlays.add(folderRoad)
+        } else {
+            folderRoad.items.clear()
         }
         map.invalidate()
 
@@ -324,8 +322,14 @@ class FlutterOsmView(
                 val wayPoints = listPointsArgs.map {
                     GeoPoint(it["lat"]!!, it["lon"]!!)
                 }.toMutableList()
+                withContext(Main) {
+                    map.overlays.removeAll {
+                        it is FlutterMaker && wayPoints.contains(it.position)
+                    }
+                    map.invalidate()
+                }
                 val road = manager.getRoad(ArrayList(wayPoints))
-                withContext(Main){
+                withContext(Main) {
                     if (road.mRouteHigh.size > 2) {
                         val polyLine = RoadManager.buildRoadOverlay(road)
                         polyLine.outlinePaint.color = Color.GREEN
@@ -335,10 +339,11 @@ class FlutterOsmView(
                         flutterRoad = FlutterRoad(application!!, map)
                         flutterRoad?.let {
                             it.markersIcons = customRoadMarkerIcon
-                            polyLine.points.removeFirst()
-                            polyLine.points.removeLast()
-                            polyLine.outlinePaint.strokeWidth=5.0f
+                            polyLine.outlinePaint.strokeWidth = 5.0f
                             it.road = polyLine
+                            folderRoad.items.add(it.start)
+                            folderRoad.items.add(it.end)
+                            folderRoad.items.add(it.road!!)
                         }
                         map.invalidate()
                     }
@@ -520,15 +525,15 @@ class FlutterOsmView(
 
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-        if(activity is AppCompatActivity && scope==null){
-            scope=activity.lifecycleScope
+        if (activity is AppCompatActivity && scope == null) {
+            scope = activity.lifecycleScope
         }
 
     }
 
     override fun onActivityStarted(activity: Activity) {
 
-        
+
     }
 
     override fun onActivityResumed(activity: Activity) {
@@ -592,9 +597,9 @@ class FlutterOsmView(
 
     override fun onStop(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(STOPPED)
-        if(jobFlow!=null){
+        if (jobFlow != null) {
             jobFlow?.cancel()
-            jobFlow=null
+            jobFlow = null
         }
     }
 

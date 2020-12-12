@@ -21,6 +21,7 @@ open class FlutterMaker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClic
         set(listener) {
             if (listener != null) field = listener
         }
+
     private lateinit var mapView: MapView
     private var infoWindow: View? = null
         set(infoWindow) {
@@ -31,17 +32,22 @@ open class FlutterMaker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClic
     constructor(application: Application, mapView: MapView) : this(mapView = mapView) {
         this.application = application
         this.mapView = mapView
-        setOnMarkerClickListener(this)
+        this.setOnMarkerClickListener { marker, map ->
+            onMarkerClick(marker, map)
+        }
     }
 
     constructor(application: Application, mapView: MapView, point: GeoPoint) : this(mapView = mapView) {
         this.application = application
         this.mapView = mapView
         this.mPosition = point
-        setOnMarkerClickListener(this)
+        this.setOnMarkerClickListener { marker, map ->
+            onMarkerClick(marker, map)
+        }
         creatWindowInfoView()
-        setInfoWindow(FlutterInfoWindow(infoView = infoWindow!! , mapView = mapView, point = this.mPosition))
+        setInfoWindow(FlutterInfoWindow(infoView = infoWindow!!, mapView = mapView, point = mPosition))
     }
+
 
     constructor(mapView: MapView, infoWindow: View) : this(mapView) {
         this.mapView = mapView
@@ -63,13 +69,13 @@ open class FlutterMaker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClic
         setInfoWindow(FlutterInfoWindow(infoView = infoWindow!!, mapView = mapView, point = this.mPosition))
     }
 
-    protected fun getDefaultIconDrawable(color: Int?, bitmap: Bitmap?): Drawable {
+    private fun getDefaultIconDrawable(color: Int?, bitmap: Bitmap?): Drawable {
         var iconDrawable: Drawable? = null
         bitmap?.let { b ->
-            iconDrawable = BitmapDrawable(application.resources, b)
-            iconDrawable.apply {
+            iconDrawable = BitmapDrawable(mapView.resources, b)
+            iconDrawable=iconDrawable.apply {
                 color?.let { c ->
-                    this?.setColorFilter(BlendModeColorFilterCompat.createBlendModeColorFilterCompat(c, BlendModeCompat.SRC_OVER))
+                    this?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(c, BlendModeCompat.SRC_OVER)
                 }
             }
 

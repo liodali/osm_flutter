@@ -120,9 +120,9 @@ class _MainExampleState extends State<MainExample> {
           ),
           markerIcon: MarkerIcon(
             icon: Icon(
-              Icons.person_pin_circle,
-              color: Colors.blue,
-              size: 56,
+              Icons.home,
+              color: Colors.orange,
+              size: 64,
             ),
           ),
           trackMyPosition: false,
