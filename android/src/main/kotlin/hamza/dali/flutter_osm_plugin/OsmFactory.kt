@@ -12,22 +12,30 @@ import io.flutter.plugin.platform.PlatformViewFactory
 import java.util.concurrent.atomic.AtomicInteger
 
 open class OsmFactory(
-        val state: AtomicInteger,
-        val binaryMessenger: BinaryMessenger,
+        private val state: AtomicInteger,
+        private val binaryMessenger: BinaryMessenger,
         val application: Application?,
-        val lifecycle: Lifecycle?,
-        val activity: Activity?,
-        val activityHashCode: Int,
-        val register: PluginRegistry.Registrar?,
+        private val lifecycle: Lifecycle?,
+        private val activity: Activity?,
+        private val activityHashCode: Int,
+        private val register: PluginRegistry.Registrar?,
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(
-            context: Context?,
+            context: Context,
             viewId: Int,
             args: Any?,
     ): PlatformView {
-        val flutterOSMView = FlutterOsmView(context, register,
-                binaryMessenger, viewId, state, application, activity, lifecycle, activityHashCode)
-        flutterOSMView.init()
-        return flutterOSMView
+        return FlutterOsmView(
+                context,
+                register,
+                binaryMessenger,
+                viewId,
+                state,
+                application,
+                activity,
+                lifecycle,
+                activityHashCode,
+        )
     }
+
 }

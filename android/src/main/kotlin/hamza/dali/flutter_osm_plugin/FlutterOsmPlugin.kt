@@ -5,29 +5,34 @@ import android.app.Application
 import android.os.Bundle
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import io.flutter.embedding.engine.plugins.lifecycle.FlutterLifecycleAdapter
 import io.flutter.plugin.common.PluginRegistry
 import java.util.concurrent.atomic.AtomicInteger
-import io.flutter.embedding.engine.plugins.lifecycle.FlutterLifecycleAdapter;
 
-class FlutterOsmPlugin(activity: Activity) : Application.ActivityLifecycleCallbacks,
+
+class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
         FlutterPlugin, ActivityAware, DefaultLifecycleObserver {
-
-    init {
+    constructor(activity: Activity) : this() {
         registrarActivityHashCode = activity.hashCode()
+        this.activity = activity
     }
+
+    private lateinit var activity: Activity
 
 
     companion object {
+
         var state = AtomicInteger(0)
         var registrarActivityHashCode = 0
         var pluginBinding: FlutterPluginBinding? = null
         var lifecycle: Lifecycle? = null
         var register: PluginRegistry.Registrar? = null
-        protected const val VIEW_TYPE = "plugins.dali.hamza/osmview"
+        val VIEW_TYPE = "plugins.dali.hamza/osmview"
         val CREATED = 1
         val STARTED = 2
         val RESUMED = 3
@@ -35,23 +40,28 @@ class FlutterOsmPlugin(activity: Activity) : Application.ActivityLifecycleCallba
         val STOPPED = 5
         val DESTROYED = 6
 
+        @JvmStatic
         fun registerWith(register: PluginRegistry.Registrar) {
+
             if (register.activity() == null) {
                 return
             }
             this.register = register
             val flutterOsmView = FlutterOsmPlugin(register.activity())
             register.activity().application.registerActivityLifecycleCallbacks(flutterOsmView)
-            register.platformViewRegistry().registerViewFactory(VIEW_TYPE, OsmFactory(state, register.messenger(),
-                    null,
-                    null,
-                    null,
-                    -1, register))
+            register.platformViewRegistry().registerViewFactory(VIEW_TYPE,
+                    OsmFactory(state,
+                            register.messenger(),
+                            null,
+                            null,
+                            null,
+                            -1, register))
         }
     }
 
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         pluginBinding = binding
+
     }
 
     override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
@@ -113,11 +123,13 @@ class FlutterOsmPlugin(activity: Activity) : Application.ActivityLifecycleCallba
         lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding)
         lifecycle?.addObserver(this)
 
-        pluginBinding?.platformViewRegistry?.registerViewFactory(VIEW_TYPE, OsmFactory(state, pluginBinding!!.binaryMessenger,
-                binding.activity.application,
-                lifecycle,
-                binding.activity,
-                registrarActivityHashCode, register))
+        pluginBinding?.platformViewRegistry?.registerViewFactory(VIEW_TYPE,
+                OsmFactory(state,
+                        pluginBinding!!.binaryMessenger,
+                        binding.activity.application,
+                        lifecycle,
+                        binding.activity,
+                        registrarActivityHashCode, register))
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
@@ -139,5 +151,27 @@ class FlutterOsmPlugin(activity: Activity) : Application.ActivityLifecycleCallba
         lifecycle?.removeObserver(this)
     }
 
+    override fun onCreate(owner: LifecycleOwner) {
+        state.set(CREATED)
+    }
 
+    override fun onStart(owner: LifecycleOwner) {
+        state.set(STARTED)
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        state.set(RESUMED)
+    }
+
+    override fun onPause(owner: LifecycleOwner) {
+        state.set(PAUSED)
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+        state.set(STOPPED)
+    }
+
+    override fun onDestroy(owner: LifecycleOwner) {
+        state.set(DESTROYED)
+    }
 }

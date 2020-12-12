@@ -10,7 +10,6 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
-import hamza.dali.flutter_osm_plugin.databinding.InfowindowBinding
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -18,14 +17,14 @@ import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
 
 open class FlutterMaker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClickListener {
     protected lateinit var application: Application
-     var onClickListener: OnMarkerClickListener? = null
+    var onClickListener: OnMarkerClickListener? = null
         set(listener) {
             if (listener != null) field = listener
         }
     private lateinit var mapView: MapView
     private var infoWindow: View? = null
         set(infoWindow) {
-            setInfoWindow(FlutterInfoWindow(mapView, InfowindowBinding.bind(infoWindow!!), this.mPosition))
+            setInfoWindow(FlutterInfoWindow(mapView, infoWindow!!, this.mPosition))
             field = infoWindow
         }
 
@@ -40,7 +39,8 @@ open class FlutterMaker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClic
         this.mapView = mapView
         this.mPosition = point
         setOnMarkerClickListener(this)
-        setInfoWindow(FlutterInfoWindow(infoView = creatWindowInfoView(), mapView = mapView, point = this.mPosition))
+        creatWindowInfoView()
+        setInfoWindow(FlutterInfoWindow(infoView = infoWindow!! , mapView = mapView, point = this.mPosition))
     }
 
     constructor(mapView: MapView, infoWindow: View) : this(mapView) {
@@ -60,7 +60,7 @@ open class FlutterMaker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClic
     }
 
     fun defaultInfoWindow() {
-        setInfoWindow(FlutterInfoWindow(infoView = InfowindowBinding.bind(infoWindow!!), mapView = mapView, point = this.mPosition))
+        setInfoWindow(FlutterInfoWindow(infoView = infoWindow!!, mapView = mapView, point = this.mPosition))
     }
 
     protected fun getDefaultIconDrawable(color: Int?, bitmap: Bitmap?): Drawable {
@@ -80,9 +80,10 @@ open class FlutterMaker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClic
 
     }
 
-    private fun creatWindowInfoView(): InfowindowBinding {
+    private fun creatWindowInfoView(): View {
         val inflater = application.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        return InfowindowBinding.inflate(inflater, null, false)
+        infoWindow = inflater.inflate(R.layout.infowindow, null)
+        return infoWindow!!
     }
 
     override fun setInfoWindow(infoWindow: MarkerInfoWindow?) {

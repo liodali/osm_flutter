@@ -307,7 +307,10 @@ class OSMFlutterState extends State<OSMFlutter>
   @override
   void afterFirstLayout(BuildContext context) {
     print("after layout");
-    Future.delayed(Duration(milliseconds: 500), () async {
+    Future.delayed(Duration(milliseconds: 1000), () async {
+      /*while(this._osmController==null){
+        print("osm null");
+      }*/
       this._osmController.setSecureURL(widget.useSecureURL);
       if (widget.onGeoPointClicked != null) {
         this._osmController.startListen(widget.onGeoPointClicked, (err) {

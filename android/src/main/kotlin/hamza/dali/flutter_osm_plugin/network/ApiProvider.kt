@@ -5,8 +5,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 object ApiProvider {
-    val apiClient: ApiClient = Retrofit.Builder()
+    val apiClientNominatim: ApiClient = Retrofit.Builder()
             .client(OkHttpClient())
+            .baseUrl("https://nominatim.openstreetmap.org/")
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create(ApiClient::class.java)

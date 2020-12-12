@@ -18,6 +18,7 @@ class _MainExampleState extends State<MainExample> {
     osmKey = GlobalKey<OSMFlutterState>();
     scaffoldKey = GlobalKey<ScaffoldState>();
   }
+
   @override
   Widget build(BuildContext loncontext) {
     return Scaffold(
@@ -29,11 +30,9 @@ class _MainExampleState extends State<MainExample> {
             onPressed: () async {
               try {
                 ///selection geoPoint
-                GeoPoint point=await osmKey.currentState.selectPosition();
-                GeoPoint point2=await osmKey.currentState.selectPosition();
-                await osmKey.currentState.drawRoad(
-                    point,
-                    point2);
+                GeoPoint point = await osmKey.currentState.selectPosition();
+                GeoPoint point2 = await osmKey.currentState.selectPosition();
+                await osmKey.currentState.drawRoad(point, point2);
               } on RoadException catch (e) {
                 scaffoldKey.currentState.showSnackBar(
                   SnackBar(
@@ -110,14 +109,15 @@ class _MainExampleState extends State<MainExample> {
             ),
           ],
           road: Road(
-              startIcon: MarkerIcon(
-                icon: Icon(
-                  Icons.person,
-                  size: 64,
-                  color: Colors.brown,
-                ),
+            startIcon: MarkerIcon(
+              icon: Icon(
+                Icons.person,
+                size: 64,
+                color: Colors.brown,
               ),
-              roadColor: Colors.yellowAccent),
+            ),
+            roadColor: Colors.red,
+          ),
           markerIcon: MarkerIcon(
             icon: Icon(
               Icons.person_pin_circle,

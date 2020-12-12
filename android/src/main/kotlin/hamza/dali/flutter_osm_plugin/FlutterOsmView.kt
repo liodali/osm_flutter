@@ -14,25 +14,33 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.*
 import androidx.preference.PreferenceManager
 import hamza.dali.flutter_osm_plugin.Constants.Companion.url
+import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.CREATED
+import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.DESTROYED
+import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.PAUSED
+import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STARTED
+import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STOPPED
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding.OnSaveInstanceStateListener
 import io.flutter.plugin.common.*
 import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.platform.PlatformView
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
+import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -64,7 +72,7 @@ fun GeoPoint.toHashMap(): HashMap<String, Double> {
 
 class FlutterOsmView(
         private val context: Context?,
-        private val register: PluginRegistry.Registrar,
+        private val register: PluginRegistry.Registrar?,
         private val binaryMessenger: BinaryMessenger,
         private val id: Int,//viewId
         private val activityState: AtomicInteger,
@@ -88,6 +96,9 @@ class FlutterOsmView(
     private val folderStaticPosition: FolderOverlay = FolderOverlay()
     private var flutterRoad: FlutterRoad? = null
     private var job: Job? = null
+    private var jobFlow: Job? = null
+    private var scope:CoroutineScope?
+
 
     private var methodChannel: MethodChannel
     private var eventChannel: EventChannel
@@ -100,9 +111,10 @@ class FlutterOsmView(
     private val defaultZoom = 10.0
     private var useSecureURL = true
 
+
     init {
         if (application == null) {
-            application = register.activity().application
+            application = register?.activity()?.application
         }
         folderStaticPosition.name = Constants.nameFolderStatic
         Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context))
@@ -115,11 +127,11 @@ class FlutterOsmView(
         }
         map.addMapListener(object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
-                return false
+                return true
             }
 
             override fun onZoom(event: ZoomEvent?): Boolean {
-                if (event!!.zoomLevel < 12) {
+                if (event!!.zoomLevel < Constants.zoomStaticPosition) {
                     val rect = Rect()
                     map.getDrawingRect(rect)
                     map.overlays.remove(folderStaticPosition)
@@ -128,7 +140,7 @@ class FlutterOsmView(
                         map.overlays.add(folderStaticPosition)
                     }
                 }
-                return false
+                return true
             }
         })
 
@@ -136,12 +148,16 @@ class FlutterOsmView(
         methodChannel.setMethodCallHandler(this)
         eventChannel = EventChannel(binaryMessenger, "plugins.dali.hamza/osmview_stream_${id}")
         eventChannel.setStreamHandler(this)
+        if (lifecycle != null) {
+            lifecycle.addObserver(this)
+        } else {
+            application!!.registerActivityLifecycleCallbacks(this)
+        }
+        scope=lifecycle?.coroutineScope
+
 
     }
 
-    fun init() {
-
-    }
 
     private fun setZoom(methodCall: MethodCall, result: MethodChannel.Result) {
         try {
@@ -275,7 +291,7 @@ class FlutterOsmView(
                 setRoadColor(call, result)
             }
             "road#markers" -> {
-                serRoadMaker(call, result)
+                setRoadMaker(call, result)
             }
             "staticPosition" -> {
                 staticPosition(call, result)
@@ -291,7 +307,9 @@ class FlutterOsmView(
 
     private fun drawRoad(call: MethodCall, result: MethodChannel.Result) {
         val listPointsArgs = call.arguments!! as List<HashMap<String, Double>>
-
+        flutterRoad?.let { 
+            
+        }
         map.overlays.removeAll {
             it is Polyline
         }
@@ -301,28 +319,30 @@ class FlutterOsmView(
             roadManager = OSRMRoadManager(application!!)
         roadManager?.let { manager ->
 
-            job = GlobalScope.launch(IO) {
+            job = scope?.launch(Default) {
                 if (useSecureURL) roadManager!!.setService("https://$url")
                 val wayPoints = listPointsArgs.map {
                     GeoPoint(it["lat"]!!, it["lon"]!!)
                 }.toMutableList()
                 val road = manager.getRoad(ArrayList(wayPoints))
-                if (road.mRouteHigh.size > 2) {
-                    val polyLine = RoadManager.buildRoadOverlay(road)
-                    withContext(Main) {
+                withContext(Main){
+                    if (road.mRouteHigh.size > 2) {
+                        val polyLine = RoadManager.buildRoadOverlay(road)
                         polyLine.outlinePaint.color = Color.GREEN
                         roadColor?.let { color ->
-                            polyLine.getOutlinePaint().setColor(color)
-
+                            polyLine.outlinePaint.color = color
                         }
                         flutterRoad = FlutterRoad(application!!, map)
                         flutterRoad?.let {
                             it.markersIcons = customRoadMarkerIcon
+                            polyLine.points.removeFirst()
+                            polyLine.points.removeLast()
+                            polyLine.outlinePaint.strokeWidth=5.0f
                             it.road = polyLine
                         }
                         map.invalidate()
-                        result.success(null)
                     }
+                    result.success(null)
                 }
 
             }
@@ -363,11 +383,11 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    private fun serRoadMaker(call: MethodCall, result: MethodChannel.Result) {
+    private fun setRoadMaker(call: MethodCall, result: MethodChannel.Result) {
         try {
             val hashMap = call.arguments!! as HashMap<String, ByteArray>
             hashMap.forEach { (key, bytes) ->
-                customRoadMarkerIcon.put(key, BitmapFactory.decodeByteArray(bytes, 0, bytes.size))
+                customRoadMarkerIcon[key] = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             }
             result.success(null)
         } catch (e: Exception) {
@@ -500,11 +520,15 @@ class FlutterOsmView(
 
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-        TODO("Not yet implemented")
+        if(activity is AppCompatActivity && scope==null){
+            scope=activity.lifecycleScope
+        }
+
     }
 
     override fun onActivityStarted(activity: Activity) {
-        TODO("Not yet implemented")
+
+        
     }
 
     override fun onActivityResumed(activity: Activity) {
@@ -522,6 +546,12 @@ class FlutterOsmView(
                 it.cancel()
             }
         }
+        jobFlow?.let {
+            if (it.isActive) {
+                it.cancel()
+            }
+        }
+        jobFlow = null
         job = null
     }
 
@@ -541,5 +571,35 @@ class FlutterOsmView(
         TODO("Not yet implemented")
     }
 
+    override fun onCreate(owner: LifecycleOwner) {
+        FlutterOsmPlugin.state.set(CREATED)
+    }
+
+    override fun onStart(owner: LifecycleOwner) {
+        FlutterOsmPlugin.state.set(STARTED)
+
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        FlutterOsmPlugin.state.set(FlutterOsmPlugin.RESUMED)
+        map.onResume()
+    }
+
+    override fun onPause(owner: LifecycleOwner) {
+        FlutterOsmPlugin.state.set(PAUSED)
+        map.onPause()
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+        FlutterOsmPlugin.state.set(STOPPED)
+        if(jobFlow!=null){
+            jobFlow?.cancel()
+            jobFlow=null
+        }
+    }
+
+    override fun onDestroy(owner: LifecycleOwner) {
+        FlutterOsmPlugin.state.set(DESTROYED)
+    }
 
 }
