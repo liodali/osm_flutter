@@ -202,7 +202,10 @@ class FlutterOsmView(
     }
 
     private fun enableMyLocation(result: MethodChannel.Result) {
-        map.overlays.clear()
+        if(folderRoad.items.isNotEmpty()){
+            folderRoad.items.clear()
+            map.invalidate()
+        }
         if (staticPoints.isNotEmpty()) {
             val iterator = staticPoints.entries.iterator()
             while (iterator.hasNext()) {
@@ -461,18 +464,16 @@ class FlutterOsmView(
         val overlay = FolderOverlay().apply {
             name = idStaticPosition
         }
-        staticPoints.get(idStaticPosition)?.forEach { geoPoint ->
+        staticPoints[idStaticPosition]?.forEach { geoPoint ->
             val maker = FlutterMaker(application!!, map)
             maker.position = geoPoint
             maker.defaultInfoWindow()
-            maker.onClickListener = object : Marker.OnMarkerClickListener {
-                override fun onMarkerClick(marker: Marker?, mapView: MapView?): Boolean {
-                    val hashMap = HashMap<String, Double>()
-                    hashMap["lon"] = marker!!.position.longitude
-                    hashMap["lat"] = marker.position.latitude
-                    eventSink!!.success(hashMap)
-                    return true
-                }
+            maker.onClickListener = Marker.OnMarkerClickListener { marker, _ ->
+                val hashMap = HashMap<String, Double>()
+                hashMap["lon"] = marker!!.position.longitude
+                hashMap["lat"] = marker.position.latitude
+                eventSink!!.success(hashMap)
+                true
             }
             if (staticMarkerIcon.isNotEmpty()) {
                 maker.setIconMaker(null, staticMarkerIcon[id])

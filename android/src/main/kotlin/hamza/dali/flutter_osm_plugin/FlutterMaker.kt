@@ -66,7 +66,8 @@ open class FlutterMaker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClic
     }
 
     fun defaultInfoWindow() {
-        setInfoWindow(FlutterInfoWindow(infoView = infoWindow!!, mapView = mapView, point = this.mPosition))
+
+        setInfoWindow(FlutterInfoWindow(infoView = infoWindow?:creatWindowInfoView(), mapView = mapView, point = this.mPosition))
     }
 
     private fun getDefaultIconDrawable(color: Int?, bitmap: Bitmap?): Drawable {
