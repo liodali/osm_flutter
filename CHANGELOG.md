@@ -1,3 +1,5 @@
+## 0.4.1 [beta-version]:
+* recuperation distance and duration of current road
 ## 0.4.0 [beta-version]:
 * migrate native android code from java to kotlin
 ## 0.3.6+7 [beta-version]:

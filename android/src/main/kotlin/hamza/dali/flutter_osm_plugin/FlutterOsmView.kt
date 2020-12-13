@@ -202,7 +202,7 @@ class FlutterOsmView(
     }
 
     private fun enableMyLocation(result: MethodChannel.Result) {
-        if(folderRoad.items.isNotEmpty()){
+        if (folderRoad.items.isNotEmpty()) {
             folderRoad.items.clear()
             map.invalidate()
         }
@@ -350,7 +350,11 @@ class FlutterOsmView(
                         }
                         map.invalidate()
                     }
-                    result.success(null)
+
+                    result.success(HashMap<String, Double>().apply {
+                        this["duration"] = road.mDuration
+                        this["distance"] = road.mLength
+                    })
                 }
 
             }
