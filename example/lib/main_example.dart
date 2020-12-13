@@ -32,7 +32,11 @@ class _MainExampleState extends State<MainExample> {
                 ///selection geoPoint
                 GeoPoint point = await osmKey.currentState.selectPosition();
                 GeoPoint point2 = await osmKey.currentState.selectPosition();
-                await osmKey.currentState.drawRoad(point, point2);
+                RoadInfo roadInformation =
+                    await osmKey.currentState.drawRoad(point, point2);
+                print(
+                    "duration:${Duration(seconds: roadInformation.duration.toInt()).inMinutes}");
+                print("distance:${roadInformation.distance}Km");
               } on RoadException catch (e) {
                 scaffoldKey.currentState.showSnackBar(
                   SnackBar(

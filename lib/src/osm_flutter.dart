@@ -117,6 +117,7 @@ class OSMFlutterState extends State<OSMFlutter>
       }
     });
   }
+
   /// requestPermission callback to request location in your phone
   Future<void> requestPermission() async {
     _permission = await LocationPermissions().checkPermissionStatus();
@@ -192,12 +193,12 @@ class OSMFlutterState extends State<OSMFlutter>
   /// draw road
   ///  [start] : started point of your Road
   ///  [end] : last point of your road
-  Future<void> drawRoad(GeoPoint start, GeoPoint end) async {
+  Future<RoadInfo> drawRoad(GeoPoint start, GeoPoint end) async {
     assert(
         start != null && end != null, "you cannot make road without 2 point");
     assert(start.latitude != end.latitude || start.longitude != end.longitude,
         "you cannot make road with same geopoint");
-    await this._osmController.drawRoad(start, end);
+   return  await this._osmController.drawRoad(start, end);
   }
 
   Future<void> _checkServiceLocation() async {
@@ -482,12 +483,13 @@ class _OsmController {
   }
 
   ///draw road
-  Future<void> drawRoad(GeoPoint p, GeoPoint p2) async {
+  Future<RoadInfo> drawRoad(GeoPoint p, GeoPoint p2) async {
     try {
-      return await _channel.invokeMethod("road", [
+      Map map = await _channel.invokeMethod("road", [
         {"lon": p.longitude, "lat": p.latitude},
         {"lon": p2.longitude, "lat": p2.latitude}
       ]);
+      return RoadInfo.fromMap(map);
     } on PlatformException catch (e) {
       throw RoadException(msg: e.message);
     }
