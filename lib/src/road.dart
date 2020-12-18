@@ -19,7 +19,10 @@ class RoadInfo {
   final double distance;
   final double duration;
 
-  RoadInfo({this.distance, this.duration});
+  RoadInfo({
+    this.distance,
+    this.duration,
+  });
 
   RoadInfo.fromMap(Map map)
       : this.duration = map["duration"],

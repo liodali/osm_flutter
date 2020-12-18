@@ -198,7 +198,7 @@ class OSMFlutterState extends State<OSMFlutter>
         start != null && end != null, "you cannot make road without 2 point");
     assert(start.latitude != end.latitude || start.longitude != end.longitude,
         "you cannot make road with same geopoint");
-   return  await this._osmController.drawRoad(start, end);
+    return await this._osmController.drawRoad(start, end);
   }
 
   Future<void> _checkServiceLocation() async {
