@@ -1,3 +1,6 @@
+## 0.4.2 [beta-version]:
+* create method to calculate distance between 2 point : distance2point
+* format files
 ## 0.4.1 [beta-version]:
 * recuperation distance and duration of current road
 ## 0.4.0 [beta-version]:

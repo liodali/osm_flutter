@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.4.1-orange)
+![pub](https://img.shields.io/badge/pub-v0.4.2-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -9,7 +9,8 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 * customize Icon Marker
 * draw Road,recuperate information (duration/distance) of the current road
 * ClickListener on Marker
-  
+* calculate distance between 2 points
+
 ## Getting Started
 
 
@@ -18,7 +19,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.4.1
+      flutter_osm_plugin: ^0.4.2
 ## Simple Usage
 #### Creating a basic `OSMFlutter`:
   
@@ -89,8 +90,6 @@ Add the following to your `pubspec.yaml` file:
 > you can use it to change their position over time
 ` osmKey.currentState.setStaticPosition(List<GeoPoint> geoPoints,String id ) `
 
-
-
 ####  `OSMFlutter`
 | Properties           | Description                         |
 | -------------------- | ----------------------------------- |
@@ -103,6 +102,12 @@ Add the following to your `pubspec.yaml` file:
 | `useSecureURL`       | enabled secure urls                  |
 | `staticPoints`       | List of Markers you want to show always ,should every marker have unique id |
 | `onGeoPointClicked`  | listener on static geoPoint          |
+
+## STATIC METHODS:
+### calculate distance between 2 geopoint position
+` double distanceEnMetres = await distance2point(GeoPoint(longitude: 36.84612143139903,latitude: 11.099388684927824,),
+        GeoPoint( longitude: 36.8388023164018, latitude: 11.096959785428027, ),); `
+
 
 ## NOTICE:
 > `for now the map working only for android,iOS will be available soon `
