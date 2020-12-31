@@ -30,11 +30,9 @@ open class OsmFactory(
                 register,
                 binaryMessenger,
                 viewId,
-                state,
                 application,
                 activity,
                 lifecycle,
-                activityHashCode,
         )
     }
 
