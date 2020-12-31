@@ -76,6 +76,8 @@ class OSMFlutter extends StatefulWidget {
 
 class OSMFlutterState extends State<OSMFlutter>
     with AfterLayoutMixin<OSMFlutter> {
+
+  GlobalKey androidViewKey=GlobalKey();
   //permission status
   PermissionStatus _permission;
 
@@ -247,6 +249,7 @@ class OSMFlutterState extends State<OSMFlutter>
         children: <Widget>[
           widgetConfigMap(),
           AndroidView(
+            key: androidViewKey,
             viewType: 'plugins.dali.hamza/osmview',
             onPlatformViewCreated: _onPlatformViewCreated,
             //creationParamsCodec:  StandardMessageCodec(),

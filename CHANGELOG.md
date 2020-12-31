@@ -1,3 +1,5 @@
+## 0.4.3 [beta-version]:
+* fix lifecycle of map in activity
 ## 0.4.2 [beta-version]:
 * create method to calculate distance between 2 point : distance2point
 * format files
