@@ -169,7 +169,7 @@ class OSMFlutterState extends State<OSMFlutter>
   /// positive value:zoomIN
   /// negative value:zoomOut
   Future<void> zoom(double zoom) async {
-    assert(zoom!=0,"zoom value should different from zero");
+    assert(zoom != 0, "zoom value should different from zero");
     await this._osmController.zoom(zoom);
   }
 
@@ -521,8 +521,13 @@ class _OsmController {
   Future<void> customMarkerStaticPosition(
       GlobalKey globalKey, String id) async {
     Uint8List icon = await _capturePng(globalKey);
-    await _channel
-        .invokeMethod("staticPosition#IconMarker", {"id": id, "bitmap": icon});
+    await _channel.invokeMethod(
+      "staticPosition#IconMarker",
+      {
+        "id": id,
+        "bitmap": icon,
+      },
+    );
   }
 
   ///static position
