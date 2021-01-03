@@ -1,3 +1,5 @@
+## 0.4.4+1 [beta-version]:
+* fix display marker of staticPoint
 ## 0.4.4 [beta-version]:
 * add attribute defaultZoom
 * add zoomIn/zoomOut as 2 other method to make zoom in map

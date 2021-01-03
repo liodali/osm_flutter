@@ -368,15 +368,15 @@ class FlutterOsmView(
     }
 
     private fun staticPositionIconMaker(call: MethodCall, result: MethodChannel.Result) {
-        val hasmap = call.arguments as HashMap<String, Any>
+        val hashMap:HashMap<String, Any> = call.arguments as HashMap<String, Any>
 
         try {
-            val bitmap = getBitmap((hasmap["bitmap"] as ByteArray))
-            staticMarkerIcon[(hasmap["id"] as String)] = bitmap
+            val bitmap = getBitmap((hashMap["bitmap"] as ByteArray))
+            staticMarkerIcon[(hashMap["id"] as String)] = bitmap
             result.success(null)
         } catch (e: java.lang.Exception) {
-            Log.e("id", hasmap["id"].toString())
-            Log.e("err", e.message)
+            Log.e("id", hashMap["id"].toString())
+            Log.e("err static point marker", e.message as String)
             result.error("400", "error to getBitmap static Position", "")
             staticMarkerIcon = HashMap()
         }
@@ -387,8 +387,8 @@ class FlutterOsmView(
         val id = map["id"] as String?
         val points = map["point"] as MutableList<HashMap<String, Double>>?
         val geoPoints: MutableList<GeoPoint> = ArrayList()
-        for (hashmap in points!!) {
-            geoPoints.add(GeoPoint(hashmap["lat"]!!, hashmap["lon"]!!))
+        for (hashMap in points!!) {
+            geoPoints.add(GeoPoint(hashMap["lat"]!!, hashMap["lon"]!!))
         }
         if (staticPoints.containsKey(id)) {
             Log.e(id, "" + points.size)
@@ -486,7 +486,7 @@ class FlutterOsmView(
                 true
             }
             if (staticMarkerIcon.isNotEmpty()) {
-                maker.setIconMaker(null, staticMarkerIcon[id])
+                maker.setIconMaker(null, staticMarkerIcon[idStaticPosition])
             }
             overlay.items.add(maker)
         }
