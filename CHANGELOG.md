@@ -1,3 +1,7 @@
+## 0.4.4 [beta-version]:
+* add attribute defaultZoom
+* add zoomIn/zoomOut as 2 other method to make zoom in map
+* fix bug in zoom method in native code
 ## 0.4.3 [beta-version]:
 * fix lifecycle of map in activity
 ## 0.4.2 [beta-version]:

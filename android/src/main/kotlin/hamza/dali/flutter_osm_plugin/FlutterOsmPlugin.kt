@@ -53,12 +53,12 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
             val flutterOsmView = FlutterOsmPlugin(register.activity())
             //register.activity().application.registerActivityLifecycleCallbacks(flutterOsmView)
             register.platformViewRegistry().registerViewFactory(VIEW_TYPE,
-                    OsmFactory(state,
+                    OsmFactory(
                             register.messenger(),
                             null,
                             null,
                             null,
-                            -1, register))
+                            register))
         }
     }
 
@@ -80,13 +80,16 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
         Configuration.getInstance().load(activity!!.application,
                 PreferenceManager.getDefaultSharedPreferences(activity!!.application))
 
-        pluginBinding!!.platformViewRegistry.registerViewFactory(VIEW_TYPE,
-                OsmFactory(state,
+        pluginBinding!!.platformViewRegistry.registerViewFactory(
+                VIEW_TYPE,
+                OsmFactory(
                         pluginBinding!!.binaryMessenger,
                         activity!!.application,
                         lifecycle,
                         activity,
-                        registrarActivityHashCode, register))
+                        register,
+                ),
+        )
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
@@ -108,12 +111,11 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
                 PreferenceManager.getDefaultSharedPreferences(activity!!.application))
 
         pluginBinding!!.platformViewRegistry.registerViewFactory(VIEW_TYPE,
-                OsmFactory(state,
+                OsmFactory(
                         pluginBinding!!.binaryMessenger,
                         activity!!.application,
                         lifecycle,
-                        activity,
-                        registrarActivityHashCode, register))
+                        activity, register))
 
     }
 

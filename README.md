@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.4.3-orange)
+![pub](https://img.shields.io/badge/pub-v0.4.4-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -19,7 +19,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.4.3
+      flutter_osm_plugin: ^0.4.4
 ## Simple Usage
 #### Creating a basic `OSMFlutter`:
   
@@ -57,12 +57,16 @@ Add the following to your `pubspec.yaml` file:
 
 ### zoomIN
 
-` osmKey.currentState.zoom(2.) `
+* ` osmKey.currentState.zoom(2.) `
+
+* ` osmKey.currentState.zoomIn() `
 
 
 ### zoomOut
 
-` osmKey.currentState.zoom(-2.) `
+* ` osmKey.currentState.zoom(-2.) `
+
+* ` osmKey.currentState.zoomOut() `
 
 ###  track user current position or disable tracking
 
@@ -98,6 +102,7 @@ Add the following to your `pubspec.yaml` file:
 | `showZoomController` | show default zoom controller.       |
 | `initPosition`       | set default position showing in map |
 | `markerIcon`         | set icon Marker                     |
+| `defaultZoom`        | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
 | `road`               | set color and start/end/middle markers in road |
 | `useSecureURL`       | enabled secure urls                  |
 | `staticPoints`       | List of Markers you want to show always ,should every marker have unique id |

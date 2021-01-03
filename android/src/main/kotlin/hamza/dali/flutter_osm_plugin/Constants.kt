@@ -23,6 +23,7 @@ class Constants {
         const val latLabel: String = "lat"
         const val lonLabel: String = "lon"
         const val zoomMyLocation: Double = 15.0
+        const val defaultZoom: Double = 1.0
         const val url = "router.project-osrm.org/route/v1/driving/"
         const val unvailableAdress = "unvailable addresse"
         const val STARTPOSITIONROAD = "START"

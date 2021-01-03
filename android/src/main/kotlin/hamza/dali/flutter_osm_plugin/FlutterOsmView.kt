@@ -17,12 +17,10 @@ import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
-import androidx.core.view.contains
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
-import androidx.preference.PreferenceManager
 import hamza.dali.flutter_osm_plugin.Constants.Companion.url
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.CREATED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.DESTROYED
@@ -34,13 +32,11 @@ import io.flutter.plugin.common.*
 import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.platform.PlatformView
-import kotlinx.android.synthetic.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
-import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
@@ -60,8 +56,8 @@ import kotlin.collections.set
 
 fun GeoPoint.toHashMap(): HashMap<String, Double> {
     return HashMap<String, Double>().apply {
-        this.put(Constants.latLabel, latitude)
-        this.put(Constants.lonLabel, longitude)
+        this[Constants.latLabel] = latitude
+        this[Constants.lonLabel] = longitude
     }
 
 }
@@ -69,11 +65,11 @@ fun GeoPoint.toHashMap(): HashMap<String, Double> {
 class FlutterOsmView(
         private val context: Context?,
         register: PluginRegistry.Registrar?,
-        private  val binaryMessenger: BinaryMessenger,
+        private val binaryMessenger: BinaryMessenger,
         private val id: Int,//viewId
         private var application: Application?,
         private var activity: Activity?,
-          lifecycle: Lifecycle?,
+        lifecycle: Lifecycle?,
 
         ) :
         DefaultLifecycleObserver,
@@ -107,23 +103,24 @@ class FlutterOsmView(
     private var mapEventsOverlay: MapEventsOverlay? = null
     private var roadManager: OSRMRoadManager? = null
     private var roadColor: Int? = null
-    private val defaultZoom = 10.0
+    private var defaultZoom = Constants.defaultZoom
+    private val initPositionZoom = 10.0
     private var useSecureURL = true
 
-    private var mainLinearLayout:LinearLayout
-    
+    private var mainLinearLayout: LinearLayout
+
     init {
-       
+
 
         mainLinearLayout = LinearLayout(context).apply {
             this.layoutParams = MapView.LayoutParams(LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-            this.orientation=LinearLayout.VERTICAL
-          }
-        lifecycle?.addObserver(this) 
+            this.orientation = LinearLayout.VERTICAL
+        }
+        lifecycle?.addObserver(this)
 
 
     }
-    
+
 
     private fun initMap() {
         map = MapView(context).apply {
@@ -133,7 +130,7 @@ class FlutterOsmView(
             setTileSource(MAPNIK)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         }
-        map!!.addMapListener(object:MapListener {
+        map!!.addMapListener(object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
                 return true
             }
@@ -153,9 +150,16 @@ class FlutterOsmView(
         })
         mainLinearLayout.addView(map)
     }
+
     private fun setZoom(methodCall: MethodCall, result: MethodChannel.Result) {
         try {
-            val zoom = methodCall.arguments as Double
+            var zoomInput = methodCall.arguments as Double
+            if (zoomInput == 0.0) {
+                zoomInput = defaultZoom
+            } else if (zoomInput == -1.0) {
+                zoomInput = -defaultZoom
+            }
+            val zoom=map!!.zoomLevelDouble+zoomInput
             map!!.controller.setZoom(zoom)
             result.success(null)
         } catch (e: Exception) {
@@ -168,7 +172,7 @@ class FlutterOsmView(
 
         map!!.overlays.clear()
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
-        addMarker(geoPoint, defaultZoom, null)
+        addMarker(geoPoint, initPositionZoom, null)
         result.success(null)
     }
 
@@ -235,6 +239,10 @@ class FlutterOsmView(
             }
             "Zoom" -> {
                 setZoom(call, result)
+            }
+            "defaultZoom" -> {
+                defaultZoom = call.arguments as Double
+                result.success(null)
             }
 
             "currentLocation" -> {
@@ -517,7 +525,7 @@ class FlutterOsmView(
 
     override fun dispose() {
         mainLinearLayout.removeAllViews()
-        map=null
+        map = null
     }
 
     override fun onFlutterViewAttached(flutterView: View) {
@@ -549,19 +557,19 @@ class FlutterOsmView(
         folderStaticPosition.name = Constants.nameFolderStatic
 
         initMap()
-        
+
 
     }
 
     override fun onStart(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(STARTED)
-        Log.e("osm","osm flutter plugin start")
-        
+        Log.e("osm", "osm flutter plugin start")
+
     }
 
     override fun onResume(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(FlutterOsmPlugin.RESUMED)
-        Log.e("osm","osm flutter plugin resume")
+        Log.e("osm", "osm flutter plugin resume")
 
         map!!.onResume()
 
@@ -593,7 +601,7 @@ class FlutterOsmView(
         map!!.clearFindViewByIdCache()
         map!!.tileProvider.clearTileCache()
          */
-        
+
 
     }
 

@@ -12,12 +12,10 @@ import io.flutter.plugin.platform.PlatformViewFactory
 import java.util.concurrent.atomic.AtomicInteger
 
 open class OsmFactory(
-        private val state: AtomicInteger,
         private val binaryMessenger: BinaryMessenger,
         val application: Application?,
         private val lifecycle: Lifecycle?,
         private val activity: Activity?,
-        private val activityHashCode: Int,
         private val register: PluginRegistry.Registrar?,
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(
