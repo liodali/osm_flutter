@@ -30,6 +30,7 @@ typedef OnGeoPointClicked = void Function(GeoPoint);
 /// [onGeoPointClicked] : (callback) is trigger when you clicked on geoPoint
 /// [markerIcon] : (Icon/AssertImage) marker of geopoint
 /// [road] : set color and icons marker of road
+/// [defaultZoom] : set default zoom value (default = 1)
 /// [useSecureURL] : use https or http when we get data from osm api
 class OSMFlutter extends StatefulWidget {
   final bool currentLocation;
@@ -40,6 +41,7 @@ class OSMFlutter extends StatefulWidget {
   final OnGeoPointClicked onGeoPointClicked;
   final MarkerIcon markerIcon;
   final Road road;
+  final double defaultZoom;
   final bool useSecureURL;
 
   OSMFlutter({
@@ -52,6 +54,7 @@ class OSMFlutter extends StatefulWidget {
     this.markerIcon,
     this.onGeoPointClicked,
     this.road,
+    this.defaultZoom = 1.0,
     this.useSecureURL = true,
   }) : super(key: key);
 
@@ -76,8 +79,8 @@ class OSMFlutter extends StatefulWidget {
 
 class OSMFlutterState extends State<OSMFlutter>
     with AfterLayoutMixin<OSMFlutter> {
+  GlobalKey androidViewKey = GlobalKey();
 
-  GlobalKey androidViewKey=GlobalKey();
   //permission status
   PermissionStatus _permission;
 
@@ -165,8 +168,21 @@ class OSMFlutterState extends State<OSMFlutter>
   /// zoom in/out
   /// positive value:zoomIN
   /// negative value:zoomOut
-  void zoom(double zoom) async {
+  Future<void> zoom(double zoom) async {
+    assert(zoom!=0,"zoom value should different from zero");
     await this._osmController.zoom(zoom);
+  }
+
+  /// zoomIn use defaultZoom
+  /// positive value:zoomIN
+  Future<void> zoomIn() async {
+    await this._osmController.zoom(0);
+  }
+
+  /// zoomOut use defaultZoom
+  /// negative value:zoomOut
+  Future<void> zoomOut() async {
+    await this._osmController.zoom(-1);
   }
 
   /// activate current location position
@@ -311,10 +327,13 @@ class OSMFlutterState extends State<OSMFlutter>
   @override
   void afterFirstLayout(BuildContext context) {
     print("after layout");
-    Future.delayed(Duration(milliseconds: 1000), () async {
+    Future.delayed(Duration(milliseconds: 1250), () async {
       /*while(this._osmController==null){
         print("osm null");
       }*/
+
+      this._osmController.setDefaultZoom(widget.defaultZoom);
+
       this._osmController.setSecureURL(widget.useSecureURL);
       if (widget.onGeoPointClicked != null) {
         this._osmController.startListen(widget.onGeoPointClicked, (err) {
@@ -515,6 +534,14 @@ class _OsmController {
       }
       return await _channel
           .invokeMethod("staticPosition", {"id": id, "point": listGeos});
+    } on PlatformException catch (e) {
+      print(e.message);
+    }
+  }
+
+  Future<void> setDefaultZoom(double defaultZoom) async {
+    try {
+      return await _channel.invokeMethod("defaultZoom", defaultZoom);
     } on PlatformException catch (e) {
       print(e.message);
     }
