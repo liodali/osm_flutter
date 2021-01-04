@@ -159,7 +159,7 @@ class FlutterOsmView(
             } else if (zoomInput == -1.0) {
                 zoomInput = -defaultZoom
             }
-            val zoom=map!!.zoomLevelDouble+zoomInput
+            val zoom = map!!.zoomLevelDouble + zoomInput
             map!!.controller.setZoom(zoom)
             result.success(null)
         } catch (e: Exception) {
@@ -368,7 +368,7 @@ class FlutterOsmView(
     }
 
     private fun staticPositionIconMaker(call: MethodCall, result: MethodChannel.Result) {
-        val hashMap:HashMap<String, Any> = call.arguments as HashMap<String, Any>
+        val hashMap: HashMap<String, Any> = call.arguments as HashMap<String, Any>
 
         try {
             val bitmap = getBitmap((hashMap["bitmap"] as ByteArray))
@@ -386,7 +386,7 @@ class FlutterOsmView(
         val map = call.arguments as HashMap<String, Any>
         val id = map["id"] as String?
         val points = map["point"] as MutableList<HashMap<String, Double>>?
-        val geoPoints: MutableList<GeoPoint> = ArrayList()
+        val geoPoints: MutableList<GeoPoint> = emptyList<GeoPoint>().toMutableList()
         for (hashMap in points!!) {
             geoPoints.add(GeoPoint(hashMap["lat"]!!, hashMap["lon"]!!))
         }
@@ -394,6 +394,10 @@ class FlutterOsmView(
             Log.e(id, "" + points.size)
             staticPoints[id]?.clear()
             staticPoints[id]?.addAll(geoPoints)
+            if (folderStaticPosition.items.isNotEmpty())
+                folderStaticPosition.remove(folderStaticPosition.items.first {
+                    (it as FolderOverlay).name?.equals(id) == true
+                })
         } else {
             staticPoints[id!!] = geoPoints
         }
@@ -467,9 +471,10 @@ class FlutterOsmView(
 
     private fun showStaticPosition(idStaticPosition: String) {
 
-        folderStaticPosition.items.retainAll {
-            (it as FolderOverlay).name?.equals(id) == true
-        }
+        /* folderStaticPosition.items.retainAll {
+             (it as FolderOverlay).name?.equals(idStaticPosition) == true
+         }*/
+
 
         val overlay = FolderOverlay().apply {
             name = idStaticPosition
@@ -488,9 +493,9 @@ class FlutterOsmView(
             if (staticMarkerIcon.isNotEmpty()) {
                 maker.setIconMaker(null, staticMarkerIcon[idStaticPosition])
             }
-            overlay.items.add(maker)
+            overlay.add(maker)
         }
-        folderStaticPosition.items.add(overlay)
+        folderStaticPosition.add(overlay)
         if (map!!.zoomLevelDouble > 10.0) {
             if (map!!.overlays.contains(folderStaticPosition)) {
                 map!!.overlays.remove(folderStaticPosition)
