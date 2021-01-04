@@ -100,9 +100,9 @@ class OSMFlutterState extends State<OSMFlutter>
       }
 
       ids.asMap().forEach((i, id) {
-        var copy = ids.skipWhile((_id) => id == _id).toList();
-        if (copy.isNotEmpty && copy.firstWhere((x) => id == x).isNotEmpty) {
-          assert(false, "you have duplicated ids");
+        var count = ids.where((_id) => id == _id).length;
+        if (count > 1) {
+          assert(false, "you have duplicated ids for static points");
         }
       });
       ids = null;
