@@ -36,7 +36,7 @@ class _MainExampleState extends State<MainExample> {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        title: const Text('OSM Plugin app'),
+        title: const Text('OSM'),
         actions: <Widget>[
           IconButton(
             onPressed: () async {
@@ -119,7 +119,7 @@ class _MainExampleState extends State<MainExample> {
               },
               staticPoints: [
                 StaticPositionGeoPoint(
-                  "static",
+                  "line 1",
                   MarkerIcon(
                     icon: Icon(
                       Icons.train,
@@ -132,6 +132,20 @@ class _MainExampleState extends State<MainExample> {
                     GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
                   ],
                 ),
+                StaticPositionGeoPoint(
+                  "line 2",
+                  MarkerIcon(
+                    icon: Icon(
+                      Icons.train,
+                      color: Colors.red,
+                      size: 48,
+                    ),
+                  ),
+                  [
+                    GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
+                    GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
+                  ],
+                )
               ],
               road: Road(
                 startIcon: MarkerIcon(
