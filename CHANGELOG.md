@@ -1,3 +1,5 @@
+## 0.4.4+2 [beta-version]:
+* fix bug in multiple staticPoint
 ## 0.4.4+1 [beta-version]:
 * fix display marker of staticPoint
 ## 0.4.4 [beta-version]:
