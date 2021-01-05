@@ -1,3 +1,5 @@
+## 0.4.4+3 [beta-version]:
+* fix missing export utilities
 ## 0.4.4+2 [beta-version]:
 * fix bug in multiple staticPoint
 ## 0.4.4+1 [beta-version]:
