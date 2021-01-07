@@ -88,6 +88,7 @@ class OSMFlutterState extends State<OSMFlutter>
   _OsmController _osmController;
   GlobalKey _key, _startIconKey, _endIconKey, _midddleIconKey;
   Map<String, GlobalKey> _staticMarkersKeys;
+  bool _isTracking = false;
 
   @override
   void initState() {
@@ -191,15 +192,27 @@ class OSMFlutterState extends State<OSMFlutter>
     await this._osmController.currentLocation();
   }
 
+
   /// recuperation of user current position
   Future<GeoPoint> myLocation() async {
     return await this._osmController.myLocation();
   }
 
-  /// enabled/disabled tracking user location
+  /// enabled tracking user location
   Future<void> enableTracking() async {
-    await requestPermission();
-    await this._osmController.enableTracking();
+    if (!_isTracking) {
+      await requestPermission();
+      await this._osmController.enableTracking();
+      _isTracking = true;
+    }
+  }
+
+  /// disabled tracking user location
+  Future<void> disabledTracking() async {
+    if (_isTracking) {
+      await this._osmController.enableTracking();
+      _isTracking = false;
+    }
   }
 
   /// pick Position in map

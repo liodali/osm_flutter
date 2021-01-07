@@ -1,5 +1,4 @@
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:flutter_osm_plugin/src/utilities.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
