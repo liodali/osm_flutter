@@ -23,6 +23,7 @@ class _MainExampleState extends State<MainExample> {
   GlobalKey<OSMFlutterState> osmKey;
   GlobalKey<ScaffoldState> scaffoldKey;
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
+  ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
 
   @override
   void initState() {
@@ -206,10 +207,25 @@ class _MainExampleState extends State<MainExample> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await osmKey.currentState.currentLocation();
-          await osmKey.currentState.enableTracking();
+          if(!trackingNotifier.value){
+            await osmKey.currentState.currentLocation();
+            await osmKey.currentState.enableTracking();
+          }else{
+            await osmKey.currentState.disabledTracking();
+          }
+          trackingNotifier.value=!trackingNotifier.value;
+
+
         },
-        child: Icon(Icons.my_location),
+        child: ValueListenableBuilder<bool>(
+          valueListenable: trackingNotifier,
+          builder: (ctx,isTracking,_){
+            if(isTracking){
+              return Icon(Icons.gps_off_sharp);
+            }
+            return Icon(Icons.my_location);
+          },
+        ),
       ),
     );
   }
