@@ -214,8 +214,6 @@ class _MainExampleState extends State<MainExample> {
             await osmKey.currentState.disabledTracking();
           }
           trackingNotifier.value=!trackingNotifier.value;
-
-
         },
         child: ValueListenableBuilder<bool>(
           valueListenable: trackingNotifier,
