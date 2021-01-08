@@ -99,7 +99,7 @@ class FlutterOsmView(
     private lateinit var eventChannel: EventChannel
     private var eventSink: EventSink? = null
 
-    private var provider:GpsMyLocationProvider? = null
+    private var provider: GpsMyLocationProvider? = null
     private var mapEventsOverlay: MapEventsOverlay? = null
     private var roadManager: OSRMRoadManager? = null
     private var roadColor: Int? = null
@@ -206,25 +206,23 @@ class FlutterOsmView(
     }
 
     private fun enableMyLocation(result: MethodChannel.Result) {
-        if (folderRoad.items.isNotEmpty()) {
-            folderRoad.items.forEach {
-                folderRoad.remove(it)
-            }
-            map!!.invalidate()
-        }
-        /*if (staticPoints.isNotEmpty()) {
-            val iterator = staticPoints.entries.iterator()
-            while (iterator.hasNext()) {
-                val mapEntry = iterator.next()
-                showStaticPosition(mapEntry.key)
-            }
-        }*/
+        /* if (folderRoad.items.isNotEmpty()) {
+             folderRoad.items.clear()
+             map!!.invalidate()
+         }
+         if (staticPoints.isNotEmpty()) {
+             val iterator = staticPoints.entries.iterator()
+             while (iterator.hasNext()) {
+                 val mapEntry = iterator.next()
+                 showStaticPosition(mapEntry.key)
+             }
+         }*/
         if (locationNewOverlay == null) {
-             provider = GpsMyLocationProvider(application)
+            provider = GpsMyLocationProvider(application)
             locationNewOverlay = MyLocationNewOverlay(provider, map)
 
         }
-        locationNewOverlay!!.setPersonIcon(customMarkerIcon)
+        //locationNewOverlay!!.setPersonIcon(customMarkerIcon)
         locationNewOverlay?.let { location ->
             if (!location.isMyLocationEnabled) {
                 isEnabled = true
@@ -238,9 +236,9 @@ class FlutterOsmView(
                 }
             }
         }
-
-        map!!.overlays.add(locationNewOverlay)
-
+        if (!map!!.overlays.contains(locationNewOverlay)) {
+            map!!.overlays.add(locationNewOverlay)
+        }
         result.success(null)
     }
 

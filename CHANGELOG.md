@@ -1,3 +1,5 @@
+## 0.4.5+1 [beta-version]:
+* fix enable/disable tracking
 ## 0.4.5 [beta-version]:
 * disableTracking when activity goes in background and re-enabled when is resumed
 * add new method to disable tracking
