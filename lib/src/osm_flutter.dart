@@ -18,6 +18,7 @@ import 'package:flutter_osm_plugin/src/road_exception.dart';
 import 'package:location_permissions/location_permissions.dart';
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
+typedef OnLocationChanged = void Function(GeoPoint);
 
 /// Principal widget to show OSMMap using osm api
 /// you can track you current location,show static points like position of your stores
@@ -39,6 +40,7 @@ class OSMFlutter extends StatefulWidget {
   final GeoPoint initPosition;
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked onGeoPointClicked;
+  final OnLocationChanged onLocationChanged;
   final MarkerIcon markerIcon;
   final Road road;
   final double defaultZoom;
@@ -53,6 +55,7 @@ class OSMFlutter extends StatefulWidget {
     this.staticPoints = const [],
     this.markerIcon,
     this.onGeoPointClicked,
+    this.onLocationChanged,
     this.road,
     this.defaultZoom = 1.0,
     this.useSecureURL = true,
@@ -191,7 +194,6 @@ class OSMFlutterState extends State<OSMFlutter>
     await requestPermission();
     await this._osmController.currentLocation();
   }
-
 
   /// recuperation of user current position
   Future<GeoPoint> myLocation() async {
@@ -353,6 +355,11 @@ class OSMFlutterState extends State<OSMFlutter>
           print(err);
         });
       }
+      if (widget.onLocationChanged != null) {
+        this._osmController.myLocationListener(widget.onLocationChanged, (err) {
+          print(err);
+        });
+      }
       if (widget.trackMyPosition) {
         await enableTracking();
         await currentLocation();
@@ -407,15 +414,30 @@ class OSMFlutterState extends State<OSMFlutter>
 
 class _OsmController {
   _OsmController._(int id)
-      : _channel = new MethodChannel('plugins.dali.hamza/osmview_$id'),
-        _eventChannel =
-            new EventChannel("plugins.dali.hamza/osmview_stream_$id");
+      : _channel = MethodChannel('plugins.dali.hamza/osmview_$id'),
+        _eventChannel = EventChannel("plugins.dali.hamza/osmview_stream_$id"),
+        _eventLocationChannel =
+            EventChannel("plugins.dali.hamza/osmview_stream_location_$id");
 
   //_eventChannel=null;
 
   final MethodChannel _channel;
   final EventChannel _eventChannel;
-  StreamSubscription eventOSM;
+  final EventChannel _eventLocationChannel;
+  StreamSubscription eventOSM, eventLocationUser;
+
+  void myLocationListener(
+      OnLocationChanged onChanged, Function(dynamic d) onError) {
+    eventLocationUser =
+        _eventLocationChannel.receiveBroadcastStream().listen((data) {
+      if (onChanged != null) {
+        GeoPoint p = GeoPoint(latitude: data["lat"], longitude: data["lon"]);
+        onChanged(p);
+      }
+    }, onError: (e) {
+      onError(e);
+    });
+  }
 
   //final EventChannel _eventChannel;
   void startListen(
@@ -431,7 +453,8 @@ class _OsmController {
   }
 
   void closeListen() {
-    eventOSM.cancel();
+    eventOSM?.cancel();
+    eventLocationUser?.cancel();
   }
 
   Future<void> setSecureURL(bool secure) async {
