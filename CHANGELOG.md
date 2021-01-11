@@ -1,3 +1,5 @@
+## 0.4.6 [beta-version]:
+* receive update location when tracking is enabled
 ## 0.4.5+1 [beta-version]:
 * fix enable/disable tracking
 ## 0.4.5 [beta-version]:

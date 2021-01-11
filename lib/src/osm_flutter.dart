@@ -28,8 +28,9 @@ typedef OnLocationChanged = void Function(GeoPoint);
 /// [showZoomController] : (bool) if us true, you can zoomIn zoomOut directly in the map
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 /// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
-/// [onGeoPointClicked] : (callback) is trigger when you clicked on geoPoint
-/// [markerIcon] : (Icon/AssertImage) marker of geopoint
+/// [onGeoPointClicked] : (callback) is trigger when you clicked on marker,return current  geoPoint of the Marker
+/// [onLocationChanged] : (callback) it's hire when you activate tracking and  user position has been changed
+/// [markerIcon] : (Icon/AssertImage) marker of geoPoint
 /// [road] : set color and icons marker of road
 /// [defaultZoom] : set default zoom value (default = 1)
 /// [useSecureURL] : use https or http when we get data from osm api
