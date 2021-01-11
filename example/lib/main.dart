@@ -104,6 +104,9 @@ class _MainExampleState extends State<MainExample> {
               key: osmKey,
               currentLocation: false,
               defaultZoom: 3.0,
+              onLocationChanged: (myLocation){
+                print(myLocation);
+              },
               onGeoPointClicked: (geoPoint) {
                 scaffoldKey.currentState.showSnackBar(
                   SnackBar(
