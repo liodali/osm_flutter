@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.4.5%2B1-orange)
+![pub](https://img.shields.io/badge/pub-v0.4.6-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -19,12 +19,13 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.4.5+1
+      flutter_osm_plugin: ^0.4.6
 ## Simple Usage
 #### Creating a basic `OSMFlutter`:
   
   
-    OSMFlutter( 
+```dart
+OSMFlutter( 
         key: osmKey,
         currentLocation: false,
         road: Road(
@@ -46,6 +47,8 @@ Add the following to your `pubspec.yaml` file:
         ),
         initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
     );
+
+```
 
 ### Declare GlobalKey
 
@@ -110,7 +113,8 @@ Add the following to your `pubspec.yaml` file:
 | `road`               | set color and start/end/middle markers in road |
 | `useSecureURL`       | enabled secure urls                  |
 | `staticPoints`       | List of Markers you want to show always ,should every marker have unique id |
-| `onGeoPointClicked`  | listener on static geoPoint          |
+| `onGeoPointClicked`  | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
+| `onGeoPointClicked`  | (callback) it is hire when you activate tracking and  user position has been changed          |
 
 ## STATIC METHODS:
 ### calculate distance between 2 geopoint position

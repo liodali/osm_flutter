@@ -34,6 +34,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.platform.PlatformView
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
@@ -97,7 +98,9 @@ class FlutterOsmView(
 
     private lateinit var methodChannel: MethodChannel
     private lateinit var eventChannel: EventChannel
+    private lateinit var eventLocationChannel: EventChannel
     private var eventSink: EventSink? = null
+    private var eventLocationSink: EventSink? = null
 
     private var provider: GpsMyLocationProvider? = null
     private var mapEventsOverlay: MapEventsOverlay? = null
@@ -230,9 +233,10 @@ class FlutterOsmView(
             }
             location.runOnFirstFix {
                 GlobalScope.launch(Main) {
-                    val currentPosition = GeoPoint(location.lastFix.latitude, location.lastFix.longitude)
+                    val currentPosition = GeoPoint(location.lastFix)
                     map!!.controller.setZoom(Constants.zoomMyLocation)
                     map!!.controller.animateTo(currentPosition)
+                    eventLocationSink?.success(currentPosition.toHashMap())
                 }
             }
         }
@@ -242,6 +246,14 @@ class FlutterOsmView(
         result.success(null)
     }
 
+    fun onChangedLocation(locationOverlay:MyLocationNewOverlay){
+        provider?.startLocationProvider { location, source ->
+            locationOverlay.onLocationChanged(location,source)
+            val geoPMap=GeoPoint(location).toHashMap()
+            println("send location to flutter")
+            eventLocationSink?.success(geoPMap)
+        }
+    }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
@@ -275,19 +287,27 @@ class FlutterOsmView(
             }
 
             "trackMe" -> {
-                locationNewOverlay?.let {
-                    if (it.isFollowLocationEnabled) {
-                        it.disableFollowLocation()
-                        it.disableMyLocation()
-                        isTracking = false
-                        isEnabled = false
-                    } else {
-                        isTracking = true
-                        it.enableFollowLocation()
-
+                try {
+                    locationNewOverlay?.let { locationOverlay ->
+                        if (locationOverlay.isFollowLocationEnabled) {
+                            locationOverlay.disableFollowLocation()
+                            locationOverlay.disableMyLocation()
+                            provider?.stopLocationProvider()
+                            isTracking = false
+                            isEnabled = false
+                        } else {
+                            isTracking = true
+                            locationOverlay.enableFollowLocation()
+                            
+                            onChangedLocation(locationOverlay)
+                        }
                     }
+                    result.success(true)
+                } catch (e: Exception) {
+                    result.error("400", "${e.message!!}", "")
+
                 }
-                result.success(null)
+
             }
             "user#position" -> {
                 locationNewOverlay?.let {
@@ -527,7 +547,7 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+    override fun onListen(arguments: Any?, events: EventSink?) {
         eventSink = events
     }
 
@@ -574,6 +594,18 @@ class FlutterOsmView(
         methodChannel.setMethodCallHandler(this)
         eventChannel = EventChannel(binaryMessenger, "plugins.dali.hamza/osmview_stream_${id}")
         eventChannel.setStreamHandler(this)
+
+        eventLocationChannel = EventChannel(binaryMessenger, "plugins.dali.hamza/osmview_stream_location_${id}")
+        eventLocationChannel.setStreamHandler(object : EventChannel.StreamHandler {
+            override fun onListen(arguments: Any?, events: EventSink?) {
+                eventLocationSink = events
+            }
+
+            override fun onCancel(arguments: Any?) {
+                eventLocationSink?.endOfStream()
+            }
+
+        })
         scope = owner.lifecycle.coroutineScope
         folderStaticPosition.name = Constants.nameFolderStatic
 
@@ -596,8 +628,9 @@ class FlutterOsmView(
             if (isEnabled) {
                 myLocation.enableMyLocation()
             }
-            if (isTracking) {
+            if (isTracking && isEnabled) {
                 myLocation.enableFollowLocation()
+                onChangedLocation(myLocation)
             }
 
         }
@@ -612,6 +645,7 @@ class FlutterOsmView(
             }
             if (myLocation.isMyLocationEnabled) {
                 myLocation.disableMyLocation()
+                provider?.stopLocationProvider()
             }
         }
         map!!.onPause()
