@@ -1,3 +1,6 @@
+## 0.4.7 [beta-version]:
+* add marker picked by user deletable in long click
+* add new method to delete marker manually (cannot delete static point with this method)
 ## 0.4.6 [beta-version]:
 * receive update location when tracking is enabled
 ## 0.4.5+1 [beta-version]:
