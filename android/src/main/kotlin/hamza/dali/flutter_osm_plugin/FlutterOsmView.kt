@@ -34,7 +34,6 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.platform.PlatformView
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
@@ -60,6 +59,14 @@ fun GeoPoint.toHashMap(): HashMap<String, Double> {
         this[Constants.latLabel] = latitude
         this[Constants.lonLabel] = longitude
     }
+
+}
+
+fun HashMap<String, Double>.toGeoPoint(): GeoPoint {
+    if (this.keys.contains("lat") && this.keys.contains("lon")) {
+        return GeoPoint(this["lat"]!!, this["lon"]!!)
+    }
+    throw IllegalArgumentException("cannot map this hashMap to GeoPoint")
 
 }
 
@@ -189,6 +196,13 @@ class FlutterOsmView(
 
     private fun createMarker(geoPoint: GeoPoint, color: Int?): Marker {
         val marker = FlutterMaker(application!!, map!!, geoPoint)
+        marker.longPress = object : LongClickHandler {
+            override fun invoke(marker: Marker): Boolean {
+                map!!.overlays.remove(marker)
+                map!!.invalidate()
+                return true
+            }
+        }
         val iconDrawable: Drawable = getDefaultIconDrawable(color)
         //marker.setPosition(geoPoint);
         marker.icon = iconDrawable
@@ -246,10 +260,10 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    fun onChangedLocation(locationOverlay:MyLocationNewOverlay){
+    private fun onChangedLocation(locationOverlay: MyLocationNewOverlay) {
         provider?.startLocationProvider { location, source ->
-            locationOverlay.onLocationChanged(location,source)
-            val geoPMap=GeoPoint(location).toHashMap()
+            locationOverlay.onLocationChanged(location, source)
+            val geoPMap = GeoPoint(location).toHashMap()
             println("send location to flutter")
             eventLocationSink?.success(geoPMap)
         }
@@ -298,7 +312,7 @@ class FlutterOsmView(
                         } else {
                             isTracking = true
                             locationOverlay.enableFollowLocation()
-                            
+
                             onChangedLocation(locationOverlay)
                         }
                     }
@@ -321,6 +335,9 @@ class FlutterOsmView(
 
             "user#pickPosition" -> {
                 pickPosition(call, result)
+            }
+            "user#removeMarkerPosition" -> {
+                removePosition(call, result)
             }
             "road" -> {
                 drawRoad(call, result)
@@ -478,8 +495,11 @@ class FlutterOsmView(
         if (mapEventsOverlay == null) {
             mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
                 override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-                    mapEventsOverlay = null
-                    map!!.overlays.removeFirst()
+                    if (mapEventsOverlay != null) {
+                        mapEventsOverlay = null
+                        map!!.overlays.removeFirst()
+                    }
+
                     addMarker(p!!, Constants.zoomMyLocation, null)
                     result.success(p.toHashMap())
 
@@ -487,11 +507,34 @@ class FlutterOsmView(
                 }
 
                 override fun longPressHelper(p: GeoPoint?): Boolean {
-                    TODO("Not yet implemented")
+
+
+                    return true
+
                 }
 
             })
             map!!.overlays.add(0, mapEventsOverlay)
+        }
+
+    }
+
+    private fun removePosition(call: MethodCall, result: MethodChannel.Result) {
+        val geoMap = call.arguments as HashMap<String, Double>
+        deleteMarker(geoMap.toGeoPoint())
+    }
+
+    private fun deleteMarker(geoPoint: GeoPoint) {
+        val geoMarker = map!!.overlays.firstOrNull {
+            if (it is FlutterMaker) {
+                (it.position.latitude == geoPoint.latitude
+                        && it.position.longitude == geoPoint.longitude)
+            } else
+                false
+        }
+        geoMarker?.let {
+            map!!.overlays.remove(it)
+            map!!.invalidate()
         }
     }
 

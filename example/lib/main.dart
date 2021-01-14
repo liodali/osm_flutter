@@ -104,14 +104,14 @@ class _MainExampleState extends State<MainExample> {
               key: osmKey,
               currentLocation: false,
               defaultZoom: 3.0,
-              onLocationChanged: (myLocation){
+              onLocationChanged: (myLocation) {
                 print(myLocation);
               },
-              onGeoPointClicked: (geoPoint) {
+              onGeoPointClicked: (geoPoint) async {
                 scaffoldKey.currentState.showSnackBar(
                   SnackBar(
                     content: Text(
-                      "lat:${geoPoint.latitude},lon${geoPoint.longitude}",
+                      "${geoPoint.toMap().toString()}",
                     ),
                     action: SnackBarAction(
                       onPressed: () =>
@@ -210,18 +210,18 @@ class _MainExampleState extends State<MainExample> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          if(!trackingNotifier.value){
+          if (!trackingNotifier.value) {
             await osmKey.currentState.currentLocation();
             await osmKey.currentState.enableTracking();
-          }else{
+          } else {
             await osmKey.currentState.disabledTracking();
           }
-          trackingNotifier.value=!trackingNotifier.value;
+          trackingNotifier.value = !trackingNotifier.value;
         },
         child: ValueListenableBuilder<bool>(
           valueListenable: trackingNotifier,
-          builder: (ctx,isTracking,_){
-            if(isTracking){
+          builder: (ctx, isTracking, _) {
+            if (isTracking) {
               return Icon(Icons.gps_off_sharp);
             }
             return Icon(Icons.my_location);
