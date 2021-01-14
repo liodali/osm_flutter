@@ -9,4 +9,11 @@ class GeoPoint {
     this.latitude,
     this.longitude,
   });
+
+  Map<String, double> toMap() {
+    return {
+      "lon": longitude,
+      "lat": latitude,
+    };
+  }
 }

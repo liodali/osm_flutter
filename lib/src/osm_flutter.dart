@@ -154,6 +154,12 @@ class OSMFlutterState extends State<OSMFlutter>
     if (p != null) this._osmController.addPosition(p);
   }
 
+  ///remove marker from map of position
+  /// [p] : geoPoint
+  Future<void> removeMarker(GeoPoint p) async {
+    if (p != null) this._osmController.removePosition(p);
+  }
+
   //change Icon Marker
   Future changeIconMarker(GlobalKey key) async {
     await this._osmController.customMarker(key);
@@ -171,8 +177,7 @@ class OSMFlutterState extends State<OSMFlutter>
   }
 
   /// zoom in/out
-  /// positive value:zoomIN
-  /// negative value:zoomOut
+  /// [zoom] : (double) positive value:zoomIN or negative value:zoomOut
   Future<void> zoom(double zoom) async {
     assert(zoom != 0, "zoom value should different from zero");
     await this._osmController.zoom(zoom);
@@ -539,6 +544,12 @@ class _OsmController {
   Future<void> addPosition(GeoPoint p) async {
     return await _channel.invokeListMethod(
         "initPosition", {"lon": p.longitude, "lat": p.latitude});
+  }
+  ///delete marker of this position
+  ///[p] : (GeoPoint) position of marker that you want to remove it from the map
+  Future<void> removePosition(GeoPoint p) async {
+    return await _channel.invokeListMethod(
+        "user#removeMarkerPosition", p.toMap());
   }
 
   ///draw road

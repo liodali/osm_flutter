@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.4.6-orange)
+![pub](https://img.shields.io/badge/pub-v0.4.7-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -19,9 +19,9 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.4.6
+      flutter_osm_plugin: ^0.4.7
 ## Simple Usage
-#### Creating a basic `OSMFlutter`:
+#### Creating a basic `OSMFlutter` :
   
   
 ```dart
@@ -90,6 +90,13 @@ OSMFlutter(
 ### select/create new position
 
 `GeoPoint geoPoint = osmKey.currentState.selectPosition() `
+
+* PS : selected position can be removed by long press 
+
+### remove marker
+
+`osmKey.currentState.removePosition(geoPoint)`
+* PS : static position cannot be removed by this method 
 
 ### draw road,recuperate distance in km and duration in sec
 ` RoadInfo roadInfo = await osmKey.currentState.drawRoad( GeoPoint(latitude: 47.35387, longitude: 8.43609),GeoPoint(latitude: 47.4371, longitude: 8.6136)); `
