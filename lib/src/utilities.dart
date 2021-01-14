@@ -22,6 +22,7 @@ double sqrtCos(num x) {
 double sqrtCos2(num x, num y) {
   return Math.cos(x) * Math.cos(y);
 }
+
 /// calculate approximately distance between two geographique point using  haversine formula
 /// fore more detail @link: https://www.movable-type.co.uk/scripts/latlong.html
 /// return value in metres
@@ -38,5 +39,5 @@ Future<double> distance2point(GeoPoint p1, GeoPoint p2) async {
 
   final double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return earthRadius * c;//metres
+  return earthRadius * c; //metres
 }

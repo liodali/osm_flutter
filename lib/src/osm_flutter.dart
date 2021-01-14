@@ -160,20 +160,22 @@ class OSMFlutterState extends State<OSMFlutter>
     if (p != null) this._osmController.removePosition(p);
   }
 
-  //change Icon Marker
+  ///change Icon Marker
+  /// we need to global key to recuperate widget from tree element
+  /// [key] : (GlobalKey) key of widget that represent the new marker
   Future changeIconMarker(GlobalKey key) async {
     await this._osmController.customMarker(key);
   }
 
   /// change static position in runtime
-  ///  [geos] : list of static geoPoint
+  ///  [geoPoints] : list of static geoPoint
   ///  [id] : String of that list of static geoPoint
-  Future<void> setStaticPosition(List<GeoPoint> geos, String id) async {
+  Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
     assert(
         widget.staticPoints != null &&
             widget.staticPoints.firstWhere((p) => p.id == id) != null,
         "static points null,you should initialize them before you set their positions!");
-    await this._osmController.staticPosition(geos, id);
+    await this._osmController.staticPosition(geoPoints, id);
   }
 
   /// zoom in/out
@@ -236,7 +238,7 @@ class OSMFlutterState extends State<OSMFlutter>
     assert(
         start != null && end != null, "you cannot make road without 2 point");
     assert(start.latitude != end.latitude || start.longitude != end.longitude,
-        "you cannot make road with same geopoint");
+        "you cannot make road with same geoPoint");
     return await this._osmController.drawRoad(start, end);
   }
 
@@ -458,23 +460,30 @@ class _OsmController {
     });
   }
 
+  /// cancel StreamSubscription
+  /// should be called in dispose
   void closeListen() {
     eventOSM?.cancel();
     eventLocationUser?.cancel();
   }
 
+  /// to enable https calls of osm
+  ///  [secure] : (bool)
   Future<void> setSecureURL(bool secure) async {
     return await _channel.invokeMethod('use#secure', secure);
   }
 
+  /// [zoom] : (double) zoom value that will send to osm
   Future<void> zoom(double zoom) async {
     if (zoom != null) await _channel.invokeMethod('Zoom', zoom);
   }
 
+  /// change map camera to current location of user
   Future<void> currentLocation() async {
     await _channel.invokeMethod('currentLocation', null);
   }
 
+  /// recuperate current user position
   Future<GeoPoint> myLocation() async {
     try {
       Map<String, dynamic> map =
@@ -485,6 +494,7 @@ class _OsmController {
     }
   }
 
+  /// select position and show marker on it
   Future<GeoPoint> pickLocation() async {
     try {
       Map<String, dynamic> map =
@@ -495,6 +505,7 @@ class _OsmController {
     }
   }
 
+  /// change marker with you own widget
   Future<void> customMarker(GlobalKey globalKey) async {
     Uint8List icon = await _capturePng(globalKey);
     if (defaultTargetPlatform == TargetPlatform.iOS) {
@@ -504,10 +515,15 @@ class _OsmController {
       await _channel.invokeMethod("marker#icon", icon);
   }
 
+  /// change color of road
   Future<void> setColorRoad(int r, int g, int b) async {
     await _channel.invokeMethod("road#color", [r, g, b]);
   }
 
+  /// change marker of road
+  /// [startKey]   :(GlobalKey) key of widget of start custom marker in road
+  /// [endKey]     : (GlobalKey) key of widget of end custom marker in road
+  /// [middleKey] :(GlobalKey) key of widget of middle custom marker in road
   Future<void> setMarkersRoad(
       GlobalKey startKey, GlobalKey endKey, GlobalKey middleKey) async {
     Map<String, Uint8List> bitmaps = {};
@@ -545,6 +561,7 @@ class _OsmController {
     return await _channel.invokeListMethod(
         "initPosition", {"lon": p.longitude, "lat": p.latitude});
   }
+
   ///delete marker of this position
   ///[p] : (GeoPoint) position of marker that you want to remove it from the map
   Future<void> removePosition(GeoPoint p) async {
@@ -553,11 +570,13 @@ class _OsmController {
   }
 
   ///draw road
-  Future<RoadInfo> drawRoad(GeoPoint p, GeoPoint p2) async {
+  /// [start] :(GeoPoint) start point of road
+  /// [end]   :(GeoPoint) destination ,last point or road
+  Future<RoadInfo> drawRoad(GeoPoint start, GeoPoint end) async {
     try {
       Map map = await _channel.invokeMethod("road", [
-        {"lon": p.longitude, "lat": p.latitude},
-        {"lon": p2.longitude, "lat": p2.latitude}
+        start.toMap(),
+        end.toMap(),
       ]);
       return RoadInfo.fromMap(map);
     } on PlatformException catch (e) {
@@ -578,7 +597,9 @@ class _OsmController {
     );
   }
 
-  ///static position
+  /// change or add static position
+  /// [pList] : list of geoPoint
+  /// [id] : (String) id of static position
   Future<void> staticPosition(List<GeoPoint> pList, String id) async {
     try {
       List<Map<String, double>> listGeos = [];
@@ -592,6 +613,8 @@ class _OsmController {
     }
   }
 
+  ///change default value zoom
+  /// [defaultZoom] :(double) new default zoom in map
   Future<void> setDefaultZoom(double defaultZoom) async {
     try {
       return await _channel.invokeMethod("defaultZoom", defaultZoom);
