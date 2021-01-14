@@ -1,3 +1,6 @@
+## 0.4.7+1 [beta-version]:
+* format files
+* add comments
 ## 0.4.7 [beta-version]:
 * add marker picked by user deletable in long click
 * add new method to delete marker manually (cannot delete static point with this method)
