@@ -42,6 +42,8 @@ class _MainExampleState extends State<MainExample> {
           IconButton(
             onPressed: () async {
               try {
+                await osmKey.currentState.removeLastRoad();
+
                 ///selection geoPoint
                 GeoPoint point = await osmKey.currentState.selectPosition();
                 GeoPoint point2 = await osmKey.currentState.selectPosition();
