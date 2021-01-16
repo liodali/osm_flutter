@@ -500,7 +500,7 @@ class FlutterOsmView(
                         map!!.overlays.removeFirst()
                     }
 
-                    addMarker(p!!, Constants.zoomMyLocation, null)
+                    addMarker(p!!, map!!.zoomLevelDouble, null)
                     result.success(p.toHashMap())
 
                     return true
