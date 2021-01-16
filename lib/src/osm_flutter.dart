@@ -242,6 +242,11 @@ class OSMFlutterState extends State<OSMFlutter>
     return await this._osmController.drawRoad(start, end);
   }
 
+  ///delete last road draw in the map
+  Future<void> removeLastRoad() async {
+    await this._osmController.removeLastRoad();
+  }
+
   Future<void> _checkServiceLocation() async {
     ServiceStatus serviceStatus =
         await LocationPermissions().checkServiceStatus();
@@ -567,6 +572,11 @@ class _OsmController {
   Future<void> removePosition(GeoPoint p) async {
     return await _channel.invokeListMethod(
         "user#removeMarkerPosition", p.toMap());
+  }
+
+  ///delete last road draw in the map
+  Future<void> removeLastRoad() async {
+    return await _channel.invokeListMethod("user#removeroad");
   }
 
   ///draw road
