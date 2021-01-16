@@ -1,3 +1,5 @@
+## 0.4.7+2 [beta-version]:
+* fix zoom level when new position was picked
 ## 0.4.7+1 [beta-version]:
 * format files
 * add comments
