@@ -339,6 +339,14 @@ class FlutterOsmView(
             "user#removeMarkerPosition" -> {
                 removePosition(call, result)
             }
+            "user#removeroad" -> {
+                if(folderRoad.items.isNotEmpty()){
+                    folderRoad.items.clear()
+                    map!!.invalidate()
+                }
+                result.success(null)
+
+            }
             "road" -> {
                 drawRoad(call, result)
             }
