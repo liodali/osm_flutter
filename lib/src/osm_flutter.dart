@@ -124,8 +124,12 @@ class OSMFlutterState extends State<OSMFlutter>
       //check location permission
       if (widget.currentLocation || widget.trackMyPosition) {
         await requestPermission();
+        if(widget.currentLocation){
+          await _checkServiceLocation();
+        }
       }
     });
+    _isTracking = widget.trackMyPosition;
   }
 
   /// requestPermission callback to request location in your phone
@@ -138,7 +142,8 @@ class OSMFlutterState extends State<OSMFlutter>
         await _checkServiceLocation();
       }
     } else if (_permission == PermissionStatus.granted) {
-      if (widget.currentLocation) await _checkServiceLocation();
+
+    //  if (widget.currentLocation) await _checkServiceLocation();
     }
   }
 
@@ -283,6 +288,7 @@ class OSMFlutterState extends State<OSMFlutter>
       );
     } else if (serviceStatus == ServiceStatus.enabled) {
       currentLocation();
+
     }
   }
 
