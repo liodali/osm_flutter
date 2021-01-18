@@ -1,3 +1,6 @@
+## 0.4.7+6 [beta-version]:
+* fix bug in map when currentLocation = true map freeze and no response due to infinite loop
+in requestPermission
 ## 0.4.7+5 [beta-version]:
 * fix readme
 ## 0.4.7+4 [beta-version]:
