@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.4.7%2B4-orange)
+![pub](https://img.shields.io/badge/pub-v0.4.7%2B5-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -19,7 +19,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.4.7+4
+      flutter_osm_plugin: ^0.4.7+5
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
@@ -146,10 +146,11 @@ OSMFlutter(
         android:usesCleartextTraffic="true"> 
         `
 > if you faced build error in fresh project you need to follow those instruction ([#40])
-    1-remove flutter_osm_plugin from pubspec, after that pub get
-    2- open android module in android studio ( right click in name of project -> flutter-> open android module in android studio)
-    3- update gradle version to 4.1.1 ( IDE will show popup to make update)
-    4- update kotlin version to 1.4.21 & re-build the project
-    5- re-add flutter_osm_plugin in pubspec , pub get ( or flutter clean & pub get )
+    
+    1) remove flutter_osm_plugin from pubspec, after that pub get
+    2) open android module in android studio ( right click in name of project -> flutter-> open android module in android studio)
+    3) update gradle version to 4.1.1 ( IDE will show popup to make update)
+    4) update kotlin version to 1.4.21 & re-build the project
+    5) re-add flutter_osm_plugin in pubspec , pub get ( or flutter clean & pub get )
 
 #### MIT LICENCE
