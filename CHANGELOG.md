@@ -1,3 +1,5 @@
+## 0.4.7+4 [beta-version]:
+* update readme
 ## 0.4.7+3 [beta-version]:
 * create new method to delete last road in map
 ## 0.4.7+2 [beta-version]:
