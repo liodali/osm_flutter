@@ -237,7 +237,6 @@ class FlutterOsmView(
         if (locationNewOverlay == null) {
             provider = GpsMyLocationProvider(application)
             locationNewOverlay = MyLocationNewOverlay(provider, map)
-
         }
         //locationNewOverlay!!.setPersonIcon(customMarkerIcon)
         locationNewOverlay?.let { location ->
@@ -257,7 +256,7 @@ class FlutterOsmView(
         if (!map!!.overlays.contains(locationNewOverlay)) {
             map!!.overlays.add(locationNewOverlay)
         }
-        result.success(null)
+        result.success(isEnabled)
     }
 
     private fun onChangedLocation(locationOverlay: MyLocationNewOverlay) {
@@ -303,25 +302,38 @@ class FlutterOsmView(
             "trackMe" -> {
                 try {
                     locationNewOverlay?.let { locationOverlay ->
+                        if (!locationOverlay.isFollowLocationEnabled) {
+                            isTracking = true
+                            locationOverlay.enableFollowLocation()
+                            onChangedLocation(locationOverlay)
+                            result.success(true)
+                        }
+                        result.success(null)
+
+                    }
+                } catch (e: Exception) {
+                    result.error("400", "${e.message!!}", "")
+
+                }
+
+            }
+            "deactivateTrackMe" -> {
+                try {
+                    locationNewOverlay?.let { locationOverlay ->
                         if (locationOverlay.isFollowLocationEnabled) {
                             locationOverlay.disableFollowLocation()
                             locationOverlay.disableMyLocation()
                             provider?.stopLocationProvider()
                             isTracking = false
                             isEnabled = false
-                        } else {
-                            isTracking = true
-                            locationOverlay.enableFollowLocation()
+                            result.success(false)
 
-                            onChangedLocation(locationOverlay)
                         }
+                        result.success(null)
                     }
-                    result.success(true)
                 } catch (e: Exception) {
                     result.error("400", "${e.message!!}", "")
-
                 }
-
             }
             "user#position" -> {
                 locationNewOverlay?.let {
@@ -340,7 +352,7 @@ class FlutterOsmView(
                 removePosition(call, result)
             }
             "user#removeroad" -> {
-                if(folderRoad.items.isNotEmpty()){
+                if (folderRoad.items.isNotEmpty()) {
                     folderRoad.items.clear()
                     map!!.invalidate()
                 }
