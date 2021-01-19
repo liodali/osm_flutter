@@ -92,7 +92,8 @@ class OSMFlutterState extends State<OSMFlutter>
   _OsmController _osmController;
   GlobalKey _key, _startIconKey, _endIconKey, _midddleIconKey;
   Map<String, GlobalKey> _staticMarkersKeys;
-  bool _isTracking = false;
+  ValueNotifier<bool> _isTracking = ValueNotifier(false);
+  ValueNotifier<bool> _startTracking = ValueNotifier(false);
 
   @override
   void initState() {
@@ -124,12 +125,12 @@ class OSMFlutterState extends State<OSMFlutter>
       //check location permission
       if (widget.currentLocation || widget.trackMyPosition) {
         await requestPermission();
-        if(widget.currentLocation){
+        if (widget.currentLocation) {
           await _checkServiceLocation();
         }
       }
     });
-    _isTracking = widget.trackMyPosition;
+    _startTracking.value = widget.trackMyPosition;
   }
 
   /// requestPermission callback to request location in your phone
@@ -142,8 +143,7 @@ class OSMFlutterState extends State<OSMFlutter>
         await _checkServiceLocation();
       }
     } else if (_permission == PermissionStatus.granted) {
-
-    //  if (widget.currentLocation) await _checkServiceLocation();
+      //  if (widget.currentLocation) await _checkServiceLocation();
     }
   }
 
@@ -215,18 +215,18 @@ class OSMFlutterState extends State<OSMFlutter>
 
   /// enabled tracking user location
   Future<void> enableTracking() async {
-    if (!_isTracking) {
+    if (!_isTracking.value) {
       await requestPermission();
       await this._osmController.enableTracking();
-      _isTracking = true;
+      _isTracking.value = true;
     }
   }
 
   /// disabled tracking user location
   Future<void> disabledTracking() async {
-    if (_isTracking) {
-      await this._osmController.enableTracking();
-      _isTracking = false;
+    if (_isTracking.value) {
+      await this._osmController.disableTracking();
+      _isTracking.value = false;
     }
   }
 
@@ -288,7 +288,6 @@ class OSMFlutterState extends State<OSMFlutter>
       );
     } else if (serviceStatus == ServiceStatus.enabled) {
       currentLocation();
-
     }
   }
 
@@ -379,9 +378,9 @@ class OSMFlutterState extends State<OSMFlutter>
           print(err);
         });
       }
-      if (widget.trackMyPosition) {
+      if (_startTracking.value) {
+        if (!widget.currentLocation) await currentLocation();
         await enableTracking();
-        await currentLocation();
       }
       if (widget.markerIcon != null) {
         await changeIconMarker(_key);
@@ -491,7 +490,8 @@ class _OsmController {
 
   /// change map camera to current location of user
   Future<void> currentLocation() async {
-    await _channel.invokeMethod('currentLocation', null);
+   final result= await _channel.invokeMethod('currentLocation', null);
+   print(result);
   }
 
   /// recuperate current user position
@@ -638,4 +638,9 @@ class _OsmController {
       print(e.message);
     }
   }
+
+ Future<void>  disableTracking()async {
+   await _channel.invokeMethod('deactivateTrackMe', null);
+
+ }
 }

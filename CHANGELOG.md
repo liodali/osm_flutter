@@ -1,3 +1,5 @@
+## 0.4.7+7 [beta-version]:
+* fix enableTracking and deactivateTracking
 ## 0.4.7+6 [beta-version]:
 * fix bug in map when currentLocation = true map freeze and no response due to infinite loop
 in requestPermission
