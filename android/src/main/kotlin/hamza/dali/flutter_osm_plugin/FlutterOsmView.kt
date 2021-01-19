@@ -423,7 +423,9 @@ class FlutterOsmView(
                             it.markersIcons = customRoadMarkerIcon
                             polyLine.outlinePaint.strokeWidth = 5.0f
                             it.road = polyLine
+                            // if (it.start != null) 
                             folderRoad.items.add(it.start)
+                            //  if (it.end != null) 
                             folderRoad.items.add(it.end)
                             folderRoad.items.add(it.road!!)
                         }

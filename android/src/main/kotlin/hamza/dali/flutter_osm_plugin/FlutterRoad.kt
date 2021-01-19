@@ -12,13 +12,12 @@ open class FlutterRoad(
         private val mapView: MapView,
 ) : Overlay() {
 
-    lateinit var start: FlutterRoadMarker
-    lateinit var end: FlutterRoadMarker
+    lateinit var start: FlutterRoadMarker//? = null
+    lateinit var end: FlutterRoadMarker//? = null
     var road: Polyline? = null
         set(value) {
             if (value != null) {
-                if (markersIcons.isNotEmpty())
-                    initStartEndPoints(value.points.first(), value.points.last())
+                initStartEndPoints(value.points.first(), value.points.last())
                 field = value
             }
         }

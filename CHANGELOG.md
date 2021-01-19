@@ -1,3 +1,5 @@
+## 0.4.7+8 [beta-version]:
+* fix error in road when markers not initialized
 ## 0.4.7+7 [beta-version]:
 * fix enableTracking and deactivateTracking
 ## 0.4.7+6 [beta-version]:
