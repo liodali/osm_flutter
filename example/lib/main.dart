@@ -23,7 +23,7 @@ class _MainExampleState extends State<MainExample> {
   GlobalKey<OSMFlutterState> osmKey;
   GlobalKey<ScaffoldState> scaffoldKey;
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
-  ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
+  ValueNotifier<bool> trackingNotifier = ValueNotifier(true);
 
   @override
   void initState() {
@@ -170,7 +170,7 @@ class _MainExampleState extends State<MainExample> {
                   size: 64,
                 ),
               ),
-              trackMyPosition: false,
+              trackMyPosition: trackingNotifier.value,
               //initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
               useSecureURL: false,
             ),
