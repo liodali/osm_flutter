@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -6,20 +7,45 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:stream_transform/stream_transform.dart';
 
 import '../../flutter_osm_plugin.dart';
 import '../interface_osm/osm_interface.dart';
 import '../types/geo_point.dart';
 
+abstract class EventOSM<T> {
+  /// The ID of the Map this event is associated to.
+  final int mapId;
+
+  /// The value wrapped by this event
+  final T value;
+
+  /// Build a Map Event, that relates a mapId with a given value.
+  ///
+  /// The `mapId` is the id of the map that triggered the event.
+  /// `value` may be `null` in events that don't transport any meaningful data.
+  EventOSM(this.mapId, this.value);
+}
+
+class GeoPointEvent extends EventOSM<GeoPoint> {
+  GeoPointEvent(int mapId, GeoPoint position) : super(mapId, position);
+}
+
 class MethodChannelOSM extends OSMPlatform {
   final Map<int, MethodChannel> _channels = {};
   final Map<int, List<EventChannel>> _eventsChannels = {};
+  StreamController _streamController = StreamController<EventOSM>.broadcast();
+
+  // Returns a filtered view of the events in the _controller, by mapId.
+  Stream<EventOSM> _events(int mapId) =>
+      _streamController.stream.where((event) => event.mapId == mapId);
 
   @override
   Future<void> init(int idOSMMap) async {
     if (!_channels.containsKey(idOSMMap)) {
       _channels[idOSMMap] =
           MethodChannel('plugins.dali.hamza/osmview_$idOSMMap');
+      setGeoPointHandler(idOSMMap);
     }
     if (!_eventsChannels.containsKey(idOSMMap)) {
       _eventsChannels[idOSMMap] = [
@@ -30,12 +56,33 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  void close() {}
+  Stream<GeoPointEvent> onGeoPointClickListener(int idMap) {
+    return _events(idMap).whereType<GeoPointEvent>();
+  }
+
+  void setGeoPointHandler(int idMap) async {
+    _channels[idMap].setMethodCallHandler((call) {
+      switch (call.method) {
+        case "receiveGeoPoint":
+          final result = call.arguments;
+          _streamController.add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
+          return null;
+          break;
+        default:
+          return null;
+      }
+    });
+  }
+
+  @override
+  void close() {
+    _streamController.close();
+  }
 
   @override
   Future<void> currentLocation(int idOSM) async {
     try {
-          await _channels[idOSM].invokeMethod("currentLocation", null);
+      await _channels[idOSM].invokeMethod("currentLocation", null);
     } on PlatformException catch (e) {
       throw GeoPointException(msg: e.message);
     }

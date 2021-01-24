@@ -12,6 +12,8 @@ dependencies:
   location_permissions: ^3.0.0+1
   after_layout: ^1.0.7+2
   plugin_platform_interface: ^1.0.3
+  stream_transform: ^1.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

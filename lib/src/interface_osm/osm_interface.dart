@@ -26,6 +26,8 @@ abstract class OSMPlatform extends PlatformInterface {
 
   void close();
 
+  Stream<GeoPointEvent> onGeoPointClickListener(int idMap);
+
   Future<void> setSecureURL(
     int idOSM,
     bool secure,

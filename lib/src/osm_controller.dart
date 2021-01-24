@@ -20,14 +20,18 @@ class OSMController {
     return OSMController._(id, osmState);
   }
 
+  void dispose() {
+    osmPlatform.close();
+  }
+
   Future<void> initMap() async {
     osmPlatform.setDefaultZoom(idMap, _osmFlutterState.widget.defaultZoom);
 
     osmPlatform.setSecureURL(idMap, _osmFlutterState.widget.useSecureURL);
     if (_osmFlutterState.widget.onGeoPointClicked != null) {
-      /*this._osmController.startListen(widget.onGeoPointClicked, (err) {
-          print(err);
-        });*/
+      osmPlatform.onGeoPointClickListener(idMap).listen((event) {
+        _osmFlutterState.widget.onGeoPointClicked(event.value);
+      });
     }
     if (_osmFlutterState.widget.onLocationChanged != null) {
       /* this._osmController.myLocationListener(widget.onLocationChanged, (err) {

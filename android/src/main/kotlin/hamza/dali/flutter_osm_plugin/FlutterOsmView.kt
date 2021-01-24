@@ -588,7 +588,7 @@ class FlutterOsmView(
                 val hashMap = HashMap<String, Double>()
                 hashMap["lon"] = marker!!.position.longitude
                 hashMap["lat"] = marker.position.latitude
-                eventSink!!.success(hashMap)
+                methodChannel.invokeMethod("receiveGeoPoint",hashMap)
                 true
             }
             if (staticMarkerIcon.isNotEmpty()) {
@@ -714,7 +714,7 @@ class FlutterOsmView(
                 provider?.stopLocationProvider()
             }
         }
-        map!!.onPause()
+        map?.onPause()
 
     }
 
