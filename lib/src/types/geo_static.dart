@@ -1,5 +1,6 @@
-import 'package:flutter_osm_plugin/src/geo_point.dart';
-import 'package:flutter_osm_plugin/src/marker.dart';
+import 'package:flutter_osm_plugin/src/types/geo_point.dart';
+
+import 'marker.dart';
 
 class StaticPositionGeoPoint {
   final String id;

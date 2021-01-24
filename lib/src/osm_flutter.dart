@@ -1,21 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:after_layout/after_layout.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:flutter_osm_plugin/src/geo_point_exception.dart';
-import 'package:flutter_osm_plugin/src/geo_static.dart';
-import 'package:flutter_osm_plugin/src/job_alert_dialog.dart';
-import 'package:flutter_osm_plugin/src/marker.dart';
-import 'package:flutter_osm_plugin/src/road.dart';
-import 'package:flutter_osm_plugin/src/road_exception.dart';
 import 'package:location_permissions/location_permissions.dart';
+
+import 'osm_controller.dart';
+import 'types/types.dart';
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
@@ -84,16 +77,14 @@ class OSMFlutter extends StatefulWidget {
 class OSMFlutterState extends State<OSMFlutter>
     with AfterLayoutMixin<OSMFlutter> {
   GlobalKey androidViewKey = GlobalKey();
+  OSMController _osmController;
 
   //permission status
   PermissionStatus _permission;
 
   //_OsmCreatedCallback _osmCreatedCallback;
-  _OsmController _osmController;
-  GlobalKey _key, _startIconKey, _endIconKey, _midddleIconKey;
-  Map<String, GlobalKey> _staticMarkersKeys;
-  ValueNotifier<bool> _isTracking = ValueNotifier(false);
-  ValueNotifier<bool> _startTracking = ValueNotifier(false);
+  GlobalKey key, startIconKey, endIconKey, midddleIconKey;
+  Map<String, GlobalKey> staticMarkersKeys;
 
   @override
   void initState() {
@@ -113,13 +104,13 @@ class OSMFlutterState extends State<OSMFlutter>
       });
       ids = null;
     }
-    _key = GlobalKey();
-    _startIconKey = GlobalKey();
-    _endIconKey = GlobalKey();
-    _midddleIconKey = GlobalKey();
-    _staticMarkersKeys = {};
+    key = GlobalKey();
+    startIconKey = GlobalKey();
+    endIconKey = GlobalKey();
+    midddleIconKey = GlobalKey();
+    staticMarkersKeys = {};
     widget.staticPoints.forEach((gs) {
-      _staticMarkersKeys.putIfAbsent(gs.id, () => GlobalKey());
+      staticMarkersKeys.putIfAbsent(gs.id, () => GlobalKey());
     });
     Future.delayed(Duration.zero, () async {
       //check location permission
@@ -130,11 +121,41 @@ class OSMFlutterState extends State<OSMFlutter>
         }
       }
     });
-    _startTracking.value = widget.trackMyPosition;
+  }
+
+  @override
+  void didUpdateWidget(covariant OSMFlutter oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (this.widget != oldWidget) {}
+  }
+
+  @override
+  void dispose() {
+    //this._osmController?.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return Stack(
+        children: <Widget>[
+          widgetConfigMap(),
+          AndroidView(
+            key: androidViewKey,
+            viewType: 'plugins.dali.hamza/osmview',
+            onPlatformViewCreated: _onPlatformViewCreated,
+            //creationParamsCodec:  StandardMessageCodec(),
+          ),
+        ],
+      );
+    }
+    return Text(
+        '$defaultTargetPlatform is not yet supported by the osm plugin');
   }
 
   /// requestPermission callback to request location in your phone
-  Future<void> requestPermission() async {
+  Future<bool> requestPermission() async {
     _permission = await LocationPermissions().checkPermissionStatus();
     if (_permission == PermissionStatus.denied) {
       //request location permission
@@ -142,34 +163,31 @@ class OSMFlutterState extends State<OSMFlutter>
       if (_permission == PermissionStatus.granted) {
         await _checkServiceLocation();
       }
+      return false;
     } else if (_permission == PermissionStatus.granted) {
+      return true;
       //  if (widget.currentLocation) await _checkServiceLocation();
     }
-  }
-
-  @override
-  void dispose() {
-    this._osmController?.closeListen();
-    super.dispose();
+    return false;
   }
 
   ///initialise or change of position
   /// [p] : geoPoint
   Future<void> changeLocation(GeoPoint p) async {
-    if (p != null) this._osmController.addPosition(p);
+    if (p != null) this._osmController.changeLocation(p);
   }
 
   ///remove marker from map of position
   /// [p] : geoPoint
   Future<void> removeMarker(GeoPoint p) async {
-    if (p != null) this._osmController.removePosition(p);
+    if (p != null) this._osmController.removeMarker(p);
   }
 
   ///change Icon Marker
   /// we need to global key to recuperate widget from tree element
   /// [key] : (GlobalKey) key of widget that represent the new marker
   Future changeIconMarker(GlobalKey key) async {
-    await this._osmController.customMarker(key);
+    await this._osmController.changeIconMarker(key);
   }
 
   /// change static position in runtime
@@ -180,7 +198,7 @@ class OSMFlutterState extends State<OSMFlutter>
         widget.staticPoints != null &&
             widget.staticPoints.firstWhere((p) => p.id == id) != null,
         "static points null,you should initialize them before you set their positions!");
-    await this._osmController.staticPosition(geoPoints, id);
+    await this._osmController.setStaticPosition(geoPoints, id);
   }
 
   /// zoom in/out
@@ -215,24 +233,18 @@ class OSMFlutterState extends State<OSMFlutter>
 
   /// enabled tracking user location
   Future<void> enableTracking() async {
-    if (!_isTracking.value) {
-      await requestPermission();
-      await this._osmController.enableTracking();
-      _isTracking.value = true;
-    }
+    await requestPermission();
+    await this._osmController.enableTracking();
   }
 
   /// disabled tracking user location
   Future<void> disabledTracking() async {
-    if (_isTracking.value) {
-      await this._osmController.disableTracking();
-      _isTracking.value = false;
-    }
+    await this._osmController.disabledTracking();
   }
 
   /// pick Position in map
   Future<GeoPoint> selectPosition() async {
-    GeoPoint p = await this._osmController.pickLocation();
+    GeoPoint p = await this._osmController.selectPosition();
     return p;
   }
 
@@ -291,25 +303,6 @@ class OSMFlutterState extends State<OSMFlutter>
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return Stack(
-        children: <Widget>[
-          widgetConfigMap(),
-          AndroidView(
-            key: androidViewKey,
-            viewType: 'plugins.dali.hamza/osmview',
-            onPlatformViewCreated: _onPlatformViewCreated,
-            //creationParamsCodec:  StandardMessageCodec(),
-          ),
-        ],
-      );
-    }
-    return Text(
-        '$defaultTargetPlatform is not yet supported by the osm plugin');
-  }
-
   Widget widgetConfigMap() {
     return Positioned(
       top: -100,
@@ -317,7 +310,7 @@ class OSMFlutterState extends State<OSMFlutter>
         children: <Widget>[
           if (widget.markerIcon != null) ...[
             RepaintBoundary(
-              key: _key,
+              key: key,
               child: widget.markerIcon,
             ),
           ],
@@ -325,26 +318,26 @@ class OSMFlutterState extends State<OSMFlutter>
               widget.staticPoints.isNotEmpty) ...[
             for (int i = 0; i < widget.staticPoints.length; i++) ...[
               RepaintBoundary(
-                key: _staticMarkersKeys[widget.staticPoints[i].id],
+                key: staticMarkersKeys[widget.staticPoints[i].id],
                 child: widget.staticPoints[i].markerIcon,
               ),
             ]
           ],
           if (widget.road?.endIcon != null) ...[
             RepaintBoundary(
-              key: _endIconKey,
+              key: endIconKey,
               child: widget.road.endIcon,
             ),
           ],
           if (widget.road?.startIcon != null) ...[
             RepaintBoundary(
-              key: _startIconKey,
+              key: startIconKey,
               child: widget.road.startIcon,
             ),
           ],
           if (widget.road?.middleIcon != null) ...[
             RepaintBoundary(
-              key: _midddleIconKey,
+              key: midddleIconKey,
               child: widget.road.middleIcon,
             ),
           ],
@@ -353,83 +346,22 @@ class OSMFlutterState extends State<OSMFlutter>
     );
   }
 
-  void _onPlatformViewCreated(int id) {
-    this._osmController = _OsmController._(id);
+  void _onPlatformViewCreated(int id) async {
+    this._osmController = await OSMController.init(id, this);
+    Future.delayed(Duration(milliseconds: 1250), () async {
+      await _osmController.initMap();
+      /*while(this._osmController==null){
+        print("osm null");
+      }*/
+    });
   }
 
   @override
   void afterFirstLayout(BuildContext context) {
     print("after layout");
-    Future.delayed(Duration(milliseconds: 1250), () async {
-      /*while(this._osmController==null){
-        print("osm null");
-      }*/
-
-      this._osmController.setDefaultZoom(widget.defaultZoom);
-
-      this._osmController.setSecureURL(widget.useSecureURL);
-      if (widget.onGeoPointClicked != null) {
-        this._osmController.startListen(widget.onGeoPointClicked, (err) {
-          print(err);
-        });
-      }
-      if (widget.onLocationChanged != null) {
-        this._osmController.myLocationListener(widget.onLocationChanged, (err) {
-          print(err);
-        });
-      }
-      if (_startTracking.value) {
-        if (!widget.currentLocation) await currentLocation();
-        await enableTracking();
-      }
-      if (widget.markerIcon != null) {
-        await changeIconMarker(_key);
-      }
-      if (widget.initPosition != null) {
-        await changeLocation(widget.initPosition);
-      }
-
-      if (widget.staticPoints != null) {
-        if (widget.staticPoints.isNotEmpty) {
-          widget.staticPoints.asMap().forEach((index, points) async {
-            if (points.markerIcon != null) {
-              await this._osmController.customMarkerStaticPosition(
-                  _staticMarkersKeys[points.id], points.id);
-            }
-            if (points.geoPoints != null && points.geoPoints.isNotEmpty) {
-              await this
-                  ._osmController
-                  .staticPosition(points.geoPoints, points.id);
-            }
-          });
-        }
-      }
-      if (widget.road != null) {
-        await showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (ctx) {
-              return JobAlertDialog(
-                callback: () async {
-                  await this._osmController.setColorRoad(
-                        widget.road.roadColor.red,
-                        widget.road.roadColor.green,
-                        widget.road.roadColor.blue,
-                      );
-                  await this._osmController.setMarkersRoad(
-                        _startIconKey,
-                        _endIconKey,
-                        _midddleIconKey,
-                      );
-                  Navigator.pop(ctx);
-                },
-              );
-            });
-      }
-    });
   }
 }
-
+/*
 class _OsmController {
   _OsmController._(int id)
       : _channel = MethodChannel('plugins.dali.hamza/osmview_$id'),
@@ -490,8 +422,8 @@ class _OsmController {
 
   /// change map camera to current location of user
   Future<void> currentLocation() async {
-   final result= await _channel.invokeMethod('currentLocation', null);
-   print(result);
+    final result = await _channel.invokeMethod('currentLocation', null);
+    print(result);
   }
 
   /// recuperate current user position
@@ -639,8 +571,8 @@ class _OsmController {
     }
   }
 
- Future<void>  disableTracking()async {
-   await _channel.invokeMethod('deactivateTrackMe', null);
-
- }
+  Future<void> disableTracking() async {
+    await _channel.invokeMethod('deactivateTrackMe', null);
+  }
 }
+*/

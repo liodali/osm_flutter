@@ -14,6 +14,7 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.embedding.engine.plugins.lifecycle.FlutterLifecycleAdapter
 import io.flutter.plugin.common.PluginRegistry
 import org.osmdroid.config.Configuration
+import org.osmdroid.config.IConfigurationProvider
 import java.util.concurrent.atomic.AtomicInteger
 
 
@@ -25,6 +26,7 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
     }
 
     private var activity: Activity? = null
+    private var configuration: IConfigurationProvider? = null
 
 
     companion object {
@@ -65,10 +67,11 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         pluginBinding = binding
 
+
     }
 
     override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
-
+        
     }
 
 
@@ -77,8 +80,9 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
         lifecycle?.addObserver(this)
         activity = binding.activity
         activity!!.application.registerActivityLifecycleCallbacks(this)
-        Configuration.getInstance().load(activity!!.application,
-                PreferenceManager.getDefaultSharedPreferences(activity!!.application))
+        configuration = Configuration.getInstance()
+        configuration!!.load(pluginBinding!!.applicationContext,//.application,
+                PreferenceManager.getDefaultSharedPreferences(pluginBinding!!.applicationContext))
 
         pluginBinding!!.platformViewRegistry.registerViewFactory(
                 VIEW_TYPE,
@@ -94,6 +98,8 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
 
     override fun onDetachedFromActivityForConfigChanges() {
         //  this.onDetachedFromActivity()
+        configuration!!.osmdroidTileCache.delete()
+        configuration = null
         activity!!.application.unregisterActivityLifecycleCallbacks(this)
         activity = null
         lifecycle?.removeObserver(this)
@@ -107,8 +113,9 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
         activity = binding.activity
         activity!!.application.registerActivityLifecycleCallbacks(this)
 
-        Configuration.getInstance().load(activity!!.application,
-                PreferenceManager.getDefaultSharedPreferences(activity!!.application))
+        configuration = Configuration.getInstance()
+        configuration!!.load(pluginBinding!!.applicationContext,//.application,
+                PreferenceManager.getDefaultSharedPreferences(pluginBinding!!.applicationContext))
 
         pluginBinding!!.platformViewRegistry.registerViewFactory(VIEW_TYPE,
                 OsmFactory(

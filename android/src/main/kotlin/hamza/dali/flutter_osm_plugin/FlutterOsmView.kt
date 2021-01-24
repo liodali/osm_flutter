@@ -621,7 +621,7 @@ class FlutterOsmView(
     }
 
     override fun onCancel(arguments: Any?) {
-        TODO("Not yet implemented")
+        eventSink?.endOfStream()
     }
 
 
@@ -631,6 +631,7 @@ class FlutterOsmView(
 
     override fun dispose() {
         mainLinearLayout.removeAllViews()
+        map!!.onDetach()
         map = null
     }
 
@@ -656,9 +657,9 @@ class FlutterOsmView(
     override fun onCreate(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(CREATED)
         methodChannel = MethodChannel(binaryMessenger, "plugins.dali.hamza/osmview_${id}")
-        methodChannel.setMethodCallHandler(this)
         eventChannel = EventChannel(binaryMessenger, "plugins.dali.hamza/osmview_stream_${id}")
         eventChannel.setStreamHandler(this)
+        methodChannel.setMethodCallHandler(this)
 
         eventLocationChannel = EventChannel(binaryMessenger, "plugins.dali.hamza/osmview_stream_location_${id}")
         eventLocationChannel.setStreamHandler(object : EventChannel.StreamHandler {
@@ -720,7 +721,7 @@ class FlutterOsmView(
     override fun onStop(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(STOPPED)
 
-
+        
         job?.let {
             if (it.isActive) {
                 it.cancel()
@@ -743,11 +744,13 @@ class FlutterOsmView(
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
-        FlutterOsmPlugin.state.set(DESTROYED)
+        mainLinearLayout.removeAllViews()
+        map!!.onDetach()
         methodChannel.setMethodCallHandler(null)
         eventChannel.setStreamHandler(null)
-        mainLinearLayout.removeAllViews()
         map = null
+        FlutterOsmPlugin.state.set(DESTROYED)
+
     }
 
 }
