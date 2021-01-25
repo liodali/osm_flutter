@@ -8,20 +8,18 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: MainExample(),
-      routes:{
-        "/home":(ctx)=>MainExample(),
-        "/second":(ctx)=>Scaffold(
-          body: Center(
-            child: RaisedButton(
-              onPressed: () {
-                Navigator.popAndPushNamed(ctx, "/home");
-
-
-              },
-              child: Text("another page"),
+      routes: {
+        "/home": (ctx) => MainExample(),
+        "/second": (ctx) => Scaffold(
+              body: Center(
+                child: RaisedButton(
+                  onPressed: () {
+                    Navigator.popAndPushNamed(ctx, "/home");
+                  },
+                  child: Text("another page"),
+                ),
+              ),
             ),
-          ),
-        ),
       },
     );
   }
@@ -35,7 +33,7 @@ class MainExample extends StatefulWidget {
 }
 
 class _MainExampleState extends State<MainExample> {
-  GlobalKey<OSMFlutterState> osmKey;
+  MapController controller;
   GlobalKey<ScaffoldState> scaffoldKey;
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
@@ -43,7 +41,9 @@ class _MainExampleState extends State<MainExample> {
   @override
   void initState() {
     super.initState();
-    osmKey = GlobalKey<OSMFlutterState>();
+    controller = MapController(
+      initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+    );
     scaffoldKey = GlobalKey<ScaffoldState>();
   }
 
@@ -56,21 +56,20 @@ class _MainExampleState extends State<MainExample> {
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.info),
-            onPressed: () async{
-             await Navigator.popAndPushNamed(context, "/second");
-
+            onPressed: () async {
+              await Navigator.popAndPushNamed(context, "/second");
             },
           ),
           IconButton(
             onPressed: () async {
               try {
-                await osmKey.currentState.removeLastRoad();
+                await controller.removeLastRoad();
 
                 ///selection geoPoint
-                GeoPoint point = await osmKey.currentState.selectPosition();
-                GeoPoint point2 = await osmKey.currentState.selectPosition();
+                GeoPoint point = await controller.selectPosition();
+                GeoPoint point2 = await controller.selectPosition();
                 RoadInfo roadInformation =
-                    await osmKey.currentState.drawRoad(point, point2);
+                    await controller.drawRoad(point, point2);
                 print(
                     "duration:${Duration(seconds: roadInformation.duration.toInt()).inMinutes}");
                 print("distance:${roadInformation.distance}Km");
@@ -94,7 +93,7 @@ class _MainExampleState extends State<MainExample> {
           ),
           IconButton(
             onPressed: () async {
-              GeoPoint p = await osmKey.currentState.selectPosition();
+              GeoPoint p = await controller.selectPosition();
               scaffoldKey.currentState.showSnackBar(
                 SnackBar(
                   content: Text(
@@ -108,7 +107,7 @@ class _MainExampleState extends State<MainExample> {
           IconButton(
             icon: Icon(Icons.refresh),
             onPressed: () async {
-              await osmKey.currentState.setStaticPosition([
+              await controller.setStaticPosition([
                 GeoPoint(latitude: 47.434541, longitude: 8.467369),
                 GeoPoint(latitude: 47.436207, longitude: 8.464072),
                 GeoPoint(latitude: 47.437688, longitude: 8.460832),
@@ -122,15 +121,13 @@ class _MainExampleState extends State<MainExample> {
         ],
       ),
       body: OrientationBuilder(
-        builder: (ctx,orientation){
+        builder: (ctx, orientation) {
           return Container(
             child: Stack(
               children: [
                 OSMFlutter(
-                  key: osmKey,
-                  //currentLocation: false,
+                  controller: controller,
                   //trackMyPosition: trackingNotifier.value,
-                  // initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
                   useSecureURL: false,
                   defaultZoom: 3.0,
 
@@ -216,7 +213,7 @@ class _MainExampleState extends State<MainExample> {
                         RaisedButton(
                           child: Icon(Icons.add),
                           onPressed: () async {
-                            osmKey.currentState.zoomIn();
+                            controller.zoomIn();
                           },
                           elevation: 0,
                         ),
@@ -224,7 +221,7 @@ class _MainExampleState extends State<MainExample> {
                           child: Icon(Icons.remove),
                           elevation: 0,
                           onPressed: () async {
-                            osmKey.currentState.zoomOut();
+                            controller.zoomOut();
                           },
                         ),
                       ],
@@ -239,10 +236,10 @@ class _MainExampleState extends State<MainExample> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           if (!trackingNotifier.value) {
-            await osmKey.currentState.currentLocation();
-            await osmKey.currentState.enableTracking();
+            await controller.currentLocation();
+            await controller.enableTracking();
           } else {
-            await osmKey.currentState.disabledTracking();
+            await controller.disabledTracking();
           }
           trackingNotifier.value = !trackingNotifier.value;
         },
