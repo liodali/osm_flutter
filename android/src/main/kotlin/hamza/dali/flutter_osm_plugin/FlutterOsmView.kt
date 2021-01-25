@@ -645,7 +645,7 @@ class FlutterOsmView(
 
 
     override fun onFlutterViewDetached() {
-        //    map!!.onDetach()
+            map!!.onDetach()
     }
 
 
@@ -683,6 +683,10 @@ class FlutterOsmView(
         FlutterOsmPlugin.state.set(FlutterOsmPlugin.RESUMED)
         Log.e("osm", "osm flutter plugin resume")
         map!!.onResume()
+        if (isEnabled || isTracking) {
+            provider = GpsMyLocationProvider(application)
+            locationNewOverlay = MyLocationNewOverlay(provider, map)
+        }
         locationNewOverlay?.also { myLocation ->
             if (isEnabled) {
                 myLocation.enableMyLocation()
@@ -707,8 +711,9 @@ class FlutterOsmView(
                 provider?.stopLocationProvider()
             }
         }
+        provider = null
+        locationNewOverlay = null
         map?.onPause()
-
     }
 
     override fun onStop(owner: LifecycleOwner) {
@@ -727,6 +732,7 @@ class FlutterOsmView(
         }
         jobFlow = null
         job = null
+
         /*
         map!!.removeMapListener(mapListener)
         map!!.clearFindViewByIdCache()
@@ -738,7 +744,7 @@ class FlutterOsmView(
 
     override fun onDestroy(owner: LifecycleOwner) {
         mainLinearLayout.removeAllViews()
-        map!!.onDetach()
+        //map!!.onDetach()
         methodChannel.setMethodCallHandler(null)
         //eventChannel.setStreamHandler(null)
         map = null
