@@ -128,9 +128,9 @@ class _MainExampleState extends State<MainExample> {
               children: [
                 OSMFlutter(
                   key: osmKey,
-                  currentLocation: false,
+                  //currentLocation: false,
                   //trackMyPosition: trackingNotifier.value,
-                   initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+                  // initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
                   useSecureURL: false,
                   defaultZoom: 3.0,
 

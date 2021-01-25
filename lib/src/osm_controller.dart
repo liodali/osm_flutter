@@ -34,6 +34,9 @@ class OSMController {
       });
     }
     if (_osmFlutterState.widget.onLocationChanged != null) {
+      osmPlatform.onUserPositionListener(idMap).listen((event) {
+        _osmFlutterState.widget.onLocationChanged(event.value);
+      });
       /* this._osmController.myLocationListener(widget.onLocationChanged, (err) {
           print(err);
         });*/

@@ -30,10 +30,13 @@ abstract class EventOSM<T> {
 class GeoPointEvent extends EventOSM<GeoPoint> {
   GeoPointEvent(int mapId, GeoPoint position) : super(mapId, position);
 }
+class UserLocationEvent extends EventOSM<GeoPoint> {
+  UserLocationEvent(int mapId, GeoPoint position) : super(mapId, position);
+}
 
 class MethodChannelOSM extends OSMPlatform {
   final Map<int, MethodChannel> _channels = {};
-  final Map<int, List<EventChannel>> _eventsChannels = {};
+  //final Map<int, List<EventChannel>> _eventsChannels = {};
   StreamController _streamController = StreamController<EventOSM>.broadcast();
 
   // Returns a filtered view of the events in the _controller, by mapId.
@@ -47,17 +50,21 @@ class MethodChannelOSM extends OSMPlatform {
           MethodChannel('plugins.dali.hamza/osmview_$idOSMMap');
       setGeoPointHandler(idOSMMap);
     }
-    if (!_eventsChannels.containsKey(idOSMMap)) {
+    /*if (!_eventsChannels.containsKey(idOSMMap)) {
       _eventsChannels[idOSMMap] = [
-        EventChannel("plugins.dali.hamza/osmview_stream_$idOSMMap"),
+       // EventChannel("plugins.dali.hamza/osmview_stream_$idOSMMap"),
         EventChannel("plugins.dali.hamza/osmview_stream_location_$idOSMMap"),
       ];
-    }
+    }*/
   }
 
   @override
   Stream<GeoPointEvent> onGeoPointClickListener(int idMap) {
     return _events(idMap).whereType<GeoPointEvent>();
+  }
+  @override
+  Stream<UserLocationEvent> onUserPositionListener(int idMap) {
+    return _events(idMap).whereType<UserLocationEvent>();
   }
 
   void setGeoPointHandler(int idMap) async {
@@ -66,11 +73,14 @@ class MethodChannelOSM extends OSMPlatform {
         case "receiveGeoPoint":
           final result = call.arguments;
           _streamController.add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
-          return null;
           break;
-        default:
-          return null;
+        case "receiveUserLocation":
+          final result = call.arguments;
+          _streamController.add(UserLocationEvent(idMap, GeoPoint.fromMap(result)));
+          break;
       }
+      return null;
+
     });
   }
 
