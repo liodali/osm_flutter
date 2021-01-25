@@ -7,7 +7,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:location_permissions/location_permissions.dart';
 
-import 'osm_controller.dart';
+import 'controller/map_controller.dart';
+import 'controller/osm_controller.dart';
 import 'types/types.dart';
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
@@ -16,10 +17,8 @@ typedef OnLocationChanged = void Function(GeoPoint);
 /// Principal widget to show OSMMap using osm api
 /// you can track you current location,show static points like position of your stores
 /// show road between 2 points
-/// [currentLocation] : (bool) if is true, map will show your current location
 /// [trackMyPosition] : (bool) if is true, map will track your location
 /// [showZoomController] : (bool) if us true, you can zoomIn zoomOut directly in the map
-/// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 /// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
 /// [onGeoPointClicked] : (callback) is trigger when you clicked on marker,return current  geoPoint of the Marker
 /// [onLocationChanged] : (callback) it's hire when you activate tracking and  user position has been changed
@@ -28,10 +27,9 @@ typedef OnLocationChanged = void Function(GeoPoint);
 /// [defaultZoom] : set default zoom value (default = 1)
 /// [useSecureURL] : use https or http when we get data from osm api
 class OSMFlutter extends StatefulWidget {
-  final bool currentLocation;
+  final MapController controller;
   final bool trackMyPosition;
   final bool showZoomController;
-  final GeoPoint initPosition;
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked onGeoPointClicked;
   final OnLocationChanged onLocationChanged;
@@ -42,10 +40,9 @@ class OSMFlutter extends StatefulWidget {
 
   OSMFlutter({
     Key key,
-    this.currentLocation = true,
+    this.controller,
     this.trackMyPosition = false,
     this.showZoomController = false,
-    this.initPosition,
     this.staticPoints = const [],
     this.markerIcon,
     this.onGeoPointClicked,
@@ -53,7 +50,8 @@ class OSMFlutter extends StatefulWidget {
     this.road,
     this.defaultZoom = 1.0,
     this.useSecureURL = true,
-  }) : super(key: key);
+  })  : assert(controller != null),
+        super(key: key);
 
   static OSMFlutterState of<T>(BuildContext context, {bool nullOk = false}) {
     assert(context != null);
@@ -83,7 +81,7 @@ class OSMFlutterState extends State<OSMFlutter>
   PermissionStatus _permission;
 
   //_OsmCreatedCallback _osmCreatedCallback;
-  GlobalKey key, startIconKey, endIconKey, midddleIconKey;
+  GlobalKey key, startIconKey, endIconKey, middleIconKey;
   Map<String, GlobalKey> staticMarkersKeys;
 
   @override
@@ -107,17 +105,17 @@ class OSMFlutterState extends State<OSMFlutter>
     key = GlobalKey();
     startIconKey = GlobalKey();
     endIconKey = GlobalKey();
-    midddleIconKey = GlobalKey();
+    middleIconKey = GlobalKey();
     staticMarkersKeys = {};
     widget.staticPoints.forEach((gs) {
       staticMarkersKeys.putIfAbsent(gs.id, () => GlobalKey());
     });
     Future.delayed(Duration.zero, () async {
       //check location permission
-      if (widget.currentLocation || widget.trackMyPosition) {
+      if (widget.controller.initMapWithUserPosition || widget.trackMyPosition) {
         await requestPermission();
-        if (widget.currentLocation) {
-          await _checkServiceLocation();
+        if (widget.controller.initMapWithUserPosition) {
+          await _osmController.checkServiceLocation();
         }
       }
     });
@@ -161,7 +159,7 @@ class OSMFlutterState extends State<OSMFlutter>
       //request location permission
       _permission = await LocationPermissions().requestPermissions();
       if (_permission == PermissionStatus.granted) {
-        await _checkServiceLocation();
+        await _osmController.checkServiceLocation();
       }
       return false;
     } else if (_permission == PermissionStatus.granted) {
@@ -169,138 +167,6 @@ class OSMFlutterState extends State<OSMFlutter>
       //  if (widget.currentLocation) await _checkServiceLocation();
     }
     return false;
-  }
-
-  ///initialise or change of position
-  /// [p] : geoPoint
-  Future<void> changeLocation(GeoPoint p) async {
-    if (p != null) this._osmController.changeLocation(p);
-  }
-
-  ///remove marker from map of position
-  /// [p] : geoPoint
-  Future<void> removeMarker(GeoPoint p) async {
-    if (p != null) this._osmController.removeMarker(p);
-  }
-
-  ///change Icon Marker
-  /// we need to global key to recuperate widget from tree element
-  /// [key] : (GlobalKey) key of widget that represent the new marker
-  Future changeIconMarker(GlobalKey key) async {
-    await this._osmController.changeIconMarker(key);
-  }
-
-  /// change static position in runtime
-  ///  [geoPoints] : list of static geoPoint
-  ///  [id] : String of that list of static geoPoint
-  Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
-    assert(
-        widget.staticPoints != null &&
-            widget.staticPoints.firstWhere((p) => p.id == id) != null,
-        "static points null,you should initialize them before you set their positions!");
-    await this._osmController.setStaticPosition(geoPoints, id);
-  }
-
-  /// zoom in/out
-  /// [zoom] : (double) positive value:zoomIN or negative value:zoomOut
-  Future<void> zoom(double zoom) async {
-    assert(zoom != 0, "zoom value should different from zero");
-    await this._osmController.zoom(zoom);
-  }
-
-  /// zoomIn use defaultZoom
-  /// positive value:zoomIN
-  Future<void> zoomIn() async {
-    await this._osmController.zoomIn();
-  }
-
-  /// zoomOut use defaultZoom
-  /// negative value:zoomOut
-  Future<void> zoomOut() async {
-    await this._osmController.zoom(-1);
-  }
-
-  /// activate current location position
-  Future<void> currentLocation() async {
-    await requestPermission();
-    await this._osmController.currentLocation();
-  }
-
-  /// recuperation of user current position
-  Future<GeoPoint> myLocation() async {
-    return await this._osmController.myLocation();
-  }
-
-  /// enabled tracking user location
-  Future<void> enableTracking() async {
-    await requestPermission();
-    await this._osmController.enableTracking();
-  }
-
-  /// disabled tracking user location
-  Future<void> disabledTracking() async {
-    await this._osmController.disabledTracking();
-  }
-
-  /// pick Position in map
-  Future<GeoPoint> selectPosition() async {
-    GeoPoint p = await this._osmController.selectPosition();
-    return p;
-  }
-
-  /// draw road
-  ///  [start] : started point of your Road
-  ///  [end] : last point of your road
-  Future<RoadInfo> drawRoad(GeoPoint start, GeoPoint end) async {
-    assert(
-        start != null && end != null, "you cannot make road without 2 point");
-    assert(start.latitude != end.latitude || start.longitude != end.longitude,
-        "you cannot make road with same geoPoint");
-    return await this._osmController.drawRoad(start, end);
-  }
-
-  ///delete last road draw in the map
-  Future<void> removeLastRoad() async {
-    await this._osmController.removeLastRoad();
-  }
-
-  Future<void> _checkServiceLocation() async {
-    ServiceStatus serviceStatus =
-        await LocationPermissions().checkServiceStatus();
-    if (serviceStatus == ServiceStatus.disabled) {
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) {
-          return AlertDialog(
-            title: Text("GPS service is disabled"),
-            content: Text(
-                "We need to get your current location,you should turn on your gps location "),
-            actions: <Widget>[
-              FlatButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "annuler",
-                  style: TextStyle(color: Colors.black),
-                ),
-              ),
-              FlatButton(
-                onPressed: () => Navigator.pop(context),
-                color: Theme.of(context).primaryColor,
-                child: Text(
-                  "ok",
-                  style: TextStyle(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    } else if (serviceStatus == ServiceStatus.enabled) {
-      currentLocation();
-    }
   }
 
   Widget widgetConfigMap() {
@@ -337,7 +203,7 @@ class OSMFlutterState extends State<OSMFlutter>
           ],
           if (widget.road?.middleIcon != null) ...[
             RepaintBoundary(
-              key: midddleIconKey,
+              key: middleIconKey,
               child: widget.road.middleIcon,
             ),
           ],
@@ -348,8 +214,12 @@ class OSMFlutterState extends State<OSMFlutter>
 
   void _onPlatformViewCreated(int id) async {
     this._osmController = await OSMController.init(id, this);
+    widget.controller.init(this._osmController);
     Future.delayed(Duration(milliseconds: 1250), () async {
-      await _osmController.initMap();
+      await _osmController.initMap(
+        initPosition: widget.controller.initPosition,
+        initWithUserPosition: widget.controller.initMapWithUserPosition,
+      );
       /*while(this._osmController==null){
         print("osm null");
       }*/
