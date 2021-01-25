@@ -211,7 +211,7 @@ class OSMFlutterState extends State<OSMFlutter>
   /// zoomIn use defaultZoom
   /// positive value:zoomIN
   Future<void> zoomIn() async {
-    await this._osmController.zoom(0);
+    await this._osmController.zoomIn();
   }
 
   /// zoomOut use defaultZoom
