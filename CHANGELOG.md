@@ -1,3 +1,5 @@
+## 0.6.0+1 [beta-version]:
+* fix readme
 ## 0.6.0 [beta-version]:
 * separation of controller from osmFlutter
 * remove working with globalkey to make operation in osmMap

@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.6.0-orange)
+![pub](https://img.shields.io/badge/pub-v0.6.0%2B1-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -19,7 +19,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.6.0
+      flutter_osm_plugin: ^0.6.0+1
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
@@ -141,10 +141,13 @@ print("${roadInfo.duration}sec");
 await controller.removeLastRoad();
 ```
 
-### change static geopoint position
+### change static GeoPoint position
 > you can use it if you don't have at first static position and you need to add  staticPoints with empty list of geoPoints
 > you can use it to change their position over time
-` osmKey.currentState.setStaticPosition(List<GeoPoint> geoPoints,String id ) `
+
+```dart
+await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
+```
 
 ####  `OSMFlutter`
 | Properties           | Description                         |
