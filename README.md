@@ -149,7 +149,6 @@ await controller.removeLastRoad();
 ####  `OSMFlutter`
 | Properties           | Description                         |
 | -------------------- | ----------------------------------- |
-| `currentLocation`    | enable the current position.        |
 | `trackMyPosition`    | enbaled tracking user position.     |
 | `showZoomController` | show default zoom controller.       |
 | `markerIcon`         | set icon Marker                     |
