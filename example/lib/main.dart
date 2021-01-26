@@ -42,11 +42,17 @@ class _MainExampleState extends State<MainExample> {
   void initState() {
     super.initState();
     controller = MapController(
+      initMapWithUserPosition: false,
       initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
   }
 
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext loncontext) {
     return Scaffold(

@@ -10,7 +10,7 @@ class MapController {
   final GeoPoint initPosition;
 
   MapController({
-    this.initMapWithUserPosition = false,
+    this.initMapWithUserPosition = true,
     this.initPosition,
   }) : assert( initMapWithUserPosition || initPosition != null);
 

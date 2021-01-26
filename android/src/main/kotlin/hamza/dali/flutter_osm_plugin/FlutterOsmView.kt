@@ -645,7 +645,7 @@ class FlutterOsmView(
 
 
     override fun onFlutterViewDetached() {
-            map!!.onDetach()
+        //    map!!.onDetach()
     }
 
 
