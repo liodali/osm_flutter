@@ -8,6 +8,19 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: MainExample(),
+      routes: {
+        "/home": (ctx) => MainExample(),
+        "/second": (ctx) => Scaffold(
+              body: Center(
+                child: RaisedButton(
+                  onPressed: () {
+                    Navigator.popAndPushNamed(ctx, "/home");
+                  },
+                  child: Text("another page"),
+                ),
+              ),
+            ),
+      },
     );
   }
 }
@@ -20,18 +33,26 @@ class MainExample extends StatefulWidget {
 }
 
 class _MainExampleState extends State<MainExample> {
-  GlobalKey<OSMFlutterState> osmKey;
+  MapController controller;
   GlobalKey<ScaffoldState> scaffoldKey;
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
-  ValueNotifier<bool> trackingNotifier = ValueNotifier(true);
+  ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
 
   @override
   void initState() {
     super.initState();
-    osmKey = GlobalKey<OSMFlutterState>();
+    controller = MapController(
+      initMapWithUserPosition: false,
+      initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+    );
     scaffoldKey = GlobalKey<ScaffoldState>();
   }
 
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext loncontext) {
     return Scaffold(
@@ -40,15 +61,21 @@ class _MainExampleState extends State<MainExample> {
         title: const Text('OSM'),
         actions: <Widget>[
           IconButton(
+            icon: Icon(Icons.info),
+            onPressed: () async {
+              await Navigator.popAndPushNamed(context, "/second");
+            },
+          ),
+          IconButton(
             onPressed: () async {
               try {
-                await osmKey.currentState.removeLastRoad();
+                await controller.removeLastRoad();
 
                 ///selection geoPoint
-                GeoPoint point = await osmKey.currentState.selectPosition();
-                GeoPoint point2 = await osmKey.currentState.selectPosition();
+                GeoPoint point = await controller.selectPosition();
+                GeoPoint point2 = await controller.selectPosition();
                 RoadInfo roadInformation =
-                    await osmKey.currentState.drawRoad(point, point2);
+                    await controller.drawRoad(point, point2);
                 print(
                     "duration:${Duration(seconds: roadInformation.duration.toInt()).inMinutes}");
                 print("distance:${roadInformation.distance}Km");
@@ -72,7 +99,7 @@ class _MainExampleState extends State<MainExample> {
           ),
           IconButton(
             onPressed: () async {
-              GeoPoint p = await osmKey.currentState.selectPosition();
+              GeoPoint p = await controller.selectPosition();
               scaffoldKey.currentState.showSnackBar(
                 SnackBar(
                   content: Text(
@@ -86,7 +113,7 @@ class _MainExampleState extends State<MainExample> {
           IconButton(
             icon: Icon(Icons.refresh),
             onPressed: () async {
-              await osmKey.currentState.setStaticPosition([
+              await controller.setStaticPosition([
                 GeoPoint(latitude: 47.434541, longitude: 8.467369),
                 GeoPoint(latitude: 47.436207, longitude: 8.464072),
                 GeoPoint(latitude: 47.437688, longitude: 8.460832),
@@ -99,123 +126,126 @@ class _MainExampleState extends State<MainExample> {
           )
         ],
       ),
-      body: Container(
-        child: Stack(
-          children: [
-            OSMFlutter(
-              key: osmKey,
-              currentLocation: true,
-              defaultZoom: 3.0,
-              onLocationChanged: (myLocation) {
-                print(myLocation);
-              },
-              onGeoPointClicked: (geoPoint) async {
-                scaffoldKey.currentState.showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      "${geoPoint.toMap().toString()}",
+      body: OrientationBuilder(
+        builder: (ctx, orientation) {
+          return Container(
+            child: Stack(
+              children: [
+                OSMFlutter(
+                  controller: controller,
+                  //trackMyPosition: trackingNotifier.value,
+                  useSecureURL: false,
+                  defaultZoom: 3.0,
+
+                  onLocationChanged: (myLocation) {
+                    print(myLocation);
+                  },
+                  onGeoPointClicked: (geoPoint) async {
+                    scaffoldKey.currentState.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          "${geoPoint.toMap().toString()}",
+                        ),
+                        action: SnackBarAction(
+                          onPressed: () =>
+                              scaffoldKey.currentState.hideCurrentSnackBar(),
+                          label: "hide",
+                        ),
+                      ),
+                    );
+                  },
+                  staticPoints: [
+                    StaticPositionGeoPoint(
+                      "line 1",
+                      MarkerIcon(
+                        icon: Icon(
+                          Icons.train,
+                          color: Colors.green,
+                          size: 48,
+                        ),
+                      ),
+                      [
+                        GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+                        GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
+                      ],
                     ),
-                    action: SnackBarAction(
-                      onPressed: () =>
-                          scaffoldKey.currentState.hideCurrentSnackBar(),
-                      label: "hide",
-                    ),
-                  ),
-                );
-              },
-              staticPoints: [
-                StaticPositionGeoPoint(
-                  "line 1",
-                  MarkerIcon(
-                    icon: Icon(
-                      Icons.train,
-                      color: Colors.green,
-                      size: 48,
-                    ),
-                  ),
-                  [
-                    GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
-                    GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
+                    StaticPositionGeoPoint(
+                      "line 2",
+                      MarkerIcon(
+                        icon: Icon(
+                          Icons.train,
+                          color: Colors.red,
+                          size: 48,
+                        ),
+                      ),
+                      [
+                        GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
+                        GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
+                      ],
+                    )
                   ],
+                  road: Road(
+                    startIcon: MarkerIcon(
+                      icon: Icon(
+                        Icons.person,
+                        size: 64,
+                        color: Colors.brown,
+                      ),
+                    ),
+                    roadColor: Colors.red,
+                  ),
+                  markerIcon: MarkerIcon(
+                    icon: Icon(
+                      Icons.home,
+                      color: Colors.orange,
+                      size: 64,
+                    ),
+                  ),
                 ),
-                StaticPositionGeoPoint(
-                  "line 2",
-                  MarkerIcon(
-                    icon: Icon(
-                      Icons.train,
-                      color: Colors.red,
-                      size: 48,
+                Positioned(
+                  bottom: 10,
+                  left: 10,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: zoomNotifierActivation,
+                    builder: (ctx, visible, child) {
+                      return AnimatedOpacity(
+                        opacity: visible ? 1.0 : 0.0,
+                        duration: Duration(milliseconds: 500),
+                        child: child,
+                      );
+                    },
+                    child: Column(
+                      children: [
+                        RaisedButton(
+                          child: Icon(Icons.add),
+                          onPressed: () async {
+                            controller.zoomIn();
+                          },
+                          elevation: 0,
+                        ),
+                        RaisedButton(
+                          child: Icon(Icons.remove),
+                          elevation: 0,
+                          onPressed: () async {
+                            controller.zoomOut();
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                  [
-                    GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
-                    GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
-                  ],
-                )
+                ),
               ],
-              road: Road(
-                startIcon: MarkerIcon(
-                  icon: Icon(
-                    Icons.person,
-                    size: 64,
-                    color: Colors.brown,
-                  ),
-                ),
-                roadColor: Colors.red,
-              ),
-              markerIcon: MarkerIcon(
-                icon: Icon(
-                  Icons.home,
-                  color: Colors.orange,
-                  size: 64,
-                ),
-              ),
-              trackMyPosition: trackingNotifier.value,
-              //initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
-              useSecureURL: false,
             ),
-            Positioned(
-              bottom: 10,
-              left: 10,
-              child: ValueListenableBuilder<bool>(
-                valueListenable: zoomNotifierActivation,
-                builder: (ctx, visible, child) {
-                  return AnimatedOpacity(
-                    opacity: visible ? 1.0 : 0.0,
-                    duration: Duration(milliseconds: 500),
-                    child: child,
-                  );
-                },
-                child: Column(
-                  children: [
-                    RaisedButton(
-                      child: Icon(Icons.add),
-                      onPressed: () async {
-                        osmKey.currentState.zoomIn();
-                      },
-                      elevation: 0,
-                    ),
-                    RaisedButton(
-                      child: Icon(Icons.remove),
-                      elevation: 0,
-                      onPressed: () async {
-                        osmKey.currentState.zoomOut();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           if (!trackingNotifier.value) {
-            await osmKey.currentState.currentLocation();
-            await osmKey.currentState.enableTracking();
+            await controller.currentLocation();
+            await controller.enableTracking();
           } else {
-            await osmKey.currentState.disabledTracking();
+            await controller.disabledTracking();
           }
           trackingNotifier.value = !trackingNotifier.value;
         },

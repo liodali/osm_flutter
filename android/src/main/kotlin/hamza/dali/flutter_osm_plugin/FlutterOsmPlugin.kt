@@ -11,13 +11,14 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
-import io.flutter.embedding.engine.plugins.lifecycle.FlutterLifecycleAdapter
 import io.flutter.plugin.common.PluginRegistry
 import org.osmdroid.config.Configuration
+import org.osmdroid.config.IConfigurationProvider
 import java.util.concurrent.atomic.AtomicInteger
+import io.flutter.embedding.engine.plugins.lifecycle.FlutterLifecycleAdapter
 
 
-class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
+class FlutterOsmPlugin() :
         FlutterPlugin, ActivityAware, DefaultLifecycleObserver {
     constructor(activity: Activity) : this() {
         registrarActivityHashCode = activity.hashCode()
@@ -25,6 +26,7 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
     }
 
     private var activity: Activity? = null
+    private var configuration: IConfigurationProvider? = null
 
 
     companion object {
@@ -65,10 +67,11 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         pluginBinding = binding
 
+
     }
 
     override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
-
+        
     }
 
 
@@ -76,9 +79,10 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
         lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding)
         lifecycle?.addObserver(this)
         activity = binding.activity
-        activity!!.application.registerActivityLifecycleCallbacks(this)
-        Configuration.getInstance().load(activity!!.application,
-                PreferenceManager.getDefaultSharedPreferences(activity!!.application))
+
+        configuration = Configuration.getInstance()
+        configuration!!.load(pluginBinding!!.applicationContext,//.application,
+                PreferenceManager.getDefaultSharedPreferences(pluginBinding!!.applicationContext))
 
         pluginBinding!!.platformViewRegistry.registerViewFactory(
                 VIEW_TYPE,
@@ -94,7 +98,9 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
 
     override fun onDetachedFromActivityForConfigChanges() {
         //  this.onDetachedFromActivity()
-        activity!!.application.unregisterActivityLifecycleCallbacks(this)
+        configuration!!.osmdroidTileCache.delete()
+        configuration = null
+
         activity = null
         lifecycle?.removeObserver(this)
         lifecycle = null
@@ -104,25 +110,25 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
         lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding)
 
         lifecycle?.addObserver(this)
-        activity = binding.activity
+        /*activity = binding.activity
         activity!!.application.registerActivityLifecycleCallbacks(this)
 
-        Configuration.getInstance().load(activity!!.application,
-                PreferenceManager.getDefaultSharedPreferences(activity!!.application))
+        configuration = Configuration.getInstance()
+        configuration!!.load(pluginBinding!!.applicationContext,//.application,
+                PreferenceManager.getDefaultSharedPreferences(pluginBinding!!.applicationContext))
 
         pluginBinding!!.platformViewRegistry.registerViewFactory(VIEW_TYPE,
                 OsmFactory(
                         pluginBinding!!.binaryMessenger,
                         activity!!.application,
                         lifecycle,
-                        activity, register))
+                        activity, register))*/
 
     }
 
     override fun onDetachedFromActivity() {
         lifecycle?.removeObserver(this)
         Configuration.getInstance().osmdroidTileCache.delete()
-        activity!!.application.unregisterActivityLifecycleCallbacks(this)
         activity = null
         lifecycle = null
         pluginBinding = null
@@ -131,7 +137,6 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
 
     override fun onCreate(owner: LifecycleOwner) {
         state.set(CREATED)
-
     }
 
     override fun onStart(owner: LifecycleOwner) {
@@ -154,25 +159,4 @@ class FlutterOsmPlugin() : Application.ActivityLifecycleCallbacks,
         state.set(DESTROYED)
     }
 
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-    }
-
-    override fun onActivityStarted(activity: Activity) {
-
-    }
-
-    override fun onActivityResumed(activity: Activity) {
-    }
-
-    override fun onActivityPaused(activity: Activity) {
-    }
-
-    override fun onActivityStopped(activity: Activity) {
-    }
-
-    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-    }
-
-    override fun onActivityDestroyed(activity: Activity) {
-    }
 }

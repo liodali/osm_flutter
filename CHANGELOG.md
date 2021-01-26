@@ -1,3 +1,8 @@
+## 0.6.0 [beta-version]:
+* separation of controller from osmFlutter
+* remove working with globalkey to make operation in osmMap
+* create MapController to communicate with osm map
+* improve readability of code
 ## 0.4.7+8 [beta-version]:
 * fix error in road when markers not initialized
 ## 0.4.7+7 [beta-version]:

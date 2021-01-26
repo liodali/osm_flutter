@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_plugin/src/marker.dart';
+
+import 'marker.dart';
 
 class Road {
   final Color roadColor;

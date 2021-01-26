@@ -104,8 +104,9 @@ class FlutterOsmView(
 
 
     private lateinit var methodChannel: MethodChannel
-    private lateinit var eventChannel: EventChannel
-    private lateinit var eventLocationChannel: EventChannel
+
+    //private lateinit var eventChannel: EventChannel
+    //private lateinit var eventLocationChannel: EventChannel
     private var eventSink: EventSink? = null
     private var eventLocationSink: EventSink? = null
 
@@ -263,8 +264,10 @@ class FlutterOsmView(
         provider?.startLocationProvider { location, source ->
             locationOverlay.onLocationChanged(location, source)
             val geoPMap = GeoPoint(location).toHashMap()
+            methodChannel.invokeMethod("receiveUserLocation", geoPMap)
+
             println("send location to flutter")
-            eventLocationSink?.success(geoPMap)
+            //eventLocationSink?.success(geoPMap)
         }
     }
 
@@ -328,8 +331,8 @@ class FlutterOsmView(
                             isEnabled = false
                             result.success(false)
 
-                        }
-                        result.success(null)
+                        } else
+                            result.success(null)
                     }
                 } catch (e: Exception) {
                     result.error("400", "${e.message!!}", "")
@@ -588,7 +591,7 @@ class FlutterOsmView(
                 val hashMap = HashMap<String, Double>()
                 hashMap["lon"] = marker!!.position.longitude
                 hashMap["lat"] = marker.position.latitude
-                eventSink!!.success(hashMap)
+                methodChannel.invokeMethod("receiveGeoPoint", hashMap)
                 true
             }
             if (staticMarkerIcon.isNotEmpty()) {
@@ -621,7 +624,7 @@ class FlutterOsmView(
     }
 
     override fun onCancel(arguments: Any?) {
-        TODO("Not yet implemented")
+        eventSink?.endOfStream()
     }
 
 
@@ -631,6 +634,7 @@ class FlutterOsmView(
 
     override fun dispose() {
         mainLinearLayout.removeAllViews()
+        map!!.onDetach()
         map = null
     }
 
@@ -657,20 +661,10 @@ class FlutterOsmView(
         FlutterOsmPlugin.state.set(CREATED)
         methodChannel = MethodChannel(binaryMessenger, "plugins.dali.hamza/osmview_${id}")
         methodChannel.setMethodCallHandler(this)
-        eventChannel = EventChannel(binaryMessenger, "plugins.dali.hamza/osmview_stream_${id}")
-        eventChannel.setStreamHandler(this)
+        //eventChannel = EventChannel(binaryMessenger, "plugins.dali.hamza/osmview_stream_${id}")
+        //eventChannel.setStreamHandler(this)
 
-        eventLocationChannel = EventChannel(binaryMessenger, "plugins.dali.hamza/osmview_stream_location_${id}")
-        eventLocationChannel.setStreamHandler(object : EventChannel.StreamHandler {
-            override fun onListen(arguments: Any?, events: EventSink?) {
-                eventLocationSink = events
-            }
 
-            override fun onCancel(arguments: Any?) {
-                eventLocationSink?.endOfStream()
-            }
-
-        })
         scope = owner.lifecycle.coroutineScope
         folderStaticPosition.name = Constants.nameFolderStatic
 
@@ -689,6 +683,10 @@ class FlutterOsmView(
         FlutterOsmPlugin.state.set(FlutterOsmPlugin.RESUMED)
         Log.e("osm", "osm flutter plugin resume")
         map!!.onResume()
+        if (isEnabled || isTracking) {
+            provider = GpsMyLocationProvider(application)
+            locationNewOverlay = MyLocationNewOverlay(provider, map)
+        }
         locationNewOverlay?.also { myLocation ->
             if (isEnabled) {
                 myLocation.enableMyLocation()
@@ -713,8 +711,9 @@ class FlutterOsmView(
                 provider?.stopLocationProvider()
             }
         }
-        map!!.onPause()
-
+        provider = null
+        locationNewOverlay = null
+        map?.onPause()
     }
 
     override fun onStop(owner: LifecycleOwner) {
@@ -733,6 +732,7 @@ class FlutterOsmView(
         }
         jobFlow = null
         job = null
+
         /*
         map!!.removeMapListener(mapListener)
         map!!.clearFindViewByIdCache()
@@ -743,11 +743,13 @@ class FlutterOsmView(
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
-        FlutterOsmPlugin.state.set(DESTROYED)
-        methodChannel.setMethodCallHandler(null)
-        eventChannel.setStreamHandler(null)
         mainLinearLayout.removeAllViews()
+        //map!!.onDetach()
+        methodChannel.setMethodCallHandler(null)
+        //eventChannel.setStreamHandler(null)
         map = null
+        FlutterOsmPlugin.state.set(DESTROYED)
+
     }
 
 }

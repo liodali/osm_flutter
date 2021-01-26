@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.4.7%2B8-orange)
+![pub](https://img.shields.io/badge/pub-v0.6.0-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -19,14 +19,14 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.4.7+8
+      flutter_osm_plugin: ^0.6.0
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
   
 ```dart
 OSMFlutter( 
-        key: osmKey,
+        controler:mapController,
         currentLocation: false,
         road: Road(
                 startIcon: MarkerIcon(
@@ -50,62 +50,96 @@ OSMFlutter(
 
 ```
 
-### Declare GlobalKey
+### Declare MapController to control osm map instead of using GlobalKey 
+ 
+#### Initialisation
+```dart
+MapController controller = MapController(
+                            initMapWithUserPosition: false,
+                            initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+                       );
+```
+#### dispose
+```dart
+     controller.dispose();
+```
+####  `MapController`
+| Properties                   | Description                                                             |
+| ---------------------------- | ----------------------------------------------------------------------- |
+| `initMapWithUserPosition`    | (bool) initialize map with user position (default:true                  |
+| `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
 
-`  GlobalKey<OSMFlutterState> osmKey = GlobalKey<OSMFlutterState>();`
+>  GlobalKey was deprecated
 
 ### set map on user current position
 
-` osmKey.currentState.currentPosition() `
-
+```dart
+await controller.currentPosition();
+```
 ### zoomIN
-
-* ` osmKey.currentState.zoom(2.) `
-
-* ` osmKey.currentState.zoomIn() `
-
+```dart
+await controller.zoom(2.);
+// or 
+await controller.zoomIn();
+```
 
 ### zoomOut
-
-* ` osmKey.currentState.zoom(-2.) `
-
-* ` osmKey.currentState.zoomOut() `
+```dart
+await controller.zoom(-2.);
+// or 
+await controller.zoomOut();
+```
 
 ###  track user current position
 
-` osmKey.currentState.enableTracking() `
+```dart
+await controller.enableTracking();
+```
 
 ### disable tracking user position
 
-` osmKey.currentState.disabledTracking() `
+```dart
+await controller.disabledTracking();
+```
 
 ### initialise position
 
-` osmKey.currentState.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609)) `
-
+```dart
+controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
+```
 ### recuperation current position
 
-`GeoPoint geoPoint = osmKey.currentState.myLocation() `
+```dart
+GeoPoint geoPoint = controller.myLocation();
+```
 
 ### select/create new position
 
-`GeoPoint geoPoint = osmKey.currentState.selectPosition() `
+```dart
+GeoPoint geoPoint = controller.selectPosition();
+```
 
 * PS : selected position can be removed by long press 
 
 ### remove marker
 
-`osmKey.currentState.removePosition(geoPoint)`
+```dart
+controller.removePosition(geoPoint);
+```
 * PS : static position cannot be removed by this method 
 
 ### draw road,recuperate distance in km and duration in sec
-` RoadInfo roadInfo = await osmKey.currentState.drawRoad( GeoPoint(latitude: 47.35387, longitude: 8.43609),GeoPoint(latitude: 47.4371, longitude: 8.6136)); `
-` print("${roadInfo.distance}km")`
-` print("${roadInfo.duration}sec")`
+```dart
+RoadInfo roadInfo = await controller.drawRoad( GeoPoint(latitude: 47.35387, longitude: 8.43609),GeoPoint(latitude: 47.4371, longitude: 8.6136));
+print("${roadInfo.distance}km");
+print("${roadInfo.duration}sec");
+```
 
 ### delete last road
 
-`await osmKey.currentState.removeLastRoad()`
+```dart
+await controller.removeLastRoad();
+```
 
 ### change static geopoint position
 > you can use it if you don't have at first static position and you need to add  staticPoints with empty list of geoPoints
@@ -118,7 +152,6 @@ OSMFlutter(
 | `currentLocation`    | enable the current position.        |
 | `trackMyPosition`    | enbaled tracking user position.     |
 | `showZoomController` | show default zoom controller.       |
-| `initPosition`       | set default position showing in map |
 | `markerIcon`         | set icon Marker                     |
 | `defaultZoom`        | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
 | `road`               | set color and start/end/middle markers in road |

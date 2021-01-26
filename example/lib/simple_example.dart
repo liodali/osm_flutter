@@ -60,23 +60,25 @@ class _SimpleExampleState extends State<SimpleExample> {
 
 class SimpleOSM extends StatefulWidget {
   @override
-  State<StatefulWidget> createState() =>SimpleOSMState();
+  State<StatefulWidget> createState() => SimpleOSMState();
 }
 
-class SimpleOSMState extends State<SimpleOSM> with AutomaticKeepAliveClientMixin {
-  GlobalKey<OSMFlutterState> osmKey;
+class SimpleOSMState extends State<SimpleOSM>
+    with AutomaticKeepAliveClientMixin {
+  MapController controller;
 
   @override
   void initState() {
     super.initState();
-    osmKey = GlobalKey<OSMFlutterState>();
+    controller = MapController(
+      initMapWithUserPosition: true,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return OSMFlutter(
-      key: osmKey,
-      currentLocation: false,
+      controller: controller,
       markerIcon: MarkerIcon(
         icon: Icon(
           Icons.person_pin_circle,
@@ -85,7 +87,6 @@ class SimpleOSMState extends State<SimpleOSM> with AutomaticKeepAliveClientMixin
         ),
       ),
       trackMyPosition: false,
-      initPosition: GeoPoint(latitude: 42.151753, longitude: 24.769730),
       useSecureURL: false,
     );
   }
