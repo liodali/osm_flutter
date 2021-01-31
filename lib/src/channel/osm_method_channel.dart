@@ -262,4 +262,9 @@ class MethodChannelOSM extends OSMPlatform {
     Uint8List pngBytes = byteData.buffer.asUint8List();
     return pngBytes;
   }
+
+  @override
+  Future<void> visibilityInfoWindow(int idOSM, bool visible) async{
+    await _channels[idOSM].invokeMethod("use#visiblityInfoWindow",visible);
+  }
 }

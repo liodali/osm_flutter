@@ -110,4 +110,9 @@ abstract class OSMPlatform extends PlatformInterface {
   Future<void> disableTracking(
     int idOSM,
   );
+
+  Future<void> visibilityInfoWindow(
+      int idOSM,
+      bool visible,
+      );
 }

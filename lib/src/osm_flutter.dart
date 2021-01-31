@@ -25,6 +25,7 @@ typedef OnLocationChanged = void Function(GeoPoint);
 /// [markerIcon] : (Icon/AssertImage) marker of geoPoint
 /// [road] : set color and icons marker of road
 /// [defaultZoom] : set default zoom value (default = 1)
+/// [showDefaultInfoWindow] : (bool) enable/disable default infoWindow of marker (default = false)
 /// [useSecureURL] : use https or http when we get data from osm api
 class OSMFlutter extends StatefulWidget {
   final MapController controller;
@@ -36,6 +37,7 @@ class OSMFlutter extends StatefulWidget {
   final MarkerIcon markerIcon;
   final Road road;
   final double defaultZoom;
+  final bool showDefaultInfoWindow;
   final bool useSecureURL;
 
   OSMFlutter({
@@ -49,6 +51,7 @@ class OSMFlutter extends StatefulWidget {
     this.onLocationChanged,
     this.road,
     this.defaultZoom = 1.0,
+    this.showDefaultInfoWindow = false,
     this.useSecureURL = true,
   })  : assert(controller != null),
         super(key: key);
