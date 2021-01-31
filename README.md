@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.6.0%2B1-orange)
+![pub](https://img.shields.io/badge/pub-v0.6.1-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -19,7 +19,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.6.0+1
+      flutter_osm_plugin: ^0.6.1
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
@@ -150,17 +150,18 @@ await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
 
 ####  `OSMFlutter`
-| Properties           | Description                         |
-| -------------------- | ----------------------------------- |
-| `trackMyPosition`    | enbaled tracking user position.     |
-| `showZoomController` | show default zoom controller.       |
-| `markerIcon`         | set icon Marker                     |
-| `defaultZoom`        | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
-| `road`               | set color and start/end/middle markers in road |
-| `useSecureURL`       | enabled secure urls                  |
-| `staticPoints`       | List of Markers you want to show always ,should every marker have unique id |
-| `onGeoPointClicked`  | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
-| `onGeoPointClicked`  | (callback) it is hire when you activate tracking and  user position has been changed          |
+| Properties               | Description                         |
+| ------------------------ | ----------------------------------- |
+| `trackMyPosition`        | enbaled tracking user position.     |
+| `showZoomController`     | show default zoom controller.       |
+| `markerIcon`             | set icon Marker                     |
+| `defaultZoom`            | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
+| `road`                   | set color and start/end/middle markers in road |
+| `useSecureURL`           | enabled secure urls                  |
+| `staticPoints`           | List of Markers you want to show always ,should every marker have unique id |
+| `onGeoPointClicked`      | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
+| `onLocationChanged`      | (callback) it is hire when you activate tracking and  user position has been changed          |
+| `showDefaultInfoWindow`  | (bool) enable/disable default infoWindow of marker (default = false)         |
 
 ## STATIC METHODS:
 ### calculate distance between 2 geopoint position
