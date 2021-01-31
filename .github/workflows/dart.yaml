@@ -5,6 +5,7 @@ on:
       - master
 jobs:
   build:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     container:
       image:  google/dart:latest

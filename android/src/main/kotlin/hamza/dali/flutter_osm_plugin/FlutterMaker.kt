@@ -15,8 +15,10 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
-typealias LongClickHandler = (marker:Marker) -> Boolean
-open class FlutterMaker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClickListener, (Marker) -> Boolean {
+
+typealias LongClickHandler = (marker: Marker) -> Boolean
+
+open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClickListener, (Marker) -> Boolean {
     protected lateinit var application: Application
     var longPress: LongClickHandler? = null
         set(longPress) {
@@ -107,6 +109,10 @@ open class FlutterMaker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClic
 
     override fun setInfoWindow(infoWindow: MarkerInfoWindow?) {
         super.setInfoWindow(infoWindow)
+    }
+
+    fun visibilityInfoWindow(visible: Boolean) {
+        this.infoWindow?.let { it.visibility = if (visible) View.VISIBLE else View.GONE }
     }
 
     override fun showInfoWindow() {

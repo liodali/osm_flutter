@@ -7,7 +7,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 
 class FlutterRoadMarker(application: Application, mapView: MapView, point: GeoPoint) :
-        FlutterMaker(application, mapView, point) {
+        FlutterMarker(application, mapView, point) {
     var mapIconsBitmaps: HashMap<String, Bitmap> = HashMap()
         set(hashMap) {
             if (hashMap.isNotEmpty()) field = hashMap

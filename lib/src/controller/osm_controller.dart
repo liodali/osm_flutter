@@ -36,7 +36,8 @@ class OSMController {
   }) async {
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
 
-    osmPlatform.setSecureURL(_idMap, _osmFlutterState.widget.useSecureURL);
+    await osmPlatform.setSecureURL(_idMap, _osmFlutterState.widget.useSecureURL);
+    await osmPlatform.visibilityInfoWindow(_idMap, _osmFlutterState.widget.showDefaultInfoWindow);
     if (_osmFlutterState.widget.onGeoPointClicked != null) {
       osmPlatform.onGeoPointClickListener(_idMap).listen((event) {
         _osmFlutterState.widget.onGeoPointClicked(event.value);

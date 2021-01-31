@@ -119,6 +119,7 @@ class FlutterOsmView(
     private var useSecureURL = true
     private var isTracking = false
     private var isEnabled = false
+    private var visibilityInfoWindow = false
 
     private var mainLinearLayout: LinearLayout
 
@@ -196,7 +197,8 @@ class FlutterOsmView(
     }
 
     private fun createMarker(geoPoint: GeoPoint, color: Int?): Marker {
-        val marker = FlutterMaker(application!!, map!!, geoPoint)
+        val marker = FlutterMarker(application!!, map!!, geoPoint)
+        marker.visibilityInfoWindow(visibilityInfoWindow)
         marker.longPress = object : LongClickHandler {
             override fun invoke(marker: Marker): Boolean {
                 map!!.overlays.remove(marker)
@@ -275,6 +277,10 @@ class FlutterOsmView(
         when (call.method) {
             "use#secure" -> {
                 setSecureURL(call, result)
+            }
+            "use#visiblityInfoWindow" -> {
+                visibilityInfoWindow = call.arguments as Boolean
+                result.success(null)
             }
             "Zoom" -> {
                 setZoom(call, result)
@@ -409,7 +415,7 @@ class FlutterOsmView(
                 }.toMutableList()
                 withContext(Main) {
                     map!!.overlays.removeAll {
-                        it is FlutterMaker && wayPoints.contains(it.position)
+                        it is FlutterMarker && wayPoints.contains(it.position)
                     }
                     map!!.invalidate()
                 }
@@ -422,14 +428,19 @@ class FlutterOsmView(
                             polyLine.outlinePaint.color = color
                         }
                         flutterRoad = FlutterRoad(application!!, map!!)
+
                         flutterRoad?.let {
                             it.markersIcons = customRoadMarkerIcon
                             polyLine.outlinePaint.strokeWidth = 5.0f
                             it.road = polyLine
                             // if (it.start != null) 
-                            folderRoad.items.add(it.start)
+                            folderRoad.items.add(it.start.apply {
+                                this.visibilityInfoWindow(visibilityInfoWindow)
+                            })
                             //  if (it.end != null) 
-                            folderRoad.items.add(it.end)
+                            folderRoad.items.add(it.end.apply {
+                                this.visibilityInfoWindow(visibilityInfoWindow)
+                            })
                             folderRoad.items.add(it.road!!)
                         }
                         map!!.invalidate()
@@ -551,7 +562,7 @@ class FlutterOsmView(
 
     private fun deleteMarker(geoPoint: GeoPoint) {
         val geoMarker = map!!.overlays.firstOrNull {
-            if (it is FlutterMaker) {
+            if (it is FlutterMarker) {
                 (it.position.latitude == geoPoint.latitude
                         && it.position.longitude == geoPoint.longitude)
             } else
@@ -584,10 +595,12 @@ class FlutterOsmView(
             name = idStaticPosition
         }
         staticPoints[idStaticPosition]?.forEach { geoPoint ->
-            val maker = FlutterMaker(application!!, map!!)
-            maker.position = geoPoint
-            maker.defaultInfoWindow()
-            maker.onClickListener = Marker.OnMarkerClickListener { marker, _ ->
+            val marker = FlutterMarker(application!!, map!!)
+            marker.position = geoPoint
+
+            marker.defaultInfoWindow()
+            marker.visibilityInfoWindow(visibilityInfoWindow)
+            marker.onClickListener = Marker.OnMarkerClickListener { marker, _ ->
                 val hashMap = HashMap<String, Double>()
                 hashMap["lon"] = marker!!.position.longitude
                 hashMap["lat"] = marker.position.latitude
@@ -595,9 +608,9 @@ class FlutterOsmView(
                 true
             }
             if (staticMarkerIcon.isNotEmpty()) {
-                maker.setIconMaker(null, staticMarkerIcon[idStaticPosition])
+                marker.setIconMaker(null, staticMarkerIcon[idStaticPosition])
             }
-            overlay.add(maker)
+            overlay.add(marker)
         }
         folderStaticPosition.add(overlay)
         if (map!!.zoomLevelDouble > 10.0) {
