@@ -1,3 +1,5 @@
+## 0.6.1+1 [beta-version]:
+* fix bugs
 ## 0.6.1 [beta-version]:
 * add new attribute to control the visibility if infoWindow of Marker
 ## 0.6.0+1 [beta-version]:
