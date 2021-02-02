@@ -30,12 +30,14 @@ abstract class EventOSM<T> {
 class GeoPointEvent extends EventOSM<GeoPoint> {
   GeoPointEvent(int mapId, GeoPoint position) : super(mapId, position);
 }
+
 class UserLocationEvent extends EventOSM<GeoPoint> {
   UserLocationEvent(int mapId, GeoPoint position) : super(mapId, position);
 }
 
 class MethodChannelOSM extends OSMPlatform {
   final Map<int, MethodChannel> _channels = {};
+
   //final Map<int, List<EventChannel>> _eventsChannels = {};
   StreamController _streamController = StreamController<EventOSM>.broadcast();
 
@@ -62,6 +64,7 @@ class MethodChannelOSM extends OSMPlatform {
   Stream<GeoPointEvent> onGeoPointClickListener(int idMap) {
     return _events(idMap).whereType<GeoPointEvent>();
   }
+
   @override
   Stream<UserLocationEvent> onUserPositionListener(int idMap) {
     return _events(idMap).whereType<UserLocationEvent>();
@@ -76,11 +79,11 @@ class MethodChannelOSM extends OSMPlatform {
           break;
         case "receiveUserLocation":
           final result = call.arguments;
-          _streamController.add(UserLocationEvent(idMap, GeoPoint.fromMap(result)));
+          _streamController
+              .add(UserLocationEvent(idMap, GeoPoint.fromMap(result)));
           break;
       }
       return null;
-
     });
   }
 
@@ -231,7 +234,7 @@ class MethodChannelOSM extends OSMPlatform {
 
   @override
   Future<void> setSecureURL(int idOSM, bool secure) async {
-    await _channels[idOSM].invokeMethod('use#secure', secure);
+    return await _channels[idOSM].invokeMethod('use#secure', secure);
   }
 
   @override
@@ -251,7 +254,7 @@ class MethodChannelOSM extends OSMPlatform {
 
   @override
   Future<void> zoom(int idOSM, double zoom) async {
-    if (zoom != null) await _channels[idOSM].invokeMethod('Zoom', zoom);
+    if (zoom != null) return await _channels[idOSM].invokeMethod('Zoom', zoom);
   }
 
   Future<Uint8List> _capturePng(GlobalKey globalKey) async {
@@ -264,7 +267,8 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> visibilityInfoWindow(int idOSM, bool visible) async{
-    await _channels[idOSM].invokeMethod("use#visiblityInfoWindow",visible);
+  Future<void> visibilityInfoWindow(int idOSM, bool visible) async {
+    return await _channels[idOSM]
+        .invokeMethod("use#visiblityInfoWindow", visible);
   }
 }

@@ -22,6 +22,7 @@ class OSMController {
     await osmPlatform.init(id);
     return OSMController._(id, osmState);
   }
+
   /// dispose: close stream in osmPlatform,remove references
   void dispose() {
     osmPlatform.close();
@@ -36,8 +37,10 @@ class OSMController {
   }) async {
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
 
-    await osmPlatform.setSecureURL(_idMap, _osmFlutterState.widget.useSecureURL);
-    await osmPlatform.visibilityInfoWindow(_idMap, _osmFlutterState.widget.showDefaultInfoWindow);
+    osmPlatform.setSecureURL(_idMap, _osmFlutterState.widget.useSecureURL);
+    if (_osmFlutterState.widget.showDefaultInfoWindow == true)
+      osmPlatform.visibilityInfoWindow(
+          _idMap, _osmFlutterState.widget.showDefaultInfoWindow);
     if (_osmFlutterState.widget.onGeoPointClicked != null) {
       osmPlatform.onGeoPointClickListener(_idMap).listen((event) {
         _osmFlutterState.widget.onGeoPointClicked(event.value);
