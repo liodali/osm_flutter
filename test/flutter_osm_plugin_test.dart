@@ -1,4 +1,5 @@
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin/src/types/search_completion.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -14,5 +15,9 @@ void main() {
       ),
     );
     expect(distance.round(), 843);
+  });
+  test("test search completion", () async {
+    List<SearchInfo> suggestions = await addressSuggestion("berlin");
+    expect(suggestions.length, 5);
   });
 }
