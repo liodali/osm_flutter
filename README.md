@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.6.1%2B1-orange)
+![pub](https://img.shields.io/badge/pub-v0.6.2-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -19,7 +19,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.6.1+1
+      flutter_osm_plugin: ^0.6.2
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
@@ -165,8 +165,18 @@ await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 
 ## STATIC METHODS:
 ### calculate distance between 2 geoPoint position
-` double distanceEnMetres = await distance2point(GeoPoint(longitude: 36.84612143139903,latitude: 11.099388684927824,),
-        GeoPoint( longitude: 36.8388023164018, latitude: 11.096959785428027, ),); `
+```dart
+ double distanceEnMetres = await distance2point(GeoPoint(longitude: 36.84612143139903,latitude: 11.099388684927824,),
+        GeoPoint( longitude: 36.8388023164018, latitude: 11.096959785428027, ),);
+```
+
+### get search Suggestion of text 
+
+>  you should know that i'm using public api, don't make lot of request
+
+```dart
+    List<SearchInfo> suggestions = await addressSuggestion("address");
+```
 
 
 ## NOTICE:

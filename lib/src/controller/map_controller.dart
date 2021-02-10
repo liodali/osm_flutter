@@ -12,7 +12,7 @@ class MapController {
   MapController({
     this.initMapWithUserPosition = true,
     this.initPosition,
-  }) : assert( initMapWithUserPosition || initPosition != null);
+  }) : assert(initMapWithUserPosition || initPosition != null);
 
   void init(OSMController osmController,
       {initMapWithCurrentPosition = false, initPosition}) {

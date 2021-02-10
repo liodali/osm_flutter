@@ -1,3 +1,5 @@
+## 0.6.2 [beta-version]:
+* add addressSuggestion for search completion 
 ## 0.6.1+1 [beta-version]:
 * fix bugs
 ## 0.6.1 [beta-version]:

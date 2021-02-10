@@ -1,6 +1,8 @@
 import 'dart:math' as Math;
 
+import 'package:dio/dio.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin/src/types/search_completion.dart';
 
 const earthRadius = 6371e3; //metre
 
@@ -40,4 +42,18 @@ Future<double> distance2point(GeoPoint p1, GeoPoint p2) async {
   final double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return earthRadius * c; //metres
+}
+
+Future<List<SearchInfo>> addressSuggestion(String searchText,
+    {int limitInformation = 5}) async {
+  Response response = await Dio().get(
+    "https://photon.komoot.io/api/",
+    queryParameters: {
+      "q": searchText,
+      "limit": limitInformation == 0 ? "" : "$limitInformation"
+    },
+  );
+  final json = response.data;
+
+  return (json["features"] as List).map((d) => SearchInfo.fromPhotonAPI(d)).toList();
 }
