@@ -40,5 +40,4 @@ class SearchInfo {
             latitude: data["geometry"]["coordinates"][1],
             longitude: data["geometry"]["coordinates"][0]),
         this.address = Address.fromPhotonAPI(data["properties"]);
-
 }
