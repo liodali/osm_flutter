@@ -412,6 +412,10 @@ class FlutterOsmView(
                 p.fillPaint.alpha = 50
                 p.outlinePaint.strokeWidth = stokeWidth
                 p.outlinePaint.color = color
+                p.setOnClickListener { polygon, _, _ ->
+                    polygon.closeInfoWindow()
+                    false
+                }
                 if (!map!!.overlays.contains(folderCircles)) {
                     map!!.overlays.add(folderCircles)
                 }
