@@ -46,6 +46,15 @@ class _MainExampleState extends State<MainExample> {
       initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
+    Future.delayed(Duration(seconds: 10), () async {
+      controller.drawCircle(CircleOSM(
+        key: "circle0",
+        centerPoint: GeoPoint(latitude: 47.434541, longitude: 8.467369),
+        radius: 1200.0,
+        color: Colors.red,
+        stokeWidth: 0.3,
+      ));
+    });
   }
 
   @override
@@ -53,6 +62,7 @@ class _MainExampleState extends State<MainExample> {
     controller.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext loncontext) {
     return Scaffold(

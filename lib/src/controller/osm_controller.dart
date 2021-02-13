@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_plugin/src/types/circle_osm.dart';
 import 'package:location_permissions/location_permissions.dart';
 
 import '../interface_osm/osm_interface.dart';
@@ -207,7 +208,7 @@ class OSMController {
 
   ///delete last road draw in the map
   Future<void> removeLastRoad() async {
-    await osmPlatform.removeLastRoad(_idMap);
+    return await osmPlatform.removeLastRoad(_idMap);
   }
 
   Future<void> checkServiceLocation() async {
@@ -247,5 +248,9 @@ class OSMController {
     } else if (serviceStatus == ServiceStatus.enabled) {
       currentLocation();
     }
+  }
+
+  Future<void> drawCircle(CircleOSM circleOSM) async{
+    return await  osmPlatform.drawCircle(_idMap, circleOSM);
   }
 }

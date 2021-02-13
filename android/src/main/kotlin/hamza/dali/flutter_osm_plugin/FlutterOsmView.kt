@@ -3,10 +3,7 @@ package hamza.dali.flutter_osm_plugin
 import android.app.Activity
 import android.app.Application
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Color
-import android.graphics.Rect
+import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -37,6 +34,7 @@ import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
+import org.osmdroid.config.IConfigurationProvider
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
@@ -48,11 +46,13 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.FolderOverlay
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
+
 
 fun GeoPoint.toHashMap(): HashMap<String, Double> {
     return HashMap<String, Double>().apply {
@@ -86,7 +86,7 @@ class FlutterOsmView(
         EventChannel.StreamHandler,
         MethodCallHandler {
 
-
+    private var configuration: IConfigurationProvider? = null
     private var map: MapView? = null
     private var locationNewOverlay: MyLocationNewOverlay? = null
     private var customMarkerIcon: Bitmap? = null
@@ -94,6 +94,9 @@ class FlutterOsmView(
     private val customRoadMarkerIcon = HashMap<String, Bitmap>()
     private val staticPoints: HashMap<String, MutableList<GeoPoint>> = HashMap()
     private val folderStaticPosition: FolderOverlay = FolderOverlay()
+    private val folderCircles: FolderOverlay = FolderOverlay().apply { 
+        name = Constants.circlesNames
+    }
     private val folderRoad: FolderOverlay = FolderOverlay().apply {
         this.name = Constants.roadName
     }
@@ -121,15 +124,14 @@ class FlutterOsmView(
     private var isEnabled = false
     private var visibilityInfoWindow = false
 
-    private var mainLinearLayout: LinearLayout
+    private var mainLinearLayout: LinearLayout = LinearLayout(context).apply {
+        this.layoutParams = MapView.LayoutParams(LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        this.orientation = LinearLayout.VERTICAL
+    }
 
     init {
 
 
-        mainLinearLayout = LinearLayout(context).apply {
-            this.layoutParams = MapView.LayoutParams(LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-            this.orientation = LinearLayout.VERTICAL
-        }
         lifecycle?.addObserver(this)
 
 
@@ -137,6 +139,8 @@ class FlutterOsmView(
 
 
     private fun initMap() {
+
+
         map = MapView(context).apply {
             this.layoutParams = MapView.LayoutParams(LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
             this.isTilesScaledToDpi = true
@@ -144,6 +148,7 @@ class FlutterOsmView(
             setTileSource(MAPNIK)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         }
+
         map!!.addMapListener(object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
                 return true
@@ -187,13 +192,16 @@ class FlutterOsmView(
         map!!.overlays.clear()
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
         addMarker(geoPoint, initPositionZoom, null)
+
         result.success(null)
     }
 
-    private fun addMarker(geoPoint: GeoPoint, zoom: Double, color: Int? = null) {
+    private fun addMarker(geoPoint: GeoPoint, zoom: Double, color: Int? = null): FlutterMarker {
         map!!.controller.setZoom(zoom)
         map!!.controller.animateTo(geoPoint)
-        map!!.overlays.add(createMarker(geoPoint, color))
+        val marker: FlutterMarker = createMarker(geoPoint, color) as FlutterMarker
+        map!!.overlays.add(marker)
+        return marker
     }
 
     private fun createMarker(geoPoint: GeoPoint, color: Int?): Marker {
@@ -385,6 +393,33 @@ class FlutterOsmView(
             }
             "staticPosition#IconMarker" -> {
                 staticPositionIconMaker(call, result)
+            }
+            "draw#circle" -> {
+                val args = call.arguments!! as HashMap<String, *>
+                val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
+                val key = args["key"] as String
+                val colors = args["color"] as List<Double>
+                val radius = (args["radius"] as Double)
+                val stokeWidth = (args["stokeWidth"] as Double).toFloat()
+                val color = Color.rgb(colors[0].toInt(), colors[1].toInt(), colors[2].toInt())
+
+                val circle: List<GeoPoint> = Polygon.pointsAsCircle(geoPoint, radius)
+                val p = Polygon(map!!)
+                p.id = key
+                p.points = circle
+                p.fillPaint.color = color
+                p.fillPaint.style = Paint.Style.FILL
+                p.fillPaint.alpha = 50
+                p.outlinePaint.strokeWidth = stokeWidth
+                p.outlinePaint.color = color
+                if (!map!!.overlays.contains(folderCircles)) {
+                    map!!.overlays.add(folderCircles)
+                }
+                folderCircles.items.removeAll {
+                    it is Polygon && it.id == key
+                }
+                folderCircles.items.add(p)
+                map!!.invalidate()
             }
             else -> {
                 result.notImplemented()
@@ -732,7 +767,6 @@ class FlutterOsmView(
     override fun onStop(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(STOPPED)
 
-
         job?.let {
             if (it.isActive) {
                 it.cancel()
@@ -759,6 +793,8 @@ class FlutterOsmView(
         mainLinearLayout.removeAllViews()
         //map!!.onDetach()
         methodChannel.setMethodCallHandler(null)
+        //configuration!!.osmdroidTileCache.delete()
+        //configuration = null
         //eventChannel.setStreamHandler(null)
         map = null
         FlutterOsmPlugin.state.set(DESTROYED)

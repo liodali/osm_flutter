@@ -27,6 +27,7 @@ abstract class OSMPlatform extends PlatformInterface {
   void close();
 
   Stream<GeoPointEvent> onGeoPointClickListener(int idMap);
+
   Stream<UserLocationEvent> onUserPositionListener(int idMap);
 
   Future<void> setSecureURL(
@@ -90,6 +91,11 @@ abstract class OSMPlatform extends PlatformInterface {
     GeoPoint end,
   );
 
+  Future<void> drawCircle(
+    int idOSM,
+    CircleOSM circleOSM,
+  );
+
   Future<void> customMarkerStaticPosition(
     int idOSM,
     GlobalKey globalKey,
@@ -112,7 +118,7 @@ abstract class OSMPlatform extends PlatformInterface {
   );
 
   Future<void> visibilityInfoWindow(
-      int idOSM,
-      bool visible,
-      );
+    int idOSM,
+    bool visible,
+  );
 }

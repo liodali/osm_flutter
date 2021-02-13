@@ -3,6 +3,9 @@ package hamza.dali.flutter_osm_plugin
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Point
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
@@ -20,6 +23,7 @@ typealias LongClickHandler = (marker: Marker) -> Boolean
 
 open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClickListener, (Marker) -> Boolean {
     protected lateinit var application: Application
+    private var canvas: Canvas? = null
     var longPress: LongClickHandler? = null
         set(longPress) {
             if (longPress != null) field = longPress
@@ -56,7 +60,6 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
         setInfoWindow(FlutterInfoWindow(infoView = infoWindow!!, mapView = mapView, point = mPosition))
     }
 
-
     constructor(mapView: MapView, infoWindow: View) : this(mapView) {
         this.mapView = mapView
         this.infoWindow = infoWindow
@@ -83,6 +86,8 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
         setInfoWindow(FlutterInfoWindow(infoView = infoWindow
                 ?: creatWindowInfoView(), mapView = mapView, point = this.mPosition))
     }
+
+
 
     private fun getDefaultIconDrawable(color: Int?, bitmap: Bitmap?): Drawable {
         var iconDrawable: Drawable? = null
