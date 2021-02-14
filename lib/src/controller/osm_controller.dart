@@ -261,4 +261,13 @@ class OSMController {
   Future<void> removeAllCircle() async {
     return await osmPlatform.removeAllCircle(_idMap);
   }
+  Future<void> advancedPositionPicker() async {
+    return await osmPlatform.advancedPositionPicker(_idMap);
+  }
+  Future<GeoPoint> selectAdvancedPositionPicker() async {
+    return await osmPlatform.selectAdvancedPositionPicker(_idMap);
+  }
+  Future<void> cancelAdvancedPositionPicker() async {
+    return await osmPlatform.cancelAdvancedPositionPicker(_idMap);
+  }
 }

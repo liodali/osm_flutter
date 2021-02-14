@@ -130,4 +130,16 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM,
     bool visible,
   );
+
+  Future<void> advancedPositionPicker(
+    int idOSM,
+  );
+
+  Future<GeoPoint> selectAdvancedPositionPicker(
+    int idOSM,
+  );
+
+  Future<void> cancelAdvancedPositionPicker(
+    int idOSM,
+  );
 }

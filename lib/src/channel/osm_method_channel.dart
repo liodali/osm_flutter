@@ -301,4 +301,23 @@ class MethodChannelOSM extends OSMPlatform {
   Future<void> removeCircle(int idOSM, String key) async {
     return await _channels[idOSM].invokeMethod("remove#circle", key);
   }
+
+  @override
+  Future<void> advancedPositionPicker(int idOSM) async {
+    return await _channels[idOSM].invokeMethod("advanced#selection");
+  }
+
+  @override
+  Future<void> cancelAdvancedPositionPicker(int idOSM) async {
+    return await _channels[idOSM].invokeMethod(
+      "cancel#advanced#selection",
+    );
+  }
+
+  @override
+  Future<GeoPoint> selectAdvancedPositionPicker(int idOSM) async {
+    Map mGeoPoint =
+        await _channels[idOSM].invokeMapMethod("confirm#advanced#selection");
+    return GeoPoint.fromMap(mGeoPoint);
+  }
 }
