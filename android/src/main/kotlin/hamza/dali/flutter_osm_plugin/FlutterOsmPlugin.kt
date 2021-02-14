@@ -23,10 +23,10 @@ class FlutterOsmPlugin() :
     constructor(activity: Activity) : this() {
         registrarActivityHashCode = activity.hashCode()
         this.activity = activity
+
     }
 
     private var activity: Activity? = null
-    private var configuration: IConfigurationProvider? = null
 
 
     companion object {
@@ -67,7 +67,8 @@ class FlutterOsmPlugin() :
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         pluginBinding = binding
 
-
+        Configuration.getInstance().load(pluginBinding!!.applicationContext,
+                PreferenceManager.getDefaultSharedPreferences(pluginBinding!!.applicationContext))
     }
 
     override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
@@ -80,9 +81,6 @@ class FlutterOsmPlugin() :
         lifecycle?.addObserver(this)
         activity = binding.activity
 
-        configuration = Configuration.getInstance()
-        configuration!!.load(pluginBinding!!.applicationContext,//.application,
-                PreferenceManager.getDefaultSharedPreferences(pluginBinding!!.applicationContext))
 
         pluginBinding!!.platformViewRegistry.registerViewFactory(
                 VIEW_TYPE,
@@ -98,9 +96,6 @@ class FlutterOsmPlugin() :
 
     override fun onDetachedFromActivityForConfigChanges() {
         //  this.onDetachedFromActivity()
-        configuration!!.osmdroidTileCache.delete()
-        configuration = null
-
         activity = null
         lifecycle?.removeObserver(this)
         lifecycle = null

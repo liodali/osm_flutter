@@ -46,6 +46,18 @@ class _MainExampleState extends State<MainExample> {
       initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
+    Future.delayed(Duration(seconds: 10), () async {
+      await controller.drawCircle(CircleOSM(
+        key: "circle0",
+        centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+        radius: 1200.0,
+        color: Colors.red,
+        stokeWidth: 0.3,
+      ));
+    });
+    Future.delayed(Duration(seconds: 20), () async {
+      await controller.removeCircle("circle0");
+    });
   }
 
   @override
@@ -53,8 +65,9 @@ class _MainExampleState extends State<MainExample> {
     controller.dispose();
     super.dispose();
   }
+
   @override
-  Widget build(BuildContext loncontext) {
+  Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(

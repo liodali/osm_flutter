@@ -114,8 +114,11 @@ class MethodChannelOSM extends OSMPlatform {
 
   @override
   Future<void> addPosition(int idOSM, GeoPoint p) async {
+    Map requestData = {"lon": p.longitude, "lat": p.latitude};
     return await _channels[idOSM].invokeListMethod(
-        "initPosition", {"lon": p.longitude, "lat": p.latitude});
+      "initPosition",
+      requestData,
+    );
   }
 
   @override
@@ -270,5 +273,32 @@ class MethodChannelOSM extends OSMPlatform {
   Future<void> visibilityInfoWindow(int idOSM, bool visible) async {
     return await _channels[idOSM]
         .invokeMethod("use#visiblityInfoWindow", visible);
+  }
+
+  @override
+  Future<void> drawCircle(int idOSM, CircleOSM circleOSM) async {
+    Map requestData = {
+      "lon": circleOSM.centerPoint.longitude,
+      "lat": circleOSM.centerPoint.latitude,
+      "key": circleOSM.key,
+      "radius": circleOSM.radius,
+      "stokeWidth": circleOSM.stokeWidth,
+      "color": [
+        circleOSM.color.red,
+        circleOSM.color.blue,
+        circleOSM.color.green,
+      ],
+    };
+    return await _channels[idOSM].invokeMethod("draw#circle", requestData);
+  }
+
+  @override
+  Future<void> removeAllCircle(int idOSM) async {
+    return await _channels[idOSM].invokeMethod("remove#circle", null);
+  }
+
+  @override
+  Future<void> removeCircle(int idOSM, String key) async {
+    return await _channels[idOSM].invokeMethod("remove#circle", key);
   }
 }

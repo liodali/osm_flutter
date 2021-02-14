@@ -90,7 +90,6 @@ class OSMFlutterState extends State<OSMFlutter>
   @override
   void initState() {
     super.initState();
-
     if (widget.staticPoints.isNotEmpty && widget.staticPoints.length > 1) {
       List<String> ids = [];
       for (int i = 0; i < widget.staticPoints.length; i++) {

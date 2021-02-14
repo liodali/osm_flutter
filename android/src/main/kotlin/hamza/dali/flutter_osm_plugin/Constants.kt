@@ -18,6 +18,7 @@ class Constants {
     }
 
     companion object {
+        const val circlesNames: String = "static_circles"
         const val roadName: String="DYNAMIC-ROAD"
         const val zoomStaticPosition: Double = 12.0
         const val latLabel: String = "lat"

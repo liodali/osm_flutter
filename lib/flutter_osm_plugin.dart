@@ -8,4 +8,5 @@ export 'src/osm_flutter.dart' hide OSMFlutterState;
 export 'src/types/geo_point.dart';
 export 'src/types/geo_static.dart';
 export 'src/types/road.dart';
+export 'src/types/circle_osm.dart';
 export 'src/types/types.dart';
