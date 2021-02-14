@@ -28,9 +28,7 @@ class MapController {
   /// [p] : geoPoint
   /// [circleOSM] : (CircleOSM) circle that will be draw with marker
   Future<void> changeLocation(GeoPoint p) async {
-    if (p != null)
-      _osmController.changeLocation(p);
-
+    if (p != null) _osmController.changeLocation(p);
   }
 
   ///remove marker from map of position
@@ -108,8 +106,16 @@ class MapController {
   Future<void> removeLastRoad() async {
     await _osmController.removeLastRoad();
   }
-
-  Future<void> drawCircle(CircleOSM circleOSM) async{
+  /// draw circle into map
+  Future<void> drawCircle(CircleOSM circleOSM) async {
     await _osmController.drawCircle(circleOSM);
+  }
+  /// remove specific circle in the map
+  Future<void> removeCircle(String keyCircle) async {
+    await _osmController.removeCircle(keyCircle);
+  }
+  /// clear all circle
+  Future<void> removeAllCircle() async {
+    await _osmController.removeAllCircle();
   }
 }

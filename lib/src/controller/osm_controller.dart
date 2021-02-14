@@ -253,4 +253,10 @@ class OSMController {
   Future<void> drawCircle(CircleOSM circleOSM) async{
     return await  osmPlatform.drawCircle(_idMap, circleOSM);
   }
+  Future<void> removeCircle(String key) async{
+    return await  osmPlatform.removeCircle(_idMap, key);
+  }
+  Future<void> removeAllCircle() async{
+    return await  osmPlatform.removeAllCircle(_idMap);
+  }
 }

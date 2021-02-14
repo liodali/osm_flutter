@@ -96,6 +96,15 @@ abstract class OSMPlatform extends PlatformInterface {
     CircleOSM circleOSM,
   );
 
+  Future<void> removeCircle(
+    int idOSM,
+    String key,
+  );
+
+  Future<void> removeAllCircle(
+    int idOSM,
+  );
+
   Future<void> customMarkerStaticPosition(
     int idOSM,
     GlobalKey globalKey,

@@ -276,8 +276,7 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> drawCircle(
-      int idOSM, CircleOSM circleOSM) async {
+  Future<void> drawCircle(int idOSM, CircleOSM circleOSM) async {
     Map requestData = {
       "lon": circleOSM.centerPoint.longitude,
       "lat": circleOSM.centerPoint.latitude,
@@ -291,5 +290,15 @@ class MethodChannelOSM extends OSMPlatform {
       ],
     };
     return await _channels[idOSM].invokeMethod("draw#circle", requestData);
+  }
+
+  @override
+  Future<void> removeAllCircle(int idOSM) async {
+    return await _channels[idOSM].invokeMethod("remove#circle", null);
+  }
+
+  @override
+  Future<void> removeCircle(int idOSM, String key) async {
+    return await _channels[idOSM].invokeMethod("remove#circle", key);
   }
 }

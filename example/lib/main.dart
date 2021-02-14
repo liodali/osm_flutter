@@ -49,11 +49,14 @@ class _MainExampleState extends State<MainExample> {
     Future.delayed(Duration(seconds: 10), () async {
       controller.drawCircle(CircleOSM(
         key: "circle0",
-        centerPoint: GeoPoint(latitude: 47.434541, longitude: 8.467369),
+        centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
         radius: 1200.0,
         color: Colors.red,
         stokeWidth: 0.3,
       ));
+    });
+    Future.delayed(Duration(seconds: 20), () async {
+      controller.removeCircle("circle0");
     });
   }
 
@@ -64,7 +67,7 @@ class _MainExampleState extends State<MainExample> {
   }
 
   @override
-  Widget build(BuildContext loncontext) {
+  Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(

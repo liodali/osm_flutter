@@ -94,7 +94,7 @@ class FlutterOsmView(
     private val customRoadMarkerIcon = HashMap<String, Bitmap>()
     private val staticPoints: HashMap<String, MutableList<GeoPoint>> = HashMap()
     private val folderStaticPosition: FolderOverlay = FolderOverlay()
-    private val folderCircles: FolderOverlay = FolderOverlay().apply { 
+    private val folderCircles: FolderOverlay = FolderOverlay().apply {
         name = Constants.circlesNames
     }
     private val folderRoad: FolderOverlay = FolderOverlay().apply {
@@ -395,40 +395,61 @@ class FlutterOsmView(
                 staticPositionIconMaker(call, result)
             }
             "draw#circle" -> {
-                val args = call.arguments!! as HashMap<String, *>
-                val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
-                val key = args["key"] as String
-                val colors = args["color"] as List<Double>
-                val radius = (args["radius"] as Double)
-                val stokeWidth = (args["stokeWidth"] as Double).toFloat()
-                val color = Color.rgb(colors[0].toInt(), colors[1].toInt(), colors[2].toInt())
-
-                val circle: List<GeoPoint> = Polygon.pointsAsCircle(geoPoint, radius)
-                val p = Polygon(map!!)
-                p.id = key
-                p.points = circle
-                p.fillPaint.color = color
-                p.fillPaint.style = Paint.Style.FILL
-                p.fillPaint.alpha = 50
-                p.outlinePaint.strokeWidth = stokeWidth
-                p.outlinePaint.color = color
-                p.setOnClickListener { polygon, _, _ ->
-                    polygon.closeInfoWindow()
-                    false
-                }
-                if (!map!!.overlays.contains(folderCircles)) {
-                    map!!.overlays.add(folderCircles)
-                }
-                folderCircles.items.removeAll {
-                    it is Polygon && it.id == key
-                }
-                folderCircles.items.add(p)
-                map!!.invalidate()
+                drawCircle(call, result)
+            }
+            "remove#circle" -> {
+                removeCircle(call, result)
             }
             else -> {
                 result.notImplemented()
             }
         }
+    }
+
+    private fun removeCircle(call: MethodCall, result: MethodChannel.Result) {
+        val id = call.arguments as String?
+        if (id != null)
+            folderCircles.items.removeAll {
+                (it as Polygon).id == id
+            }
+        else {
+            folderCircles.items.clear()
+        }
+        map!!.invalidate()
+        result.success(null)
+    }
+
+    private fun drawCircle(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments!! as HashMap<String, *>
+        val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
+        val key = args["key"] as String
+        val colors = args["color"] as List<Double>
+        val radius = (args["radius"] as Double)
+        val stokeWidth = (args["stokeWidth"] as Double).toFloat()
+        val color = Color.rgb(colors[0].toInt(), colors[1].toInt(), colors[2].toInt())
+
+        val circle: List<GeoPoint> = Polygon.pointsAsCircle(geoPoint, radius)
+        val p = Polygon(map!!)
+        p.id = key
+        p.points = circle
+        p.fillPaint.color = color
+        p.fillPaint.style = Paint.Style.FILL
+        p.fillPaint.alpha = 50
+        p.outlinePaint.strokeWidth = stokeWidth
+        p.outlinePaint.color = color
+        p.setOnClickListener { polygon, _, _ ->
+            polygon.closeInfoWindow()
+            false
+        }
+        if (!map!!.overlays.contains(folderCircles)) {
+            map!!.overlays.add(folderCircles)
+        }
+        folderCircles.items.removeAll {
+            it is Polygon && it.id == key
+        }
+        folderCircles.items.add(p)
+        map!!.invalidate()
+        result.success(null)
     }
 
     private fun drawRoad(call: MethodCall, result: MethodChannel.Result) {
