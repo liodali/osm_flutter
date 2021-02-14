@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.6.2-orange)
+![pub](https://img.shields.io/badge/pub-v0.6.3-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -10,6 +10,8 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 * draw Road,recuperate information (duration/distance) of the current road
 * ClickListener on Marker
 * calculate distance between 2 points
+* address suggestion
+* draw shapes
 
 ## Getting Started
 
@@ -19,7 +21,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.6.2
+      flutter_osm_plugin: ^0.6.3
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
@@ -148,6 +150,29 @@ await controller.removeLastRoad();
 ```dart
 await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
+
+### draw Shape in the map
+
+* Circle
+```dart
+/// to draw
+await controller.drawCircle(CircleOSM(
+              key: "circle0",
+              centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+              radius: 1200.0,
+              color: Colors.red,
+              stokeWidth: 0.3,
+            ));
+/// to remove Circle using Key
+await controller.removeCircle("circle0");
+
+/// to remove All Circle in the map 
+await controller.removeAllCircle();
+
+```
+
+
+
 
 ####  `OSMFlutter`
 | Properties               | Description                         |

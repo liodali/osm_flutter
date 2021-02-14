@@ -47,7 +47,7 @@ class _MainExampleState extends State<MainExample> {
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
     Future.delayed(Duration(seconds: 10), () async {
-      controller.drawCircle(CircleOSM(
+      await controller.drawCircle(CircleOSM(
         key: "circle0",
         centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
         radius: 1200.0,
@@ -56,7 +56,7 @@ class _MainExampleState extends State<MainExample> {
       ));
     });
     Future.delayed(Duration(seconds: 20), () async {
-      controller.removeCircle("circle0");
+      await controller.removeCircle("circle0");
     });
   }
 

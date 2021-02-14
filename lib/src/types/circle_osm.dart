@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../flutter_osm_plugin.dart';
+
 /// CircleOSM : class that represent circle with be draw into map
 /// [key] : (String) unique key should be given to each circle
 /// [centerPoint] : (GeoPoint) center point of circle

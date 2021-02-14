@@ -106,14 +106,17 @@ class MapController {
   Future<void> removeLastRoad() async {
     await _osmController.removeLastRoad();
   }
+
   /// draw circle into map
   Future<void> drawCircle(CircleOSM circleOSM) async {
     await _osmController.drawCircle(circleOSM);
   }
+
   /// remove specific circle in the map
   Future<void> removeCircle(String keyCircle) async {
     await _osmController.removeCircle(keyCircle);
   }
+
   /// clear all circle
   Future<void> removeAllCircle() async {
     await _osmController.removeAllCircle();

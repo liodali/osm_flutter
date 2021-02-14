@@ -129,8 +129,6 @@ class OSMFlutterState extends State<OSMFlutter>
     if (this.widget != oldWidget) {}
   }
 
-
-
   @override
   void dispose() {
     //this._osmController?.close();
