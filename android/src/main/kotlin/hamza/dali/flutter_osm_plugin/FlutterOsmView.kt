@@ -161,7 +161,7 @@ class FlutterOsmView(
                     val rect = Rect()
                     map!!.getDrawingRect(rect)
                     map!!.overlays.remove(folderStaticPosition)
-                } else {
+                } else if (markerSelectionPicker == null) {
                     if (!map!!.overlays.contains(folderStaticPosition)) {
                         map!!.overlays.add(folderStaticPosition)
                     }
@@ -410,30 +410,34 @@ class FlutterOsmView(
             }
 
             "cancel#advanced#selection" -> {
-                if (markerSelectionPicker != null) {
-                    mainLinearLayout.removeView(markerSelectionPicker)
-                    if (isTracking) {
-                        try {
-                            locationNewOverlay?.let { locationOverlay ->
-                                if (!locationOverlay.isFollowLocationEnabled) {
-                                    isTracking = true
-                                    locationOverlay.enableFollowLocation()
-                                    onChangedLocation(locationOverlay)
-                                }
-                            }
-                        } catch (e: Exception) {
-                        }
-                    }
-                    map!!.overlays.add(folderCircles)
-                    map!!.overlays.add(folderRoad)
-                    map!!.overlays.add(folderStaticPosition)
-                    markerSelectionPicker = null
-                    result.success(null)
-                }
+                cancelAdvancedSelection()
+                result.success(null)
             }
             else -> {
                 result.notImplemented()
             }
+        }
+    }
+
+    private fun cancelAdvancedSelection() {
+        if (markerSelectionPicker != null) {
+            mainLinearLayout.removeView(markerSelectionPicker)
+            if (isTracking) {
+                try {
+                    locationNewOverlay?.let { locationOverlay ->
+                        if (!locationOverlay.isFollowLocationEnabled) {
+                            isTracking = true
+                            locationOverlay.enableFollowLocation()
+                            onChangedLocation(locationOverlay)
+                        }
+                    }
+                } catch (e: Exception) {
+                }
+            }
+            map!!.overlays.add(folderCircles)
+            map!!.overlays.add(folderRoad)
+            map!!.overlays.add(folderStaticPosition)
+            markerSelectionPicker = null
         }
     }
 
@@ -457,7 +461,7 @@ class FlutterOsmView(
         }
         val point = Point()
         map!!.projection.toPixels(map!!.mapCenter, point)
-        val bitmap = ResourcesCompat.getDrawable(context!!.resources,R.drawable.ic_location_on_red_24dp,null)!!.toBitmap(64,64) //BitmapFactory.decodeResource(, R.drawable.ic_location_on_red_24dp)?:customMarkerIcon
+        val bitmap = ResourcesCompat.getDrawable(context!!.resources, R.drawable.ic_location_on_red_24dp, null)!!.toBitmap(64, 64) //BitmapFactory.decodeResource(, R.drawable.ic_location_on_red_24dp)?:customMarkerIcon
         markerSelectionPicker = FlutterPickerViewOverlay(
                 bitmap, context, point
         )
