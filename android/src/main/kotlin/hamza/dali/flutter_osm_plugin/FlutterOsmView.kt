@@ -15,8 +15,10 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -385,33 +387,7 @@ class FlutterOsmView(
                 removeCircle(call, result)
             }
             "advanced#selection" -> {
-                map!!.overlays.clear()
-                if (isTracking) {
-                    try {
-                        locationNewOverlay?.let { locationOverlay ->
-                            if (locationOverlay.isFollowLocationEnabled) {
-                                locationOverlay.disableFollowLocation()
-                                locationOverlay.disableMyLocation()
-                                provider?.stopLocationProvider()
-                            }
-                        }
-                    } catch (e: Exception) {
-                    }
-                }
-                map!!.invalidate()
-                if (markerSelectionPicker != null) {
-                    mainLinearLayout.removeView(markerSelectionPicker)
-                }
-                val point = Point()
-                map!!.projection.toPixels(map!!.mapCenter,point)
-                markerSelectionPicker = FlutterPickerViewOverlay(
-                        customMarkerIcon!!, context!!, point
-                )
-                val params = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER)
-                markerSelectionPicker!!.layoutParams = params
-                mainLinearLayout.addView(markerSelectionPicker)
+                startAdvancedSelection(call)
                 result.success(null)
 
             }
@@ -459,6 +435,37 @@ class FlutterOsmView(
                 result.notImplemented()
             }
         }
+    }
+
+    private fun startAdvancedSelection(call: MethodCall) {
+        map!!.overlays.clear()
+        if (isTracking) {
+            try {
+                locationNewOverlay?.let { locationOverlay ->
+                    if (locationOverlay.isFollowLocationEnabled) {
+                        locationOverlay.disableFollowLocation()
+                        locationOverlay.disableMyLocation()
+                        provider?.stopLocationProvider()
+                    }
+                }
+            } catch (e: Exception) {
+            }
+        }
+        map!!.invalidate()
+        if (markerSelectionPicker != null) {
+            mainLinearLayout.removeView(markerSelectionPicker)
+        }
+        val point = Point()
+        map!!.projection.toPixels(map!!.mapCenter, point)
+        val bitmap = ResourcesCompat.getDrawable(context!!.resources,R.drawable.ic_location_on_red_24dp,null)!!.toBitmap(64,64) //BitmapFactory.decodeResource(, R.drawable.ic_location_on_red_24dp)?:customMarkerIcon
+        markerSelectionPicker = FlutterPickerViewOverlay(
+                bitmap, context, point
+        )
+        val params = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER)
+        markerSelectionPicker!!.layoutParams = params
+        mainLinearLayout.addView(markerSelectionPicker)
     }
 
     private fun deactivateTrackMe(call: MethodCall, result: MethodChannel.Result) {
