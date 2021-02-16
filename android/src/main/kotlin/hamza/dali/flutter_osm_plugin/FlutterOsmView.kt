@@ -247,6 +247,13 @@ class FlutterOsmView(
                  showStaticPosition(mapEntry.key)
              }
          }*/
+        if(markerSelectionPicker!=null){
+            mainLinearLayout.removeView(markerSelectionPicker)
+            map!!.overlays.add(folderCircles)
+            map!!.overlays.add(folderRoad)
+            map!!.overlays.add(folderStaticPosition)
+            markerSelectionPicker = null
+        }
         if (locationNewOverlay == null) {
             provider = GpsMyLocationProvider(application)
             locationNewOverlay = MyLocationNewOverlay(provider, map)
@@ -392,21 +399,7 @@ class FlutterOsmView(
 
             }
             "confirm#advanced#selection" -> {
-                if (markerSelectionPicker != null) {
-                    //markerSelectionPicker!!.callOnClick()
-                    mainLinearLayout.removeView(markerSelectionPicker)
-                    val position = map!!.mapCenter as GeoPoint
-                    addMarker(position, map!!.zoomLevelDouble, null)
-                    markerSelectionPicker = null
-                    map!!.overlays.add(folderCircles)
-                    map!!.overlays.add(folderRoad)
-                    map!!.overlays.add(folderStaticPosition)
-                    if (isTracking) {
-                        isTracking = false
-                        isEnabled = false
-                    }
-                    result.success(position.toHashMap())
-                }
+                confirmAdvancedSelection(result)
             }
 
             "cancel#advanced#selection" -> {
@@ -417,6 +410,25 @@ class FlutterOsmView(
                 result.notImplemented()
             }
         }
+    }
+
+    private fun confirmAdvancedSelection(result: MethodChannel.Result) {
+        if (markerSelectionPicker != null) {
+            //markerSelectionPicker!!.callOnClick()
+            mainLinearLayout.removeView(markerSelectionPicker)
+            val position = map!!.mapCenter as GeoPoint
+            addMarker(position, map!!.zoomLevelDouble, null)
+            markerSelectionPicker = null
+            map!!.overlays.add(folderCircles)
+            map!!.overlays.add(folderRoad)
+            map!!.overlays.add(folderStaticPosition)
+            if (isTracking) {
+                isTracking = false
+                isEnabled = false
+            }
+            result.success(position.toHashMap())
+        }
+
     }
 
     private fun cancelAdvancedSelection() {
