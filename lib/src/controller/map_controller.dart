@@ -121,4 +121,16 @@ class MapController {
   Future<void> removeAllCircle() async {
     await _osmController.removeAllCircle();
   }
+
+  Future<void> advancedPositionPicker() async {
+    return await _osmController.advancedPositionPicker();
+  }
+
+  Future<GeoPoint> selectAdvancedPositionPicker() async {
+    return await _osmController.selectAdvancedPositionPicker();
+  }
+
+  Future<void> cancelAdvancedPositionPicker() async {
+    return await _osmController.cancelAdvancedPositionPicker();
+  }
 }

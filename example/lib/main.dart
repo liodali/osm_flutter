@@ -36,6 +36,7 @@ class _MainExampleState extends State<MainExample> {
   MapController controller;
   GlobalKey<ScaffoldState> scaffoldKey;
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
+  ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
 
   @override
@@ -46,7 +47,7 @@ class _MainExampleState extends State<MainExample> {
       initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
-    Future.delayed(Duration(seconds: 10), () async {
+    /*Future.delayed(Duration(seconds: 10), () async {
       await controller.drawCircle(CircleOSM(
         key: "circle0",
         centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
@@ -57,7 +58,7 @@ class _MainExampleState extends State<MainExample> {
     });
     Future.delayed(Duration(seconds: 20), () async {
       await controller.removeCircle("circle0");
-    });
+    });*/
   }
 
   @override
@@ -124,17 +125,12 @@ class _MainExampleState extends State<MainExample> {
             icon: Icon(Icons.search),
           ),
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: Icon(Icons.select_all),
             onPressed: () async {
-              await controller.setStaticPosition([
-                GeoPoint(latitude: 47.434541, longitude: 8.467369),
-                GeoPoint(latitude: 47.436207, longitude: 8.464072),
-                GeoPoint(latitude: 47.437688, longitude: 8.460832),
-              ], "static");
-              scaffoldKey.currentState.showSnackBar(SnackBar(
-                content: Text("static point changed"),
-                duration: Duration(seconds: 10),
-              ));
+              if (advPickerNotifierActivation.value == false) {
+                advPickerNotifierActivation.value = true;
+                await controller.advancedPositionPicker();
+              }
             },
           )
         ],
@@ -245,6 +241,31 @@ class _MainExampleState extends State<MainExample> {
                           },
                         ),
                       ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 10,
+                  left: 10,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: advPickerNotifierActivation,
+                    builder: (ctx, visible, child) {
+                      return AnimatedOpacity(
+                        opacity: visible ? 1.0 : 0.0,
+                        duration: Duration(milliseconds: 500),
+                        child: child,
+                      );
+                    },
+                    child: FloatingActionButton(
+                      key: UniqueKey(),
+                      child: Icon(Icons.arrow_forward),
+                      heroTag: "confirmAdvPicker",
+                      onPressed: () async {
+                        advPickerNotifierActivation.value = false;
+                        GeoPoint p =
+                            await controller.selectAdvancedPositionPicker();
+                        print(p);
+                      },
                     ),
                   ),
                 ),

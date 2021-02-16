@@ -249,16 +249,30 @@ class OSMController {
       currentLocation();
     }
   }
-
+  /// draw circle shape in the map
+  /// [circleOSM] : (CircleOSM) represent circle in osm map
   Future<void> drawCircle(CircleOSM circleOSM) async {
     return await osmPlatform.drawCircle(_idMap, circleOSM);
   }
-
+  /// remove circle shape from map
+  /// [key] : (String) key of the circle
   Future<void> removeCircle(String key) async {
     return await osmPlatform.removeCircle(_idMap, key);
   }
-
+  /// remove all circle shapes from map
   Future<void> removeAllCircle() async {
     return await osmPlatform.removeAllCircle(_idMap);
+  }
+  /// to start assisted selection in the map
+  Future<void> advancedPositionPicker() async {
+    return await osmPlatform.advancedPositionPicker(_idMap);
+  }
+  /// to retrieve location desired
+  Future<GeoPoint> selectAdvancedPositionPicker() async {
+    return await osmPlatform.selectAdvancedPositionPicker(_idMap);
+  }
+  /// to cancel the assisted selection in tge map
+  Future<void> cancelAdvancedPositionPicker() async {
+    return await osmPlatform.cancelAdvancedPositionPicker(_idMap);
   }
 }

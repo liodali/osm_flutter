@@ -8,12 +8,17 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -24,6 +29,7 @@ import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.DESTROYED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.PAUSED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STARTED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STOPPED
+import hamza.dali.flutter_osm_plugin.utilities.FlutterPickerViewOverlay
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding.OnSaveInstanceStateListener
 import io.flutter.plugin.common.*
 import io.flutter.plugin.common.EventChannel.EventSink
@@ -124,17 +130,13 @@ class FlutterOsmView(
     private var isEnabled = false
     private var visibilityInfoWindow = false
 
-    private var mainLinearLayout: LinearLayout = LinearLayout(context).apply {
-        this.layoutParams = MapView.LayoutParams(LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-        this.orientation = LinearLayout.VERTICAL
+    private var mainLinearLayout: FrameLayout = FrameLayout(context!!).apply {
+        this.layoutParams = MapView.LayoutParams(FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
     }
+    private var markerSelectionPicker: FlutterPickerViewOverlay? = null
 
     init {
-
-
         lifecycle?.addObserver(this)
-
-
     }
 
 
@@ -159,7 +161,7 @@ class FlutterOsmView(
                     val rect = Rect()
                     map!!.getDrawingRect(rect)
                     map!!.overlays.remove(folderStaticPosition)
-                } else {
+                } else if (markerSelectionPicker == null) {
                     if (!map!!.overlays.contains(folderStaticPosition)) {
                         map!!.overlays.add(folderStaticPosition)
                     }
@@ -245,6 +247,13 @@ class FlutterOsmView(
                  showStaticPosition(mapEntry.key)
              }
          }*/
+        if(markerSelectionPicker!=null){
+            mainLinearLayout.removeView(markerSelectionPicker)
+            map!!.overlays.add(folderCircles)
+            map!!.overlays.add(folderRoad)
+            map!!.overlays.add(folderStaticPosition)
+            markerSelectionPicker = null
+        }
         if (locationNewOverlay == null) {
             provider = GpsMyLocationProvider(application)
             locationNewOverlay = MyLocationNewOverlay(provider, map)
@@ -330,27 +339,11 @@ class FlutterOsmView(
                     }
                 } catch (e: Exception) {
                     result.error("400", "${e.message!!}", "")
-
                 }
 
             }
             "deactivateTrackMe" -> {
-                try {
-                    locationNewOverlay?.let { locationOverlay ->
-                        if (locationOverlay.isFollowLocationEnabled) {
-                            locationOverlay.disableFollowLocation()
-                            locationOverlay.disableMyLocation()
-                            provider?.stopLocationProvider()
-                            isTracking = false
-                            isEnabled = false
-                            result.success(false)
-
-                        } else
-                            result.success(null)
-                    }
-                } catch (e: Exception) {
-                    result.error("400", "${e.message!!}", "")
-                }
+                deactivateTrackMe(call, result)
             }
             "user#position" -> {
                 locationNewOverlay?.let {
@@ -400,9 +393,113 @@ class FlutterOsmView(
             "remove#circle" -> {
                 removeCircle(call, result)
             }
+            "advanced#selection" -> {
+                startAdvancedSelection(call)
+                result.success(null)
+
+            }
+            "confirm#advanced#selection" -> {
+                confirmAdvancedSelection(result)
+            }
+
+            "cancel#advanced#selection" -> {
+                cancelAdvancedSelection()
+                result.success(null)
+            }
             else -> {
                 result.notImplemented()
             }
+        }
+    }
+
+    private fun confirmAdvancedSelection(result: MethodChannel.Result) {
+        if (markerSelectionPicker != null) {
+            //markerSelectionPicker!!.callOnClick()
+            mainLinearLayout.removeView(markerSelectionPicker)
+            val position = map!!.mapCenter as GeoPoint
+            addMarker(position, map!!.zoomLevelDouble, null)
+            markerSelectionPicker = null
+            map!!.overlays.add(folderCircles)
+            map!!.overlays.add(folderRoad)
+            map!!.overlays.add(folderStaticPosition)
+            if (isTracking) {
+                isTracking = false
+                isEnabled = false
+            }
+            result.success(position.toHashMap())
+        }
+
+    }
+
+    private fun cancelAdvancedSelection() {
+        if (markerSelectionPicker != null) {
+            mainLinearLayout.removeView(markerSelectionPicker)
+            if (isTracking) {
+                try {
+                    locationNewOverlay?.let { locationOverlay ->
+                        if (!locationOverlay.isFollowLocationEnabled) {
+                            isTracking = true
+                            locationOverlay.enableFollowLocation()
+                            onChangedLocation(locationOverlay)
+                        }
+                    }
+                } catch (e: Exception) {
+                }
+            }
+            map!!.overlays.add(folderCircles)
+            map!!.overlays.add(folderRoad)
+            map!!.overlays.add(folderStaticPosition)
+            markerSelectionPicker = null
+        }
+    }
+
+    private fun startAdvancedSelection(call: MethodCall) {
+        map!!.overlays.clear()
+        if (isTracking) {
+            try {
+                locationNewOverlay?.let { locationOverlay ->
+                    if (locationOverlay.isFollowLocationEnabled) {
+                        locationOverlay.disableFollowLocation()
+                        locationOverlay.disableMyLocation()
+                        provider?.stopLocationProvider()
+                    }
+                }
+            } catch (e: Exception) {
+            }
+        }
+        map!!.invalidate()
+        if (markerSelectionPicker != null) {
+            mainLinearLayout.removeView(markerSelectionPicker)
+        }
+        val point = Point()
+        map!!.projection.toPixels(map!!.mapCenter, point)
+        val bitmap = ResourcesCompat.getDrawable(context!!.resources, R.drawable.ic_location_on_red_24dp, null)!!.toBitmap(64, 64) //BitmapFactory.decodeResource(, R.drawable.ic_location_on_red_24dp)?:customMarkerIcon
+        markerSelectionPicker = FlutterPickerViewOverlay(
+                bitmap, context, point
+        )
+        val params = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER)
+        markerSelectionPicker!!.layoutParams = params
+        mainLinearLayout.addView(markerSelectionPicker)
+    }
+
+    private fun deactivateTrackMe(call: MethodCall, result: MethodChannel.Result) {
+        try {
+            locationNewOverlay?.let { locationOverlay ->
+                if (locationOverlay.isFollowLocationEnabled) {
+                    locationOverlay.disableFollowLocation()
+                    locationOverlay.disableMyLocation()
+                    provider?.stopLocationProvider()
+                    isTracking = false
+                    isEnabled = false
+                    result.success(false)
+
+                } else
+                    result.success(null)
+            }
+        } catch (e: Exception) {
+            result.error("400", "${e.message!!}", "")
         }
     }
 

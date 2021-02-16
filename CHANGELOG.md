@@ -1,3 +1,5 @@
+## 0.6.4 [beta-version]:
+* add assisted selection position 
 ## 0.6.3 [beta-version]:
 * add drawCircle , removeCircle and removeAllCircle method
 * update android dependencies  

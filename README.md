@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.6.3-orange)
+![pub](https://img.shields.io/badge/pub-v0.6.4-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -7,6 +7,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 * change position 
 * tracking user location
 * customize Icon Marker
+* assisted selection position
 * draw Road,recuperate information (duration/distance) of the current road
 * ClickListener on Marker
 * calculate distance between 2 points
@@ -14,7 +15,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 * draw shapes
 
 ## Getting Started
-
+<img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
 
 ## Installing
 
@@ -117,10 +118,23 @@ GeoPoint geoPoint = controller.myLocation();
 
 ### select/create new position
 
+* we have 2 way to select location in map
+
+1) manual selection
+
 ```dart
 GeoPoint geoPoint = controller.selectPosition();
 ```
+2) assisted selection (for more details see example)
 
+```dart
+/// To Start assisted Selection
+await controller.advancedPositionPicker();
+/// To get location desired
+GeoPoint p = await controller.selectAdvancedPositionPicker();
+/// To cancel assisted Selection
+await controller.cancelAdvancedPositionPicker();
+```
 * PS : selected position can be removed by long press 
 
 ### remove marker
