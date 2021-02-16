@@ -15,7 +15,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 * draw shapes
 
 ## Getting Started
-
+<img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
 
 ## Installing
 
