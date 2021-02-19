@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_plugin/src/types/circle_osm.dart';
+import 'package:flutter_osm_plugin/src/types/shape_osm.dart';
 import 'package:location_permissions/location_permissions.dart';
 
 import '../interface_osm/osm_interface.dart';
@@ -258,6 +258,16 @@ class OSMController {
   /// [key] : (String) key of the circle
   Future<void> removeCircle(String key) async {
     return await osmPlatform.removeCircle(_idMap, key);
+  }
+  /// draw rect shape in the map
+  /// [regionOSM] : (RegionOSM) represent region in osm map
+  Future<void> drawRect(RectOSM rectOSM) async {
+    return await osmPlatform.drawRect(_idMap, rectOSM);
+  }
+  /// remove region shape from map
+  /// [key] : (String) key of the region
+  Future<void> removeRect(String key) async {
+    return await osmPlatform.removeRect(_idMap, key);
   }
   /// remove all circle shapes from map
   Future<void> removeAllCircle() async {

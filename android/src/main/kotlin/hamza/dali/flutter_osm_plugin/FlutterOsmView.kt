@@ -100,8 +100,14 @@ class FlutterOsmView(
     private val customRoadMarkerIcon = HashMap<String, Bitmap>()
     private val staticPoints: HashMap<String, MutableList<GeoPoint>> = HashMap()
     private val folderStaticPosition: FolderOverlay = FolderOverlay()
+    private val folderShape: FolderOverlay = FolderOverlay().apply {
+        name = Constants.shapesNames
+    }
     private val folderCircles: FolderOverlay = FolderOverlay().apply {
         name = Constants.circlesNames
+    }
+    private val folderRect: FolderOverlay = FolderOverlay().apply {
+        name = Constants.regionNames
     }
     private val folderRoad: FolderOverlay = FolderOverlay().apply {
         this.name = Constants.roadName
@@ -137,6 +143,8 @@ class FlutterOsmView(
 
     init {
         lifecycle?.addObserver(this)
+        folderShape.add(folderCircles)
+        folderShape.add(folderRect)
     }
 
 
@@ -247,9 +255,9 @@ class FlutterOsmView(
                  showStaticPosition(mapEntry.key)
              }
          }*/
-        if(markerSelectionPicker!=null){
+        if (markerSelectionPicker != null) {
             mainLinearLayout.removeView(markerSelectionPicker)
-            map!!.overlays.add(folderCircles)
+            map!!.overlays.add(folderShape)
             map!!.overlays.add(folderRoad)
             map!!.overlays.add(folderStaticPosition)
             markerSelectionPicker = null
@@ -393,6 +401,12 @@ class FlutterOsmView(
             "remove#circle" -> {
                 removeCircle(call, result)
             }
+            "draw#rect" -> {
+                drawRect(call, result)
+            }
+            "remove#rect" -> {
+                removeRect(call, result)
+            }
             "advanced#selection" -> {
                 startAdvancedSelection(call)
                 result.success(null)
@@ -412,6 +426,53 @@ class FlutterOsmView(
         }
     }
 
+    private fun drawRect(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments!! as HashMap<String, *>
+        val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
+        val key = args["key"] as String
+        val colors = args["color"] as List<Double>
+        val distance = (args["distance"] as Double)
+        val stokeWidth = (args["stokeWidth"] as Double).toFloat()
+        val color = Color.rgb(colors[0].toInt(), colors[1].toInt(), colors[2].toInt())
+
+        val region: List<GeoPoint> = Polygon.pointsAsRect(geoPoint, distance, distance).toList() as List<GeoPoint>
+        val p = Polygon(map!!)
+        p.id = key
+        p.points = region
+        p.fillPaint.color = color
+        p.fillPaint.style = Paint.Style.FILL
+        p.fillPaint.alpha = 50
+        p.outlinePaint.strokeWidth = stokeWidth
+        p.outlinePaint.color = color
+        p.setOnClickListener { polygon, _, _ ->
+            polygon.closeInfoWindow()
+            false
+        }
+        
+        folderRect.items.removeAll {
+            it is Polygon && it.id == key
+        }
+        folderRect.items.add(p)
+        if(!map!!.overlays.contains(folderShape)){
+            map!!.overlays.add(folderShape)
+        }
+        map!!.invalidate()
+        result.success(null)
+    }
+
+    private fun removeRect(call: MethodCall, result: MethodChannel.Result) {
+        val id = call.arguments as String?
+        if (id != null)
+            folderRect.items.removeAll {
+                (it as Polygon).id == id
+            }
+        else {
+            folderRect.items.clear()
+        }
+        map!!.invalidate()
+        result.success(null)
+    }
+
     private fun confirmAdvancedSelection(result: MethodChannel.Result) {
         if (markerSelectionPicker != null) {
             //markerSelectionPicker!!.callOnClick()
@@ -419,7 +480,7 @@ class FlutterOsmView(
             val position = map!!.mapCenter as GeoPoint
             addMarker(position, map!!.zoomLevelDouble, null)
             markerSelectionPicker = null
-            map!!.overlays.add(folderCircles)
+            map!!.overlays.add(folderShape)
             map!!.overlays.add(folderRoad)
             map!!.overlays.add(folderStaticPosition)
             if (isTracking) {
@@ -446,7 +507,7 @@ class FlutterOsmView(
                 } catch (e: Exception) {
                 }
             }
-            map!!.overlays.add(folderCircles)
+            map!!.overlays.add(folderShape)
             map!!.overlays.add(folderRoad)
             map!!.overlays.add(folderStaticPosition)
             markerSelectionPicker = null
@@ -538,13 +599,14 @@ class FlutterOsmView(
             polygon.closeInfoWindow()
             false
         }
-        if (!map!!.overlays.contains(folderCircles)) {
-            map!!.overlays.add(folderCircles)
-        }
+        
         folderCircles.items.removeAll {
             it is Polygon && it.id == key
         }
         folderCircles.items.add(p)
+        if(!map!!.overlays.contains(folderShape)){
+            map!!.overlays.add(folderShape)
+        }
         map!!.invalidate()
         result.success(null)
     }

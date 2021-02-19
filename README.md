@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.6.4-orange)
+![pub](https://img.shields.io/badge/pub-v0.6.5-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -22,7 +22,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.6.3
+      flutter_osm_plugin: ^0.6.5
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
@@ -175,7 +175,7 @@ await controller.drawCircle(CircleOSM(
               centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
               radius: 1200.0,
               color: Colors.red,
-              stokeWidth: 0.3,
+              strokeWidth: 0.3,
             ));
 /// to remove Circle using Key
 await controller.removeCircle("circle0");
@@ -184,7 +184,20 @@ await controller.removeCircle("circle0");
 await controller.removeAllCircle();
 
 ```
+* Rect
+```dart
+/// to draw
+await controller.drawRect(RectOSM(
+              key: "rect",
+              centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+              distance: 1200.0,
+              color: Colors.red,
+              strokeWidth: 0.3,
+            ));
+/// to remove Circle using Key
+await controller.removeRect("rect");
 
+```
 
 
 

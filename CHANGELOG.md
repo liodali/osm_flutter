@@ -1,3 +1,5 @@
+## 0.6.5 [beta-version]:
+* add drawRect , removeRect
 ## 0.6.4 [beta-version]:
 * add assisted selection position 
 ## 0.6.3 [beta-version]:
