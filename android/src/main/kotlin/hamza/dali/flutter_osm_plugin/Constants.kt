@@ -18,6 +18,8 @@ class Constants {
     }
 
     companion object {
+        const val shapesNames: String = "static_shapes"
+        const val regionNames: String = "static_regions"
         const val circlesNames: String = "static_circles"
         const val roadName: String="DYNAMIC-ROAD"
         const val zoomStaticPosition: Double = 12.0
