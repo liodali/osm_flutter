@@ -100,6 +100,15 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM,
     String key,
   );
+  Future<void> drawRect(
+      int idOSM,
+      RectOSM rectOSM,
+      );
+
+  Future<void> removeRect(
+      int idOSM,
+      String key,
+      );
 
   Future<void> removeAllCircle(
     int idOSM,

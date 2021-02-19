@@ -116,6 +116,15 @@ class MapController {
   Future<void> removeCircle(String keyCircle) async {
     await _osmController.removeCircle(keyCircle);
   }
+  /// draw rect into map
+  Future<void> drawRect(RectOSM rectOSM) async {
+    await _osmController.drawRect(rectOSM);
+  }
+
+  /// remove specific region in the map
+  Future<void> removeRect(String keyRect) async {
+    await _osmController.removeRect(keyRect);
+  }
 
   /// clear all circle
   Future<void> removeAllCircle() async {

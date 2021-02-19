@@ -282,7 +282,7 @@ class MethodChannelOSM extends OSMPlatform {
       "lat": circleOSM.centerPoint.latitude,
       "key": circleOSM.key,
       "radius": circleOSM.radius,
-      "stokeWidth": circleOSM.stokeWidth,
+      "stokeWidth": circleOSM.strokeWidth,
       "color": [
         circleOSM.color.red,
         circleOSM.color.blue,
@@ -319,5 +319,28 @@ class MethodChannelOSM extends OSMPlatform {
     Map mGeoPoint =
         await _channels[idOSM].invokeMapMethod("confirm#advanced#selection");
     return GeoPoint.fromMap(mGeoPoint);
+  }
+
+  @override
+  Future<void> drawRect(int idOSM, RectOSM rectOSM) async{
+    Map requestData = {
+      "lon": rectOSM.centerPoint.longitude,
+      "lat": rectOSM.centerPoint.latitude,
+      "key": rectOSM.key,
+      "distance": rectOSM.distance,
+      "stokeWidth": rectOSM.strokeWidth,
+      "color": [
+        rectOSM.color.red,
+        rectOSM.color.blue,
+        rectOSM.color.green,
+      ],
+    };
+    return await _channels[idOSM].invokeMethod("draw#rect", requestData);
+  }
+
+  @override
+  Future<void> removeRect(int idOSM, String key) async{
+    return await _channels[idOSM].invokeMethod("remove#rect", key);
+
   }
 }
