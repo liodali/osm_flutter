@@ -175,7 +175,7 @@ await controller.drawCircle(CircleOSM(
               centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
               radius: 1200.0,
               color: Colors.red,
-              stokeWidth: 0.3,
+              strokeWidth: 0.3,
             ));
 /// to remove Circle using Key
 await controller.removeCircle("circle0");
@@ -184,7 +184,20 @@ await controller.removeCircle("circle0");
 await controller.removeAllCircle();
 
 ```
+* Rect
+```dart
+/// to draw
+await controller.drawRect(RectOSM(
+              key: "rect",
+              centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+              distance: 1200.0,
+              color: Colors.red,
+              strokeWidth: 0.3,
+            ));
+/// to remove Circle using Key
+await controller.removeRect("rect");
 
+```
 
 
 
