@@ -1,3 +1,6 @@
+## 0.6.6 [beta-version]:
+* add removeAllRect,removeAllShapes
+* optimisation in native android code
 ## 0.6.5 [beta-version]:
 * add drawRect , removeRect
 ## 0.6.4 [beta-version]:

@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.6.5-orange)
+![pub](https://img.shields.io/badge/pub-v0.6.6-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -22,7 +22,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.6.5
+      flutter_osm_plugin: ^0.6.6
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
@@ -194,9 +194,16 @@ await controller.drawRect(RectOSM(
               color: Colors.red,
               strokeWidth: 0.3,
             ));
-/// to remove Circle using Key
+/// to remove Rect using Key
 await controller.removeRect("rect");
 
+/// to remove All Rect in the map 
+await controller.removeAllRect();
+
+```
+* remove all shapes in the map
+```dart
+await controller.removeAllShapes();
 ```
 
 
