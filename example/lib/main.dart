@@ -47,7 +47,7 @@ class _MainExampleState extends State<MainExample> {
       initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
-    /*Future.delayed(Duration(seconds: 10), () async {
+    Future.delayed(Duration(seconds: 10), () async {
       await controller.drawRect(RectOSM(
         key: "rect",
         centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
@@ -57,8 +57,8 @@ class _MainExampleState extends State<MainExample> {
       ));
     });
     Future.delayed(Duration(seconds: 20), () async {
-      await controller.removeRect("rect");
-    });*/
+      await controller.removeAllShapes();
+    });
   }
 
   @override
