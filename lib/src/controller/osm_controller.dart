@@ -269,9 +269,17 @@ class OSMController {
   Future<void> removeRect(String key) async {
     return await osmPlatform.removeRect(_idMap, key);
   }
+  /// remove all rect shape from map
+  Future<void> removeAllRect() async {
+    return await osmPlatform.removeAllRect(_idMap);
+  }
   /// remove all circle shapes from map
   Future<void> removeAllCircle() async {
     return await osmPlatform.removeAllCircle(_idMap);
+  }
+  /// remove all shapes from map
+  Future<void> removeAllShapes() async {
+    return await osmPlatform.removeAllShapes(_idMap);
   }
   /// to start assisted selection in the map
   Future<void> advancedPositionPicker() async {

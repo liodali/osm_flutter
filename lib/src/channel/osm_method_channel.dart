@@ -343,4 +343,15 @@ class MethodChannelOSM extends OSMPlatform {
     return await _channels[idOSM].invokeMethod("remove#rect", key);
 
   }
+
+  @override
+  Future<void> removeAllRect(int idOSM) async{
+    return await _channels[idOSM].invokeMethod("remove#rect", null);
+
+  }
+
+  @override
+  Future<void> removeAllShapes(int idOSM) async{
+    return await _channels[idOSM].invokeMethod("clear#shapes");
+  }
 }

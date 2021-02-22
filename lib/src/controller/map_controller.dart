@@ -125,12 +125,18 @@ class MapController {
   Future<void> removeRect(String keyRect) async {
     await _osmController.removeRect(keyRect);
   }
-
+  /// remove all rect shape from map
+  Future<void> removeAllRect() async {
+    return await _osmController.removeAllRect();
+  }
   /// clear all circle
   Future<void> removeAllCircle() async {
     await _osmController.removeAllCircle();
   }
-
+  /// remove all shape from map
+  Future<void> removeAllShapes() async {
+    return await _osmController.removeAllShapes();
+  }
   Future<void> advancedPositionPicker() async {
     return await _osmController.advancedPositionPicker();
   }
