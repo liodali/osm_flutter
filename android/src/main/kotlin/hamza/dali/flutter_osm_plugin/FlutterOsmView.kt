@@ -99,18 +99,29 @@ class FlutterOsmView(
     private var staticMarkerIcon: HashMap<String, Bitmap> = HashMap()
     private val customRoadMarkerIcon = HashMap<String, Bitmap>()
     private val staticPoints: HashMap<String, MutableList<GeoPoint>> = HashMap()
-    private val folderStaticPosition: FolderOverlay = FolderOverlay()
-    private val folderShape: FolderOverlay = FolderOverlay().apply {
-        name = Constants.shapesNames
+    private val folderStaticPosition: FolderOverlay by lazy {
+        FolderOverlay()
     }
-    private val folderCircles: FolderOverlay = FolderOverlay().apply {
-        name = Constants.circlesNames
+
+    private val folderShape: FolderOverlay by lazy {
+        FolderOverlay().apply {
+            name = Constants.shapesNames
+        }
     }
-    private val folderRect: FolderOverlay = FolderOverlay().apply {
-        name = Constants.regionNames
+    private val folderCircles: FolderOverlay by lazy {
+        FolderOverlay().apply {
+            name = Constants.circlesNames
+        }
     }
-    private val folderRoad: FolderOverlay = FolderOverlay().apply {
-        this.name = Constants.roadName
+    private val folderRect: FolderOverlay by lazy {
+        FolderOverlay().apply {
+            name = Constants.regionNames
+        }
+    }
+    private val folderRoad: FolderOverlay by lazy {
+        FolderOverlay().apply {
+            this.name = Constants.roadName
+        }
     }
     private var flutterRoad: FlutterRoad? = null
     private var job: Job? = null
@@ -143,8 +154,7 @@ class FlutterOsmView(
 
     init {
         lifecycle?.addObserver(this)
-        folderShape.add(folderCircles)
-        folderShape.add(folderRect)
+
     }
 
 
@@ -407,6 +417,13 @@ class FlutterOsmView(
             "remove#rect" -> {
                 removeRect(call, result)
             }
+            "clear#shapes" -> {
+                folderCircles.items.clear()
+                folderRect.items.clear()
+                map!!.invalidate()
+                result.success(null)
+
+            }
             "advanced#selection" -> {
                 startAdvancedSelection(call)
                 result.success(null)
@@ -448,13 +465,16 @@ class FlutterOsmView(
             polygon.closeInfoWindow()
             false
         }
-        
+
         folderRect.items.removeAll {
             it is Polygon && it.id == key
         }
         folderRect.items.add(p)
-        if(!map!!.overlays.contains(folderShape)){
+        if (!map!!.overlays.contains(folderShape)) {
             map!!.overlays.add(folderShape)
+            if (!folderShape.items.contains(folderRect)) {
+                folderShape.add(folderRect)
+            }
         }
         map!!.invalidate()
         result.success(null)
@@ -599,13 +619,16 @@ class FlutterOsmView(
             polygon.closeInfoWindow()
             false
         }
-        
+
         folderCircles.items.removeAll {
             it is Polygon && it.id == key
         }
         folderCircles.items.add(p)
-        if(!map!!.overlays.contains(folderShape)){
+        if (!map!!.overlays.contains(folderShape)) {
             map!!.overlays.add(folderShape)
+            if (!folderShape.items.contains(folderCircles)) {
+                folderShape.add(folderCircles)
+            }
         }
         map!!.invalidate()
         result.success(null)
