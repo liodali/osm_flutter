@@ -24,6 +24,31 @@ class Address {
         this.city = data["city"],
         this.state = data["state"],
         this.country = data["country"];
+
+  @override
+  String toString() {
+    String addr = "";
+    if (name != null && name.isNotEmpty) {
+      addr = addr + "$name,";
+    }
+    if (street != null && street.isNotEmpty) {
+      addr = addr + "$street,";
+    }
+    if (postcode != null && postcode.isNotEmpty) {
+      addr = addr + "$postcode,";
+    }
+    if (city != null && city.isNotEmpty) {
+      addr = addr + "$city,";
+    }
+    if (state != null && state.isNotEmpty) {
+      addr = addr + "$state,";
+    }
+    if (country != null && country.isNotEmpty) {
+      addr = addr + "$country";
+    }
+
+    return addr;
+  }
 }
 
 class SearchInfo {
