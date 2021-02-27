@@ -14,18 +14,24 @@ class _LocationAppExampleState extends State<LocationAppExample> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(""),
-          RaisedButton(
-            onPressed: () async {
-              await Navigator.pushNamed(context, "/search");
-            },
-            child: Text("pick address"),
-          ),
-        ],
+      appBar: AppBar(
+        title: Text("search picker example"),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(""),
+            RaisedButton(
+              onPressed: () async {
+                await Navigator.pushNamed(context, "/search");
+              },
+              child: Text("pick address"),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -46,40 +52,55 @@ class _SearchPageState extends State<SearchPage> {
   Future<List<SearchInfo>> _futureSuggestionAddress;
   final TextEditingController textEditingController = TextEditingController();
   String oldText = "";
+  Timer _timerToStartSuggestionReq;
 
   @override
   void initState() {
     super.initState();
     streamSuggestion = StreamController();
-
-    /// to wait map initialize and should activate advanced picker
-    Future.delayed(Duration(seconds: 5), () async {
-      controller.advancedPositionPicker();
-    });
     textEditingController.addListener(onChanged);
   }
 
   @override
   void dispose() {
+    _timerToStartSuggestionReq.cancel();
     textEditingController.removeListener(onChanged);
+    streamSuggestion.close();
     super.dispose();
   }
 
-  void onChanged() {
+  void onChanged() async {
     final v = textEditingController.text;
-    if (v.length % 3 == 0 && oldText != v) {
+    if (v.length > 3 && oldText != v) {
       oldText = v;
-      Future.delayed(Duration(seconds: 3), () async {
-        notifierAutoCompletion.value = true;
-        _futureSuggestionAddress = addressSuggestion(
-          v,
-          limitInformation: 5,
-        );
-        _futureSuggestionAddress.then((value) {
-          streamSuggestion.sink.add(value);
-        });
+      if (_timerToStartSuggestionReq != null &&
+          _timerToStartSuggestionReq.isActive) {
+        _timerToStartSuggestionReq.cancel();
+      }
+      _timerToStartSuggestionReq =
+          Timer.periodic(Duration(seconds: 3), (timer) async {
+        await suggestionProcesing(v);
+        timer.cancel();
       });
     }
+    if (v.isEmpty) {
+      notifierAutoCompletion.value = false;
+      await streamSuggestion.close();
+      setState(() {
+        streamSuggestion = StreamController();
+      });
+    }
+  }
+
+  Future<void> suggestionProcesing(String addr) {
+    notifierAutoCompletion.value = true;
+    _futureSuggestionAddress = addressSuggestion(
+      addr,
+      limitInformation: 5,
+    );
+    _futureSuggestionAddress.then((value) {
+      streamSuggestion.sink.add(value);
+    });
   }
 
   @override
@@ -90,26 +111,37 @@ class _SearchPageState extends State<SearchPage> {
       appBar: AppBar(
         title: TextField(
           controller: textEditingController,
-          onChanged: (v) async {
-            if (v.isEmpty) {
-              notifierAutoCompletion.value = false;
-              await streamSuggestion.close();
-              setState(() {
-                streamSuggestion = StreamController();
-              });
-            }
-          },
           onEditingComplete: () async {
-            notifierAutoCompletion.value = false;
-            await streamSuggestion.close();
-            setState(() {
-              streamSuggestion = StreamController();
-            });
+            FocusScope.of(context).requestFocus(new FocusNode());
           },
           decoration: InputDecoration(
             prefixIcon: Icon(
               Icons.search,
               color: Colors.black,
+            ),
+            suffix: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: textEditingController,
+              builder: (ctx, text, child) {
+                if (text.text.isNotEmpty) {
+                  return child;
+                }
+                return SizedBox.shrink();
+              },
+              child: InkWell(
+                focusNode: FocusNode(),
+                onTap: () {
+                  if (_timerToStartSuggestionReq.isActive) {
+                    _timerToStartSuggestionReq.cancel();
+                  }
+                  textEditingController.clear();
+                  FocusScope.of(context).requestFocus(new FocusNode());
+                },
+                child: Icon(
+                  Icons.close,
+                  size: 16,
+                  color: Colors.black,
+                ),
+              ),
             ),
             focusColor: Colors.black,
             filled: true,
@@ -129,6 +161,7 @@ class _SearchPageState extends State<SearchPage> {
             controller: controller,
             showDefaultInfoWindow: false,
             useSecureURL: true,
+            isPicker: true,
             onGeoPointClicked: (geoPoint) {},
           ),
           Positioned(
@@ -158,15 +191,25 @@ class _SearchPageState extends State<SearchPage> {
                               maxLines: 1,
                               overflow: TextOverflow.fade,
                             ),
-                            onTap: () {},
+                            onTap: () {
+                              /// go to location selected by address
+                              controller.changeLocation(snap.data[index].point);
+
+                              /// hide suggestion card
+                              notifierAutoCompletion.value = false;
+                              FocusScope.of(context)
+                                  .requestFocus(new FocusNode());
+                            },
                           );
                         },
                         itemCount: snap.data.length,
                       ),
                     );
                   } else if (snap.connectionState == ConnectionState.waiting) {
-                    return Center(
-                      child: CircularProgressIndicator(),
+                    return Card(
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
                     );
                   }
                   return Container();
