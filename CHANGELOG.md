@@ -1,3 +1,5 @@
+## 0.6.6+1 [beta-version]:
+* fix error export
 ## 0.6.6 [beta-version]:
 * add removeAllRect,removeAllShapes
 * optimisation in native android code

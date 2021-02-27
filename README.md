@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.6.6-orange)
+![pub](https://img.shields.io/badge/pub-v0.6.6%2B1-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -22,13 +22,13 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.6.6
+      flutter_osm_plugin: ^0.6.6+1
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
   
 ```dart
-OSMFlutter( 
+ OSMFlutter( 
         controler:mapController,
         currentLocation: false,
         road: Road(
@@ -57,7 +57,7 @@ OSMFlutter(
  
 #### Initialisation
 ```dart
-MapController controller = MapController(
+ MapController controller = MapController(
                             initMapWithUserPosition: false,
                             initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
                        );
@@ -77,32 +77,32 @@ MapController controller = MapController(
 ### set map on user current position
 
 ```dart
-await controller.currentPosition();
+ await controller.currentPosition();
 ```
 ### zoomIN
 ```dart
-await controller.zoom(2.);
-// or 
-await controller.zoomIn();
+ await controller.zoom(2.);
+ // or 
+ await controller.zoomIn();
 ```
 
 ### zoomOut
 ```dart
-await controller.zoom(-2.);
-// or 
-await controller.zoomOut();
+ await controller.zoom(-2.);
+ // or 
+ await controller.zoomOut();
 ```
 
 ###  track user current position
 
 ```dart
-await controller.enableTracking();
+ await controller.enableTracking();
 ```
 
 ### disable tracking user position
 
 ```dart
-await controller.disabledTracking();
+ await controller.disabledTracking();
 ```
 
 ### initialise position
@@ -113,7 +113,7 @@ controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 ### recuperation current position
 
 ```dart
-GeoPoint geoPoint = controller.myLocation();
+ GeoPoint geoPoint = controller.myLocation();
 ```
 
 ### select/create new position
@@ -123,38 +123,38 @@ GeoPoint geoPoint = controller.myLocation();
 1) manual selection
 
 ```dart
-GeoPoint geoPoint = controller.selectPosition();
+ GeoPoint geoPoint = controller.selectPosition();
 ```
 2) assisted selection (for more details see example)
 
 ```dart
 /// To Start assisted Selection
-await controller.advancedPositionPicker();
+ await controller.advancedPositionPicker();
 /// To get location desired
-GeoPoint p = await controller.selectAdvancedPositionPicker();
-/// To cancel assisted Selection
-await controller.cancelAdvancedPositionPicker();
+ GeoPoint p = await controller.selectAdvancedPositionPicker();
+ /// To cancel assisted Selection
+ await controller.cancelAdvancedPositionPicker();
 ```
 * PS : selected position can be removed by long press 
 
 ### remove marker
 
 ```dart
-controller.removePosition(geoPoint);
+ controller.removePosition(geoPoint);
 ```
 * PS : static position cannot be removed by this method 
 
 ### draw road,recuperate distance in km and duration in sec
 ```dart
-RoadInfo roadInfo = await controller.drawRoad( GeoPoint(latitude: 47.35387, longitude: 8.43609),GeoPoint(latitude: 47.4371, longitude: 8.6136));
-print("${roadInfo.distance}km");
-print("${roadInfo.duration}sec");
+ RoadInfo roadInfo = await controller.drawRoad( GeoPoint(latitude: 47.35387, longitude: 8.43609),GeoPoint(latitude: 47.4371, longitude: 8.6136));
+ print("${roadInfo.distance}km");
+ print("${roadInfo.duration}sec");
 ```
 
 ### delete last road
 
 ```dart
-await controller.removeLastRoad();
+ await controller.removeLastRoad();
 ```
 
 ### change static GeoPoint position
@@ -162,48 +162,48 @@ await controller.removeLastRoad();
 > you can use it to change their position over time
 
 ```dart
-await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
+ await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
 
 ### draw Shape in the map
 
 * Circle
 ```dart
-/// to draw
-await controller.drawCircle(CircleOSM(
+ /// to draw
+ await controller.drawCircle(CircleOSM(
               key: "circle0",
               centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
               radius: 1200.0,
               color: Colors.red,
               strokeWidth: 0.3,
             ));
-/// to remove Circle using Key
-await controller.removeCircle("circle0");
+ /// to remove Circle using Key
+ await controller.removeCircle("circle0");
 
-/// to remove All Circle in the map 
-await controller.removeAllCircle();
+ /// to remove All Circle in the map 
+ await controller.removeAllCircle();
 
 ```
 * Rect
 ```dart
-/// to draw
-await controller.drawRect(RectOSM(
+ /// to draw
+ await controller.drawRect(RectOSM(
               key: "rect",
               centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
               distance: 1200.0,
               color: Colors.red,
               strokeWidth: 0.3,
             ));
-/// to remove Rect using Key
-await controller.removeRect("rect");
+ /// to remove Rect using Key
+ await controller.removeRect("rect");
 
-/// to remove All Rect in the map 
-await controller.removeAllRect();
+ /// to remove All Rect in the map 
+ await controller.removeAllRect();
 
 ```
 * remove all shapes in the map
 ```dart
-await controller.removeAllShapes();
+ await controller.removeAllShapes();
 ```
 
 
