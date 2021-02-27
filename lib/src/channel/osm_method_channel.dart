@@ -322,7 +322,7 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> drawRect(int idOSM, RectOSM rectOSM) async{
+  Future<void> drawRect(int idOSM, RectOSM rectOSM) async {
     Map requestData = {
       "lon": rectOSM.centerPoint.longitude,
       "lat": rectOSM.centerPoint.latitude,
@@ -339,19 +339,25 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> removeRect(int idOSM, String key) async{
+  Future<void> removeRect(int idOSM, String key) async {
     return await _channels[idOSM].invokeMethod("remove#rect", key);
-
   }
 
   @override
-  Future<void> removeAllRect(int idOSM) async{
+  Future<void> removeAllRect(int idOSM) async {
     return await _channels[idOSM].invokeMethod("remove#rect", null);
-
   }
 
   @override
-  Future<void> removeAllShapes(int idOSM) async{
+  Future<void> removeAllShapes(int idOSM) async {
     return await _channels[idOSM].invokeMethod("clear#shapes");
+  }
+
+  /// get position without finish advanced picker
+  @override
+  Future<GeoPoint> getPositionOnlyAdvancedPositionPicker(int idOSM) async {
+    Map mGeoPoint = await _channels[idOSM]
+        .invokeMapMethod("get#position#advanced#selection");
+    return GeoPoint.fromMap(mGeoPoint);
   }
 }

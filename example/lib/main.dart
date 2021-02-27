@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/search_example.dart';
 
 void main() => runApp(MyApp());
 
@@ -20,6 +21,9 @@ class MyApp extends StatelessWidget {
                 ),
               ),
             ),
+        "/picker-result" :(ctx) => LocationAppExample(),
+        "/search" :(ctx) => SearchPage(),
+
       },
     );
   }
@@ -47,18 +51,18 @@ class _MainExampleState extends State<MainExample> {
       initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
-    Future.delayed(Duration(seconds: 10), () async {
-      await controller.drawRect(RectOSM(
-        key: "rect",
-        centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
-        distance: 1200.0,
-        color: Colors.red,
-        strokeWidth: 0.3,
-      ));
-    });
-    Future.delayed(Duration(seconds: 20), () async {
-      await controller.removeAllShapes();
-    });
+    // Future.delayed(Duration(seconds: 10), () async {
+    //   await controller.drawRect(RectOSM(
+    //     key: "rect",
+    //     centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+    //     distance: 1200.0,
+    //     color: Colors.red,
+    //     strokeWidth: 0.3,
+    //   ));
+    // });
+    // Future.delayed(Duration(seconds: 20), () async {
+    //   await controller.removeAllShapes();
+    // });
   }
 
   @override
@@ -113,14 +117,7 @@ class _MainExampleState extends State<MainExample> {
           ),
           IconButton(
             onPressed: () async {
-              GeoPoint p = await controller.selectPosition();
-              scaffoldKey.currentState.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    "the picked position:lat ${p.latitude},lon ${p.longitude}",
-                  ),
-                ),
-              );
+              await Navigator.pushNamed(context, "/picker-result");
             },
             icon: Icon(Icons.search),
           ),

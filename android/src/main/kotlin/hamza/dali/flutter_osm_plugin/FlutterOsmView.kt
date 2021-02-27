@@ -429,8 +429,11 @@ class FlutterOsmView(
                 result.success(null)
 
             }
-            "confirm#advanced#selection" -> {
+            "get#position#advanced#selection" -> {
                 confirmAdvancedSelection(result)
+            }
+            "confirm#advanced#selection" -> {
+                confirmAdvancedSelection(result,isFinished = true)
             }
 
             "cancel#advanced#selection" -> {
@@ -493,19 +496,21 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    private fun confirmAdvancedSelection(result: MethodChannel.Result) {
+    private fun confirmAdvancedSelection(result: MethodChannel.Result, isFinished: Boolean = false) {
         if (markerSelectionPicker != null) {
             //markerSelectionPicker!!.callOnClick()
             mainLinearLayout.removeView(markerSelectionPicker)
             val position = map!!.mapCenter as GeoPoint
-            addMarker(position, map!!.zoomLevelDouble, null)
-            markerSelectionPicker = null
-            map!!.overlays.add(folderShape)
-            map!!.overlays.add(folderRoad)
-            map!!.overlays.add(folderStaticPosition)
-            if (isTracking) {
-                isTracking = false
-                isEnabled = false
+            if(isFinished){
+                addMarker(position, map!!.zoomLevelDouble, null)
+                markerSelectionPicker = null
+                map!!.overlays.add(folderShape)
+                map!!.overlays.add(folderRoad)
+                map!!.overlays.add(folderStaticPosition)
+                if (isTracking) {
+                    isTracking = false
+                    isEnabled = false
+                }
             }
             result.success(position.toHashMap())
         }

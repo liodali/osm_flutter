@@ -289,6 +289,10 @@ class OSMController {
   Future<GeoPoint> selectAdvancedPositionPicker() async {
     return await osmPlatform.selectAdvancedPositionPicker(_idMap);
   }
+  /// to retrieve current location without finish picker
+  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
+    return await osmPlatform.getPositionOnlyAdvancedPositionPicker(_idMap);
+  }
   /// to cancel the assisted selection in tge map
   Future<void> cancelAdvancedPositionPicker() async {
     return await osmPlatform.cancelAdvancedPositionPicker(_idMap);

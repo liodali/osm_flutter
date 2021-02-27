@@ -14,8 +14,11 @@ class MapController {
     this.initPosition,
   }) : assert(initMapWithUserPosition || initPosition != null);
 
-  void init(OSMController osmController,
-      {initMapWithCurrentPosition = false, initPosition}) {
+  void init(
+    OSMController osmController, {
+    initMapWithCurrentPosition = false,
+    initPosition,
+  }) {
     _osmController = osmController;
   }
 
@@ -116,6 +119,7 @@ class MapController {
   Future<void> removeCircle(String keyCircle) async {
     await _osmController.removeCircle(keyCircle);
   }
+
   /// draw rect into map
   Future<void> drawRect(RectOSM rectOSM) async {
     await _osmController.drawRect(rectOSM);
@@ -125,26 +129,37 @@ class MapController {
   Future<void> removeRect(String keyRect) async {
     await _osmController.removeRect(keyRect);
   }
+
   /// remove all rect shape from map
   Future<void> removeAllRect() async {
     return await _osmController.removeAllRect();
   }
+
   /// clear all circle
   Future<void> removeAllCircle() async {
     await _osmController.removeAllCircle();
   }
+
   /// remove all shape from map
   Future<void> removeAllShapes() async {
     return await _osmController.removeAllShapes();
   }
+
   Future<void> advancedPositionPicker() async {
     return await _osmController.advancedPositionPicker();
   }
 
+  /// select current position and finish advanced picker
   Future<GeoPoint> selectAdvancedPositionPicker() async {
     return await _osmController.selectAdvancedPositionPicker();
   }
 
+  /// get current position
+  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
+    return await _osmController.getCurrentPositionAdvancedPositionPicker();
+  }
+
+  /// cancel advanced picker
   Future<void> cancelAdvancedPositionPicker() async {
     return await _osmController.cancelAdvancedPositionPicker();
   }
