@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.6.6%2B1-orange)
+![pub](https://img.shields.io/badge/pub-v0.6.7-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -16,13 +16,15 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
+<br>
+<img src="https://github.com/liodali/osm_flutter/blob/master/searchExample.gif?raw=true" alt="openStreetMap flutter examples"><br>
 
 ## Installing
 
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.6.6+1
+      flutter_osm_plugin: ^0.6.7
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
@@ -128,9 +130,11 @@ controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 2) assisted selection (for more details see example)
 
 ```dart
-/// To Start assisted Selection
+ /// To Start assisted Selection
  await controller.advancedPositionPicker();
-/// To get location desired
+ /// To get location desired
+  GeoPoint p = await controller.getCurrentPositionAdvancedPositionPicker();
+  /// To get location desired and close picker
  GeoPoint p = await controller.selectAdvancedPositionPicker();
  /// To cancel assisted Selection
  await controller.cancelAdvancedPositionPicker();
@@ -221,6 +225,7 @@ controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 | `onGeoPointClicked`      | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
 | `onLocationChanged`      | (callback) it is hire when you activate tracking and  user position has been changed          |
 | `showDefaultInfoWindow`  | (bool) enable/disable default infoWindow of marker (default = false)         |
+| `isPicker`               | (bool) enable advanced picker from init of  the map (default = false)         |
 
 ## STATIC METHODS:
 ### calculate distance between 2 geoPoint position

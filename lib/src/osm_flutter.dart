@@ -17,6 +17,7 @@ typedef OnLocationChanged = void Function(GeoPoint);
 /// Principal widget to show OSMMap using osm api
 /// you can track you current location,show static points like position of your stores
 /// show road between 2 points
+/// [isPicker] : (bool) if is true, map will behave as picker and will start advanced picker
 /// [trackMyPosition] : (bool) if is true, map will track your location
 /// [showZoomController] : (bool) if us true, you can zoomIn zoomOut directly in the map
 /// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
@@ -39,6 +40,7 @@ class OSMFlutter extends StatefulWidget {
   final double defaultZoom;
   final bool showDefaultInfoWindow;
   final bool useSecureURL;
+  final bool isPicker;
 
   OSMFlutter({
     Key key,
@@ -53,10 +55,14 @@ class OSMFlutter extends StatefulWidget {
     this.defaultZoom = 1.0,
     this.showDefaultInfoWindow = false,
     this.useSecureURL = true,
+    this.isPicker = false,
   })  : assert(controller != null),
         super(key: key);
 
-  static OSMFlutterState of<T>(BuildContext context, {bool nullOk = false}) {
+  static OSMFlutterState of<T>(
+    BuildContext context, {
+    bool nullOk = false,
+  }) {
     assert(context != null);
     assert(nullOk != null);
     final OSMFlutterState result =

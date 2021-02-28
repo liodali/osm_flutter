@@ -35,9 +35,12 @@ import io.flutter.plugin.common.*
 import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.platform.PlatformView
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.IConfigurationProvider
@@ -136,7 +139,9 @@ class FlutterOsmView(
     private var eventSink: EventSink? = null
     private var eventLocationSink: EventSink? = null
 
-    private var provider: GpsMyLocationProvider? = null
+    private val provider: GpsMyLocationProvider by lazy {
+        GpsMyLocationProvider(application)
+    }
     private var mapEventsOverlay: MapEventsOverlay? = null
     private var roadManager: OSRMRoadManager? = null
     private var roadColor: Int? = null
@@ -273,7 +278,6 @@ class FlutterOsmView(
             markerSelectionPicker = null
         }
         if (locationNewOverlay == null) {
-            provider = GpsMyLocationProvider(application)
             locationNewOverlay = MyLocationNewOverlay(provider, map)
         }
         //locationNewOverlay!!.setPersonIcon(customMarkerIcon)
@@ -283,7 +287,7 @@ class FlutterOsmView(
                 location.enableMyLocation()
             }
             location.runOnFirstFix {
-                GlobalScope.launch(Main) {
+                scope!!.launch(Main) {
                     val currentPosition = GeoPoint(location.lastFix)
                     map!!.controller.setZoom(Constants.zoomMyLocation)
                     map!!.controller.animateTo(currentPosition)
@@ -298,7 +302,7 @@ class FlutterOsmView(
     }
 
     private fun onChangedLocation(locationOverlay: MyLocationNewOverlay) {
-        provider?.startLocationProvider { location, source ->
+        provider.startLocationProvider { location, source ->
             locationOverlay.onLocationChanged(location, source)
             val geoPMap = GeoPoint(location).toHashMap()
             methodChannel.invokeMethod("receiveUserLocation", geoPMap)
@@ -364,6 +368,9 @@ class FlutterOsmView(
                 deactivateTrackMe(call, result)
             }
             "user#position" -> {
+                if (locationNewOverlay == null) {
+                    locationNewOverlay = MyLocationNewOverlay(provider, map)
+                }
                 locationNewOverlay?.let {
                     if (!it.isMyLocationEnabled) {
                         result.error("404", "enabled track you current position fisrt", "")
@@ -429,8 +436,11 @@ class FlutterOsmView(
                 result.success(null)
 
             }
-            "confirm#advanced#selection" -> {
+            "get#position#advanced#selection" -> {
                 confirmAdvancedSelection(result)
+            }
+            "confirm#advanced#selection" -> {
+                confirmAdvancedSelection(result, isFinished = true)
             }
 
             "cancel#advanced#selection" -> {
@@ -493,19 +503,21 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    private fun confirmAdvancedSelection(result: MethodChannel.Result) {
+    private fun confirmAdvancedSelection(result: MethodChannel.Result, isFinished: Boolean = false) {
         if (markerSelectionPicker != null) {
             //markerSelectionPicker!!.callOnClick()
             mainLinearLayout.removeView(markerSelectionPicker)
             val position = map!!.mapCenter as GeoPoint
-            addMarker(position, map!!.zoomLevelDouble, null)
-            markerSelectionPicker = null
-            map!!.overlays.add(folderShape)
-            map!!.overlays.add(folderRoad)
-            map!!.overlays.add(folderStaticPosition)
-            if (isTracking) {
-                isTracking = false
-                isEnabled = false
+            if (isFinished) {
+                addMarker(position, map!!.zoomLevelDouble, null)
+                markerSelectionPicker = null
+                map!!.overlays.add(folderShape)
+                map!!.overlays.add(folderRoad)
+                map!!.overlays.add(folderStaticPosition)
+                if (isTracking) {
+                    isTracking = false
+                    isEnabled = false
+                }
             }
             result.success(position.toHashMap())
         }
@@ -542,7 +554,7 @@ class FlutterOsmView(
                     if (locationOverlay.isFollowLocationEnabled) {
                         locationOverlay.disableFollowLocation()
                         locationOverlay.disableMyLocation()
-                        provider?.stopLocationProvider()
+                        provider.stopLocationProvider()
                     }
                 }
             } catch (e: Exception) {
@@ -571,7 +583,7 @@ class FlutterOsmView(
                 if (locationOverlay.isFollowLocationEnabled) {
                     locationOverlay.disableFollowLocation()
                     locationOverlay.disableMyLocation()
-                    provider?.stopLocationProvider()
+                    provider.stopLocationProvider()
                     isTracking = false
                     isEnabled = false
                     result.success(false)
@@ -817,13 +829,17 @@ class FlutterOsmView(
     }
 
     private fun currentUserPosition(call: MethodCall, result: MethodChannel.Result) {
-        locationNewOverlay!!.let {
-            it.lastFix?.let {
-                val point = GeoPoint(it.latitude, it.longitude)
-                result.success(point.toHashMap())
-            } ?: result.error("400", "we cannot get the current position!", "")
+        locationNewOverlay?.let { locationOverlay ->
+            locationOverlay.runOnFirstFix {
+                scope!!.launch(Main) {
+                    locationOverlay.lastFix?.let { location ->
+                        val point = GeoPoint(location.latitude, location.longitude)
+                        result.success(point.toHashMap())
+                    } ?: result.error("400", "we cannot get the current position!", "")
+                }
+            }
 
-        }
+        } ?: result.error("400", "we cannot get the current position!", "")
     }
 
     private fun showStaticPosition(idStaticPosition: String) {
@@ -939,7 +955,6 @@ class FlutterOsmView(
         Log.e("osm", "osm flutter plugin resume")
         map!!.onResume()
         if (isEnabled || isTracking) {
-            provider = GpsMyLocationProvider(application)
             locationNewOverlay = MyLocationNewOverlay(provider, map)
         }
         locationNewOverlay?.also { myLocation ->
@@ -963,10 +978,9 @@ class FlutterOsmView(
             }
             if (myLocation.isMyLocationEnabled) {
                 myLocation.disableMyLocation()
-                provider?.stopLocationProvider()
+                provider.stopLocationProvider()
             }
         }
-        provider = null
         locationNewOverlay = null
         map?.onPause()
     }

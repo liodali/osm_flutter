@@ -55,7 +55,7 @@ class OSMController {
           print(err);
         });*/
     }
-    if (initWithUserPosition) {
+    if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
       await currentLocation();
     }
     if (_osmFlutterState.widget.markerIcon != null) {
@@ -104,6 +104,11 @@ class OSMController {
               },
             );
           });
+    }
+    if (initWithUserPosition && _osmFlutterState.widget.isPicker) {
+     GeoPoint p = await osmPlatform.myLocation(_idMap);
+     await osmPlatform.addPosition(_idMap, p);
+     osmPlatform.advancedPositionPicker(_idMap);
     }
   }
 
@@ -288,6 +293,10 @@ class OSMController {
   /// to retrieve location desired
   Future<GeoPoint> selectAdvancedPositionPicker() async {
     return await osmPlatform.selectAdvancedPositionPicker(_idMap);
+  }
+  /// to retrieve current location without finish picker
+  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
+    return await osmPlatform.getPositionOnlyAdvancedPositionPicker(_idMap);
   }
   /// to cancel the assisted selection in tge map
   Future<void> cancelAdvancedPositionPicker() async {
