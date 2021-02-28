@@ -225,6 +225,7 @@ controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 | `onGeoPointClicked`      | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
 | `onLocationChanged`      | (callback) it is hire when you activate tracking and  user position has been changed          |
 | `showDefaultInfoWindow`  | (bool) enable/disable default infoWindow of marker (default = false)         |
+| `isPicker`               | (bool) enable advanced picker from init of  the map (default = false)         |
 
 ## STATIC METHODS:
 ### calculate distance between 2 geoPoint position
