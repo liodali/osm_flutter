@@ -23,10 +23,18 @@ class _LocationAppExampleState extends State<LocationAppExample> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(""),
+            ValueListenableBuilder<GeoPoint>(
+              valueListenable: notifier,
+              builder: (ctx, p, child) {
+                return Text("${p?.toString() ?? ""}");
+              },
+            ),
             RaisedButton(
               onPressed: () async {
-                await Navigator.pushNamed(context, "/search");
+                var p = await Navigator.pushNamed(context, "/search");
+                if (p != null) {
+                  notifier.value = p;
+                }
               },
               child: Text("pick address"),
             ),

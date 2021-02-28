@@ -21,9 +21,8 @@ class MyApp extends StatelessWidget {
                 ),
               ),
             ),
-        "/picker-result" :(ctx) => LocationAppExample(),
-        "/search" :(ctx) => SearchPage(),
-
+        "/picker-result": (ctx) => LocationAppExample(),
+        "/search": (ctx) => SearchPage(),
       },
     );
   }

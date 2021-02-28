@@ -1,3 +1,6 @@
+## 0.6.7 [beta-version]:
+* add new method to get current location without close advanced picker
+* create new example  search picker example 
 ## 0.6.6+1 [beta-version]:
 * fix error export
 ## 0.6.6 [beta-version]:
