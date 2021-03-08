@@ -48,10 +48,12 @@ class _SimpleExampleState extends State<SimpleExample> {
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.info),
-            title: Text("information"),
+            label: "information",
           ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.contacts), title: Text("contact")),
+            icon: Icon(Icons.contacts),
+            label: "contact",
+          ),
         ],
       ),
     );

@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
         "/home": (ctx) => MainExample(),
         "/second": (ctx) => Scaffold(
               body: Center(
-                child: RaisedButton(
+                child: ElevatedButton(
                   onPressed: () {
                     Navigator.popAndPushNamed(ctx, "/home");
                   },
@@ -97,7 +97,7 @@ class _MainExampleState extends State<MainExample> {
                     "duration:${Duration(seconds: roadInformation.duration.toInt()).inMinutes}");
                 print("distance:${roadInformation.distance}Km");
               } on RoadException catch (e) {
-                scaffoldKey.currentState.showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
                       "${e.errorMessage()}",
@@ -147,14 +147,14 @@ class _MainExampleState extends State<MainExample> {
                     print(myLocation);
                   },
                   onGeoPointClicked: (geoPoint) async {
-                    scaffoldKey.currentState.showSnackBar(
+                    ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
                           "${geoPoint.toMap().toString()}",
                         ),
                         action: SnackBarAction(
                           onPressed: () =>
-                              scaffoldKey.currentState.hideCurrentSnackBar(),
+                              ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                           label: "hide",
                         ),
                       ),
@@ -222,16 +222,14 @@ class _MainExampleState extends State<MainExample> {
                     },
                     child: Column(
                       children: [
-                        RaisedButton(
+                        ElevatedButton(
                           child: Icon(Icons.add),
                           onPressed: () async {
                             controller.zoomIn();
                           },
-                          elevation: 0,
                         ),
-                        RaisedButton(
+                        ElevatedButton(
                           child: Icon(Icons.remove),
-                          elevation: 0,
                           onPressed: () async {
                             controller.zoomOut();
                           },

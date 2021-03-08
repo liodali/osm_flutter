@@ -1,3 +1,5 @@
+## 0.6.7+1 [beta-version]:
+* fix issues
 ## 0.6.7 [beta-version]:
 * add new method to get current location without close advanced picker
 * create new example  search picker example 

@@ -29,7 +29,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                 return Text("${p?.toString() ?? ""}");
               },
             ),
-            RaisedButton(
+            ElevatedButton(
               onPressed: () async {
                 var p = await Navigator.pushNamed(context, "/search");
                 if (p != null) {
@@ -100,7 +100,7 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  Future<void> suggestionProcesing(String addr) {
+  Future<void> suggestionProcesing(String addr) async{
     notifierAutoCompletion.value = true;
     _futureSuggestionAddress = addressSuggestion(
       addr,
@@ -114,7 +114,6 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomPadding: false,
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: TextField(
