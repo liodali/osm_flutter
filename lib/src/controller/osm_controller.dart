@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/src/types/shape_osm.dart';
-import 'package:location_permissions/location_permissions.dart';
+import 'package:location/location.dart';
 
 import '../interface_osm/osm_interface.dart';
 import '../osm_flutter.dart';
@@ -217,9 +217,9 @@ class OSMController {
   }
 
   Future<void> checkServiceLocation() async {
-    ServiceStatus serviceStatus =
-        await LocationPermissions().checkServiceStatus();
-    if (serviceStatus == ServiceStatus.disabled) {
+    bool isEnabled =
+        await Location().serviceEnabled();
+    if (!isEnabled) {
       await showDialog(
         context: _osmFlutterState.context,
         barrierDismissible: false,
@@ -249,7 +249,7 @@ class OSMController {
           );
         },
       );
-    } else if (serviceStatus == ServiceStatus.enabled) {
+    } else {
       currentLocation();
     }
   }

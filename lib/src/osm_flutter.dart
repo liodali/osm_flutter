@@ -1,11 +1,10 @@
 import 'dart:async';
 
-import 'package:after_layout/after_layout.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:location_permissions/location_permissions.dart';
+import 'package:location/location.dart';
 
 import 'controller/map_controller.dart';
 import 'controller/osm_controller.dart';
@@ -81,8 +80,7 @@ class OSMFlutter extends StatefulWidget {
   OSMFlutterState createState() => OSMFlutterState();
 }
 
-class OSMFlutterState extends State<OSMFlutter>
-    with AfterLayoutMixin<OSMFlutter> {
+class OSMFlutterState extends State<OSMFlutter> {
   GlobalKey androidViewKey = GlobalKey();
   OSMController _osmController;
 
@@ -162,12 +160,20 @@ class OSMFlutterState extends State<OSMFlutter>
 
   /// requestPermission callback to request location in your phone
   Future<bool> requestPermission() async {
-    _permission = await LocationPermissions().checkPermissionStatus();
+    Location location = new Location();
+    _permission = await location.hasPermission();
     if (_permission == PermissionStatus.denied) {
       //request location permission
-      _permission = await LocationPermissions().requestPermissions();
+      _permission = await location.requestPermission();
       if (_permission == PermissionStatus.granted) {
-        await _osmController.checkServiceLocation();
+        bool isEnabled = await location.serviceEnabled();
+        if(!isEnabled){
+          await location.requestService();
+        }
+          location.onLocationChanged.listen((location)async {
+            await _osmController.checkServiceLocation();
+
+          });
       }
       return false;
     } else if (_permission == PermissionStatus.granted) {
@@ -234,6 +240,4 @@ class OSMFlutterState extends State<OSMFlutter>
     });
   }
 
-  @override
-  void afterFirstLayout(BuildContext context) {}
 }
