@@ -28,7 +28,6 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 29
@@ -45,9 +44,7 @@ android {
         disable 'InvalidPackage'
     }
     buildFeatures {
-        viewBinding {
-            enabled = true
-        }
+        viewBinding  true
     }
 }
 dependencies {

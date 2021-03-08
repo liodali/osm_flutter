@@ -1,3 +1,5 @@
+## 0.6.7+2 [beta-version]:
+* remove deprecated api in build.gradle
 ## 0.6.7+1 [beta-version]:
 * fix issues
 ## 0.6.7 [beta-version]:

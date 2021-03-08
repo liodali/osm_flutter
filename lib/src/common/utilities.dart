@@ -55,5 +55,7 @@ Future<List<SearchInfo>> addressSuggestion(String searchText,
   );
   final json = response.data;
 
-  return (json["features"] as List).map((d) => SearchInfo.fromPhotonAPI(d)).toList();
+  return (json["features"] as List)
+      .map((d) => SearchInfo.fromPhotonAPI(d))
+      .toList();
 }
