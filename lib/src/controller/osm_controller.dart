@@ -229,16 +229,15 @@ class OSMController {
             content: Text(
                 "We need to get your current location,you should turn on your gps location "),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 onPressed: () => Navigator.pop(_osmFlutterState.context),
                 child: Text(
                   "annuler",
                   style: TextStyle(color: Colors.black),
                 ),
               ),
-              FlatButton(
+              TextButton(
                 onPressed: () => Navigator.pop(_osmFlutterState.context),
-                color: Theme.of(_osmFlutterState.context).primaryColor,
                 child: Text(
                   "ok",
                   style: TextStyle(

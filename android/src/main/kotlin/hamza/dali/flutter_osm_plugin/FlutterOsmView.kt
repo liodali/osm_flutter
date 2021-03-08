@@ -360,7 +360,7 @@ class FlutterOsmView(
 
                     }
                 } catch (e: Exception) {
-                    result.error("400", "${e.message!!}", "")
+                    result.error("400", e.stackTraceToString(), "")
                 }
 
             }
@@ -592,7 +592,7 @@ class FlutterOsmView(
                     result.success(null)
             }
         } catch (e: Exception) {
-            result.error("400", "${e.message!!}", "")
+            result.error("400", e.stackTraceToString(), "")
         }
     }
 
@@ -719,7 +719,7 @@ class FlutterOsmView(
             result.success(null)
         } catch (e: java.lang.Exception) {
             Log.e("id", hashMap["id"].toString())
-            Log.e("err static point marker", e.message as String)
+            Log.e("err static point marker", e.stackTraceToString())
             result.error("400", "error to getBitmap static Position", "")
             staticMarkerIcon = HashMap()
         }
@@ -756,9 +756,8 @@ class FlutterOsmView(
             }
             result.success(null)
         } catch (e: Exception) {
-            Log.d("err", e.message)
-            result.error("400", "Opss!Erreur", e.stackTrace.toString())
-
+            Log.d("err", e.stackTraceToString())
+            result.error("400", "Opss!Erreur", e.stackTraceToString())
         }
     }
 
@@ -773,8 +772,8 @@ class FlutterOsmView(
             customMarkerIcon = getBitmap(call.arguments as ByteArray)
             //customMarkerIcon.recycle();
             result.success(null)
-        } catch (e: java.lang.Exception) {
-            Log.d("err", e.message!!)
+        } catch (e: Exception) {
+            Log.d("err", e.stackTraceToString())
             customMarkerIcon = null
             result.error("500", "Cannot make markerIcon custom", "")
         }
