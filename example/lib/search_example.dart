@@ -100,7 +100,7 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  Future<void> suggestionProcesing(String addr) async{
+  Future<void> suggestionProcesing(String addr) async {
     notifierAutoCompletion.value = true;
     _futureSuggestionAddress = addressSuggestion(
       addr,

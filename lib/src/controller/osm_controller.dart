@@ -106,9 +106,9 @@ class OSMController {
           });
     }
     if (initWithUserPosition && _osmFlutterState.widget.isPicker) {
-     GeoPoint p = await osmPlatform.myLocation(_idMap);
-     await osmPlatform.addPosition(_idMap, p);
-     osmPlatform.advancedPositionPicker(_idMap);
+      GeoPoint p = await osmPlatform.myLocation(_idMap);
+      await osmPlatform.addPosition(_idMap, p);
+      osmPlatform.advancedPositionPicker(_idMap);
     }
   }
 
@@ -253,50 +253,61 @@ class OSMController {
       currentLocation();
     }
   }
+
   /// draw circle shape in the map
   /// [circleOSM] : (CircleOSM) represent circle in osm map
   Future<void> drawCircle(CircleOSM circleOSM) async {
     return await osmPlatform.drawCircle(_idMap, circleOSM);
   }
+
   /// remove circle shape from map
   /// [key] : (String) key of the circle
   Future<void> removeCircle(String key) async {
     return await osmPlatform.removeCircle(_idMap, key);
   }
+
   /// draw rect shape in the map
   /// [regionOSM] : (RegionOSM) represent region in osm map
   Future<void> drawRect(RectOSM rectOSM) async {
     return await osmPlatform.drawRect(_idMap, rectOSM);
   }
+
   /// remove region shape from map
   /// [key] : (String) key of the region
   Future<void> removeRect(String key) async {
     return await osmPlatform.removeRect(_idMap, key);
   }
+
   /// remove all rect shape from map
   Future<void> removeAllRect() async {
     return await osmPlatform.removeAllRect(_idMap);
   }
+
   /// remove all circle shapes from map
   Future<void> removeAllCircle() async {
     return await osmPlatform.removeAllCircle(_idMap);
   }
+
   /// remove all shapes from map
   Future<void> removeAllShapes() async {
     return await osmPlatform.removeAllShapes(_idMap);
   }
+
   /// to start assisted selection in the map
   Future<void> advancedPositionPicker() async {
     return await osmPlatform.advancedPositionPicker(_idMap);
   }
+
   /// to retrieve location desired
   Future<GeoPoint> selectAdvancedPositionPicker() async {
     return await osmPlatform.selectAdvancedPositionPicker(_idMap);
   }
+
   /// to retrieve current location without finish picker
   Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
     return await osmPlatform.getPositionOnlyAdvancedPositionPicker(_idMap);
   }
+
   /// to cancel the assisted selection in tge map
   Future<void> cancelAdvancedPositionPicker() async {
     return await osmPlatform.cancelAdvancedPositionPicker(_idMap);

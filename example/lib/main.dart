@@ -153,8 +153,8 @@ class _MainExampleState extends State<MainExample> {
                           "${geoPoint.toMap().toString()}",
                         ),
                         action: SnackBarAction(
-                          onPressed: () =>
-                              ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                          onPressed: () => ScaffoldMessenger.of(context)
+                              .hideCurrentSnackBar(),
                           label: "hide",
                         ),
                       ),
