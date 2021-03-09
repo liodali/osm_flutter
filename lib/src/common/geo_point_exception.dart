@@ -1,11 +1,11 @@
 class GeoPointException implements Exception {
-  final String msg;
+  final String? msg;
 
   GeoPointException({
     this.msg,
   });
 
-  String errorMessage() {
+  String? errorMessage() {
     return msg;
   }
 }

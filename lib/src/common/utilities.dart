@@ -31,10 +31,10 @@ double sqrtCos2(num x, num y) {
 /// [p1] : (GeoPoint) first point in road
 /// [p2] : (GeoPoint) last point in road
 Future<double> distance2point(GeoPoint p1, GeoPoint p2) async {
-  final phi1 = p1.latitude * Math.pi / 180; // φ, λ in radians
-  final phi2 = p2.latitude * Math.pi / 180;
-  final deltaPhi = (p2.latitude - p1.latitude) * Math.pi / 180;
-  final deltaLambda = (p2.longitude - p1.longitude) * Math.pi / 180;
+  final phi1 = p1.latitude! * Math.pi / 180; // φ, λ in radians
+  final phi2 = p2.latitude! * Math.pi / 180;
+  final deltaPhi = (p2.latitude! - p1.latitude!) * Math.pi / 180;
+  final deltaLambda = (p2.longitude! - p1.longitude!) * Math.pi / 180;
 
   final double a =
       sqrtSin(deltaPhi / 2) + sqrtCos2(phi1, phi2) * sqrtSin(deltaLambda / 2);

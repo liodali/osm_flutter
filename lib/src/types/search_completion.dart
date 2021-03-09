@@ -1,12 +1,12 @@
 import 'geo_point.dart';
 
 class Address {
-  final String postcode;
-  final String name;
-  final String street;
-  final String city;
-  final String state;
-  final String country;
+  final String? postcode;
+  final String? name;
+  final String? street;
+  final String? city;
+  final String? state;
+  final String? country;
 
   Address({
     this.postcode,
@@ -28,22 +28,22 @@ class Address {
   @override
   String toString() {
     String addr = "";
-    if (name != null && name.isNotEmpty) {
+    if (name != null && name!.isNotEmpty) {
       addr = addr + "$name,";
     }
-    if (street != null && street.isNotEmpty) {
+    if (street != null && street!.isNotEmpty) {
       addr = addr + "$street,";
     }
-    if (postcode != null && postcode.isNotEmpty) {
+    if (postcode != null && postcode!.isNotEmpty) {
       addr = addr + "$postcode,";
     }
-    if (city != null && city.isNotEmpty) {
+    if (city != null && city!.isNotEmpty) {
       addr = addr + "$city,";
     }
-    if (state != null && state.isNotEmpty) {
+    if (state != null && state!.isNotEmpty) {
       addr = addr + "$state,";
     }
-    if (country != null && country.isNotEmpty) {
+    if (country != null && country!.isNotEmpty) {
       addr = addr + "$country";
     }
 
@@ -52,8 +52,8 @@ class Address {
 }
 
 class SearchInfo {
-  final GeoPoint point;
-  final Address address;
+  final GeoPoint? point;
+  final Address? address;
 
   SearchInfo({
     this.point,

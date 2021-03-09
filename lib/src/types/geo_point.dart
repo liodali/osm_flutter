@@ -2,8 +2,8 @@
 /// [longitude] : (double)
 /// [latitude] : (double)
 class GeoPoint {
-  final double longitude;
-  final double latitude;
+  final double? longitude;
+  final double? latitude;
 
   GeoPoint({
     this.latitude,
@@ -14,7 +14,7 @@ class GeoPoint {
       : this.latitude = m["lat"],
         this.longitude = m["lon"];
 
-  Map<String, double> toMap() {
+  Map<String, double?> toMap() {
     return {
       "lon": longitude,
       "lat": latitude,

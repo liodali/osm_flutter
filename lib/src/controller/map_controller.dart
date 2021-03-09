@@ -5,9 +5,9 @@ import 'package:flutter_osm_plugin/src/controller/osm_controller.dart';
 /// [initMapWithUserPosition] : (bool) if is true, map will show your current location
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 class MapController {
-  OSMController _osmController;
+  late OSMController _osmController;
   final bool initMapWithUserPosition;
-  final GeoPoint initPosition;
+  final GeoPoint? initPosition;
 
   MapController({
     this.initMapWithUserPosition = true,
@@ -24,20 +24,19 @@ class MapController {
 
   void dispose() {
     _osmController.dispose();
-    _osmController = null;
   }
 
   /// initialise or change of position
   /// [p] : geoPoint
   /// [circleOSM] : (CircleOSM) circle that will be draw with marker
   Future<void> changeLocation(GeoPoint p) async {
-    if (p != null) _osmController.changeLocation(p);
+    _osmController.changeLocation(p);
   }
 
   ///remove marker from map of position
   /// [p] : geoPoint
   Future<void> removeMarker(GeoPoint p) async {
-    if (p != null) _osmController.removeMarker(p);
+    _osmController.removeMarker(p);
   }
 
   ///change Icon Marker
@@ -142,11 +141,11 @@ class MapController {
 
   /// remove all shape from map
   Future<void> removeAllShapes() async {
-    return await _osmController.removeAllShapes();
+     await _osmController.removeAllShapes();
   }
 
   Future<void> advancedPositionPicker() async {
-    return await _osmController.advancedPositionPicker();
+     await _osmController.advancedPositionPicker();
   }
 
   /// select current position and finish advanced picker

@@ -32,18 +32,18 @@ class OSMFlutter extends StatefulWidget {
   final bool trackMyPosition;
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
-  final OnGeoPointClicked onGeoPointClicked;
-  final OnLocationChanged onLocationChanged;
-  final MarkerIcon markerIcon;
-  final Road road;
+  final OnGeoPointClicked? onGeoPointClicked;
+  final OnLocationChanged? onLocationChanged;
+  final MarkerIcon? markerIcon;
+  final Road? road;
   final double defaultZoom;
   final bool showDefaultInfoWindow;
   final bool useSecureURL;
   final bool isPicker;
 
   OSMFlutter({
-    Key key,
-    this.controller,
+    Key? key,
+    required this.controller,
     this.trackMyPosition = false,
     this.showZoomController = false,
     this.staticPoints = const [],
@@ -58,13 +58,13 @@ class OSMFlutter extends StatefulWidget {
   })  : assert(controller != null),
         super(key: key);
 
-  static OSMFlutterState of<T>(
+  static OSMFlutterState? of<T>(
     BuildContext context, {
     bool nullOk = false,
   }) {
     assert(context != null);
     assert(nullOk != null);
-    final OSMFlutterState result =
+    final OSMFlutterState? result =
         context.findAncestorStateOfType<OSMFlutterState>();
     if (nullOk || result != null) return result;
     throw FlutterError.fromParts(<DiagnosticsNode>[
@@ -82,14 +82,14 @@ class OSMFlutter extends StatefulWidget {
 
 class OSMFlutterState extends State<OSMFlutter> {
   GlobalKey androidViewKey = GlobalKey();
-  OSMController _osmController;
+  OSMController? _osmController;
 
   //permission status
-  PermissionStatus _permission;
+  PermissionStatus? _permission;
 
   //_OsmCreatedCallback _osmCreatedCallback;
-  GlobalKey key, startIconKey, endIconKey, middleIconKey;
-  Map<String, GlobalKey> staticMarkersKeys;
+  GlobalKey? key, startIconKey, endIconKey, middleIconKey;
+  late Map<String, GlobalKey> staticMarkersKeys;
 
   @override
   void initState() {
@@ -106,7 +106,6 @@ class OSMFlutterState extends State<OSMFlutter> {
           assert(false, "you have duplicated ids for static points");
         }
       });
-      ids = null;
     }
     key = GlobalKey();
     startIconKey = GlobalKey();
@@ -121,7 +120,7 @@ class OSMFlutterState extends State<OSMFlutter> {
       if (widget.controller.initMapWithUserPosition || widget.trackMyPosition) {
         await requestPermission();
         if (widget.controller.initMapWithUserPosition) {
-          await _osmController.checkServiceLocation();
+          await _osmController!.checkServiceLocation();
         }
       }
     });
@@ -171,7 +170,7 @@ class OSMFlutterState extends State<OSMFlutter> {
           await location.requestService();
         }
           location.onLocationChanged.listen((location)async {
-            await _osmController.checkServiceLocation();
+            await _osmController!.checkServiceLocation();
 
           });
       }
@@ -206,19 +205,19 @@ class OSMFlutterState extends State<OSMFlutter> {
           if (widget.road?.endIcon != null) ...[
             RepaintBoundary(
               key: endIconKey,
-              child: widget.road.endIcon,
+              child: widget.road!.endIcon,
             ),
           ],
           if (widget.road?.startIcon != null) ...[
             RepaintBoundary(
               key: startIconKey,
-              child: widget.road.startIcon,
+              child: widget.road!.startIcon,
             ),
           ],
           if (widget.road?.middleIcon != null) ...[
             RepaintBoundary(
               key: middleIconKey,
-              child: widget.road.middleIcon,
+              child: widget.road!.middleIcon,
             ),
           ],
         ],
@@ -228,9 +227,9 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   void _onPlatformViewCreated(int id) async {
     this._osmController = await OSMController.init(id, this);
-    widget.controller.init(this._osmController);
+    widget.controller.init(this._osmController!);
     Future.delayed(Duration(milliseconds: 1250), () async {
-      await _osmController.initMap(
+      await _osmController!.initMap(
         initPosition: widget.controller.initPosition,
         initWithUserPosition: widget.controller.initMapWithUserPosition,
       );

@@ -4,9 +4,9 @@ import 'marker.dart';
 
 class Road {
   final Color roadColor;
-  final MarkerIcon startIcon;
-  final MarkerIcon endIcon;
-  final MarkerIcon middleIcon;
+  final MarkerIcon? startIcon;
+  final MarkerIcon? endIcon;
+  final MarkerIcon? middleIcon;
 
   Road({
     this.roadColor = Colors.blue,
@@ -17,8 +17,8 @@ class Road {
 }
 
 class RoadInfo {
-  final double distance;
-  final double duration;
+  final double? distance;
+  final double? duration;
 
   RoadInfo({
     this.distance,

@@ -54,7 +54,7 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Future<void> customMarker(
     int idOSM,
-    GlobalKey globalKey,
+    GlobalKey? globalKey,
   );
 
   Future<void> setColorRoad(
@@ -64,7 +64,7 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Future<void> setMarkersRoad(
     int idOSM,
-    List<GlobalKey> keys,
+    List<GlobalKey?> keys,
   );
 
   Future<void> enableTracking(
@@ -125,7 +125,7 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Future<void> customMarkerStaticPosition(
     int idOSM,
-    GlobalKey globalKey,
+    GlobalKey? globalKey,
     String id,
   );
 

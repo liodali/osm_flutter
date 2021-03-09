@@ -15,10 +15,10 @@ abstract class ShapeOSM {
   final double strokeWidth;
 
   ShapeOSM({
-    @required this.key,
-    @required this.centerPoint,
-    @required this.color,
-    @required this.strokeWidth,
+    required this.key,
+    required this.centerPoint,
+    required this.color,
+    required this.strokeWidth,
   });
 }
 
@@ -28,11 +28,11 @@ class RectOSM extends ShapeOSM {
   final double distance;
 
   RectOSM({
-    @required String key,
-    @required GeoPoint centerPoint,
-    @required this.distance,
-    @required Color color,
-    @required double strokeWidth,
+    required String key,
+    required GeoPoint centerPoint,
+    required this.distance,
+    required Color color,
+    required double strokeWidth,
   }) : super(
           color: color,
           centerPoint: centerPoint,
@@ -47,11 +47,11 @@ class CircleOSM extends ShapeOSM {
   final double radius;
 
   CircleOSM({
-    @required String key,
-    @required GeoPoint centerPoint,
-    @required this.radius,
-    @required Color color,
-    @required double strokeWidth,
+    required String key,
+    required GeoPoint centerPoint,
+    required this.radius,
+    required Color color,
+    required double strokeWidth,
   }) : super(
           color: color,
           centerPoint: centerPoint,
