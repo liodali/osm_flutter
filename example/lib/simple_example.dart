@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 
 class SimpleExample extends StatefulWidget {
-  SimpleExample({Key key}) : super(key: key);
+  SimpleExample({Key? key}) : super(key: key);
 
   @override
   _SimpleExampleState createState() => _SimpleExampleState();
 }
 
 class _SimpleExampleState extends State<SimpleExample> {
-  PageController controller;
-  int indexPage;
+  late PageController controller;
+  late int indexPage;
 
   @override
   void initState() {
@@ -67,7 +67,7 @@ class SimpleOSM extends StatefulWidget {
 
 class SimpleOSMState extends State<SimpleOSM>
     with AutomaticKeepAliveClientMixin {
-  MapController controller;
+  late MapController controller;
 
   @override
   void initState() {
@@ -78,7 +78,9 @@ class SimpleOSMState extends State<SimpleOSM>
   }
 
   @override
+  @mustCallSuper
   Widget build(BuildContext context) {
+    super.build(context);
     return OSMFlutter(
       controller: controller,
       markerIcon: MarkerIcon(

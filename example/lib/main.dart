@@ -29,15 +29,15 @@ class MyApp extends StatelessWidget {
 }
 
 class MainExample extends StatefulWidget {
-  MainExample({Key key}) : super(key: key);
+  MainExample({Key? key}) : super(key: key);
 
   @override
   _MainExampleState createState() => _MainExampleState();
 }
 
 class _MainExampleState extends State<MainExample> {
-  MapController controller;
-  GlobalKey<ScaffoldState> scaffoldKey;
+  late MapController controller;
+  late GlobalKey<ScaffoldState> scaffoldKey;
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
@@ -94,7 +94,7 @@ class _MainExampleState extends State<MainExample> {
                 RoadInfo roadInformation =
                     await controller.drawRoad(point, point2);
                 print(
-                    "duration:${Duration(seconds: roadInformation.duration.toInt()).inMinutes}");
+                    "duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
                 print("distance:${roadInformation.distance}Km");
               } on RoadException catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
