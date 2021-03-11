@@ -1,3 +1,5 @@
+## 0.6.7+3 [beta-version]:
+* remove default zoom from track location
 ## 0.6.7+2 [beta-version]:
 * remove deprecated api in build.gradle
 ## 0.6.7+1 [beta-version]:

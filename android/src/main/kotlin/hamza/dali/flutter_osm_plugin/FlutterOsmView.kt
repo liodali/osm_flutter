@@ -289,7 +289,6 @@ class FlutterOsmView(
             location.runOnFirstFix {
                 scope!!.launch(Main) {
                     val currentPosition = GeoPoint(location.lastFix)
-                    map!!.controller.setZoom(Constants.zoomMyLocation)
                     map!!.controller.animateTo(currentPosition)
                     eventLocationSink?.success(currentPosition.toHashMap())
                 }
