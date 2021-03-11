@@ -1,8 +1,6 @@
 package hamza.dali.flutter_osm_plugin
 
 import android.app.Activity
-import android.app.Application
-import android.os.Bundle
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -11,11 +9,10 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import io.flutter.embedding.engine.plugins.lifecycle.FlutterLifecycleAdapter
 import io.flutter.plugin.common.PluginRegistry
 import org.osmdroid.config.Configuration
-import org.osmdroid.config.IConfigurationProvider
 import java.util.concurrent.atomic.AtomicInteger
-import io.flutter.embedding.engine.plugins.lifecycle.FlutterLifecycleAdapter
 
 
 class FlutterOsmPlugin() :
@@ -36,13 +33,13 @@ class FlutterOsmPlugin() :
         var pluginBinding: FlutterPluginBinding? = null
         var lifecycle: Lifecycle? = null
         var register: PluginRegistry.Registrar? = null
-        val VIEW_TYPE = "plugins.dali.hamza/osmview"
-        val CREATED = 1
-        val STARTED = 2
-        val RESUMED = 3
-        val PAUSED = 4
-        val STOPPED = 5
-        val DESTROYED = 6
+        const val VIEW_TYPE = "plugins.dali.hamza/osmview"
+        const val CREATED = 1
+        const val STARTED = 2
+        const val RESUMED = 3
+        const val PAUSED = 4
+        const val STOPPED = 5
+        const val DESTROYED = 6
 
         @JvmStatic
         fun registerWith(register: PluginRegistry.Registrar) {
@@ -72,7 +69,7 @@ class FlutterOsmPlugin() :
     }
 
     override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
-        
+
     }
 
 

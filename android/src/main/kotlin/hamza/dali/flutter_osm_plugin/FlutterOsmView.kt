@@ -259,17 +259,7 @@ class FlutterOsmView(
     }
 
     private fun enableMyLocation(result: MethodChannel.Result) {
-        /* if (folderRoad.items.isNotEmpty()) {
-             folderRoad.items.clear()
-             map!!.invalidate()
-         }
-         if (staticPoints.isNotEmpty()) {
-             val iterator = staticPoints.entries.iterator()
-             while (iterator.hasNext()) {
-                 val mapEntry = iterator.next()
-                 showStaticPosition(mapEntry.key)
-             }
-         }*/
+
         if (markerSelectionPicker != null) {
             mainLinearLayout.removeView(markerSelectionPicker)
             map!!.overlays.add(folderShape)
@@ -307,7 +297,6 @@ class FlutterOsmView(
             val geoPMap = GeoPoint(location).toHashMap()
             methodChannel.invokeMethod("receiveUserLocation", geoPMap)
 
-            println("send location to flutter")
             //eventLocationSink?.success(geoPMap)
         }
     }
@@ -373,11 +362,10 @@ class FlutterOsmView(
                 }
                 locationNewOverlay?.let {
                     if (!it.isMyLocationEnabled) {
-                        result.error("404", "enabled track you current position fisrt", "")
-                    } else {
-                        currentUserPosition(call, result)
+                        it.enableMyLocation()
                     }
-                } ?: result.error("400", "Opps!erreur locationOverlay is NULL", "")
+                    currentUserPosition(call, result)
+                } ?: result.error("400", "Opps!error locationOverlay is NULL", "")
             }
 
             "user#pickPosition" -> {
@@ -952,6 +940,9 @@ class FlutterOsmView(
     override fun onResume(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(FlutterOsmPlugin.RESUMED)
         Log.e("osm", "osm flutter plugin resume")
+//        if(map==null){
+//            initMap()
+//        }
         map!!.onResume()
         if (isEnabled || isTracking) {
             locationNewOverlay = MyLocationNewOverlay(provider, map)
