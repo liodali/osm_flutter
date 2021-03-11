@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:location/location.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import '../../flutter_osm_plugin.dart';
@@ -48,6 +49,7 @@ class MethodChannelOSM extends OSMPlatform {
 
   @override
   Future<void> init(int idOSMMap) async {
+    locationService = Location();
     if (!_channels.containsKey(idOSMMap)) {
       _channels[idOSMMap] =
           MethodChannel('plugins.dali.hamza/osmview_$idOSMMap');

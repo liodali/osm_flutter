@@ -2,12 +2,12 @@
 /// [longitude] : (double)
 /// [latitude] : (double)
 class GeoPoint {
-  final double? longitude;
-  final double? latitude;
+  final double longitude;
+  final double latitude;
 
   GeoPoint({
-    this.latitude,
-    this.longitude,
+    required this.latitude,
+    required this.longitude,
   });
 
   GeoPoint.fromMap(Map m)

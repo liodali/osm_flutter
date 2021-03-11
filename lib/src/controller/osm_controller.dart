@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_plugin/src/types/shape_osm.dart';
 import 'package:location/location.dart';
 
+import '../common/utilities.dart';
 import '../interface_osm/osm_interface.dart';
 import '../osm_flutter.dart';
+import '../types/shape_osm.dart';
 import '../types/types.dart';
 
 final OSMPlatform osmPlatform = OSMPlatform.instance;
@@ -70,8 +73,8 @@ class OSMController {
           .asMap()
           .forEach((index, points) async {
         if (points.markerIcon != null) {
-          await osmPlatform.customMarkerStaticPosition(_idMap,
-              _osmFlutterState.staticMarkersKeys[points.id], points.id);
+          await osmPlatform.customMarkerStaticPosition(
+              _idMap, _osmFlutterState.staticMarkersKeys[points.id], points.id);
         }
         if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {
           await osmPlatform.staticPosition(
@@ -104,9 +107,19 @@ class OSMController {
           });
     }
     if (initWithUserPosition && _osmFlutterState.widget.isPicker) {
-      GeoPoint p = await osmPlatform.myLocation(_idMap);
+      bool granted = await _osmFlutterState.requestPermission();
+      if (!granted) {
+        throw Exception("you should open gps to get current position");
+      }
+      await _osmFlutterState.checkService();
+      GeoPoint? p;
+      try {
+        p = await osmPlatform.myLocation(_idMap);
+      } catch (e) {
+        p = (await Location().getLocation()).toGeoPoint();
+      }
       await osmPlatform.addPosition(_idMap, p);
-      osmPlatform.advancedPositionPicker(_idMap);
+      await osmPlatform.advancedPositionPicker(_idMap);
     }
   }
 
@@ -167,7 +180,14 @@ class OSMController {
   /// activate current location position
   Future<void> currentLocation() async {
     bool granted = await _osmFlutterState.requestPermission();
-    if (granted) await osmPlatform.currentLocation(_idMap);
+    if (!granted) {
+      throw Exception("Location permission not granted");
+    }
+    bool isEnabled = await _osmFlutterState.checkService();
+    if (!isEnabled) {
+      throw Exception("turn on GPS service");
+    }
+    await osmPlatform.currentLocation(_idMap);
   }
 
   /// recuperation of user current position
@@ -215,41 +235,17 @@ class OSMController {
     return await osmPlatform.removeLastRoad(_idMap);
   }
 
-  Future<void> checkServiceLocation() async {
-    bool isEnabled = await Location().serviceEnabled();
+  Future<bool> checkServiceLocation() async {
+    bool isEnabled = await osmPlatform.locationService.serviceEnabled();
     if (!isEnabled) {
-      await showDialog(
-        context: _osmFlutterState.context,
-        barrierDismissible: false,
-        builder: (ctx) {
-          return AlertDialog(
-            title: Text("GPS service is disabled"),
-            content: Text(
-                "We need to get your current location,you should turn on your gps location "),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.pop(_osmFlutterState.context),
-                child: Text(
-                  "Cancel",
-                  style: TextStyle(color: Colors.black),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(_osmFlutterState.context),
-                child: Text(
-                  "ok",
-                  style: TextStyle(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    } else {
-      currentLocation();
+      await osmPlatform.locationService.requestService();
+      return Future.delayed(Duration(milliseconds: 55), () async {
+        isEnabled = await osmPlatform.locationService.serviceEnabled();
+        return isEnabled;
+      });
+
     }
+    return true;
   }
 
   /// draw circle shape in the map

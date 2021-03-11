@@ -55,8 +55,7 @@ class OSMFlutter extends StatefulWidget {
     this.showDefaultInfoWindow = false,
     this.useSecureURL = true,
     this.isPicker = false,
-  })  :
-        super(key: key);
+  }) : super(key: key);
 
   static OSMFlutterState? of<T>(
     BuildContext context, {
@@ -118,7 +117,13 @@ class OSMFlutterState extends State<OSMFlutter> {
       if (widget.controller.initMapWithUserPosition || widget.trackMyPosition) {
         await requestPermission();
         if (widget.controller.initMapWithUserPosition) {
-          await _osmController!.checkServiceLocation();
+          bool isEnabled = await _osmController!.checkServiceLocation();
+          Future.delayed(Duration(seconds: 1), () async {
+            if (isEnabled) {
+              return;
+            }
+            await _osmController!.currentLocation();
+          });
         }
       }
     });
@@ -140,6 +145,7 @@ class OSMFlutterState extends State<OSMFlutter> {
   Widget build(BuildContext context) {
     if (defaultTargetPlatform == TargetPlatform.android) {
       return Stack(
+        clipBehavior: Clip.none,
         children: <Widget>[
           widgetConfigMap(),
           AndroidView(
@@ -158,19 +164,13 @@ class OSMFlutterState extends State<OSMFlutter> {
   /// requestPermission callback to request location in your phone
   Future<bool> requestPermission() async {
     Location location = new Location();
+
     _permission = await location.hasPermission();
     if (_permission == PermissionStatus.denied) {
       //request location permission
       _permission = await location.requestPermission();
       if (_permission == PermissionStatus.granted) {
-        bool isEnabled = await location.serviceEnabled();
-        if(!isEnabled){
-          await location.requestService();
-        }
-          location.onLocationChanged.listen((location)async {
-            await _osmController!.checkServiceLocation();
-
-          });
+        return true;
       }
       return false;
     } else if (_permission == PermissionStatus.granted) {
@@ -178,6 +178,10 @@ class OSMFlutterState extends State<OSMFlutter> {
       //  if (widget.currentLocation) await _checkServiceLocation();
     }
     return false;
+  }
+
+  Future<bool> checkService() async {
+    return await _osmController!.checkServiceLocation();
   }
 
   Widget widgetConfigMap() {
@@ -191,8 +195,7 @@ class OSMFlutterState extends State<OSMFlutter> {
               child: widget.markerIcon,
             ),
           ],
-          if (
-              widget.staticPoints.isNotEmpty) ...[
+          if (widget.staticPoints.isNotEmpty) ...[
             for (int i = 0; i < widget.staticPoints.length; i++) ...[
               RepaintBoundary(
                 key: staticMarkersKeys[widget.staticPoints[i].id],
@@ -236,5 +239,4 @@ class OSMFlutterState extends State<OSMFlutter> {
       }*/
     });
   }
-
 }
