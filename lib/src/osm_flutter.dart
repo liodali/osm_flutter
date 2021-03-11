@@ -55,15 +55,13 @@ class OSMFlutter extends StatefulWidget {
     this.showDefaultInfoWindow = false,
     this.useSecureURL = true,
     this.isPicker = false,
-  })  : assert(controller != null),
+  })  :
         super(key: key);
 
   static OSMFlutterState? of<T>(
     BuildContext context, {
     bool nullOk = false,
   }) {
-    assert(context != null);
-    assert(nullOk != null);
     final OSMFlutterState? result =
         context.findAncestorStateOfType<OSMFlutterState>();
     if (nullOk || result != null) return result;
@@ -193,7 +191,7 @@ class OSMFlutterState extends State<OSMFlutter> {
               child: widget.markerIcon,
             ),
           ],
-          if (widget.staticPoints != null &&
+          if (
               widget.staticPoints.isNotEmpty) ...[
             for (int i = 0; i < widget.staticPoints.length; i++) ...[
               RepaintBoundary(
