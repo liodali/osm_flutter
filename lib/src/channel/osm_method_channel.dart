@@ -45,7 +45,7 @@ class MethodChannelOSM extends OSMPlatform {
   // Returns a filtered view of the events in the _controller, by mapId.
   Stream<EventOSM> _events(int mapId) =>
       _streamController.stream.where((event) => event.mapId == mapId)
-          as Stream<EventOSM<dynamic>>;
+          as Stream<EventOSM>;
 
   @override
   Future<void> init(int idOSMMap) async {

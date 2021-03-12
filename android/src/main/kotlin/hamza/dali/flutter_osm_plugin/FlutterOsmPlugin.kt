@@ -51,13 +51,15 @@ class FlutterOsmPlugin() :
 
             val flutterOsmView = FlutterOsmPlugin(register.activity())
             //register.activity().application.registerActivityLifecycleCallbacks(flutterOsmView)
-            register.platformViewRegistry().registerViewFactory(VIEW_TYPE,
+            register.platformViewRegistry().registerViewFactory(
+                    VIEW_TYPE,
                     OsmFactory(
                             register.messenger(),
+                            flutterOsmView.activity?.application,
                             null,
-                            null,
-                            null,
-                            register))
+                            flutterOsmView.activity,
+                    ),
+            )
         }
     }
 
@@ -86,7 +88,6 @@ class FlutterOsmPlugin() :
                         activity!!.application,
                         lifecycle,
                         activity,
-                        register,
                 ),
         )
     }

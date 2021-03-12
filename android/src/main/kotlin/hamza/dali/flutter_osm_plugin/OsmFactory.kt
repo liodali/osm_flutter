@@ -16,7 +16,6 @@ open class OsmFactory(
         val application: Application?,
         private val lifecycle: Lifecycle?,
         private val activity: Activity?,
-        private val register: PluginRegistry.Registrar?,
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(
             context: Context,
@@ -25,7 +24,6 @@ open class OsmFactory(
     ): PlatformView {
         return FlutterOsmView(
                 context,
-                register,
                 binaryMessenger,
                 viewId,
                 application,

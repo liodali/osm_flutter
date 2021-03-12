@@ -31,8 +31,11 @@ import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STARTED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STOPPED
 import hamza.dali.flutter_osm_plugin.utilities.FlutterPickerViewOverlay
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding.OnSaveInstanceStateListener
-import io.flutter.plugin.common.*
+import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.EventChannel.EventSink
+import io.flutter.plugin.common.MethodCall
+import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.platform.PlatformView
 import kotlinx.coroutines.CoroutineScope
@@ -81,7 +84,6 @@ fun HashMap<String, Double>.toGeoPoint(): GeoPoint {
 
 class FlutterOsmView(
         private val context: Context?,
-        register: PluginRegistry.Registrar?,
         private val binaryMessenger: BinaryMessenger,
         private val id: Int,//viewId
         private var application: Application?,
@@ -142,6 +144,7 @@ class FlutterOsmView(
     private val provider: GpsMyLocationProvider by lazy {
         GpsMyLocationProvider(application)
     }
+
     private var mapEventsOverlay: MapEventsOverlay? = null
     private var roadManager: OSRMRoadManager? = null
     private var roadColor: Int? = null
@@ -279,7 +282,6 @@ class FlutterOsmView(
             location.runOnFirstFix {
                 scope!!.launch(Main) {
                     val currentPosition = GeoPoint(location.lastFix)
-                    map!!.controller.setZoom(Constants.zoomMyLocation)
                     map!!.controller.animateTo(currentPosition)
                     eventLocationSink?.success(currentPosition.toHashMap())
                 }
@@ -292,6 +294,7 @@ class FlutterOsmView(
     }
 
     private fun onChangedLocation(locationOverlay: MyLocationNewOverlay) {
+        //
         provider.startLocationProvider { location, source ->
             locationOverlay.onLocationChanged(location, source)
             val geoPMap = GeoPoint(location).toHashMap()
@@ -339,13 +342,17 @@ class FlutterOsmView(
             "trackMe" -> {
                 try {
                     locationNewOverlay?.let { locationOverlay ->
-                        if (!locationOverlay.isFollowLocationEnabled) {
-                            isTracking = true
-                            locationOverlay.enableFollowLocation()
-                            onChangedLocation(locationOverlay)
-                            result.success(true)
+                        when {
+                            !locationOverlay.isFollowLocationEnabled -> {
+                                isTracking = true
+                                locationOverlay.enableFollowLocation()
+                                onChangedLocation(locationOverlay)
+                                result.success(true)
+                            }
+                            else -> result.success(null)
+
                         }
-                        result.success(null)
+                       
 
                     }
                 } catch (e: Exception) {
@@ -566,22 +573,25 @@ class FlutterOsmView(
     }
 
     private fun deactivateTrackMe(call: MethodCall, result: MethodChannel.Result) {
+        isTracking = false
+        isEnabled = false
         try {
             locationNewOverlay?.let { locationOverlay ->
-                if (locationOverlay.isFollowLocationEnabled) {
-                    locationOverlay.disableFollowLocation()
-                    locationOverlay.disableMyLocation()
-                    provider.stopLocationProvider()
-                    isTracking = false
-                    isEnabled = false
-                    result.success(false)
+                when {
+                    locationOverlay.isFollowLocationEnabled -> {
+                        locationOverlay.disableFollowLocation()
+                        locationOverlay.disableMyLocation()
+                        provider.stopLocationProvider()
+                    }
+                    else -> result.success(null)
 
-                } else
-                    result.success(null)
+                }
+
             }
         } catch (e: Exception) {
             result.error("400", e.stackTraceToString(), "")
         }
+        result.success(false)
     }
 
     private fun removeCircle(call: MethodCall, result: MethodChannel.Result) {
@@ -934,45 +944,27 @@ class FlutterOsmView(
     override fun onStart(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(STARTED)
         Log.e("osm", "osm flutter plugin start")
-
     }
+
 
     override fun onResume(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(FlutterOsmPlugin.RESUMED)
         Log.e("osm", "osm flutter plugin resume")
-//        if(map==null){
-//            initMap()
-//        }
-        map!!.onResume()
-        if (isEnabled || isTracking) {
-            locationNewOverlay = MyLocationNewOverlay(provider, map)
+        if (map == null) {
+            initMap()
         }
-        locationNewOverlay?.also { myLocation ->
-            if (isEnabled) {
-                myLocation.enableMyLocation()
-            }
-            if (isTracking && isEnabled) {
-                myLocation.enableFollowLocation()
-                onChangedLocation(myLocation)
-            }
+        map?.onResume()
+        reStartFollowLocation()
 
-        }
 
     }
 
     override fun onPause(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(PAUSED)
-        locationNewOverlay?.also { myLocation ->
-            if (myLocation.isFollowLocationEnabled) {
-                myLocation.disableFollowLocation()
-            }
-            if (myLocation.isMyLocationEnabled) {
-                myLocation.disableMyLocation()
-                provider.stopLocationProvider()
-            }
-        }
-        locationNewOverlay = null
+        stopFollowLocation()
         map?.onPause()
+        Log.e("osm", "osm flutter plugin pause")
+
     }
 
     override fun onStop(owner: LifecycleOwner) {
@@ -991,14 +983,8 @@ class FlutterOsmView(
         jobFlow = null
         job = null
 
-        /*
-        map!!.removeMapListener(mapListener)
-        map!!.clearFindViewByIdCache()
-        map!!.tileProvider.clearTileCache()
-         */
-
-
     }
+
 
     override fun onDestroy(owner: LifecycleOwner) {
         mainLinearLayout.removeAllViews()
@@ -1012,4 +998,42 @@ class FlutterOsmView(
 
     }
 
+    private fun reStartFollowLocation() {
+        if (isEnabled || isTracking) {
+
+            if (locationNewOverlay == null) {
+                locationNewOverlay = MyLocationNewOverlay(provider, map)
+            }
+
+            locationNewOverlay?.also { myLocation ->
+                if(isEnabled){
+                    myLocation.enableMyLocation()
+                }
+                if(isTracking){
+                    myLocation.enableFollowLocation()
+                    onChangedLocation(myLocation)
+                }
+
+            }
+          
+
+        }
+    }
+
+    private fun stopFollowLocation() {
+        if (isTracking || isEnabled) {
+            locationNewOverlay?.also { myLocation ->
+
+                if (myLocation.isFollowLocationEnabled) {
+                    myLocation.disableFollowLocation()
+                }
+                if (myLocation.isMyLocationEnabled) {
+                    myLocation.disableMyLocation()
+                    //provider.stopLocationProvider()
+                }
+                provider.stopLocationProvider()
+            }
+            locationNewOverlay = null
+        }
+    }
 }
