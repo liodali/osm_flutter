@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin/src/controller/osm_controller.dart';
 
+/// class [MapController] : map controller that will control map by select position,enable current location,
+/// draw road , show static geoPoint,
+///
 /// [initMapWithUserPosition] : (bool) if is true, map will show your current location
+///
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 class MapController {
   late OSMController _osmController;
