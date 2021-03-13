@@ -3,6 +3,8 @@
 * fix bugs
 * remove dependencies that doesn't support null safety
 * open gps service when current location demanded by user
+## 0.6.7+3 [beta-version]:
+* remove default zoom from track location
 ## 0.6.7+2 [beta-version]:
 * remove deprecated api in build.gradle
 ## 0.6.7+1 [beta-version]:

@@ -25,6 +25,7 @@ Add the following to your `pubspec.yaml` file:
 
     dependencies:
       flutter_osm_plugin: ^0.7.0-nullsafet.0
+
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
