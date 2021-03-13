@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin/src/channel/osm_method_channel.dart';
+import 'package:location/location.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 abstract class OSMPlatform extends PlatformInterface {
   OSMPlatform() : super(token: _token);
+  late Location locationService;
 
   static final Object _token = Object();
 
@@ -54,7 +56,7 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Future<void> customMarker(
     int idOSM,
-    GlobalKey globalKey,
+    GlobalKey? globalKey,
   );
 
   Future<void> setColorRoad(
@@ -64,7 +66,7 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Future<void> setMarkersRoad(
     int idOSM,
-    List<GlobalKey> keys,
+    List<GlobalKey?> keys,
   );
 
   Future<void> enableTracking(
@@ -125,7 +127,7 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Future<void> customMarkerStaticPosition(
     int idOSM,
-    GlobalKey globalKey,
+    GlobalKey? globalKey,
     String id,
   );
 

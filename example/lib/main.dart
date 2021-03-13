@@ -29,15 +29,15 @@ class MyApp extends StatelessWidget {
 }
 
 class MainExample extends StatefulWidget {
-  MainExample({Key key}) : super(key: key);
+  MainExample({Key? key}) : super(key: key);
 
   @override
   _MainExampleState createState() => _MainExampleState();
 }
 
 class _MainExampleState extends State<MainExample> {
-  MapController controller;
-  GlobalKey<ScaffoldState> scaffoldKey;
+  late MapController controller;
+  late GlobalKey<ScaffoldState> scaffoldKey;
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
@@ -50,18 +50,18 @@ class _MainExampleState extends State<MainExample> {
       initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
-    // Future.delayed(Duration(seconds: 10), () async {
-    //   await controller.drawRect(RectOSM(
-    //     key: "rect",
-    //     centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
-    //     distance: 1200.0,
-    //     color: Colors.red,
-    //     strokeWidth: 0.3,
-    //   ));
-    // });
-    // Future.delayed(Duration(seconds: 20), () async {
-    //   await controller.removeAllShapes();
-    // });
+    Future.delayed(Duration(seconds: 10), () async {
+      await controller.drawRect(RectOSM(
+        key: "rect",
+        centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+        distance: 1200.0,
+        color: Colors.red,
+        strokeWidth: 0.3,
+      ));
+    });
+    Future.delayed(Duration(seconds: 20), () async {
+      await controller.removeAllShapes();
+    });
   }
 
   @override
@@ -94,7 +94,7 @@ class _MainExampleState extends State<MainExample> {
                 RoadInfo roadInformation =
                     await controller.drawRoad(point, point2);
                 print(
-                    "duration:${Duration(seconds: roadInformation.duration.toInt()).inMinutes}");
+                    "duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
                 print("distance:${roadInformation.distance}Km");
               } on RoadException catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(

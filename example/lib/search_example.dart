@@ -9,7 +9,7 @@ class LocationAppExample extends StatefulWidget {
 }
 
 class _LocationAppExampleState extends State<LocationAppExample> {
-  ValueNotifier<GeoPoint> notifier = ValueNotifier(null);
+  ValueNotifier<GeoPoint?> notifier = ValueNotifier(null);
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +23,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ValueListenableBuilder<GeoPoint>(
+            ValueListenableBuilder<GeoPoint?>(
               valueListenable: notifier,
               builder: (ctx, p, child) {
                 return Text("${p?.toString() ?? ""}");
@@ -33,7 +33,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
               onPressed: () async {
                 var p = await Navigator.pushNamed(context, "/search");
                 if (p != null) {
-                  notifier.value = p;
+                  notifier.value = p as GeoPoint;
                 }
               },
               child: Text("pick address"),
@@ -51,16 +51,16 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  ValueNotifier<GeoPoint> notifierGeoPoint = ValueNotifier(null);
+  ValueNotifier<GeoPoint?> notifierGeoPoint = ValueNotifier(null);
   ValueNotifier<bool> notifierAutoCompletion = ValueNotifier(false);
   MapController controller = MapController(
     initMapWithUserPosition: true,
   );
-  StreamController<List<SearchInfo>> streamSuggestion;
-  Future<List<SearchInfo>> _futureSuggestionAddress;
+  late StreamController<List<SearchInfo>> streamSuggestion;
+  late Future<List<SearchInfo>> _futureSuggestionAddress;
   final TextEditingController textEditingController = TextEditingController();
   String oldText = "";
-  Timer _timerToStartSuggestionReq;
+  Timer? _timerToStartSuggestionReq;
 
   @override
   void initState() {
@@ -71,7 +71,7 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void dispose() {
-    _timerToStartSuggestionReq.cancel();
+    _timerToStartSuggestionReq?.cancel();
     textEditingController.removeListener(onChanged);
     streamSuggestion.close();
     super.dispose();
@@ -82,8 +82,8 @@ class _SearchPageState extends State<SearchPage> {
     if (v.length > 3 && oldText != v) {
       oldText = v;
       if (_timerToStartSuggestionReq != null &&
-          _timerToStartSuggestionReq.isActive) {
-        _timerToStartSuggestionReq.cancel();
+          _timerToStartSuggestionReq!.isActive) {
+        _timerToStartSuggestionReq!.cancel();
       }
       _timerToStartSuggestionReq =
           Timer.periodic(Duration(seconds: 3), (timer) async {
@@ -130,15 +130,15 @@ class _SearchPageState extends State<SearchPage> {
               valueListenable: textEditingController,
               builder: (ctx, text, child) {
                 if (text.text.isNotEmpty) {
-                  return child;
+                  return child!;
                 }
                 return SizedBox.shrink();
               },
               child: InkWell(
                 focusNode: FocusNode(),
                 onTap: () {
-                  if (_timerToStartSuggestionReq.isActive) {
-                    _timerToStartSuggestionReq.cancel();
+                  if (_timerToStartSuggestionReq!.isActive) {
+                    _timerToStartSuggestionReq!.cancel();
                   }
                   textEditingController.clear();
                   FocusScope.of(context).requestFocus(new FocusNode());
@@ -180,7 +180,7 @@ class _SearchPageState extends State<SearchPage> {
               valueListenable: notifierAutoCompletion,
               builder: (ctx, isVisible, child) {
                 if (isVisible) {
-                  return child;
+                  return child!;
                 }
                 return Container();
               },
@@ -194,13 +194,14 @@ class _SearchPageState extends State<SearchPage> {
                         itemBuilder: (ctx, index) {
                           return ListTile(
                             title: Text(
-                              snap.data[index].address.toString(),
+                              snap.data![index].address.toString(),
                               maxLines: 1,
                               overflow: TextOverflow.fade,
                             ),
                             onTap: () {
                               /// go to location selected by address
-                              controller.changeLocation(snap.data[index].point);
+                              controller
+                                  .changeLocation(snap.data![index].point!);
 
                               /// hide suggestion card
                               notifierAutoCompletion.value = false;
@@ -209,7 +210,7 @@ class _SearchPageState extends State<SearchPage> {
                             },
                           );
                         },
-                        itemCount: snap.data.length,
+                        itemCount: snap.data!.length,
                       ),
                     );
                   } else if (snap.connectionState == ConnectionState.waiting) {

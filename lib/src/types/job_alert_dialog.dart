@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class JobAlertDialog extends StatefulWidget {
-  final VoidCallback callback;
+  final VoidCallback? callback;
 
   JobAlertDialog({this.callback});
 
@@ -14,7 +14,7 @@ class _JobAlertDialogState extends State<JobAlertDialog> {
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () {
-      widget.callback();
+      widget.callback!();
     });
   }
 

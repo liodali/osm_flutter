@@ -1,11 +1,10 @@
 import 'dart:async';
 
-import 'package:after_layout/after_layout.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:location_permissions/location_permissions.dart';
+import 'package:location/location.dart';
 
 import 'controller/map_controller.dart';
 import 'controller/osm_controller.dart';
@@ -33,18 +32,18 @@ class OSMFlutter extends StatefulWidget {
   final bool trackMyPosition;
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
-  final OnGeoPointClicked onGeoPointClicked;
-  final OnLocationChanged onLocationChanged;
-  final MarkerIcon markerIcon;
-  final Road road;
+  final OnGeoPointClicked? onGeoPointClicked;
+  final OnLocationChanged? onLocationChanged;
+  final MarkerIcon? markerIcon;
+  final Road? road;
   final double defaultZoom;
   final bool showDefaultInfoWindow;
   final bool useSecureURL;
   final bool isPicker;
 
   OSMFlutter({
-    Key key,
-    this.controller,
+    Key? key,
+    required this.controller,
     this.trackMyPosition = false,
     this.showZoomController = false,
     this.staticPoints = const [],
@@ -56,16 +55,13 @@ class OSMFlutter extends StatefulWidget {
     this.showDefaultInfoWindow = false,
     this.useSecureURL = true,
     this.isPicker = false,
-  })  : assert(controller != null),
-        super(key: key);
+  }) : super(key: key);
 
-  static OSMFlutterState of<T>(
+  static OSMFlutterState? of<T>(
     BuildContext context, {
     bool nullOk = false,
   }) {
-    assert(context != null);
-    assert(nullOk != null);
-    final OSMFlutterState result =
+    final OSMFlutterState? result =
         context.findAncestorStateOfType<OSMFlutterState>();
     if (nullOk || result != null) return result;
     throw FlutterError.fromParts(<DiagnosticsNode>[
@@ -81,17 +77,16 @@ class OSMFlutter extends StatefulWidget {
   OSMFlutterState createState() => OSMFlutterState();
 }
 
-class OSMFlutterState extends State<OSMFlutter>
-    with AfterLayoutMixin<OSMFlutter> {
+class OSMFlutterState extends State<OSMFlutter> {
   GlobalKey androidViewKey = GlobalKey();
-  OSMController _osmController;
+  OSMController? _osmController;
 
   //permission status
-  PermissionStatus _permission;
+  PermissionStatus? _permission;
 
   //_OsmCreatedCallback _osmCreatedCallback;
-  GlobalKey key, startIconKey, endIconKey, middleIconKey;
-  Map<String, GlobalKey> staticMarkersKeys;
+  GlobalKey? key, startIconKey, endIconKey, middleIconKey;
+  late Map<String, GlobalKey> staticMarkersKeys;
 
   @override
   void initState() {
@@ -108,7 +103,6 @@ class OSMFlutterState extends State<OSMFlutter>
           assert(false, "you have duplicated ids for static points");
         }
       });
-      ids = null;
     }
     key = GlobalKey();
     startIconKey = GlobalKey();
@@ -123,7 +117,13 @@ class OSMFlutterState extends State<OSMFlutter>
       if (widget.controller.initMapWithUserPosition || widget.trackMyPosition) {
         await requestPermission();
         if (widget.controller.initMapWithUserPosition) {
-          await _osmController.checkServiceLocation();
+          bool isEnabled = await _osmController!.checkServiceLocation();
+          Future.delayed(Duration(seconds: 1), () async {
+            if (isEnabled) {
+              return;
+            }
+            await _osmController!.currentLocation();
+          });
         }
       }
     });
@@ -145,6 +145,7 @@ class OSMFlutterState extends State<OSMFlutter>
   Widget build(BuildContext context) {
     if (defaultTargetPlatform == TargetPlatform.android) {
       return Stack(
+        clipBehavior: Clip.none,
         children: <Widget>[
           widgetConfigMap(),
           AndroidView(
@@ -162,12 +163,14 @@ class OSMFlutterState extends State<OSMFlutter>
 
   /// requestPermission callback to request location in your phone
   Future<bool> requestPermission() async {
-    _permission = await LocationPermissions().checkPermissionStatus();
+    Location location = new Location();
+
+    _permission = await location.hasPermission();
     if (_permission == PermissionStatus.denied) {
       //request location permission
-      _permission = await LocationPermissions().requestPermissions();
+      _permission = await location.requestPermission();
       if (_permission == PermissionStatus.granted) {
-        await _osmController.checkServiceLocation();
+        return true;
       }
       return false;
     } else if (_permission == PermissionStatus.granted) {
@@ -175,6 +178,10 @@ class OSMFlutterState extends State<OSMFlutter>
       //  if (widget.currentLocation) await _checkServiceLocation();
     }
     return false;
+  }
+
+  Future<bool> checkService() async {
+    return await _osmController!.checkServiceLocation();
   }
 
   Widget widgetConfigMap() {
@@ -188,8 +195,7 @@ class OSMFlutterState extends State<OSMFlutter>
               child: widget.markerIcon,
             ),
           ],
-          if (widget.staticPoints != null &&
-              widget.staticPoints.isNotEmpty) ...[
+          if (widget.staticPoints.isNotEmpty) ...[
             for (int i = 0; i < widget.staticPoints.length; i++) ...[
               RepaintBoundary(
                 key: staticMarkersKeys[widget.staticPoints[i].id],
@@ -200,19 +206,19 @@ class OSMFlutterState extends State<OSMFlutter>
           if (widget.road?.endIcon != null) ...[
             RepaintBoundary(
               key: endIconKey,
-              child: widget.road.endIcon,
+              child: widget.road!.endIcon,
             ),
           ],
           if (widget.road?.startIcon != null) ...[
             RepaintBoundary(
               key: startIconKey,
-              child: widget.road.startIcon,
+              child: widget.road!.startIcon,
             ),
           ],
           if (widget.road?.middleIcon != null) ...[
             RepaintBoundary(
               key: middleIconKey,
-              child: widget.road.middleIcon,
+              child: widget.road!.middleIcon,
             ),
           ],
         ],
@@ -222,9 +228,9 @@ class OSMFlutterState extends State<OSMFlutter>
 
   void _onPlatformViewCreated(int id) async {
     this._osmController = await OSMController.init(id, this);
-    widget.controller.init(this._osmController);
+    widget.controller.init(this._osmController!);
     Future.delayed(Duration(milliseconds: 1250), () async {
-      await _osmController.initMap(
+      await _osmController!.initMap(
         initPosition: widget.controller.initPosition,
         initWithUserPosition: widget.controller.initMapWithUserPosition,
       );
@@ -233,7 +239,4 @@ class OSMFlutterState extends State<OSMFlutter>
       }*/
     });
   }
-
-  @override
-  void afterFirstLayout(BuildContext context) {}
 }

@@ -1,3 +1,8 @@
+## 0.7.0-nullsafety.0 [beta-version]:
+* migrate plugin to null safety
+* fix bugs
+* remove dependencies that doesn't support null safety
+* open gps service when current location demanded by user
 ## 0.6.7+3 [beta-version]:
 * remove default zoom from track location
 ## 0.6.7+2 [beta-version]:

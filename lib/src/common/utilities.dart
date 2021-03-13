@@ -3,6 +3,7 @@ import 'dart:math' as Math;
 import 'package:dio/dio.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin/src/types/search_completion.dart';
+import 'package:location/location.dart';
 
 const earthRadius = 6371e3; //metre
 
@@ -58,4 +59,12 @@ Future<List<SearchInfo>> addressSuggestion(String searchText,
   return (json["features"] as List)
       .map((d) => SearchInfo.fromPhotonAPI(d))
       .toList();
+}
+extension ExtGeoPoint on LocationData {
+  GeoPoint toGeoPoint(){
+    return GeoPoint(
+      longitude: this.longitude??0.0,
+      latitude: this.latitude??0.0
+    );
+  }
 }

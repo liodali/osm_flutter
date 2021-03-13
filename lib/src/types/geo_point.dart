@@ -6,15 +6,15 @@ class GeoPoint {
   final double latitude;
 
   GeoPoint({
-    this.latitude,
-    this.longitude,
+    required this.latitude,
+    required this.longitude,
   });
 
   GeoPoint.fromMap(Map m)
       : this.latitude = m["lat"],
         this.longitude = m["lon"];
 
-  Map<String, double> toMap() {
+  Map<String, double?> toMap() {
     return {
       "lon": longitude,
       "lat": latitude,
