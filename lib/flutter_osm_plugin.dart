@@ -10,3 +10,4 @@ export 'src/types/geo_static.dart';
 export 'src/types/road.dart';
 export 'src/types/shape_osm.dart';
 export 'src/types/types.dart';
+export 'src/widgets/picker_location.dart';

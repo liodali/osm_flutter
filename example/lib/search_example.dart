@@ -26,17 +26,44 @@ class _LocationAppExampleState extends State<LocationAppExample> {
             ValueListenableBuilder<GeoPoint?>(
               valueListenable: notifier,
               builder: (ctx, p, child) {
-                return Text("${p?.toString() ?? ""}");
+                return Center(
+                  child: Text(
+                    "${p?.toString() ?? ""}",
+                    textAlign: TextAlign.center,
+                  ),
+                );
               },
             ),
-            ElevatedButton(
-              onPressed: () async {
-                var p = await Navigator.pushNamed(context, "/search");
-                if (p != null) {
-                  notifier.value = p as GeoPoint;
-                }
-              },
-              child: Text("pick address"),
+            Column(
+              children: [
+                ElevatedButton(
+                  onPressed: () async {
+                    var p = await Navigator.pushNamed(context, "/search");
+                    if (p != null) {
+                      notifier.value = p as GeoPoint;
+                    }
+                  },
+                  child: Text("pick address"),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    var p = await showSimplePickerLocation(
+                      context: context,
+                      isDismissible: true,
+                      title: "location picker",
+                      textConfirmPicker: "pick",
+                      initCurrentUserPosition: false,
+                      initPosition:
+                          GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+                      radius: 8.0,
+                    );
+                    if (p != null) {
+                      notifier.value = p;
+                    }
+                  },
+                  child: Text("show picker address"),
+                )
+              ],
             ),
           ],
         ),
