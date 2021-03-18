@@ -122,7 +122,7 @@ class OSMFlutterState extends State<OSMFlutter> {
             if (isEnabled) {
               return;
             }
-            await _osmController!.currentLocation();
+            //await _osmController!.currentLocation();
           });
         }
       }

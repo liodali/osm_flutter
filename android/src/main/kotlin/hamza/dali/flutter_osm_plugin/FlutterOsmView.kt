@@ -12,6 +12,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
@@ -40,6 +41,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.platform.PlatformView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -156,7 +158,7 @@ class FlutterOsmView(
     private var visibilityInfoWindow = false
 
     private var mainLinearLayout: FrameLayout = FrameLayout(context!!).apply {
-        this.layoutParams = MapView.LayoutParams(FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        this.layoutParams = MapView.LayoutParams(FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
     }
     private var markerSelectionPicker: FlutterPickerViewOverlay? = null
 
@@ -170,7 +172,8 @@ class FlutterOsmView(
 
 
         map = MapView(context).apply {
-            this.layoutParams = MapView.LayoutParams(LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            this.layoutParams = MapView.LayoutParams(
+                    LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
             this.isTilesScaledToDpi = true
             this.setMultiTouchControls(true)
             setTileSource(MAPNIK)
@@ -270,6 +273,7 @@ class FlutterOsmView(
             map!!.overlays.add(folderStaticPosition)
             markerSelectionPicker = null
         }
+      
         if (locationNewOverlay == null) {
             locationNewOverlay = MyLocationNewOverlay(provider, map)
         }
@@ -340,25 +344,7 @@ class FlutterOsmView(
             }
 
             "trackMe" -> {
-                try {
-                    locationNewOverlay?.let { locationOverlay ->
-                        when {
-                            !locationOverlay.isFollowLocationEnabled -> {
-                                isTracking = true
-                                locationOverlay.enableFollowLocation()
-                                onChangedLocation(locationOverlay)
-                                result.success(true)
-                            }
-                            else -> result.success(null)
-
-                        }
-                       
-
-                    }
-                } catch (e: Exception) {
-                    result.error("400", e.stackTraceToString(), "")
-                }
-
+               trackUserLocation(call,result)
             }
             "deactivateTrackMe" -> {
                 deactivateTrackMe(call, result)
@@ -377,6 +363,9 @@ class FlutterOsmView(
 
             "user#pickPosition" -> {
                 pickPosition(call, result)
+            }
+            "goto#position" -> {
+                goToSpecificPosition(call, result)
             }
             "user#removeMarkerPosition" -> {
                 removePosition(call, result)
@@ -447,6 +436,36 @@ class FlutterOsmView(
             }
         }
     }
+
+    private fun trackUserLocation(call: MethodCall, result: MethodChannel.Result) {
+        try {
+            locationNewOverlay?.let { locationOverlay ->
+                when {
+                    !locationOverlay.isFollowLocationEnabled -> {
+                        isTracking = true
+                        locationOverlay.enableFollowLocation()
+                        onChangedLocation(locationOverlay)
+                        result.success(true)
+                    }
+                    else -> result.success(null)
+
+                }
+
+
+            }
+        } catch (e: Exception) {
+            result.error("400", e.stackTraceToString(), "")
+        }
+    }
+
+    private fun goToSpecificPosition(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments!! as HashMap<String, *>
+        val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
+        //map!!.controller.zoomTo(defaultZoom)
+        map!!.controller.animateTo(geoPoint)
+        result.success(null)
+    }
+
 
     private fun drawRect(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments!! as HashMap<String, *>
@@ -830,7 +849,11 @@ class FlutterOsmView(
             locationOverlay.runOnFirstFix {
                 scope!!.launch(Main) {
                     locationOverlay.lastFix?.let { location ->
-                        val point = GeoPoint(location.latitude, location.longitude)
+                        val point = GeoPoint(
+                                location.latitude,
+                                location.longitude,
+                        )
+                        locationOverlay.disableMyLocation()
                         result.success(point.toHashMap())
                     } ?: result.error("400", "we cannot get the current position!", "")
                 }
@@ -1006,16 +1029,16 @@ class FlutterOsmView(
             }
 
             locationNewOverlay?.also { myLocation ->
-                if(isEnabled){
+                if (isEnabled) {
                     myLocation.enableMyLocation()
                 }
-                if(isTracking){
+                if (isTracking) {
                     myLocation.enableFollowLocation()
                     onChangedLocation(myLocation)
                 }
 
             }
-          
+
 
         }
     }

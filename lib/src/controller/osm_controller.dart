@@ -58,15 +58,15 @@ class OSMController {
           print(err);
         });*/
     }
-    if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
-      await currentLocation();
-    }
+
     if (_osmFlutterState.widget.markerIcon != null) {
       await changeIconMarker(_osmFlutterState.key);
     }
-    if (initPosition != null) {
-      await changeLocation(initPosition);
+    if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
+      initPosition = await myLocation();
     }
+
+    if (initPosition != null) await changeLocation(initPosition);
 
     if (_osmFlutterState.widget.staticPoints.isNotEmpty) {
       _osmFlutterState.widget.staticPoints
@@ -89,18 +89,7 @@ class OSMController {
           builder: (ctx) {
             return JobAlertDialog(
               callback: () async {
-                await osmPlatform.setColorRoad(
-                  _idMap,
-                  _osmFlutterState.widget.road!.roadColor,
-                );
-                await osmPlatform.setMarkersRoad(
-                  _idMap,
-                  [
-                    _osmFlutterState.startIconKey,
-                    _osmFlutterState.endIconKey,
-                    _osmFlutterState.middleIconKey
-                  ],
-                );
+                await _initializeRoadInformation();
                 Navigator.pop(ctx);
               },
             );
@@ -123,6 +112,21 @@ class OSMController {
       await osmPlatform.addPosition(_idMap, p!);
       await osmPlatform.advancedPositionPicker(_idMap);
     }
+  }
+
+  Future _initializeRoadInformation() async {
+    await osmPlatform.setColorRoad(
+      _idMap,
+      _osmFlutterState.widget.road!.roadColor,
+    );
+    await osmPlatform.setMarkersRoad(
+      _idMap,
+      [
+        _osmFlutterState.startIconKey,
+        _osmFlutterState.endIconKey,
+        _osmFlutterState.middleIconKey
+      ],
+    );
   }
 
   ///initialise or change of position
@@ -195,6 +199,13 @@ class OSMController {
   /// recuperation of user current position
   Future<GeoPoint> myLocation() async {
     return await osmPlatform.myLocation(_idMap);
+  }
+
+  /// go to specific position without create marker
+  ///
+  /// [p] : (GeoPoint) desired location
+  Future<void> goToPosition(GeoPoint p) async {
+    await osmPlatform.goToPosition(_idMap, p);
   }
 
   /// enabled tracking user location
