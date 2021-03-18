@@ -109,7 +109,7 @@ class OSMController {
           p = (await Location().getLocation()).toGeoPoint();
         }
       }
-      await osmPlatform.addPosition(_idMap, p!);
+      await osmPlatform.goToPosition(_idMap, p!);
       await osmPlatform.advancedPositionPicker(_idMap);
     }
   }
