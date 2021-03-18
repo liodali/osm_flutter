@@ -2,13 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../../flutter_osm_plugin.dart';
 
-/// pickerLocation : picker to select specific position
+/// showSimplePickerLocation : picker to select specific position
 ///
-/// [title] : (widget) title widget of dialog
-Future<GeoPoint?> pickerLocation({
+/// [context] : (BuildContext) dialog context parent
+/// [title] : (String) text title widget of dialog
+/// [textConfirmPicker] : (String) text confirm button widget of dialog
+/// [radius] : (double) rounded radius of the dialog
+/// [isDismissible] : (bool) to indicate if tapping out side of dialog will dismiss the dialog
+/// [initCurrentUserPosition] : (GeoPoint) to indicate initialize position in the map
+/// [initPosition] : (bool) to initialize the map  in user location
+Future<GeoPoint?> showSimplePickerLocation({
   required BuildContext context,
-  required Widget title,
-  Widget? confirmPicker,
+  required String title,
+  String? textConfirmPicker,
+  double radius = 0.0,
   GeoPoint? initPosition,
   bool isDismissible = false,
   bool initCurrentUserPosition = true,
@@ -22,43 +29,48 @@ Future<GeoPoint?> pickerLocation({
   GeoPoint? point = await showDialog(
     context: context,
     builder: (ctx) {
-      return WillPopScope(
-        onWillPop: () async {
-          return isDismissible;
-        },
-        child: Column(
-          children: [
-            title,
-            Expanded(
-              child: Stack(
-                children: [
-                  OSMFlutter(
-                    controller: controller,
-                    isPicker: true,
-                  ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: GestureDetector(
-                      onTap: () async {
-                        final p =
-                            await controller.selectAdvancedPositionPicker();
-                        Navigator.pop(ctx, p);
-                      },
-                      child: AbsorbPointer(
-                        absorbing: true,
-                        child: confirmPicker ??
-                            FloatingActionButton(
-                              onPressed: () {},
-                              child: Icon(Icons.location_on),
-                            ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ],
+      return AlertDialog(
+        title: Text(title),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(radius),
+          ),
         ),
+        content: WillPopScope(
+          onWillPop: () async {
+            return isDismissible;
+          },
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height / 2.5,
+            child: Stack(
+              fit: StackFit.loose,
+              children: [
+                OSMFlutter(
+                  controller: controller,
+                  isPicker: true,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              MaterialLocalizations.of(context).cancelButtonLabel,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final p = await controller.selectAdvancedPositionPicker();
+              Navigator.pop(ctx, p);
+            },
+            child: Text(
+              textConfirmPicker ??
+                  MaterialLocalizations.of(context).okButtonLabel,
+            ),
+          ),
+        ],
       );
     },
   );
