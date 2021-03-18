@@ -1,3 +1,5 @@
+## 0.7.1-nullsafety.0 [beta-version]:
+* create `showSimplePickerLocation` method that display simple dialog with osm map  
 ## 0.7.0-nullsafety.0 [beta-version]:
 * migrate plugin to null safety
 * fix bugs

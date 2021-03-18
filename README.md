@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.0--nullsafety.0-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.1--nullsafety.0-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -13,6 +13,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 * calculate distance between 2 points
 * address suggestion
 * draw shapes
+* simple dialog location picker
 
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
@@ -24,7 +25,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.0-nullsafet.0
+      flutter_osm_plugin: ^0.7.1-nullsafet.0
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -241,6 +242,20 @@ controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 
 ```dart
     List<SearchInfo> suggestions = await addressSuggestion("address");
+```
+
+## show dialog picker
+
+> simple dialog  location picker to selected user location   
+
+```dart
+GeoPoint p = await showSimplePickerLocation(
+                      context: context,
+                      isDismissible: true,
+                      title: "Title dialog",
+                      textConfirmPicker: "pick",
+                      initCurrentUserPosition: true,
+                    )
 ```
 
 

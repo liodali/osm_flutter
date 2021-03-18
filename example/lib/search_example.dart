@@ -43,11 +43,14 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                 ElevatedButton(
                   onPressed: () async {
                     var p = await showSimplePickerLocation(
-                        context: context,
-                        isDismissible: true,
-                        title: "Title dialog",
-                        textConfirmPicker: "pick",
-                        initCurrentUserPosition: true);
+                      context: context,
+                      isDismissible: true,
+                      title: "Title dialog",
+                      textConfirmPicker: "pick",
+                      initCurrentUserPosition: false,
+                      initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+                      radius: 8.0,
+                    );
                     if (p != null) {
                       notifier.value = p;
                     }
