@@ -78,6 +78,11 @@ abstract class OSMPlatform extends PlatformInterface {
     GeoPoint p,
   );
 
+  Future<void> goToPosition(
+    int idOSM,
+    GeoPoint p,
+  );
+
   Future<void> removePosition(
     int idOSM,
     GeoPoint p,
