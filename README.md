@@ -19,6 +19,8 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
 <br>
 <img src="https://github.com/liodali/osm_flutter/blob/master/searchExample.gif?raw=true" alt="openStreetMap flutter examples"><br>
+<br>
+<img src="https://github.com/liodali/osm_flutter/blob/master/dialogSimplePickerLocation.gif?raw=true" alt="openStreetMap flutter examples"><br>
 
 ## Installing
 
