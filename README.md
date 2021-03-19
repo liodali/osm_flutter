@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.1--nullsafety.0-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.2--nullsafety.0-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -27,7 +27,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.1-nullsafety.0
+      flutter_osm_plugin: ^0.7.2-nullsafety.0
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -113,13 +113,22 @@ Add the following to your `pubspec.yaml` file:
 
 ### initialise position
 
+> this method will create marker on that specific pisition
+
 ```dart
-controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
+await controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 ```
+### change the location with out add marker 
+
+```dart
+await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
+```
+
+
 ### recuperation current position
 
 ```dart
- GeoPoint geoPoint = controller.myLocation();
+ GeoPoint geoPoint = await controller.myLocation();
 ```
 
 ### select/create new position
@@ -129,7 +138,7 @@ controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 1) manual selection
 
 ```dart
- GeoPoint geoPoint = controller.selectPosition();
+ GeoPoint geoPoint = await controller.selectPosition();
 ```
 2) assisted selection (for more details see example)
 
@@ -148,7 +157,7 @@ controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 ### remove marker
 
 ```dart
- controller.removePosition(geoPoint);
+ await controller.removePosition(geoPoint);
 ```
 * PS : static position cannot be removed by this method 
 

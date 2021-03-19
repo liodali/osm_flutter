@@ -1,3 +1,7 @@
+## 0.7.2-nullsafety.0 [beta-version]:
+* add goToLocation method to change location in the map without add marker
+* change example
+* fix bug
 ## 0.7.1-nullsafety.0 [beta-version]:
 * create `showSimplePickerLocation` method that display simple dialog with osm map  
 ## 0.7.0-nullsafety.0 [beta-version]:
