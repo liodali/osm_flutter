@@ -88,6 +88,7 @@ class _SearchPageState extends State<SearchPage> {
   final TextEditingController textEditingController = TextEditingController();
   String oldText = "";
   Timer? _timerToStartSuggestionReq;
+  final Key streamKey = Key("streamAddressSug");
 
   @override
   void initState() {
@@ -114,20 +115,24 @@ class _SearchPageState extends State<SearchPage> {
       }
       _timerToStartSuggestionReq =
           Timer.periodic(Duration(seconds: 3), (timer) async {
-        await suggestionProcesing(v);
+        await suggestionProcessing(v);
         timer.cancel();
       });
     }
     if (v.isEmpty) {
-      notifierAutoCompletion.value = false;
-      await streamSuggestion.close();
-      setState(() {
-        streamSuggestion = StreamController();
-      });
+      await reInitStream();
     }
   }
 
-  Future<void> suggestionProcesing(String addr) async {
+  Future reInitStream() async {
+     notifierAutoCompletion.value = false;
+    await streamSuggestion.close();
+    setState(() {
+      streamSuggestion = StreamController();
+    });
+  }
+
+  Future<void> suggestionProcessing(String addr) async {
     notifierAutoCompletion.value = true;
     _futureSuggestionAddress = addressSuggestion(
       addr,
@@ -213,6 +218,7 @@ class _SearchPageState extends State<SearchPage> {
               },
               child: StreamBuilder<List<SearchInfo>>(
                 stream: streamSuggestion.stream,
+                key: streamKey,
                 builder: (ctx, snap) {
                   if (snap.hasData) {
                     return Card(
@@ -225,29 +231,33 @@ class _SearchPageState extends State<SearchPage> {
                               maxLines: 1,
                               overflow: TextOverflow.fade,
                             ),
-                            onTap: () {
+                            onTap: () async{
                               /// go to location selected by address
-                              controller
-                                  .changeLocation(snap.data![index].point!);
+                              controller.goToLocation(
+                                snap.data![index].point!,
+                              );
 
                               /// hide suggestion card
                               notifierAutoCompletion.value = false;
-                              FocusScope.of(context)
-                                  .requestFocus(new FocusNode());
+                              await reInitStream();
+                              FocusScope.of(context).requestFocus(
+                                new FocusNode(),
+                              );
                             },
                           );
                         },
                         itemCount: snap.data!.length,
                       ),
                     );
-                  } else if (snap.connectionState == ConnectionState.waiting) {
+                  }
+                  if (snap.connectionState == ConnectionState.waiting) {
                     return Card(
                       child: Center(
                         child: CircularProgressIndicator(),
                       ),
                     );
                   }
-                  return Container();
+                  return SizedBox();
                 },
               ),
             ),
