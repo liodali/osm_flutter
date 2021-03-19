@@ -26,7 +26,12 @@ class _LocationAppExampleState extends State<LocationAppExample> {
             ValueListenableBuilder<GeoPoint?>(
               valueListenable: notifier,
               builder: (ctx, p, child) {
-                return Text("${p?.toString() ?? ""}");
+                return Center(
+                  child: Text(
+                    "${p?.toString() ?? ""}",
+                    textAlign: TextAlign.center,
+                  ),
+                );
               },
             ),
             Column(
@@ -45,10 +50,11 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                     var p = await showSimplePickerLocation(
                       context: context,
                       isDismissible: true,
-                      title: "Title dialog",
+                      title: "location picker",
                       textConfirmPicker: "pick",
                       initCurrentUserPosition: false,
-                      initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+                      initPosition:
+                          GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
                       radius: 8.0,
                     );
                     if (p != null) {

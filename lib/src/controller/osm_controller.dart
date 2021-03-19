@@ -95,19 +95,21 @@ class OSMController {
             );
           });
     }
-    if (initWithUserPosition && _osmFlutterState.widget.isPicker) {
+    if (_osmFlutterState.widget.isPicker) {
       bool granted = await _osmFlutterState.requestPermission();
       if (!granted) {
         throw Exception("you should open gps to get current position");
       }
       await _osmFlutterState.checkService();
-      GeoPoint? p;
-      try {
-        p = await osmPlatform.myLocation(_idMap);
-      } catch (e) {
-        p = (await Location().getLocation()).toGeoPoint();
+      GeoPoint? p = _osmFlutterState.widget.controller.initPosition;
+      if (p == null && initWithUserPosition) {
+        try {
+          p = await osmPlatform.myLocation(_idMap);
+        } catch (e) {
+          p = (await Location().getLocation()).toGeoPoint();
+        }
       }
-      await osmPlatform.addPosition(_idMap, p);
+      await osmPlatform.goToPosition(_idMap, p!);
       await osmPlatform.advancedPositionPicker(_idMap);
     }
   }
