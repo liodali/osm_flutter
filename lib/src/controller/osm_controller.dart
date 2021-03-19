@@ -109,7 +109,7 @@ class OSMController {
           p = (await Location().getLocation()).toGeoPoint();
         }
       }
-      await osmPlatform.goToPosition(_idMap, p!);
+      await osmPlatform.addPosition(_idMap, p!);
       await osmPlatform.advancedPositionPicker(_idMap);
     }
   }
@@ -130,15 +130,17 @@ class OSMController {
   }
 
   ///initialise or change of position
-  /// [p] : geoPoint
+  ///
+  /// [p] : (GeoPoint) position that will be added to map
   Future<void> changeLocation(GeoPoint p) async {
-    osmPlatform.addPosition(_idMap, p);
+    await osmPlatform.addPosition(_idMap, p);
   }
+
 
   ///remove marker from map of position
   /// [p] : geoPoint
   Future<void> removeMarker(GeoPoint p) async {
-    osmPlatform.removePosition(_idMap, p);
+   await osmPlatform.removePosition(_idMap, p);
   }
 
   ///change Icon Marker

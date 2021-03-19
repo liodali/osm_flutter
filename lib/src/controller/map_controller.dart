@@ -30,11 +30,18 @@ class MapController {
     _osmController.dispose();
   }
 
-  /// initialise or change of position
+  /// initialise or change of position with creating marker in that specific position
+  ///
   /// [p] : geoPoint
-  /// [circleOSM] : (CircleOSM) circle that will be draw with marker
+  ///
   Future<void> changeLocation(GeoPoint p) async {
-    _osmController.changeLocation(p);
+      await _osmController.changeLocation(p);
+  }
+  ///animate  to specific position with out add marker into the map
+  ///
+  /// [p] : (GeoPoint) position that will be go to map
+  Future<void> goToLocation(GeoPoint p) async {
+    await _osmController.goToPosition(p);
   }
 
   ///remove marker from map of position
@@ -145,11 +152,11 @@ class MapController {
 
   /// remove all shape from map
   Future<void> removeAllShapes() async {
-     await _osmController.removeAllShapes();
+    await _osmController.removeAllShapes();
   }
 
   Future<void> advancedPositionPicker() async {
-     await _osmController.advancedPositionPicker();
+    await _osmController.advancedPositionPicker();
   }
 
   /// select current position and finish advanced picker
