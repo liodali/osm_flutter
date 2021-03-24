@@ -248,17 +248,13 @@ class OSMController {
   }
 
   /// draw road
-  ///  [start] : started point of your Road
-  ///  [end] : last point of your road
   ///  [path] : (list) path of the road
   Future<void> drawRoadManually(
-    GeoPoint start,
-    GeoPoint end,
     List<GeoPoint> path,
   ) async {
-    assert(start.latitude != end.latitude || start.longitude != end.longitude,
+    assert(path.first.latitude != path.last.latitude || path.first.longitude != path.last.longitude,
         "you cannot make road with same geoPoint");
-     await osmPlatform.drawRoadManually(_idMap, start, end,path);
+     await osmPlatform.drawRoadManually(_idMap,path);
   }
 
   ///delete last road draw in the map

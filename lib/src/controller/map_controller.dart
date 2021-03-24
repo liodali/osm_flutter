@@ -175,13 +175,12 @@ class MapController {
     return await _osmController.cancelAdvancedPositionPicker();
   }
 
-  /// cancel advanced picker
+  /// draw road manually
+  ///  [path] : (list) path of the road
   Future<void> drawRoadManually(
-    GeoPoint start,
-    GeoPoint end,
     List<GeoPoint> path,
   ) async {
     assert(path.length > 3);
-    await _osmController.drawRoad(start, end);
+    await _osmController.drawRoadManually(path);
   }
 }
