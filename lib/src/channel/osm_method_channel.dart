@@ -365,11 +365,29 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> goToPosition(int idOSM, GeoPoint p) async{
+  Future<void> goToPosition(int idOSM, GeoPoint p) async {
     Map requestData = {"lon": p.longitude, "lat": p.latitude};
     await _channels[idOSM]!.invokeListMethod(
       "goto#position",
       requestData,
+    );
+  }
+
+  @override
+  Future<void> drawRoadManually(
+    int idOSM,
+    GeoPoint start,
+    GeoPoint end,
+    List<GeoPoint> road,
+  ) async {
+    final listMapRoad = road.map((e) => e.toMap());
+    await _channels[idOSM]!.invokeListMethod(
+      "drawRoad#manually",
+      [
+        {"start": start.toMap()},
+        {"end": end.toMap()},
+        {"road": listMapRoad}
+      ],
     );
   }
 }

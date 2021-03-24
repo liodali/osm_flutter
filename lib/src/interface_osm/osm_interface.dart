@@ -171,4 +171,11 @@ abstract class OSMPlatform extends PlatformInterface {
   Future<void> cancelAdvancedPositionPicker(
     int idOSM,
   );
+
+  Future<void> drawRoadManually(
+    int idOSM,
+    GeoPoint start,
+    GeoPoint end,
+    List<GeoPoint> road,
+  );
 }
