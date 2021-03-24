@@ -35,8 +35,9 @@ class MapController {
   /// [p] : geoPoint
   ///
   Future<void> changeLocation(GeoPoint p) async {
-      await _osmController.changeLocation(p);
+    await _osmController.changeLocation(p);
   }
+
   ///animate  to specific position with out add marker into the map
   ///
   /// [p] : (GeoPoint) position that will be go to map
@@ -172,5 +173,15 @@ class MapController {
   /// cancel advanced picker
   Future<void> cancelAdvancedPositionPicker() async {
     return await _osmController.cancelAdvancedPositionPicker();
+  }
+
+  /// cancel advanced picker
+  Future<void> drawRoadManually(
+    GeoPoint start,
+    GeoPoint end,
+    List<GeoPoint> path,
+  ) async {
+    assert(path.length > 3);
+    await _osmController.drawRoad(start, end);
   }
 }

@@ -136,11 +136,10 @@ class OSMController {
     await osmPlatform.addPosition(_idMap, p);
   }
 
-
   ///remove marker from map of position
   /// [p] : geoPoint
   Future<void> removeMarker(GeoPoint p) async {
-   await osmPlatform.removePosition(_idMap, p);
+    await osmPlatform.removePosition(_idMap, p);
   }
 
   ///change Icon Marker
@@ -239,10 +238,27 @@ class OSMController {
   /// draw road
   ///  [start] : started point of your Road
   ///  [end] : last point of your road
-  Future<RoadInfo> drawRoad(GeoPoint start, GeoPoint end) async {
+  Future<RoadInfo> drawRoad(
+    GeoPoint start,
+    GeoPoint end,
+  ) async {
     assert(start.latitude != end.latitude || start.longitude != end.longitude,
         "you cannot make road with same geoPoint");
     return await osmPlatform.drawRoad(_idMap, start, end);
+  }
+
+  /// draw road
+  ///  [start] : started point of your Road
+  ///  [end] : last point of your road
+  ///  [path] : (list) path of the road
+  Future<void> drawRoadManually(
+    GeoPoint start,
+    GeoPoint end,
+    List<GeoPoint> path,
+  ) async {
+    assert(start.latitude != end.latitude || start.longitude != end.longitude,
+        "you cannot make road with same geoPoint");
+     await osmPlatform.drawRoadManually(_idMap, start, end,path);
   }
 
   ///delete last road draw in the map
