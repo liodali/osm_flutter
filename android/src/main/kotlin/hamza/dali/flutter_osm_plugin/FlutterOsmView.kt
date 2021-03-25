@@ -451,7 +451,7 @@ class FlutterOsmView(
             val leg = RoadLeg()
             road.mLegs.add(leg)
             road.mBoundingBox = BoundingBox.fromGeoPoints(wayPoints)
-            for(point in wayPoints){
+            for (point in wayPoints) {
                 val node = RoadNode()
                 node.mLocation = point
                 road.mNodes.add(node)
@@ -709,7 +709,20 @@ class FlutterOsmView(
     }
 
     private fun drawRoad(call: MethodCall, result: MethodChannel.Result) {
-        val listPointsArgs = call.arguments!! as List<HashMap<String, Double>>
+        val args = call.arguments!! as HashMap<String, Any>
+        val listPointsArgs = args["wayPoints"] as List<HashMap<String, Double>>
+
+        val colorRoad: Int? = when (args.containsKey("roadColor")) {
+            true -> {
+                val colors = (args["roadColor"] as List<Int>)
+                Color.rgb(colors[0], colors[1], colors[2])
+            }
+            else -> roadColor
+        }
+        val roadWidth: Float = when (args.containsKey("roadWidth")) {
+            true -> (args["roadWidth"] as Double).toFloat()
+            else -> 5f
+        }
         flutterRoad?.let {
             map!!.overlays.remove(it.road!!)
         }
@@ -739,15 +752,16 @@ class FlutterOsmView(
                 withContext(Main) {
                     if (road.mRouteHigh.size > 2) {
                         val polyLine = RoadManager.buildRoadOverlay(road)
-                        polyLine.outlinePaint.color = Color.GREEN
-                        roadColor?.let { color ->
-                            polyLine.outlinePaint.color = color
-                        }
+
+                        /// set polyline color
+                        polyLine.outlinePaint.color = colorRoad ?: Color.GREEN
+
+
                         flutterRoad = FlutterRoad(application!!, map!!)
 
                         flutterRoad?.let {
                             it.markersIcons = customRoadMarkerIcon
-                            polyLine.outlinePaint.strokeWidth = 5.0f
+                            polyLine.outlinePaint.strokeWidth = roadWidth
                             it.road = polyLine
                             // if (it.start != null) 
                             folderRoad.items.add(it.start.apply {

@@ -158,13 +158,27 @@ class MethodChannelOSM extends OSMPlatform {
   Future<RoadInfo> drawRoad(
     int idOSM,
     GeoPoint start,
-    GeoPoint end,
-  ) async {
-    try {
-      Map map = (await (_channels[idOSM]!.invokeMethod("road", [
+    GeoPoint end, {
+    Color? roadColor,
+    double? roadWidth,
+  }) async {
+    final Map args = {
+      "wayPoints": [
         start.toMap(),
         end.toMap(),
-      ])))!;
+      ]
+    };
+    if (roadColor != null) {
+      args.addAll(roadColor.toMap("roadColor"));
+    }
+    if (roadWidth != null) {
+      args.addAll({"roadWidth": roadWidth});
+    }
+    try {
+      Map map = (await (_channels[idOSM]!.invokeMethod(
+        "road",
+        args,
+      )))!;
       return RoadInfo.fromMap(map);
     } on PlatformException catch (e) {
       throw RoadException(msg: e.message);

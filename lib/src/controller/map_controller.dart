@@ -111,9 +111,24 @@ class MapController {
 
   /// draw road
   ///  [start] : started point of your Road
+  ///
   ///  [end] : last point of your road
-  Future<RoadInfo> drawRoad(GeoPoint start, GeoPoint end) async {
-    return await _osmController.drawRoad(start, end);
+  ///
+  ///  [roadColor] : (Color) indicate the color that you want to be drawing the road, if Color null will draw with default color that specified in OSMFlutter or red color (default of osm map)
+  ///
+  ///  [roadWidth] : (double) indicate the width of  your road
+  Future<RoadInfo> drawRoad(
+    GeoPoint start,
+    GeoPoint end, {
+    Color? roadColor,
+    double? roadWidth,
+  }) async {
+    return await _osmController.drawRoad(
+      start,
+      end,
+      roadColor: roadColor,
+      roadWidth: roadWidth,
+    );
   }
 
   ///delete last road draw in the map
