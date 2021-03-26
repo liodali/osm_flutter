@@ -189,7 +189,7 @@ class MapController {
   Future<void> cancelAdvancedPositionPicker() async {
     return await _osmController.cancelAdvancedPositionPicker();
   }
-
+  /*
   /// draw road manually
   ///  [path] : (list) path of the road
   Future<void> drawRoadManually(
@@ -197,5 +197,5 @@ class MapController {
   ) async {
     assert(path.length > 3);
     await _osmController.drawRoadManually(path);
-  }
+  }*/
 }

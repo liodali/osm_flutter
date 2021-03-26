@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.2--nullsafety.0-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.3--nullsafety.0-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -27,7 +27,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.2-nullsafety.0
+      flutter_osm_plugin: ^0.7.3-nullsafety.0
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -162,8 +162,14 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 * PS : static position cannot be removed by this method 
 
 ### draw road,recuperate distance in km and duration in sec
+
 ```dart
- RoadInfo roadInfo = await controller.drawRoad( GeoPoint(latitude: 47.35387, longitude: 8.43609),GeoPoint(latitude: 47.4371, longitude: 8.6136));
+ RoadInfo roadInfo = await controller.drawRoad( 
+   GeoPoint(latitude: 47.35387, longitude: 8.43609),
+   GeoPoint(latitude: 47.4371, longitude: 8.6136),
+   roadColor : Colors.green,
+   roadWidth : 7.0,
+);
  print("${roadInfo.distance}km");
  print("${roadInfo.duration}sec");
 ```
