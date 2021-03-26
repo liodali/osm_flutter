@@ -1,6 +1,7 @@
 import 'dart:math' as Math;
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin/src/types/search_completion.dart';
 import 'package:location/location.dart';
@@ -60,11 +61,18 @@ Future<List<SearchInfo>> addressSuggestion(String searchText,
       .map((d) => SearchInfo.fromPhotonAPI(d))
       .toList();
 }
+
 extension ExtGeoPoint on LocationData {
-  GeoPoint toGeoPoint(){
+  GeoPoint toGeoPoint() {
     return GeoPoint(
-      longitude: this.longitude??0.0,
-      latitude: this.latitude??0.0
-    );
+        longitude: this.longitude ?? 0.0, latitude: this.latitude ?? 0.0);
+  }
+}
+
+extension ColorMap on Color {
+  Map<String, List<int>> toMap(String key) {
+    return {
+      "$key": [this.red, this.blue, this.green]
+    };
   }
 }

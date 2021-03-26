@@ -158,13 +158,27 @@ class MethodChannelOSM extends OSMPlatform {
   Future<RoadInfo> drawRoad(
     int idOSM,
     GeoPoint start,
-    GeoPoint end,
-  ) async {
-    try {
-      Map map = (await (_channels[idOSM]!.invokeMethod("road", [
+    GeoPoint end, {
+    Color? roadColor,
+    double? roadWidth,
+  }) async {
+    final Map args = {
+      "wayPoints": [
         start.toMap(),
         end.toMap(),
-      ])))!;
+      ]
+    };
+    if (roadColor != null) {
+      args.addAll(roadColor.toMap("roadColor"));
+    }
+    if (roadWidth != null) {
+      args.addAll({"roadWidth": roadWidth});
+    }
+    try {
+      Map map = (await (_channels[idOSM]!.invokeMethod(
+        "road",
+        args,
+      )))!;
       return RoadInfo.fromMap(map);
     } on PlatformException catch (e) {
       throw RoadException(msg: e.message);
@@ -365,11 +379,25 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> goToPosition(int idOSM, GeoPoint p) async{
+  Future<void> goToPosition(int idOSM, GeoPoint p) async {
     Map requestData = {"lon": p.longitude, "lat": p.latitude};
     await _channels[idOSM]!.invokeListMethod(
       "goto#position",
       requestData,
+    );
+  }
+
+  @override
+  Future<void> drawRoadManually(
+    int idOSM,
+    List<GeoPoint> road,
+  ) async {
+    final listMapRoad = road.map((e) => e.toMap());
+    await _channels[idOSM]!.invokeListMethod(
+      "drawRoad#manually",
+      [
+        {"road": listMapRoad}
+      ],
     );
   }
 }

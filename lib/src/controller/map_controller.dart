@@ -35,8 +35,9 @@ class MapController {
   /// [p] : geoPoint
   ///
   Future<void> changeLocation(GeoPoint p) async {
-      await _osmController.changeLocation(p);
+    await _osmController.changeLocation(p);
   }
+
   ///animate  to specific position with out add marker into the map
   ///
   /// [p] : (GeoPoint) position that will be go to map
@@ -110,9 +111,24 @@ class MapController {
 
   /// draw road
   ///  [start] : started point of your Road
+  ///
   ///  [end] : last point of your road
-  Future<RoadInfo> drawRoad(GeoPoint start, GeoPoint end) async {
-    return await _osmController.drawRoad(start, end);
+  ///
+  ///  [roadColor] : (Color) indicate the color that you want to be drawing the road, if Color null will draw with default color that specified in OSMFlutter or red color (default of osm map)
+  ///
+  ///  [roadWidth] : (double) indicate the width of  your road
+  Future<RoadInfo> drawRoad(
+    GeoPoint start,
+    GeoPoint end, {
+    Color? roadColor,
+    double? roadWidth,
+  }) async {
+    return await _osmController.drawRoad(
+      start,
+      end,
+      roadColor: roadColor,
+      roadWidth: roadWidth,
+    );
   }
 
   ///delete last road draw in the map
@@ -173,4 +189,13 @@ class MapController {
   Future<void> cancelAdvancedPositionPicker() async {
     return await _osmController.cancelAdvancedPositionPicker();
   }
+  /*
+  /// draw road manually
+  ///  [path] : (list) path of the road
+  Future<void> drawRoadManually(
+    List<GeoPoint> path,
+  ) async {
+    assert(path.length > 3);
+    await _osmController.drawRoadManually(path);
+  }*/
 }

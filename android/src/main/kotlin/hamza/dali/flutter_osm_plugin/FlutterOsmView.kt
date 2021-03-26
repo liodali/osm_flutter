@@ -41,19 +41,18 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.platform.PlatformView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.osmdroid.bonuspack.routing.OSRMRoadManager
-import org.osmdroid.bonuspack.routing.RoadManager
+import org.osmdroid.bonuspack.routing.*
 import org.osmdroid.config.IConfigurationProvider
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory.MAPNIK
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
@@ -273,7 +272,7 @@ class FlutterOsmView(
             map!!.overlays.add(folderStaticPosition)
             markerSelectionPicker = null
         }
-      
+
         if (locationNewOverlay == null) {
             locationNewOverlay = MyLocationNewOverlay(provider, map)
         }
@@ -344,7 +343,7 @@ class FlutterOsmView(
             }
 
             "trackMe" -> {
-               trackUserLocation(call,result)
+                trackUserLocation(call, result)
             }
             "deactivateTrackMe" -> {
                 deactivateTrackMe(call, result)
@@ -386,6 +385,9 @@ class FlutterOsmView(
             }
             "road#color" -> {
                 setRoadColor(call, result)
+            }
+            "drawRoad#manually" -> {
+                drawRoadManually(call, result)
             }
             "road#markers" -> {
                 setRoadMaker(call, result)
@@ -435,6 +437,49 @@ class FlutterOsmView(
                 result.notImplemented()
             }
         }
+    }
+
+    private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
+        val road: Road = Road()
+        val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
+
+        val wayPoints = (args["road"] as List<HashMap<String, Double>>).map { gP ->
+            gP.toGeoPoint()
+        }.toList()
+        scope!!.launch {
+
+            val leg = RoadLeg()
+            road.mLegs.add(leg)
+            road.mBoundingBox = BoundingBox.fromGeoPoints(wayPoints)
+            for (point in wayPoints) {
+                val node = RoadNode()
+                node.mLocation = point
+                road.mNodes.add(node)
+            }
+            val polyLine = RoadManager.buildRoadOverlay(road)
+            polyLine.outlinePaint.color = Color.GREEN
+            roadColor?.let { color ->
+                polyLine.outlinePaint.color = color
+            }
+            flutterRoad = FlutterRoad(application!!, map!!)
+
+            flutterRoad?.let {
+                it.markersIcons = customRoadMarkerIcon
+                polyLine.outlinePaint.strokeWidth = 5.0f
+                it.road = polyLine
+                // if (it.start != null)
+                folderRoad.items.add(it.start.apply {
+                    this.visibilityInfoWindow(visibilityInfoWindow)
+                })
+                //  if (it.end != null)
+                folderRoad.items.add(it.end.apply {
+                    this.visibilityInfoWindow(visibilityInfoWindow)
+                })
+                folderRoad.items.add(it.road!!)
+            }
+        }
+        map!!.invalidate()
+        result.success(null)
     }
 
     private fun trackUserLocation(call: MethodCall, result: MethodChannel.Result) {
@@ -664,7 +709,20 @@ class FlutterOsmView(
     }
 
     private fun drawRoad(call: MethodCall, result: MethodChannel.Result) {
-        val listPointsArgs = call.arguments!! as List<HashMap<String, Double>>
+        val args = call.arguments!! as HashMap<String, Any>
+        val listPointsArgs = args["wayPoints"] as List<HashMap<String, Double>>
+
+        val colorRoad: Int? = when (args.containsKey("roadColor")) {
+            true -> {
+                val colors = (args["roadColor"] as List<Int>)
+                Color.rgb(colors[0], colors[1], colors[2])
+            }
+            else -> roadColor
+        }
+        val roadWidth: Float = when (args.containsKey("roadWidth")) {
+            true -> (args["roadWidth"] as Double).toFloat()
+            else -> 5f
+        }
         flutterRoad?.let {
             map!!.overlays.remove(it.road!!)
         }
@@ -694,15 +752,16 @@ class FlutterOsmView(
                 withContext(Main) {
                     if (road.mRouteHigh.size > 2) {
                         val polyLine = RoadManager.buildRoadOverlay(road)
-                        polyLine.outlinePaint.color = Color.GREEN
-                        roadColor?.let { color ->
-                            polyLine.outlinePaint.color = color
-                        }
+
+                        /// set polyline color
+                        polyLine.outlinePaint.color = colorRoad ?: Color.GREEN
+
+
                         flutterRoad = FlutterRoad(application!!, map!!)
 
                         flutterRoad?.let {
                             it.markersIcons = customRoadMarkerIcon
-                            polyLine.outlinePaint.strokeWidth = 5.0f
+                            polyLine.outlinePaint.strokeWidth = roadWidth
                             it.road = polyLine
                             // if (it.start != null) 
                             folderRoad.items.add(it.start.apply {

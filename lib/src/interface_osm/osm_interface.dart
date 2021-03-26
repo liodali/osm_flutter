@@ -95,8 +95,10 @@ abstract class OSMPlatform extends PlatformInterface {
   Future<RoadInfo> drawRoad(
     int idOSM,
     GeoPoint start,
-    GeoPoint end,
-  );
+    GeoPoint end, {
+    Color? roadColor,
+    double? roadWidth,
+  });
 
   Future<void> drawCircle(
     int idOSM,
@@ -170,5 +172,10 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Future<void> cancelAdvancedPositionPicker(
     int idOSM,
+  );
+
+  Future<void> drawRoadManually(
+    int idOSM,
+    List<GeoPoint> road,
   );
 }

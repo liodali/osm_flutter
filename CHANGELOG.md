@@ -1,3 +1,5 @@
+## 0.7.3-nullsafety.0 [beta-version]:
+* add new attribute to drawRoad : `roadColor`,`roadWidth`
 ## 0.7.2-nullsafety.0 [beta-version]:
 * add goToLocation method to change location in the map without add marker
 * change example
