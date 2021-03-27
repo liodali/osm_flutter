@@ -5,6 +5,8 @@ export 'src/common/road_exception.dart';
 export 'src/common/utilities.dart';
 export 'src/controller/map_controller.dart';
 export 'src/controller/base_map_controller.dart';
+export 'src/controller/picker_map_controller.dart';
+export 'src/widgets/custom_picker_location.dart';
 export 'src/osm_flutter.dart' hide OSMFlutterState;
 export 'src/types/geo_point.dart';
 export 'src/types/geo_static.dart';
