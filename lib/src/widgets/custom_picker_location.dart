@@ -60,6 +60,13 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
           appBar: widget.appBarPicker,
           body: Stack(
             children: [
+              Positioned(
+                top: 56,
+                child: OSMFlutter(
+                  controller: widget.controller,
+                  isPicker: true,
+                ),
+              ),
               if (widget.bottomWidgetPicker != null) ...[
                 Positioned(
                   bottom: 0,
@@ -70,13 +77,6 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
                   }),
                 ),
               ],
-              Positioned(
-                top: 56,
-                child: OSMFlutter(
-                  controller: widget.controller,
-                  isPicker: true,
-                ),
-              ),
             ],
           ),
         );
