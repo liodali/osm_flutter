@@ -5,7 +5,7 @@ import '../osm_flutter.dart';
 import '../types/geo_point.dart';
 
 class CustomPickerLocation extends StatefulWidget {
-  final Widget appBarPicker;
+  final AppBar appBarPicker;
   final Widget? bottomWidgetPicker;
   final GeoPoint? initPosition;
   final bool initUserPosition;
@@ -54,34 +54,33 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: Builder(builder: (ctx) {
-            return widget.appBarPicker;
-          }),
-        ),
-        if (widget.bottomWidgetPicker != null) ...[
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Builder(builder: (ctx) {
-              return widget.bottomWidgetPicker!;
-            }),
+    return Builder(
+      builder: (ctx){
+        return Scaffold(
+          appBar: widget.appBarPicker,
+          body: Stack(
+            children: [
+              if (widget.bottomWidgetPicker != null) ...[
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Builder(builder: (ctx) {
+                    return widget.bottomWidgetPicker!;
+                  }),
+                ),
+              ],
+              Positioned(
+                top: 56,
+                child: OSMFlutter(
+                  controller: widget.controller,
+                  isPicker: true,
+                ),
+              ),
+            ],
           ),
-        ],
-        Positioned(
-          top: 56,
-          child: OSMFlutter(
-            controller: widget.controller,
-            isPicker: true,
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
