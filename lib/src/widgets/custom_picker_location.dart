@@ -2,28 +2,31 @@ import 'package:flutter/material.dart';
 
 import '../controller/picker_map_controller.dart';
 import '../osm_flutter.dart';
-import '../types/geo_point.dart';
 
+/// CustomPickerLocation
+///
+/// used to create customizable search location widget using OSMFlutter : to pick location from address
+///
+/// [controller] :
+///
+/// [appBarPicker] :
+///
+/// [topWidgetPicker] :
+///
+/// [bottomWidgetPicker] :
 class CustomPickerLocation extends StatefulWidget {
   final AppBar appBarPicker;
+  final Widget? topWidgetPicker;
   final Widget? bottomWidgetPicker;
-  final GeoPoint? initPosition;
-  final bool initUserPosition;
   final PickerMapController controller;
 
   CustomPickerLocation({
+    required this.controller,
     required this.appBarPicker,
     this.bottomWidgetPicker,
-    this.initPosition,
-    this.initUserPosition = true,
+    this.topWidgetPicker,
     Key? key,
-  })  : assert(
-          initUserPosition || initPosition != null,
-        ),
-        this.controller = PickerMapController(
-          initPosition: initPosition,
-          initMapWithUserPosition: initUserPosition,
-        ),
+  })  :
         super(key: key);
 
   static PickerMapController of<T>(
@@ -53,9 +56,14 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Builder(
-      builder: (ctx){
+      builder: (ctx) {
         return Scaffold(
           appBar: widget.appBarPicker,
           body: Stack(
@@ -67,15 +75,16 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
                   isPicker: true,
                 ),
               ),
-              if (widget.bottomWidgetPicker != null) ...[
+              if (widget.topWidgetPicker != null) ...[
                 Positioned(
-                  bottom: 0,
+                  top: 0,
                   left: 0,
                   right: 0,
-                  child: Builder(builder: (ctx) {
-                    return widget.bottomWidgetPicker!;
-                  }),
+                  child: widget.topWidgetPicker!,
                 ),
+              ],
+              if (widget.bottomWidgetPicker != null) ...[
+                widget.bottomWidgetPicker!,
               ],
             ],
           ),
