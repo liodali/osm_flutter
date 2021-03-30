@@ -1,7 +1,12 @@
 import '../types/geo_point.dart';
 import 'osm_controller.dart';
 
-/// class [BaseMapController] : base map controller
+/// class [BaseMapController] : base controller for osm flutter
+///
+///
+/// [initMapWithUserPosition] : (bool) if is true, map will show your current location
+///
+/// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 abstract class BaseMapController {
   late OSMController osmController;
   final bool initMapWithUserPosition;

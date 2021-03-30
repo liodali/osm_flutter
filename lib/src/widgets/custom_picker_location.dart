@@ -7,13 +7,13 @@ import '../osm_flutter.dart';
 ///
 /// used to create customizable search location widget using OSMFlutter : to pick location from address
 ///
-/// [controller] :
+/// [controller] : controller for custom picker location
 ///
-/// [appBarPicker] :
+/// [appBarPicker] : toolbar widget for CustomPickerLocation
 ///
-/// [topWidgetPicker] :
+/// [topWidgetPicker] :  widget above of osm flutter widget to show list of address suggestion
 ///
-/// [bottomWidgetPicker] :
+/// [bottomWidgetPicker] :  widget on bottom of screen and above the osm flutter widget to show another information or action widget for the picker
 class CustomPickerLocation extends StatefulWidget {
   final AppBar appBarPicker;
   final Widget? topWidgetPicker;
@@ -65,11 +65,11 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
     return Builder(
       builder: (ctx) {
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           appBar: widget.appBarPicker,
           body: Stack(
             children: [
-              Positioned(
-                top: 56,
+              Positioned.fill(
                 child: OSMFlutter(
                   controller: widget.controller,
                   isPicker: true,

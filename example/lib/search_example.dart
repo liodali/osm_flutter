@@ -78,76 +78,32 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  ValueNotifier<GeoPoint?> notifierGeoPoint = ValueNotifier(null);
-  ValueNotifier<bool> notifierAutoCompletion = ValueNotifier(false);
-  MapController controller = MapController(
+  late TextEditingController textEditingController = TextEditingController();
+  late PickerMapController controller = PickerMapController(
     initMapWithUserPosition: true,
   );
-  late StreamController<List<SearchInfo>> streamSuggestion;
-  late Future<List<SearchInfo>> _futureSuggestionAddress;
-  final TextEditingController textEditingController = TextEditingController();
-  String oldText = "";
-  Timer? _timerToStartSuggestionReq;
-  final Key streamKey = Key("streamAddressSug");
 
   @override
   void initState() {
     super.initState();
-    streamSuggestion = StreamController();
-    textEditingController.addListener(onChanged);
+    textEditingController.addListener(textOnChanged);
+  }
+
+  void textOnChanged() {
+    controller.setSearchableText(textEditingController.text);
   }
 
   @override
   void dispose() {
-    _timerToStartSuggestionReq?.cancel();
-    textEditingController.removeListener(onChanged);
-    streamSuggestion.close();
+    textEditingController.removeListener(textOnChanged);
     super.dispose();
-  }
-
-  void onChanged() async {
-    final v = textEditingController.text;
-    if (v.length > 3 && oldText != v) {
-      oldText = v;
-      if (_timerToStartSuggestionReq != null &&
-          _timerToStartSuggestionReq!.isActive) {
-        _timerToStartSuggestionReq!.cancel();
-      }
-      _timerToStartSuggestionReq =
-          Timer.periodic(Duration(seconds: 3), (timer) async {
-        await suggestionProcessing(v);
-        timer.cancel();
-      });
-    }
-    if (v.isEmpty) {
-      await reInitStream();
-    }
-  }
-
-  Future reInitStream() async {
-     notifierAutoCompletion.value = false;
-    await streamSuggestion.close();
-    setState(() {
-      streamSuggestion = StreamController();
-    });
-  }
-
-  Future<void> suggestionProcessing(String addr) async {
-    notifierAutoCompletion.value = true;
-    _futureSuggestionAddress = addressSuggestion(
-      addr,
-      limitInformation: 5,
-    );
-    _futureSuggestionAddress.then((value) {
-      streamSuggestion.sink.add(value);
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
+    return CustomPickerLocation(
+      controller: controller,
+      appBarPicker: AppBar(
         title: TextField(
           controller: textEditingController,
           onEditingComplete: () async {
@@ -169,10 +125,8 @@ class _SearchPageState extends State<SearchPage> {
               child: InkWell(
                 focusNode: FocusNode(),
                 onTap: () {
-                  if (_timerToStartSuggestionReq!.isActive) {
-                    _timerToStartSuggestionReq!.cancel();
-                  }
                   textEditingController.clear();
+                  controller.setSearchableText("");
                   FocusScope.of(context).requestFocus(new FocusNode());
                 },
                 child: Icon(
@@ -194,82 +148,144 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          OSMFlutter(
-            controller: controller,
-            showDefaultInfoWindow: false,
-            useSecureURL: true,
-            isPicker: true,
-            onGeoPointClicked: (geoPoint) {},
-          ),
-          Positioned(
-            top: 0.0,
-            left: 0.0,
-            right: 0.0,
-            height: MediaQuery.of(context).size.height / 4,
-            child: ValueListenableBuilder<bool>(
-              valueListenable: notifierAutoCompletion,
-              builder: (ctx, isVisible, child) {
-                if (isVisible) {
-                  return child!;
-                }
-                return Container();
-              },
-              child: StreamBuilder<List<SearchInfo>>(
-                stream: streamSuggestion.stream,
-                key: streamKey,
-                builder: (ctx, snap) {
-                  if (snap.hasData) {
-                    return Card(
-                      child: ListView.builder(
-                        itemExtent: 50.0,
-                        itemBuilder: (ctx, index) {
-                          return ListTile(
-                            title: Text(
-                              snap.data![index].address.toString(),
-                              maxLines: 1,
-                              overflow: TextOverflow.fade,
-                            ),
-                            onTap: () async{
-                              /// go to location selected by address
-                              controller.goToLocation(
-                                snap.data![index].point!,
-                              );
-
-                              /// hide suggestion card
-                              notifierAutoCompletion.value = false;
-                              await reInitStream();
-                              FocusScope.of(context).requestFocus(
-                                new FocusNode(),
-                              );
-                            },
-                          );
-                        },
-                        itemCount: snap.data!.length,
-                      ),
-                    );
-                  }
-                  if (snap.connectionState == ConnectionState.waiting) {
-                    return Card(
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-                  return SizedBox();
-                },
-              ),
-            ),
-          ),
-        ],
+      topWidgetPicker: TopSearchWidget(),
+      bottomWidgetPicker: Align(
+        alignment: Alignment.bottomRight,
+        child: FloatingActionButton(
+          onPressed: () async {
+            GeoPoint p = await controller.selectAdvancedPositionPicker();
+            Navigator.pop(context, p);
+          },
+          child: Icon(Icons.arrow_forward),
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          GeoPoint p = await controller.selectAdvancedPositionPicker();
-          Navigator.pop(context, p);
+    );
+  }
+}
+
+class TopSearchWidget extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => _TopSearchWidgetState();
+}
+
+class _TopSearchWidgetState extends State<TopSearchWidget> {
+  late PickerMapController controller;
+  ValueNotifier<GeoPoint?> notifierGeoPoint = ValueNotifier(null);
+  ValueNotifier<bool> notifierAutoCompletion = ValueNotifier(false);
+
+  late StreamController<List<SearchInfo>> streamSuggestion = StreamController();
+  late Future<List<SearchInfo>> _futureSuggestionAddress;
+  String oldText = "";
+  Timer? _timerToStartSuggestionReq;
+  final Key streamKey = Key("streamAddressSug");
+
+  @override
+  void initState() {
+    super.initState();
+    controller = CustomPickerLocation.of(context);
+    controller.searchableText.addListener(onSearchableTextChanged);
+  }
+
+  void onSearchableTextChanged() async {
+    final v = controller.searchableText.value;
+    if (v.length > 3 && oldText != v) {
+      oldText = v;
+      if (_timerToStartSuggestionReq != null &&
+          _timerToStartSuggestionReq!.isActive) {
+        _timerToStartSuggestionReq!.cancel();
+      }
+      _timerToStartSuggestionReq =
+          Timer.periodic(Duration(seconds: 3), (timer) async {
+        await suggestionProcessing(v);
+        timer.cancel();
+      });
+    }
+    if (v.isEmpty) {
+      await reInitStream();
+    }
+  }
+
+  Future reInitStream() async {
+    notifierAutoCompletion.value = false;
+    await streamSuggestion.close();
+    setState(() {
+      streamSuggestion = StreamController();
+    });
+  }
+
+  Future<void> suggestionProcessing(String addr) async {
+    notifierAutoCompletion.value = true;
+    _futureSuggestionAddress = addressSuggestion(
+      addr,
+      limitInformation: 5,
+    );
+    _futureSuggestionAddress.then((value) {
+      streamSuggestion.sink.add(value);
+    });
+  }
+
+  @override
+  void dispose() {
+    controller.searchableText.removeListener(onSearchableTextChanged);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: notifierAutoCompletion,
+      builder: (ctx, isVisible, child) {
+        return AnimatedContainer(
+          duration: Duration(
+            milliseconds: 500,
+          ),
+          height: isVisible ? MediaQuery.of(context).size.height / 4 : 0,
+          child: Card(
+            child: child!,
+          ),
+        );
+      },
+      child: StreamBuilder<List<SearchInfo>>(
+        stream: streamSuggestion.stream,
+        key: streamKey,
+        builder: (ctx, snap) {
+          if (snap.hasData) {
+            return ListView.builder(
+              itemExtent: 50.0,
+              itemBuilder: (ctx, index) {
+                return ListTile(
+                  title: Text(
+                    snap.data![index].address.toString(),
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                  ),
+                  onTap: () async {
+                    /// go to location selected by address
+                    controller.goToLocation(
+                      snap.data![index].point!,
+                    );
+
+                    /// hide suggestion card
+                    notifierAutoCompletion.value = false;
+                    await reInitStream();
+                    FocusScope.of(context).requestFocus(
+                      new FocusNode(),
+                    );
+                  },
+                );
+              },
+              itemCount: snap.data!.length,
+            );
+          }
+          if (snap.connectionState == ConnectionState.waiting) {
+            return Card(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+          return SizedBox();
         },
-        child: Icon(Icons.arrow_forward),
       ),
     );
   }
