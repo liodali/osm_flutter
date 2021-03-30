@@ -56,7 +56,7 @@ packages:
       name: dio
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "4.0.0-beta6"
+    version: "4.0.0"
   fake_async:
     dependency: transitive
     description:
@@ -75,7 +75,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.7.3-nullsafety.0"
+    version: "0.7.4-nullsafety.0"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:

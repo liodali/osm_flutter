@@ -7,6 +7,7 @@ import '../../flutter_osm_plugin.dart';
 /// [context] : (BuildContext) dialog context parent
 /// [title] : (String) text title widget of dialog
 /// [textConfirmPicker] : (String) text confirm button widget of dialog
+/// [textCancelPicker] : (String) text cancel button widget of dialog
 /// [radius] : (double) rounded radius of the dialog
 /// [isDismissible] : (bool) to indicate if tapping out side of dialog will dismiss the dialog
 /// [initCurrentUserPosition] : (GeoPoint) to indicate initialize position in the map
@@ -15,6 +16,7 @@ Future<GeoPoint?> showSimplePickerLocation({
   required BuildContext context,
   required String title,
   String? textConfirmPicker,
+  String? textCancelPicker,
   double radius = 0.0,
   GeoPoint? initPosition,
   bool isDismissible = false,
@@ -57,7 +59,8 @@ Future<GeoPoint?> showSimplePickerLocation({
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              MaterialLocalizations.of(context).cancelButtonLabel,
+              textCancelPicker ??
+                  MaterialLocalizations.of(context).cancelButtonLabel,
             ),
           ),
           ElevatedButton(

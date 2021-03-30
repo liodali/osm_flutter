@@ -6,7 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:location/location.dart';
 
-import 'controller/map_controller.dart';
+import 'controller/base_map_controller.dart';
 import 'controller/osm_controller.dart';
 import 'types/types.dart';
 
@@ -28,7 +28,7 @@ typedef OnLocationChanged = void Function(GeoPoint);
 /// [showDefaultInfoWindow] : (bool) enable/disable default infoWindow of marker (default = false)
 /// [useSecureURL] : use https or http when we get data from osm api
 class OSMFlutter extends StatefulWidget {
-  final MapController controller;
+  final BaseMapController controller;
   final bool trackMyPosition;
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -57,21 +57,6 @@ class OSMFlutter extends StatefulWidget {
     this.isPicker = false,
   }) : super(key: key);
 
-  static OSMFlutterState? of<T>(
-    BuildContext context, {
-    bool nullOk = false,
-  }) {
-    final OSMFlutterState? result =
-        context.findAncestorStateOfType<OSMFlutterState>();
-    if (nullOk || result != null) return result;
-    throw FlutterError.fromParts(<DiagnosticsNode>[
-      ErrorSummary(
-          'FlutterOsmState.of() called with a context that does not contain an FlutterOsm.'),
-      ErrorDescription(
-          'No FlutterOsm ancestor could be found starting from the context that was passed to FlutterOsm.of().'),
-      context.describeElement('The context used was')
-    ]);
-  }
 
   @override
   OSMFlutterState createState() => OSMFlutterState();
@@ -114,7 +99,7 @@ class OSMFlutterState extends State<OSMFlutter> {
     });
     Future.delayed(Duration.zero, () async {
       //check location permission
-      if (widget.controller.initMapWithUserPosition || widget.trackMyPosition) {
+      if ((widget.controller).initMapWithUserPosition || widget.trackMyPosition) {
         await requestPermission();
         if (widget.controller.initMapWithUserPosition) {
           bool isEnabled = await _osmController!.checkServiceLocation();
@@ -229,14 +214,6 @@ class OSMFlutterState extends State<OSMFlutter> {
   void _onPlatformViewCreated(int id) async {
     this._osmController = await OSMController.init(id, this);
     widget.controller.init(this._osmController!);
-    Future.delayed(Duration(milliseconds: 1250), () async {
-      await _osmController!.initMap(
-        initPosition: widget.controller.initPosition,
-        initWithUserPosition: widget.controller.initMapWithUserPosition,
-      );
-      /*while(this._osmController==null){
-        print("osm null");
-      }*/
-    });
+
   }
 }

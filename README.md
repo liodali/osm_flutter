@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.3--nullsafety.0-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.4--nullsafety.0-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -27,7 +27,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.3-nullsafety.0
+      flutter_osm_plugin: ^0.7.4-nullsafety.0
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -59,88 +59,91 @@ Add the following to your `pubspec.yaml` file:
 
 ```
 
-### Declare MapController to control osm map instead of using GlobalKey 
+## MapController
+
+> Declare `MapController` to control OSM map 
  
-#### Initialisation
+<b>1) Initialisation </b>
+
 ```dart
  MapController controller = MapController(
                             initMapWithUserPosition: false,
                             initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
                        );
 ```
-#### dispose
+<b>2) Dispose </b>
 ```dart
      controller.dispose();
 ```
-####  `MapController`
+<b> 3) Properties  of `MapController` </b>
+
 | Properties                   | Description                                                             |
 | ---------------------------- | ----------------------------------------------------------------------- |
 | `initMapWithUserPosition`    | (bool) initialize map with user position (default:true                  |
 | `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
 
->  GlobalKey was deprecated
 
-### set map on user current position
+<b>4) Set map on user current position </b>
 
 ```dart
  await controller.currentPosition();
 ```
-### zoomIN
+<b> 5) Zoom IN </b>
 ```dart
  await controller.zoom(2.);
  // or 
  await controller.zoomIn();
 ```
 
-### zoomOut
+<b> 6) Zoom Out </b>
 ```dart
  await controller.zoom(-2.);
  // or 
  await controller.zoomOut();
 ```
 
-###  track user current position
+<b> 7)  Track user current position </b>
 
 ```dart
  await controller.enableTracking();
 ```
 
-### disable tracking user position
+<b> 8) Disable tracking user position </b>
 
 ```dart
  await controller.disabledTracking();
 ```
 
-### initialise position
+<b>9) update the current  position </b>
 
-> this method will create marker on that specific pisition
+> this method will create marker on that specific position
 
 ```dart
 await controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 ```
-### change the location with out add marker 
+<b>10) Change the location with out add marker </b>
 
 ```dart
 await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 ```
 
 
-### recuperation current position
+<b> 11) recuperation current position </b>
 
 ```dart
  GeoPoint geoPoint = await controller.myLocation();
 ```
 
-### select/create new position
+<b> 12) select/create new position </b>
 
 * we have 2 way to select location in map
 
-1) manual selection
+<b>12.1 Manual selection </b>
 
 ```dart
  GeoPoint geoPoint = await controller.selectPosition();
 ```
-2) assisted selection (for more details see example)
+<b>12.2 Assisted selection </b> (for more details see example) 
 
 ```dart
  /// To Start assisted Selection
@@ -154,14 +157,14 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 ```
 * PS : selected position can be removed by long press 
 
-### remove marker
+<b>13) Remove marker </b>
 
 ```dart
  await controller.removePosition(geoPoint);
 ```
 * PS : static position cannot be removed by this method 
 
-### draw road,recuperate distance in km and duration in sec
+<b>14) Draw road,recuperate distance in km and duration in sec </b>
 
 ```dart
  RoadInfo roadInfo = await controller.drawRoad( 
@@ -174,13 +177,14 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
  print("${roadInfo.duration}sec");
 ```
 
-### delete last road
+<b>15) Delete last road </b>
 
 ```dart
  await controller.removeLastRoad();
 ```
 
-### change static GeoPoint position
+<b>16) Change static GeoPoint position </b>
+
 > you can use it if you don't have at first static position and you need to add  staticPoints with empty list of geoPoints
 > you can use it to change their position over time
 
@@ -188,7 +192,7 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
 
-### draw Shape in the map
+<b>17) Draw Shape in the map </b>
 
 * Circle
 ```dart
@@ -229,9 +233,8 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
  await controller.removeAllShapes();
 ```
 
+##  `OSMFlutter`
 
-
-####  `OSMFlutter`
 | Properties               | Description                         |
 | ------------------------ | ----------------------------------- |
 | `trackMyPosition`        | enbaled tracking user position.     |
@@ -247,13 +250,14 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 | `isPicker`               | (bool) enable advanced picker from init of  the map (default = false)         |
 
 ## STATIC METHODS:
-### calculate distance between 2 geoPoint position
+
+<b>1) calculate distance between 2 geoPoint position </b>
 ```dart
  double distanceEnMetres = await distance2point(GeoPoint(longitude: 36.84612143139903,latitude: 11.099388684927824,),
         GeoPoint( longitude: 36.8388023164018, latitude: 11.096959785428027, ),);
 ```
 
-### get search Suggestion of text 
+<b>2) get search Suggestion of text </b>
 
 >  you should know that i'm using public api, don't make lot of request
 
@@ -275,20 +279,25 @@ GeoPoint p = await showSimplePickerLocation(
                     )
 ```
 
+## CustomLocationPicker
+> customizable widget to build  search location  
+
+> you should use `PickerMapController` as controller for the widget
+ see example  :  [ search widget ](https://github.com/liodali/osm_flutter/blob/master/example/lib/search_example.dart) 
 
 ## NOTICE:
-> `for now the map working only for android,iOS will be available soon `
+> `For now the map working only for android,iOS will be available soon `
 
-> ` if you get ssl certfiction exception,use can use http by following instruction below `
+> ` If you get ssl certfiction exception,use can use http by following instruction below `
 
-> ` if you want to use http in Android PIE or above : `
+> ` If you want to use http in Android PIE or above : `
   * enable useSecureURL and add ` android:usesCleartextTraffic="true" `  in your manifest like example below :
 
     * ` <application
         ...
         android:usesCleartextTraffic="true"> 
         `
-> if you faced build error in fresh project you need to follow those instruction ([#40])
+> if you faced build error in fresh project you need to follow those instruction [#40]
     
     1) remove flutter_osm_plugin from pubspec, after that pub get
     2) open android module in android studio ( right click in name of project -> flutter-> open android module in android studio)

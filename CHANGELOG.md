@@ -1,3 +1,6 @@
+## 0.7.4-nullsafety.0 [beta-version]:
+* add new widget `CustomPickerLocatiob` to build custom search picker
+* add new attribute `textCancelPicker` showSimplePickerLocation
 ## 0.7.3-nullsafety.0 [beta-version]:
 * add new attribute to drawRoad : `roadColor`,`roadWidth`
 ## 0.7.2-nullsafety.0 [beta-version]:
