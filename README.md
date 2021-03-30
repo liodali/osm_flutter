@@ -235,7 +235,7 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 
 
 
-####  `OSMFlutter`
+##  `OSMFlutter`
 | Properties               | Description                         |
 | ------------------------ | ----------------------------------- |
 | `trackMyPosition`        | enbaled tracking user position.     |
@@ -280,7 +280,7 @@ GeoPoint p = await showSimplePickerLocation(
                     )
 ```
 
-### CustomLocationPicker
+## CustomLocationPicker
 > customizable widget to build  search location  
 
 > you should use `PickerMapController` as controller for the widget
