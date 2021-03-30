@@ -251,13 +251,13 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 
 ## STATIC METHODS:
 
-### calculate distance between 2 geoPoint position
+<b>1) calculate distance between 2 geoPoint position </b>
 ```dart
  double distanceEnMetres = await distance2point(GeoPoint(longitude: 36.84612143139903,latitude: 11.099388684927824,),
         GeoPoint( longitude: 36.8388023164018, latitude: 11.096959785428027, ),);
 ```
 
-### get search Suggestion of text 
+<b>2) get search Suggestion of text </b>
 
 >  you should know that i'm using public api, don't make lot of request
 
