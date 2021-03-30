@@ -15,14 +15,14 @@ import '../osm_flutter.dart';
 ///
 /// [bottomWidgetPicker] :  widget on bottom of screen and above the osm flutter widget to show another information or action widget for the picker
 class CustomPickerLocation extends StatefulWidget {
-  final AppBar appBarPicker;
+  final AppBar? appBarPicker;
   final Widget? topWidgetPicker;
   final Widget? bottomWidgetPicker;
   final PickerMapController controller;
 
   CustomPickerLocation({
     required this.controller,
-    required this.appBarPicker,
+     this.appBarPicker,
     this.bottomWidgetPicker,
     this.topWidgetPicker,
     Key? key,
