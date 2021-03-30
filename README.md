@@ -59,7 +59,7 @@ Add the following to your `pubspec.yaml` file:
 
 ```
 
-### MapController
+## MapController
 
 > Declare `MapController` to control OSM map 
  
@@ -233,9 +233,8 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
  await controller.removeAllShapes();
 ```
 
-
-
 ##  `OSMFlutter`
+
 | Properties               | Description                         |
 | ------------------------ | ----------------------------------- |
 | `trackMyPosition`        | enbaled tracking user position.     |
