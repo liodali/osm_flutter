@@ -1,3 +1,5 @@
+## 0.7.4-nullsafety.2 [beta-version]:
+* fix readme
 ## 0.7.4-nullsafety.1 [beta-version]:
 * update readme
 ## 0.7.4-nullsafety.0 [beta-version]:

@@ -22,12 +22,11 @@ class CustomPickerLocation extends StatefulWidget {
 
   CustomPickerLocation({
     required this.controller,
-     this.appBarPicker,
+    this.appBarPicker,
     this.bottomWidgetPicker,
     this.topWidgetPicker,
     Key? key,
-  })  :
-        super(key: key);
+  }) : super(key: key);
 
   static PickerMapController of<T>(
     BuildContext context, {

@@ -57,7 +57,6 @@ class OSMFlutter extends StatefulWidget {
     this.isPicker = false,
   }) : super(key: key);
 
-
   @override
   OSMFlutterState createState() => OSMFlutterState();
 }
@@ -99,7 +98,8 @@ class OSMFlutterState extends State<OSMFlutter> {
     });
     Future.delayed(Duration.zero, () async {
       //check location permission
-      if ((widget.controller).initMapWithUserPosition || widget.trackMyPosition) {
+      if ((widget.controller).initMapWithUserPosition ||
+          widget.trackMyPosition) {
         await requestPermission();
         if (widget.controller.initMapWithUserPosition) {
           bool isEnabled = await _osmController!.checkServiceLocation();
@@ -214,6 +214,5 @@ class OSMFlutterState extends State<OSMFlutter> {
   void _onPlatformViewCreated(int id) async {
     this._osmController = await OSMController.init(id, this);
     widget.controller.init(this._osmController!);
-
   }
 }

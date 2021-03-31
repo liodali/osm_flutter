@@ -294,8 +294,8 @@ GeoPoint p = await showSimplePickerLocation(
 | ------------------------ | ----------------------------------- |
 | `controller`             | (PickerMapController) controller of the widget     |
 | `appBarPicker`           | (AppBar) appbar for the widget        |
-| `TopPicker`              | (Widget?) widget will be show on top of osm map,for example to show address suggestion                     |
-| `bottomPicker`           | (Widget?) widget will be show at bottom of screen for example to show more details about selected location or more action       |
+| `topWidgetPicker`        | (Widget?) widget will be show on top of osm map,for example to show address suggestion                     |
+| `bottomWidgetPicker`     | (Widget?) widget will be show at bottom of screen for example to show more details about selected location or more action       |
 
 
 

@@ -5,13 +5,11 @@ import 'package:flutter/material.dart';
 import '../types/geo_point.dart';
 import 'base_map_controller.dart';
 
-
 /// controller for custom picker location widget
 /// you will cancel/get/finish advanced picker
 /// you can also draw road,change current location
 /// get also current searchable text
 class PickerMapController extends BaseMapController {
-
   late ValueNotifier<String> _searchableText = ValueNotifier("");
 
   ValueNotifier<String> get searchableText => _searchableText;

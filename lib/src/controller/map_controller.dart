@@ -4,7 +4,6 @@ import 'package:flutter_osm_plugin/src/controller/osm_controller.dart';
 
 import 'base_map_controller.dart';
 
-
 /// class [MapController] : map controller that will control map by select position,enable current location,
 /// draw road , show static geoPoint,
 ///
@@ -14,7 +13,7 @@ import 'base_map_controller.dart';
 class MapController extends BaseMapController {
   MapController({
     bool initMapWithUserPosition = true,
-    GeoPoint?initPosition,
+    GeoPoint? initPosition,
   })  : assert(
           initMapWithUserPosition || initPosition != null,
         ),
