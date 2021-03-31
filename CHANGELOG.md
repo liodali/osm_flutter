@@ -1,3 +1,5 @@
+## 0.7.4-nullsafety.1 [beta-version]:
+* update readme
 ## 0.7.4-nullsafety.0 [beta-version]:
 * add new widget `CustomPickerLocatiob` to build custom search picker
 * add new attribute `textCancelPicker` showSimplePickerLocation

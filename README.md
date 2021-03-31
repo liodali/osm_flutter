@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.4--nullsafety.0-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.4--nullsafety.1-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -27,7 +27,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.4-nullsafety.0
+      flutter_osm_plugin: ^0.7.4-nullsafety.1
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -89,6 +89,7 @@ Add the following to your `pubspec.yaml` file:
  await controller.currentPosition();
 ```
 <b> 5) Zoom IN </b>
+
 ```dart
  await controller.zoom(2.);
  // or 
@@ -96,6 +97,7 @@ Add the following to your `pubspec.yaml` file:
 ```
 
 <b> 6) Zoom Out </b>
+
 ```dart
  await controller.zoom(-2.);
  // or 
@@ -114,36 +116,36 @@ Add the following to your `pubspec.yaml` file:
  await controller.disabledTracking();
 ```
 
-<b>9) update the current  position </b>
+<b>9) update the location </b>
 
 > this method will create marker on that specific position
 
 ```dart
-await controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
+ await controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 ```
-<b>10) Change the location with out add marker </b>
+> Change the location without create marker
 
 ```dart
-await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
+ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 ```
 
 
-<b> 11) recuperation current position </b>
+<b> 10) recuperation current position </b>
 
 ```dart
  GeoPoint geoPoint = await controller.myLocation();
 ```
 
-<b> 12) select/create new position </b>
+<b> 11) select/create new position </b>
 
 * we have 2 way to select location in map
 
-<b>12.1 Manual selection </b>
+<b>11.1 Manual selection </b>
 
 ```dart
  GeoPoint geoPoint = await controller.selectPosition();
 ```
-<b>12.2 Assisted selection </b> (for more details see example) 
+<b>11.2 Assisted selection </b> (for more details see example) 
 
 ```dart
  /// To Start assisted Selection
@@ -157,14 +159,14 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 ```
 * PS : selected position can be removed by long press 
 
-<b>13) Remove marker </b>
+<b>12) Remove marker </b>
 
 ```dart
  await controller.removePosition(geoPoint);
 ```
 * PS : static position cannot be removed by this method 
 
-<b>14) Draw road,recuperate distance in km and duration in sec </b>
+<b>13) Draw road,recuperate distance in km and duration in sec </b>
 
 ```dart
  RoadInfo roadInfo = await controller.drawRoad( 
@@ -177,13 +179,13 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
  print("${roadInfo.duration}sec");
 ```
 
-<b>15) Delete last road </b>
+<b>14) Delete last road </b>
 
 ```dart
  await controller.removeLastRoad();
 ```
 
-<b>16) Change static GeoPoint position </b>
+<b>15) Change static GeoPoint position </b>
 
 > you can use it if you don't have at first static position and you need to add  staticPoints with empty list of geoPoints
 > you can use it to change their position over time
@@ -192,7 +194,7 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
 
-<b>17) Draw Shape in the map </b>
+<b>16) Draw Shape in the map </b>
 
 * Circle
 ```dart
@@ -251,13 +253,13 @@ await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
 
 ## STATIC METHODS:
 
-<b>1) calculate distance between 2 geoPoint position </b>
+<b>1) Calculate distance between 2 geoPoint position </b>
 ```dart
  double distanceEnMetres = await distance2point(GeoPoint(longitude: 36.84612143139903,latitude: 11.099388684927824,),
         GeoPoint( longitude: 36.8388023164018, latitude: 11.096959785428027, ),);
 ```
 
-<b>2) get search Suggestion of text </b>
+<b>2) Get search Suggestion of text </b>
 
 >  you should know that i'm using public api, don't make lot of request
 
@@ -284,6 +286,18 @@ GeoPoint p = await showSimplePickerLocation(
 
 > you should use `PickerMapController` as controller for the widget
  see example  :  [ search widget ](https://github.com/liodali/osm_flutter/blob/master/example/lib/search_example.dart) 
+
+#### Properties of `CustomLocationPicker`
+
+
+| Properties               | Description                         |
+| ------------------------ | ----------------------------------- |
+| `controller`             | (PickerMapController) controller of the widget     |
+| `appBarPicker`           | (AppBar) appbar for the widget        |
+| `TopPicker`              | (Widget?) widget will be show on top of osm map,for example to show address suggestion                     |
+| `bottomPicker`           | (Widget?) widget will be show at bottom of screen for example to show more details about selected location or more action       |
+
+
 
 ## NOTICE:
 > `For now the map working only for android,iOS will be available soon `
