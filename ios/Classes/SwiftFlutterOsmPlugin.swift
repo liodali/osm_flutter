@@ -3,12 +3,19 @@ import UIKit
 
 public class SwiftFlutterOsmPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "flutter_osm_plugin", binaryMessenger: registrar.messenger())
-    let instance = SwiftFlutterOsmPlugin()
-    registrar.addMethodCallDelegate(instance, channel: channel)
-  }
+    let window = UIApplication.shared.delegate?.window
+    let controller = window??.rootViewController as! FlutterViewController
+   let mapViewFactory = MapviewFactory(controller: controller)
 
-  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    result("iOS " + UIDevice.current.systemVersion)
-  }
-}
+   //let channel = FlutterMethodChannel(name: "flutter_osm_plugin", binaryMessenger: registrar.messenger())
+   //let instance = SwiftFlutterOsmPlugin()
+   //registrar(forPlugin:"plugins.dali.hamza/osmview").register(mapViewFactory, withId: "plugins.dali.hamza/osmview")
+
+   registrar.register(mapViewFactory, withId: "plugins.dali.hamza/osmview")
+
+  // registrar.addMethodCallDelegate(instance, channel: channel)
+ }
+
+ public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+   result("iOS " + UIDevice.current.systemVersion)
+ }}

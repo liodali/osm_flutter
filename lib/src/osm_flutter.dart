@@ -128,22 +128,29 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   @override
   Widget build(BuildContext context) {
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return Stack(
-        clipBehavior: Clip.none,
-        children: <Widget>[
-          widgetConfigMap(),
-          AndroidView(
-            key: androidViewKey,
-            viewType: 'plugins.dali.hamza/osmview',
-            onPlatformViewCreated: _onPlatformViewCreated,
-            //creationParamsCodec:  StandardMessageCodec(),
-          ),
-        ],
+    Widget widgetMap = AndroidView(
+      key: androidViewKey,
+      viewType: 'plugins.dali.hamza/osmview',
+      onPlatformViewCreated: _onPlatformViewCreated,
+      //creationParamsCodec:  StandardMessageCodec(),
+    );
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      widgetMap = UiKitView(
+        viewType: 'plugins.dali.hamza/osmview',
+        onPlatformViewCreated: _onPlatformViewCreated,
+        //creationParamsCodec:  StandardMessageCodec(),
       );
+    } else if (kIsWeb) {
+      return Text(
+          '$defaultTargetPlatform is not yet supported by the osm plugin');
     }
-    return Text(
-        '$defaultTargetPlatform is not yet supported by the osm plugin');
+    return Stack(
+      clipBehavior: Clip.none,
+      children: <Widget>[
+        widgetConfigMap(),
+        widgetMap,
+      ],
+    );
   }
 
   /// requestPermission callback to request location in your phone
