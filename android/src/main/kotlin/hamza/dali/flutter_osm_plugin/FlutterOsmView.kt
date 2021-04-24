@@ -3,6 +3,7 @@ package hamza.dali.flutter_osm_plugin
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
@@ -24,6 +25,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
+import androidx.preference.PreferenceManager
 import hamza.dali.flutter_osm_plugin.Constants.Companion.url
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.CREATED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.DESTROYED
@@ -46,6 +48,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.osmdroid.bonuspack.routing.*
+import org.osmdroid.config.Configuration
 import org.osmdroid.config.IConfigurationProvider
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
@@ -169,6 +172,8 @@ class FlutterOsmView(
 
     private fun initMap() {
 
+        val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+        Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context))
 
         map = MapView(context).apply {
             this.layoutParams = MapView.LayoutParams(
@@ -433,10 +438,25 @@ class FlutterOsmView(
                 cancelAdvancedSelection()
                 result.success(null)
             }
+            "map#orientation" -> {
+                mapOrientation(call, result)
+            }
             else -> {
                 result.notImplemented()
             }
         }
+    }
+
+    private fun mapOrientation(call: MethodCall, result: MethodChannel.Result) {
+        //map!!.mapOrientation = (call.arguments as Double?)?.toFloat() ?: 0f
+        map!!.controller.animateTo(
+                map!!.mapCenter,
+                map!!.zoomLevelDouble, 
+                null,
+                (call.arguments as Double?)?.toFloat() ?: 0f
+        )
+        map!!.invalidate()
+        result.success(null)
     }
 
     private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
@@ -990,12 +1010,16 @@ class FlutterOsmView(
 
     override fun onFlutterViewAttached(flutterView: View) {
         //   map!!.onAttachedToWindow()
-        flutterView.requestLayout()
+        initMap()
+        map?.forceLayout()
     }
 
 
     override fun onFlutterViewDetached() {
         //    map!!.onDetach()
+//        mainLinearLayout.removeAllViews()
+//        map!!.onDetach()
+//        map = null
     }
 
 
@@ -1019,6 +1043,7 @@ class FlutterOsmView(
         folderStaticPosition.name = Constants.nameFolderStatic
 
         initMap()
+        map!!.forceLayout()
 
 
     }
@@ -1044,6 +1069,8 @@ class FlutterOsmView(
     override fun onPause(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(PAUSED)
         stopFollowLocation()
+        val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        Configuration.getInstance().save(context, prefs);
         map?.onPause()
         Log.e("osm", "osm flutter plugin pause")
 
@@ -1051,7 +1078,6 @@ class FlutterOsmView(
 
     override fun onStop(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(STOPPED)
-
         job?.let {
             if (it.isActive) {
                 it.cancel()
