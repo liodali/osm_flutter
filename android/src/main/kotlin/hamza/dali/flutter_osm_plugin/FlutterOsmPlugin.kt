@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 
 class FlutterOsmPlugin() :
-        FlutterPlugin, ActivityAware, DefaultLifecycleObserver {
+        FlutterPlugin, ActivityAware {
     constructor(activity: Activity) : this() {
         registrarActivityHashCode = activity.hashCode()
         this.activity = activity
@@ -71,13 +71,15 @@ class FlutterOsmPlugin() :
     }
 
     override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
-
+        activity = null
+        // lifecycle?.removeObserver(this)
+        lifecycle = null
     }
 
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding)
-        lifecycle?.addObserver(this)
+        //lifecycle?.addObserver(this)
         activity = binding.activity
 
 
@@ -95,14 +97,14 @@ class FlutterOsmPlugin() :
     override fun onDetachedFromActivityForConfigChanges() {
         //  this.onDetachedFromActivity()
         activity = null
-        lifecycle?.removeObserver(this)
+       // lifecycle?.removeObserver(this)
         lifecycle = null
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
         lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding)
 
-        lifecycle?.addObserver(this)
+        //lifecycle?.addObserver(this)
         /*activity = binding.activity
         activity!!.application.registerActivityLifecycleCallbacks(this)
 
@@ -120,36 +122,36 @@ class FlutterOsmPlugin() :
     }
 
     override fun onDetachedFromActivity() {
-        lifecycle?.removeObserver(this)
+        //lifecycle?.removeObserver(this)
         Configuration.getInstance().osmdroidTileCache.delete()
         activity = null
         lifecycle = null
         pluginBinding = null
 
     }
-
-    override fun onCreate(owner: LifecycleOwner) {
-        state.set(CREATED)
-    }
-
-    override fun onStart(owner: LifecycleOwner) {
-        state.set(STARTED)
-    }
-
-    override fun onResume(owner: LifecycleOwner) {
-        state.set(RESUMED)
-    }
-
-    override fun onPause(owner: LifecycleOwner) {
-        state.set(PAUSED)
-    }
-
-    override fun onStop(owner: LifecycleOwner) {
-        state.set(STOPPED)
-    }
-
-    override fun onDestroy(owner: LifecycleOwner) {
-        state.set(DESTROYED)
-    }
+//
+//    override fun onCreate(owner: LifecycleOwner) {
+//        state.set(CREATED)
+//    }
+//
+//    override fun onStart(owner: LifecycleOwner) {
+//        state.set(STARTED)
+//    }
+//
+//    override fun onResume(owner: LifecycleOwner) {
+//        state.set(RESUMED)
+//    }
+//
+//    override fun onPause(owner: LifecycleOwner) {
+//        state.set(PAUSED)
+//    }
+//
+//    override fun onStop(owner: LifecycleOwner) {
+//        state.set(STOPPED)
+//    }
+//
+//    override fun onDestroy(owner: LifecycleOwner) {
+//        state.set(DESTROYED)
+//    }
 
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
@@ -40,8 +41,9 @@ class OSMController {
     bool initWithUserPosition = false,
   }) async {
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
-
-    osmPlatform.setSecureURL(_idMap, _osmFlutterState.widget.useSecureURL);
+    if (Platform.isAndroid) {
+      osmPlatform.setSecureURL(_idMap, _osmFlutterState.widget.useSecureURL);
+    }
     if (_osmFlutterState.widget.showDefaultInfoWindow == true)
       osmPlatform.visibilityInfoWindow(
           _idMap, _osmFlutterState.widget.showDefaultInfoWindow);
@@ -344,5 +346,9 @@ class OSMController {
   /// to cancel the assisted selection in tge map
   Future<void> cancelAdvancedPositionPicker() async {
     return await osmPlatform.cancelAdvancedPositionPicker(_idMap);
+  }
+
+  Future<void> mapOrientation(double? degree) async {
+    await osmPlatform.mapRotation(_idMap, degree);
   }
 }

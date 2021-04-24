@@ -178,4 +178,9 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM,
     List<GeoPoint> road,
   );
+
+  Future<void> mapRotation(
+    int idOSM,
+    double? degree,
+  );
 }
