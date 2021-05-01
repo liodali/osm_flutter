@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.4--nullsafety.2-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.5-orange)
 
 osm plugin for flutter apps (only Android for now, iOS will be supported in future)
 
@@ -27,7 +27,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.4-nullsafety.2
+      flutter_osm_plugin: ^0.7.5
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -194,7 +194,13 @@ Add the following to your `pubspec.yaml` file:
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
 
-<b>16) Draw Shape in the map </b>
+<b>16) change orientation of the map</b>
+
+```dart
+ await controller.rotateMapCamera(degree);
+```
+
+<b>17) Draw Shape in the map </b>
 
 * Circle
 ```dart

@@ -1,3 +1,5 @@
+## 0.7.5 [beta-version]:
+* add `rotateMapCamera` function to change orientation of the osm map
 ## 0.7.4-nullsafety.2 [beta-version]:
 * fix readme
 ## 0.7.4-nullsafety.1 [beta-version]:

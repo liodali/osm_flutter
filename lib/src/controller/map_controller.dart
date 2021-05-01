@@ -192,6 +192,10 @@ class MapController extends BaseMapController {
   Future<void> cancelAdvancedPositionPicker() async {
     return await osmController.cancelAdvancedPositionPicker();
   }
+  /// rotate camera of osm map
+  Future<void> rotateMapCamera(double? degree) async {
+    return await osmController.mapOrientation(degree);
+  }
 /*
   /// draw road manually
   ///  [path] : (list) path of the road
