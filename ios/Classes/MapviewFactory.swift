@@ -11,9 +11,10 @@ import Flutter
 
 public class MapviewFactory : NSObject, FlutterPlatformViewFactory {
     let controller: FlutterViewController
-    
-    init(controller: FlutterViewController) {
+    let messenger : FlutterBinaryMessenger
+    init(controller: FlutterViewController,messenger:FlutterBinaryMessenger) {
         self.controller = controller
+        self.messenger = messenger
     }
     
     public func create(
@@ -21,9 +22,9 @@ public class MapviewFactory : NSObject, FlutterPlatformViewFactory {
         viewIdentifier viewId: Int64,
         arguments args: Any?
     ) -> FlutterPlatformView {
-        let channel = FlutterMethodChannel(
-            name: String(viewId),
-            binaryMessenger: controller.binaryMessenger
+       let channel = FlutterMethodChannel(
+            name: "plugins.dali.hamza/osmview_"+String(viewId),
+            binaryMessenger: self.messenger
         )
         return MyMapView(frame, viewId: viewId, channel: channel, args: args)
     }
