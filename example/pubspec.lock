@@ -75,7 +75,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.7.5"
+    version: "0.7.5+1"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:

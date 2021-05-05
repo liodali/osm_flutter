@@ -219,6 +219,34 @@ class _MainExampleState extends State<MainExample> {
                   bottom: 10,
                   left: 10,
                   child: ValueListenableBuilder<bool>(
+                    valueListenable: advPickerNotifierActivation,
+                    builder: (ctx, visible, child) {
+                      return  Visibility(
+                        visible: visible,
+                        child: AnimatedOpacity(
+                          opacity: visible ? 1.0 : 0.0,
+                          duration: Duration(milliseconds: 500),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: FloatingActionButton(
+                      key: UniqueKey(),
+                      child: Icon(Icons.arrow_forward),
+                      heroTag: "confirmAdvPicker",
+                      onPressed: () async {
+                        advPickerNotifierActivation.value = false;
+                        GeoPoint p =
+                        await controller.selectAdvancedPositionPicker();
+                        print(p);
+                      },
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 10,
+                  left: 10,
+                  child: ValueListenableBuilder<bool>(
                     valueListenable: zoomNotifierActivation,
                     builder: (ctx, visible, child) {
                       return AnimatedOpacity(
@@ -245,31 +273,7 @@ class _MainExampleState extends State<MainExample> {
                     ),
                   ),
                 ),
-                Positioned(
-                  bottom: 10,
-                  left: 10,
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: advPickerNotifierActivation,
-                    builder: (ctx, visible, child) {
-                      return AnimatedOpacity(
-                        opacity: visible ? 1.0 : 0.0,
-                        duration: Duration(milliseconds: 500),
-                        child: child,
-                      );
-                    },
-                    child: FloatingActionButton(
-                      key: UniqueKey(),
-                      child: Icon(Icons.arrow_forward),
-                      heroTag: "confirmAdvPicker",
-                      onPressed: () async {
-                        advPickerNotifierActivation.value = false;
-                        GeoPoint p =
-                            await controller.selectAdvancedPositionPicker();
-                        print(p);
-                      },
-                    ),
-                  ),
-                ),
+
               ],
             ),
           );
