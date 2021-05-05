@@ -172,6 +172,9 @@ class OSMFlutterState extends State<OSMFlutter> {
   Widget widgetConfigMap() {
     return Positioned(
       top: -100,
+      bottom: 0,
+      left: 0,
+      right: 0,
       child: Stack(
         children: <Widget>[
           if (widget.markerIcon != null) ...[
