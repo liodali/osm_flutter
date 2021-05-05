@@ -129,17 +129,19 @@ class OSMFlutterState extends State<OSMFlutter> {
   @override
   Widget build(BuildContext context) {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return Stack(
-        clipBehavior: Clip.none,
-        children: <Widget>[
-          widgetConfigMap(),
-          AndroidView(
-            key: androidViewKey,
-            viewType: 'plugins.dali.hamza/osmview',
-            onPlatformViewCreated: _onPlatformViewCreated,
-            //creationParamsCodec:  StandardMessageCodec(),
-          ),
-        ],
+      return OverflowBox(
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: <Widget>[
+            widgetConfigMap(),
+            AndroidView(
+              key: androidViewKey,
+              viewType: 'plugins.dali.hamza/osmview',
+              onPlatformViewCreated: _onPlatformViewCreated,
+              //creationParamsCodec:  StandardMessageCodec(),
+            ),
+          ],
+        ),
       );
     }
     return Text(
@@ -172,7 +174,11 @@ class OSMFlutterState extends State<OSMFlutter> {
   Widget widgetConfigMap() {
     return Positioned(
       top: -100,
+      left: 0,
+      right: 0,
+      bottom: 0,
       child: Stack(
+        clipBehavior: Clip.none,
         children: <Widget>[
           if (widget.markerIcon != null) ...[
             RepaintBoundary(
