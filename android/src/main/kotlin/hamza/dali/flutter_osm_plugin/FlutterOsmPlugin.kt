@@ -66,8 +66,8 @@ class FlutterOsmPlugin() :
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         pluginBinding = binding
 
-        Configuration.getInstance().load(pluginBinding!!.applicationContext,
-                PreferenceManager.getDefaultSharedPreferences(pluginBinding!!.applicationContext))
+       Configuration.getInstance().load(pluginBinding!!.applicationContext,
+            PreferenceManager.getDefaultSharedPreferences(pluginBinding!!.applicationContext))
     }
 
     override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
