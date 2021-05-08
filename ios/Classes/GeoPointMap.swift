@@ -7,11 +7,11 @@
 import Foundation
 import MapKit
 
-class GeoPointMap:  NSObject,MKAnnotation {
-  let title: String?
-  let subtitle: String?
+class GeoPointMap:  MKPointAnnotation {
+  //let title: String?
+  //let subtitle: String?
   var marker:UIImage?
-  let coordinate: CLLocationCoordinate2D
+  //let coordinate: CLLocationCoordinate2D
 
   init(
     locationName: String?,
@@ -19,10 +19,10 @@ class GeoPointMap:  NSObject,MKAnnotation {
     discipline: String?,
     coordinate: CLLocationCoordinate2D
   ) {
+    super.init()
     self.title = locationName
     self.subtitle = discipline
     self.coordinate = coordinate
-    //super.init()
     self.marker = icon
 
   }
@@ -37,14 +37,12 @@ extension  GeoPointMap{
           for annotation:GeoPointMap,on map:MKMapView
   )-> MKAnnotationView{
     let reuseIdentifier = NSStringFromClass(GeoPointMap.self)
-    let flagAnnotationView = map.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier, for: annotation)
+    let flagAnnotationView = map.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier, for: annotation)   as! MKPinAnnotationView   //MKMarkerAnnotationView
 
     flagAnnotationView.canShowCallout = false
 
     // Provide the annotation view's image.
     flagAnnotationView.image = self.marker
-
-
 
 
     return flagAnnotationView

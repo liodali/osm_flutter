@@ -17,7 +17,7 @@ class MarkerView: MKMarkerAnnotationView {
       guard let point = newValue as? GeoPointMap else {
         return
       }
-      canShowCallout = true
+      canShowCallout = false
       calloutOffset = CGPoint(x: -5, y: 5)
       //rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
 
