@@ -1,5 +1,9 @@
+## 0.7.5+1 [beta-version]:
+* fix bug
+* update osmdroid  to 6.1.10 
+* update osmbonuspack to 6.7.0
 ## 0.7.5 [beta-version]:
-* add `rotateMapCamera` function to change orientation of the osm map
+* add `rotateMapCamera` function to chang orientation of the osm map
 ## 0.7.4-nullsafety.2 [beta-version]:
 * fix readme
 ## 0.7.4-nullsafety.1 [beta-version]:

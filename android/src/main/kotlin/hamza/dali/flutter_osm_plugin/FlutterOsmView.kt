@@ -754,7 +754,7 @@ class FlutterOsmView(
         map!!.invalidate()
 
         if (roadManager == null)
-            roadManager = OSRMRoadManager(application!!)
+            roadManager = OSRMRoadManager(application!!,"json/application")
         roadManager?.let { manager ->
 
             job = scope?.launch(Default) {

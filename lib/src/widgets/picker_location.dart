@@ -44,14 +44,9 @@ Future<GeoPoint?> showSimplePickerLocation({
           },
           child: SizedBox(
             height: MediaQuery.of(context).size.height / 2.5,
-            child: Stack(
-              fit: StackFit.loose,
-              children: [
-                OSMFlutter(
-                  controller: controller,
-                  isPicker: true,
-                ),
-              ],
+            child: OSMFlutter(
+              controller: controller,
+              isPicker: true,
             ),
           ),
         ),
