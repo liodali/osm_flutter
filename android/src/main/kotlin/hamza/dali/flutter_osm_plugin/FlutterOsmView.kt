@@ -167,8 +167,6 @@ class FlutterOsmView(
 
     private fun initMap() {
 
-        val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context))
 
         map = MapView(context).apply {
             this.layoutParams = MapView.LayoutParams(
@@ -760,7 +758,6 @@ class FlutterOsmView(
                     map!!.overlays.removeAll {
                         it is FlutterMarker && wayPoints.contains(it.position)
                     }
-                    map!!.invalidate()
                 }
                 val road = manager.getRoad(ArrayList(wayPoints))
                 withContext(Main) {
@@ -901,6 +898,7 @@ class FlutterOsmView(
     private fun removePosition(call: MethodCall, result: MethodChannel.Result) {
         val geoMap = call.arguments as HashMap<String, Double>
         deleteMarker(geoMap.toGeoPoint())
+        result.success(null)
     }
 
     private fun deleteMarker(geoPoint: GeoPoint) {
@@ -915,6 +913,7 @@ class FlutterOsmView(
             map!!.overlays.remove(it)
             map!!.invalidate()
         }
+
     }
 
     private fun currentUserPosition(call: MethodCall, result: MethodChannel.Result) {
@@ -989,6 +988,10 @@ class FlutterOsmView(
     }
 
     override fun dispose() {
+        staticMarkerIcon.clear()
+        staticPoints.clear()
+        customMarkerIcon = null
+        customRoadMarkerIcon.clear()
         mainLinearLayout.removeAllViews()
         map!!.onDetach()
         map = null
@@ -996,13 +999,18 @@ class FlutterOsmView(
 
     override fun onFlutterViewAttached(flutterView: View) {
         //   map!!.onAttachedToWindow()
-        initMap()
-        map?.forceLayout()
+        if(map!=null){
+            val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+            Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context))
+//            initMap()
+//            map?.forceLayout()
+        }
+
     }
 
 
     override fun onFlutterViewDetached() {
-        //    map!!.onDetach()
+            map!!.onDetach()
 //        mainLinearLayout.removeAllViews()
 //        map!!.onDetach()
 //        map = null
