@@ -98,7 +98,6 @@ class FlutterOsmView(
         DefaultLifecycleObserver,
         OnSaveInstanceStateListener,
         PlatformView,
-        EventChannel.StreamHandler,
         MethodCallHandler {
 
     private var configuration: IConfigurationProvider? = null
@@ -140,10 +139,6 @@ class FlutterOsmView(
 
     private lateinit var methodChannel: MethodChannel
 
-    //private lateinit var eventChannel: EventChannel
-    //private lateinit var eventLocationChannel: EventChannel
-    private var eventSink: EventSink? = null
-    private var eventLocationSink: EventSink? = null
 
     private val provider: GpsMyLocationProvider by lazy {
         GpsMyLocationProvider(application)
@@ -291,7 +286,6 @@ class FlutterOsmView(
                 scope!!.launch(Main) {
                     val currentPosition = GeoPoint(location.lastFix)
                     map!!.controller.animateTo(currentPosition)
-                    eventLocationSink?.success(currentPosition.toHashMap())
                 }
             }
         }
@@ -391,9 +385,9 @@ class FlutterOsmView(
             "road#color" -> {
                 setRoadColor(call, result)
             }
-            "drawRoad#manually" -> {
+            /*"drawRoad#manually" -> {
                 drawRoadManually(call, result)
-            }
+            }*/
             "road#markers" -> {
                 setRoadMaker(call, result)
             }
@@ -458,7 +452,7 @@ class FlutterOsmView(
         map!!.invalidate()
         result.success(null)
     }
-
+/*
     private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
         val road: Road = Road()
         val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
@@ -501,7 +495,7 @@ class FlutterOsmView(
         map!!.invalidate()
         result.success(null)
     }
-
+*/
     private fun trackUserLocation(call: MethodCall, result: MethodChannel.Result) {
         try {
             locationNewOverlay?.let { locationOverlay ->
@@ -985,16 +979,8 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    override fun onListen(arguments: Any?, events: EventSink?) {
-        eventSink = events
-    }
-
     private fun getBitmap(bytes: ByteArray): Bitmap {
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-    }
-
-    override fun onCancel(arguments: Any?) {
-        eventSink?.endOfStream()
     }
 
 
