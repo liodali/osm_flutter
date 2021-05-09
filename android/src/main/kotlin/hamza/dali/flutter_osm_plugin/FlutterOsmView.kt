@@ -98,7 +98,6 @@ class FlutterOsmView(
         DefaultLifecycleObserver,
         OnSaveInstanceStateListener,
         PlatformView,
-        EventChannel.StreamHandler,
         MethodCallHandler {
 
     private var configuration: IConfigurationProvider? = null
@@ -140,10 +139,6 @@ class FlutterOsmView(
 
     private lateinit var methodChannel: MethodChannel
 
-    //private lateinit var eventChannel: EventChannel
-    //private lateinit var eventLocationChannel: EventChannel
-    private var eventSink: EventSink? = null
-    private var eventLocationSink: EventSink? = null
 
     private val provider: GpsMyLocationProvider by lazy {
         GpsMyLocationProvider(application)
@@ -172,8 +167,6 @@ class FlutterOsmView(
 
     private fun initMap() {
 
-        val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context))
 
         map = MapView(context).apply {
             this.layoutParams = MapView.LayoutParams(
@@ -291,7 +284,6 @@ class FlutterOsmView(
                 scope!!.launch(Main) {
                     val currentPosition = GeoPoint(location.lastFix)
                     map!!.controller.animateTo(currentPosition)
-                    eventLocationSink?.success(currentPosition.toHashMap())
                 }
             }
         }
@@ -391,9 +383,9 @@ class FlutterOsmView(
             "road#color" -> {
                 setRoadColor(call, result)
             }
-            "drawRoad#manually" -> {
+            /*"drawRoad#manually" -> {
                 drawRoadManually(call, result)
-            }
+            }*/
             "road#markers" -> {
                 setRoadMaker(call, result)
             }
@@ -458,7 +450,7 @@ class FlutterOsmView(
         map!!.invalidate()
         result.success(null)
     }
-
+/*
     private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
         val road: Road = Road()
         val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
@@ -501,7 +493,7 @@ class FlutterOsmView(
         map!!.invalidate()
         result.success(null)
     }
-
+*/
     private fun trackUserLocation(call: MethodCall, result: MethodChannel.Result) {
         try {
             locationNewOverlay?.let { locationOverlay ->
@@ -766,7 +758,6 @@ class FlutterOsmView(
                     map!!.overlays.removeAll {
                         it is FlutterMarker && wayPoints.contains(it.position)
                     }
-                    map!!.invalidate()
                 }
                 val road = manager.getRoad(ArrayList(wayPoints))
                 withContext(Main) {
@@ -907,6 +898,7 @@ class FlutterOsmView(
     private fun removePosition(call: MethodCall, result: MethodChannel.Result) {
         val geoMap = call.arguments as HashMap<String, Double>
         deleteMarker(geoMap.toGeoPoint())
+        result.success(null)
     }
 
     private fun deleteMarker(geoPoint: GeoPoint) {
@@ -921,6 +913,7 @@ class FlutterOsmView(
             map!!.overlays.remove(it)
             map!!.invalidate()
         }
+
     }
 
     private fun currentUserPosition(call: MethodCall, result: MethodChannel.Result) {
@@ -985,16 +978,8 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    override fun onListen(arguments: Any?, events: EventSink?) {
-        eventSink = events
-    }
-
     private fun getBitmap(bytes: ByteArray): Bitmap {
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-    }
-
-    override fun onCancel(arguments: Any?) {
-        eventSink?.endOfStream()
     }
 
 
@@ -1003,6 +988,10 @@ class FlutterOsmView(
     }
 
     override fun dispose() {
+        staticMarkerIcon.clear()
+        staticPoints.clear()
+        customMarkerIcon = null
+        customRoadMarkerIcon.clear()
         mainLinearLayout.removeAllViews()
         map!!.onDetach()
         map = null
@@ -1010,13 +999,18 @@ class FlutterOsmView(
 
     override fun onFlutterViewAttached(flutterView: View) {
         //   map!!.onAttachedToWindow()
-        initMap()
-        map?.forceLayout()
+        if(map!=null){
+            val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+            Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context))
+//            initMap()
+//            map?.forceLayout()
+        }
+
     }
 
 
     override fun onFlutterViewDetached() {
-        //    map!!.onDetach()
+            map!!.onDetach()
 //        mainLinearLayout.removeAllViews()
 //        map!!.onDetach()
 //        map = null

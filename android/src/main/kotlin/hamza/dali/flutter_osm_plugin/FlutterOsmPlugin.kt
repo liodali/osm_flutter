@@ -73,7 +73,6 @@ class FlutterOsmPlugin() :
     override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
         activity = null
         // lifecycle?.removeObserver(this)
-        lifecycle = null
     }
 
 
@@ -96,7 +95,6 @@ class FlutterOsmPlugin() :
 
     override fun onDetachedFromActivityForConfigChanges() {
         //  this.onDetachedFromActivity()
-        activity = null
        // lifecycle?.removeObserver(this)
         lifecycle = null
     }
@@ -129,29 +127,5 @@ class FlutterOsmPlugin() :
         pluginBinding = null
 
     }
-//
-//    override fun onCreate(owner: LifecycleOwner) {
-//        state.set(CREATED)
-//    }
-//
-//    override fun onStart(owner: LifecycleOwner) {
-//        state.set(STARTED)
-//    }
-//
-//    override fun onResume(owner: LifecycleOwner) {
-//        state.set(RESUMED)
-//    }
-//
-//    override fun onPause(owner: LifecycleOwner) {
-//        state.set(PAUSED)
-//    }
-//
-//    override fun onStop(owner: LifecycleOwner) {
-//        state.set(STOPPED)
-//    }
-//
-//    override fun onDestroy(owner: LifecycleOwner) {
-//        state.set(DESTROYED)
-//    }
 
 }

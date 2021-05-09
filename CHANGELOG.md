@@ -1,3 +1,5 @@
+## 0.7.5+2 [beta-version]:
+* remove unnecessary code
 ## 0.7.5+1 [beta-version]:
 * fix bug
 * update osmdroid  to 6.1.10 
