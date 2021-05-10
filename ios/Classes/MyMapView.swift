@@ -22,6 +22,7 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
     var markerIcon: UIImage? = nil
     var isFollowUserLocation: Bool = false
     var canGetLastUserLocation = false
+    var canTrackUserLocation = false
     // var tileRenderer:MKTileOverlayRenderer!
 
     var span = MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3)
@@ -67,15 +68,19 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
             result(200)
             break;
         case "trackMe":
+            trackUserLocation()
+            result(200)
             break;
         case "user#position":
             break;
         case "deactivateTrackMe":
+            deactivateTrackMe()
+            result(200)
             break;
         case "Zoom":
             let levelZoom = call.arguments! as! Double
             if (levelZoom == 0 || levelZoom == -1) {
-                var alpha = levelZoom
+                var alpha:Double = -1
                 if levelZoom == 0 {
                     alpha = 1
                 }
@@ -134,7 +139,10 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         locationManager.requestLocation()
          canGetLastUserLocation = true
     }
-
+    private func trackUserLocation(){
+        locationManager.startUpdatingLocation()
+        canTrackUserLocation = true
+    }
 
     private func convertImage(codeImage: String) -> UIImage? {
         let dataImage = Data(base64Encoded: codeImage)
@@ -164,15 +172,27 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         //self.mapView.addOverlay(overlay, level: .aboveLabels)
         // self.tileRenderer = MKTileOverlayRenderer(tileOverlay: overlay)
     }
+    private func deactivateTrackMe(){
+        canTrackUserLocation = false
+        locationManager.stopUpdatingLocation()
+        mapView.showsUserLocation = false
+    }
+
+    // ------- delegation func ----
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if(canGetLastUserLocation){
+        if(canGetLastUserLocation || canTrackUserLocation){
             if let location = locations.last?.coordinate {
                 let region = MKCoordinateRegion.init(center: location, latitudinalMeters: 4000, longitudinalMeters: 4000)
                 mapView.setRegion(region, animated: true)
-                //mapView.showsUserLocation = true
-                let geoMap = ["lon": location.longitude, "lat": location.latitude]
-                channel.invokeMethod("location", arguments: geoMap)
-                canGetLastUserLocation = false
+                if (canTrackUserLocation){
+                    mapView.showsUserLocation = true
+                    let geoMap = ["lon": location.longitude, "lat": location.latitude]
+                    channel.invokeMethod("receiveUserLocation", arguments: geoMap)
+                }
+                if(canGetLastUserLocation){
+                    canGetLastUserLocation = false
+                }
+
             }
         }
     }
