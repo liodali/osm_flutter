@@ -23,6 +23,8 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
     var isFollowUserLocation: Bool = false
     var canGetLastUserLocation = false
     var canTrackUserLocation = false
+    var dictClusterAnnotation = [String: [StaticGeoPMarker]]()
+    var dictIconClusterAnnotation = [String: UIImage]()
     // var tileRenderer:MKTileOverlayRenderer!
 
     var span = MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3)
@@ -48,16 +50,19 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
 
         //self.setupTileRenderer()
         mapView.register(MKPinAnnotationView.self, forAnnotationViewWithReuseIdentifier: NSStringFromClass(GeoPointMap.self))
+        mapView.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: NSStringFromClass(StaticGeoPMarker.self))
+        //mapView.register(StaticPointClusterAnnotationView.self, forAnnotationViewWithReuseIdentifier: NSStringFromClass(StaticGeoPMarker.self) )
 
         channel.setMethodCallHandler({
             (call: FlutterMethodCall, result: FlutterResult) ->
                     Void in
-            self.onListenMethodChannel(call:call,result:result)
+            self.onListenMethodChannel(call: call, result: result)
 
 
         })
     }
-    private func onListenMethodChannel(call:FlutterMethodCall,result:FlutterResult){
+
+    private func onListenMethodChannel(call: FlutterMethodCall, result: FlutterResult) {
         print(call.method)
         switch call.method {
         case "initPosition":
@@ -80,7 +85,7 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         case "Zoom":
             let levelZoom = call.arguments! as! Double
             if (levelZoom == 0 || levelZoom == -1) {
-                var alpha:Double = -1
+                var alpha: Double = -1
                 if levelZoom == 0 {
                     alpha = 1
                 }
@@ -95,8 +100,15 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
             result(200)
             break;
         case "marker#icon":
-            print("marker")
             markerIcon = convertImage(codeImage: call.arguments as! String)!
+            result(200)
+            break;
+        case "staticPosition#IconMarker":
+            setMarkerStaticGeoPIcon(call: call)
+            result(200)
+            break;
+        case "staticPosition":
+            setStaticGeoPoint(call: call)
             result(200)
             break;
         default:
@@ -104,6 +116,7 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
             break;
         }
     }
+
     public func view() -> UIView {
         if #available(iOS 11.0, *) {
             mapView.register(
@@ -134,12 +147,12 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
     }
 
 
-
     private func currentUserLocation() {
         locationManager.requestLocation()
-         canGetLastUserLocation = true
+        canGetLastUserLocation = true
     }
-    private func trackUserLocation(){
+
+    private func trackUserLocation() {
         locationManager.startUpdatingLocation()
         canTrackUserLocation = true
     }
@@ -172,24 +185,54 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         //self.mapView.addOverlay(overlay, level: .aboveLabels)
         // self.tileRenderer = MKTileOverlayRenderer(tileOverlay: overlay)
     }
-    private func deactivateTrackMe(){
+
+    private func deactivateTrackMe() {
         canTrackUserLocation = false
         locationManager.stopUpdatingLocation()
         mapView.showsUserLocation = false
     }
 
+    private func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
+        let args = call.arguments as! [String: String]
+        let icon = convertImage(codeImage: args["bitmap"]!)
+        dictIconClusterAnnotation[args["id"]!] = icon!
+    }
+
+    private func setStaticGeoPoint(call: FlutterMethodCall) {
+        let args = call.arguments as! [String: Any]
+        let id = args["id"] as! String
+
+
+        let listGeos = (args["point"] as! [GeoPoint]).map { point -> StaticGeoPMarker in
+            StaticGeoPMarker(icon: dictIconClusterAnnotation[id]!, color: nil, coordinate: point.toLocationCoordinate())
+        } as [StaticGeoPMarker]
+        if dictClusterAnnotation.keys.contains(id) {
+            mapView.removeAnnotations(dictClusterAnnotation[id]!)
+            dictClusterAnnotation[id] = listGeos
+        } else {
+            dictClusterAnnotation[id] = listGeos
+        }
+        let clusterAnnotation = ClusterMarkerAnnotation(
+                id: id,
+                geos: listGeos
+        )
+        mapView.addAnnotations(listGeos)
+        //mapView.addAnnotation(clusterAnnotation)
+
+    }
+
     // ------- delegation func ----
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if(canGetLastUserLocation || canTrackUserLocation){
+        if (canGetLastUserLocation || canTrackUserLocation) {
             if let location = locations.last?.coordinate {
                 let region = MKCoordinateRegion.init(center: location, latitudinalMeters: 4000, longitudinalMeters: 4000)
                 mapView.setRegion(region, animated: true)
-                if (canTrackUserLocation){
+                if (canTrackUserLocation) {
                     mapView.showsUserLocation = true
                     let geoMap = ["lon": location.longitude, "lat": location.latitude]
                     channel.invokeMethod("receiveUserLocation", arguments: geoMap)
                 }
-                if(canGetLastUserLocation){
+                if (canGetLastUserLocation) {
                     canGetLastUserLocation = false
                 }
 
@@ -208,6 +251,8 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         var viewAnnotation: MKAnnotationView?
         if let annotationM = annotation as? GeoPointMap {
             viewAnnotation = annotationM.setupMKAnnotationView(for: annotationM, on: mapView)
+        } else if let staticPoint = annotation as? StaticGeoPMarker {
+            viewAnnotation = staticPoint.setupClusterView(for: staticPoint, on: mapView)
         }
 
         return viewAnnotation

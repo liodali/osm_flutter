@@ -127,25 +127,31 @@ class MethodChannelOSM extends OSMPlatform {
   @override
   Future<void> customMarker(int idOSM, GlobalKey? globalKey) async {
     Uint8List icon = await _capturePng(globalKey!);
-
+    dynamic args = icon;
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       var base64Str = base64.encode(icon);
-      await _channels[idOSM]!.invokeMethod("marker#icon", base64Str);
-    } else
-      await _channels[idOSM]!.invokeMethod("marker#icon", icon);
+      args = base64Str;
+    }
+
+    await _channels[idOSM]!.invokeMethod("marker#icon", args);
   }
 
   @override
   Future<void> customMarkerStaticPosition(
       int idOSM, GlobalKey? globalKey, String id) async {
     Uint8List icon = await _capturePng(globalKey!);
+    var args = {
+      "id": id,
+      "bitmap": icon,
+    };
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      var base64Str = base64.encode(icon);
+      args["bitmap"] = base64Str;
+    }
 
     await _channels[idOSM]!.invokeMethod(
       "staticPosition#IconMarker",
-      {
-        "id": id,
-        "bitmap": icon,
-      },
+      args,
     );
   }
 
@@ -261,7 +267,7 @@ class MethodChannelOSM extends OSMPlatform {
   Future<void> staticPosition(
       int idOSM, List<GeoPoint> pList, String id) async {
     try {
-      List<Map<String, double?>> listGeos = [];
+      List<Map<String, double>> listGeos = [];
       for (GeoPoint p in pList) {
         listGeos.add({"lon": p.longitude, "lat": p.latitude});
       }
