@@ -135,8 +135,9 @@ abstract class OSMPlatform extends PlatformInterface {
   Future<void> customMarkerStaticPosition(
     int idOSM,
     GlobalKey? globalKey,
-    String id,
-  );
+    String id, {
+    Color? colorIcon,
+  });
 
   Future<void> staticPosition(
     int idOSM,
