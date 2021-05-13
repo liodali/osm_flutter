@@ -138,7 +138,11 @@ class MethodChannelOSM extends OSMPlatform {
 
   @override
   Future<void> customMarkerStaticPosition(
-      int idOSM, GlobalKey? globalKey, String id) async {
+    int idOSM,
+    GlobalKey? globalKey,
+    String id, {
+    Color? colorIcon,
+  }) async {
     Uint8List icon = await _capturePng(globalKey!);
     var args = {
       "id": id,
@@ -147,6 +151,9 @@ class MethodChannelOSM extends OSMPlatform {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       var base64Str = base64.encode(icon);
       args["bitmap"] = base64Str;
+      if (colorIcon != null) {
+        args.addAll(colorIcon.toMap("color"));
+      }
     }
 
     await _channels[idOSM]!.invokeMethod(

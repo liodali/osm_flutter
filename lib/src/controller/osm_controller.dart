@@ -86,7 +86,11 @@ class OSMController {
           .forEach((index, points) async {
         if (points.markerIcon != null) {
           await osmPlatform.customMarkerStaticPosition(
-              _idMap, _osmFlutterState.staticMarkersKeys[points.id], points.id);
+            _idMap,
+            _osmFlutterState.staticMarkersKeys[points.id],
+            points.id,
+            colorIcon: points.markerIcon?.icon?.color ?? null,
+          );
         }
         if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {
           await osmPlatform.staticPosition(
