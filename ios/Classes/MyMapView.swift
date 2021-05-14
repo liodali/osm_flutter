@@ -24,7 +24,7 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
     var canGetLastUserLocation = false
     var canTrackUserLocation = false
     var dictClusterAnnotation = [String: [StaticGeoPMarker]]()
-    var dictIconClusterAnnotation = [String: UIImage]()
+    var dictIconClusterAnnotation = [String: StaticMarkerData]()
     // var tileRenderer:MKTileOverlayRenderer!
 
     var span = MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3)
@@ -100,6 +100,7 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
             result(200)
             break;
         case "marker#icon":
+
             markerIcon = convertImage(codeImage: call.arguments as! String)!
             result(200)
             break;
@@ -193,9 +194,12 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
     }
 
     private func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
-        let args = call.arguments as! [String: String]
-        let icon = convertImage(codeImage: args["bitmap"]!)
-        dictIconClusterAnnotation[args["id"]!] = icon!
+        let args = call.arguments as! [String: Any]
+        let id = args["id"] as! String
+        let rgbList: [Int] = (args["color"] as! [Int])
+        let icon = convertImage(codeImage: args["bitmap"] as! String)
+        let iconColor = UIColor.init(absoluteRed: rgbList.first!, green: rgbList.last!, blue: rgbList[1])
+        dictIconClusterAnnotation[id] = StaticMarkerData(image:icon!,color:iconColor)
     }
 
     private func setStaticGeoPoint(call: FlutterMethodCall) {
@@ -204,7 +208,7 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
 
 
         let listGeos = (args["point"] as! [GeoPoint]).map { point -> StaticGeoPMarker in
-            StaticGeoPMarker(icon: dictIconClusterAnnotation[id]!, color: nil, coordinate: point.toLocationCoordinate())
+            StaticGeoPMarker(icon: dictIconClusterAnnotation[id]!.image, color: dictIconClusterAnnotation[id]!.color, coordinate: point.toLocationCoordinate())
         } as [StaticGeoPMarker]
         if dictClusterAnnotation.keys.contains(id) {
             mapView.removeAnnotations(dictClusterAnnotation[id]!)
