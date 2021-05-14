@@ -9,23 +9,28 @@ import Foundation
 
 import MapKit
 
-@available (iOS 11.0,*)
+@available(iOS 11.0, *)
 class MarkerView: MKMarkerAnnotationView {
-  override var annotation: MKAnnotation? {
-    willSet {
-      // 1
-      guard let point = newValue as? GeoPointMap else {
-        return
-      }
-      canShowCallout = false
-      calloutOffset = CGPoint(x: -5, y: 5)
-      //rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
+    override var annotation: MKAnnotation? {
+        willSet {
+            // 1
+            guard let point = newValue as? GeoPointMap else {
+                return
+            }
+            canShowCallout = false
+            calloutOffset = CGPoint(x: -5, y: 5)
+            //rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
 
-      // 2
-        if(point.marker != nil){
-        image = point.marker
+            // 2
+            if (point.marker != nil) {
+                image = point.marker
+            }
+
         }
-      
     }
-  }
+}
+
+struct StaticMarkerData {
+    let image: UIImage
+    let color: UIColor
 }
