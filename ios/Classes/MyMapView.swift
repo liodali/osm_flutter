@@ -100,7 +100,6 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
             result(200)
             break;
         case "marker#icon":
-
             markerIcon = convertImage(codeImage: call.arguments as! String)!
             result(200)
             break;
@@ -111,6 +110,9 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         case "staticPosition":
             setStaticGeoPoint(call: call)
             result(200)
+            break;
+        case "road":
+            drawRoad(call: call, result: result)
             break;
         default:
             result(nil)
@@ -198,8 +200,8 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         let id = args["id"] as! String
         let rgbList: [Int] = (args["color"] as! [Int])
         let icon = convertImage(codeImage: args["bitmap"] as! String)
-        let iconColor = UIColor.init(absoluteRed: rgbList.first!, green: rgbList.last!, blue: rgbList[1])
-        dictIconClusterAnnotation[id] = StaticMarkerData(image:icon!,color:iconColor)
+        let iconColor = rgbList.toUIColor()//UIColor.init(absoluteRed: rgbList.first!, green: rgbList.last!, blue: rgbList[1])
+        dictIconClusterAnnotation[id] = StaticMarkerData(image: icon!, color: iconColor)
     }
 
     private func setStaticGeoPoint(call: FlutterMethodCall) {
@@ -216,13 +218,47 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         } else {
             dictClusterAnnotation[id] = listGeos
         }
-        let clusterAnnotation = ClusterMarkerAnnotation(
-                id: id,
-                geos: listGeos
-        )
+
         mapView.addAnnotations(listGeos)
         //mapView.addAnnotation(clusterAnnotation)
 
+    }
+
+    private func drawRoad(call: FlutterMethodCall, result: FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let points = args["wayPoint"] as! [GeoPoint]
+
+        let roadData = RoadData(startPoint: points.first!.toLocationCoordinate(),
+                endPoint: points.last!.toLocationCoordinate(),
+                roadColor: (args["roadColor"] as? [Int]?)??.toUIColor(),
+                roadWidth: args["roadWidth"] as! Float?)
+        let directionRequest = MKDirections.Request()
+        directionRequest.source = MKMapItem(placemark: MKPlacemark(coordinate: roadData.startPoint))
+        directionRequest.destination = MKMapItem(placemark: MKPlacemark(coordinate: roadData.endPoint))
+        directionRequest.transportType = .automobile
+
+        // Calculate the direction
+        let directions = MKDirections(request: directionRequest)
+        directions.calculate {
+            (response, error) -> Void in
+
+            guard let response = response else {
+                if let error = error {
+                    print("Error: \(error)")
+                }
+                result(FlutterError(code: "400", message: "error to draw road", details: nil))
+                return
+            }
+
+            let route = response.routes[0]
+            let distance = route.distance.rounded()
+            let second = route.expectedTravelTime
+            self.mapView.addOverlay((route.polyline))
+
+            let rect = route.polyline.boundingMapRect
+            self.mapView.setRegion(MKCoordinateRegion(rect), animated: true)
+            result(["distance": distance, "duration": second])
+        }
     }
 
     // ------- delegation func ----
