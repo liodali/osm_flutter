@@ -42,13 +42,15 @@ extension StaticGeoPMarker {
 
 extension GeoPoint
 {
-     func toLocationCoordinate(
-
-    )-> CLLocationCoordinate2D {
+     func toLocationCoordinate()-> CLLocationCoordinate2D {
          CLLocationCoordinate2D(latitude: self["lat"]!, longitude: self["lon"]!)
     }
 }
-
+extension Array where Element == Int  {
+    func toUIColor()-> UIColor{
+        return UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 1.0)
+    }
+}
 extension UIColor {
 
     /// Create color from RGB(A)

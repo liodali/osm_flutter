@@ -34,3 +34,9 @@ struct StaticMarkerData {
     let image: UIImage
     let color: UIColor
 }
+struct RoadData {
+    let startPoint:CLLocationCoordinate2D
+    let endPoint:CLLocationCoordinate2D
+    let roadColor :UIColor?
+    let roadWidth : Float?
+}
