@@ -83,7 +83,7 @@ class OSMFlutterState extends State<OSMFlutter> {
   PermissionStatus? _permission;
 
   //_OsmCreatedCallback _osmCreatedCallback;
-  GlobalKey? defaultMarkerKey,advancedPickerMarker, startIconKey, endIconKey, middleIconKey;
+  late GlobalKey defaultMarkerKey,advancedPickerMarker, startIconKey, endIconKey, middleIconKey;
   late Map<String, GlobalKey> staticMarkersKeys;
 
   @override

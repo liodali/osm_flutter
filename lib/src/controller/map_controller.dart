@@ -58,7 +58,13 @@ class MapController extends BaseMapController {
   /// we need to global key to recuperate widget from tree element
   /// [key] : (GlobalKey) key of widget that represent the new marker
   Future changeIconMarker(GlobalKey key) async {
-    await osmController.changeIconMarker(key);
+    await osmController.changeDefaultIconMarker(key);
+  }
+  ///change advanced Icon Marker
+  /// we need to global key to recuperate widget from tree element
+  /// [key] : (GlobalKey) key of widget that represent the new marker
+  Future changeAdvPickerIconMarker(GlobalKey key) async {
+    await osmController.changeIconAdvPickerMarker(key);
   }
 
   /// change static position in runtime
