@@ -408,4 +408,19 @@ class MethodChannelOSM extends OSMPlatform {
       degree,
     );
   }
+
+  @override
+  Future<void> customAdvancedPickerMarker(
+    int idMap,
+    GlobalKey key,
+  ) async {
+    Uint8List icon = await _capturePng(key);
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      var base64Str = base64.encode(icon);
+      await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", base64Str);
+    } else {
+      await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", icon);
+    }
+  }
 }
