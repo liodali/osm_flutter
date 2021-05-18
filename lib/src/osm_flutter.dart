@@ -17,15 +17,26 @@ typedef OnLocationChanged = void Function(GeoPoint);
 /// you can track you current location,show static points like position of your stores
 /// show road between 2 points
 /// [isPicker] : (bool) if is true, map will behave as picker and will start advanced picker
+///
 /// [trackMyPosition] : (bool) if is true, map will track your location
+///
 /// [showZoomController] : (bool) if us true, you can zoomIn zoomOut directly in the map
+///
 /// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
+///
 /// [onGeoPointClicked] : (callback) is trigger when you clicked on marker,return current  geoPoint of the Marker
+///
 /// [onLocationChanged] : (callback) it's hire when you activate tracking and  user position has been changed
+///
 /// [markerIcon] : (Icon/AssertImage) marker of geoPoint
+/// [markerOption] :  contain marker of geoPoint and customisation of advanced picker marker
+///
 /// [road] : set color and icons marker of road
+///
 /// [defaultZoom] : set default zoom value (default = 1)
+///
 /// [showDefaultInfoWindow] : (bool) enable/disable default infoWindow of marker (default = false)
+///
 /// [useSecureURL] : use https or http when we get data from osm api
 class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
@@ -34,7 +45,9 @@ class OSMFlutter extends StatefulWidget {
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
+  @Deprecated("this deprecated use MarkerOption,\nit will be delete in 0.8.0")
   final MarkerIcon? markerIcon;
+  final MarkerOption? markerOption;
   final Road? road;
   final double defaultZoom;
   final bool showDefaultInfoWindow;
@@ -48,6 +61,7 @@ class OSMFlutter extends StatefulWidget {
     this.showZoomController = false,
     this.staticPoints = const [],
     this.markerIcon,
+    this.markerOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
     this.road,
