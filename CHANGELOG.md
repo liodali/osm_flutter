@@ -1,3 +1,7 @@
+## 0.7.6 [beta-version]:
+* add new attribute markerOption to configuration marker in osm map
+* deprecate attribute markerIcon
+* add method `changeAdvPickerIconMarker` 
 ## 0.7.5+2 [beta-version]:
 * remove unnecessary code
 ## 0.7.5+1 [beta-version]:

@@ -39,6 +39,7 @@ class _MainExampleState extends State<MainExample> {
   late MapController controller;
   late GlobalKey<ScaffoldState> scaffoldKey;
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
+  ValueNotifier<bool> visibilityZoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
 
@@ -62,7 +63,7 @@ class _MainExampleState extends State<MainExample> {
     // Future.delayed(Duration(seconds: 20), () async {
     //   await controller.removeAllShapes();
     // });
-    Future.delayed(Duration(seconds: 10),()async{
+    Future.delayed(Duration(seconds: 10), () async {
       await controller.zoom(5);
       await controller.rotateMapCamera(45.0);
       // await controller.rotateMapCamera(120);
@@ -117,6 +118,8 @@ class _MainExampleState extends State<MainExample> {
           ),
           IconButton(
             onPressed: () async {
+              visibilityZoomNotifierActivation.value =
+                  !visibilityZoomNotifierActivation.value;
               zoomNotifierActivation.value = !zoomNotifierActivation.value;
             },
             icon: Icon(Icons.zoom_out_map),
@@ -149,7 +152,6 @@ class _MainExampleState extends State<MainExample> {
                   useSecureURL: false,
                   showDefaultInfoWindow: false,
                   defaultZoom: 3.0,
-
                   onLocationChanged: (myLocation) {
                     print(myLocation);
                   },
@@ -207,11 +209,20 @@ class _MainExampleState extends State<MainExample> {
                     ),
                     roadColor: Colors.red,
                   ),
-                  markerIcon: MarkerIcon(
-                    icon: Icon(
-                      Icons.home,
-                      color: Colors.orange,
-                      size: 64,
+                  markerOption: MarkerOption(
+                    defaultMarker: MarkerIcon(
+                      icon: Icon(
+                        Icons.home,
+                        color: Colors.orange,
+                        size: 64,
+                      ),
+                    ),
+                    advancedPickerMarker: MarkerIcon(
+                      icon: Icon(
+                        Icons.location_searching,
+                        color: Colors.green,
+                        size: 64,
+                      ),
                     ),
                   ),
                 ),
@@ -221,7 +232,7 @@ class _MainExampleState extends State<MainExample> {
                   child: ValueListenableBuilder<bool>(
                     valueListenable: advPickerNotifierActivation,
                     builder: (ctx, visible, child) {
-                      return  Visibility(
+                      return Visibility(
                         visible: visible,
                         child: AnimatedOpacity(
                           opacity: visible ? 1.0 : 0.0,
@@ -237,7 +248,7 @@ class _MainExampleState extends State<MainExample> {
                       onPressed: () async {
                         advPickerNotifierActivation.value = false;
                         GeoPoint p =
-                        await controller.selectAdvancedPositionPicker();
+                            await controller.selectAdvancedPositionPicker();
                         print(p);
                       },
                     ),
@@ -247,33 +258,44 @@ class _MainExampleState extends State<MainExample> {
                   bottom: 10,
                   left: 10,
                   child: ValueListenableBuilder<bool>(
-                    valueListenable: zoomNotifierActivation,
-                    builder: (ctx, visible, child) {
-                      return AnimatedOpacity(
-                        opacity: visible ? 1.0 : 0.0,
-                        duration: Duration(milliseconds: 500),
-                        child: child,
+                    valueListenable: visibilityZoomNotifierActivation,
+                    builder: (ctx, visibility, child) {
+                      return Visibility(
+                        visible: visibility,
+                        child: child!,
                       );
                     },
-                    child: Column(
-                      children: [
-                        ElevatedButton(
-                          child: Icon(Icons.add),
-                          onPressed: () async {
-                            controller.zoomIn();
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: zoomNotifierActivation,
+                      builder: (ctx, isVisible, child) {
+                        return AnimatedOpacity(
+                          opacity: isVisible ? 1.0 : 0.0,
+                          onEnd: () {
+                            visibilityZoomNotifierActivation.value = isVisible;
                           },
-                        ),
-                        ElevatedButton(
-                          child: Icon(Icons.remove),
-                          onPressed: () async {
-                            controller.zoomOut();
-                          },
-                        ),
-                      ],
+                          duration: Duration(milliseconds: 500),
+                          child: child,
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          ElevatedButton(
+                            child: Icon(Icons.add),
+                            onPressed: () async {
+                              controller.zoomIn();
+                            },
+                          ),
+                          ElevatedButton(
+                            child: Icon(Icons.remove),
+                            onPressed: () async {
+                              controller.zoomOut();
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-
               ],
             ),
           );

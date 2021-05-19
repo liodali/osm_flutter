@@ -183,4 +183,9 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM,
     double? degree,
   );
+
+  Future<void> customAdvancedPickerMarker(
+    int idMap,
+    GlobalKey key,
+  );
 }

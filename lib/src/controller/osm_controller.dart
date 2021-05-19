@@ -61,15 +61,25 @@ class OSMController {
         });*/
     }
 
-    if (_osmFlutterState.widget.markerIcon != null) {
-      await changeIconMarker(_osmFlutterState.key);
+    /// change default icon  marker
+    final defaultIcon = _osmFlutterState.widget.markerOption
+        ?.copyWith(defaultMarker: _osmFlutterState.widget.markerIcon);
+    if (defaultIcon != null) {
+      await changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
     }
+
+    /// change advanced picker icon marker
+    if (_osmFlutterState.widget.markerOption?.advancedPickerMarker != null) {
+      await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker);
+    }
+
+    /// init location in map
     if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
       initPosition = await myLocation();
     }
-
     if (initPosition != null) await changeLocation(initPosition);
 
+    /// draw static position
     if (_osmFlutterState.widget.staticPoints.isNotEmpty) {
       _osmFlutterState.widget.staticPoints
           .asMap()
@@ -84,6 +94,7 @@ class OSMController {
         }
       });
     }
+    /// road configuration
     if (_osmFlutterState.widget.road != null) {
       await showDialog(
           context: _osmFlutterState.context,
@@ -97,6 +108,7 @@ class OSMController {
             );
           });
     }
+    /// picker config
     if (_osmFlutterState.widget.isPicker) {
       bool granted = await _osmFlutterState.requestPermission();
       if (!granted) {
@@ -147,8 +159,15 @@ class OSMController {
   ///change Icon Marker
   /// we need to global key to recuperate widget from tree element
   /// [key] : (GlobalKey) key of widget that represent the new marker
-  Future changeIconMarker(GlobalKey? key) async {
+  Future changeDefaultIconMarker(GlobalKey? key) async {
     await osmPlatform.customMarker(_idMap, key);
+  }
+
+  ///change Icon  of advanced picker Marker
+  /// we need to global key to recuperate widget from tree element
+  /// [key] : (GlobalKey) key of widget that represent the new marker
+  Future changeIconAdvPickerMarker(GlobalKey key) async {
+    await osmPlatform.customAdvancedPickerMarker(_idMap, key);
   }
 
   /// change static position in runtime

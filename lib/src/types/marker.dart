@@ -1,5 +1,24 @@
 import 'package:flutter/material.dart';
 
+class MarkerOption {
+  final MarkerIcon? defaultMarker;
+  final MarkerIcon? advancedPickerMarker;
+
+  MarkerOption({
+    this.defaultMarker,
+    this.advancedPickerMarker,
+  });
+  MarkerOption copyWith({
+    MarkerIcon? defaultMarker,
+    MarkerIcon? advancedPickerMarker,
+  }){
+    return MarkerOption(
+      defaultMarker: defaultMarker??this.defaultMarker,
+      advancedPickerMarker: advancedPickerMarker ?? this.advancedPickerMarker
+    );
+  }
+}
+
 class MarkerIcon extends StatelessWidget {
   final Icon? icon;
   final AssetImage? image;
