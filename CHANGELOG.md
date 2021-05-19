@@ -1,3 +1,5 @@
+## 0.7.6+1 [beta-version]:
+* increase score
 ## 0.7.6 [beta-version]:
 * add new attribute markerOption to configuration marker in osm map
 * deprecate attribute markerIcon

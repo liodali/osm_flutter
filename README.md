@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.6-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.6%2B-orange)
 
 ## Platform Support
 | Android | iOS |
@@ -33,7 +33,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.6
+      flutter_osm_plugin: ^0.7.6+1
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :

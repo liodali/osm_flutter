@@ -94,6 +94,7 @@ class OSMController {
         }
       });
     }
+
     /// road configuration
     if (_osmFlutterState.widget.road != null) {
       await showDialog(
@@ -108,6 +109,7 @@ class OSMController {
             );
           });
     }
+
     /// picker config
     if (_osmFlutterState.widget.isPicker) {
       bool granted = await _osmFlutterState.requestPermission();
