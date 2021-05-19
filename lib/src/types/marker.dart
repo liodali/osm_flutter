@@ -11,11 +11,11 @@ class MarkerOption {
   MarkerOption copyWith({
     MarkerIcon? defaultMarker,
     MarkerIcon? advancedPickerMarker,
-  }){
+  }) {
     return MarkerOption(
-      defaultMarker: defaultMarker??this.defaultMarker,
-      advancedPickerMarker: advancedPickerMarker ?? this.advancedPickerMarker
-    );
+        defaultMarker: defaultMarker ?? this.defaultMarker,
+        advancedPickerMarker:
+            advancedPickerMarker ?? this.advancedPickerMarker);
   }
 }
 

@@ -83,7 +83,11 @@ class OSMFlutterState extends State<OSMFlutter> {
   PermissionStatus? _permission;
 
   //_OsmCreatedCallback _osmCreatedCallback;
-  late GlobalKey defaultMarkerKey,advancedPickerMarker, startIconKey, endIconKey, middleIconKey;
+  late GlobalKey defaultMarkerKey,
+      advancedPickerMarker,
+      startIconKey,
+      endIconKey,
+      middleIconKey;
   late Map<String, GlobalKey> staticMarkersKeys;
 
   @override
@@ -205,8 +209,7 @@ class OSMFlutterState extends State<OSMFlutter> {
           if (widget.markerOption?.advancedPickerMarker != null) ...[
             RepaintBoundary(
               key: advancedPickerMarker,
-              child: widget.markerOption
-                  ?.advancedPickerMarker,
+              child: widget.markerOption?.advancedPickerMarker,
             ),
           ],
           if (widget.staticPoints.isNotEmpty) ...[

@@ -418,7 +418,8 @@ class MethodChannelOSM extends OSMPlatform {
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       var base64Str = base64.encode(icon);
-      await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", base64Str);
+      await _channels[idMap]!
+          .invokeMethod("advancedPicker#marker#icon", base64Str);
     } else {
       await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", icon);
     }
