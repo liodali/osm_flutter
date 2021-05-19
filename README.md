@@ -1,7 +1,13 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.5%2B2-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.6-orange)
 
-osm plugin for flutter apps (only Android for now, iOS will be supported in future)
+## Platform Support
+| Android | iOS |
+|:---:|:---:|
+| supported :heavy_check_mark: | coming soon  |
+
+
+<b>osm plugin for flutter apps </b>
 
 * current position
 * change position 
@@ -27,7 +33,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.5+2
+      flutter_osm_plugin: ^0.7.6
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -96,7 +102,7 @@ Add the following to your `pubspec.yaml` file:
  await controller.zoomIn();
 ```
 
-<b> 6) Zoom Out </b>
+<b> 6Android) Zoom Out </b>
 
 ```dart
  await controller.zoom(-2.);
@@ -245,9 +251,10 @@ Add the following to your `pubspec.yaml` file:
 
 | Properties               | Description                         |
 | ------------------------ | ----------------------------------- |
-| `trackMyPosition`        | enbaled tracking user position.     |
+| `trackMyPosition`        | enable tracking user position.     |
 | `showZoomController`     | show default zoom controller.       |
-| `markerIcon`             | set icon Marker                     |
+| `markerIcon`             | set icon Marker  (deprecated replaced with `markerOption` )                   |
+| `markerOption`           | configure marker of osm map                   |
 | `defaultZoom`            | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
 | `road`                   | set color and start/end/middle markers in road |
 | `useSecureURL`           | enabled secure urls                  |
