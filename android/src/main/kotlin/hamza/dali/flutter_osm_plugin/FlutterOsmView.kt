@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
@@ -648,7 +647,7 @@ class FlutterOsmView(
                 ?: ResourcesCompat.getDrawable(context!!.resources, R.drawable.ic_location_on_red_24dp, null)!!.toBitmap(64, 64) //BitmapFactory.decodeResource(, R.drawable.ic_location_on_red_24dp)?:customMarkerIcon
 
         markerSelectionPicker = FlutterPickerViewOverlay(
-                bitmap, context!!, point
+                bitmap, context!!, point, customPickerMarkerIcon != null
         )
         val params = FrameLayout.LayoutParams(
                 WRAP_CONTENT,
