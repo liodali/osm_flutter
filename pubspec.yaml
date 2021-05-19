@@ -13,7 +13,6 @@ dependencies:
   stream_transform: ^2.0.0
   location: ^4.1.1
   dio: ^4.0.0
-  after_layout: ^1.1.0
 
 dev_dependencies:
   flutter_test:
