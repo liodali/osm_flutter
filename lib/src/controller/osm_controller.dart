@@ -70,7 +70,7 @@ class OSMController {
 
     /// change advanced picker icon marker
     if (_osmFlutterState.widget.markerOption?.advancedPickerMarker != null) {
-      await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker!);
+      await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker);
     }
 
     /// init location in map
