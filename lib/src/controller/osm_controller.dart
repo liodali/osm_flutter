@@ -77,9 +77,9 @@ class OSMController {
     if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
       initPosition = await myLocation();
     }
-
     if (initPosition != null) await changeLocation(initPosition);
 
+    /// draw static position
     if (_osmFlutterState.widget.staticPoints.isNotEmpty) {
       _osmFlutterState.widget.staticPoints
           .asMap()
@@ -94,6 +94,7 @@ class OSMController {
         }
       });
     }
+    /// road configuration
     if (_osmFlutterState.widget.road != null) {
       await showDialog(
           context: _osmFlutterState.context,
@@ -107,6 +108,7 @@ class OSMController {
             );
           });
     }
+    /// picker config
     if (_osmFlutterState.widget.isPicker) {
       bool granted = await _osmFlutterState.requestPermission();
       if (!granted) {
