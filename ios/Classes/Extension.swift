@@ -48,7 +48,7 @@ extension GeoPoint
 }
 extension Array where Element == Int  {
     func toUIColor()-> UIColor{
-        return UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 1.0)
+        return UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
     }
 }
 extension UIColor {
