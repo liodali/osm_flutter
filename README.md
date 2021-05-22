@@ -41,7 +41,7 @@ Add the following to your `pubspec.yaml` file:
   
 ```dart
  OSMFlutter( 
-        controler:mapController,
+        controller:mapController,
         currentLocation: false,
         road: Road(
                 startIcon: MarkerIcon(
@@ -60,7 +60,6 @@ Add the following to your `pubspec.yaml` file:
           size: 56,
           ),
         ),
-        initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
     );
 
 ```
