@@ -97,10 +97,14 @@ class _MainExampleState extends State<MainExample> {
 
                 ///selection geoPoint
                 GeoPoint point = await controller.selectPosition();
+                GeoPoint pointM1 = await controller.selectPosition();
+                GeoPoint pointM2 = await controller.selectPosition();
                 GeoPoint point2 = await controller.selectPosition();
                 RoadInfo roadInformation = await controller.drawRoad(
                     point, point2,
-                    roadWidth: 10.0, roadColor: Colors.blue);
+                    interestPoints: [pointM1, pointM2],
+                    roadWidth: 10.0,
+                    roadColor: Colors.blue);
                 print(
                     "duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
                 print("distance:${roadInformation.distance}Km");
