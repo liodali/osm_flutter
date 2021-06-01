@@ -45,7 +45,7 @@ class MethodChannelOSM extends OSMPlatform {
   // Returns a filtered view of the events in the _controller, by mapId.
   Stream<EventOSM> _events(int mapId) =>
       _streamController.stream.where((event) => event.mapId == mapId)
-          as Stream<EventOSM>;
+      as Stream<EventOSM>;
 
   @override
   Future<void> init(int idOSMMap) async {
@@ -108,7 +108,7 @@ class MethodChannelOSM extends OSMPlatform {
   Future<GeoPoint> myLocation(int idMap) async {
     try {
       Map<String, dynamic> map =
-          (await (_channels[idMap]!.invokeMapMethod("user#position")))!;
+      (await (_channels[idMap]!.invokeMapMethod("user#position")))!;
       return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
     } on PlatformException catch (e) {
       throw GeoPointException(msg: e.message);
@@ -136,8 +136,8 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> customMarkerStaticPosition(
-      int idOSM, GlobalKey? globalKey, String id) async {
+  Future<void> customMarkerStaticPosition(int idOSM, GlobalKey? globalKey,
+      String id) async {
     Uint8List icon = await _capturePng(globalKey!);
 
     await _channels[idOSM]!.invokeMethod(
@@ -155,19 +155,22 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<RoadInfo> drawRoad(
-    int idOSM,
-    GeoPoint start,
-    GeoPoint end, {
-    Color? roadColor,
-    double? roadWidth,
-  }) async {
+  Future<RoadInfo> drawRoad(int idOSM,
+      GeoPoint start,
+      GeoPoint end, {
+        List<GeoPoint>? interestPoints,
+        Color? roadColor,
+        double? roadWidth,
+      }) async {
     final Map args = {
       "wayPoints": [
         start.toMap(),
         end.toMap(),
       ]
     };
+    if (interestPoints != null && interestPoints.isNotEmpty) {
+      args.addAll({"middlePoints": interestPoints.map((e) => e.toMap()).toList()});
+    }
     if (roadColor != null) {
       args.addAll(roadColor.toMap("roadColor"));
     }
@@ -258,8 +261,8 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> staticPosition(
-      int idOSM, List<GeoPoint> pList, String id) async {
+  Future<void> staticPosition(int idOSM, List<GeoPoint> pList,
+      String id) async {
     try {
       List<Map<String, double?>> listGeos = [];
       for (GeoPoint p in pList) {
@@ -279,10 +282,10 @@ class MethodChannelOSM extends OSMPlatform {
 
   Future<Uint8List> _capturePng(GlobalKey globalKey) async {
     RenderRepaintBoundary boundary =
-        globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     ui.Image image = await boundary.toImage();
     ByteData byteData =
-        (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
+    (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
     Uint8List pngBytes = byteData.buffer.asUint8List();
     return pngBytes;
   }
@@ -388,10 +391,8 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> drawRoadManually(
-    int idOSM,
-    List<GeoPoint> road,
-  ) async {
+  Future<void> drawRoadManually(int idOSM,
+      List<GeoPoint> road,) async {
     final listMapRoad = road.map((e) => e.toMap());
     await _channels[idOSM]!.invokeListMethod(
       "drawRoad#manually",
@@ -410,10 +411,8 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> customAdvancedPickerMarker(
-    int idMap,
-    GlobalKey key,
-  ) async {
+  Future<void> customAdvancedPickerMarker(int idMap,
+      GlobalKey key,) async {
     Uint8List icon = await _capturePng(key);
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {

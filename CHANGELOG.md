@@ -1,3 +1,5 @@
+## 0.7.7 [beta-version]:
+* add interest point to draw road 
 ## 0.7.6+1 [beta-version]:
 * increase score
 ## 0.7.6 [beta-version]:

@@ -96,6 +96,7 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM,
     GeoPoint start,
     GeoPoint end, {
+    List<GeoPoint>? interestPoints,
     Color? roadColor,
     double? roadWidth,
   });

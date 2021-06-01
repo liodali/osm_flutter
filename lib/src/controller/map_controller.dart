@@ -60,6 +60,7 @@ class MapController extends BaseMapController {
   Future changeIconMarker(GlobalKey key) async {
     await osmController.changeDefaultIconMarker(key);
   }
+
   /*///change advanced picker Icon Marker
   /// we need to global key to recuperate widget from tree element
   /// [key] : (GlobalKey) key of widget that represent the new marker
@@ -123,18 +124,22 @@ class MapController extends BaseMapController {
   ///
   ///  [end] : last point of your road
   ///
+  ///  [interestPoints] : (List of GeoPoint) middle position that you want you road to pass through it
+  ///
   ///  [roadColor] : (Color) indicate the color that you want to be drawing the road, if Color null will draw with default color that specified in OSMFlutter or red color (default of osm map)
   ///
   ///  [roadWidth] : (double) indicate the width of  your road
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
+    List<GeoPoint>? interestPoints,
     Color? roadColor,
     double? roadWidth,
   }) async {
     return await osmController.drawRoad(
       start,
       end,
+      interestPoints: interestPoints,
       roadColor: roadColor,
       roadWidth: roadWidth,
     );

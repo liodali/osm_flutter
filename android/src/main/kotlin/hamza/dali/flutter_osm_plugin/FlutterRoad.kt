@@ -10,14 +10,16 @@ import org.osmdroid.views.overlay.Polyline
 open class FlutterRoad(
         val application: Application,
         private val mapView: MapView,
+        private val interestPoint: List<GeoPoint>,
 ) : Overlay() {
 
     lateinit var start: FlutterRoadMarker//? = null
     lateinit var end: FlutterRoadMarker//? = null
+    var middlePoints: MutableList<FlutterRoadMarker> = emptyList<FlutterRoadMarker>().toMutableList()
     var road: Polyline? = null
         set(value) {
             if (value != null) {
-                initStartEndPoints(value.points.first(), value.points.last())
+                initStartEndPoints(value.actualPoints.first(), value.actualPoints.last(), interestPoint)
                 field = value
             }
         }
@@ -26,15 +28,28 @@ open class FlutterRoad(
             if (value.isNotEmpty()) field = value
         }
 
-    private fun initStartEndPoints(s: GeoPoint, e: GeoPoint) {
-        start = FlutterRoadMarker(application, mapView, s).apply {
+    private fun initStartEndPoints(
+            startRoad: GeoPoint,
+            destinationRoad: GeoPoint,
+            interestPoint: List<GeoPoint> = emptyList()
+    ) {
+        start = FlutterRoadMarker(application, mapView, startRoad).apply {
             this.mapIconsBitmaps = markersIcons
             this.iconPosition(Constants.PositionMarker.START)
         }
 
-        end = FlutterRoadMarker(application, mapView, e).apply {
+        end = FlutterRoadMarker(application, mapView, destinationRoad).apply {
             this.mapIconsBitmaps = markersIcons
             this.iconPosition(Constants.PositionMarker.END)
+        }
+        interestPoint.forEach { geoPoint ->
+            middlePoints.add(
+                    FlutterRoadMarker(application, mapView, geoPoint).apply {
+                        this.mapIconsBitmaps = markersIcons
+                        this.iconPosition(Constants.PositionMarker.MIDDLE)
+                        this.visibilityInfoWindow(false)
+                    }
+            )
         }
 
 
