@@ -169,7 +169,7 @@ class MethodChannelOSM extends OSMPlatform {
       ]
     };
     if (interestPoints != null && interestPoints.isNotEmpty) {
-      args.addAll({"middle": interestPoints.map((e) => e.toMap())});
+      args.addAll({"middlePoints": interestPoints.map((e) => e.toMap()).toList()});
     }
     if (roadColor != null) {
       args.addAll(roadColor.toMap("roadColor"));

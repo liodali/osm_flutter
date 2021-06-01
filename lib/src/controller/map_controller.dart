@@ -60,6 +60,7 @@ class MapController extends BaseMapController {
   Future changeIconMarker(GlobalKey key) async {
     await osmController.changeDefaultIconMarker(key);
   }
+
   /*///change advanced picker Icon Marker
   /// we need to global key to recuperate widget from tree element
   /// [key] : (GlobalKey) key of widget that represent the new marker
@@ -129,12 +130,14 @@ class MapController extends BaseMapController {
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
+    List<GeoPoint>? interestPoints,
     Color? roadColor,
     double? roadWidth,
   }) async {
     return await osmController.drawRoad(
       start,
       end,
+      interestPoints: interestPoints,
       roadColor: roadColor,
       roadWidth: roadWidth,
     );
