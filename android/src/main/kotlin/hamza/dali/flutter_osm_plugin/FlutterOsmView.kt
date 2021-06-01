@@ -773,7 +773,8 @@ class FlutterOsmView(
                 }.toList()
                 withContext(Main) {
                     map!!.overlays.removeAll {
-                        it is FlutterMarker && wayPoints.contains(it.position)
+                       ( it is FlutterMarker && wayPoints.contains(it.position) )||
+                               ( it is FlutterMarker && listInterestPoints.contains(it.position) )
                     }
                 }
                 val roadPoints = ArrayList(wayPoints)
@@ -795,23 +796,23 @@ class FlutterOsmView(
                                 interestPoint = listInterestPoints
                         )
 
-                        flutterRoad?.let {
-                            it.markersIcons = customRoadMarkerIcon
+                        flutterRoad?.let { roadF ->
+                            roadF.markersIcons = customRoadMarkerIcon
                             polyLine.outlinePaint.strokeWidth = roadWidth
-                            it.road = polyLine
+                            roadF.road = polyLine
                             // if (it.start != null) 
-                            folderRoad.items.add(it.start.apply {
+                            folderRoad.items.add(roadF.start.apply {
                                 this.visibilityInfoWindow(visibilityInfoWindow)
                             })
                             //  if (it.end != null) 
-                            folderRoad.items.add(it.end.apply {
+                            folderRoad.items.add(roadF.end.apply {
                                 this.visibilityInfoWindow(visibilityInfoWindow)
                             })
-                            folderRoad.items.add(it.road!!)
+                            folderRoad.items.addAll(roadF.middlePoints)
+                            folderRoad.items.add(roadF.road!!)
                         }
                         map!!.invalidate()
                     }
-
                     result.success(HashMap<String, Double>().apply {
                         this["duration"] = road.mDuration
                         this["distance"] = road.mLength
