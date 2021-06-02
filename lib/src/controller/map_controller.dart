@@ -133,15 +133,13 @@ class MapController extends BaseMapController {
     GeoPoint start,
     GeoPoint end, {
     List<GeoPoint>? interestPoints,
-    Color? roadColor,
-    double? roadWidth,
+    RoadOption? roadOption,
   }) async {
     return await osmController.drawRoad(
       start,
       end,
       interestPoints: interestPoints,
-      roadColor: roadColor,
-      roadWidth: roadWidth,
+      roadOption: roadOption,
     );
   }
 

@@ -268,8 +268,7 @@ class OSMController {
     GeoPoint start,
     GeoPoint end, {
     List<GeoPoint>? interestPoints,
-    Color? roadColor,
-    double? roadWidth,
+    RoadOption? roadOption,
   }) async {
     assert(start.latitude != end.latitude || start.longitude != end.longitude,
         "you cannot make road with same geoPoint");
@@ -278,8 +277,7 @@ class OSMController {
       start,
       end,
       interestPoints: interestPoints,
-      roadColor: roadColor,
-      roadWidth: roadWidth,
+      roadOption: roadOption ?? const RoadOption.empty(),
     );
   }
 
