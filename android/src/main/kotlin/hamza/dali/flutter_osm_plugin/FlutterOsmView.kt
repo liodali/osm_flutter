@@ -732,6 +732,9 @@ class FlutterOsmView(
 
     private fun drawRoad(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments!! as HashMap<String, Any>
+
+        val showPoiMarker = args["showMarker"] as Boolean
+
         val listPointsArgs = args["wayPoints"] as List<HashMap<String, Double>>
 
         val listInterestPoints: List<GeoPoint> = when (args.containsKey("roadColor")) {
@@ -744,7 +747,7 @@ class FlutterOsmView(
         val colorRoad: Int? = when (args.containsKey("roadColor")) {
             true -> {
                 val colors = (args["roadColor"] as List<Int>)
-                Color.rgb(colors[0], colors[1], colors[2])
+                Color.rgb(colors.first(), colors.last(), colors[1])
             }
             else -> roadColor
         }
@@ -773,8 +776,8 @@ class FlutterOsmView(
                 }.toList()
                 withContext(Main) {
                     map!!.overlays.removeAll {
-                       ( it is FlutterMarker && wayPoints.contains(it.position) )||
-                               ( it is FlutterMarker && listInterestPoints.contains(it.position) )
+                        (it is FlutterMarker && wayPoints.contains(it.position)) ||
+                                (it is FlutterMarker && listInterestPoints.contains(it.position))
                     }
                 }
                 val roadPoints = ArrayList(wayPoints)
@@ -793,12 +796,13 @@ class FlutterOsmView(
                         flutterRoad = FlutterRoad(
                                 application!!,
                                 map!!,
-                                interestPoint = listInterestPoints
+                                interestPoint = if (showPoiMarker) listInterestPoints else emptyList()
                         )
 
                         flutterRoad?.let { roadF ->
                             roadF.markersIcons = customRoadMarkerIcon
                             polyLine.outlinePaint.strokeWidth = roadWidth
+
                             roadF.road = polyLine
                             // if (it.start != null) 
                             folderRoad.items.add(roadF.start.apply {
