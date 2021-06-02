@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.7-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.7%2B1-orange)
 
 ## Platform Support
 | Android | iOS |
@@ -33,7 +33,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.7
+      flutter_osm_plugin: ^0.7.7+1
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -180,8 +180,11 @@ Add the following to your `pubspec.yaml` file:
    GeoPoint(latitude: 47.35387, longitude: 8.43609),
    GeoPoint(latitude: 47.4371, longitude: 8.6136),
    interestPoints : [ GeoPoint(latitude: 47.4361, longitude: 8.6156), GeoPoint(latitude: 47.4481, longitude: 8.6266)]
-   roadColor : Colors.green,
-   roadWidth : 7.0,
+   roadOption: RoadOption(
+       roadWidth: 10.0,
+       roadColor: Colors.blue,
+       showMarkerOfPOI: false
+   ),
 );
  print("${roadInfo.distance}km");
  print("${roadInfo.duration}sec");

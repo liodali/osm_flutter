@@ -103,8 +103,10 @@ class _MainExampleState extends State<MainExample> {
                 RoadInfo roadInformation = await controller.drawRoad(
                     point, point2,
                     interestPoints: [pointM1, pointM2],
-                    roadWidth: 10.0,
-                    roadColor: Colors.blue);
+                    roadOption: RoadOption(
+                        roadWidth: 10.0,
+                        roadColor: Colors.blue,
+                        showMarkerOfPOI: false));
                 print(
                     "duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
                 print("distance:${roadInformation.distance}Km");
