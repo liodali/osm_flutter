@@ -27,7 +27,7 @@ class RoadOption {
     this.showMarkerOfPOI = false,
   });
 
- const RoadOption.empty()
+  const RoadOption.empty()
       : this.roadWidth = null,
         this.roadColor = null,
         this.showMarkerOfPOI = false;
