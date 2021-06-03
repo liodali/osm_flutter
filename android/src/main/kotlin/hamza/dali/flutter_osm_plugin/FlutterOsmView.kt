@@ -804,15 +804,18 @@ class FlutterOsmView(
                             polyLine.outlinePaint.strokeWidth = roadWidth
 
                             roadF.road = polyLine
-                            // if (it.start != null) 
-                            folderRoad.items.add(roadF.start.apply {
-                                this.visibilityInfoWindow(visibilityInfoWindow)
-                            })
-                            //  if (it.end != null) 
-                            folderRoad.items.add(roadF.end.apply {
-                                this.visibilityInfoWindow(visibilityInfoWindow)
-                            })
-                            folderRoad.items.addAll(roadF.middlePoints)
+                            if (showPoiMarker) {
+                                // if (it.start != null)
+                                folderRoad.items.add(roadF.start.apply {
+                                    this.visibilityInfoWindow(visibilityInfoWindow)
+                                })
+                                //  if (it.end != null)
+                                folderRoad.items.add(roadF.end.apply {
+                                    this.visibilityInfoWindow(visibilityInfoWindow)
+                                })
+                                folderRoad.items.addAll(roadF.middlePoints)
+                            }
+
                             folderRoad.items.add(roadF.road!!)
                         }
                         map!!.invalidate()

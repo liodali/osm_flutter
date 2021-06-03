@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.7%2B1-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.7%2B2-orange)
 
 ## Platform Support
 | Android | iOS |
@@ -33,7 +33,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.7+1
+      flutter_osm_plugin: ^0.7.7+2
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -173,7 +173,7 @@ Add the following to your `pubspec.yaml` file:
 
 <b>13) Draw road,recuperate distance in km and duration in sec </b>
 
-> you can add anmiddle position to pass your route through them
+> you can add an middle position to pass your route through them
 >
 ```dart
  RoadInfo roadInfo = await controller.drawRoad( 
