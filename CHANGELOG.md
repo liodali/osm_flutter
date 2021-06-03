@@ -1,3 +1,5 @@
+## 0.7.7+2 :
+* fix bug : hide markers of start and end position
 ## 0.7.7+1 :
 * remove `roadWidth` , `roadColor` from the method `drawRoad`
 * create new class RoadOption contain new attribute `showMarkerOfPOI`
