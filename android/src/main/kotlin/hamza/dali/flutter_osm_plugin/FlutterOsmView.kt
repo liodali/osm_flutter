@@ -25,6 +25,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import androidx.preference.PreferenceManager
+import com.squareup.picasso.Picasso
+import com.squareup.picasso.Target
 import hamza.dali.flutter_osm_plugin.Constants.Companion.url
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.CREATED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.DESTROYED
@@ -229,13 +231,42 @@ class FlutterOsmView(
             zoom: Double,
             color: Int? = null,
             dynamicMarkerBitmap: Drawable? = null,
+            imageURL: String? = null,
     ): FlutterMarker {
         map!!.controller.setZoom(zoom)
         map!!.controller.animateTo(geoPoint)
         val marker: FlutterMarker = createMarker(geoPoint, color) as FlutterMarker
-        if (dynamicMarkerBitmap != null)
-            marker.icon = dynamicMarkerBitmap
-        map!!.overlays.add(marker)
+        when {
+            dynamicMarkerBitmap != null -> {
+                marker.icon = dynamicMarkerBitmap
+                map!!.overlays.add(marker)
+
+            }
+            imageURL != null && imageURL.isNotEmpty() -> {
+                Picasso.get()
+                        .load(imageURL)
+                        .into(object : Target {
+                            override fun onBitmapLoaded(bitmapMarker: Bitmap?, from: Picasso.LoadedFrom?) {
+                                marker.icon = BitmapDrawable(activity!!.resources, bitmapMarker)
+                                map!!.overlays.add(marker)
+                            }
+
+                            override fun onBitmapFailed(e: java.lang.Exception?, errorDrawable: Drawable?) {
+                                marker.icon = ContextCompat.getDrawable(context!!, R.drawable.ic_location_on_red_24dp)
+                                map!!.overlays.add(marker)
+
+                            }
+
+                            override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                                // marker.icon = ContextCompat.getDrawable(context!!, R.drawable.ic_location_on_red_24dp)
+                            }
+
+                        })
+            }
+            else -> map!!.overlays.add(marker)
+
+        }
+
         return marker
     }
 
@@ -925,9 +956,10 @@ class FlutterOsmView(
             val bitmap = getBitmap(args["icon"] as ByteArray)
             BitmapDrawable(activity!!.resources, bitmap)
         } else null
-        if (args.containsKey("")) {
+        val imageURL: String? = if (args.containsKey("imageURL")) {
+            args["imageURL"] as String
+        } else null
 
-        }
         if (mapEventsOverlay == null) {
             mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
                 override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -936,7 +968,12 @@ class FlutterOsmView(
                         map!!.overlays.removeFirst()
                     }
 
-                    addMarker(p!!, map!!.zoomLevelDouble, null, marker)
+                    addMarker(
+                            p!!, map!!.zoomLevelDouble,
+                            null,
+                            marker,
+                            imageURL,
+                    )
                     result.success(p.toHashMap())
 
                     return true
