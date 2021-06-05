@@ -224,10 +224,17 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    private fun addMarker(geoPoint: GeoPoint, zoom: Double, color: Int? = null): FlutterMarker {
+    private fun addMarker(
+            geoPoint: GeoPoint,
+            zoom: Double,
+            color: Int? = null,
+            dynamicMarkerBitmap: Drawable? = null,
+    ): FlutterMarker {
         map!!.controller.setZoom(zoom)
         map!!.controller.animateTo(geoPoint)
         val marker: FlutterMarker = createMarker(geoPoint, color) as FlutterMarker
+        if (dynamicMarkerBitmap != null)
+            marker.icon = dynamicMarkerBitmap
         map!!.overlays.add(marker)
         return marker
     }
@@ -913,6 +920,14 @@ class FlutterOsmView(
 
     private fun pickPosition(call: MethodCall, result: MethodChannel.Result) {
         //val usingCamera=call.arguments as Boolean
+        val args = call.arguments as Map<String, Any>
+        val marker: Drawable? = if (args.containsKey("icon")) {
+            val bitmap = getBitmap(args["icon"] as ByteArray)
+            BitmapDrawable(activity!!.resources, bitmap)
+        } else null
+        if (args.containsKey("")) {
+
+        }
         if (mapEventsOverlay == null) {
             mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
                 override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -921,7 +936,7 @@ class FlutterOsmView(
                         map!!.overlays.removeFirst()
                     }
 
-                    addMarker(p!!, map!!.zoomLevelDouble, null)
+                    addMarker(p!!, map!!.zoomLevelDouble, null, marker)
                     result.success(p.toHashMap())
 
                     return true
