@@ -78,6 +78,7 @@ class OSMFlutter extends StatefulWidget {
 class OSMFlutterState extends State<OSMFlutter> {
   GlobalKey androidViewKey = GlobalKey();
   OSMController? _osmController;
+  ValueNotifier<Widget?> dynamicMarkerWidgetNotifier = ValueNotifier(null);
 
   //permission status
   PermissionStatus? _permission;
@@ -87,7 +88,8 @@ class OSMFlutterState extends State<OSMFlutter> {
       advancedPickerMarker,
       startIconKey,
       endIconKey,
-      middleIconKey;
+      middleIconKey,
+      dynamicMarkerKey;
   late Map<String, GlobalKey> staticMarkersKeys;
 
   @override
@@ -196,8 +198,20 @@ class OSMFlutterState extends State<OSMFlutter> {
       right: 0,
       child: Stack(
         children: <Widget>[
+          ValueListenableBuilder<Widget?>(
+            valueListenable: dynamicMarkerWidgetNotifier,
+            builder: (ctx, widget, child) {
+              if(widget==null){
+                return SizedBox.fromSize();
+              }
+              return RepaintBoundary(
+                key: dynamicMarkerKey,
+                child: widget,
+              );
+            },
+          ),
           if ((widget.markerOption?.defaultMarker != null) ||
-              (widget.markerIcon != null)) ...[
+              (widget.markerOption!.defaultMarker != null)) ...[
             RepaintBoundary(
               key: defaultMarkerKey,
               child: widget.markerOption
