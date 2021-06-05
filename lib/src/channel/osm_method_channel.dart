@@ -210,11 +210,11 @@ class MethodChannelOSM extends OSMPlatform {
     }
     if(imageURL.isNotEmpty){
       args.addAll({"imageURL": imageURL});
-
     }
+
     try {
       Map<String, dynamic> map = (await (_channels[idOSM]!
-          .invokeMapMethod("user#pickPosition", null)))!;
+          .invokeMapMethod("user#pickPosition", args)))!;
       return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
     } on PlatformException catch (e) {
       throw GeoPointException(msg: e.message);

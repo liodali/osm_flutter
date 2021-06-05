@@ -108,6 +108,7 @@ class OSMFlutterState extends State<OSMFlutter> {
         }
       });
     }
+    dynamicMarkerKey = GlobalKey();
     defaultMarkerKey = GlobalKey();
     advancedPickerMarker = GlobalKey();
     startIconKey = GlobalKey();
