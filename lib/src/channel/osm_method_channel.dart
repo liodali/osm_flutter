@@ -197,7 +197,21 @@ class MethodChannelOSM extends OSMPlatform {
 
   /// select position and show marker on it
   @override
-  Future<GeoPoint> pickLocation(int idOSM) async {
+  Future<GeoPoint> pickLocation(
+    int idOSM, {
+    GlobalKey? key,
+    String imageURL = "",
+  }) async {
+    Uint8List? bitmap;
+    Map args = {};
+    if (key != null) {
+      bitmap = await _capturePng(key);
+      args.addAll({"icon": bitmap});
+    }
+    if(imageURL.isNotEmpty){
+      args.addAll({"imageURL": imageURL});
+
+    }
     try {
       Map<String, dynamic> map = (await (_channels[idOSM]!
           .invokeMapMethod("user#pickPosition", null)))!;

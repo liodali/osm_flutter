@@ -245,8 +245,27 @@ class OSMController {
   }
 
   /// pick Position in map
-  Future<GeoPoint> selectPosition() async {
-    GeoPoint p = await osmPlatform.pickLocation(_idMap);
+  Future<GeoPoint> selectPosition({
+    MarkerIcon? icon,
+    String imageURL = "",
+  }) async {
+    if (icon != null){
+      _osmFlutterState.dynamicMarkerWidgetNotifier.value = icon;
+      return Future.delayed(
+          Duration(
+            milliseconds: 200,
+          ), () async {
+        GeoPoint p = await osmPlatform.pickLocation(
+          _idMap,
+          key: _osmFlutterState.dynamicMarkerKey,
+        );
+        return p;
+      });
+    }
+    GeoPoint p = await osmPlatform.pickLocation(
+      _idMap,
+      imageURL: imageURL,
+    );
     return p;
   }
 
