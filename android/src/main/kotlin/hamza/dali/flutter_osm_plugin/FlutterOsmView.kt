@@ -25,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import androidx.preference.PreferenceManager
+import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 import hamza.dali.flutter_osm_plugin.Constants.Companion.url
@@ -243,25 +244,41 @@ class FlutterOsmView(
 
             }
             imageURL != null && imageURL.isNotEmpty() -> {
+
                 Picasso.get()
                         .load(imageURL)
-                        .into(object : Target {
-                            override fun onBitmapLoaded(bitmapMarker: Bitmap?, from: Picasso.LoadedFrom?) {
-                                marker.icon = BitmapDrawable(activity!!.resources, bitmapMarker)
-                                map!!.overlays.add(marker)
+                        .fetch(object : Callback {
+                            override fun onSuccess() {
+                                Picasso.get()
+                                        .load(imageURL)
+                                        .into(object : Target {
+                                            override fun onBitmapLoaded(bitmapMarker: Bitmap?, from: Picasso.LoadedFrom?) {
+
+                                                marker.icon = BitmapDrawable(activity!!.resources, bitmapMarker)
+                                                map!!.overlays.add(marker)
+
+                                            }
+
+                                            override fun onBitmapFailed(e: java.lang.Exception?, errorDrawable: Drawable?) {
+                                                marker.icon = ContextCompat.getDrawable(context!!, R.drawable.ic_location_on_red_24dp)
+                                                map!!.overlays.add(marker)
+
+                                            }
+
+                                            override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                                                // marker.icon = ContextCompat.getDrawable(context!!, R.drawable.ic_location_on_red_24dp)
+                                            }
+
+                                        })
                             }
 
-                            override fun onBitmapFailed(e: java.lang.Exception?, errorDrawable: Drawable?) {
-                                marker.icon = ContextCompat.getDrawable(context!!, R.drawable.ic_location_on_red_24dp)
-                                map!!.overlays.add(marker)
-
-                            }
-
-                            override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
-                                // marker.icon = ContextCompat.getDrawable(context!!, R.drawable.ic_location_on_red_24dp)
+                            override fun onError(e: java.lang.Exception?) {
+                                TODO("Not yet implemented")
                             }
 
                         })
+
+
             }
             else -> map!!.overlays.add(marker)
 
