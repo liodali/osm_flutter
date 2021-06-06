@@ -96,9 +96,18 @@ class _MainExampleState extends State<MainExample> {
                 await controller.removeLastRoad();
 
                 ///selection geoPoint
-                GeoPoint point = await controller.selectPosition();
+                GeoPoint point = await controller.selectPosition(
+                    icon: MarkerIcon(
+                  icon: Icon(
+                    Icons.location_history,
+                    color: Colors.amber,
+                    size: 48,
+                  ),
+                ));
                 GeoPoint pointM1 = await controller.selectPosition();
-                GeoPoint pointM2 = await controller.selectPosition();
+                GeoPoint pointM2 = await controller.selectPosition(
+                  imageURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png"
+                );
                 GeoPoint point2 = await controller.selectPosition();
                 RoadInfo roadInformation = await controller.drawRoad(
                     point, point2,
