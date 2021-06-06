@@ -151,7 +151,7 @@ a) select without change default marker
 ```dart
  GeoPoint geoPoint = await controller.selectPosition();
 ```
-b) dynamic image for the marker
+b) select position with dynamic marker
  * Flutter widget 
 ```dart
  GeoPoint geoPoint = await controller.selectPosition(
@@ -160,7 +160,7 @@ b) dynamic image for the marker
                         Icons.location_history,
                         color: Colors.amber,
                         size: 48,
-                      ), 
+          ), 
 );
 ```
  * image from network
