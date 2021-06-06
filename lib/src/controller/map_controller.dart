@@ -114,8 +114,14 @@ class MapController extends BaseMapController {
   }
 
   /// pick Position in map
-  Future<GeoPoint> selectPosition() async {
-    GeoPoint p = await osmController.selectPosition();
+  Future<GeoPoint> selectPosition({
+    MarkerIcon? icon,
+    String imageURL = "",
+  }) async {
+    GeoPoint p = await osmController.selectPosition(
+      icon: icon,
+      imageURL: imageURL,
+    );
     return p;
   }
 

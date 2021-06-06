@@ -1,3 +1,7 @@
+## 0.7.8 :
+* add put dynamic image to marker for select position 
+   * you could put flutter widget
+   * load image from network
 ## 0.7.7+2 :
 * fix bug : hide markers of start and end position
 ## 0.7.7+1 :

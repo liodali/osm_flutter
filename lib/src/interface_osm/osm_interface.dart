@@ -51,8 +51,10 @@ abstract class OSMPlatform extends PlatformInterface {
   );
 
   Future<GeoPoint> pickLocation(
-    int idOSM,
-  );
+    int idOSM, {
+    GlobalKey? key,
+    String imageURL = "",
+  });
 
   Future<void> customMarker(
     int idOSM,

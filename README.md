@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.7%2B2-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.8-orange)
 
 ## Platform Support
 | Android | iOS |
@@ -33,7 +33,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.7+2
+      flutter_osm_plugin: ^0.7.8
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -147,9 +147,29 @@ Add the following to your `pubspec.yaml` file:
 
 <b>11.1 Manual selection </b>
 
+a) select without change default marker
 ```dart
  GeoPoint geoPoint = await controller.selectPosition();
 ```
+b) select position with dynamic marker
+ * Flutter widget 
+```dart
+ GeoPoint geoPoint = await controller.selectPosition(
+     icon: MarkerIcon(
+                      icon: Icon(
+                        Icons.location_history,
+                        color: Colors.amber,
+                        size: 48,
+          ), 
+);
+```
+ * image from network
+ ```dart
+  GeoPoint geoPoint = await controller.selectPosition(  
+          imageURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png"
+);
+ ```
+ 
 <b>11.2 Assisted selection </b> (for more details see example) 
 
 ```dart
