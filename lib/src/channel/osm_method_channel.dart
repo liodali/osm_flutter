@@ -45,7 +45,7 @@ class MethodChannelOSM extends OSMPlatform {
   // Returns a filtered view of the events in the _controller, by mapId.
   Stream<EventOSM> _events(int mapId) =>
       _streamController.stream.where((event) => event.mapId == mapId)
-      as Stream<EventOSM>;
+          as Stream<EventOSM>;
 
   @override
   Future<void> init(int idOSMMap) async {
@@ -159,8 +159,8 @@ class MethodChannelOSM extends OSMPlatform {
     int idOSM,
     GeoPoint start,
     GeoPoint end, {
-    Color? roadColor,
-    double? roadWidth,
+    List<GeoPoint>? interestPoints,
+    RoadOption roadOption = const RoadOption.empty(),
   }) async {
     final Map args = {
       "wayPoints": [
@@ -168,11 +168,16 @@ class MethodChannelOSM extends OSMPlatform {
         end.toMap(),
       ]
     };
-    if (roadColor != null) {
-      args.addAll(roadColor.toMap("roadColor"));
+    args.addAll({"showMarker": roadOption.showMarkerOfPOI});
+    if (interestPoints != null && interestPoints.isNotEmpty) {
+      args.addAll(
+          {"middlePoints": interestPoints.map((e) => e.toMap()).toList()});
     }
-    if (roadWidth != null) {
-      args.addAll({"roadWidth": roadWidth});
+    if (roadOption.roadColor != null) {
+      args.addAll(roadOption.roadColor!.toMap("roadColor"));
+    }
+    if (roadOption.roadWidth != null) {
+      args.addAll({"roadWidth": roadOption.roadWidth});
     }
     try {
       Map map = (await (_channels[idOSM]!.invokeMethod(
@@ -192,10 +197,24 @@ class MethodChannelOSM extends OSMPlatform {
 
   /// select position and show marker on it
   @override
-  Future<GeoPoint> pickLocation(int idOSM) async {
+  Future<GeoPoint> pickLocation(
+    int idOSM, {
+    GlobalKey? key,
+    String imageURL = "",
+  }) async {
+    Uint8List? bitmap;
+    Map args = {};
+    if (key != null) {
+      bitmap = await _capturePng(key);
+      args.addAll({"icon": bitmap});
+    }
+    if(imageURL.isNotEmpty){
+      args.addAll({"imageURL": imageURL});
+    }
+
     try {
       Map<String, dynamic> map = (await (_channels[idOSM]!
-          .invokeMapMethod("user#pickPosition", null)))!;
+          .invokeMapMethod("user#pickPosition", args)))!;
       return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
     } on PlatformException catch (e) {
       throw GeoPointException(msg: e.message);
@@ -407,5 +426,21 @@ class MethodChannelOSM extends OSMPlatform {
       "map#orientation",
       degree,
     );
+  }
+
+  @override
+  Future<void> customAdvancedPickerMarker(
+    int idMap,
+    GlobalKey key,
+  ) async {
+    Uint8List icon = await _capturePng(key);
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      var base64Str = base64.encode(icon);
+      await _channels[idMap]!
+          .invokeMethod("advancedPicker#marker#icon", base64Str);
+    } else {
+      await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", icon);
+    }
   }
 }

@@ -249,8 +249,27 @@ class OSMController {
   }
 
   /// pick Position in map
-  Future<GeoPoint> selectPosition() async {
-    GeoPoint p = await osmPlatform.pickLocation(_idMap);
+  Future<GeoPoint> selectPosition({
+    MarkerIcon? icon,
+    String imageURL = "",
+  }) async {
+    if (icon != null){
+      _osmFlutterState.dynamicMarkerWidgetNotifier.value = icon;
+      return Future.delayed(
+          Duration(
+            milliseconds: 200,
+          ), () async {
+        GeoPoint p = await osmPlatform.pickLocation(
+          _idMap,
+          key: _osmFlutterState.dynamicMarkerKey,
+        );
+        return p;
+      });
+    }
+    GeoPoint p = await osmPlatform.pickLocation(
+      _idMap,
+      imageURL: imageURL,
+    );
     return p;
   }
 
@@ -272,8 +291,7 @@ class OSMController {
     GeoPoint start,
     GeoPoint end, {
     List<GeoPoint>? interestPoints,
-    Color? roadColor,
-    double? roadWidth,
+    RoadOption? roadOption,
   }) async {
     assert(start.latitude != end.latitude || start.longitude != end.longitude,
         "you cannot make road with same geoPoint");
@@ -282,8 +300,7 @@ class OSMController {
       start,
       end,
       interestPoints: interestPoints,
-      roadColor: roadColor,
-      roadWidth: roadWidth,
+      roadOption: roadOption ?? const RoadOption.empty(),
     );
   }
 

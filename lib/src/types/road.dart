@@ -16,6 +16,23 @@ class Road {
   });
 }
 
+class RoadOption {
+  final Color? roadColor;
+  final double? roadWidth;
+  final bool showMarkerOfPOI;
+
+  RoadOption({
+    this.roadColor,
+    this.roadWidth,
+    this.showMarkerOfPOI = false,
+  });
+
+  const RoadOption.empty()
+      : this.roadWidth = null,
+        this.roadColor = null,
+        this.showMarkerOfPOI = false;
+}
+
 class RoadInfo {
   final double? distance;
   final double? duration;

@@ -114,8 +114,14 @@ class MapController extends BaseMapController {
   }
 
   /// pick Position in map
-  Future<GeoPoint> selectPosition() async {
-    GeoPoint p = await osmController.selectPosition();
+  Future<GeoPoint> selectPosition({
+    MarkerIcon? icon,
+    String imageURL = "",
+  }) async {
+    GeoPoint p = await osmController.selectPosition(
+      icon: icon,
+      imageURL: imageURL,
+    );
     return p;
   }
 
@@ -133,15 +139,13 @@ class MapController extends BaseMapController {
     GeoPoint start,
     GeoPoint end, {
     List<GeoPoint>? interestPoints,
-    Color? roadColor,
-    double? roadWidth,
+    RoadOption? roadOption,
   }) async {
     return await osmController.drawRoad(
       start,
       end,
       interestPoints: interestPoints,
-      roadColor: roadColor,
-      roadWidth: roadWidth,
+      roadOption: roadOption,
     );
   }
 
