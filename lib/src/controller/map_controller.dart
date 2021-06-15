@@ -58,8 +58,15 @@ class MapController extends BaseMapController {
   /// we need to global key to recuperate widget from tree element
   /// [key] : (GlobalKey) key of widget that represent the new marker
   Future changeIconMarker(GlobalKey key) async {
-    await osmController.changeIconMarker(key);
+    await osmController.changeDefaultIconMarker(key);
   }
+
+  /*///change advanced picker Icon Marker
+  /// we need to global key to recuperate widget from tree element
+  /// [key] : (GlobalKey) key of widget that represent the new marker
+  Future changeAdvPickerIconMarker(GlobalKey key) async {
+    await osmController.changeIconAdvPickerMarker(key);
+  }*/
 
   /// change static position in runtime
   ///  [geoPoints] : list of static geoPoint
@@ -117,18 +124,22 @@ class MapController extends BaseMapController {
   ///
   ///  [end] : last point of your road
   ///
+  ///  [interestPoints] : (List of GeoPoint) middle position that you want you road to pass through it
+  ///
   ///  [roadColor] : (Color) indicate the color that you want to be drawing the road, if Color null will draw with default color that specified in OSMFlutter or red color (default of osm map)
   ///
   ///  [roadWidth] : (double) indicate the width of  your road
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
+    List<GeoPoint>? interestPoints,
     Color? roadColor,
     double? roadWidth,
   }) async {
     return await osmController.drawRoad(
       start,
       end,
+      interestPoints: interestPoints,
       roadColor: roadColor,
       roadWidth: roadWidth,
     );
@@ -192,6 +203,7 @@ class MapController extends BaseMapController {
   Future<void> cancelAdvancedPositionPicker() async {
     return await osmController.cancelAdvancedPositionPicker();
   }
+
   /// rotate camera of osm map
   Future<void> rotateMapCamera(double? degree) async {
     return await osmController.mapOrientation(degree);

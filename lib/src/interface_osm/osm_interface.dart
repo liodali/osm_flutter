@@ -96,6 +96,7 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM,
     GeoPoint start,
     GeoPoint end, {
+    List<GeoPoint>? interestPoints,
     Color? roadColor,
     double? roadWidth,
   });
@@ -183,5 +184,10 @@ abstract class OSMPlatform extends PlatformInterface {
   Future<void> mapRotation(
     int idOSM,
     double? degree,
+  );
+
+  Future<void> customAdvancedPickerMarker(
+    int idMap,
+    GlobalKey key,
   );
 }

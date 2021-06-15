@@ -1,7 +1,13 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.5%2B1-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.7-orange)
 
-osm plugin for flutter apps (only Android for now, iOS will be supported in future)
+## Platform Support
+| Android | iOS |
+|:---:|:---:|
+| supported :heavy_check_mark: | coming soon  |
+
+
+<b>osm plugin for flutter apps </b>
 
 * current position
 * change position 
@@ -27,7 +33,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.5+1
+      flutter_osm_plugin: ^0.7.7
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -35,7 +41,7 @@ Add the following to your `pubspec.yaml` file:
   
 ```dart
  OSMFlutter( 
-        controler:mapController,
+        controller:mapController,
         currentLocation: false,
         road: Road(
                 startIcon: MarkerIcon(
@@ -54,7 +60,6 @@ Add the following to your `pubspec.yaml` file:
           size: 56,
           ),
         ),
-        initPosition: GeoPoint(latitude: 47.35387, longitude: 8.43609),
     );
 
 ```
@@ -96,7 +101,7 @@ Add the following to your `pubspec.yaml` file:
  await controller.zoomIn();
 ```
 
-<b> 6) Zoom Out </b>
+<b> 6Android) Zoom Out </b>
 
 ```dart
  await controller.zoom(-2.);
@@ -168,10 +173,13 @@ Add the following to your `pubspec.yaml` file:
 
 <b>13) Draw road,recuperate distance in km and duration in sec </b>
 
+> you can add anmiddle position to pass your route through them
+>
 ```dart
  RoadInfo roadInfo = await controller.drawRoad( 
    GeoPoint(latitude: 47.35387, longitude: 8.43609),
    GeoPoint(latitude: 47.4371, longitude: 8.6136),
+   interestPoints : [ GeoPoint(latitude: 47.4361, longitude: 8.6156), GeoPoint(latitude: 47.4481, longitude: 8.6266)]
    roadColor : Colors.green,
    roadWidth : 7.0,
 );
@@ -245,9 +253,10 @@ Add the following to your `pubspec.yaml` file:
 
 | Properties               | Description                         |
 | ------------------------ | ----------------------------------- |
-| `trackMyPosition`        | enbaled tracking user position.     |
+| `trackMyPosition`        | enable tracking user position.     |
 | `showZoomController`     | show default zoom controller.       |
-| `markerIcon`             | set icon Marker                     |
+| `markerIcon`             | set icon Marker  (deprecated replaced with `markerOption` )                   |
+| `markerOption`           | configure marker of osm map                   |
 | `defaultZoom`            | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
 | `road`                   | set color and start/end/middle markers in road |
 | `useSecureURL`           | enabled secure urls                  |

@@ -8,22 +8,31 @@ class FlutterPickerViewOverlay constructor(
         private val bitmap: Bitmap,
         context: Context,
         private val point: Point,
+        private val isCustom: Boolean = false,
 ) : View(context, null) {
 
     private var mCirclePaint = Paint()
 
     override fun draw(canvas: Canvas?) {
         super.draw(canvas)
-        val radius = 15f
-        val extraX = bitmap.width / 2.0f
-        canvas!!.drawBitmap(bitmap, (point.x-extraX).toFloat(), (point.y - (bitmap.height)).toFloat(), mCirclePaint)
-        mCirclePaint.color = Color.BLUE
-        mCirclePaint.alpha = 30
-        mCirclePaint.style = Paint.Style.FILL
-        canvas.drawCircle(point.x.toFloat()-radius/2, point.y.toFloat()-radius, radius, mCirclePaint)
-        mCirclePaint.alpha = 150
-        mCirclePaint.style = Paint.Style.STROKE
-        canvas.drawCircle(point.x.toFloat()-radius/2, point.y.toFloat()-radius, radius, mCirclePaint)
+        val radius = 18f
+        val extraX = bitmap.width / 3.0f
+        val extraY = bitmap.height / 10f
+
+        if(!isCustom){
+            mCirclePaint.color = Color.BLUE
+            mCirclePaint.alpha = 30
+            mCirclePaint.style = Paint.Style.FILL
+            canvas!!.drawCircle((point.x.toFloat() - radius / 2 + extraX), point.y.toFloat() - radius + extraY, radius, mCirclePaint)
+            mCirclePaint.alpha = 150
+            mCirclePaint.style = Paint.Style.STROKE
+            canvas.drawCircle((point.x.toFloat() - radius / 2 + extraX), point.y.toFloat() - radius + extraY, radius, mCirclePaint)
+
+        }
+
+        canvas!!.drawBitmap(bitmap, (point.x - extraX), (point.y - (bitmap.height)).toFloat(), Paint())
+
+
 
         canvas.save()
     }
