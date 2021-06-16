@@ -23,7 +23,7 @@ class MarkerView: MKMarkerAnnotationView {
 
             // 2
             if (point.marker != nil) {
-                image = point.marker
+             //   image = point.marker
             }
 
         }
@@ -34,9 +34,4 @@ struct StaticMarkerData {
     let image: UIImage
     let color: UIColor
 }
-struct RoadData {
-    let startPoint:CLLocationCoordinate2D
-    let endPoint:CLLocationCoordinate2D
-    let roadColor :UIColor?
-    let roadWidth : Float?
-}
+

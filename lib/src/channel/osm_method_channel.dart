@@ -137,7 +137,11 @@ class MethodChannelOSM extends OSMPlatform {
 
   @override
   Future<void> customMarkerStaticPosition(
-      int idOSM, GlobalKey? globalKey, String id) async {
+    int idOSM,
+    GlobalKey? globalKey,
+    String id, {
+    Color? colorIcon,
+  }) async {
     Uint8List icon = await _capturePng(globalKey!);
 
     await _channels[idOSM]!.invokeMethod(
@@ -208,7 +212,7 @@ class MethodChannelOSM extends OSMPlatform {
       bitmap = await _capturePng(key);
       args.addAll({"icon": bitmap});
     }
-    if(imageURL.isNotEmpty){
+    if (imageURL.isNotEmpty) {
       args.addAll({"imageURL": imageURL});
     }
 

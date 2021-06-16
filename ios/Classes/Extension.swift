@@ -3,54 +3,85 @@
 //
 
 import Foundation
-import MapKit
+import TangramMap
+
 
 extension GeoPointMap {
-    public func setupMKAnnotationView(
-            for annotation: GeoPointMap, on map: MKMapView
-    ) -> MKAnnotationView {
-        let reuseIdentifier = NSStringFromClass(GeoPointMap.self)
-        let flagAnnotationView = map.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier, for: annotation) as! MKPinAnnotationView   //MKMarkerAnnotationView
+    public func setupMarker(
+            for annotation: GeoPointMap, on map: TGMapView
+    ) -> GeoPointMap {
 
-        flagAnnotationView.canShowCallout = false
+        annotation.marker = map.markerAdd()
+        annotation.marker?.icon = annotation.markerIcon!
+        annotation.marker?.stylingString = annotation.styleMarker
+        annotation.marker?.point = annotation.coordinate
 
-        // Provide the annotation view's image.
-        flagAnnotationView.image = marker
+        annotation.marker?.visible = true
+        return annotation
+    }
 
-
-        return flagAnnotationView
+    public func toMap() -> GeoPoint {
+        ["lat": self.coordinate.latitude, "lon": coordinate.longitude]
     }
 }
+
+extension TGMapView {
+    func addUserLocation(for userLocation: CLLocationCoordinate2D, on map: TGMapView) -> MyLocationMarker {
+        let userLocationMarker = MyLocationMarker(coordinate: userLocation)
+
+        userLocationMarker.marker = map.markerAdd()
+        userLocationMarker.marker!.point = userLocationMarker.coordinate
+        userLocationMarker.marker!.stylingString = userLocationMarker.styleMarker
+        
+        return userLocationMarker
+    }
+
+    func flyToUserLocation(for location: CLLocationCoordinate2D) {
+        let cameraOption = TGCameraPosition(center: location, zoom: self.zoom, bearing: self.bearing, pitch: self.pitch)
+        self.fly(to: cameraOption!, withSpeed: 50)
+    }
+
+    func removeUserLocation(for marker: TGMarker) {
+        self.markerRemove(marker)
+    }
+}
+
 
 extension StaticGeoPMarker {
-    public func setupClusterView(
-            for annotation: StaticGeoPMarker, on map: MKMapView
-    )->MKAnnotationView{
-        let reuseIdentifier = NSStringFromClass(StaticGeoPMarker.self)
-        let flagAnnotationView = map.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier, for: annotation) as! MKMarkerAnnotationView   //MKMarkerAnnotationView
+    public func addStaticGeosToMapView(
+            for annotation: StaticGeoPMarker, on map: TGMapView
+    ) -> StaticGeoPMarker {
+        annotation.marker = map.markerAdd()
+        if (annotation.markerIcon != nil) {
+            annotation.marker?.icon = annotation.markerIcon!
+        }
+        annotation.marker?.stylingString = annotation.styleMarker
+        annotation.marker?.point = annotation.coordinate
 
-        flagAnnotationView.canShowCallout = false
+        annotation.marker?.visible = true
+        return annotation
 
-        // Provide the annotation view's image.
-        flagAnnotationView.glyphImage = icon
-        flagAnnotationView.markerTintColor = color
-        flagAnnotationView.glyphTintColor = .white
-
-        return flagAnnotationView
     }
 }
 
-extension GeoPoint
-{
-     func toLocationCoordinate()-> CLLocationCoordinate2D {
-         CLLocationCoordinate2D(latitude: self["lat"]!, longitude: self["lon"]!)
+extension GeoPoint {
+    func toLocationCoordinate() -> CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: self["lat"]!, longitude: self["lon"]!)
     }
 }
-extension Array where Element == Int  {
-    func toUIColor()-> UIColor{
-        return UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
+
+extension RoadInformation {
+    func toMap() -> [String: Double] {
+        ["distance": self.distance, "duration": self.seconds]
     }
 }
+
+extension Array where Element == Int {
+    func toUIColor() -> UIColor {
+        UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
+    }
+}
+
 extension UIColor {
 
     /// Create color from RGB(A)
