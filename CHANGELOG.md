@@ -1,3 +1,9 @@
+## 0.8.0-alpha.0 :
+* support ios ( not stable )
+  * visualisation of map in ios 
+  * support select position (custom marker, not network image will not work) 
+  * support track user location
+  
 ## 0.7.8 :
 * add put dynamic image to marker for select position 
    * you could put flutter widget
