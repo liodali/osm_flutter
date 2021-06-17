@@ -35,6 +35,13 @@ Add the following to your `pubspec.yaml` file:
     dependencies:
       flutter_osm_plugin: ^0.7.8
 
+* alpha version (iOS support)
+
+
+     dependencies:
+          flutter_osm_plugin: ^0.7.8
+    
+
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
