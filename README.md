@@ -38,8 +38,11 @@ Add the following to your `pubspec.yaml` file:
 * alpha version (iOS support)
 
 
-     dependencies:
+```dart
+ dependencies:
           flutter_osm_plugin: ^0.7.8
+```
+    
     
 
 ## Simple Usage
