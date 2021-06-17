@@ -40,7 +40,7 @@ Add the following to your `pubspec.yaml` file:
 
 ```dart
  dependencies:
-          flutter_osm_plugin: ^0.7.8
+          flutter_osm_plugin: ^0.8.0-alpha.0
 ```
     
     
