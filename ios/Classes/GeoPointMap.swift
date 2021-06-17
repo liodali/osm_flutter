@@ -46,7 +46,7 @@ class MyLocationMarker:GeoPointMap {
 
             coordinate: CLLocationCoordinate2D
     ) {
-        super.init(icon: nil, coordinate: coordinate,styleMarker: "{ style: 'ux-current-location', interactive: false,color: 'white', order: 1010, collide: false } ")
+        super.init(icon: nil, coordinate: coordinate,styleMarker: "{ style: 'ux-location-gem-overlay',sprite: ux-current-location, interactive: false,color: 'white',size: 48px ,order: 2000, collide: false } ")
 
     }
 }

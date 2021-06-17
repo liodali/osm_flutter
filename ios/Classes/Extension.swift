@@ -32,7 +32,7 @@ extension TGMapView {
         userLocationMarker.marker = map.markerAdd()
         userLocationMarker.marker!.point = userLocationMarker.coordinate
         userLocationMarker.marker!.stylingString = userLocationMarker.styleMarker
-        
+        userLocationMarker.marker!.visible = true
         return userLocationMarker
     }
 

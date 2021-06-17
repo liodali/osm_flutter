@@ -107,7 +107,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             //mapView.addSubview(frameV)
             break;
         case "deactivateTrackMe":
-            // deactivateTrackMe()
+            deactivateTrackMe()
             result(200)
             break;
         case "Zoom":
@@ -327,7 +327,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             if let location = locations.last?.coordinate {
                 //mapView.setRegion(region, animated: true)
                 if (canTrackUserLocation) {
-                    if(userLocation != nil ){
+                    if(userLocation == nil ){
                         userLocation = mapView.addUserLocation(for: location, on: mapView)
                     }
                         userLocation?.marker?.point = location
