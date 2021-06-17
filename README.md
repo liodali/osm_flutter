@@ -4,7 +4,7 @@
 ## Platform Support
 | Android | iOS |
 |:---:|:---:|
-| supported :heavy_check_mark: | coming soon  |
+| supported :heavy_check_mark: | supported (not stable yet): 0.8.0-alpha.0 |
 
 
 <b>osm plugin for flutter apps </b>
