@@ -191,4 +191,8 @@ abstract class OSMPlatform extends PlatformInterface {
     int idMap,
     GlobalKey key,
   );
+
+  Future<void> initIosMap(
+    int idMap,
+  );
 }

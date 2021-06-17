@@ -447,4 +447,10 @@ class MethodChannelOSM extends OSMPlatform {
       await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", icon);
     }
   }
+
+
+  @override
+  Future<void> initIosMap(int idOSM) async{
+    await _channels[idOSM]!.invokeMethod("init#ios#map");
+  }
 }
