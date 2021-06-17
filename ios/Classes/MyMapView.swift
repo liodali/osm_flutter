@@ -140,13 +140,14 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break;
         case "road":
-            drawRoad(call: call) { [unowned self] roadInfo, route, error in
-                if (error != nil) {
-                    result(FlutterError(code: "400", message: "error to draw road", details: nil))
-                }
-                showRoute(with: route)
-                result(roadInfo.toMap())
-            }
+//             drawRoad(call: call) { [unowned self] roadInfo, route, error in
+//                 if (error != nil) {
+//                     result(FlutterError(code: "400", message: "error to draw road", details: nil))
+//                 }
+//                 showRoute(with: route)
+//                 result(roadInfo.toMap())
+//             }
+            result(["distance": 0, "duration": 0])
             break;
         default:
             result(nil)
