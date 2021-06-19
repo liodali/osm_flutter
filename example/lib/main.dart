@@ -63,12 +63,7 @@ class _MainExampleState extends State<MainExample> {
     // Future.delayed(Duration(seconds: 20), () async {
     //   await controller.removeAllShapes();
     // });
-    Future.delayed(Duration(seconds: 10), () async {
-      await controller.zoom(5);
-      await controller.rotateMapCamera(45.0);
-      // await controller.rotateMapCamera(120);
-      // await controller.rotateMapCamera(null);
-    });
+
   }
 
   @override
@@ -106,8 +101,8 @@ class _MainExampleState extends State<MainExample> {
                 ));
                 GeoPoint pointM1 = await controller.selectPosition();
                 GeoPoint pointM2 = await controller.selectPosition(
-                  imageURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png"
-                );
+                    imageURL:
+                        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png");
                 GeoPoint point2 = await controller.selectPosition();
                 RoadInfo roadInformation = await controller.drawRoad(
                     point, point2,

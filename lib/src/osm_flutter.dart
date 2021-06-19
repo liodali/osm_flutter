@@ -209,7 +209,7 @@ class OSMFlutterState extends State<OSMFlutter> {
           ValueListenableBuilder<Widget?>(
             valueListenable: dynamicMarkerWidgetNotifier,
             builder: (ctx, widget, child) {
-              if(widget==null){
+              if (widget == null) {
                 return SizedBox.fromSize();
               }
               return RepaintBoundary(
@@ -219,7 +219,7 @@ class OSMFlutterState extends State<OSMFlutter> {
             },
           ),
           if ((widget.markerOption?.defaultMarker != null) ||
-              (widget.markerOption!.defaultMarker != null)) ...[
+              (widget.markerIcon != null)) ...[
             RepaintBoundary(
               key: defaultMarkerKey,
               child: widget.markerOption
