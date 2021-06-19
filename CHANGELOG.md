@@ -1,3 +1,5 @@
+## 0.7.8+1 :
+* fix null check in OSMFlutter 
 ## 0.7.8 :
 * add put dynamic image to marker for select position 
    * you could put flutter widget

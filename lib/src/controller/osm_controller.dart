@@ -253,7 +253,7 @@ class OSMController {
     MarkerIcon? icon,
     String imageURL = "",
   }) async {
-    if (icon != null){
+    if (icon != null) {
       _osmFlutterState.dynamicMarkerWidgetNotifier.value = icon;
       return Future.delayed(
           Duration(

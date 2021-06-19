@@ -106,8 +106,8 @@ class _MainExampleState extends State<MainExample> {
                 ));
                 GeoPoint pointM1 = await controller.selectPosition();
                 GeoPoint pointM2 = await controller.selectPosition(
-                  imageURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png"
-                );
+                    imageURL:
+                        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png");
                 GeoPoint point2 = await controller.selectPosition();
                 RoadInfo roadInformation = await controller.drawRoad(
                     point, point2,

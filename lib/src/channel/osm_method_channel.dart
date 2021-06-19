@@ -221,7 +221,7 @@ class MethodChannelOSM extends OSMPlatform {
       bitmap = await _capturePng(key);
       args.addAll({"icon": bitmap});
     }
-    if(imageURL.isNotEmpty){
+    if (imageURL.isNotEmpty) {
       args.addAll({"imageURL": imageURL});
     }
 
