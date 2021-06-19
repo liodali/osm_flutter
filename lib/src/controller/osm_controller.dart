@@ -63,7 +63,9 @@ class OSMController {
 
     /// change default icon  marker
     final defaultIcon = _osmFlutterState.widget.markerOption
-        ?.copyWith(defaultMarker: _osmFlutterState.widget.markerIcon);
+            ?.copyWith(defaultMarker: _osmFlutterState.widget.markerIcon) ??
+        _osmFlutterState.widget.markerIcon;
+
     if (defaultIcon != null) {
       await changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
     }

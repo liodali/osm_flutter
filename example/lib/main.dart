@@ -63,12 +63,7 @@ class _MainExampleState extends State<MainExample> {
     // Future.delayed(Duration(seconds: 20), () async {
     //   await controller.removeAllShapes();
     // });
-    Future.delayed(Duration(seconds: 10), () async {
-      await controller.zoom(5);
-      await controller.rotateMapCamera(45.0);
-      // await controller.rotateMapCamera(120);
-      // await controller.rotateMapCamera(null);
-    });
+
   }
 
   @override
