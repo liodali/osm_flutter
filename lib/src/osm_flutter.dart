@@ -219,7 +219,7 @@ class OSMFlutterState extends State<OSMFlutter> {
             },
           ),
           if ((widget.markerOption?.defaultMarker != null) ||
-              (widget.markerOption!.defaultMarker != null)) ...[
+              (widget.markerIcon != null)) ...[
             RepaintBoundary(
               key: defaultMarkerKey,
               child: widget.markerOption
