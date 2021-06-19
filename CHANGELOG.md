@@ -1,3 +1,6 @@
+## 0.8.0-alpha.1 :
+* fix set color static marker position
+* fix convert bitmap to string
 ## 0.8.0-alpha.0 :
 * support ios ( not stable )
   * visualisation of map in ios 

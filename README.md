@@ -111,6 +111,9 @@ Add the following to your `pubspec.yaml` file:
 
 <b> 7)  Track user current position </b>
 
+> for ios,you should add `NSLocationWhenInUseUsageDescription` and `NSLocationAlwaysUsageDescription` in `info.plist` 
+
+
 ```dart
  await controller.enableTracking();
 ```
@@ -136,6 +139,8 @@ Add the following to your `pubspec.yaml` file:
 
 
 <b> 10) recuperation current position </b>
+
+> for ios,you should add `NSLocationWhenInUseUsageDescription` and `NSLocationAlwaysUsageDescription` in `info.plist` 
 
 ```dart
  GeoPoint geoPoint = await controller.myLocation();
