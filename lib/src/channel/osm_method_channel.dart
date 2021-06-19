@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -143,13 +144,17 @@ class MethodChannelOSM extends OSMPlatform {
     Color? colorIcon,
   }) async {
     Uint8List icon = await _capturePng(globalKey!);
-
+    var args = {
+      "id": id,
+      "bitmap": icon,
+    };
+    if (Platform.isIOS && colorIcon != null) {
+      args.addAll(colorIcon.toMap("color"));
+      args["bitmap"] = icon.convertToString();
+    }
     await _channels[idOSM]!.invokeMethod(
       "staticPosition#IconMarker",
-      {
-        "id": id,
-        "bitmap": icon,
-      },
+      args,
     );
   }
 
@@ -448,9 +453,8 @@ class MethodChannelOSM extends OSMPlatform {
     }
   }
 
-
   @override
-  Future<void> initIosMap(int idOSM) async{
+  Future<void> initIosMap(int idOSM) async {
     await _channels[idOSM]!.invokeMethod("init#ios#map");
   }
 }
