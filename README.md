@@ -52,7 +52,7 @@ Add the following to your `pubspec.yaml` file:
 ```dart
  OSMFlutter( 
         controller:mapController,
-        currentLocation: false,
+        trackMyPosition: false,
         road: Road(
                 startIcon: MarkerIcon(
                   icon: Icon(
