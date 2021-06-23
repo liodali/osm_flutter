@@ -368,7 +368,7 @@ GeoPoint p = await showSimplePickerLocation(
     4) update kotlin version to 1.4.21 & re-build the project
     5) re-add flutter_osm_plugin in pubspec , pub get ( or flutter clean & pub get )
 
-> before you publish your application using this library,
+> Before you publish your application using this library,
 > you should take care about copyright of openStreetMap Data,
 > that's why i add `CopyrightOSMWidget` see example and this issue [#101](https://github.com/liodali/osm_flutter/issues/101)
 
