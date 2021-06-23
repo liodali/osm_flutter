@@ -63,7 +63,6 @@ class _MainExampleState extends State<MainExample> {
     // Future.delayed(Duration(seconds: 20), () async {
     //   await controller.removeAllShapes();
     // });
-
   }
 
   @override
