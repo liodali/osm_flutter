@@ -9,6 +9,7 @@ import 'package:location/location.dart';
 import 'controller/base_map_controller.dart';
 import 'controller/osm_controller.dart';
 import 'types/types.dart';
+import 'widgets/copyright_osm_widget.dart';
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
@@ -38,6 +39,8 @@ typedef OnLocationChanged = void Function(GeoPoint);
 /// [showDefaultInfoWindow] : (bool) enable/disable default infoWindow of marker (default = false)
 ///
 /// [useSecureURL] : use https or http when we get data from osm api
+///
+/// [showContributorBadgeForOSM] : (bool) for copyright of osm, we need to add badge in bottom of the map (default false)
 class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
   final bool trackMyPosition;
@@ -53,6 +56,7 @@ class OSMFlutter extends StatefulWidget {
   final bool showDefaultInfoWindow;
   final bool useSecureURL;
   final bool isPicker;
+  final bool showContributorBadgeForOSM;
 
   OSMFlutter({
     Key? key,
@@ -69,6 +73,7 @@ class OSMFlutter extends StatefulWidget {
     this.showDefaultInfoWindow = false,
     this.useSecureURL = true,
     this.isPicker = false,
+    this.showContributorBadgeForOSM = false,
   }) : super(key: key);
 
   @override
@@ -171,6 +176,12 @@ class OSMFlutterState extends State<OSMFlutter> {
       children: <Widget>[
         widgetConfigMap(),
         widgetMap,
+        if (widget.showContributorBadgeForOSM)
+          Positioned(
+            bottom: 0,
+            right: 5,
+            child: CopyrightOSMWidget(),
+          )
       ],
     );
   }

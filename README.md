@@ -1,10 +1,10 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.8%2B1-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.8%2B2-orange)
 
 ## Platform Support
 | Android | iOS |
 |:---:|:---:|
-| supported :heavy_check_mark: | supported (not stable yet): 0.8.0-alpha.0 |
+| supported :heavy_check_mark: | supported (not stable yet): 0.8.0-alpha.1 |
 
 
 <b>osm plugin for flutter apps </b>
@@ -33,14 +33,14 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.8+1
+      flutter_osm_plugin: ^0.7.8+2
 
 * alpha version (iOS support)
 
 
 ```dart
  dependencies:
-          flutter_osm_plugin: ^0.8.0-alpha.0
+          flutter_osm_plugin: ^0.8.0-alpha.1
 ```
     
     
@@ -284,20 +284,21 @@ b) select position with dynamic marker
 
 ##  `OSMFlutter`
 
-| Properties               | Description                         |
-| ------------------------ | ----------------------------------- |
-| `trackMyPosition`        | enable tracking user position.     |
-| `showZoomController`     | show default zoom controller.       |
-| `markerIcon`             | set icon Marker  (deprecated replaced with `markerOption` )                   |
-| `markerOption`           | configure marker of osm map                   |
-| `defaultZoom`            | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
-| `road`                   | set color and start/end/middle markers in road |
-| `useSecureURL`           | enabled secure urls                  |
-| `staticPoints`           | List of Markers you want to show always ,should every marker have unique id |
-| `onGeoPointClicked`      | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
-| `onLocationChanged`      | (callback) it is hire when you activate tracking and  user position has been changed          |
-| `showDefaultInfoWindow`  | (bool) enable/disable default infoWindow of marker (default = false)         |
-| `isPicker`               | (bool) enable advanced picker from init of  the map (default = false)         |
+| Properties                    | Description                         |
+| ----------------------------- | ----------------------------------- |
+| `trackMyPosition`             | enable tracking user position.     |
+| `showZoomController`          | show default zoom controller.       |
+| `markerIcon`                  | set icon Marker  (deprecated replaced with `markerOption` )                   |
+| `markerOption`                | configure marker of osm map                   |
+| `defaultZoom`                 | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
+| `road`                        | set color and start/end/middle markers in road |
+| `useSecureURL`                | enabled secure urls                  |
+| `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
+| `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
+| `onLocationChanged`           | (callback) it is hire when you activate tracking and  user position has been changed          |
+| `showDefaultInfoWindow`       | (bool) enable/disable default infoWindow of marker (default = false)         |
+| `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |
+| `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
 
 ## STATIC METHODS:
 
@@ -359,12 +360,16 @@ GeoPoint p = await showSimplePickerLocation(
         ...
         android:usesCleartextTraffic="true"> 
         `
-> if you faced build error in fresh project you need to follow those instruction [#40]
+> if you faced build error in fresh project you need to follow those instruction [#40](https://github.com/liodali/osm_flutter/issues/40)
     
     1) remove flutter_osm_plugin from pubspec, after that pub get
     2) open android module in android studio ( right click in name of project -> flutter-> open android module in android studio)
     3) update gradle version to 4.1.1 ( IDE will show popup to make update)
     4) update kotlin version to 1.4.21 & re-build the project
     5) re-add flutter_osm_plugin in pubspec , pub get ( or flutter clean & pub get )
+
+> Before you publish your application using this library,
+> you should take care about copyright of openStreetMap Data,
+> that's why i add `CopyrightOSMWidget` see example and this issue [#101](https://github.com/liodali/osm_flutter/issues/101)
 
 #### MIT LICENCE

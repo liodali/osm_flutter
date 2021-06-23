@@ -1,3 +1,5 @@
+## 0.7.8+2 :
+* add copyright widget for osm copyright
 ## 0.7.8+1 :
 * fix null check in OSMFlutter 
 ## 0.7.8 :
