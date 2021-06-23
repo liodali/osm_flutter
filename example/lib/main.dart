@@ -158,6 +158,7 @@ class _MainExampleState extends State<MainExample> {
               children: [
                 OSMFlutter(
                   controller: controller,
+                  showContributorBadgeForOSM: true,
                   //trackMyPosition: trackingNotifier.value,
                   useSecureURL: false,
                   showDefaultInfoWindow: false,

@@ -14,3 +14,4 @@ export 'src/types/road.dart';
 export 'src/types/shape_osm.dart';
 export 'src/types/types.dart';
 export 'src/widgets/picker_location.dart';
+export 'src/widgets/copyright_osm_widget.dart';
