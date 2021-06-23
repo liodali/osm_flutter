@@ -370,6 +370,6 @@ GeoPoint p = await showSimplePickerLocation(
 
 > before you publish your application using this library,
 > you should take care about copyright of openStreetMap Data,
-> that's why i add `CopyrightOSMWidget` see example and this issues [#101]
+> that's why i add `CopyrightOSMWidget` see example and this issue [#101]
 
 #### MIT LICENCE
