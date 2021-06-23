@@ -360,7 +360,7 @@ GeoPoint p = await showSimplePickerLocation(
         ...
         android:usesCleartextTraffic="true"> 
         `
-> if you faced build error in fresh project you need to follow those instruction [#40]
+> if you faced build error in fresh project you need to follow those instruction [#40](https://github.com/liodali/osm_flutter/issues/40)
     
     1) remove flutter_osm_plugin from pubspec, after that pub get
     2) open android module in android studio ( right click in name of project -> flutter-> open android module in android studio)
@@ -370,6 +370,6 @@ GeoPoint p = await showSimplePickerLocation(
 
 > before you publish your application using this library,
 > you should take care about copyright of openStreetMap Data,
-> that's why i add `CopyrightOSMWidget` see example and this issue [#101]
+> that's why i add `CopyrightOSMWidget` see example and this issue [#101](https://github.com/liodali/osm_flutter/issues/101)
 
 #### MIT LICENCE
