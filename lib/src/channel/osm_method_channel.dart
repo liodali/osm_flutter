@@ -27,7 +27,9 @@ abstract class EventOSM<T> {
   /// `value` may be `null` in events that don't transport any meaningful data.
   EventOSM(this.mapId, this.value);
 }
-
+class LongTapEvent extends EventOSM<GeoPoint> {
+  LongTapEvent(int mapId, GeoPoint position) : super(mapId, position);
+}
 class GeoPointEvent extends EventOSM<GeoPoint> {
   GeoPointEvent(int mapId, GeoPoint position) : super(mapId, position);
 }
@@ -62,7 +64,11 @@ class MethodChannelOSM extends OSMPlatform {
       ];
     }*/
   }
+  @override
+  Stream<GeoPointEvent> onLongPressMapClickListener(int idMap) {
+    return _events(idMap).whereType<GeoPointEvent>();
 
+  }
   @override
   Stream<GeoPointEvent> onGeoPointClickListener(int idMap) {
     return _events(idMap).whereType<GeoPointEvent>();
@@ -76,6 +82,10 @@ class MethodChannelOSM extends OSMPlatform {
   void setGeoPointHandler(int idMap) async {
     _channels[idMap]!.setMethodCallHandler((call) async {
       switch (call.method) {
+        case "receiveLongPress":
+          final result = call.arguments;
+          _streamController.add(LongTapEvent(idMap, GeoPoint.fromMap(result)));
+          break;
         case "receiveGeoPoint":
           final result = call.arguments;
           _streamController.add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
@@ -456,4 +466,6 @@ class MethodChannelOSM extends OSMPlatform {
       await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", icon);
     }
   }
+
+
 }
