@@ -840,9 +840,9 @@ class FlutterOsmView(
 
         val showPoiMarker = args["showMarker"] as Boolean
 
-        val listPointsArgs = args["wayPoints"] as List<HashMap<String, Double>>
+        val listPointsArgs =  args["wayPoints"] as List<HashMap<String, Double>>
 
-        val listInterestPoints: List<GeoPoint> = when (args.containsKey("roadColor")) {
+        val listInterestPoints: List<GeoPoint> = when (args.containsKey("middlePoints")) {
             true -> args["middlePoints"] as List<HashMap<String, Double>>
             false -> emptyList()
         }.map { g ->
