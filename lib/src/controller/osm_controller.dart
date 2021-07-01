@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
@@ -45,6 +44,19 @@ class OSMController {
     if (_osmFlutterState.widget.showDefaultInfoWindow == true)
       osmPlatform.visibilityInfoWindow(
           _idMap, _osmFlutterState.widget.showDefaultInfoWindow);
+
+    /// listen to data send from native map
+
+    osmPlatform.onLongPressMapClickListener(_idMap).listen((event) {
+      _osmFlutterState.widget.controller.listenerMapLongTapping.value =
+          event.value;
+    });
+
+    osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
+      _osmFlutterState.widget.controller.listenerMapSingleTapping.value =
+          event.value;
+    });
+
     if (_osmFlutterState.widget.onGeoPointClicked != null) {
       osmPlatform.onGeoPointClickListener(_idMap).listen((event) {
         _osmFlutterState.widget.onGeoPointClicked!(event.value);
