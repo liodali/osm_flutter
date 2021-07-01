@@ -28,7 +28,15 @@ abstract class EventOSM<T> {
   EventOSM(this.mapId, this.value);
 }
 
-class LongTapEvent extends EventOSM<GeoPoint> {
+class TapEvent extends EventOSM<GeoPoint> {
+  TapEvent(int mapId, GeoPoint position) : super(mapId, position);
+}
+
+class SingleTapEvent extends TapEvent {
+  SingleTapEvent(int mapId, GeoPoint position) : super(mapId, position);
+}
+
+class LongTapEvent extends TapEvent {
   LongTapEvent(int mapId, GeoPoint position) : super(mapId, position);
 }
 
@@ -68,8 +76,13 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Stream<GeoPointEvent> onLongPressMapClickListener(int idMap) {
-    return _events(idMap).whereType<GeoPointEvent>();
+  Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
+    return _events(idMap).whereType<SingleTapEvent>();
+  }
+
+  @override
+  Stream<LongTapEvent> onLongPressMapClickListener(int idMap) {
+    return _events(idMap).whereType<LongTapEvent>();
   }
 
   @override
@@ -88,6 +101,11 @@ class MethodChannelOSM extends OSMPlatform {
         case "receiveLongPress":
           final result = call.arguments;
           _streamController.add(LongTapEvent(idMap, GeoPoint.fromMap(result)));
+          break;
+        case "receiveSinglePress":
+          final result = call.arguments;
+          _streamController
+              .add(SingleTapEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveGeoPoint":
           final result = call.arguments;

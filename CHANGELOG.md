@@ -1,3 +1,6 @@
+## 0.7.9 :
+* add `listenerMapLongTapping` and `listenerMapSingleTapping` to manage Tapping Listener on the map (available for Android)
+* remove deletion of marker with LongPres
 ## 0.7.8+4 :
 * remove `useSecureURL` attribute
 * remove setURL for drawRoad

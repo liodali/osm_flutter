@@ -51,6 +51,16 @@ class _MainExampleState extends State<MainExample> {
       initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
+    controller.listenerMapLongTapping.addListener(() {
+      if (controller.listenerMapLongTapping.value != null) {
+        print(controller.listenerMapLongTapping.value);
+      }
+    });
+    controller.listenerMapSingleTapping.addListener(() {
+      if (controller.listenerMapSingleTapping.value != null) {
+        print(controller.listenerMapSingleTapping.value);
+      }
+    });
     // Future.delayed(Duration(seconds: 10), () async {
     //   await controller.drawRect(RectOSM(
     //     key: "rect",

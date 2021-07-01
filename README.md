@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.8%2B4-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.9-orange)
 
 ## Platform Support
 | Android | iOS |
@@ -33,7 +33,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.8+4
+      flutter_osm_plugin: ^0.7.9
 
 * alpha version (iOS support)
 
@@ -281,6 +281,29 @@ b) select position with dynamic marker
 ```dart
  await controller.removeAllShapes();
 ```
+
+<b>18) Map Tapping Listener  </b> 
+
+> listener to singleTap and LongPress on the map (available on Android)
+
+```dart
+/// Listener LongPress
+controller.listenerMapLongTapping.addListener(() {
+      if(controller.listenerMapLongTapping.value!=null){
+         /// app logic
+      }
+    });
+/// Listener SingleTap
+
+controller.listenerMapSingleTapping.addListener(() {
+      if(controller.listenerMapSingleTapping.value!=null){
+         /// app logic
+      }
+});
+```
+
+
+
 
 ##  `OSMFlutter`
 

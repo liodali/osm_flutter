@@ -148,25 +148,7 @@ class FlutterOsmView(
 
     private var mapEventsOverlay: MapEventsOverlay? = null
 
-    private val mapListenerEventsOverlay: MapEventsOverlay by lazy {
-        MapEventsOverlay(object : MapEventsReceiver {
-            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
 
-                return false
-            }
-
-            override fun longPressHelper(p: GeoPoint?): Boolean {
-
-                if (mapEventsOverlay == null) {
-                    methodChannel.invokeMethod("receiveLongPress", p!!.toHashMap())
-                }
-
-                return true
-
-            }
-
-        })
-    }
     private var roadManager: OSRMRoadManager? = null
     private var roadColor: Int? = null
     private var defaultZoom = Constants.defaultZoom
@@ -199,8 +181,7 @@ class FlutterOsmView(
             setTileSource(MAPNIK)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         }
-        if (!map!!.overlayManager.contains(mapListenerEventsOverlay))
-            map!!.overlayManager.add(mapListenerEventsOverlay)
+
         map!!.addMapListener(object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
                 return true
@@ -241,7 +222,7 @@ class FlutterOsmView(
         @Suppress("UNCHECKED_CAST")
         val args = methodCall.arguments!! as HashMap<String, Double>
 
-        map!!.overlays.clear()
+        //map!!.overlays.clear()
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
         addMarker(geoPoint, initPositionZoom, null)
 
@@ -320,13 +301,13 @@ class FlutterOsmView(
     private fun createMarker(geoPoint: GeoPoint, color: Int?): Marker {
         val marker = FlutterMarker(application!!, map!!, geoPoint)
         marker.visibilityInfoWindow(visibilityInfoWindow)
-        marker.longPress = object : LongClickHandler {
-            override fun invoke(marker: Marker): Boolean {
-                map!!.overlays.remove(marker)
-                map!!.invalidate()
-                return true
-            }
-        }
+//        marker.longPress = object : LongClickHandler {
+//            override fun invoke(marker: Marker): Boolean {
+//                map!!.overlays.remove(marker)
+//                map!!.invalidate()
+//                return true
+//            }
+//        }
         val iconDrawable: Drawable = getDefaultIconDrawable(color)
         //marker.setPosition(geoPoint);
         marker.icon = iconDrawable
@@ -836,7 +817,7 @@ class FlutterOsmView(
 
         val showPoiMarker = args["showMarker"] as Boolean
 
-        val listPointsArgs =  args["wayPoints"] as List<HashMap<String, Double>>
+        val listPointsArgs = args["wayPoints"] as List<HashMap<String, Double>>
 
         val listInterestPoints: List<GeoPoint> = when (args.containsKey("middlePoints")) {
             true -> args["middlePoints"] as List<HashMap<String, Double>>
@@ -1048,7 +1029,8 @@ class FlutterOsmView(
                 }
 
             })
-            map!!.overlays.add(0, mapEventsOverlay)
+            if (mapEventsOverlay != null)
+                map!!.overlays.add(0, mapEventsOverlay)
         }
 
     }
@@ -1192,9 +1174,26 @@ class FlutterOsmView(
         folderStaticPosition.name = Constants.nameFolderStatic
 
         initMap()
-        map!!.forceLayout()
+        // map!!.forceLayout()
+        val staticOverlayListener = MapEventsOverlay(object : MapEventsReceiver {
+            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
 
+                methodChannel.invokeMethod("receiveSinglePress", p!!.toHashMap())
 
+                return true
+            }
+
+            override fun longPressHelper(p: GeoPoint?): Boolean {
+
+                methodChannel.invokeMethod("receiveLongPress", p!!.toHashMap())
+
+                return true
+
+            }
+
+        })
+        map!!.overlays.add(0, staticOverlayListener)
+        println(map!!.overlays.size)
     }
 
     override fun onStart(owner: LifecycleOwner) {
