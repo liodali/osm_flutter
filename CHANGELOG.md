@@ -1,3 +1,6 @@
+## 0.7.8+4 :
+* remove `useSecureURL` attribute
+* remove setURL for drawRoad
 ## 0.7.8+3 :
 * fix bug in android side (check for intersectPoint using wrong key)
 * change name attribute from `interestPoint` to `intersectPoint` in drawRoad

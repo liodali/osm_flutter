@@ -277,8 +277,6 @@ class OSMController {
     await osmPlatform.setDefaultZoom(_idMap, zoom);
   }
 
-
-
   /// draw road
   ///  [start] : started point of your Road
   ///  [end] : last point of your road

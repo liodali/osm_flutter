@@ -38,8 +38,6 @@ typedef OnLocationChanged = void Function(GeoPoint);
 ///
 /// [showDefaultInfoWindow] : (bool) enable/disable default infoWindow of marker (default = false)
 ///
-/// [useSecureURL] : use https or http when we get data from osm api
-///
 /// [showContributorBadgeForOSM] : (bool) for copyright of osm, we need to add badge in bottom of the map (default false)
 class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
