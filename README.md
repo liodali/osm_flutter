@@ -290,14 +290,14 @@ b) select position with dynamic marker
 /// Listener LongPress
 controller.listenerMapLongTapping.addListener(() {
       if(controller.listenerMapLongTapping.value!=null){
-         /// app logic
+         final geoP = controller.listenerMapLongTapping.value;
       }
     });
 /// Listener SingleTap
 
 controller.listenerMapSingleTapping.addListener(() {
       if(controller.listenerMapSingleTapping.value!=null){
-         /// app logic
+         final geoP = controller.listenerMapLongTapping.value;
       }
 });
 ```
