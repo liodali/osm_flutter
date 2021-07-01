@@ -4,7 +4,7 @@ export 'src/common/geo_point_exception.dart';
 export 'src/common/road_exception.dart';
 export 'src/common/utilities.dart';
 export 'src/controller/base_map_controller.dart'
-    show MapController, PickerMapController,CustomPickerLocation;
+    show MapController, PickerMapController, CustomPickerLocation;
 
 // export 'src/controller/map_controller.dart' show MapController;
 // export 'src/controller/picker_map_controller.dart';

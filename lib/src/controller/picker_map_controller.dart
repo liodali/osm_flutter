@@ -1,7 +1,5 @@
 part of osm_flutter;
 
-
-
 /// controller for custom picker location widget
 /// you will cancel/get/finish advanced picker
 /// you can also draw road,change current location

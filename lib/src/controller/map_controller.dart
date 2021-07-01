@@ -6,9 +6,6 @@ part of osm_flutter;
 //
 // import 'base_map_controller.dart';
 
-
-
-
 /// class [MapController] : map controller that will control map by select position,enable current location,
 /// draw road , show static geoPoint,
 ///

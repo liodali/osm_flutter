@@ -31,6 +31,7 @@ abstract class EventOSM<T> {
 class TapEvent extends EventOSM<GeoPoint> {
   TapEvent(int mapId, GeoPoint position) : super(mapId, position);
 }
+
 class SingleTapEvent extends TapEvent {
   SingleTapEvent(int mapId, GeoPoint position) : super(mapId, position);
 }
@@ -77,7 +78,6 @@ class MethodChannelOSM extends OSMPlatform {
   @override
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
     return _events(idMap).whereType<SingleTapEvent>();
-
   }
 
   @override
@@ -102,9 +102,10 @@ class MethodChannelOSM extends OSMPlatform {
           final result = call.arguments;
           _streamController.add(LongTapEvent(idMap, GeoPoint.fromMap(result)));
           break;
-        case "receiveSinglePress" :
+        case "receiveSinglePress":
           final result = call.arguments;
-          _streamController.add(SingleTapEvent(idMap, GeoPoint.fromMap(result)));
+          _streamController
+              .add(SingleTapEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveGeoPoint":
           final result = call.arguments;
@@ -481,6 +482,4 @@ class MethodChannelOSM extends OSMPlatform {
       await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", icon);
     }
   }
-
-
 }

@@ -1,7 +1,5 @@
 part of osm_flutter;
 
-
-
 /// CustomPickerLocation
 ///
 /// used to create customizable search location widget using OSMFlutter : to pick location from address

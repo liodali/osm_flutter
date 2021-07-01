@@ -52,12 +52,12 @@ class _MainExampleState extends State<MainExample> {
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
     controller.listenerMapLongTapping.addListener(() {
-      if(controller.listenerMapLongTapping.value!=null){
+      if (controller.listenerMapLongTapping.value != null) {
         print(controller.listenerMapLongTapping.value);
       }
     });
     controller.listenerMapSingleTapping.addListener(() {
-      if(controller.listenerMapSingleTapping.value!=null){
+      if (controller.listenerMapSingleTapping.value != null) {
         print(controller.listenerMapSingleTapping.value);
       }
     });
