@@ -41,9 +41,7 @@ class OSMController {
     bool initWithUserPosition = false,
   }) async {
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
-    if (Platform.isAndroid) {
-      osmPlatform.setSecureURL(_idMap, _osmFlutterState.widget.useSecureURL);
-    }
+
     if (_osmFlutterState.widget.showDefaultInfoWindow == true)
       osmPlatform.visibilityInfoWindow(
           _idMap, _osmFlutterState.widget.showDefaultInfoWindow);
@@ -279,9 +277,7 @@ class OSMController {
     await osmPlatform.setDefaultZoom(_idMap, zoom);
   }
 
-  Future<void> enableHttps(bool enable) async {
-    await osmPlatform.setSecureURL(_idMap, enable);
-  }
+
 
   /// draw road
   ///  [start] : started point of your Road

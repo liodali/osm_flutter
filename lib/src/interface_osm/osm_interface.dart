@@ -34,10 +34,7 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Stream<UserLocationEvent> onUserPositionListener(int idMap);
 
-  Future<void> setSecureURL(
-    int idOSM,
-    bool secure,
-  );
+
 
   Future<void> currentLocation(
     int idOSM,

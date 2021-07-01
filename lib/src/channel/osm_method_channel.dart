@@ -298,11 +298,6 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> setSecureURL(int idOSM, bool secure) async {
-    await _channels[idOSM]!.invokeMethod('use#secure', secure);
-  }
-
-  @override
   Future<void> staticPosition(
       int idOSM, List<GeoPoint> pList, String id) async {
     try {
