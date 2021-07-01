@@ -28,7 +28,6 @@ import androidx.preference.PreferenceManager
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
-import hamza.dali.flutter_osm_plugin.Constants.Companion.url
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.CREATED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.DESTROYED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.PAUSED
@@ -172,7 +171,6 @@ class FlutterOsmView(
     private var roadColor: Int? = null
     private var defaultZoom = Constants.defaultZoom
     private val initPositionZoom = 10.0
-    private var useSecureURL = true
     private var isTracking = false
     private var isEnabled = false
     private var visibilityInfoWindow = false
@@ -399,9 +397,7 @@ class FlutterOsmView(
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "use#secure" -> {
-                setSecureURL(call, result)
-            }
+
             "use#visiblityInfoWindow" -> {
                 visibilityInfoWindow = call.arguments as Boolean
                 result.success(null)
@@ -875,7 +871,6 @@ class FlutterOsmView(
         roadManager?.let { manager ->
 
             job = scope?.launch(Default) {
-                if (useSecureURL) roadManager!!.setService("https://$url")
                 val wayPoints = listPointsArgs.map {
                     GeoPoint(it["lat"]!!, it["lon"]!!)
                 }.toList()
@@ -1136,10 +1131,6 @@ class FlutterOsmView(
 
     }
 
-    private fun setSecureURL(call: MethodCall, result: MethodChannel.Result) {
-        useSecureURL = call.arguments as Boolean
-        result.success(null)
-    }
 
     private fun getBitmap(bytes: ByteArray): Bitmap {
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
