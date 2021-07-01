@@ -38,8 +38,6 @@ typedef OnLocationChanged = void Function(GeoPoint);
 ///
 /// [showDefaultInfoWindow] : (bool) enable/disable default infoWindow of marker (default = false)
 ///
-/// [useSecureURL] : use https or http when we get data from osm api
-///
 /// [showContributorBadgeForOSM] : (bool) for copyright of osm, we need to add badge in bottom of the map (default false)
 class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
@@ -54,7 +52,6 @@ class OSMFlutter extends StatefulWidget {
   final Road? road;
   final double defaultZoom;
   final bool showDefaultInfoWindow;
-  final bool useSecureURL;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
 
@@ -71,7 +68,6 @@ class OSMFlutter extends StatefulWidget {
     this.road,
     this.defaultZoom = 1.0,
     this.showDefaultInfoWindow = false,
-    this.useSecureURL = true,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
   }) : super(key: key);

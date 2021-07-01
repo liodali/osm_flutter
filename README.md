@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.8%2B3-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.8%2B4-orange)
 
 ## Platform Support
 | Android | iOS |
@@ -33,7 +33,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.7.8+3
+      flutter_osm_plugin: ^0.7.8+4
 
 * alpha version (iOS support)
 
@@ -292,7 +292,6 @@ b) select position with dynamic marker
 | `markerOption`                | configure marker of osm map                   |
 | `defaultZoom`                 | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
 | `road`                        | set color and start/end/middle markers in road |
-| `useSecureURL`                | enabled secure urls                  |
 | `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
 | `onLocationChanged`           | (callback) it is hire when you activate tracking and  user position has been changed          |

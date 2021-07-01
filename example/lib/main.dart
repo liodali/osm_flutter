@@ -161,7 +161,6 @@ class _MainExampleState extends State<MainExample> {
                   controller: controller,
                   showContributorBadgeForOSM: true,
                   //trackMyPosition: trackingNotifier.value,
-                  useSecureURL: false,
                   showDefaultInfoWindow: false,
                   defaultZoom: 3.0,
                   onLocationChanged: (myLocation) {
