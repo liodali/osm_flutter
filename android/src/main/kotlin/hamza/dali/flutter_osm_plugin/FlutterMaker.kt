@@ -70,10 +70,12 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
         return onClickListener?.onMarkerClick(this, mapView) ?: true
     }
 
-    override fun onLongPress(event: MotionEvent?, mapView: MapView?): Boolean {
-        longPress?.let { it(this) }
-        return super.onLongPress(event, mapView)
-    }
+
+
+//    override fun onLongPress(event: MotionEvent?, mapView: MapView?): Boolean {
+//        longPress?.let { it(this) }
+//        return super.onLongPress(event, mapView)
+//    }
 
     fun setIconMaker(color: Int?, bitmap: Bitmap?) {
         getDefaultIconDrawable(color, bitmap).also {
