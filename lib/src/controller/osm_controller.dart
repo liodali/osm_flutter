@@ -41,9 +41,10 @@ class OSMController {
   }) async {
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
 
-    if (_osmFlutterState.widget.showDefaultInfoWindow == true)
+    if (_osmFlutterState.widget.showDefaultInfoWindow == true){
       osmPlatform.visibilityInfoWindow(
           _idMap, _osmFlutterState.widget.showDefaultInfoWindow);
+    }
 
     /// listen to data send from native map
 
