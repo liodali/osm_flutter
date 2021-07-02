@@ -1,3 +1,6 @@
+## 0.7.9+1 :
+* fix problem when `await selectPosition` used should
+cancel global map listener 
 ## 0.7.9 :
 * add `listenerMapLongTapping` and `listenerMapSingleTapping` to manage Tapping Listener on the map (available for Android)
 * remove deletion of marker with LongPres
