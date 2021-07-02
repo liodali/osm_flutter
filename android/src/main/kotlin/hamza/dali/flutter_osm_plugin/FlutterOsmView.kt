@@ -157,6 +157,27 @@ class FlutterOsmView(
     private var isEnabled = false
     private var visibilityInfoWindow = false
 
+    private val staticOverlayListener by lazy {
+        MapEventsOverlay(object : MapEventsReceiver {
+            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+
+                methodChannel.invokeMethod("receiveSinglePress", p!!.toHashMap())
+
+                return true
+            }
+
+            override fun longPressHelper(p: GeoPoint?): Boolean {
+
+                methodChannel.invokeMethod("receiveLongPress", p!!.toHashMap())
+
+                return true
+
+            }
+
+        })
+    }
+
+
     private var mainLinearLayout: FrameLayout = FrameLayout(context!!).apply {
         this.layoutParams =
             MapView.LayoutParams(FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
@@ -200,6 +221,8 @@ class FlutterOsmView(
                 return true
             }
         })
+        map!!.overlays.add(0, staticOverlayListener)
+
         mainLinearLayout.addView(map)
     }
 
@@ -489,12 +512,10 @@ class FlutterOsmView(
                     call = call,
                     result = result,
                 )
-                result.success(null)
             }
             "advanced#selection" -> {
                 startAdvancedSelection(call)
                 result.success(null)
-
             }
             "get#position#advanced#selection" -> {
                 confirmAdvancedSelection(result)
@@ -738,6 +759,7 @@ class FlutterOsmView(
         )
         markerSelectionPicker!!.layoutParams = params
         mainLinearLayout.addView(markerSelectionPicker)
+
     }
 
     private fun deactivateTrackMe(call: MethodCall, result: MethodChannel.Result) {
@@ -1005,8 +1027,8 @@ class FlutterOsmView(
         } else null
 
         if (mapEventsOverlay == null) {
-            val mapGlobalListener =  map!!.overlays.first()
-            map!!.overlays.removeFirst()
+            if (map!!.overlays.first() is MapEventsOverlay)
+                map!!.overlays.removeFirst()
             mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
                 override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
 
@@ -1020,7 +1042,7 @@ class FlutterOsmView(
                     if (mapEventsOverlay != null) {
                         mapEventsOverlay = null
                         map!!.overlays.removeFirst()
-                        map!!.overlays.add(0, mapGlobalListener)
+                        map!!.overlays.add(0, staticOverlayListener)
                     }
                     return true
                 }
@@ -1176,25 +1198,7 @@ class FlutterOsmView(
 
         initMap()
         // map!!.forceLayout()
-        val staticOverlayListener = MapEventsOverlay(object : MapEventsReceiver {
-            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
 
-                methodChannel.invokeMethod("receiveSinglePress", p!!.toHashMap())
-
-                return true
-            }
-
-            override fun longPressHelper(p: GeoPoint?): Boolean {
-
-                methodChannel.invokeMethod("receiveLongPress", p!!.toHashMap())
-
-                return true
-
-            }
-
-        })
-        map!!.overlays.add(0, staticOverlayListener)
-        println(map!!.overlays.size)
     }
 
     override fun onStart(owner: LifecycleOwner) {

@@ -63,6 +63,9 @@ class MethodChannelOSM extends OSMPlatform {
   Future<void> init(int idOSMMap) async {
     locationService = Location();
     if (!_channels.containsKey(idOSMMap)) {
+      if (_streamController.isClosed) {
+        _streamController = StreamController<EventOSM>.broadcast();
+      }
       _channels[idOSMMap] =
           MethodChannel('plugins.dali.hamza/osmview_$idOSMMap');
       setGeoPointHandler(idOSMMap);
@@ -109,7 +112,8 @@ class MethodChannelOSM extends OSMPlatform {
           break;
         case "receiveGeoPoint":
           final result = call.arguments;
-          _streamController.add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
+          _streamController
+              .add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveUserLocation":
           final result = call.arguments;
