@@ -1,3 +1,5 @@
+## 0.7.9+2 :
+* fix reinitialize the stream controller when map screen was disposed and reopened again
 ## 0.7.9+1 :
 * fix problem when `await selectPosition` used should
 cancel global map listener 
