@@ -994,6 +994,7 @@ class FlutterOsmView(
 
     private fun pickPosition(call: MethodCall, result: MethodChannel.Result) {
         //val usingCamera=call.arguments as Boolean
+
         val args = call.arguments as Map<String, Any>
         val marker: Drawable? = if (args.containsKey("icon")) {
             val bitmap = getBitmap(args["icon"] as ByteArray)
@@ -1004,6 +1005,8 @@ class FlutterOsmView(
         } else null
 
         if (mapEventsOverlay == null) {
+            val mapGlobalListener =  map!!.overlays.first()
+            map!!.overlays.removeFirst()
             mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
                 override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
 
@@ -1017,15 +1020,13 @@ class FlutterOsmView(
                     if (mapEventsOverlay != null) {
                         mapEventsOverlay = null
                         map!!.overlays.removeFirst()
+                        map!!.overlays.add(0, mapGlobalListener)
                     }
                     return true
                 }
 
                 override fun longPressHelper(p: GeoPoint?): Boolean {
-
-
                     return true
-
                 }
 
             })
