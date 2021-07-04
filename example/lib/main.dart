@@ -85,6 +85,7 @@ class _MainExampleState extends State<MainExample> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('OSM'),
         actions: <Widget>[

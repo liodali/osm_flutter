@@ -210,7 +210,7 @@ b) select position with dynamic marker
    GeoPoint(latitude: 47.4371, longitude: 8.6136),
    intersectPoint : [ GeoPoint(latitude: 47.4361, longitude: 8.6156), GeoPoint(latitude: 47.4481, longitude: 8.6266)]
    roadOption: RoadOption(
-       roadWidth: 10.0,
+       roadWidth: 10,
        roadColor: Colors.blue,
        showMarkerOfPOI: false
    ),
