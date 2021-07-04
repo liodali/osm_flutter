@@ -27,9 +27,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var userLocation:MyLocationMarker? = nil
     var dictClusterAnnotation = [String: [StaticGeoPMarker]]()
     var dictIconClusterAnnotation = [String: StaticMarkerData]()
+    var roadMarkerPolyline:TGMarker? = nil
     var resultFlutter: FlutterResult? = nil
     var methodCall: FlutterMethodCall? = nil
     var uiSingleTapEventMap: UILongPressGestureRecognizer = UILongPressGestureRecognizer()
+    lazy var roadManager:RoadManager = RoadManager()
+
     // var tileRenderer:MKTileOverlayRenderer!
 
     var span = MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3)
@@ -140,14 +143,18 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break;
         case "road":
-//             drawRoad(call: call) { [unowned self] roadInfo, route, error in
-//                 if (error != nil) {
-//                     result(FlutterError(code: "400", message: "error to draw road", details: nil))
-//                 }
-//                 showRoute(with: route)
-//                 result(roadInfo.toMap())
-//             }
-            result(["distance": 0, "duration": 0])
+             drawRoad(call: call) { [unowned self] roadInfo,road,roadData,  error in
+                 if (error != nil) {
+                     result(FlutterError(code: "400", message: "error to draw road", details: nil))
+                 }else {
+                     var newRoad = road
+                     newRoad?.roadData = roadData!
+                     roadManager.drawRoadOnMap(on: newRoad!, for: mapView)
+                     result(roadInfo!.toMap())
+                 }
+
+             }
+            //result(["distance": 0, "duration": 0])
             break;
         default:
             result(nil)
@@ -278,48 +285,43 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     }
 
-    private func drawRoad(call: FlutterMethodCall, completion: @escaping (_ roadInfo: RoadInformation, _ polyLine: MKPolyline, _ error: Error?) -> ()) {
+    private func drawRoad(call: FlutterMethodCall, completion: @escaping (_ roadInfo: RoadInformation?,_ road:Road?,_ roadData:RoadData?, _ error: Error?) -> ()) {
         let args = call.arguments as! [String: Any]
-        let points = args["wayPoints"] as! [GeoPoint]
+        var points = args["wayPoints"] as! [GeoPoint]
+        var intersectPoint = [GeoPoint]()
+        if(args.keys.contains("middlePoint")){
+            intersectPoint = args["middlePoint"] as! [GeoPoint]
+            points.insert(contentsOf: intersectPoint, at: 1)
 
-        let roadData = RoadData(startPoint: points.first!.toLocationCoordinate(),
-                endPoint: points.last!.toLocationCoordinate(),
-                roadColor: (args["roadColor"] as? [Int]?)??.toUIColor(),
-                roadWidth: args["roadWidth"] as! Float?)
+        }
+        var roadColor =  "#ffffff"
+        if(args.keys.contains("roadColor")){
+           roadColor = args["roadColor"] as! String
+        }
+        var roadWidth = "5px"
+        if(args.keys.contains("roadWidth")){
+            roadWidth = (args["roadWidth"] as! String) + "px"
+        }
 
-        let directionRequest = MKDirections.Request()
-        directionRequest.source = MKMapItem(placemark: MKPlacemark(coordinate: roadData.startPoint))
-        directionRequest.destination = MKMapItem(placemark: MKPlacemark(coordinate: roadData.endPoint))
-        directionRequest.transportType = [.automobile]
-        directionRequest.requestsAlternateRoutes = false
-        // Calculate the direction
-        let directions = MKDirections(request: directionRequest)
+        let waysPoint = points.map { point  -> String in
+           let wayP = String(format: "%F,%F", point["lon"]!,point["lat"]!)
+           return  wayP
+        }
+        roadManager.getRoad(wayPoints: waysPoint,typeRoad: RoadType.car){ road in
+               var error: Error? = nil
+                if road==nil {
+                   error =  NSError()
+                    completion(nil,nil,nil,error)
 
-        directions.calculate { response, error in
-            guard let response = response else {
-                if let error = error {
-                    print("Error: \(error)")
-                    //throw Error("")
                 }
-                return
-            }
-            let route = response.routes.first!
-            let distance = route.distance.rounded() / 1000
-            let second = route.expectedTravelTime
+            let roadInfo = RoadInformation(distance: road!.distance, seconds: road!.duration)
 
-            completion(RoadInformation(distance: distance, seconds: second), route.polyline, error)
-            //result(["distance": distance, "duration": second])
+            completion(roadInfo,road,RoadData(roadColor: roadColor, roadWidth: roadWidth),nil)
         }
 
     }
 
-    private func showRoute(with: MKPolyline) {
-        //DispatchQueue.main.async {
-        // self.mapView.addOverlay(with)//,level: MKOverlayLevel.aboveRoads)
-        // let rect = with.boundingMapRect
-        //self.mapView.setVisibleMapRect(rect, animated: true)
-        //}
-    }
+
 
 
     // ------- delegation func ----
