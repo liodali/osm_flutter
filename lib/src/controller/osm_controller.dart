@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
@@ -70,6 +71,9 @@ class OSMController {
       /* this._osmController.myLocationListener(widget.onLocationChanged, (err) {
           print(err);
         });*/
+    }
+    if (Platform.isIOS) {
+      await osmPlatform.initIosMap(_idMap);
     }
 
     /// change default icon  marker

@@ -1,25 +1,26 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.7.9%2B2-orange)
+![pub](https://img.shields.io/badge/pub-v0.9.0--alpha.0-orange)
 
 ## Platform Support
 | Android | iOS |
 |:---:|:---:|
-| supported :heavy_check_mark: | supported (not stable yet): 0.8.0-alpha.1 |
+| supported :heavy_check_mark: | supported (not stable yet) :  0.9.0-alpha  |
 
 
 <b>osm plugin for flutter apps </b>
 
-* current position
-* change position 
-* tracking user location
-* customize Icon Marker
-* assisted selection position
-* draw Road,recuperate information (duration/distance) of the current road
-* ClickListener on Marker
-* calculate distance between 2 points
+* current position (Android)
+* change position (Android)
+* tracking user location (Android/iOS)
+* customize Icon Marker (Android/iOS)
+* assisted selection position (Android)
+* draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
+* ClickListener on Marker (Android)
+* ClickListener on Map (Android)
+* calculate distance between 2 points 
 * address suggestion
-* draw shapes
-* simple dialog location picker
+* draw shapes (Android)
+* simple dialog location picker (Android)
 
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
@@ -34,16 +35,12 @@ Add the following to your `pubspec.yaml` file:
 
     dependencies:
       flutter_osm_plugin: ^0.7.9+2
-
+      
 * alpha version (iOS support)
-
-
-```dart
- dependencies:
-          flutter_osm_plugin: ^0.8.0-alpha.1
-```
-    
-    
+      ```dart
+       dependencies:
+                flutter_osm_plugin: ^0.9.0-alpha.0
+      ```
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -281,29 +278,6 @@ b) select position with dynamic marker
 ```dart
  await controller.removeAllShapes();
 ```
-
-<b>18) Map Tapping Listener  </b> 
-
-> listener to singleTap and LongPress on the map (available on Android)
-
-```dart
-/// Listener LongPress
-controller.listenerMapLongTapping.addListener(() {
-      if(controller.listenerMapLongTapping.value!=null){
-         final geoP = controller.listenerMapLongTapping.value;
-      }
-    });
-/// Listener SingleTap
-
-controller.listenerMapSingleTapping.addListener(() {
-      if(controller.listenerMapSingleTapping.value!=null){
-         final geoP = controller.listenerMapLongTapping.value;
-      }
-});
-```
-
-
-
 
 ##  `OSMFlutter`
 

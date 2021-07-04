@@ -52,6 +52,7 @@ class OSMFlutter extends StatefulWidget {
   final Road? road;
   final double defaultZoom;
   final bool showDefaultInfoWindow;
+  final bool useSecureURL;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
 
@@ -68,6 +69,7 @@ class OSMFlutter extends StatefulWidget {
     this.road,
     this.defaultZoom = 1.0,
     this.showDefaultInfoWindow = false,
+    this.useSecureURL = true,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
   }) : super(key: key);

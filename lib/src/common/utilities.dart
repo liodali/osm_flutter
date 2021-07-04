@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:math' as Math;
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -74,5 +76,15 @@ extension ColorMap on Color {
     return {
       "$key": [this.red, this.blue, this.green]
     };
+  }
+  Map<String,String> toHexMap(String key) {
+    return {
+      "$key": "#${this.value.toRadixString(16)}"
+    };
+  }
+}
+extension Uint8ListConvert on Uint8List {
+  String convertToString(){
+    return base64.encode(this);
   }
 }

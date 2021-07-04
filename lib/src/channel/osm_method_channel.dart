@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -112,8 +113,7 @@ class MethodChannelOSM extends OSMPlatform {
           break;
         case "receiveGeoPoint":
           final result = call.arguments;
-          _streamController
-              .add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
+          _streamController.add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveUserLocation":
           final result = call.arguments;
@@ -183,14 +183,10 @@ class MethodChannelOSM extends OSMPlatform {
       "id": id,
       "bitmap": icon,
     };
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      var base64Str = base64.encode(icon);
-      args["bitmap"] = base64Str;
-      if (colorIcon != null) {
-        args.addAll(colorIcon.toMap("color"));
-      }
+    if (Platform.isIOS && colorIcon != null) {
+      args.addAll(colorIcon.toMap("color"));
+      args["bitmap"] = icon.convertToString();
     }
-
     await _channels[idOSM]!.invokeMethod(
       "staticPosition#IconMarker",
       args,
@@ -221,12 +217,22 @@ class MethodChannelOSM extends OSMPlatform {
       args.addAll(
           {"middlePoints": interestPoints.map((e) => e.toMap()).toList()});
     }
-    if (roadOption.roadColor != null) {
-      args.addAll(roadOption.roadColor!.toMap("roadColor"));
+    if (Platform.isIOS) {
+      if (roadOption.roadColor != null) {
+        args.addAll(roadOption.roadColor!.toHexMap("roadColor"));
+      }
+      if (roadOption.roadWidth != null) {
+        args.addAll({"roadWidth": roadOption.roadWidth});
+      }
+    } else {
+      if (roadOption.roadColor != null) {
+        args.addAll(roadOption.roadColor!.toMap("roadColor"));
+      }
+      if (roadOption.roadWidth != null) {
+        args.addAll({"roadWidth": roadOption.roadWidth!.toDouble()});
+      }
     }
-    if (roadOption.roadWidth != null) {
-      args.addAll({"roadWidth": roadOption.roadWidth});
-    }
+
     try {
       Map map = (await (_channels[idOSM]!.invokeMethod(
         "road",
@@ -485,5 +491,10 @@ class MethodChannelOSM extends OSMPlatform {
     } else {
       await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", icon);
     }
+  }
+
+  @override
+  Future<void> initIosMap(int idOSM) async {
+    await _channels[idOSM]!.invokeMethod("init#ios#map");
   }
 }
