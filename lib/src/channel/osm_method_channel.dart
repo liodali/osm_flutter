@@ -113,8 +113,7 @@ class MethodChannelOSM extends OSMPlatform {
           break;
         case "receiveGeoPoint":
           final result = call.arguments;
-          _streamController
-              .add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
+          _streamController.add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveUserLocation":
           final result = call.arguments;
@@ -218,12 +217,22 @@ class MethodChannelOSM extends OSMPlatform {
       args.addAll(
           {"middlePoints": interestPoints.map((e) => e.toMap()).toList()});
     }
-    if (roadOption.roadColor != null) {
-      args.addAll(roadOption.roadColor!.toMap("roadColor"));
+    if (Platform.isIOS) {
+      if (roadOption.roadColor != null) {
+        args.addAll(roadOption.roadColor!.toHexMap("roadColor"));
+      }
+      if (roadOption.roadWidth != null) {
+        args.addAll({"roadWidth": roadOption.roadWidth});
+      }
+    } else {
+      if (roadOption.roadColor != null) {
+        args.addAll(roadOption.roadColor!.toMap("roadColor"));
+      }
+      if (roadOption.roadWidth != null) {
+        args.addAll({"roadWidth": roadOption.roadWidth!.toDouble()});
+      }
     }
-    if (roadOption.roadWidth != null) {
-      args.addAll({"roadWidth": roadOption.roadWidth});
-    }
+
     try {
       Map map = (await (_channels[idOSM]!.invokeMethod(
         "road",

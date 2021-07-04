@@ -119,7 +119,7 @@ class _MainExampleState extends State<MainExample> {
                     point, point2,
                     //interestPoints: [pointM1, pointM2],
                     roadOption: RoadOption(
-                        roadWidth: 10.0,
+                        roadWidth: 10,
                         roadColor: Colors.blue,
                         showMarkerOfPOI: false));
                 print(

@@ -54,6 +54,7 @@ class OSMFlutter extends StatefulWidget {
   final bool showDefaultInfoWindow;
   final bool useSecureURL;
   final bool isPicker;
+  final bool showContributorBadgeForOSM;
 
   OSMFlutter({
     Key? key,
@@ -164,17 +165,6 @@ class OSMFlutterState extends State<OSMFlutter> {
         onPlatformViewCreated: _onPlatformViewCreated,
         //creationParamsCodec:  StandardMessageCodec(),
       );
-    } else if (kIsWeb) {
-      return Text(
-          '$defaultTargetPlatform is not yet supported by the osm plugin');
-    }
-    return Stack(
-      clipBehavior: Clip.none,
-      children: <Widget>[
-        widgetConfigMap(),
-        widgetMap,
-      ],
-    );
     } else if (kIsWeb) {
       return Text(
           '$defaultTargetPlatform is not yet supported by the osm plugin');
