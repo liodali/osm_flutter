@@ -1,7 +1,7 @@
 # flutter_osm_plugin
 ![pub](https://img.shields.io/badge/pub-v0.7.9%2B2-orange) 
 
-![pub](https://img.shields.io/badge/pub-v0.9.0--alpha.0-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.9.0--alpha.1-yellow) 
 
 ## Platform Support
 | Android | iOS |
@@ -41,7 +41,7 @@ Add the following to your `pubspec.yaml` file:
 * alpha version (iOS support)
       ```dart
        dependencies:
-                flutter_osm_plugin: ^0.9.0-alpha.0
+                flutter_osm_plugin: ^0.9.0-alpha.1
       ```
 
 ## Simple Usage
