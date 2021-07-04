@@ -28,14 +28,13 @@ abstract class OSMPlatform extends PlatformInterface {
 
   void close();
 
+  Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap);
+
+  Stream<LongTapEvent> onLongPressMapClickListener(int idMap);
+
   Stream<GeoPointEvent> onGeoPointClickListener(int idMap);
 
   Stream<UserLocationEvent> onUserPositionListener(int idMap);
-
-  Future<void> setSecureURL(
-    int idOSM,
-    bool secure,
-  );
 
   Future<void> currentLocation(
     int idOSM,

@@ -33,7 +33,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.8.0-alpha.1
+      flutter_osm_plugin: ^0.7.8
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -42,7 +42,7 @@ Add the following to your `pubspec.yaml` file:
 ```dart
  OSMFlutter( 
         controller:mapController,
-        currentLocation: false,
+        trackMyPosition: false,
         road: Road(
                 startIcon: MarkerIcon(
                   icon: Icon(
@@ -111,9 +111,6 @@ Add the following to your `pubspec.yaml` file:
 
 <b> 7)  Track user current position </b>
 
-> for ios,you should add `NSLocationWhenInUseUsageDescription` and `NSLocationAlwaysUsageDescription` in `info.plist` 
-
-
 ```dart
  await controller.enableTracking();
 ```
@@ -139,8 +136,6 @@ Add the following to your `pubspec.yaml` file:
 
 
 <b> 10) recuperation current position </b>
-
-> for ios,you should add `NSLocationWhenInUseUsageDescription` and `NSLocationAlwaysUsageDescription` in `info.plist` 
 
 ```dart
  GeoPoint geoPoint = await controller.myLocation();
@@ -204,7 +199,7 @@ b) select position with dynamic marker
  RoadInfo roadInfo = await controller.drawRoad( 
    GeoPoint(latitude: 47.35387, longitude: 8.43609),
    GeoPoint(latitude: 47.4371, longitude: 8.6136),
-   interestPoints : [ GeoPoint(latitude: 47.4361, longitude: 8.6156), GeoPoint(latitude: 47.4481, longitude: 8.6266)]
+   intersectPoint : [ GeoPoint(latitude: 47.4361, longitude: 8.6156), GeoPoint(latitude: 47.4481, longitude: 8.6266)]
    roadOption: RoadOption(
        roadWidth: 10.0,
        roadColor: Colors.blue,
@@ -279,20 +274,20 @@ b) select position with dynamic marker
 
 ##  `OSMFlutter`
 
-| Properties               | Description                         |
-| ------------------------ | ----------------------------------- |
-| `trackMyPosition`        | enable tracking user position.     |
-| `showZoomController`     | show default zoom controller.       |
-| `markerIcon`             | set icon Marker  (deprecated replaced with `markerOption` )                   |
-| `markerOption`           | configure marker of osm map                   |
-| `defaultZoom`            | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
-| `road`                   | set color and start/end/middle markers in road |
-| `useSecureURL`           | enabled secure urls                  |
-| `staticPoints`           | List of Markers you want to show always ,should every marker have unique id |
-| `onGeoPointClicked`      | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
-| `onLocationChanged`      | (callback) it is hire when you activate tracking and  user position has been changed          |
-| `showDefaultInfoWindow`  | (bool) enable/disable default infoWindow of marker (default = false)         |
-| `isPicker`               | (bool) enable advanced picker from init of  the map (default = false)         |
+| Properties                    | Description                         |
+| ----------------------------- | ----------------------------------- |
+| `trackMyPosition`             | enable tracking user position.     |
+| `showZoomController`          | show default zoom controller.       |
+| `markerIcon`                  | set icon Marker  (deprecated replaced with `markerOption` )                   |
+| `markerOption`                | configure marker of osm map                   |
+| `defaultZoom`                 | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
+| `road`                        | set color and start/end/middle markers in road |
+| `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
+| `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
+| `onLocationChanged`           | (callback) it is hire when you activate tracking and  user position has been changed          |
+| `showDefaultInfoWindow`       | (bool) enable/disable default infoWindow of marker (default = false)         |
+| `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |
+| `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
 
 ## STATIC METHODS:
 
@@ -354,12 +349,16 @@ GeoPoint p = await showSimplePickerLocation(
         ...
         android:usesCleartextTraffic="true"> 
         `
-> if you faced build error in fresh project you need to follow those instruction [#40]
+> if you faced build error in fresh project you need to follow those instruction [#40](https://github.com/liodali/osm_flutter/issues/40)
     
     1) remove flutter_osm_plugin from pubspec, after that pub get
     2) open android module in android studio ( right click in name of project -> flutter-> open android module in android studio)
     3) update gradle version to 4.1.1 ( IDE will show popup to make update)
     4) update kotlin version to 1.4.21 & re-build the project
     5) re-add flutter_osm_plugin in pubspec , pub get ( or flutter clean & pub get )
+
+> Before you publish your application using this library,
+> you should take care about copyright of openStreetMap Data,
+> that's why i add `CopyrightOSMWidget` see example and this issue [#101](https://github.com/liodali/osm_flutter/issues/101)
 
 #### MIT LICENCE

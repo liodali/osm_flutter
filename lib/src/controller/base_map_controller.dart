@@ -1,16 +1,30 @@
+library osm_flutter;
+
+import 'package:flutter/material.dart';
+
+import '../../flutter_osm_plugin.dart';
 import '../types/geo_point.dart';
 import 'osm_controller.dart';
 
-/// class [BaseMapController] : base controller for osm flutter
+part '../widgets/custom_picker_location.dart';
+
+part 'map_controller.dart';
+
+part 'picker_map_controller.dart';
+
+///  [BaseMapController] : base controller for osm flutter
 ///
 ///
 /// [initMapWithUserPosition] : (bool) if is true, map will show your current location
 ///
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 abstract class BaseMapController {
-  late OSMController osmController;
+  late OSMController _osmController;
   final bool initMapWithUserPosition;
   final GeoPoint? initPosition;
+
+  late ValueNotifier<GeoPoint?> listenerMapLongTapping = ValueNotifier(null);
+  late ValueNotifier<GeoPoint?> listenerMapSingleTapping = ValueNotifier(null);
 
   BaseMapController({
     this.initMapWithUserPosition = true,
@@ -20,9 +34,9 @@ abstract class BaseMapController {
   void init(
     OSMController osmController,
   ) {
-    this.osmController = osmController;
+    this._osmController = osmController;
     Future.delayed(Duration(milliseconds: 1250), () async {
-      await this.osmController.initMap(
+      await this._osmController.initMap(
             initPosition: initPosition,
             initWithUserPosition: initMapWithUserPosition,
           );

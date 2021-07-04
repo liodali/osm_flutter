@@ -9,6 +9,7 @@ import 'package:location/location.dart';
 import 'controller/base_map_controller.dart';
 import 'controller/osm_controller.dart';
 import 'types/types.dart';
+import 'widgets/copyright_osm_widget.dart';
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
@@ -37,7 +38,7 @@ typedef OnLocationChanged = void Function(GeoPoint);
 ///
 /// [showDefaultInfoWindow] : (bool) enable/disable default infoWindow of marker (default = false)
 ///
-/// [useSecureURL] : use https or http when we get data from osm api
+/// [showContributorBadgeForOSM] : (bool) for copyright of osm, we need to add badge in bottom of the map (default false)
 class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
   final bool trackMyPosition;
@@ -69,6 +70,7 @@ class OSMFlutter extends StatefulWidget {
     this.showDefaultInfoWindow = false,
     this.useSecureURL = true,
     this.isPicker = false,
+    this.showContributorBadgeForOSM = false,
   }) : super(key: key);
 
   @override
@@ -173,6 +175,23 @@ class OSMFlutterState extends State<OSMFlutter> {
         widgetMap,
       ],
     );
+    } else if (kIsWeb) {
+      return Text(
+          '$defaultTargetPlatform is not yet supported by the osm plugin');
+    }
+    return Stack(
+      clipBehavior: Clip.none,
+      children: <Widget>[
+        widgetConfigMap(),
+        widgetMap,
+        if (widget.showContributorBadgeForOSM)
+          Positioned(
+            bottom: 0,
+            right: 5,
+            child: CopyrightOSMWidget(),
+          )
+      ],
+    );
   }
 
   /// requestPermission callback to request location in your phone
@@ -209,7 +228,7 @@ class OSMFlutterState extends State<OSMFlutter> {
           ValueListenableBuilder<Widget?>(
             valueListenable: dynamicMarkerWidgetNotifier,
             builder: (ctx, widget, child) {
-              if(widget==null){
+              if (widget == null) {
                 return SizedBox.fromSize();
               }
               return RepaintBoundary(
@@ -219,7 +238,7 @@ class OSMFlutterState extends State<OSMFlutter> {
             },
           ),
           if ((widget.markerOption?.defaultMarker != null) ||
-              (widget.markerOption!.defaultMarker != null)) ...[
+              (widget.markerIcon != null)) ...[
             RepaintBoundary(
               key: defaultMarkerKey,
               child: widget.markerOption

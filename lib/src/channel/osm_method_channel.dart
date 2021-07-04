@@ -29,6 +29,18 @@ abstract class EventOSM<T> {
   EventOSM(this.mapId, this.value);
 }
 
+class TapEvent extends EventOSM<GeoPoint> {
+  TapEvent(int mapId, GeoPoint position) : super(mapId, position);
+}
+
+class SingleTapEvent extends TapEvent {
+  SingleTapEvent(int mapId, GeoPoint position) : super(mapId, position);
+}
+
+class LongTapEvent extends TapEvent {
+  LongTapEvent(int mapId, GeoPoint position) : super(mapId, position);
+}
+
 class GeoPointEvent extends EventOSM<GeoPoint> {
   GeoPointEvent(int mapId, GeoPoint position) : super(mapId, position);
 }
@@ -52,6 +64,9 @@ class MethodChannelOSM extends OSMPlatform {
   Future<void> init(int idOSMMap) async {
     locationService = Location();
     if (!_channels.containsKey(idOSMMap)) {
+      if (_streamController.isClosed) {
+        _streamController = StreamController<EventOSM>.broadcast();
+      }
       _channels[idOSMMap] =
           MethodChannel('plugins.dali.hamza/osmview_$idOSMMap');
       setGeoPointHandler(idOSMMap);
@@ -62,6 +77,16 @@ class MethodChannelOSM extends OSMPlatform {
         EventChannel("plugins.dali.hamza/osmview_stream_location_$idOSMMap"),
       ];
     }*/
+  }
+
+  @override
+  Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
+    return _events(idMap).whereType<SingleTapEvent>();
+  }
+
+  @override
+  Stream<LongTapEvent> onLongPressMapClickListener(int idMap) {
+    return _events(idMap).whereType<LongTapEvent>();
   }
 
   @override
@@ -77,9 +102,19 @@ class MethodChannelOSM extends OSMPlatform {
   void setGeoPointHandler(int idMap) async {
     _channels[idMap]!.setMethodCallHandler((call) async {
       switch (call.method) {
+        case "receiveLongPress":
+          final result = call.arguments;
+          _streamController.add(LongTapEvent(idMap, GeoPoint.fromMap(result)));
+          break;
+        case "receiveSinglePress":
+          final result = call.arguments;
+          _streamController
+              .add(SingleTapEvent(idMap, GeoPoint.fromMap(result)));
+          break;
         case "receiveGeoPoint":
           final result = call.arguments;
-          _streamController.add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
+          _streamController
+              .add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveUserLocation":
           final result = call.arguments;
@@ -128,12 +163,13 @@ class MethodChannelOSM extends OSMPlatform {
   @override
   Future<void> customMarker(int idOSM, GlobalKey? globalKey) async {
     Uint8List icon = await _capturePng(globalKey!);
-
+    dynamic args = icon;
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       var base64Str = base64.encode(icon);
-      await _channels[idOSM]!.invokeMethod("marker#icon", base64Str);
-    } else
-      await _channels[idOSM]!.invokeMethod("marker#icon", icon);
+      args = base64Str;
+    }
+
+    await _channels[idOSM]!.invokeMethod("marker#icon", args);
   }
 
   @override
@@ -281,15 +317,10 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> setSecureURL(int idOSM, bool secure) async {
-    await _channels[idOSM]!.invokeMethod('use#secure', secure);
-  }
-
-  @override
   Future<void> staticPosition(
       int idOSM, List<GeoPoint> pList, String id) async {
     try {
-      List<Map<String, double?>> listGeos = [];
+      List<Map<String, double>> listGeos = [];
       for (GeoPoint p in pList) {
         listGeos.add({"lon": p.longitude, "lat": p.latitude});
       }

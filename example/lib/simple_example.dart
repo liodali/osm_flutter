@@ -91,7 +91,6 @@ class SimpleOSMState extends State<SimpleOSM>
         ),
       ),
       trackMyPosition: false,
-      useSecureURL: false,
     );
   }
 

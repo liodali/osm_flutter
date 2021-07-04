@@ -6,7 +6,24 @@
   * visualisation of map in ios 
   * support select position (custom marker, not network image will not work) 
   * support track user location
-  
+## 0.7.9+2 :
+* fix reinitialize the stream controller when map screen was disposed and reopened again
+## 0.7.9+1 :
+* fix problem when `await selectPosition` used should
+cancel global map listener 
+## 0.7.9 :
+* add `listenerMapLongTapping` and `listenerMapSingleTapping` to manage Tapping Listener on the map (available for Android)
+* remove deletion of marker with LongPres
+## 0.7.8+4 :
+* remove `useSecureURL` attribute
+* remove setURL for drawRoad
+## 0.7.8+3 :
+* fix bug in android side (check for intersectPoint using wrong key)
+* change name attribute from `interestPoint` to `intersectPoint` in drawRoad
+## 0.7.8+2 :
+* add copyright widget for osm copyright
+## 0.7.8+1 :
+* fix null check in OSMFlutter 
 ## 0.7.8 :
 * add put dynamic image to marker for select position 
    * you could put flutter widget

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
@@ -41,12 +40,24 @@ class OSMController {
     bool initWithUserPosition = false,
   }) async {
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
-    if (Platform.isAndroid) {
-      osmPlatform.setSecureURL(_idMap, _osmFlutterState.widget.useSecureURL);
-    }
-    if (_osmFlutterState.widget.showDefaultInfoWindow == true)
+
+    if (_osmFlutterState.widget.showDefaultInfoWindow == true){
       osmPlatform.visibilityInfoWindow(
           _idMap, _osmFlutterState.widget.showDefaultInfoWindow);
+    }
+
+    /// listen to data send from native map
+
+    osmPlatform.onLongPressMapClickListener(_idMap).listen((event) {
+      _osmFlutterState.widget.controller.listenerMapLongTapping.value =
+          event.value;
+    });
+
+    osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
+      _osmFlutterState.widget.controller.listenerMapSingleTapping.value =
+          event.value;
+    });
+
     if (_osmFlutterState.widget.onGeoPointClicked != null) {
       osmPlatform.onGeoPointClickListener(_idMap).listen((event) {
         _osmFlutterState.widget.onGeoPointClicked!(event.value);
@@ -66,7 +77,9 @@ class OSMController {
 
     /// change default icon  marker
     final defaultIcon = _osmFlutterState.widget.markerOption
-        ?.copyWith(defaultMarker: _osmFlutterState.widget.markerIcon);
+            ?.copyWith(defaultMarker: _osmFlutterState.widget.markerIcon) ??
+        _osmFlutterState.widget.markerIcon;
+
     if (defaultIcon != null) {
       await changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
     }
@@ -278,10 +291,6 @@ class OSMController {
 
   Future<void> defaultZoom(double zoom) async {
     await osmPlatform.setDefaultZoom(_idMap, zoom);
-  }
-
-  Future<void> enableHttps(bool enable) async {
-    await osmPlatform.setSecureURL(_idMap, enable);
   }
 
   /// draw road

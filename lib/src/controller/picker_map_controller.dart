@@ -1,9 +1,4 @@
-import 'dart:async';
-
-import 'package:flutter/material.dart';
-
-import '../types/geo_point.dart';
-import 'base_map_controller.dart';
+part of osm_flutter;
 
 /// controller for custom picker location widget
 /// you will cancel/get/finish advanced picker
@@ -30,25 +25,25 @@ class PickerMapController extends BaseMapController {
   ///
   /// [p] : (GeoPoint) position that will be go to map
   Future<void> goToLocation(GeoPoint p) async {
-    await osmController.goToPosition(p);
+    await _osmController.goToPosition(p);
   }
 
   Future<void> advancedPositionPicker() async {
-    await osmController.advancedPositionPicker();
+    await _osmController.advancedPositionPicker();
   }
 
   /// select current position and finish advanced picker
   Future<GeoPoint> selectAdvancedPositionPicker() async {
-    return await osmController.selectAdvancedPositionPicker();
+    return await _osmController.selectAdvancedPositionPicker();
   }
 
   /// get current position
   Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
-    return await osmController.getCurrentPositionAdvancedPositionPicker();
+    return await _osmController.getCurrentPositionAdvancedPositionPicker();
   }
 
   /// cancel advanced picker
   Future<void> cancelAdvancedPositionPicker() async {
-    return await osmController.cancelAdvancedPositionPicker();
+    return await _osmController.cancelAdvancedPositionPicker();
   }
 }

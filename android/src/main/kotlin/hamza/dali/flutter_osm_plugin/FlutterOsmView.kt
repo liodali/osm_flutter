@@ -28,7 +28,6 @@ import androidx.preference.PreferenceManager
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
-import hamza.dali.flutter_osm_plugin.Constants.Companion.url
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.CREATED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.DESTROYED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.PAUSED
@@ -149,14 +148,36 @@ class FlutterOsmView(
     }
 
     private var mapEventsOverlay: MapEventsOverlay? = null
+
+
     private var roadManager: OSRMRoadManager? = null
     private var roadColor: Int? = null
     private var defaultZoom = Constants.defaultZoom
     private val initPositionZoom = 10.0
-    private var useSecureURL = true
     private var isTracking = false
     private var isEnabled = false
     private var visibilityInfoWindow = false
+
+    private val staticOverlayListener by lazy {
+        MapEventsOverlay(object : MapEventsReceiver {
+            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+
+                methodChannel.invokeMethod("receiveSinglePress", p!!.toHashMap())
+
+                return true
+            }
+
+            override fun longPressHelper(p: GeoPoint?): Boolean {
+
+                methodChannel.invokeMethod("receiveLongPress", p!!.toHashMap())
+
+                return true
+
+            }
+
+        })
+    }
+
 
     private var mainLinearLayout: FrameLayout = FrameLayout(context!!).apply {
         this.layoutParams =
@@ -201,6 +222,8 @@ class FlutterOsmView(
                 return true
             }
         })
+        map!!.overlays.add(0, staticOverlayListener)
+
         mainLinearLayout.addView(map)
     }
 
@@ -223,7 +246,7 @@ class FlutterOsmView(
         @Suppress("UNCHECKED_CAST")
         val args = methodCall.arguments!! as HashMap<String, Double>
 
-        map!!.overlays.clear()
+        //map!!.overlays.clear()
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
         addMarker(geoPoint, initPositionZoom, null)
 
@@ -247,7 +270,6 @@ class FlutterOsmView(
 
             }
             imageURL != null && imageURL.isNotEmpty() -> {
-
                 Picasso.get()
                     .load(imageURL)
                     .fetch(object : Callback {
@@ -303,13 +325,13 @@ class FlutterOsmView(
     private fun createMarker(geoPoint: GeoPoint, color: Int?): Marker {
         val marker = FlutterMarker(application!!, map!!, geoPoint)
         marker.visibilityInfoWindow(visibilityInfoWindow)
-        marker.longPress = object : LongClickHandler {
-            override fun invoke(marker: Marker): Boolean {
-                map!!.overlays.remove(marker)
-                map!!.invalidate()
-                return true
-            }
-        }
+//        marker.longPress = object : LongClickHandler {
+//            override fun invoke(marker: Marker): Boolean {
+//                map!!.overlays.remove(marker)
+//                map!!.invalidate()
+//                return true
+//            }
+//        }
         val iconDrawable: Drawable = getDefaultIconDrawable(color)
         //marker.setPosition(geoPoint);
         marker.icon = iconDrawable
@@ -380,9 +402,7 @@ class FlutterOsmView(
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "use#secure" -> {
-                setSecureURL(call, result)
-            }
+
             "use#visiblityInfoWindow" -> {
                 visibilityInfoWindow = call.arguments as Boolean
                 result.success(null)
@@ -493,12 +513,10 @@ class FlutterOsmView(
                     call = call,
                     result = result,
                 )
-                result.success(null)
             }
             "advanced#selection" -> {
                 startAdvancedSelection(call)
                 result.success(null)
-
             }
             "get#position#advanced#selection" -> {
                 confirmAdvancedSelection(result)
@@ -742,6 +760,7 @@ class FlutterOsmView(
         )
         markerSelectionPicker!!.layoutParams = params
         mainLinearLayout.addView(markerSelectionPicker)
+
     }
 
     private fun deactivateTrackMe(call: MethodCall, result: MethodChannel.Result) {
@@ -823,7 +842,7 @@ class FlutterOsmView(
 
         val listPointsArgs = args["wayPoints"] as List<HashMap<String, Double>>
 
-        val listInterestPoints: List<GeoPoint> = when (args.containsKey("roadColor")) {
+        val listInterestPoints: List<GeoPoint> = when (args.containsKey("middlePoints")) {
             true -> args["middlePoints"] as List<HashMap<String, Double>>
             false -> emptyList()
         }.map { g ->
@@ -856,7 +875,6 @@ class FlutterOsmView(
         roadManager?.let { manager ->
 
             job = scope?.launch(Default) {
-                if (useSecureURL) roadManager!!.setService("https://$url")
                 val wayPoints = listPointsArgs.map {
                     GeoPoint(it["lat"]!!, it["lon"]!!)
                 }.toList()
@@ -999,6 +1017,7 @@ class FlutterOsmView(
 
     private fun pickPosition(call: MethodCall, result: MethodChannel.Result) {
         //val usingCamera=call.arguments as Boolean
+
         val args = call.arguments as Map<String, Any>
         val marker: Drawable? = if (args.containsKey("icon")) {
             val bitmap = getBitmap(args["icon"] as ByteArray)
@@ -1009,12 +1028,10 @@ class FlutterOsmView(
         } else null
 
         if (mapEventsOverlay == null) {
+            if (map!!.overlays.first() is MapEventsOverlay)
+                map!!.overlays.removeFirst()
             mapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
                 override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-                    if (mapEventsOverlay != null) {
-                        mapEventsOverlay = null
-                        map!!.overlays.removeFirst()
-                    }
 
                     addMarker(
                         p!!, map!!.zoomLevelDouble,
@@ -1023,19 +1040,21 @@ class FlutterOsmView(
                         imageURL,
                     )
                     result.success(p.toHashMap())
-
+                    if (mapEventsOverlay != null) {
+                        mapEventsOverlay = null
+                        map!!.overlays.removeFirst()
+                        map!!.overlays.add(0, staticOverlayListener)
+                    }
                     return true
                 }
 
                 override fun longPressHelper(p: GeoPoint?): Boolean {
-
-
                     return true
-
                 }
 
             })
-            map!!.overlays.add(0, mapEventsOverlay)
+            if (mapEventsOverlay != null)
+                map!!.overlays.add(0, mapEventsOverlay)
         }
 
     }
@@ -1118,10 +1137,6 @@ class FlutterOsmView(
 
     }
 
-    private fun setSecureURL(call: MethodCall, result: MethodChannel.Result) {
-        useSecureURL = call.arguments as Boolean
-        result.success(null)
-    }
 
     private fun getBitmap(bytes: ByteArray): Bitmap {
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
@@ -1183,8 +1198,7 @@ class FlutterOsmView(
         folderStaticPosition.name = Constants.nameFolderStatic
 
         initMap()
-        map!!.forceLayout()
-
+        // map!!.forceLayout()
 
     }
 

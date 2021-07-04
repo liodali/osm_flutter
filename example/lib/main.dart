@@ -51,6 +51,16 @@ class _MainExampleState extends State<MainExample> {
       initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
+    controller.listenerMapLongTapping.addListener(() {
+      if (controller.listenerMapLongTapping.value != null) {
+        print(controller.listenerMapLongTapping.value);
+      }
+    });
+    controller.listenerMapSingleTapping.addListener(() {
+      if (controller.listenerMapSingleTapping.value != null) {
+        print(controller.listenerMapSingleTapping.value);
+      }
+    });
     // Future.delayed(Duration(seconds: 10), () async {
     //   await controller.drawRect(RectOSM(
     //     key: "rect",
@@ -63,12 +73,6 @@ class _MainExampleState extends State<MainExample> {
     // Future.delayed(Duration(seconds: 20), () async {
     //   await controller.removeAllShapes();
     // });
-    Future.delayed(Duration(seconds: 10), () async {
-      await controller.zoom(5);
-      await controller.rotateMapCamera(45.0);
-      // await controller.rotateMapCamera(120);
-      // await controller.rotateMapCamera(null);
-    });
   }
 
   @override
@@ -104,14 +108,16 @@ class _MainExampleState extends State<MainExample> {
                     size: 48,
                   ),
                 ));
-                GeoPoint pointM1 = await controller.selectPosition();
-                GeoPoint pointM2 = await controller.selectPosition(
-                  imageURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png"
-                );
+
+                // GeoPoint pointM1 = await controller.selectPosition();
+                // GeoPoint pointM2 = await controller.selectPosition(
+                //     imageURL:
+                //         "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png");
+                //
                 GeoPoint point2 = await controller.selectPosition();
                 RoadInfo roadInformation = await controller.drawRoad(
                     point, point2,
-                    interestPoints: [pointM1, pointM2],
+                    //interestPoints: [pointM1, pointM2],
                     roadOption: RoadOption(
                         roadWidth: 10.0,
                         roadColor: Colors.blue,
@@ -163,8 +169,8 @@ class _MainExampleState extends State<MainExample> {
               children: [
                 OSMFlutter(
                   controller: controller,
+                  showContributorBadgeForOSM: true,
                   //trackMyPosition: trackingNotifier.value,
-                  useSecureURL: false,
                   showDefaultInfoWindow: false,
                   defaultZoom: 3.0,
                   onLocationChanged: (myLocation) {
