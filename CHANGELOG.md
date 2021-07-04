@@ -1,3 +1,5 @@
+## 0.9.0-alpha.0 :
+* support drawRoad in iOS
 ## 0.8.0-alpha.1 :
 * fix set color static marker position
 * fix convert bitmap to string
