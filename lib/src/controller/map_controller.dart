@@ -218,7 +218,9 @@ class MapController extends BaseMapController {
   }
 
   /// draw road manually
-  ///  [path] : (list) path of the road
+  ///  [path] : (list of GeoPoint) path of the road
+  ///  [roadColor] : (Color) the color that uses to change the  default road color
+  ///  [roadWidth] : (double) uses to change width of the  road
   Future<void> drawRoadManually(
     List<GeoPoint> path,
     Color roadColor,

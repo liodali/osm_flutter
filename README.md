@@ -1,7 +1,7 @@
 # flutter_osm_plugin
 ![pub](https://img.shields.io/badge/pub-v0.7.9%2B2-orange) 
 
-![pub](https://img.shields.io/badge/pub-v0.9.0--alpha.1-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.10.0--alpha.0-yellow) 
 
 ## Platform Support
 | Android | iOS |
@@ -17,6 +17,7 @@
 * customize Icon Marker (Android/iOS)
 * assisted selection position (Android)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
+* draw Road manually (Android) (available in alpha version)
 * ClickListener on Marker (Android)
 * ClickListener on Map (Android)
 * calculate distance between 2 points 
@@ -217,6 +218,15 @@ b) select position with dynamic marker
 );
  print("${roadInfo.distance}km");
  print("${roadInfo.duration}sec");
+```
+
+13.b) draw road manually
+```dart
+await controller.drawRoadManually(
+        waysPoint,
+        Colors.purpleAccent,
+        6.0,
+      )
 ```
 
 <b>14) Delete last road </b>

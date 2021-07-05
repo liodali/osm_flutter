@@ -1,3 +1,5 @@
+## 0.10.0-alpha.0 :
+* add draw road manually for dev that they have they own routing api (ios will be support in next version)
 ## 0.9.0-alpha.0 :
 * support drawRoad in iOS
 ## 0.8.0-alpha.1 :
