@@ -216,19 +216,13 @@ class MapController extends BaseMapController {
   Future<void> rotateMapCamera(double? degree) async {
     return await _osmController.mapOrientation(degree);
   }
-
+/*
   /// draw road manually
   ///  [path] : (list) path of the road
   Future<void> drawRoadManually(
     List<GeoPoint> path,
-    Color roadColor,
-    double roadWidth,
   ) async {
     assert(path.length > 3);
-    await _osmController.drawRoadManually(
-      path,
-      roadColor,
-      roadWidth,
-    );
-  }
+    await _osmController.drawRoadManually(path);
+  }*/
 }

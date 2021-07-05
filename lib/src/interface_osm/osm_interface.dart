@@ -179,8 +179,6 @@ abstract class OSMPlatform extends PlatformInterface {
   Future<void> drawRoadManually(
     int idOSM,
     List<GeoPoint> road,
-    Color roadColor,
-    double roadWidth,
   );
 
   Future<void> mapRotation(

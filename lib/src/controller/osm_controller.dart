@@ -42,7 +42,7 @@ class OSMController {
   }) async {
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
 
-    if (_osmFlutterState.widget.showDefaultInfoWindow == true) {
+    if (_osmFlutterState.widget.showDefaultInfoWindow == true){
       osmPlatform.visibilityInfoWindow(
           _idMap, _osmFlutterState.widget.showDefaultInfoWindow);
     }
@@ -321,20 +321,12 @@ class OSMController {
   ///  [path] : (list) path of the road
   Future<void> drawRoadManually(
     List<GeoPoint> path,
-    Color roadColor,
-    double roadWidth,
   ) async {
     assert(
-        (path.first.latitude != path.last.latitude &&
-            path.first.longitude != path.last.longitude) &&
-            path.length > 2,
+        path.first.latitude != path.last.latitude ||
+            path.first.longitude != path.last.longitude,
         "you cannot make road with same geoPoint");
-    await osmPlatform.drawRoadManually(
-      _idMap,
-      path,
-      roadColor,
-      roadWidth,
-    );
+    await osmPlatform.drawRoadManually(_idMap, path);
   }
 
   ///delete last road draw in the map
