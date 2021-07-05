@@ -64,7 +64,16 @@ Future<List<SearchInfo>> addressSuggestion(String searchText,
       .toList();
 }
 
-extension ExtGeoPoint on LocationData {
+extension ExtGeoPoint on GeoPoint {
+  List<num> toListNum() {
+    return [
+      this.longitude,
+      this.latitude,
+    ];
+  }
+}
+
+extension ExtLocationData on LocationData {
   GeoPoint toGeoPoint() {
     return GeoPoint(
         longitude: this.longitude ?? 0.0, latitude: this.latitude ?? 0.0);
@@ -77,14 +86,14 @@ extension ColorMap on Color {
       "$key": [this.red, this.blue, this.green]
     };
   }
-  Map<String,String> toHexMap(String key) {
-    return {
-      "$key": "#${this.value.toRadixString(16)}"
-    };
+
+  Map<String, String> toHexMap(String key) {
+    return {"$key": "#${this.value.toRadixString(16)}"};
   }
 }
+
 extension Uint8ListConvert on Uint8List {
-  String convertToString(){
+  String convertToString() {
     return base64.encode(this);
   }
 }

@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:location/location.dart';
 import 'package:stream_transform/stream_transform.dart';
 
@@ -460,12 +461,13 @@ class MethodChannelOSM extends OSMPlatform {
     int idOSM,
     List<GeoPoint> road,
   ) async {
-    final listMapRoad = road.map((e) => e.toMap());
-    await _channels[idOSM]!.invokeListMethod(
+    final coordinates = road.map((e) => e.toListNum()).toList();
+    final encodedCoordinates = encodePolyline(coordinates);
+    await _channels[idOSM]!.invokeMethod(
       "drawRoad#manually",
-      [
-        {"road": listMapRoad}
-      ],
+      {
+        "road": encodedCoordinates,
+      },
     );
   }
 
