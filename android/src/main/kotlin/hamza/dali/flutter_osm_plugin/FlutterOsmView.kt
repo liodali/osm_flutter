@@ -48,6 +48,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
+import org.osmdroid.bonuspack.utils.PolylineEncoder
 import org.osmdroid.config.Configuration
 import org.osmdroid.config.IConfigurationProvider
 import org.osmdroid.events.MapEventsReceiver
@@ -57,14 +58,10 @@ import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.MapTileProviderBasic
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory.MAPNIK
 import org.osmdroid.tileprovider.util.SimpleInvalidationHandler
-import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.FolderOverlay
-import org.osmdroid.views.overlay.MapEventsOverlay
-import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Polygon
+import org.osmdroid.views.overlay.*
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import kotlin.collections.component1
@@ -550,50 +547,42 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    /*
-        private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
-            val road: Road = Road()
-            val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
 
-            val wayPoints = (args["road"] as List<HashMap<String, Double>>).map { gP ->
-                gP.toGeoPoint()
-            }.toList()
-            scope!!.launch {
+    private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
+        val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
 
-                val leg = RoadLeg()
-                road.mLegs.add(leg)
-                road.mBoundingBox = BoundingBox.fromGeoPoints(wayPoints)
-                for (point in wayPoints) {
-                    val node = RoadNode()
-                    node.mLocation = point
-                    road.mNodes.add(node)
-                }
-                val polyLine = RoadManager.buildRoadOverlay(road)
-                polyLine.outlinePaint.color = Color.GREEN
-                roadColor?.let { color ->
-                    polyLine.outlinePaint.color = color
-                }
-                flutterRoad = FlutterRoad(application!!, map!!)
+        val encodedWayPoints = (args["road"] as String)
+        val colorRoad = (args["roadColor"] as List<Int>)
+        val color = Color.rgb(colorRoad.first(), colorRoad.last(), colorRoad[1])
+        val widthRoad = (args["roadWidth"] as Double)
+        scope!!.launch {
 
-                flutterRoad?.let {
-                    it.markersIcons = customRoadMarkerIcon
-                    polyLine.outlinePaint.strokeWidth = 5.0f
-                    it.road = polyLine
-                    // if (it.start != null)
-                    folderRoad.items.add(it.start.apply {
-                        this.visibilityInfoWindow(visibilityInfoWindow)
-                    })
-                    //  if (it.end != null)
-                    folderRoad.items.add(it.end.apply {
-                        this.visibilityInfoWindow(visibilityInfoWindow)
-                    })
-                    folderRoad.items.add(it.road!!)
-                }
+            val route = PolylineEncoder.decode(encodedWayPoints, 10, false)
+            val polyLine = Polyline(map!!)
+            polyLine.setPoints(route)
+            polyLine.outlinePaint.color = color
+            polyLine.outlinePaint.strokeWidth = widthRoad.toFloat()
+            flutterRoad = FlutterRoad(application!!, map!!)
+
+            flutterRoad?.let {
+                it.markersIcons = customRoadMarkerIcon
+                polyLine.outlinePaint.strokeWidth = 5.0f
+                it.road = polyLine
+                // if (it.start != null)
+//                folderRoad.items.add(it.start.apply {
+//                    this.visibilityInfoWindow(visibilityInfoWindow)
+//                })
+//                //  if (it.end != null)
+//                folderRoad.items.add(it.end.apply {
+//                    this.visibilityInfoWindow(visibilityInfoWindow)
+//                })
+                folderRoad.items.add(it.road!!)
             }
-            map!!.invalidate()
-            result.success(null)
         }
-    */
+        map!!.invalidate()
+        result.success(null)
+    }
+
     private fun trackUserLocation(call: MethodCall, result: MethodChannel.Result) {
         try {
             locationNewOverlay?.let { locationOverlay ->
