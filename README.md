@@ -42,7 +42,7 @@ Add the following to your `pubspec.yaml` file:
 * alpha version (iOS support)
       ```dart
        dependencies:
-                flutter_osm_plugin: ^0.9.0-alpha.1
+                flutter_osm_plugin: ^0.10.0-alpha.0
       ```
 
 ## Simple Usage
