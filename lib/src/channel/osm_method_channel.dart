@@ -460,14 +460,19 @@ class MethodChannelOSM extends OSMPlatform {
   Future<void> drawRoadManually(
     int idOSM,
     List<GeoPoint> road,
+    Color roadColor,
+    double roadWidth,
   ) async {
     final coordinates = road.map((e) => e.toListNum()).toList();
     final encodedCoordinates = encodePolyline(coordinates);
+    Map<String, dynamic> data = {
+      "road": encodedCoordinates,
+      "roadWidth": roadWidth,
+    };
+    data.addAll(roadColor.toMap("roadColor"));
     await _channels[idOSM]!.invokeMethod(
       "drawRoad#manually",
-      {
-        "road": encodedCoordinates,
-      },
+      data,
     );
   }
 

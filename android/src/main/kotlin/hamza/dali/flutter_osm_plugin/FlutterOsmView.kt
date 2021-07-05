@@ -474,9 +474,9 @@ class FlutterOsmView(
             "road#color" -> {
                 setRoadColor(call, result)
             }
-            /*"drawRoad#manually" -> {
+            "drawRoad#manually" -> {
                 drawRoadManually(call, result)
-            }*/
+            }
             "road#markers" -> {
                 setRoadMaker(call, result)
             }
@@ -555,20 +555,26 @@ class FlutterOsmView(
         val colorRoad = (args["roadColor"] as List<Int>)
         val color = Color.rgb(colorRoad.first(), colorRoad.last(), colorRoad[1])
         val widthRoad = (args["roadWidth"] as Double)
-        scope!!.launch {
+        if (!map!!.overlays.contains(folderRoad)) {
+            map!!.overlays.add(folderRoad)
+        } else {
+            folderRoad.items.clear()
+        }
 
-            val route = PolylineEncoder.decode(encodedWayPoints, 10, false)
-            val polyLine = Polyline(map!!)
-            polyLine.setPoints(route)
-            polyLine.outlinePaint.color = color
-            polyLine.outlinePaint.strokeWidth = widthRoad.toFloat()
-            flutterRoad = FlutterRoad(application!!, map!!)
+        val route = PolylineEncoder.decode(encodedWayPoints, 10, false)
+        val polyLine = Polyline(map!!)
+        polyLine.setPoints(route)
+        polyLine.outlinePaint.color = color
+        polyLine.outlinePaint.strokeWidth = widthRoad.toFloat()
 
-            flutterRoad?.let {
-                it.markersIcons = customRoadMarkerIcon
-                polyLine.outlinePaint.strokeWidth = 5.0f
-                it.road = polyLine
-                // if (it.start != null)
+        folderRoad.items.add(polyLine)
+        /*
+        flutterRoad = FlutterRoad(application!!, map!!)
+
+       flutterRoad?.let {
+            //it.markersIcons = customRoadMarkerIcon
+            it.road = polyLine
+            // if (it.start != null)
 //                folderRoad.items.add(it.start.apply {
 //                    this.visibilityInfoWindow(visibilityInfoWindow)
 //                })
@@ -576,9 +582,7 @@ class FlutterOsmView(
 //                folderRoad.items.add(it.end.apply {
 //                    this.visibilityInfoWindow(visibilityInfoWindow)
 //                })
-                folderRoad.items.add(it.road!!)
-            }
-        }
+        }*/
         map!!.invalidate()
         result.success(null)
     }
@@ -881,11 +885,8 @@ class FlutterOsmView(
                 withContext(Main) {
                     if (road.mRouteHigh.size > 2) {
                         val polyLine = RoadManager.buildRoadOverlay(road)
-
                         /// set polyline color
                         polyLine.outlinePaint.color = colorRoad ?: Color.GREEN
-
-
                         flutterRoad = FlutterRoad(
                             application!!,
                             map!!,
