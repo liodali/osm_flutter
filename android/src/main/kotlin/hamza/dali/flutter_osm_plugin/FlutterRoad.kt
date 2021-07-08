@@ -10,7 +10,7 @@ import org.osmdroid.views.overlay.Polyline
 open class FlutterRoad(
         val application: Application,
         private val mapView: MapView,
-        private val interestPoint: List<GeoPoint>,
+        private val interestPoint: List<GeoPoint> = emptyList(),
 ) : Overlay() {
 
     lateinit var start: FlutterRoadMarker//? = null

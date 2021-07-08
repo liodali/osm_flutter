@@ -74,6 +74,9 @@ class RoadManager: PRoadManager {
     }
 
     public  func drawRoadOnMap(on road: Road, for map: TGMapView) -> TGMarker {
+        if(lastMarkerRoad != nil){
+            map.markerRemove(lastMarkerRoad!)
+        }
         let marker = map.markerAdd()
         marker.stylingString = "{ style: 'lines',interactive: false, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), order: 2000 }"
 

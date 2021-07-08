@@ -98,16 +98,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break;
         case "user#position":
+            /// TODO implement init map with user location without track position
             break;
         case "user#pickPosition":
             //let frameV = UIView()
             methodCall = call
             resultFlutter = result
-            /* uiSingleTapEventMap.addTarget(mapView, action: #selector(singleTapGesture))
-             uiSingleTapEventMap.minimumPressDuration = 0.3
-             print(uiSingleTapEventMap.isEnabled)
-             mapView.addGestureRecognizer(uiSingleTapEventMap)*/
-            //mapView.addSubview(frameV)
             break;
         case "deactivateTrackMe":
             deactivateTrackMe()
@@ -156,11 +152,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
              }
             //result(["distance": 0, "duration": 0])
             break;
+        case "drawRoad#manually":
+                drawRoadManually(call:call,result:result)
+                break;
         default:
             result(nil)
             break;
         }
     }
+
+
 
     public func view() -> UIView {
         if #available(iOS 11.0, *) {
@@ -292,9 +293,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         if(args.keys.contains("middlePoint")){
             intersectPoint = args["middlePoint"] as! [GeoPoint]
             points.insert(contentsOf: intersectPoint, at: 1)
-
         }
-        var roadColor =  "#ffffff"
+        var roadColor =  "#ff0000"
         if(args.keys.contains("roadColor")){
            roadColor = args["roadColor"] as! String
         }
@@ -321,7 +321,26 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     }
 
+    private func drawRoadManually(call: FlutterMethodCall, result: FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        var roadEncoded = args["road"] as! String
 
+        var roadColor =  "#ff0000"
+        if(args.keys.contains("roadColor")){
+            roadColor = args["roadColor"] as! String
+        }
+        var roadWidth = "5px"
+        if(args.keys.contains("roadWidth")){
+            roadWidth = "\(args["roadWidth"] as! Double)px"
+        }
+        var road = Road()
+        road.mRouteHigh = roadEncoded
+        road.roadData = RoadData(roadColor: roadColor, roadWidth: roadWidth)
+
+        let markerRoad = roadManager.drawRoadOnMap(on: road, for: mapView)
+        roadMarkerPolyline = markerRoad
+        result(nil)
+    }
 
 
     // ------- delegation func ----
