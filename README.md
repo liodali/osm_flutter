@@ -4,9 +4,9 @@
 ![pub](https://img.shields.io/badge/pub-v0.10.0--alpha.0-yellow) 
 
 ## Platform Support
-| Android | iOS |
-|:---:|:---:|
-| supported :heavy_check_mark: | supported (not stable yet) :  0.10.0-alpha  |
+| Android | iOS | Web |
+|:---:|:---:|:---:|
+| supported :heavy_check_mark: | supported (not stable yet) :  0.10.0-alpha  | will be available soon |
 
 
 <b>osm plugin for flutter apps </b>
