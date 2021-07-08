@@ -17,7 +17,7 @@
 * customize Icon Marker (Android/iOS)
 * assisted selection position (Android)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
-* draw Road manually (Android) (available in alpha version)
+* draw Road manually (Android/iOS) (available in alpha version)
 * ClickListener on Marker (Android)
 * ClickListener on Map (Android)
 * calculate distance between 2 points 

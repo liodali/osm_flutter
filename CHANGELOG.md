@@ -1,5 +1,5 @@
 ## 0.10.0-alpha.0 :
-* add draw road manually for dev that they have they own routing api (ios will be support in next version)
+* add draw road manually for dev that they have they own routing api 
 ## 0.9.0-alpha.0 :
 * support drawRoad in iOS
 ## 0.8.0-alpha.1 :
@@ -10,6 +10,8 @@
   * visualisation of map in ios 
   * support select position (custom marker, not network image will not work) 
   * support track user location
+## 0.7.9+3 :
+* remove background location permission
 ## 0.7.9+2 :
 * fix reinitialize the stream controller when map screen was disposed and reopened again
 ## 0.7.9+1 :
