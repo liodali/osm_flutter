@@ -23,6 +23,6 @@ class GeoPoint {
 
   @override
   String toString() {
-    return 'GeoPoint{longitude: $longitude, latitude: $latitude}';
+    return 'GeoPoint{latitude: $latitude , longitude: $longitude}';
   }
 }
