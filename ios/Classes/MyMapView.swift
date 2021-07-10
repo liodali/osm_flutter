@@ -24,6 +24,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var isFollowUserLocation: Bool = false
     var canGetLastUserLocation = false
     var canTrackUserLocation = false
+    var retrieveLastUserLocation = false
     var userLocation:MyLocationMarker? = nil
     var dictClusterAnnotation = [String: [StaticGeoPMarker]]()
     var dictIconClusterAnnotation = [String: StaticMarkerData]()
@@ -98,7 +99,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break;
         case "user#position":
-            /// TODO implement init map with user location without track position
+            retrieveLastUserLocation = true
+            resultFlutter = result
+            locationManager.requestLocation()
             break;
         case "user#pickPosition":
             //let frameV = UIView()
@@ -220,17 +223,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             mapView.fly(to: cameraPos, withSpeed: 25.0)
 
         }
-        /*   var region = MKCoordinateRegion(center: mapView.region.center, span: mapView.region.span)
-
-           if (level > 0) {
-               region.span.latitudeDelta /= level
-               region.span.longitudeDelta /= level
-           } else if (level < 0) {
-               let pLevel = abs(level)
-               region.span.latitudeDelta = min(region.span.latitudeDelta * pLevel, 100.0)
-               region.span.longitudeDelta = min(region.span.longitudeDelta * pLevel, 100.0)
-           }
-           mapView.setRegion(region, animated: true)*/
     }
 
     private func setupTileRenderer() {
@@ -352,8 +344,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     if(userLocation == nil ){
                         userLocation = mapView.addUserLocation(for: location, on: mapView)
                     }
-                        userLocation?.marker?.point = location
                     userLocation?.marker?.point = location
+                    //userLocation?.marker?.point = location
+
                     //  mapView.showsUserLocation = true
                     let geoMap = ["lon": location.longitude, "lat": location.latitude]
                     channel.invokeMethod("receiveUserLocation", arguments: geoMap)
@@ -363,6 +356,15 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 }
                 mapView.flyToUserLocation(for: location)
 
+            }
+        }else if(retrieveLastUserLocation){
+            if let location = locations.last?.coordinate {
+                let geoMap = ["lon": location.longitude, "lat": location.latitude]
+                resultFlutter!(geoMap)
+                retrieveLastUserLocation = false
+                resultFlutter = nil
+            }else {
+                resultFlutter!(nil)
             }
         }
     }
