@@ -61,6 +61,14 @@ class _MainExampleState extends State<MainExample> {
         print(controller.listenerMapSingleTapping.value);
       }
     });
+    Future.delayed(Duration(seconds: 5), () async {
+      await controller.zoomIn();
+    });
+    Future.delayed(Duration(seconds: 15), () async {
+      await controller
+          .changeLocation(GeoPoint(latitude: 47.433358, longitude: 8.4690184));
+    });
+
     // Future.delayed(Duration(seconds: 10), () async {
     //   await controller.drawRect(RectOSM(
     //     key: "rect",
