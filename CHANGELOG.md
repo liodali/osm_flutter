@@ -1,3 +1,6 @@
+## 0.7.10 :
+* (#123) fix zoom when changeLocation was called
+* (#123) remove previous marker  when changeLocation was called
 ## 0.7.9+3 :
 ## 0.7.9+2 :
 * fix reinitialize the stream controller when map screen was disposed and reopened again
