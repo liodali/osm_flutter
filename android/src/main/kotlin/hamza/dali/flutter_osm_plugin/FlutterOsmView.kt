@@ -107,10 +107,10 @@ class FlutterOsmView(
     private var staticMarkerIcon: HashMap<String, Bitmap> = HashMap()
     private val customRoadMarkerIcon = HashMap<String, Bitmap>()
     private val staticPoints: HashMap<String, MutableList<GeoPoint>> = HashMap()
+    private var homeMarker: FlutterMarker? = null
     private val folderStaticPosition: FolderOverlay by lazy {
         FolderOverlay()
     }
-
     private val folderShape: FolderOverlay by lazy {
         FolderOverlay().apply {
             name = Constants.shapesNames
@@ -131,6 +131,7 @@ class FlutterOsmView(
             this.name = Constants.roadName
         }
     }
+
     private var flutterRoad: FlutterRoad? = null
     private var job: Job? = null
     private var jobFlow: Job? = null
@@ -242,13 +243,20 @@ class FlutterOsmView(
     private fun initPosition(methodCall: MethodCall, result: MethodChannel.Result) {
         @Suppress("UNCHECKED_CAST")
         val args = methodCall.arguments!! as HashMap<String, Double>
-
+        if (homeMarker != null) {
+            map!!.overlays.remove(homeMarker)
+        }
         //map!!.overlays.clear()
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
-        addMarker(geoPoint, initPositionZoom, null)
+        val zoom = when (map!!.zoomLevelDouble) {
+            0.0 -> initPositionZoom
+            else -> map!!.zoomLevelDouble
+        }
+        homeMarker = addMarker(geoPoint, zoom, null)
 
         result.success(null)
     }
+
 
     private fun addMarker(
         geoPoint: GeoPoint,
@@ -429,7 +437,9 @@ class FlutterOsmView(
             "initPosition" -> {
                 initPosition(call, result)
             }
-
+            "changePosition" -> {
+                initPosition(call, result)
+            }
             "trackMe" -> {
                 trackUserLocation(call, result)
             }
