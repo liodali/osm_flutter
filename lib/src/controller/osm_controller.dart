@@ -41,7 +41,7 @@ class OSMController {
   }) async {
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
 
-    if (_osmFlutterState.widget.showDefaultInfoWindow == true){
+    if (_osmFlutterState.widget.showDefaultInfoWindow == true) {
       osmPlatform.visibilityInfoWindow(
           _idMap, _osmFlutterState.widget.showDefaultInfoWindow);
     }
@@ -114,17 +114,7 @@ class OSMController {
 
     /// road configuration
     if (_osmFlutterState.widget.road != null) {
-      await showDialog(
-          context: _osmFlutterState.context,
-          barrierDismissible: false,
-          builder: (ctx) {
-            return JobAlertDialog(
-              callback: () async {
-                await _initializeRoadInformation();
-                Navigator.pop(ctx);
-              },
-            );
-          });
+      Future.microtask(() => _initializeRoadInformation());
     }
 
     /// picker config
