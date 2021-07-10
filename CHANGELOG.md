@@ -1,7 +1,20 @@
+## 0.10.0-alpha.0 :
+* add draw road manually for dev that they have they own routing api 
+## 0.9.0-alpha.0 :
+* support drawRoad in iOS
+## 0.8.0-alpha.1 :
+* fix set color static marker position
+* fix convert bitmap to string
+## 0.8.0-alpha.0 :
+* support ios ( not stable )
+  * visualisation of map in ios 
+  * support select position (custom marker, not network image will not work) 
+  * support track user location
 ## 0.7.10 :
 * (#123) fix zoom when changeLocation was called
 * (#123) remove previous marker  when changeLocation was called
 ## 0.7.9+3 :
+* remove background location permission
 ## 0.7.9+2 :
 * fix reinitialize the stream controller when map screen was disposed and reopened again
 ## 0.7.9+1 :
