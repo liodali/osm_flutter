@@ -7,7 +7,7 @@
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported (not stable yet) :  0.10.0-alpha  | will be available soon |
+| supported :heavy_check_mark: | supported (not stable yet) :  0.10.1-alpha  | will be available soon |
 
 
 
