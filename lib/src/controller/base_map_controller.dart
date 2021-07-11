@@ -19,7 +19,6 @@ import '../controller/osm_controller.dart';
 import '../types/types.dart';
 import '../widgets/copyright_osm_widget.dart';
 
-
 part '../widgets/custom_picker_location.dart';
 
 part 'map_controller.dart';
