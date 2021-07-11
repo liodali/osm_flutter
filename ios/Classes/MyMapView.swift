@@ -34,6 +34,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var uiSingleTapEventMap: UILongPressGestureRecognizer = UILongPressGestureRecognizer()
     lazy var roadManager:RoadManager = RoadManager()
 
+    let mainView:UIStackView
+    var pickerMarker:UIImageView? = nil
+    var cacheMarkers:[TGMarker] = [TGMarker]()
+
     // var tileRenderer:MKTileOverlayRenderer!
 
     var span = MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3)
@@ -46,6 +50,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
         mapView = TGMapView()
         mapView.frame = frame
+        mainView = UIStackView(arrangedSubviews: [mapView])
         //mapview.mapType = MKMapType.standard
         //mapview.isZoomEnabled = true
         //mapview.isScrollEnabled = true
@@ -158,11 +163,25 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         case "drawRoad#manually":
                 drawRoadManually(call:call,result:result)
                 break;
+        case "advancedPicker#marker#icon":
+            setCustomIconMarker(call:call,result:result)
+            break;
+        case "advanced#selection":
+            startAdvancedPicker(call: call, result: result)
+            break;
+        case "get#position#advanced#selection":
+            break;
+        case "confirm#advanced#selection":
+            break;
+        case "cancel#advanced#selection":
+            cancelAdvancedPickerMarker(call: call, result: result)
+            break;
         default:
             result(nil)
             break;
         }
     }
+
 
 
 
@@ -174,8 +193,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                       MKMapViewDefaultAnnotationViewReuseIdentifier)*/
 
         }
+        //let view = UIStackView(arrangedSubviews: [mapView])
 
-        return mapView
+        return mainView
     }
 
     private func initPosition(args: Any?, result: FlutterResult) {
@@ -189,12 +209,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             marker.visible = true
             marker.stylingString = "{ style: points, interactive: false,color: white, order: 5000, collide: false }"
         }
-
-        //   let geoPoint = GeoPointMap(locationName: "init location", icon: markerIcon, discipline: nil, coordinate: location)
-        //        let span = MKCoordinateSpan(latitudeDelta: 2, longitudeDelta: 2)
-        //    let region = MKCoordinateRegion(center: location, span: span)
-
-        //self.mapView.centerToLocation(geoPoint.location)
         result(200)
     }
 
@@ -227,12 +241,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func setupTileRenderer() {
 
-        let template = "https://a.tile.openstreetmap.fr/osm/fr/{z}/{x}/{y}.png"
 
-        let overlay = MKTileOverlay(urlTemplate: template)
-        overlay.canReplaceMapContent = true
-        //self.mapView.addOverlay(overlay, level: .aboveLabels)
-        // self.tileRenderer = MKTileOverlayRenderer(tileOverlay: overlay)
     }
 
     private func deactivateTrackMe() {
@@ -243,6 +252,42 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
         userLocation = nil
         //mapView.showsUserLocation = false
+    }
+
+    private func setCustomIconMarker(call: FlutterMethodCall, result: FlutterResult) {
+        let image  = convertImage(codeImage: call.arguments as! String)
+        pickerMarker = UIImageView(image: image)
+        result(200)
+    }
+
+    public func startAdvancedPicker(call:FlutterMethodCall, result:FlutterResult){
+        cacheMarkers += mapView.markers
+        mapView.markerRemoveAll()
+        if(canTrackUserLocation){
+            deactivateTrackMe()
+        }
+        if(pickerMarker == nil){
+            var image = UIImage(systemName: "markLocation")
+            image = image?.withTintColor(.red)
+            pickerMarker = UIImageView(image: image)
+        }
+        //pickerMarker?.frame = CGRect(x: frame.width/2,y: frame.height/2,width: 32,height: 32)
+        pickerMarker?.center = mainView.center
+        mainView.addSubview(pickerMarker!)
+        result(200)
+    }
+    private func cancelAdvancedPickerMarker(call:FlutterMethodCall,result:FlutterResult){
+        pickerMarker?.removeFromSuperview()
+        pickerMarker = nil
+        cacheMarkers.forEach { marker in
+           let m = mapView.markerAdd()
+            m.stylingString = marker.stylingString
+            m.point = marker.point
+            m.icon = marker.icon
+            m.polyline = marker.polyline
+        }
+        cacheMarkers.removeAll(keepingCapacity: false)
+        result(200)
     }
 
     private func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {

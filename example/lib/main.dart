@@ -100,6 +100,21 @@ class _MainExampleState extends State<MainExample> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('OSM'),
+        leading: ValueListenableBuilder<bool>(
+          valueListenable: advPickerNotifierActivation,
+          builder: (ctx, isAdvancedPicker, _) {
+            if (isAdvancedPicker) {
+              return IconButton(
+                onPressed: () {
+                  advPickerNotifierActivation.value = false;
+                  controller.cancelAdvancedPositionPicker();
+                },
+                icon: Icon(Icons.close),
+              );
+            }
+            return SizedBox.shrink();
+          },
+        ),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.info),
