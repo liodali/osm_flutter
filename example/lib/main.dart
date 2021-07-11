@@ -73,7 +73,6 @@ class _MainExampleState extends State<MainExample> {
     });
 
     Future.delayed(Duration(seconds: 10), () async {
-
       final waysPoint = list
           .map((e) => GeoPoint(
                 latitude: e.last,
@@ -86,7 +85,6 @@ class _MainExampleState extends State<MainExample> {
         6.0,
       );
     });
-
   }
 
   @override
