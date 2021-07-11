@@ -1,15 +1,4 @@
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:location/location.dart';
-
-import 'controller/base_map_controller.dart';
-import 'controller/osm_controller.dart';
-import 'types/types.dart';
-import 'widgets/copyright_osm_widget.dart';
+part of osm_flutter;
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
@@ -276,6 +265,6 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   void _onPlatformViewCreated(int id) async {
     this._osmController = await OSMController.init(id, this);
-    widget.controller.init(this._osmController!);
+    widget.controller._init(this._osmController!);
   }
 }

@@ -25,10 +25,10 @@ class MapController extends BaseMapController {
         );
 
   @override
-  void init(
+  void _init(
     OSMController _osmController,
   ) {
-    super.init(_osmController);
+    super._init(_osmController);
   }
 
   void dispose() {

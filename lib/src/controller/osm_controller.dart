@@ -6,9 +6,9 @@ import 'package:location/location.dart';
 
 import '../common/utilities.dart';
 import '../interface_osm/osm_interface.dart';
-import '../osm_flutter.dart';
 import '../types/shape_osm.dart';
 import '../types/types.dart';
+import 'base_map_controller.dart';
 
 final OSMPlatform osmPlatform = OSMPlatform.instance;
 

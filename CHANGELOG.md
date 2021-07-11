@@ -1,3 +1,5 @@
+## 0.10.1-alpha.0 :
+* hide unnecessary api
 ## 0.10.0-alpha.0 :
 * add draw road manually for dev that they have they own routing api 
 ## 0.9.0-alpha.0 :

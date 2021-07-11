@@ -4,11 +4,11 @@ export 'src/common/geo_point_exception.dart';
 export 'src/common/road_exception.dart';
 export 'src/common/utilities.dart';
 export 'src/controller/base_map_controller.dart'
-    show MapController, PickerMapController, CustomPickerLocation;
+    show MapController, PickerMapController, CustomPickerLocation, OSMFlutter;
 
 // export 'src/controller/map_controller.dart' show MapController;
 // export 'src/controller/picker_map_controller.dart';
-export 'src/osm_flutter.dart' hide OSMFlutterState;
+//export 'src/osm_flutter.dart' hide OSMFlutterState;
 export 'src/types/geo_point.dart';
 export 'src/types/geo_static.dart';
 export 'src/types/road.dart';

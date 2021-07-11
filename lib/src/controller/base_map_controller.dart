@@ -6,11 +6,26 @@ import '../../flutter_osm_plugin.dart';
 import '../types/geo_point.dart';
 import 'osm_controller.dart';
 
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:location/location.dart';
+
+import '../controller/base_map_controller.dart';
+import '../controller/osm_controller.dart';
+import '../types/types.dart';
+import '../widgets/copyright_osm_widget.dart';
+
 part '../widgets/custom_picker_location.dart';
 
 part 'map_controller.dart';
 
 part 'picker_map_controller.dart';
+
+part '../osm_flutter.dart';
 
 ///  [BaseMapController] : base controller for osm flutter
 ///
@@ -31,7 +46,7 @@ abstract class BaseMapController {
     this.initPosition,
   }) : assert(initMapWithUserPosition || initPosition != null);
 
-  void init(
+  void _init(
     OSMController osmController,
   ) {
     this._osmController = osmController;
