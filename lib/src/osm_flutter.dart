@@ -155,8 +155,9 @@ class OSMFlutterState extends State<OSMFlutter> {
         //creationParamsCodec:  StandardMessageCodec(),
       );
     } else if (kIsWeb) {
-      return Text(
-          '$defaultTargetPlatform is not yet supported by the osm plugin');
+      return OsmWebWidget(
+        controller: widget.controller as MapController,
+      );
     }
     return Stack(
       clipBehavior: Clip.none,
@@ -265,6 +266,8 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   void _onPlatformViewCreated(int id) async {
     this._osmController = await OSMController.init(id, this);
-    widget.controller._init(this._osmController!);
+    widget.controller._init(
+      osmController: this._osmController!,
+    );
   }
 }

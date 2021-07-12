@@ -41,7 +41,7 @@ flutter:
         pluginClass: FlutterOsmPlugin
       web:
         pluginClass: FlutterOsmPluginWeb
-        fileName: flutter_osm_plugin_web.dart
+        fileName: flutter_osm_plugin.dart
 
   assets:
     - packages/flutter_osm_plugin/src/asset/map.html

@@ -25,10 +25,17 @@ class MapController extends BaseMapController {
         );
 
   @override
-  void _init(
-    OSMController _osmController,
-  ) {
-    super._init(_osmController);
+  void _init({
+    OSMController? osmController,
+    WebOsmController? osmWebController = null,
+  }) {
+    if (kIsWeb) {
+      _initWeb(osmWebController!);
+    } else {
+      super._init(
+        osmController: _osmController,
+      );
+    }
   }
 
   void dispose() {

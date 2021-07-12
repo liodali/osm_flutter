@@ -4,8 +4,9 @@
 library osm_interop;
 
 import 'package:js/js.dart';
-import 'es6_interop.dart';
-
 
 @JS('locateMe')
-external Map<String,double> locateMe();
+external Map<String, double> locateMe();
+
+@JS('addPosition')
+external dynamic addPosition(Map<String, double> p);

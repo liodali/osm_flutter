@@ -1,7 +1,9 @@
 import 'package:flutter_osm_plugin/src/interface_osm/base_osm_platform.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-import 'osm_web.dart';
+import '../../flutter_osm_plugin.dart';
+
+
 
 abstract class OsmWebPlatform extends BaseOsmPlatform {
   OsmWebPlatform() : super();

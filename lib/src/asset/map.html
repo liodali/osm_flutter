@@ -2,14 +2,14 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-    crossorigin />
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-    crossorigin></script>
-  <style>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+          crossorigin/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+            crossorigin></script>
+    <style>
     html,
     body {
       height: 100%;
@@ -20,13 +20,14 @@
       width: 100%;
       height: 100%;
     }
-  </style>
+
+    </style>
 </head>
 
 <body id="frame_body_map" style="margin:0px;">
-  <div id="mapid"></div>
+<div id="mapid"></div>
 
-  <script>
+<script>
 
 
     var mymap = L.map('mapid', {
@@ -57,15 +58,19 @@
       });
       const latitude = position.coords.latitude;
       const longitude = position.coords.longitude;
-      L.marker([latitude, longitude]).addTo(mymap);
-      mymap.setView([latitude, longitude],8);
+
       return {
-        Latitude:latitude,
-        Longitude : longitude
+        lat:latitude,
+        lon : longitude
       };
     }
+    async function addPosition(point) {
+       L.marker([point.lat, point.lon]).addTo(mymap);
+       mymap.setView([point.lat, point.lat],8);
+    }
 
-  </script>
+
+</script>
 
 
 </body>

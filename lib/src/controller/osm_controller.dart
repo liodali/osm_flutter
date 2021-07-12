@@ -2,17 +2,17 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../common/osm_lib.dart';
 import 'package:location/location.dart';
 
 import '../common/utilities.dart';
 import '../interface_osm/osm_interface.dart';
 import '../types/shape_osm.dart';
 import '../types/types.dart';
-import 'base_map_controller.dart';
 
 final OSMPlatform osmPlatform = OSMPlatform.instance;
 
-class OSMController {
+class OSMController{
   late int _idMap;
   late OSMFlutterState _osmFlutterState;
 

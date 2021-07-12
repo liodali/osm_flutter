@@ -1,4 +1,4 @@
-part of osm_web;
+part of osm_flutter;
 
 class FlutterOsmPluginWeb extends OsmWebPlatform {
   late BinaryMessenger? messenger;
@@ -66,9 +66,8 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
-  Future<void> addPosition(int idOSM, GeoPoint p) {
-    // TODO: implement addPosition
-    throw UnimplementedError();
+  Future<void> addPosition(int idOSM, GeoPoint p) async{
+   await _mapsController[idOSM]!.addPosition(p);
   }
 
   @override
@@ -109,9 +108,8 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
-  Future<GeoPoint> myLocation(int idMap) {
-    // TODO: implement myLocation
-    throw UnimplementedError();
+  Future<GeoPoint> myLocation(int idMap) async {
+    return await _mapsController[idMap]!.currentLocation();
   }
 
   @override

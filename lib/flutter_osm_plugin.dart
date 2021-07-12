@@ -3,8 +3,9 @@ library osm_flutter;
 export 'src/common/geo_point_exception.dart';
 export 'src/common/road_exception.dart';
 export 'src/common/utilities.dart';
-export 'src/controller/base_map_controller.dart'
-    show MapController, PickerMapController, CustomPickerLocation, OSMFlutter;
+export 'src/common/osm_lib.dart'
+    show MapController, PickerMapController,
+    CustomPickerLocation, OSMFlutter,FlutterOsmPluginWeb;
 
 // export 'src/controller/map_controller.dart' show MapController;
 // export 'src/controller/picker_map_controller.dart';
