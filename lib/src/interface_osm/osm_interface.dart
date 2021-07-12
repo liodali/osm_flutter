@@ -5,11 +5,12 @@ import 'package:flutter_osm_plugin/src/channel/osm_method_channel.dart';
 import 'package:location/location.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-abstract class OSMPlatform extends PlatformInterface {
-  OSMPlatform() : super(token: _token);
-  late Location locationService;
+import 'base_osm_platform.dart';
 
-  static final Object _token = Object();
+abstract class OSMPlatform extends BaseOsmPlatform {
+  OSMPlatform() : super();
+
+  late Location locationService;
 
   static OSMPlatform _instance = MethodChannelOSM();
 
@@ -18,88 +19,10 @@ abstract class OSMPlatform extends PlatformInterface {
   /// Platform-specific plugins should set this with their own platform-specific
   /// class that extends [OSMPlatformInterface] when they register themselves.
   static set instance(OSMPlatform instance) {
-    PlatformInterface.verifyToken(instance, _token);
+    PlatformInterface.verifyToken(instance, BaseOsmPlatform.token);
     _instance = instance;
   }
 
-  Future<void> init(
-    int idOSM,
-  );
-
-  void close();
-
-  Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap);
-
-  Stream<LongTapEvent> onLongPressMapClickListener(int idMap);
-
-  Stream<GeoPointEvent> onGeoPointClickListener(int idMap);
-
-  Stream<UserLocationEvent> onUserPositionListener(int idMap);
-
-  Future<void> currentLocation(
-    int idOSM,
-  );
-
-  Future<GeoPoint> myLocation(
-    int idMap,
-  );
-
-  Future<void> zoom(
-    int idOSM,
-    double zoom,
-  );
-
-  Future<GeoPoint> pickLocation(
-    int idOSM, {
-    GlobalKey? key,
-    String imageURL = "",
-  });
-
-  Future<void> customMarker(
-    int idOSM,
-    GlobalKey? globalKey,
-  );
-
-  Future<void> setColorRoad(
-    int idOSM,
-    Color color,
-  );
-
-  Future<void> setMarkersRoad(
-    int idOSM,
-    List<GlobalKey?> keys,
-  );
-
-  Future<void> enableTracking(
-    int idOSM,
-  );
-
-  Future<void> addPosition(
-    int idOSM,
-    GeoPoint p,
-  );
-
-  Future<void> goToPosition(
-    int idOSM,
-    GeoPoint p,
-  );
-
-  Future<void> removePosition(
-    int idOSM,
-    GeoPoint p,
-  );
-
-  Future<void> removeLastRoad(
-    int idOSM,
-  );
-
-  Future<RoadInfo> drawRoad(
-    int idOSM,
-    GeoPoint start,
-    GeoPoint end, {
-    List<GeoPoint>? interestPoints,
-    RoadOption roadOption,
-  });
 
   Future<void> drawCircle(
     int idOSM,
