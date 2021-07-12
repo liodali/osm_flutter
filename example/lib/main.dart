@@ -1,10 +1,19 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/search_example.dart';
 
 import 'utilities.dart';
+import 'web_test_osm.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (kIsWeb) {
+    runApp(WebTestOsm());
+  } else {
+    runApp(MyApp());
+  }
+}
 
 class MyApp extends StatelessWidget {
   @override
