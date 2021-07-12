@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    #mapid {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body id="frame_body_map" style="margin:0px;">
+  <div id="mapid"></div>
+
+  <script>
+
+
+    var mymap = L.map('mapid', {
+      renderer: L.canvas()
+    });
+    var OpenStreetMap_Mapnik = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Leaflet | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 18,
+      tileSize: 512,
+      zoomOffset: -1,
+    });
+    OpenStreetMap_Mapnik.addTo(mymap);
+    mymap.setView([0, 0], 2);
+
+
+    async function gotMyLocation() {
+      var position = await new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject({ "error": true, message: 'Geolocation is not supported by your browser' });
+        } else {
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            (position) => {
+              reject('Unable to retrieve your location');
+            }
+          );
+        }
+      });
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+      L.marker([latitude, longitude]).addTo(mymap);
+      mymap.setView([latitude, longitude],8);
+      return {
+        Latitude:latitude,
+        Longitude : longitude
+      };
+    }
+
+  </script>
+
+
+</body>
+
+</html>

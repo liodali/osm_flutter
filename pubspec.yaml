@@ -1,6 +1,6 @@
 name: flutter_osm_plugin
 description: openStreetMap plugin for flutter apps (only Android for now, iOS will be supported in future)
-version: 0.10.1-alpha.0
+version: 1.0.0-alpha.0
 homepage: https://github.com/liodali/osm_flutter
 environment:
   sdk: '>=2.12.0 <3.0.0'
@@ -43,7 +43,9 @@ flutter:
         pluginClass: FlutterOsmPluginWeb
         fileName: flutter_osm_plugin_web.dart
 
-
+  assets:
+    - packages/flutter_osm_plugin/src/asset/map.html
+    - packages/flutter_osm_plugin/src/asset/map.js
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
   #  - images/a_dot_burr.jpeg
