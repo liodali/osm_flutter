@@ -8,6 +8,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+  js: ^0.6.3
   flutter_plugin_android_lifecycle: ^2.0.2
   plugin_platform_interface: ^2.0.0
   stream_transform: ^2.0.0
@@ -36,7 +39,9 @@ flutter:
         pluginClass: FlutterOsmPlugin
       ios:
         pluginClass: FlutterOsmPlugin
-
+      web:
+        pluginClass: FlutterOsmPluginWeb
+        fileName: flutter_osm_plugin_web.dart
 
 
   # To add assets to your plugin package, add an assets section, like this:
