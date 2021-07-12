@@ -1,28 +1,74 @@
 part of osm_web;
 
+class FlutterOsmPluginWeb extends OsmWebPlatform {
+  late BinaryMessenger? messenger;
 
-class FlutterOsmPluginWeb extends OSMPlatform {
-  @override
-  Future<void> addPosition(int idOSM, GeoPoint p) {
-    // TODO: implement addPosition
-    throw UnimplementedError();
+  FlutterOsmPluginWeb({
+    required this.messenger,
+  });
+
+  static String getViewType(int mapId) => 'osm_web_plugin_$mapId';
+
+  Map<int, WebOsmController> _mapsController = <int, WebOsmController>{};
+
+  late WebOsmController map;
+
+  static void registerWith(Registrar registrar) {
+    final messenger = registrar;
+    OsmWebPlatform.instance = FlutterOsmPluginWeb(messenger: messenger);
+    OsmWebPlatform.instance.init(OsmWebPlatform.idOsmWeb);
   }
 
   @override
-  Future<void> advancedPositionPicker(int idOSM) {
-    // TODO: implement advancedPositionPicker
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> cancelAdvancedPositionPicker(int idOSM) {
-    // TODO: implement cancelAdvancedPositionPicker
-    throw UnimplementedError();
+  Future<void> init(int idOSM) {
+    final MethodChannel channel = MethodChannel(
+      '${getViewType(idOSM)}',
+      const StandardMethodCodec(),
+      messenger,
+    );
+    channel.setMethodCallHandler(OsmWebPlatform.instance.handleMethodCall);
+    return Future.microtask(() => close());
   }
 
   @override
   void close() {
-    // TODO: implement close
+    // _mapsController.values.forEach(
+    //         (WebTestController _mapsController) => _mapsController.dispose());
+    _mapsController.clear();
+  }
+
+  /// Handles method calls over the MethodChannel of this plugin.
+  /// Note: Check the "federated" architecture for a new way of doing this:
+  /// https://flutter.dev/go/federated-plugins
+  Future<dynamic> handleMethodCall(MethodCall call) async {
+    switch (call.method) {
+      default:
+        throw PlatformException(
+          code: 'Unimplemented',
+          details:
+              'osm_web_plugin for web doesn\'t implement \'${call.method}\'',
+        );
+    }
+  }
+
+  Widget buildMap(
+    int idChannel,
+    PlatformViewCreatedCallback onPlatformViewCreated,
+    WebOsmController controller,
+  ) {
+    if (!_mapsController.containsKey(idChannel)) {
+      map = controller;
+      _mapsController[idChannel] = map;
+      OsmWebPlatform.idOsmWeb++;
+    }
+    onPlatformViewCreated.call(idChannel);
+    return _mapsController[idChannel]!.widget!;
+  }
+
+  @override
+  Future<void> addPosition(int idOSM, GeoPoint p) {
+    // TODO: implement addPosition
+    throw UnimplementedError();
   }
 
   @override
@@ -32,42 +78,9 @@ class FlutterOsmPluginWeb extends OSMPlatform {
   }
 
   @override
-  Future<void> customAdvancedPickerMarker(
-      int idMap, GlobalKey<State<StatefulWidget>> key) {
-    // TODO: implement customAdvancedPickerMarker
-    throw UnimplementedError();
-  }
-
-  @override
   Future<void> customMarker(
       int idOSM, GlobalKey<State<StatefulWidget>>? globalKey) {
     // TODO: implement customMarker
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> customMarkerStaticPosition(
-      int idOSM, GlobalKey<State<StatefulWidget>>? globalKey, String id,
-      {Color? colorIcon}) {
-    // TODO: implement customMarkerStaticPosition
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> disableTracking(int idOSM) {
-    // TODO: implement disableTracking
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> drawCircle(int idOSM, CircleOSM circleOSM) {
-    // TODO: implement drawCircle
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> drawRect(int idOSM, RectOSM rectOSM) {
-    // TODO: implement drawRect
     throw UnimplementedError();
   }
 
@@ -84,45 +97,14 @@ class FlutterOsmPluginWeb extends OSMPlatform {
   }
 
   @override
-  Future<void> drawRoadManually(
-      int idOSM, List<GeoPoint> road, Color roadColor, double width) {
-    // TODO: implement drawRoadManually
-    throw UnimplementedError();
-  }
-
-  @override
   Future<void> enableTracking(int idOSM) {
     // TODO: implement enableTracking
     throw UnimplementedError();
   }
 
   @override
-  Future<GeoPoint> getPositionOnlyAdvancedPositionPicker(int idOSM) {
-    // TODO: implement getPositionOnlyAdvancedPositionPicker
-    throw UnimplementedError();
-  }
-
-  @override
   Future<void> goToPosition(int idOSM, GeoPoint p) {
     // TODO: implement goToPosition
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> init(int idOSM) {
-    // TODO: implement init
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> initIosMap(int idMap) {
-    // TODO: implement initIosMap
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> mapRotation(int idOSM, double? degree) {
-    // TODO: implement mapRotation
     throw UnimplementedError();
   }
 
@@ -164,30 +146,6 @@ class FlutterOsmPluginWeb extends OSMPlatform {
   }
 
   @override
-  Future<void> removeAllCircle(int idOSM) {
-    // TODO: implement removeAllCircle
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> removeAllRect(int idOSM) {
-    // TODO: implement removeAllRect
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> removeAllShapes(int idOSM) {
-    // TODO: implement removeAllShapes
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> removeCircle(int idOSM, String key) {
-    // TODO: implement removeCircle
-    throw UnimplementedError();
-  }
-
-  @override
   Future<void> removeLastRoad(int idOSM) {
     // TODO: implement removeLastRoad
     throw UnimplementedError();
@@ -200,26 +158,8 @@ class FlutterOsmPluginWeb extends OSMPlatform {
   }
 
   @override
-  Future<void> removeRect(int idOSM, String key) {
-    // TODO: implement removeRect
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<GeoPoint> selectAdvancedPositionPicker(int idOSM) {
-    // TODO: implement selectAdvancedPositionPicker
-    throw UnimplementedError();
-  }
-
-  @override
   Future<void> setColorRoad(int idOSM, Color color) {
     // TODO: implement setColorRoad
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> setDefaultZoom(int idOSM, double defaultZoom) {
-    // TODO: implement setDefaultZoom
     throw UnimplementedError();
   }
 
@@ -227,18 +167,6 @@ class FlutterOsmPluginWeb extends OSMPlatform {
   Future<void> setMarkersRoad(
       int idOSM, List<GlobalKey<State<StatefulWidget>>?> keys) {
     // TODO: implement setMarkersRoad
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> staticPosition(int idOSM, List<GeoPoint> pList, String id) {
-    // TODO: implement staticPosition
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> visibilityInfoWindow(int idOSM, bool visible) {
-    // TODO: implement visibilityInfoWindow
     throw UnimplementedError();
   }
 
