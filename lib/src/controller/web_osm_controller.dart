@@ -30,15 +30,18 @@ class WebOsmController {
 
   Future<GeoPoint> currentLocation() async {
     Map<String, double> result = await Future.microtask(() async {
-      Map<String, double> value =
-          await html.promiseToFutureAsMap(interop.locateMe()) as Map<String, double>;
+      Map<String, double> value = await html
+          .promiseToFutureAsMap(interop.locateMe()) as Map<String, double>;
       return value;
     });
     return GeoPoint.fromMap(result);
   }
 
   Future<void> addPosition(GeoPoint point) async {
-    await promiseToFuture(interop.addPosition(point.toMap()));
+    await promiseToFuture(interop.addPosition(GeoPointJs(
+      lat: point.latitude,
+      lon: point.longitude,
+    )));
   }
 
   // The Flutter widget that contains the rendered Map.
@@ -57,11 +60,11 @@ class WebOsmController {
 
   void dispose() {}
 
- Future<void> init({
+  Future<void> init({
     GeoPoint? initPosition,
     bool initWithUserPosition = false,
-  })async {
-    if(initPosition!=null && ! initWithUserPosition){
+  }) async {
+    if (initPosition != null && !initWithUserPosition) {
       await addPosition(initPosition);
     }
   }

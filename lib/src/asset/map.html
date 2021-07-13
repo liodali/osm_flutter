@@ -66,7 +66,7 @@
     }
     async function addPosition(point) {
        L.marker([point.lat, point.lon]).addTo(mymap);
-       mymap.setView([point.lat, point.lat],8);
+       mymap.setView([point.lat, point.lon],8);
     }
 
 

@@ -5,8 +5,11 @@ library osm_interop;
 
 import 'package:js/js.dart';
 
+import 'models/geo_point_js.dart';
+
 @JS('locateMe')
 external Map<String, double> locateMe();
 
 @JS('addPosition')
-external dynamic addPosition(Map<String, double> p);
+external dynamic addPosition(GeoPointJs p);
+
