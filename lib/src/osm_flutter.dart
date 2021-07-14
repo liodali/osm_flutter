@@ -112,8 +112,9 @@ class OSMFlutterState extends State<OSMFlutter> {
     });
     Future.delayed(Duration.zero, () async {
       //check location permission
-      if ((widget.controller).initMapWithUserPosition ||
-          widget.trackMyPosition) {
+      if (((widget.controller).initMapWithUserPosition ||
+              widget.trackMyPosition) &&
+          !kIsWeb) {
         await requestPermission();
         if (widget.controller.initMapWithUserPosition) {
           bool isEnabled = await _osmController!.checkServiceLocation();

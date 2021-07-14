@@ -6,11 +6,11 @@ class WebTestOsm extends StatelessWidget {
   Widget build(BuildContext context) {
     return OSMFlutter(
       controller: MapController(
-        initMapWithUserPosition: false,
-        initPosition: GeoPoint(
-          latitude: 47.4358055,
-          longitude: 8.4737324,
-        ),
+        initMapWithUserPosition: true,
+        // initPosition: GeoPoint(
+        //   latitude: 47.4358055,
+        //   longitude: 8.4737324,
+        // ),
       ),
       showContributorBadgeForOSM: true,
     );

@@ -46,12 +46,12 @@
     async function gotMyLocation() {
       var position = await new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
-          reject({ "error": true, message: 'Geolocation is not supported by your browser' });
+          reject({error: true, message: 'Geolocation is not supported by your browser' });
         } else {
           navigator.geolocation.getCurrentPosition(
             resolve,
             (position) => {
-              reject('Unable to retrieve your location');
+              reject({error: true, message: 'Unable to retrieve your location' });
             }
           );
         }

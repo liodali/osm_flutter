@@ -1,6 +1,6 @@
 part of osm_flutter;
 
-class WebOsmController {
+class WebOsmController with ControllerWebMixin{
   late int _mapId;
   late MethodChannel _channel;
 
@@ -28,21 +28,7 @@ class WebOsmController {
     //print(_getViewType(_mapId));
   }
 
-  Future<GeoPoint> currentLocation() async {
-    Map<String, double> result = await Future.microtask(() async {
-      Map<String, double> value = await html
-          .promiseToFutureAsMap(interop.locateMe()) as Map<String, double>;
-      return value;
-    });
-    return GeoPoint.fromMap(result);
-  }
 
-  Future<void> addPosition(GeoPoint point) async {
-    await promiseToFuture(interop.addPosition(GeoPointJs(
-      lat: point.latitude,
-      lon: point.longitude,
-    )));
-  }
 
   // The Flutter widget that contains the rendered Map.
   HtmlElementView? _widget;
@@ -66,6 +52,10 @@ class WebOsmController {
   }) async {
     if (initPosition != null && !initWithUserPosition) {
       await addPosition(initPosition);
+    }
+    if(initWithUserPosition){
+      final myLocation = await currentLocation();
+      await addPosition(myLocation);
     }
   }
 }
