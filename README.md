@@ -1,25 +1,30 @@
 # flutter_osm_plugin
 ![pub](https://img.shields.io/badge/pub-v0.7.10%2B1-orange)
 
+![pub](https://img.shields.io/badge/pub-v0.10.1--alpha.0-yellow) 
+
 ## Platform Support
-| Android | iOS |
-|:---:|:---:|
-| supported :heavy_check_mark: | supported (not stable yet): 0.10.0-alpha.0 |
+| Android | iOS | Web |
+|:---:|:---:|:---:|
+| supported :heavy_check_mark: | supported (not stable yet) :  0.10.1-alpha  | will be available soon |
+
 
 
 <b>osm plugin for flutter apps </b>
 
-* current position
-* change position 
-* tracking user location
-* customize Icon Marker
-* assisted selection position
-* draw Road,recuperate information (duration/distance) of the current road
-* ClickListener on Marker
-* calculate distance between 2 points
+* current position (Android)
+* change position (Android)
+* tracking user location (Android/iOS)
+* customize Icon Marker (Android/iOS)
+* assisted selection position (Android)
+* draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
+* draw Road manually (Android/iOS) (available in alpha version)
+* ClickListener on Marker (Android)
+* ClickListener on Map (Android)
+* calculate distance between 2 points 
 * address suggestion
-* draw shapes
-* simple dialog location picker
+* draw shapes (Android)
+* simple dialog location picker (Android)
 
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
@@ -35,15 +40,13 @@ Add the following to your `pubspec.yaml` file:
     dependencies:
       flutter_osm_plugin: ^0.7.10+1
 
+      
 * alpha version (iOS support)
+      ```dart
+       dependencies:
+                flutter_osm_plugin: ^0.10.1-alpha.0
+      ```
 
-
-```dart
- dependencies:
-          flutter_osm_plugin: ^0.10.0-alpha.0
-```
-    
-    
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -211,13 +214,22 @@ b) select position with dynamic marker
    GeoPoint(latitude: 47.4371, longitude: 8.6136),
    intersectPoint : [ GeoPoint(latitude: 47.4361, longitude: 8.6156), GeoPoint(latitude: 47.4481, longitude: 8.6266)]
    roadOption: RoadOption(
-       roadWidth: 10.0,
+       roadWidth: 10,
        roadColor: Colors.blue,
        showMarkerOfPOI: false
    ),
 );
  print("${roadInfo.distance}km");
  print("${roadInfo.duration}sec");
+```
+
+13.b) draw road manually
+```dart
+await controller.drawRoadManually(
+        waysPoint,
+        Colors.purpleAccent,
+        6.0,
+      )
 ```
 
 <b>14) Delete last road </b>
@@ -281,29 +293,6 @@ b) select position with dynamic marker
 ```dart
  await controller.removeAllShapes();
 ```
-
-<b>18) Map Tapping Listener  </b> 
-
-> listener to singleTap and LongPress on the map (available on Android)
-
-```dart
-/// Listener LongPress
-controller.listenerMapLongTapping.addListener(() {
-      if(controller.listenerMapLongTapping.value!=null){
-         final geoP = controller.listenerMapLongTapping.value;
-      }
-    });
-/// Listener SingleTap
-
-controller.listenerMapSingleTapping.addListener(() {
-      if(controller.listenerMapSingleTapping.value!=null){
-         final geoP = controller.listenerMapLongTapping.value;
-      }
-});
-```
-
-
-
 
 ##  `OSMFlutter`
 

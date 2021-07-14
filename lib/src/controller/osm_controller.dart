@@ -1,13 +1,14 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 
 import '../common/utilities.dart';
 import '../interface_osm/osm_interface.dart';
-import '../osm_flutter.dart';
 import '../types/shape_osm.dart';
 import '../types/types.dart';
+import 'base_map_controller.dart';
 
 final OSMPlatform osmPlatform = OSMPlatform.instance;
 
@@ -70,6 +71,9 @@ class OSMController {
       /* this._osmController.myLocationListener(widget.onLocationChanged, (err) {
           print(err);
         });*/
+    }
+    if (Platform.isIOS) {
+      await osmPlatform.initIosMap(_idMap);
     }
 
     /// change default icon  marker
@@ -307,12 +311,14 @@ class OSMController {
   ///  [path] : (list) path of the road
   Future<void> drawRoadManually(
     List<GeoPoint> path,
+    Color roadColor,
+    double width,
   ) async {
     assert(
         path.first.latitude != path.last.latitude ||
             path.first.longitude != path.last.longitude,
         "you cannot make road with same geoPoint");
-    await osmPlatform.drawRoadManually(_idMap, path);
+    await osmPlatform.drawRoadManually(_idMap, path, roadColor, width);
   }
 
   ///delete last road draw in the map

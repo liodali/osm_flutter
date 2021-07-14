@@ -1,15 +1,4 @@
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:location/location.dart';
-
-import 'controller/base_map_controller.dart';
-import 'controller/osm_controller.dart';
-import 'types/types.dart';
-import 'widgets/copyright_osm_widget.dart';
+part of osm_flutter;
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
@@ -52,6 +41,7 @@ class OSMFlutter extends StatefulWidget {
   final Road? road;
   final double defaultZoom;
   final bool showDefaultInfoWindow;
+  final bool useSecureURL;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
 
@@ -68,6 +58,7 @@ class OSMFlutter extends StatefulWidget {
     this.road,
     this.defaultZoom = 1.0,
     this.showDefaultInfoWindow = false,
+    this.useSecureURL = true,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
   }) : super(key: key);
@@ -274,6 +265,6 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   void _onPlatformViewCreated(int id) async {
     this._osmController = await OSMController.init(id, this);
-    widget.controller.init(this._osmController!);
+    widget.controller._init(this._osmController!);
   }
 }

@@ -18,7 +18,7 @@ class Road {
 
 class RoadOption {
   final Color? roadColor;
-  final double? roadWidth;
+  final int? roadWidth;
   final bool showMarkerOfPOI;
 
   RoadOption({

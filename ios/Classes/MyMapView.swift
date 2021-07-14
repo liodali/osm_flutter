@@ -10,21 +10,29 @@ import Foundation
 import UIKit
 import MapKit
 import Flutter
+import TangramMap
 
-public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLocationManagerDelegate {
+public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, TGMapViewDelegate, TGRecognizerDelegate {
 
 
     let frame: CGRect
     let viewId: Int64
     let channel: FlutterMethodChannel
-    let mapView: MKMapView
+    let mapView: TGMapView
     let locationManager: CLLocationManager = CLLocationManager()
     var markerIcon: UIImage? = nil
     var isFollowUserLocation: Bool = false
     var canGetLastUserLocation = false
     var canTrackUserLocation = false
+    var userLocation:MyLocationMarker? = nil
     var dictClusterAnnotation = [String: [StaticGeoPMarker]]()
     var dictIconClusterAnnotation = [String: StaticMarkerData]()
+    var roadMarkerPolyline:TGMarker? = nil
+    var resultFlutter: FlutterResult? = nil
+    var methodCall: FlutterMethodCall? = nil
+    var uiSingleTapEventMap: UILongPressGestureRecognizer = UILongPressGestureRecognizer()
+    lazy var roadManager:RoadManager = RoadManager()
+
     // var tileRenderer:MKTileOverlayRenderer!
 
     var span = MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3)
@@ -35,36 +43,49 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         self.viewId = viewId
         self.channel = channel
 
-        let mapview = MKMapView()
-
-        mapview.frame = frame
-        mapview.mapType = MKMapType.standard
-        mapview.isZoomEnabled = true
-        mapview.isScrollEnabled = true
-        mapView = mapview
+        mapView = TGMapView()
+        mapView.frame = frame
+        //mapview.mapType = MKMapType.standard
+        //mapview.isZoomEnabled = true
+        //mapview.isScrollEnabled = true
         super.init()
 
-        /// affect delegation
-        mapView.delegate = self
-        locationManager.delegate = self;
 
+        /// affect delegation
+        mapView.mapViewDelegate = self
+
+        mapView.gestureDelegate = self
+
+        locationManager.delegate = self
+
+        //
         //self.setupTileRenderer()
-        mapView.register(MKPinAnnotationView.self, forAnnotationViewWithReuseIdentifier: NSStringFromClass(GeoPointMap.self))
-        mapView.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: NSStringFromClass(StaticGeoPMarker.self))
+        // mapView.register(MKPinAnnotationView.self, forAnnotationViewWithReuseIdentifier: NSStringFromClass(GeoPointMap.self))
+        // mapView.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: NSStringFromClass(StaticGeoPMarker.self))
         //mapView.register(StaticPointClusterAnnotationView.self, forAnnotationViewWithReuseIdentifier: NSStringFromClass(StaticGeoPMarker.self) )
 
         channel.setMethodCallHandler({
-            (call: FlutterMethodCall, result: FlutterResult) ->
+            (call: FlutterMethodCall, result: @escaping FlutterResult) ->
                     Void in
             self.onListenMethodChannel(call: call, result: result)
-
-
         })
     }
 
-    private func onListenMethodChannel(call: FlutterMethodCall, result: FlutterResult) {
+    private func onListenMethodChannel(call: FlutterMethodCall, result: @escaping FlutterResult) {
         print(call.method)
         switch call.method {
+        case "init#ios#map":
+            //mapView.loadSceneAsync(from:URL.init(string: "https://drive.google.com/uc?export=download&id=1F67AW3Yaj5N7MEmMSd0OgeEK1bD69_CM")!, with: nil)
+            // mapView.requestRender()
+
+            let sceneUpdates = [TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
+
+
+            let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
+
+            mapView.loadSceneAsync(from: sceneUrl, with: sceneUpdates)
+            result(200)
+            break
         case "initPosition":
             initPosition(args: call.arguments, result: result)
             break;
@@ -77,6 +98,12 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
             result(200)
             break;
         case "user#position":
+            /// TODO implement init map with user location without track position
+            break;
+        case "user#pickPosition":
+            //let frameV = UIView()
+            methodCall = call
+            resultFlutter = result
             break;
         case "deactivateTrackMe":
             deactivateTrackMe()
@@ -112,20 +139,36 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
             result(200)
             break;
         case "road":
-            drawRoad(call: call, result: result)
+             drawRoad(call: call) { [unowned self] roadInfo,road,roadData,  error in
+                 if (error != nil) {
+                     result(FlutterError(code: "400", message: "error to draw road", details: nil))
+                 }else {
+                     var newRoad = road
+                     newRoad?.roadData = roadData!
+                     roadManager.drawRoadOnMap(on: newRoad!, for: mapView)
+                     result(roadInfo!.toMap())
+                 }
+
+             }
+            //result(["distance": 0, "duration": 0])
             break;
+        case "drawRoad#manually":
+                drawRoadManually(call:call,result:result)
+                break;
         default:
             result(nil)
             break;
         }
     }
 
+
+
     public func view() -> UIView {
         if #available(iOS 11.0, *) {
-            mapView.register(
-                    MarkerView.self,
-                    forAnnotationViewWithReuseIdentifier:
-                    MKMapViewDefaultAnnotationViewReuseIdentifier)
+            /*  mapView.register(
+                      MarkerView.self,
+                      forAnnotationViewWithReuseIdentifier:
+                      MKMapViewDefaultAnnotationViewReuseIdentifier)*/
 
         }
 
@@ -136,15 +179,18 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         let pointInit = args as! Dictionary<String, Double>
         print(pointInit)
         let location = CLLocationCoordinate2D(latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
+        mapView.fly(to: TGCameraPosition(center: location, zoom: CGFloat(zoomDefault), bearing: 0, pitch: 0)) { finish in
+            let marker = self.mapView.markerAdd()
+            marker.icon = self.markerIcon!
+            marker.point = location
+            marker.visible = true
+            marker.stylingString = "{ style: points, interactive: false,color: white, order: 5000, collide: false }"
+        }
 
-        let geoPoint = GeoPointMap(locationName: "init location", icon: markerIcon, discipline: nil, coordinate: location)
+        //   let geoPoint = GeoPointMap(locationName: "init location", icon: markerIcon, discipline: nil, coordinate: location)
+        //        let span = MKCoordinateSpan(latitudeDelta: 2, longitudeDelta: 2)
+        //    let region = MKCoordinateRegion(center: location, span: span)
 
-//        let span = MKCoordinateSpan(latitudeDelta: 2, longitudeDelta: 2)
-        let region = MKCoordinateRegion(center: location, span: span)
-
-        mapView.setRegion(region, animated: true)
-
-        mapView.addAnnotation(geoPoint)
         //self.mapView.centerToLocation(geoPoint.location)
         result(200)
     }
@@ -166,17 +212,25 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
     }
 
     private func zoomMap(_ level: Double) {
-        var region = MKCoordinateRegion(center: mapView.region.center, span: mapView.region.span)
-
         if (level > 0) {
-            region.span.latitudeDelta /= level
-            region.span.longitudeDelta /= level
-        } else if (level < 0) {
-            let pLevel = abs(level)
-            region.span.latitudeDelta = min(region.span.latitudeDelta * pLevel, 100.0)
-            region.span.longitudeDelta = min(region.span.longitudeDelta * pLevel, 100.0)
+            let cameraPos = TGCameraPosition(center: mapView.position, zoom: mapView.zoom + CGFloat(abs(level)), bearing: 0, pitch: 0)!
+            mapView.fly(to: cameraPos, withSpeed: 25.0)
+        } else {
+            let cameraPos = TGCameraPosition(center: mapView.position, zoom: mapView.zoom - CGFloat(abs(level)), bearing: 0, pitch: 0)!
+            mapView.fly(to: cameraPos, withSpeed: 25.0)
+
         }
-        mapView.setRegion(region, animated: true)
+        /*   var region = MKCoordinateRegion(center: mapView.region.center, span: mapView.region.span)
+
+           if (level > 0) {
+               region.span.latitudeDelta /= level
+               region.span.longitudeDelta /= level
+           } else if (level < 0) {
+               let pLevel = abs(level)
+               region.span.latitudeDelta = min(region.span.latitudeDelta * pLevel, 100.0)
+               region.span.longitudeDelta = min(region.span.longitudeDelta * pLevel, 100.0)
+           }
+           mapView.setRegion(region, animated: true)*/
     }
 
     private func setupTileRenderer() {
@@ -192,7 +246,11 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
     private func deactivateTrackMe() {
         canTrackUserLocation = false
         locationManager.stopUpdatingLocation()
-        mapView.showsUserLocation = false
+        if userLocation != nil && userLocation!.marker != nil {
+            mapView.removeUserLocation(for: userLocation!.marker!)
+        }
+        userLocation = nil
+        //mapView.showsUserLocation = false
     }
 
     private func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
@@ -209,72 +267,101 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         let id = args["id"] as! String
 
 
-        let listGeos = (args["point"] as! [GeoPoint]).map { point -> StaticGeoPMarker in
-            StaticGeoPMarker(icon: dictIconClusterAnnotation[id]!.image, color: dictIconClusterAnnotation[id]!.color, coordinate: point.toLocationCoordinate())
-        } as [StaticGeoPMarker]
+        let listGeos: [StaticGeoPMarker] = (args["point"] as! [GeoPoint]).map { point -> StaticGeoPMarker in
+            let geo = StaticGeoPMarker(icon: dictIconClusterAnnotation[id]!.image, color: dictIconClusterAnnotation[id]!.color, coordinate: point.toLocationCoordinate())
+
+            return geo.addStaticGeosToMapView(for: geo, on: mapView)
+        }
+
         if dictClusterAnnotation.keys.contains(id) {
-            mapView.removeAnnotations(dictClusterAnnotation[id]!)
+            // mapView.removeAnnotations(dictClusterAnnotation[id]!)
             dictClusterAnnotation[id] = listGeos
         } else {
             dictClusterAnnotation[id] = listGeos
         }
 
-        mapView.addAnnotations(listGeos)
-        //mapView.addAnnotation(clusterAnnotation)
+        // let clusterAnnotation = ClusterMarkerAnnotation(id: id,geos: listGeos)
+        //mapView.addAnnotations(listGeos)
+        // mapView.addAnnotation(clusterAnnotation)
 
     }
 
-    private func drawRoad(call: FlutterMethodCall, result: FlutterResult) {
+    private func drawRoad(call: FlutterMethodCall, completion: @escaping (_ roadInfo: RoadInformation?,_ road:Road?,_ roadData:RoadData?, _ error: Error?) -> ()) {
         let args = call.arguments as! [String: Any]
-        let points = args["wayPoint"] as! [GeoPoint]
-
-        let roadData = RoadData(startPoint: points.first!.toLocationCoordinate(),
-                endPoint: points.last!.toLocationCoordinate(),
-                roadColor: (args["roadColor"] as? [Int]?)??.toUIColor(),
-                roadWidth: args["roadWidth"] as! Float?)
-        let directionRequest = MKDirections.Request()
-        directionRequest.source = MKMapItem(placemark: MKPlacemark(coordinate: roadData.startPoint))
-        directionRequest.destination = MKMapItem(placemark: MKPlacemark(coordinate: roadData.endPoint))
-        directionRequest.transportType = .automobile
-
-        // Calculate the direction
-        let directions = MKDirections(request: directionRequest)
-        directions.calculate {
-            (response, error) -> Void in
-
-            guard let response = response else {
-                if let error = error {
-                    print("Error: \(error)")
-                }
-                result(FlutterError(code: "400", message: "error to draw road", details: nil))
-                return
-            }
-
-            let route = response.routes[0]
-            let distance = route.distance.rounded()
-            let second = route.expectedTravelTime
-            self.mapView.addOverlay((route.polyline))
-
-            let rect = route.polyline.boundingMapRect
-            self.mapView.setRegion(MKCoordinateRegion(rect), animated: true)
-            result(["distance": distance, "duration": second])
+        var points = args["wayPoints"] as! [GeoPoint]
+        var intersectPoint = [GeoPoint]()
+        if(args.keys.contains("middlePoint")){
+            intersectPoint = args["middlePoint"] as! [GeoPoint]
+            points.insert(contentsOf: intersectPoint, at: 1)
         }
+        var roadColor =  "#ff0000"
+        if(args.keys.contains("roadColor")){
+           roadColor = args["roadColor"] as! String
+        }
+        var roadWidth = "5px"
+        if(args.keys.contains("roadWidth")){
+            roadWidth = (args["roadWidth"] as! String) + "px"
+        }
+
+        let waysPoint = points.map { point  -> String in
+           let wayP = String(format: "%F,%F", point["lon"]!,point["lat"]!)
+           return  wayP
+        }
+        roadManager.getRoad(wayPoints: waysPoint,typeRoad: RoadType.car){ road in
+               var error: Error? = nil
+                if road==nil {
+                   error =  NSError()
+                    completion(nil,nil,nil,error)
+
+                }
+            let roadInfo = RoadInformation(distance: road!.distance, seconds: road!.duration)
+
+            completion(roadInfo,road,RoadData(roadColor: roadColor, roadWidth: roadWidth),nil)
+        }
+
     }
+
+    private func drawRoadManually(call: FlutterMethodCall, result: FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        var roadEncoded = args["road"] as! String
+
+        var roadColor =  "#ff0000"
+        if(args.keys.contains("roadColor")){
+            roadColor = args["roadColor"] as! String
+        }
+        var roadWidth = "5px"
+        if(args.keys.contains("roadWidth")){
+            roadWidth = "\(args["roadWidth"] as! Double)px"
+        }
+        var road = Road()
+        road.mRouteHigh = roadEncoded
+        road.roadData = RoadData(roadColor: roadColor, roadWidth: roadWidth)
+
+        let markerRoad = roadManager.drawRoadOnMap(on: road, for: mapView)
+        roadMarkerPolyline = markerRoad
+        result(nil)
+    }
+
 
     // ------- delegation func ----
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if (canGetLastUserLocation || canTrackUserLocation) {
             if let location = locations.last?.coordinate {
-                let region = MKCoordinateRegion.init(center: location, latitudinalMeters: 4000, longitudinalMeters: 4000)
-                mapView.setRegion(region, animated: true)
+                //mapView.setRegion(region, animated: true)
                 if (canTrackUserLocation) {
-                    mapView.showsUserLocation = true
+                    if(userLocation == nil ){
+                        userLocation = mapView.addUserLocation(for: location, on: mapView)
+                    }
+                        userLocation?.marker?.point = location
+                    userLocation?.marker?.point = location
+                    //  mapView.showsUserLocation = true
                     let geoMap = ["lon": location.longitude, "lat": location.latitude]
                     channel.invokeMethod("receiveUserLocation", arguments: geoMap)
                 }
                 if (canGetLastUserLocation) {
                     canGetLastUserLocation = false
                 }
+                mapView.flyToUserLocation(for: location)
 
             }
         }
@@ -284,29 +371,86 @@ public class MyMapView: NSObject, FlutterPlatformView, MKMapViewDelegate, CLLoca
         print(error.localizedDescription)
     }
 
-    public func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        if (annotation is MKUserLocation) {
-            return nil
+    public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
+        if( dictClusterAnnotation != nil && !dictClusterAnnotation.isEmpty){
+           for  gStaticMarker in  dictClusterAnnotation {
+               for (i,staticMarker) in gStaticMarker.value.enumerated() {
+                   let m = staticMarker
+                   if(mapView.zoom>12) {
+                       m.marker?.visible = true
+                   }else{
+                       m.marker?.visible = false
+                   }
+                   dictClusterAnnotation[gStaticMarker.key]![i] = m
+               }
+           }
         }
-        var viewAnnotation: MKAnnotationView?
-        if let annotationM = annotation as? GeoPointMap {
-            viewAnnotation = annotationM.setupMKAnnotationView(for: annotationM, on: mapView)
-        } else if let staticPoint = annotation as? StaticGeoPMarker {
-            viewAnnotation = staticPoint.setupClusterView(for: staticPoint, on: mapView)
-        }
-
-        return viewAnnotation
     }
 
-    public func mapView(
-            _ mapView: MKMapView,
-            rendererFor overlay: MKOverlay
-    ) -> MKOverlayRenderer {
-        guard let tileOverlay = overlay as? MKTileOverlay else {
-            return MKOverlayRenderer(overlay: overlay)
+    public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
+                        didRecognizeLongPressGesture location: CGPoint) {
+        if(resultFlutter != nil && methodCall != nil){
+            var iconM = markerIcon
+            let dict:[String:Any] = methodCall?.arguments as! [String:Any]
+            if let icon = dict["icon"] {
+               iconM =  convertImage(codeImage: icon as! String)
+            }
+            let coordinate = view.coordinate(fromViewPosition: location)
+            let geoP = GeoPointMap(icon: iconM!,coordinate: coordinate)
+            geoP.setupMarker(for: geoP, on: view)
+            resultFlutter!(200)
+            methodCall = nil
         }
-        return MKTileOverlayRenderer(tileOverlay: tileOverlay)
+
     }
+
+    public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
+                        shouldRecognizeDoubleTapGesture location: CGPoint) -> Bool {
+        let locationMap = view.coordinate(fromViewPosition: location)
+        view.fly(to: TGCameraPosition(center: locationMap, zoom: view.zoom + CGFloat(zoomDefault), bearing: view.bearing, pitch: view.pitch))
+        return true
+    }
+
+    public func mapView(_ view: TGMapView, recognizer: UIGestureRecognizer,
+                        shouldRecognizeShoveGesture displacement: CGPoint) -> Bool {
+        true
+    }
+
+    /*  public func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+          if (annotation is MKUserLocation) {
+              return nil
+          }
+          var viewAnnotation: MKAnnotationView?
+          if let annotationM = annotation as? GeoPointMap {
+              viewAnnotation = annotationM.setupMKAnnotationView(for: annotationM, on: mapView)
+          } else if let staticPoint = annotation as? StaticGeoPMarker {
+              viewAnnotation = staticPoint.setupClusterView(for: staticPoint, on: mapView)
+          }
+
+          return viewAnnotation
+      }*/
+
+    /* public func mapView(
+             _ mapView: MKMapView,
+             rendererFor overlay: MKOverlay
+     ) -> MKOverlayRenderer {
+         if let roadOverlay = overlay as? MKPolyline {
+             let renderer = MKPolylineRenderer(overlay: roadOverlay)
+
+             renderer.strokeColor = .red
+
+             renderer.lineWidth = 15.0
+
+             return renderer
+         }
+
+         guard   let tileOverlay = overlay as? MKTileOverlay else {
+             return MKOverlayRenderer(overlay: overlay)
+         }
+         return MKTileOverlayRenderer(tileOverlay: tileOverlay)
+
+
+     }*/
 }
 
 private extension MKMapView {
