@@ -6,14 +6,14 @@
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported (not stable yet) :  0.10.1-alpha  | will be available soon |
+| supported :heavy_check_mark: | supported (not stable yet) :  0.10.1-alpha  | under-development |
 
 
 
 <b>osm plugin for flutter apps </b>
 
-* current position (Android)
-* change position (Android)
+* current position (Android/iOS)
+* change position (Android/iOS)
 * tracking user location (Android/iOS)
 * customize Icon Marker (Android/iOS)
 * assisted selection position (Android)
