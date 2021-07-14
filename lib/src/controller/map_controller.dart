@@ -25,10 +25,10 @@ class MapController extends BaseMapController {
         );
 
   @override
-  void init(
+  void _init(
     OSMController _osmController,
   ) {
-    super.init(_osmController);
+    super._init(_osmController);
   }
 
   void dispose() {
@@ -216,13 +216,21 @@ class MapController extends BaseMapController {
   Future<void> rotateMapCamera(double? degree) async {
     return await _osmController.mapOrientation(degree);
   }
-/*
+
   /// draw road manually
-  ///  [path] : (list) path of the road
+  ///  [path] : (list of GeoPoint) path of the road
+  ///  [roadColor] : (Color) the color that uses to change the  default road color
+  ///  [roadWidth] : (double) uses to change width of the  road
   Future<void> drawRoadManually(
     List<GeoPoint> path,
+    Color roadColor,
+    double roadWidth,
   ) async {
     assert(path.length > 3);
-    await _osmController.drawRoadManually(path);
-  }*/
+    await _osmController.drawRoadManually(
+      path,
+      roadColor,
+      roadWidth,
+    );
+  }
 }

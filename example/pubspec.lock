@@ -75,6 +75,7 @@ packages:
       path: ".."
       relative: true
     source: path
+
     version: "0.8.0"
   flutter_plugin_android_lifecycle:
     dependency: transitive
@@ -93,6 +94,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  google_polyline_algorithm:
+    dependency: transitive
+    description:
+      name: google_polyline_algorithm
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.1.0"
   http_parser:
     dependency: transitive
     description:

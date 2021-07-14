@@ -186,6 +186,8 @@ abstract class OSMPlatform extends PlatformInterface {
   Future<void> drawRoadManually(
     int idOSM,
     List<GeoPoint> road,
+    Color roadColor,
+    double width,
   );
 
   Future<void> mapRotation(
@@ -196,5 +198,9 @@ abstract class OSMPlatform extends PlatformInterface {
   Future<void> customAdvancedPickerMarker(
     int idMap,
     GlobalKey key,
+  );
+
+  Future<void> initIosMap(
+    int idMap,
   );
 }

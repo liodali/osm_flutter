@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/search_example.dart';
 
+import 'utilities.dart';
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -61,6 +63,7 @@ class _MainExampleState extends State<MainExample> {
         print(controller.listenerMapSingleTapping.value);
       }
     });
+
     Future.delayed(Duration(seconds: 5), () async {
       await controller.zoomIn();
     });
@@ -73,18 +76,19 @@ class _MainExampleState extends State<MainExample> {
       );
     });
 
-    // Future.delayed(Duration(seconds: 10), () async {
-    //   await controller.drawRect(RectOSM(
-    //     key: "rect",
-    //     centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
-    //     distance: 1200.0,
-    //     color: Colors.red,
-    //     strokeWidth: 0.3,
-    //   ));
-    // });
-    // Future.delayed(Duration(seconds: 20), () async {
-    //   await controller.removeAllShapes();
-    // });
+    Future.delayed(Duration(seconds: 10), () async {
+      final waysPoint = list
+          .map((e) => GeoPoint(
+                latitude: e.last,
+                longitude: e.first,
+              ))
+          .toList();
+      await controller.drawRoadManually(
+        waysPoint,
+        Colors.purpleAccent,
+        6.0,
+      );
+    });
   }
 
   @override
@@ -97,6 +101,7 @@ class _MainExampleState extends State<MainExample> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('OSM'),
         actions: <Widget>[
@@ -131,7 +136,7 @@ class _MainExampleState extends State<MainExample> {
                     point, point2,
                     //interestPoints: [pointM1, pointM2],
                     roadOption: RoadOption(
-                        roadWidth: 10.0,
+                        roadWidth: 10,
                         roadColor: Colors.blue,
                         showMarkerOfPOI: false));
                 print(
