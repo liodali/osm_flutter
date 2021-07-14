@@ -10,6 +10,8 @@ typedef OnLocationChanged = void Function(GeoPoint);
 ///
 /// [trackMyPosition] : (bool) if is true, map will track your location
 ///
+/// [mapIsLoading]   :(Widget) show custom  widget when the map finish initialization
+///
 /// [showZoomController] : (bool) if us true, you can zoomIn zoomOut directly in the map
 ///
 /// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
@@ -19,6 +21,7 @@ typedef OnLocationChanged = void Function(GeoPoint);
 /// [onLocationChanged] : (callback) it's hire when you activate tracking and  user position has been changed
 ///
 /// [markerIcon] : (Icon/AssertImage) marker of geoPoint
+///
 /// [markerOption] :  contain marker of geoPoint and customisation of advanced picker marker
 ///
 /// [road] : set color and icons marker of road
@@ -32,6 +35,7 @@ class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
   final bool trackMyPosition;
   final bool showZoomController;
+  final Widget? mapIsLoading;
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
@@ -48,6 +52,7 @@ class OSMFlutter extends StatefulWidget {
   OSMFlutter({
     Key? key,
     required this.controller,
+    this.mapIsLoading,
     this.trackMyPosition = false,
     this.showZoomController = false,
     this.staticPoints = const [],
@@ -71,6 +76,7 @@ class OSMFlutterState extends State<OSMFlutter> {
   GlobalKey androidViewKey = GlobalKey();
   OSMController? _osmController;
   ValueNotifier<Widget?> dynamicMarkerWidgetNotifier = ValueNotifier(null);
+  ValueNotifier<bool> mapIsReadyListener = ValueNotifier(false);
 
   //permission status
   PermissionStatus? _permission;
@@ -162,13 +168,36 @@ class OSMFlutterState extends State<OSMFlutter> {
       clipBehavior: Clip.none,
       children: <Widget>[
         widgetConfigMap(),
-        widgetMap,
-        if (widget.showContributorBadgeForOSM)
+        if (widget.mapIsLoading != null) ...[
+          ValueListenableBuilder<bool>(
+            valueListenable: mapIsReadyListener,
+            builder: (ctx, isReady, _) {
+              return Opacity(
+                opacity: isReady ? 1.0 : 0.0,
+                child: widgetMap,
+              );
+            },
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: mapIsReadyListener,
+            builder: (ctx, isReady, child) {
+              return Visibility(
+                visible: !isReady,
+                child: child!,
+              );
+            },
+            child: widget.mapIsLoading!,
+          ),
+        ] else ...[
+          widgetMap
+        ],
+        if (widget.showContributorBadgeForOSM) ...[
           Positioned(
             bottom: 0,
             right: 5,
             child: CopyrightOSMWidget(),
-          )
+          ),
+        ],
       ],
     );
   }

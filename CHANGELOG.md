@@ -4,6 +4,11 @@
 * add draw road manually for dev that they have they own routing api 
 ## 0.9.0-alpha.0 :
 * support drawRoad in iOS
+## 0.8.0 (without ios support)
+* add new attribute `mapIsLoading` to show custom widget before map has been initialized
+* remove show marker in init location
+* separate change location from init location
+* add internal listener to notify when map is ready
 ## 0.8.0-alpha.1 :
 * fix set color static marker position
 * fix convert bitmap to string
