@@ -118,17 +118,7 @@ class OSMController {
 
     /// road configuration
     if (_osmFlutterState.widget.road != null) {
-      await showDialog(
-          context: _osmFlutterState.context,
-          barrierDismissible: false,
-          builder: (ctx) {
-            return JobAlertDialog(
-              callback: () async {
-                await _initializeRoadInformation();
-                Navigator.pop(ctx);
-              },
-            );
-          });
+      Future.microtask(() => _initializeRoadInformation());
     }
 
     /// picker config

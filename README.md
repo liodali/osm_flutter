@@ -1,6 +1,5 @@
 # flutter_osm_plugin
-
-![pub](https://img.shields.io/badge/pub-v0.7.10-orange)
+![pub](https://img.shields.io/badge/pub-v0.7.10%2B1-orange)
 
 ![pub](https://img.shields.io/badge/pub-v0.10.1--alpha.0-yellow) 
 
@@ -39,8 +38,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-
-      flutter_osm_plugin: ^0.7.10
+      flutter_osm_plugin: ^0.7.10+1
 
       
 * alpha version (iOS support)

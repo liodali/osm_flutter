@@ -12,6 +12,8 @@
   * visualisation of map in ios 
   * support select position (custom marker, not network image will not work) 
   * support track user location
+## 0.7.10+1 :
+* remove show dialog when map config road
 ## 0.7.10 :
 * (#123) fix zoom when changeLocation was called
 * (#123) remove previous marker  when changeLocation was called
