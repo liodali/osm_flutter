@@ -28,6 +28,8 @@ abstract class OSMPlatform extends PlatformInterface {
 
   void close();
 
+  Stream<MapInitialization> onMapIsReady(int idMap);
+
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap);
 
   Stream<LongTapEvent> onLongPressMapClickListener(int idMap);
@@ -35,6 +37,11 @@ abstract class OSMPlatform extends PlatformInterface {
   Stream<GeoPointEvent> onGeoPointClickListener(int idMap);
 
   Stream<UserLocationEvent> onUserPositionListener(int idMap);
+
+  Future<void> initMap(
+    int idOSM,
+    GeoPoint point,
+  );
 
   Future<void> currentLocation(
     int idOSM,

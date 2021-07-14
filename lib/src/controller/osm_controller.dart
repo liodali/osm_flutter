@@ -57,6 +57,9 @@ class OSMController {
       _osmFlutterState.widget.controller.listenerMapSingleTapping.value =
           event.value;
     });
+    osmPlatform.onMapIsReady(_idMap).listen((event) async {
+      _osmFlutterState.mapIsReadyListener.value = event.value;
+    });
 
     if (_osmFlutterState.widget.onGeoPointClicked != null) {
       osmPlatform.onGeoPointClickListener(_idMap).listen((event) {
@@ -90,7 +93,13 @@ class OSMController {
     if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
       initPosition = await myLocation();
     }
-    if (initPosition != null) await changeLocation(initPosition);
+    if (initPosition != null){
+      await osmPlatform.initMap(
+        _idMap,
+        initPosition,
+      );
+    }
+
 
     /// draw static position
     if (_osmFlutterState.widget.staticPoints.isNotEmpty) {
