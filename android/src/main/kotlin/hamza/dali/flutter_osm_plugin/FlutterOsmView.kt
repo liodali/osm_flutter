@@ -57,6 +57,7 @@ import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.MapTileProviderBasic
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory.MAPNIK
 import org.osmdroid.tileprovider.util.SimpleInvalidationHandler
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
@@ -194,16 +195,22 @@ class FlutterOsmView(
     private fun initMap() {
 
 
-        map = MapView(context).apply {
-            this.layoutParams = MapView.LayoutParams(
+        map = MapView(context).also {
+            it.layoutParams = MapView.LayoutParams(
                 LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
             )
-            this.isTilesScaledToDpi = true
-            this.setMultiTouchControls(true)
-            setTileSource(MAPNIK)
-
-
-            zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
+            it.isTilesScaledToDpi = true
+            it.setMultiTouchControls(true)
+            it.setTileSource(MAPNIK)
+            it.isVerticalMapRepetitionEnabled = false
+            it.isHorizontalMapRepetitionEnabled = false
+            it.setScrollableAreaLimitDouble(BoundingBox(85.0, 180.0, -85.0, -180.0))
+            it.setScrollableAreaLimitLatitude(MapView.getTileSystem().maxLatitude, MapView.getTileSystem().minLatitude, 0);
+            it.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
+            //
+            it.minZoomLevel = 2.0
+            it.controller.setZoom(2.0)
+            it.controller.setCenter(GeoPoint(0.0,0.0))
         }
 
         map!!.addMapListener(object : MapListener {
@@ -226,8 +233,7 @@ class FlutterOsmView(
         })
         map!!.overlays.add(0, staticOverlayListener)
 
-        map!!.isVerticalMapRepetitionEnabled = false
-        map!!.isHorizontalMapRepetitionEnabled = false
+
 //        map!!.addOnFirstLayoutListener { v, left, top, right, bottom ->
 //        methodChannel.invokeMethod("map#init", true)
 //        }
@@ -260,7 +266,7 @@ class FlutterOsmView(
         //map!!.overlays.clear()
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
         val zoom = when (map!!.zoomLevelDouble) {
-            0.0 -> initPositionZoom
+            2.0 -> initPositionZoom
             else -> map!!.zoomLevelDouble
         }
         //homeMarker = addMarker(geoPoint, zoom, null)
