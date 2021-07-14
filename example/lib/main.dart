@@ -177,6 +177,17 @@ class _MainExampleState extends State<MainExample> {
               children: [
                 OSMFlutter(
                   controller: controller,
+                  mapIsLoading: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        Text("Map is Loading..")
+                      ],
+                    ),
+                  ),
                   showContributorBadgeForOSM: true,
                   //trackMyPosition: trackingNotifier.value,
                   showDefaultInfoWindow: false,
