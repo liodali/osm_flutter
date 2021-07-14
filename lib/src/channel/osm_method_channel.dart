@@ -28,6 +28,10 @@ abstract class EventOSM<T> {
   EventOSM(this.mapId, this.value);
 }
 
+class MapInitialization extends EventOSM<bool> {
+  MapInitialization(int mapId, bool isMapReady) : super(mapId, isMapReady);
+}
+
 class TapEvent extends EventOSM<GeoPoint> {
   TapEvent(int mapId, GeoPoint position) : super(mapId, position);
 }

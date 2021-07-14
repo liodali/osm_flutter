@@ -201,6 +201,8 @@ class FlutterOsmView(
             this.isTilesScaledToDpi = true
             this.setMultiTouchControls(true)
             setTileSource(MAPNIK)
+
+
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         }
 
@@ -224,7 +226,15 @@ class FlutterOsmView(
         })
         map!!.overlays.add(0, staticOverlayListener)
 
-        mainLinearLayout.addView(map)
+        map!!.isVerticalMapRepetitionEnabled = false
+        map!!.isHorizontalMapRepetitionEnabled = false
+
+        map!!.addOnFirstLayoutListener { v, left, top, right, bottom ->
+            mainLinearLayout.addView(map)
+            methodChannel.invokeMethod("map#init", true)
+        }
+
+
     }
 
     private fun setZoom(methodCall: MethodCall, result: MethodChannel.Result) {
