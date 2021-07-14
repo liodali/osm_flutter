@@ -23,10 +23,10 @@ class FlutterPickerViewOverlay constructor(
             mCirclePaint.color = Color.BLUE
             mCirclePaint.alpha = 30
             mCirclePaint.style = Paint.Style.FILL
-            canvas!!.drawCircle((point.x.toFloat() - radius / 2 + extraX), point.y.toFloat() - radius + extraY, radius, mCirclePaint)
+            canvas!!.drawCircle((point.x.toFloat() /*- radius / 2 + extraX*/), point.y.toFloat() - radius + extraY, radius, mCirclePaint)
             mCirclePaint.alpha = 150
             mCirclePaint.style = Paint.Style.STROKE
-            canvas.drawCircle((point.x.toFloat() - radius / 2 + extraX), point.y.toFloat() - radius + extraY, radius, mCirclePaint)
+            canvas.drawCircle((point.x.toFloat()/* - radius / 2 + extraX*/), point.y.toFloat() - radius + extraY, radius, mCirclePaint)
 
         }
 
