@@ -85,7 +85,6 @@ class MethodChannelOSM extends OSMPlatform {
   @override
   Stream<MapInitialization> onMapIsReady(int idMap) {
     return _events(idMap).whereType<MapInitialization>();
-
   }
 
   @override
@@ -127,8 +126,7 @@ class MethodChannelOSM extends OSMPlatform {
           break;
         case "receiveGeoPoint":
           final result = call.arguments;
-          _streamController
-              .add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
+          _streamController.add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveUserLocation":
           final result = call.arguments;
@@ -144,8 +142,12 @@ class MethodChannelOSM extends OSMPlatform {
   void close() {
     _streamController.close();
   }
+
   @override
-  Future<void> initMap(int idOSM,GeoPoint point,) async{
+  Future<void> initMap(
+    int idOSM,
+    GeoPoint point,
+  ) async {
     Map requestData = {"lon": point.longitude, "lat": point.latitude};
     await _channels[idOSM]!.invokeMethod(
       "initMap",
@@ -509,8 +511,4 @@ class MethodChannelOSM extends OSMPlatform {
       await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", icon);
     }
   }
-
-
-
-
 }

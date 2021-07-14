@@ -21,7 +21,7 @@ typedef OnLocationChanged = void Function(GeoPoint);
 ///
 /// [trackMyPosition] : (bool) if is true, map will track your location
 ///
-/// [mapIsLoading]   :(Widget)
+/// [mapIsLoading]   :(Widget) show custom  widget when the map finish initialization
 ///
 /// [showZoomController] : (bool) if us true, you can zoomIn zoomOut directly in the map
 ///
@@ -191,7 +191,7 @@ class OSMFlutterState extends State<OSMFlutter> {
             valueListenable: mapIsReadyListener,
             builder: (ctx, isReady, child) {
               return Visibility(
-                visible: !isReady ,
+                visible: !isReady,
                 child: child!,
               );
             },

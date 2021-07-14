@@ -1,3 +1,8 @@
+## 0.8.0 :
+* add new attribute `mapIsLoading` to show custom widget before map has been initialized
+* remove show marker in init location
+* separate change location from init location
+* add internal listener to notify when map is ready
 ## 0.7.10+1 :
 * remove show dialog when map config road
 ## 0.7.10 :

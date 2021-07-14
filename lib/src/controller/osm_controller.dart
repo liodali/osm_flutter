@@ -93,13 +93,12 @@ class OSMController {
     if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
       initPosition = await myLocation();
     }
-    if (initPosition != null){
+    if (initPosition != null) {
       await osmPlatform.initMap(
         _idMap,
         initPosition,
       );
     }
-
 
     /// draw static position
     if (_osmFlutterState.widget.staticPoints.isNotEmpty) {
