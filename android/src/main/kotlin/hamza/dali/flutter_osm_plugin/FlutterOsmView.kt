@@ -181,7 +181,7 @@ class FlutterOsmView(
 
     private var mainLinearLayout: FrameLayout = FrameLayout(context!!).apply {
         this.layoutParams =
-            MapView.LayoutParams(FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
+            MapView.LayoutParams(FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
     }
     private var markerSelectionPicker: FlutterPickerViewOverlay? = null
 
@@ -228,11 +228,10 @@ class FlutterOsmView(
 
         map!!.isVerticalMapRepetitionEnabled = false
         map!!.isHorizontalMapRepetitionEnabled = false
-
-        map!!.addOnFirstLayoutListener { v, left, top, right, bottom ->
-            mainLinearLayout.addView(map)
-            methodChannel.invokeMethod("map#init", true)
-        }
+//        map!!.addOnFirstLayoutListener { v, left, top, right, bottom ->
+//        methodChannel.invokeMethod("map#init", true)
+//        }
+        mainLinearLayout.addView(map)
 
 
     }
@@ -255,6 +254,27 @@ class FlutterOsmView(
     private fun initPosition(methodCall: MethodCall, result: MethodChannel.Result) {
         @Suppress("UNCHECKED_CAST")
         val args = methodCall.arguments!! as HashMap<String, Double>
+//        if (homeMarker != null) {
+//            map!!.overlays.remove(homeMarker)
+//        }
+        //map!!.overlays.clear()
+        val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
+        val zoom = when (map!!.zoomLevelDouble) {
+            0.0 -> initPositionZoom
+            else -> map!!.zoomLevelDouble
+        }
+        //homeMarker = addMarker(geoPoint, zoom, null)
+
+        map!!.controller.setZoom(zoom)
+        map!!.controller.animateTo(geoPoint)
+
+        methodChannel.invokeMethod("map#init", true)
+        result.success(null)
+    }
+
+    private fun changePosition(methodCall: MethodCall, result: MethodChannel.Result) {
+        @Suppress("UNCHECKED_CAST")
+        val args = methodCall.arguments!! as HashMap<String, Double>
         if (homeMarker != null) {
             map!!.overlays.remove(homeMarker)
         }
@@ -268,7 +288,6 @@ class FlutterOsmView(
 
         result.success(null)
     }
-
 
     private fun addMarker(
         geoPoint: GeoPoint,
@@ -446,11 +465,11 @@ class FlutterOsmView(
                 result.success(null)
             }
 
-            "initPosition" -> {
+            "initMap" -> {
                 initPosition(call, result)
             }
             "changePosition" -> {
-                initPosition(call, result)
+                changePosition(call, result)
             }
             "trackMe" -> {
                 trackUserLocation(call, result)
@@ -1211,7 +1230,7 @@ class FlutterOsmView(
         methodChannel.setMethodCallHandler(this)
         //eventChannel = EventChannel(binaryMessenger, "plugins.dali.hamza/osmview_stream_${id}")
         //eventChannel.setStreamHandler(this)
-
+        methodChannel.invokeMethod("map#init", true)
 
         scope = owner.lifecycle.coroutineScope
         folderStaticPosition.name = Constants.nameFolderStatic
