@@ -1,3 +1,5 @@
+## 0.11.0-alpha.0 :
+* merge new api in 0.8.0 in alpha version
 ## 0.10.1-alpha.0 :
 * hide unnecessary api
 ## 0.10.0-alpha.0 :
