@@ -25,10 +25,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var canGetLastUserLocation = false
     var canTrackUserLocation = false
     var retrieveLastUserLocation = false
+    var isAdvancedPicker = false
     var userLocation:MyLocationMarker? = nil
     var dictClusterAnnotation = [String: [StaticGeoPMarker]]()
     var dictIconClusterAnnotation = [String: StaticMarkerData]()
     var roadMarkerPolyline:TGMarker? = nil
+    var homeMarker:TGMarker? = nil
     var resultFlutter: FlutterResult? = nil
     var methodCall: FlutterMethodCall? = nil
     var uiSingleTapEventMap: UILongPressGestureRecognizer = UILongPressGestureRecognizer()
@@ -90,10 +92,14 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
 
             mapView.loadSceneAsync(from: sceneUrl, with: sceneUpdates)
+            channel.invokeMethod("map#init", arguments: true)
             result(200)
             break
-        case "initPosition":
+        case "initMap":
             initPosition(args: call.arguments, result: result)
+            break;
+        case "changePosition":
+            changePosition(args: call.arguments, result: result)
             break;
         case "currentLocation":
             currentUserLocation()
@@ -170,11 +176,13 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             startAdvancedPicker(call: call, result: result)
             break;
         case "get#position#advanced#selection":
+            getCenterSelection(call:call,result:result)
             break;
         case "confirm#advanced#selection":
+            getCenterSelection(call: call, result: result, isFinished: true)
             break;
         case "cancel#advanced#selection":
-            cancelAdvancedPickerMarker(call: call, result: result)
+            cancelAdvancedPickerMarker()
             break;
         default:
             result(nil)
@@ -202,13 +210,27 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let pointInit = args as! Dictionary<String, Double>
         print(pointInit)
         let location = CLLocationCoordinate2D(latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
-        mapView.fly(to: TGCameraPosition(center: location, zoom: CGFloat(zoomDefault), bearing: 0, pitch: 0)) { finish in
-            let marker = self.mapView.markerAdd()
-            marker.icon = self.markerIcon!
-            marker.point = location
-            marker.visible = true
-            marker.stylingString = "{ style: points, interactive: false,color: white, order: 5000, collide: false }"
+        var zoom = mapView.zoom + CGFloat(zoomDefault)
+        if(mapView.zoom == CGFloat(0.0)){
+            zoom = CGFloat(10)
         }
+        mapView.cameraPosition = TGCameraPosition(center: location, zoom: zoom, bearing: 0, pitch: 0)
+        result(200)
+    }
+    private func changePosition(args: Any?, result: FlutterResult) {
+        let pointInit = args as! Dictionary<String, Double>
+        if( homeMarker != nil ){
+            mapView.markerRemove(homeMarker!)
+        }
+        let location = CLLocationCoordinate2D(latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
+        mapView.fly(to: TGCameraPosition(center: location, zoom: mapView.zoom, bearing: 0, pitch: 0)) { finish in
+            self.homeMarker = self.mapView.markerAdd()
+            self.homeMarker!.icon = self.markerIcon!
+            self.homeMarker!.point = location
+            self.homeMarker!.visible = true
+            self.homeMarker!.stylingString = "{ style: points, interactive: false,color: white, order: 5000, collide: false }"
+        }
+
         result(200)
     }
 
@@ -239,10 +261,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
     }
 
-    private func setupTileRenderer() {
-
-
-    }
+    private func setupTileRenderer() {}
 
     private func deactivateTrackMe() {
         canTrackUserLocation = false
@@ -261,33 +280,60 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     public func startAdvancedPicker(call:FlutterMethodCall, result:FlutterResult){
-        cacheMarkers += mapView.markers
-        mapView.markerRemoveAll()
-        if(canTrackUserLocation){
-            deactivateTrackMe()
+        if(!isAdvancedPicker) {
+            isAdvancedPicker = true
+            cacheMarkers += mapView.markers
+            mapView.markerRemoveAll()
+            if (canTrackUserLocation) {
+                deactivateTrackMe()
+            }
+
+            if (pickerMarker == nil) {
+                var image = UIImage(systemName: "markLocation")
+                image = image?.withTintColor(.red)
+                pickerMarker = UIImageView(image: image)
+            }
+            //pickerMarker?.frame = CGRect(x: frame.width/2,y: frame.height/2,width: 32,height: 32)
+            pickerMarker?.center = mainView.center
+            mainView.addSubview(pickerMarker!)
+            result(200)
         }
-        if(pickerMarker == nil){
-            var image = UIImage(systemName: "markLocation")
-            image = image?.withTintColor(.red)
-            pickerMarker = UIImageView(image: image)
-        }
-        //pickerMarker?.frame = CGRect(x: frame.width/2,y: frame.height/2,width: 32,height: 32)
-        pickerMarker?.center = mainView.center
-        mainView.addSubview(pickerMarker!)
-        result(200)
     }
-    private func cancelAdvancedPickerMarker(call:FlutterMethodCall,result:FlutterResult){
-        pickerMarker?.removeFromSuperview()
-        pickerMarker = nil
-        cacheMarkers.forEach { marker in
-           let m = mapView.markerAdd()
-            m.stylingString = marker.stylingString
-            m.point = marker.point
-            m.icon = marker.icon
-            m.polyline = marker.polyline
+    private func getCenterSelection(call: FlutterMethodCall, result: FlutterResult,isFinished : Bool = false ) {
+        if(isAdvancedPicker){
+          let coordinate = mapView.coordinate(fromViewPosition: mapView.center)
+            result(["lat":coordinate.latitude,"lon":coordinate.longitude])
+            if(isFinished){
+                if(homeMarker != nil){
+                    mapView.markerRemove(homeMarker!)
+                }
+                mapView.fly(to: TGCameraPosition(center: coordinate, zoom: mapView.zoom, bearing: 0, pitch: 0)) { finish in
+                    self.homeMarker = self.mapView.markerAdd()
+                    self.homeMarker!.icon = self.markerIcon!
+                    self.homeMarker!.point = coordinate
+                    self.homeMarker!.visible = true
+                    self.homeMarker!.stylingString = "{ style: points, interactive: false,color: white, order: 5000, collide: false }"
+                }
+                cancelAdvancedPickerMarker()
+                isAdvancedPicker = false
+            }
         }
-        cacheMarkers.removeAll(keepingCapacity: false)
-        result(200)
+    }
+    private func cancelAdvancedPickerMarker(){
+        if(isAdvancedPicker) {
+            /// remove picker from parent view
+            pickerMarker?.removeFromSuperview()
+            //pickerMarker = nil
+            cacheMarkers.forEach { marker in
+                let m = mapView.markerAdd()
+                m.stylingString = marker.stylingString
+                m.point = marker.point
+                m.icon = marker.icon
+                m.polyline = marker.polyline
+            }
+            cacheMarkers.removeAll()
+            isAdvancedPicker = false
+        }
     }
 
     private func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
@@ -337,7 +383,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
         var roadWidth = "5px"
         if(args.keys.contains("roadWidth")){
-            roadWidth = (args["roadWidth"] as! String) + "px"
+            roadWidth = "\(args["roadWidth"] as! Double)px"
         }
 
         let waysPoint = points.map { point  -> String in
@@ -360,7 +406,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func drawRoadManually(call: FlutterMethodCall, result: FlutterResult) {
         let args = call.arguments as! [String: Any]
-        var roadEncoded = args["road"] as! String
+        let roadEncoded = args["road"] as! String
 
         var roadColor =  "#ff0000"
         if(args.keys.contains("roadColor")){
@@ -419,7 +465,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
-        if( dictClusterAnnotation != nil && !dictClusterAnnotation.isEmpty){
+        if( !dictClusterAnnotation.isEmpty ){
            for  gStaticMarker in  dictClusterAnnotation {
                for (i,staticMarker) in gStaticMarker.value.enumerated() {
                    let m = staticMarker

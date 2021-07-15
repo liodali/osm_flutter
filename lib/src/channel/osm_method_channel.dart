@@ -495,7 +495,11 @@ class MethodChannelOSM extends OSMPlatform {
       "road": encodedCoordinates,
       "roadWidth": width,
     };
-    data.addAll(roadColor.toMap("roadColor"));
+    if (Platform.isIOS) {
+      data.addAll(roadColor.toHexMap("roadColor"));
+    } else {
+      data.addAll(roadColor.toMap("roadColor"));
+    }
 
     await _channels[idOSM]!.invokeMethod(
       "drawRoad#manually",
