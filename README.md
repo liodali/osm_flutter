@@ -1,20 +1,18 @@
 # flutter_osm_plugin
+![pub](https://img.shields.io/badge/pub-v0.8.0-orange)
 
-![pub](https://img.shields.io/badge/pub-v0.7.10-orange)
-
-![pub](https://img.shields.io/badge/pub-v0.10.1--alpha.0-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.11.0--alpha.0-yellow) 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported (not stable yet) :  0.10.1-alpha  | will be available soon |
-
+| supported :heavy_check_mark: | supported (not stable yet) :  0.11.0-alpha  | under-development |
 
 
 <b>osm plugin for flutter apps </b>
 
-* current position (Android)
-* change position (Android)
+* current position (Android/iOS)
+* change position (Android/iOS)
 * tracking user location (Android/iOS)
 * customize Icon Marker (Android/iOS)
 * assisted selection position (Android)
@@ -39,17 +37,15 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-
-      flutter_osm_plugin: ^0.7.10
+      flutter_osm_plugin: ^0.8.0
 
       
 * alpha version (iOS support)
       ```dart
        dependencies:
-                flutter_osm_plugin: ^0.10.1-alpha.0
+                flutter_osm_plugin: ^0.11.0-alpha.0
       ```
-
-
+      
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
@@ -300,6 +296,7 @@ await controller.drawRoadManually(
 
 | Properties                    | Description                         |
 | ----------------------------- | ----------------------------------- |
+| `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
 | `trackMyPosition`             | enable tracking user position.     |
 | `showZoomController`          | show default zoom controller.       |
 | `markerIcon`                  | set icon Marker  (deprecated replaced with `markerOption` )                   |

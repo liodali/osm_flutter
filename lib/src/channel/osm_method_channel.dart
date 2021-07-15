@@ -30,6 +30,10 @@ abstract class EventOSM<T> {
   EventOSM(this.mapId, this.value);
 }
 
+class MapInitialization extends EventOSM<bool> {
+  MapInitialization(int mapId, bool isMapReady) : super(mapId, isMapReady);
+}
+
 class TapEvent extends EventOSM<GeoPoint> {
   TapEvent(int mapId, GeoPoint position) : super(mapId, position);
 }
@@ -81,6 +85,11 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
+  Stream<MapInitialization> onMapIsReady(int idMap) {
+    return _events(idMap).whereType<MapInitialization>();
+  }
+
+  @override
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
     return _events(idMap).whereType<SingleTapEvent>();
   }
@@ -103,6 +112,11 @@ class MethodChannelOSM extends OSMPlatform {
   void setGeoPointHandler(int idMap) async {
     _channels[idMap]!.setMethodCallHandler((call) async {
       switch (call.method) {
+        case "map#init":
+          final result = call.arguments as bool;
+          _streamController.add(MapInitialization(idMap, result));
+
+          break;
         case "receiveLongPress":
           final result = call.arguments;
           _streamController.add(LongTapEvent(idMap, GeoPoint.fromMap(result)));
@@ -132,6 +146,18 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
+  Future<void> initMap(
+    int idOSM,
+    GeoPoint point,
+  ) async {
+    Map requestData = {"lon": point.longitude, "lat": point.latitude};
+    await _channels[idOSM]!.invokeMethod(
+      "initMap",
+      requestData,
+    );
+  }
+
+  @override
   Future<void> currentLocation(int? idOSM) async {
     try {
       await _channels[idOSM]!.invokeMethod("currentLocation", null);
@@ -155,7 +181,7 @@ class MethodChannelOSM extends OSMPlatform {
   Future<void> addPosition(int idOSM, GeoPoint p) async {
     Map requestData = {"lon": p.longitude, "lat": p.latitude};
     await _channels[idOSM]!.invokeMethod(
-      "initPosition",
+      "changePosition",
       requestData,
     );
   }

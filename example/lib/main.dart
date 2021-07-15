@@ -68,8 +68,12 @@ class _MainExampleState extends State<MainExample> {
       await controller.zoomIn();
     });
     Future.delayed(Duration(seconds: 15), () async {
-      await controller
-          .changeLocation(GeoPoint(latitude: 47.433358, longitude: 8.4690184));
+      await controller.changeLocation(
+        GeoPoint(
+          latitude: 47.433358,
+          longitude: 8.4690184,
+        ),
+      );
     });
 
     Future.delayed(Duration(seconds: 10), () async {
@@ -197,6 +201,17 @@ class _MainExampleState extends State<MainExample> {
               children: [
                 OSMFlutter(
                   controller: controller,
+                  mapIsLoading: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        Text("Map is Loading..")
+                      ],
+                    ),
+                  ),
                   showContributorBadgeForOSM: true,
                   //trackMyPosition: trackingNotifier.value,
                   showDefaultInfoWindow: false,
