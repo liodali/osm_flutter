@@ -88,6 +88,22 @@ class _MainExampleState extends State<MainExample> {
         Colors.purpleAccent,
         6.0,
       );
+      await controller.setMarkerOfStaticPoint(
+        id: "line 2",
+        markerIcon: MarkerIcon(
+          icon: Icon(
+            Icons.train,
+            color: Colors.red,
+            size: 48,
+          ),
+        ),
+      );
+      await controller.setStaticPosition(
+        [
+          GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
+        ],
+        "line 2",
+      );
     });
   }
 
@@ -233,20 +249,20 @@ class _MainExampleState extends State<MainExample> {
                         GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
                       ],
                     ),
-                    StaticPositionGeoPoint(
-                      "line 2",
-                      MarkerIcon(
-                        icon: Icon(
-                          Icons.train,
-                          color: Colors.red,
-                          size: 48,
-                        ),
-                      ),
-                      [
-                        GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
-                        GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
-                      ],
-                    )
+                    // StaticPositionGeoPoint(
+                    //   "line 2",
+                    //   MarkerIcon(
+                    //     icon: Icon(
+                    //       Icons.train,
+                    //       color: Colors.red,
+                    //       size: 48,
+                    //     ),
+                    //   ),
+                    //   [
+                    //     GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
+                    //     GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
+                    //   ],
+                    // )
                   ],
                   road: Road(
                     startIcon: MarkerIcon(

@@ -1,7 +1,7 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.8.0-orange)
+![pub](https://img.shields.io/badge/pub-v0.8.1-orange)
 
-![pub](https://img.shields.io/badge/pub-v0.10.1--alpha.0-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.11.0--alpha.0-yellow) 
 
 ## Platform Support
 | Android | iOS | Web |
@@ -37,13 +37,13 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.8.0
+      flutter_osm_plugin: ^0.8.1
 
       
 * alpha version (iOS support)
       ```dart
        dependencies:
-                flutter_osm_plugin: ^0.10.1-alpha.0
+                flutter_osm_plugin: ^0.11.0-alpha.0
       ```
       
 ## Simple Usage
@@ -244,14 +244,22 @@ await controller.drawRoadManually(
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
+<b>16) Change/Add Marker old/new static GeoPoint position </b>
 
-<b>16) change orientation of the map</b>
+> you can use it if you don't have at first static position
+> you can use it to change their marker over time
+
+```dart
+ await controller.setMarkerOfStaticPoint(String id,MarkerIcon markerIcon );
+```
+
+<b>17) change orientation of the map</b>
 
 ```dart
  await controller.rotateMapCamera(degree);
 ```
 
-<b>17) Draw Shape in the map </b>
+<b>18) Draw Shape in the map </b>
 
 * Circle
 ```dart
