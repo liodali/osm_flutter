@@ -80,9 +80,7 @@ class OSMController {
     }
 
     /// change default icon  marker
-    final defaultIcon = _osmFlutterState.widget.markerOption
-            ?.copyWith(defaultMarker: _osmFlutterState.widget.markerIcon) ??
-        _osmFlutterState.widget.markerIcon;
+    final defaultIcon = _osmFlutterState.widget.markerOption?.defaultMarker;
 
     if (defaultIcon != null) {
       await changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
@@ -184,6 +182,30 @@ class OSMController {
     await osmPlatform.customMarker(_idMap, key);
   }
 
+  ///change  Marker of specific static points
+  /// we need to global key to recuperate widget from tree element
+  /// [id] : (String) id  of the static group geopoint
+  /// [markerIcon] : (MarkerIcon) new marker that will set to the static group geopoint
+  Future<void> setIconStaticPositions(
+    String id,
+    MarkerIcon markerIcon,
+  ) async {
+    if (markerIcon.icon != null) {
+      _osmFlutterState.dynamicMarkerWidgetNotifier.value = markerIcon.icon;
+    } else if (markerIcon.image != null) {
+      _osmFlutterState.dynamicMarkerWidgetNotifier.value = Image(
+        image: markerIcon.image!,
+      );
+    }
+    await Future.delayed(Duration(milliseconds: 300), () async {
+      await osmPlatform.customMarkerStaticPosition(
+        _idMap,
+        _osmFlutterState.dynamicMarkerKey,
+        id,
+      );
+    });
+  }
+
   ///change Icon  of advanced picker Marker
   /// we need to global key to recuperate widget from tree element
   /// [key] : (GlobalKey) key of widget that represent the new marker
@@ -195,12 +217,12 @@ class OSMController {
   ///  [geoPoints] : list of static geoPoint
   ///  [id] : String of that list of static geoPoint
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
-    List<StaticPositionGeoPoint?> staticGeoPosition =
-        _osmFlutterState.widget.staticPoints;
-    assert(
-        staticGeoPosition.firstWhere((p) => p?.id == id, orElse: () => null) !=
-            null,
-        "no static geo points has been found,you should create it before!");
+    // List<StaticPositionGeoPoint?> staticGeoPosition =
+    //     _osmFlutterState.widget.staticPoints;
+    // assert(
+    //     staticGeoPosition.firstWhere((p) => p?.id == id, orElse: () => null) !=
+    //         null,
+    //     "no static geo points has been found,you should create it before!");
     await osmPlatform.staticPosition(_idMap, geoPoints, id);
   }
 

@@ -39,8 +39,7 @@ class OSMFlutter extends StatefulWidget {
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
-  @Deprecated("this deprecated use MarkerOption,\nit will be delete in 0.8.0")
-  final MarkerIcon? markerIcon;
+
   final MarkerOption? markerOption;
   final Road? road;
   final double defaultZoom;
@@ -56,7 +55,6 @@ class OSMFlutter extends StatefulWidget {
     this.trackMyPosition = false,
     this.showZoomController = false,
     this.staticPoints = const [],
-    this.markerIcon,
     this.markerOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
@@ -245,14 +243,10 @@ class OSMFlutterState extends State<OSMFlutter> {
               );
             },
           ),
-          if ((widget.markerOption?.defaultMarker != null) ||
-              (widget.markerIcon != null)) ...[
+          if ((widget.markerOption?.defaultMarker != null)) ...[
             RepaintBoundary(
               key: defaultMarkerKey,
-              child: widget.markerOption
-                      ?.copyWith(defaultMarker: widget.markerIcon)
-                      .defaultMarker ??
-                  widget.markerIcon,
+              child: widget.markerOption!.defaultMarker! ,
             ),
           ],
           if (widget.markerOption?.advancedPickerMarker != null) ...[
