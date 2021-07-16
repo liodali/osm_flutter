@@ -203,12 +203,16 @@ class FlutterOsmView(
             it.isVerticalMapRepetitionEnabled = false
             it.isHorizontalMapRepetitionEnabled = false
             it.setScrollableAreaLimitDouble(BoundingBox(85.0, 180.0, -85.0, -180.0))
-            it.setScrollableAreaLimitLatitude(MapView.getTileSystem().maxLatitude, MapView.getTileSystem().minLatitude, 0);
+            it.setScrollableAreaLimitLatitude(
+                MapView.getTileSystem().maxLatitude,
+                MapView.getTileSystem().minLatitude,
+                0
+            );
             it.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
             //
             it.minZoomLevel = 2.0
             it.controller.setZoom(2.0)
-            it.controller.setCenter(GeoPoint(0.0,0.0))
+            it.controller.setCenter(GeoPoint(0.0, 0.0))
         }
 
         map!!.addMapListener(object : MapListener {
@@ -1164,8 +1168,10 @@ class FlutterOsmView(
                 methodChannel.invokeMethod("receiveGeoPoint", hashMap)
                 true
             }
-            if (staticMarkerIcon.isNotEmpty()) {
+            if (staticMarkerIcon.isNotEmpty() && staticMarkerIcon.containsKey(idStaticPosition)) {
                 marker.setIconMaker(null, staticMarkerIcon[idStaticPosition])
+            } else {
+                marker.setIconMaker(null, null)
             }
             overlay.add(marker)
         }
