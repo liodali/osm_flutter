@@ -240,16 +240,18 @@ await controller.drawRoadManually(
 
 <b>15) Change static GeoPoint position </b>
 
-> you can use it if you don't have at first static position and you need to add  staticPoints with empty list of geoPoints
-> you can use it to change their position over time
+> add new staticPoints with empty list of geoPoints (notice: if you add static point without marker,they will get default maker used by plugin)
+
+> change their position over time
 
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
 <b>16) Change/Add Marker old/new static GeoPoint position </b>
 
-> you can use it if you don't have at first static position
-> you can use it to change their marker over time
+> add marker of new static point
+
+> change their marker of existing static geoPoint over time
 
 ```dart
  await controller.setMarkerOfStaticPoint(String id,MarkerIcon markerIcon );
