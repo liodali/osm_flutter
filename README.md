@@ -64,12 +64,14 @@ Add the following to your `pubspec.yaml` file:
                 ),
                 roadColor: Colors.yellowAccent,
         ),
-        markerIcon: MarkerIcon(
-        icon: Icon(
-          Icons.person_pin_circle,
-          color: Colors.blue,
-          size: 56,
-          ),
+        markerOption: MarkerOption(
+            markerIcon: MarkerIcon(
+                icon: Icon(
+                  Icons.person_pin_circle,
+                  color: Colors.blue,
+                  size: 56,
+                  ),
+                )
         ),
     );
 
