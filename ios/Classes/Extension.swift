@@ -81,6 +81,16 @@ extension Array where Element == Int {
         UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
     }
 }
+extension CLLocationCoordinate2D: Equatable {
+    static public func ==(lhs: Self, rhs: Self) -> Bool {
+         lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+    }
+}
+extension CLLocationCoordinate2D {
+    func toGeoPoint() -> GeoPoint {
+         ["lat":latitude,"lon":longitude]
+    }
+}
 
 extension UIColor {
 
