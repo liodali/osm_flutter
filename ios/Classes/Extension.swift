@@ -58,7 +58,7 @@ extension StaticGeoPMarker {
         annotation.marker?.stylingString = annotation.styleMarker
         annotation.marker?.point = annotation.coordinate
 
-        annotation.marker?.visible = true
+        annotation.marker?.visible = false
         return annotation
 
     }
