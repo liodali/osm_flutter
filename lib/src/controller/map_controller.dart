@@ -1,7 +1,5 @@
 part of osm_flutter;
 
-
-
 /// class [MapController] : map controller that will control map by select position,enable current location,
 /// draw road , show static geoPoint,
 ///

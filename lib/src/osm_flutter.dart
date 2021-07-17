@@ -39,12 +39,10 @@ class OSMFlutter extends StatefulWidget {
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
-
   final MarkerOption? markerOption;
   final Road? road;
   final double defaultZoom;
   final bool showDefaultInfoWindow;
-  final bool useSecureURL;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
 
@@ -61,7 +59,6 @@ class OSMFlutter extends StatefulWidget {
     this.road,
     this.defaultZoom = 1.0,
     this.showDefaultInfoWindow = false,
-    this.useSecureURL = true,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
   }) : super(key: key);
@@ -246,7 +243,7 @@ class OSMFlutterState extends State<OSMFlutter> {
           if ((widget.markerOption?.defaultMarker != null)) ...[
             RepaintBoundary(
               key: defaultMarkerKey,
-              child: widget.markerOption!.defaultMarker! ,
+              child: widget.markerOption!.defaultMarker!,
             ),
           ],
           if (widget.markerOption?.advancedPickerMarker != null) ...[

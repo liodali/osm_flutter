@@ -5,7 +5,7 @@ class MarkerOption {
   final MarkerIcon? advancedPickerMarker;
 
   MarkerOption({
-     this.defaultMarker,
+    this.defaultMarker,
     this.advancedPickerMarker,
   });
   MarkerOption copyWith({
