@@ -138,11 +138,12 @@ class OSMController {
       if (p == null && initWithUserPosition) {
         try {
           p = await osmPlatform.myLocation(_idMap);
+          await osmPlatform.initMap(_idMap, p);
         } catch (e) {
           p = (await Location().getLocation()).toGeoPoint();
         }
       }
-      await osmPlatform.addPosition(_idMap, p!);
+      await osmPlatform.goToPosition(_idMap, p!);
       await osmPlatform.advancedPositionPicker(_idMap);
     }
   }
