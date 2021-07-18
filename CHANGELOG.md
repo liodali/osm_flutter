@@ -1,3 +1,5 @@
+## 0.8.1+2 (without ios support)
+* fix zoom init map in customPickerLocation
 ## 0.8.1+1 (without ios support)
 * remove unused attribute
 ## 0.8.1 (without ios support)
