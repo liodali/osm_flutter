@@ -88,8 +88,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
             let sceneUpdates = [TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
             let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
-
+           //var sceneUrl = URL(string: "https://download1490.mediafire.com/79k6g435fjgg/7wmbaskfom9undp/osm-style.zip")
             mapView.loadSceneAsync(from: sceneUrl, with: sceneUpdates)
+
             //channel.invokeMethod("map#init", arguments: true)
             result(200)
             break
@@ -111,6 +112,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             retrieveLastUserLocation = true
             resultFlutter = result
             locationManager.requestLocation()
+            break;
+        case "goto#position":
+            goToSpecificLocation(call: call, result: result)
             break;
         case "user#pickPosition":
             //let frameV = UIView()
@@ -181,12 +185,15 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             break;
         case "cancel#advanced#selection":
             cancelAdvancedPickerMarker()
+            result(200)
             break;
         default:
             result(nil)
             break;
         }
     }
+
+
 
 
     public func view() -> UIView {
@@ -210,7 +217,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         // mapView.cameraPosition = TGCameraPosition(center: location, zoom: CGFloat(11), bearing: 0, pitch: 0)
 
         mapView.fly(to: TGCameraPosition(center: location, zoom: 10.0, bearing: 0, pitch: 0),
-                withSpeed: 15.0) { finish in
+                withDuration: 0.2) { finish in
             self.channel.invokeMethod("map#init", arguments: true)
             // let marker = self.mapView.markerAdd()
             //self.mapView.markerRemove(marker)
@@ -239,7 +246,14 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
         //result(200)
     }
+    private func goToSpecificLocation(call: FlutterMethodCall, result: FlutterResult) {
+        let point = call.arguments as! GeoPoint
+        mapView.fly(to: TGCameraPosition(center: point.toLocationCoordinate(), zoom: mapView.zoom, bearing: 0, pitch: 0),
+                withSpeed: 15.0)
 
+        result(200)
+
+    }
 
     private func currentUserLocation() {
         locationManager.requestLocation()
@@ -356,7 +370,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     homeMarker = nil
                 }
                 let marker = mapView.markerAdd()
-                marker.icon = markerIcon!
+                if(markerIcon != nil){
+                    marker.icon = markerIcon!
+                }
+
                 marker.point = coordinate
                 marker.visible = true
                 marker.stylingString = "{ style: points, interactive: false,color: white, order: 5000, collide: false }"
@@ -527,13 +544,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             geoP.setupMarker(for: geoP, on: view)
             resultFlutter!(geoP.toMap())
             methodCall = nil
+        }else{
+            let point = mapView.coordinate(fromViewPosition: location)
+            channel.invokeMethod("receiveSinglePress", arguments: ["lat":point.latitude,"lon":point.longitude])
         }
     }
 
     public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
                         didRecognizeLongPressGesture location: CGPoint) {
         let point = mapView.coordinate(fromViewPosition: location)
-        //channel.invokeMethod("", arguments: ["lat":point.latitude,"lon":point.longitude])
+        channel.invokeMethod("receiveLongPress", arguments: ["lat":point.latitude,"lon":point.longitude])
 
     }
 
