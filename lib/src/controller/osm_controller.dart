@@ -129,13 +129,13 @@ class OSMController {
 
     /// picker config
     if (_osmFlutterState.widget.isPicker) {
-      bool granted = await _osmFlutterState.requestPermission();
-      if (!granted) {
-        throw Exception("you should open gps to get current position");
-      }
-      await _osmFlutterState.checkService();
       GeoPoint? p = _osmFlutterState.widget.controller.initPosition;
       if (p == null && initWithUserPosition) {
+        bool granted = await _osmFlutterState.requestPermission();
+        if (!granted) {
+          throw Exception("you should open gps to get current position");
+        }
+        await _osmFlutterState.checkService();
         try {
           p = await osmPlatform.myLocation(_idMap);
           await osmPlatform.initMap(_idMap, p);

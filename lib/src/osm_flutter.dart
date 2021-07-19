@@ -163,29 +163,33 @@ class OSMFlutterState extends State<OSMFlutter> {
       clipBehavior: Clip.none,
       children: <Widget>[
         widgetConfigMap(),
-        if (widget.mapIsLoading != null) ...[
-          ValueListenableBuilder<bool>(
-            valueListenable: mapIsReadyListener,
-            builder: (ctx, isReady, _) {
-              return Opacity(
-                opacity: isReady ? 1.0 : 0.0,
-                child: widgetMap,
-              );
-            },
-          ),
-          ValueListenableBuilder<bool>(
-            valueListenable: mapIsReadyListener,
-            builder: (ctx, isReady, child) {
-              return Visibility(
-                visible: !isReady,
-                child: child!,
-              );
-            },
-            child: widget.mapIsLoading!,
-          ),
-        ] else ...[
-          widgetMap
-        ],
+        Container(
+          color: Colors.white,
+          child: widget.mapIsLoading != null?Stack(
+            children: [
+              ValueListenableBuilder<bool>(
+                valueListenable: mapIsReadyListener,
+                builder: (ctx, isReady, _) {
+                  return Opacity(
+                    opacity: isReady ? 1.0 : 0.0,
+                    child: widgetMap,
+                  );
+                },
+              ),
+              ValueListenableBuilder<bool>(
+                valueListenable: mapIsReadyListener,
+                builder: (ctx, isReady, child) {
+                  return Visibility(
+                    visible: !isReady,
+                    child: child!,
+                  );
+                },
+                child: widget.mapIsLoading!,
+              ),
+            ],
+          ):widgetMap,
+        ),
+
         if (widget.showContributorBadgeForOSM) ...[
           Positioned(
             bottom: 0,
@@ -222,7 +226,7 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   Widget widgetConfigMap() {
     return Positioned(
-      top: -100,
+      top: 0,
       bottom: 0,
       left: 0,
       right: 0,
