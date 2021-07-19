@@ -210,6 +210,8 @@ class MethodChannelOSM extends OSMPlatform {
       "id": id,
       "bitmap": icon,
     };
+
+    ///TODO check color is still need it in ios side or not
     if (Platform.isIOS && colorIcon != null) {
       args.addAll(colorIcon.toMap("color"));
       args["bitmap"] = icon.convertToString();

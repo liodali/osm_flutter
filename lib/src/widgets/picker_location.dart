@@ -60,7 +60,9 @@ Future<GeoPoint?> showSimplePickerLocation({
           ),
           ElevatedButton(
             onPressed: () async {
-              final p = await controller.selectAdvancedPositionPicker();
+              final p =
+                  await controller.getCurrentPositionAdvancedPositionPicker();
+              await controller.cancelAdvancedPositionPicker();
               Navigator.pop(ctx, p);
             },
             child: Text(

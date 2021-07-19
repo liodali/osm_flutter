@@ -1,11 +1,5 @@
 part of osm_flutter;
 
-// import 'package:flutter/material.dart';
-// import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-// import 'package:flutter_osm_plugin/src/controller/osm_controller.dart';
-//
-// import 'base_map_controller.dart';
-
 /// class [MapController] : map controller that will control map by select position,enable current location,
 /// draw road , show static geoPoint,
 ///
@@ -77,6 +71,17 @@ class MapController extends BaseMapController {
   ///  [id] : String of that list of static geoPoint
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
     await _osmController.setStaticPosition(geoPoints, id);
+  }
+
+  ///change  Marker of specific static points
+  /// we need to global key to recuperate widget from tree element
+  /// [id] : (String) id  of the static group geopoint
+  /// [markerIcon] : (MarkerIcon) new marker that will set to the static group geopoint
+  Future<void> setMarkerOfStaticPoint({
+    required String id,
+    required MarkerIcon markerIcon,
+  }) async {
+    await _osmController.setIconStaticPositions(id, markerIcon);
   }
 
   /// zoom in/out

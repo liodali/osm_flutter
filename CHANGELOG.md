@@ -6,6 +6,16 @@
 * add draw road manually for dev that they have they own routing api 
 ## 0.9.0-alpha.0 :
 * support drawRoad in iOS
+## 0.8.1+3 (without ios support)
+* optimize draw marker before send it to native view in OSMFlutter widget
+* replace `selectAdvancedPositionPicker` to get select position with  `getCurrentPositionAdvancedPositionPicker` for ios purpose
+## 0.8.1+2 (without ios support)
+* fix zoom init map in customPickerLocation
+## 0.8.1+1 (without ios support)
+* remove unused attribute
+## 0.8.1 (without ios support)
+* add new method `setMarkerOfStaticPoint` to set marker of group of geoPoint
+* remove deprecated attribute `markerIcon` that replaced with `markerOption`
 ## 0.8.0 (without ios support)
 * add new attribute `mapIsLoading` to show custom widget before map has been initialized
 * remove show marker in init location

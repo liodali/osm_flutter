@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.8.0-orange)
+![pub](https://img.shields.io/badge/pub-v0.8.1%2B3-orange)
 
 ![pub](https://img.shields.io/badge/pub-v0.11.0--alpha.0-yellow) 
 
@@ -37,7 +37,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.8.0
+      flutter_osm_plugin: ^0.8.1+2
 
       
 * alpha version (iOS support)
@@ -64,12 +64,14 @@ Add the following to your `pubspec.yaml` file:
                 ),
                 roadColor: Colors.yellowAccent,
         ),
-        markerIcon: MarkerIcon(
-        icon: Icon(
-          Icons.person_pin_circle,
-          color: Colors.blue,
-          size: 56,
-          ),
+        markerOption: MarkerOption(
+            markerIcon: MarkerIcon(
+                icon: Icon(
+                  Icons.person_pin_circle,
+                  color: Colors.blue,
+                  size: 56,
+                  ),
+                )
         ),
     );
 
@@ -238,20 +240,30 @@ await controller.drawRoadManually(
 
 <b>15) Change static GeoPoint position </b>
 
-> you can use it if you don't have at first static position and you need to add  staticPoints with empty list of geoPoints
-> you can use it to change their position over time
+> add new staticPoints with empty list of geoPoints (notice: if you add static point without marker,they will get default maker used by plugin)
+
+> change their position over time
 
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
+<b>16) Change/Add Marker old/new static GeoPoint position </b>
 
-<b>16) change orientation of the map</b>
+> add marker of new static point
+
+> change their marker of existing static geoPoint over time
+
+```dart
+ await controller.setMarkerOfStaticPoint(String id,MarkerIcon markerIcon );
+```
+
+<b>17) change orientation of the map</b>
 
 ```dart
  await controller.rotateMapCamera(degree);
 ```
 
-<b>17) Draw Shape in the map </b>
+<b>18) Draw Shape in the map </b>
 
 * Circle
 ```dart

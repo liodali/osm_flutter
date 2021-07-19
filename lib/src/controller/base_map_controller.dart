@@ -9,12 +9,10 @@ import 'osm_controller.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:location/location.dart';
 
-import '../controller/base_map_controller.dart';
 import '../controller/osm_controller.dart';
 import '../types/types.dart';
 import '../widgets/copyright_osm_widget.dart';
