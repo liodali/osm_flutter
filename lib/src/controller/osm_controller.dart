@@ -90,6 +90,18 @@ class OSMController {
     if (_osmFlutterState.widget.markerOption?.advancedPickerMarker != null) {
       await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker);
     }
+    if (Platform.isIOS &&
+        _osmFlutterState.widget.markerOption?.advancedPickerMarker == null) {
+      _osmFlutterState.dynamicMarkerWidgetNotifier.value = Icon(
+        Icons.location_on,
+        color: Colors.red,
+        size: 32,
+      );
+      await Future.delayed(Duration(milliseconds: 250), () async {
+        _osmFlutterState.dynamicMarkerWidgetNotifier.value = null;
+        await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
+      });
+    }
 
     /// init location in map
     if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
