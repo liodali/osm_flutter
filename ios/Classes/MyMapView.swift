@@ -274,10 +274,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func zoomMap(_ level: Double) {
         if (level > 0) {
             let cameraPos = TGCameraPosition(center: mapView.position, zoom: mapView.zoom + CGFloat(abs(level)), bearing: 0, pitch: 0)!
-            mapView.fly(to: cameraPos, ,withDuration:0.2)
+            mapView.fly(to: cameraPos, withDuration:0.2)
         } else {
             let cameraPos = TGCameraPosition(center: mapView.position, zoom: mapView.zoom - CGFloat(abs(level)), bearing: 0, pitch: 0)!
-            mapView.fly(to: cameraPos, ,withDuration:0.2)
+            mapView.fly(to: cameraPos, withDuration:0.2)
 
         }
     }
