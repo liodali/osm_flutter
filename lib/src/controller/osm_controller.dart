@@ -40,6 +40,11 @@ class OSMController{
     GeoPoint? initPosition,
     bool initWithUserPosition = false,
   }) async {
+    /// load config map scene for iOS
+    if (Platform.isIOS) {
+      await osmPlatform.initIosMap(_idMap);
+    }
+
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
 
     if (_osmFlutterState.widget.showDefaultInfoWindow == true) {
@@ -58,6 +63,9 @@ class OSMController{
       _osmFlutterState.widget.controller.listenerMapSingleTapping.value =
           event.value;
     });
+    osmPlatform.onMapIsReady(_idMap).listen((event) async {
+      _osmFlutterState.mapIsReadyListener.value = event.value;
+    });
 
     if (_osmFlutterState.widget.onGeoPointClicked != null) {
       osmPlatform.onGeoPointClickListener(_idMap).listen((event) {
@@ -72,14 +80,9 @@ class OSMController{
           print(err);
         });*/
     }
-    if (Platform.isIOS) {
-      await osmPlatform.initIosMap(_idMap);
-    }
 
     /// change default icon  marker
-    final defaultIcon = _osmFlutterState.widget.markerOption
-            ?.copyWith(defaultMarker: _osmFlutterState.widget.markerIcon) ??
-        _osmFlutterState.widget.markerIcon;
+    final defaultIcon = _osmFlutterState.widget.markerOption?.defaultMarker;
 
     if (defaultIcon != null) {
       await changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
@@ -89,12 +92,29 @@ class OSMController{
     if (_osmFlutterState.widget.markerOption?.advancedPickerMarker != null) {
       await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker);
     }
+    if (Platform.isIOS &&
+        _osmFlutterState.widget.markerOption?.advancedPickerMarker == null) {
+      _osmFlutterState.dynamicMarkerWidgetNotifier.value = Icon(
+        Icons.location_on,
+        color: Colors.red,
+        size: 32,
+      );
+      await Future.delayed(Duration(milliseconds: 250), () async {
+        _osmFlutterState.dynamicMarkerWidgetNotifier.value = null;
+        await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
+      });
+    }
 
     /// init location in map
     if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
       initPosition = await myLocation();
     }
-    if (initPosition != null) await changeLocation(initPosition);
+    if (initPosition != null) {
+      await osmPlatform.initMap(
+        _idMap,
+        initPosition,
+      );
+    }
 
     /// draw static position
     if (_osmFlutterState.widget.staticPoints.isNotEmpty) {
@@ -106,7 +126,6 @@ class OSMController{
             _idMap,
             _osmFlutterState.staticMarkersKeys[points.id],
             points.id,
-            colorIcon: points.markerIcon?.icon?.color ?? null,
           );
         }
         if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {
@@ -118,35 +137,25 @@ class OSMController{
 
     /// road configuration
     if (_osmFlutterState.widget.road != null) {
-      await showDialog(
-          context: _osmFlutterState.context,
-          barrierDismissible: false,
-          builder: (ctx) {
-            return JobAlertDialog(
-              callback: () async {
-                await _initializeRoadInformation();
-                Navigator.pop(ctx);
-              },
-            );
-          });
+      Future.microtask(() => _initializeRoadInformation());
     }
 
     /// picker config
     if (_osmFlutterState.widget.isPicker) {
-      bool granted = await _osmFlutterState.requestPermission();
-      if (!granted) {
-        throw Exception("you should open gps to get current position");
-      }
-      await _osmFlutterState.checkService();
       GeoPoint? p = _osmFlutterState.widget.controller.initPosition;
       if (p == null && initWithUserPosition) {
+        bool granted = await _osmFlutterState.requestPermission();
+        if (!granted) {
+          throw Exception("you should open gps to get current position");
+        }
+        await _osmFlutterState.checkService();
         try {
           p = await osmPlatform.myLocation(_idMap);
+          await osmPlatform.initMap(_idMap, p);
         } catch (e) {
           p = (await Location().getLocation()).toGeoPoint();
         }
       }
-      await osmPlatform.addPosition(_idMap, p!);
       await osmPlatform.advancedPositionPicker(_idMap);
     }
   }
@@ -186,6 +195,30 @@ class OSMController{
     await osmPlatform.customMarker(_idMap, key);
   }
 
+  ///change  Marker of specific static points
+  /// we need to global key to recuperate widget from tree element
+  /// [id] : (String) id  of the static group geopoint
+  /// [markerIcon] : (MarkerIcon) new marker that will set to the static group geopoint
+  Future<void> setIconStaticPositions(
+    String id,
+    MarkerIcon markerIcon,
+  ) async {
+    if (markerIcon.icon != null) {
+      _osmFlutterState.dynamicMarkerWidgetNotifier.value = markerIcon.icon;
+    } else if (markerIcon.image != null) {
+      _osmFlutterState.dynamicMarkerWidgetNotifier.value = Image(
+        image: markerIcon.image!,
+      );
+    }
+    await Future.delayed(Duration(milliseconds: 300), () async {
+      await osmPlatform.customMarkerStaticPosition(
+        _idMap,
+        _osmFlutterState.dynamicMarkerKey,
+        id,
+      );
+    });
+  }
+
   ///change Icon  of advanced picker Marker
   /// we need to global key to recuperate widget from tree element
   /// [key] : (GlobalKey) key of widget that represent the new marker
@@ -197,12 +230,12 @@ class OSMController{
   ///  [geoPoints] : list of static geoPoint
   ///  [id] : String of that list of static geoPoint
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
-    List<StaticPositionGeoPoint?> staticGeoPosition =
-        _osmFlutterState.widget.staticPoints;
-    assert(
-        staticGeoPosition.firstWhere((p) => p?.id == id, orElse: () => null) !=
-            null,
-        "no static geo points has been found,you should create it before!");
+    // List<StaticPositionGeoPoint?> staticGeoPosition =
+    //     _osmFlutterState.widget.staticPoints;
+    // assert(
+    //     staticGeoPosition.firstWhere((p) => p?.id == id, orElse: () => null) !=
+    //         null,
+    //     "no static geo points has been found,you should create it before!");
     await osmPlatform.staticPosition(_idMap, geoPoints, id);
   }
 

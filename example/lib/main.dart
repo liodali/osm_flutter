@@ -77,8 +77,12 @@ class _MainExampleState extends State<MainExample> {
       await controller.zoomIn();
     });
     Future.delayed(Duration(seconds: 15), () async {
-      await controller
-          .changeLocation(GeoPoint(latitude: 47.433358, longitude: 8.4690184));
+      await controller.changeLocation(
+        GeoPoint(
+          latitude: 47.433358,
+          longitude: 8.4690184,
+        ),
+      );
     });
 
     Future.delayed(Duration(seconds: 10), () async {
@@ -92,6 +96,22 @@ class _MainExampleState extends State<MainExample> {
         waysPoint,
         Colors.purpleAccent,
         6.0,
+      );
+      await controller.setMarkerOfStaticPoint(
+        id: "line 2",
+        markerIcon: MarkerIcon(
+          icon: Icon(
+            Icons.train,
+            color: Colors.red,
+            size: 48,
+          ),
+        ),
+      );
+      await controller.setStaticPosition(
+        [
+          GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
+        ],
+        "line 2",
       );
     });
   }
@@ -109,6 +129,21 @@ class _MainExampleState extends State<MainExample> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('OSM'),
+        leading: ValueListenableBuilder<bool>(
+          valueListenable: advPickerNotifierActivation,
+          builder: (ctx, isAdvancedPicker, _) {
+            if (isAdvancedPicker) {
+              return IconButton(
+                onPressed: () {
+                  advPickerNotifierActivation.value = false;
+                  controller.cancelAdvancedPositionPicker();
+                },
+                icon: Icon(Icons.close),
+              );
+            }
+            return SizedBox.shrink();
+          },
+        ),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.info),
@@ -191,6 +226,17 @@ class _MainExampleState extends State<MainExample> {
               children: [
                 OSMFlutter(
                   controller: controller,
+                  mapIsLoading: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        Text("Map is Loading..")
+                      ],
+                    ),
+                  ),
                   showContributorBadgeForOSM: true,
                   //trackMyPosition: trackingNotifier.value,
                   showDefaultInfoWindow: false,
@@ -227,20 +273,20 @@ class _MainExampleState extends State<MainExample> {
                         GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
                       ],
                     ),
-                    StaticPositionGeoPoint(
-                      "line 2",
-                      MarkerIcon(
-                        icon: Icon(
-                          Icons.train,
-                          color: Colors.red,
-                          size: 48,
-                        ),
-                      ),
-                      [
-                        GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
-                        GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
-                      ],
-                    )
+                    // StaticPositionGeoPoint(
+                    //   "line 2",
+                    //   MarkerIcon(
+                    //     icon: Icon(
+                    //       Icons.train,
+                    //       color: Colors.red,
+                    //       size: 48,
+                    //     ),
+                    //   ),
+                    //   [
+                    //     GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
+                    //     GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
+                    //   ],
+                    // )
                   ],
                   road: Road(
                     startIcon: MarkerIcon(

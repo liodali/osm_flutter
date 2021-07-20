@@ -32,6 +32,5 @@ class MarkerView: MKMarkerAnnotationView {
 
 struct StaticMarkerData {
     let image: UIImage
-    let color: UIColor
 }
 

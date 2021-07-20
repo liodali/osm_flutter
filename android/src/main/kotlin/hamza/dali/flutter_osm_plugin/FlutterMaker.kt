@@ -56,7 +56,7 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
         this.setOnMarkerClickListener { marker, map ->
             onMarkerClick(marker, map)
         }
-        creatWindowInfoView()
+        createWindowInfoView()
         setInfoWindow(FlutterInfoWindow(infoView = infoWindow!!, mapView = mapView, point = mPosition))
     }
 
@@ -86,7 +86,7 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
     fun defaultInfoWindow() {
 
         setInfoWindow(FlutterInfoWindow(infoView = infoWindow
-                ?: creatWindowInfoView(), mapView = mapView, point = this.mPosition))
+                ?: createWindowInfoView(), mapView = mapView, point = this.mPosition))
     }
 
 
@@ -108,7 +108,7 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
 
     }
 
-    private fun creatWindowInfoView(): View {
+    private fun createWindowInfoView(): View {
         val inflater = application.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         infoWindow = inflater.inflate(R.layout.infowindow, null)
         return infoWindow!!

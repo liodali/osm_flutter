@@ -10,6 +10,8 @@ typedef OnLocationChanged = void Function(GeoPoint);
 ///
 /// [trackMyPosition] : (bool) if is true, map will track your location
 ///
+/// [mapIsLoading]   :(Widget) show custom  widget when the map finish initialization
+///
 /// [showZoomController] : (bool) if us true, you can zoomIn zoomOut directly in the map
 ///
 /// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
@@ -19,6 +21,7 @@ typedef OnLocationChanged = void Function(GeoPoint);
 /// [onLocationChanged] : (callback) it's hire when you activate tracking and  user position has been changed
 ///
 /// [markerIcon] : (Icon/AssertImage) marker of geoPoint
+///
 /// [markerOption] :  contain marker of geoPoint and customisation of advanced picker marker
 ///
 /// [road] : set color and icons marker of road
@@ -32,33 +35,30 @@ class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
   final bool trackMyPosition;
   final bool showZoomController;
+  final Widget? mapIsLoading;
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
-  @Deprecated("this deprecated use MarkerOption,\nit will be delete in 0.8.0")
-  final MarkerIcon? markerIcon;
   final MarkerOption? markerOption;
   final Road? road;
   final double defaultZoom;
   final bool showDefaultInfoWindow;
-  final bool useSecureURL;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
 
   OSMFlutter({
     Key? key,
     required this.controller,
+    this.mapIsLoading,
     this.trackMyPosition = false,
     this.showZoomController = false,
     this.staticPoints = const [],
-    this.markerIcon,
     this.markerOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
     this.road,
     this.defaultZoom = 1.0,
     this.showDefaultInfoWindow = false,
-    this.useSecureURL = true,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
   }) : super(key: key);
@@ -71,6 +71,7 @@ class OSMFlutterState extends State<OSMFlutter> {
   GlobalKey androidViewKey = GlobalKey();
   OSMController? _osmController;
   ValueNotifier<Widget?> dynamicMarkerWidgetNotifier = ValueNotifier(null);
+  ValueNotifier<bool> mapIsReadyListener = ValueNotifier(false);
 
   //permission status
   PermissionStatus? _permission;
@@ -164,13 +165,41 @@ class OSMFlutterState extends State<OSMFlutter> {
       clipBehavior: Clip.none,
       children: <Widget>[
         widgetConfigMap(),
-        widgetMap,
-        if (widget.showContributorBadgeForOSM)
+        Container(
+          color: Colors.white,
+          child: widget.mapIsLoading != null
+              ? Stack(
+                  children: [
+                    ValueListenableBuilder<bool>(
+                      valueListenable: mapIsReadyListener,
+                      builder: (ctx, isReady, _) {
+                        return Opacity(
+                          opacity: isReady ? 1.0 : 0.0,
+                          child: widgetMap,
+                        );
+                      },
+                    ),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: mapIsReadyListener,
+                      builder: (ctx, isReady, child) {
+                        return Visibility(
+                          visible: !isReady,
+                          child: child!,
+                        );
+                      },
+                      child: widget.mapIsLoading!,
+                    ),
+                  ],
+                )
+              : widgetMap,
+        ),
+        if (widget.showContributorBadgeForOSM) ...[
           Positioned(
             bottom: 0,
             right: 5,
             child: CopyrightOSMWidget(),
-          )
+          ),
+        ],
       ],
     );
   }
@@ -200,7 +229,7 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   Widget widgetConfigMap() {
     return Positioned(
-      top: -100,
+      top: 0,
       bottom: 0,
       left: 0,
       right: 0,
@@ -218,14 +247,10 @@ class OSMFlutterState extends State<OSMFlutter> {
               );
             },
           ),
-          if ((widget.markerOption?.defaultMarker != null) ||
-              (widget.markerIcon != null)) ...[
+          if ((widget.markerOption?.defaultMarker != null)) ...[
             RepaintBoundary(
               key: defaultMarkerKey,
-              child: widget.markerOption
-                      ?.copyWith(defaultMarker: widget.markerIcon)
-                      .defaultMarker ??
-                  widget.markerIcon,
+              child: widget.markerOption!.defaultMarker!,
             ),
           ],
           if (widget.markerOption?.advancedPickerMarker != null) ...[

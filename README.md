@@ -1,36 +1,32 @@
 # flutter_osm_plugin
+![pub](https://img.shields.io/badge/pub-v0.8.1%2B3-orange)
 
-![pub](https://img.shields.io/badge/pub-v0.7.10-orange)
-
-![pub](https://img.shields.io/badge/pub-v0.10.1--alpha.0-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.11.0--beta.0-yellow) 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported (not stable yet) :  0.10.1-alpha  | will be available soon |
-
+| supported :heavy_check_mark: | supported (not stable yet) :  0.11.0-beta  | under-development |
 
 
 <b>osm plugin for flutter apps </b>
 
-* current position (Android)
-* change position (Android)
+* current position (Android/iOS)
+* change position (Android/iOS)
 * tracking user location (Android/iOS)
 * customize Icon Marker (Android/iOS)
-* assisted selection position (Android)
+* assisted selection position (Android/iOS)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
-* draw Road manually (Android/iOS) (available in alpha version)
-* ClickListener on Marker (Android)
-* ClickListener on Map (Android)
+* draw Road manually (Android/iOS)
+* ClickListener on Marker (Android/iOS)
+* ClickListener on Map (Android/iOS)
 * calculate distance between 2 points 
 * address suggestion
-* draw shapes (Android)
-* simple dialog location picker (Android)
+* draw shapes (Only Android)
+* simple dialog location picker (Android/iOS)
 
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
-<br>
-<img src="https://github.com/liodali/osm_flutter/blob/master/searchExample.gif?raw=true" alt="openStreetMap flutter examples"><br>
 <br>
 <img src="https://github.com/liodali/osm_flutter/blob/master/dialogSimplePickerLocation.gif?raw=true" alt="openStreetMap flutter examples"><br>
 
@@ -39,17 +35,15 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-
-      flutter_osm_plugin: ^0.7.10
+      flutter_osm_plugin: ^0.8.1+3
 
       
-* alpha version (iOS support)
+* beta version (iOS support)
       ```dart
        dependencies:
-                flutter_osm_plugin: ^0.10.1-alpha.0
+                flutter_osm_plugin: ^0.11.0-beta.0
       ```
-
-
+      
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
@@ -68,12 +62,14 @@ Add the following to your `pubspec.yaml` file:
                 ),
                 roadColor: Colors.yellowAccent,
         ),
-        markerIcon: MarkerIcon(
-        icon: Icon(
-          Icons.person_pin_circle,
-          color: Colors.blue,
-          size: 56,
-          ),
+        markerOption: MarkerOption(
+            markerIcon: MarkerIcon(
+                icon: Icon(
+                  Icons.person_pin_circle,
+                  color: Colors.blue,
+                  size: 56,
+                  ),
+                )
         ),
     );
 
@@ -125,6 +121,15 @@ Add the following to your `pubspec.yaml` file:
 ```
 
 <b> 7)  Track user current position </b>
+
+> for iOS,you should add those line in your info.plist file
+```text
+   <key>NSLocationWhenInUseUsageDescription</key>
+	<string>any text you want</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>any text you want</string>
+``` 
+
 
 ```dart
  await controller.enableTracking();
@@ -242,20 +247,30 @@ await controller.drawRoadManually(
 
 <b>15) Change static GeoPoint position </b>
 
-> you can use it if you don't have at first static position and you need to add  staticPoints with empty list of geoPoints
-> you can use it to change their position over time
+> add new staticPoints with empty list of geoPoints (notice: if you add static point without marker,they will get default maker used by plugin)
+
+> change their position over time
 
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
+<b>16) Change/Add Marker old/new static GeoPoint position </b>
 
-<b>16) change orientation of the map</b>
+> add marker of new static point
+
+> change their marker of existing static geoPoint over time
+
+```dart
+ await controller.setMarkerOfStaticPoint(String id,MarkerIcon markerIcon );
+```
+
+<b>17) change orientation of the map</b>
 
 ```dart
  await controller.rotateMapCamera(degree);
 ```
 
-<b>17) Draw Shape in the map </b>
+<b>18) Draw Shape in the map </b>
 
 * Circle
 ```dart
@@ -300,6 +315,7 @@ await controller.drawRoadManually(
 
 | Properties                    | Description                         |
 | ----------------------------- | ----------------------------------- |
+| `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
 | `trackMyPosition`             | enable tracking user position.     |
 | `showZoomController`          | show default zoom controller.       |
 | `markerIcon`                  | set icon Marker  (deprecated replaced with `markerOption` )                   |
@@ -362,7 +378,11 @@ GeoPoint p = await showSimplePickerLocation(
 
 
 ## NOTICE:
-> `For now the map working only for android,iOS will be available soon `
+> `iOS version in beta, will stable soon`
+
+> `minimum requirement in iOS version is 13`
+
+> `web is under-dev,will enter to alpha version soon`
 
 > ` If you get ssl certfiction exception,use can use http by following instruction below `
 

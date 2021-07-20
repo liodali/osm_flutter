@@ -58,7 +58,11 @@ extension StaticGeoPMarker {
         annotation.marker?.stylingString = annotation.styleMarker
         annotation.marker?.point = annotation.coordinate
 
-        annotation.marker?.visible = true
+        var isVisible:Bool = false
+        if map.zoom > 12.0 {
+              isVisible = true
+        }
+        annotation.marker?.visible = isVisible
         return annotation
 
     }
@@ -79,6 +83,16 @@ extension RoadInformation {
 extension Array where Element == Int {
     func toUIColor() -> UIColor {
         UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
+    }
+}
+extension CLLocationCoordinate2D: Equatable {
+    static public func ==(lhs: Self, rhs: Self) -> Bool {
+         lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+    }
+}
+extension CLLocationCoordinate2D {
+    func toGeoPoint() -> GeoPoint {
+         ["lat":latitude,"lon":longitude]
     }
 }
 

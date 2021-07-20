@@ -156,16 +156,22 @@ class RoadManager: PRoadManager {
                         node.distance = (step["distance"] as! Double) / 1000
                         node.duration = step["duration"] as! Double
                         var direction = maneuver["type"] as! String
-                        let modifierDirection = maneuver["modifier"] as! String
+                        var modifierDirection = ""
+                        if(maneuver.contains { k,v in k == "modifier"}){
+                            modifierDirection = maneuver["modifier"] as! String
+                        }
+
                         switch (direction) {
                         case "turn", "ramp", "merge":
-                            direction += "-" + modifierDirection
+                            if(!modifierDirection.isEmpty) {
+                                direction += "-" + modifierDirection
+                            }
                             break;
                         case "roundabout":
-                            direction += "-" + (maneuver["exit"] as! String)
+                            direction += "-" + "\(maneuver["exit"] as! Int)"
                             break;
                         case "rotary":
-                            let exit = maneuver["exit"] as! String
+                            let exit = maneuver["exit"] as! Int
                             direction = "roundabout-\(exit)"
                         default:
                             break

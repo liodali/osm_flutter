@@ -1,9 +1,32 @@
+## 0.11.0-beta.0 :
+* merge stable feature with alpha 
+* remove unnecessary attribute in show static geopoint
+* check zoom when add static geopoint to set visibility of geopoint in the map
+* change `withSpeed` attribute in fly with `withDuration`
+* add remove last road when draw road manually
+## 0.11.0-alpha.0 :
+* merge new api in 0.8.0 in alpha version
 ## 0.10.1-alpha.0 :
 * hide unnecessary api
 ## 0.10.0-alpha.0 :
 * add draw road manually for dev that they have they own routing api 
 ## 0.9.0-alpha.0 :
 * support drawRoad in iOS
+## 0.8.1+3 (without ios support)
+* optimize draw marker before send it to native view in OSMFlutter widget
+* replace `selectAdvancedPositionPicker` to get select position with  `getCurrentPositionAdvancedPositionPicker` for ios purpose
+## 0.8.1+2 (without ios support)
+* fix zoom init map in customPickerLocation
+## 0.8.1+1 (without ios support)
+* remove unused attribute
+## 0.8.1 (without ios support)
+* add new method `setMarkerOfStaticPoint` to set marker of group of geoPoint
+* remove deprecated attribute `markerIcon` that replaced with `markerOption`
+## 0.8.0 (without ios support)
+* add new attribute `mapIsLoading` to show custom widget before map has been initialized
+* remove show marker in init location
+* separate change location from init location
+* add internal listener to notify when map is ready
 ## 0.8.0-alpha.1 :
 * fix set color static marker position
 * fix convert bitmap to string
@@ -12,6 +35,8 @@
   * visualisation of map in ios 
   * support select position (custom marker, not network image will not work) 
   * support track user location
+## 0.7.10+1 :
+* remove show dialog when map config road
 ## 0.7.10 :
 * (#123) fix zoom when changeLocation was called
 * (#123) remove previous marker  when changeLocation was called

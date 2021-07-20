@@ -18,7 +18,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
   s.dependency 'Tangram-es'
   s.dependency 'Alamofire'
   s.dependency 'Polyline'
-  s.platform = :ios, '9.0'
+  s.platform = :ios, '13.0'
 
   # Flutter.framework does not contain a i386 slice. Only x86_64 simulators are supported.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64' }
