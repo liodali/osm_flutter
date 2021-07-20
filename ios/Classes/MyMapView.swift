@@ -235,7 +235,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             homeMarker = nil
         }
         let location = CLLocationCoordinate2D(latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
-        mapView.fly(to: TGCameraPosition(center: location, zoom: mapView.zoom, bearing: 0, pitch: 0), withSpeed: 20.0) { finish in
+        mapView.fly(to: TGCameraPosition(center: location, zoom: mapView.zoom, bearing: 0, pitch: 0), withDuration:0.2) { finish in
             let marker = self.mapView.markerAdd()
             marker.icon = self.markerIcon!
             marker.point = location
@@ -250,7 +250,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func goToSpecificLocation(call: FlutterMethodCall, result: FlutterResult) {
         let point = call.arguments as! GeoPoint
         mapView.fly(to: TGCameraPosition(center: point.toLocationCoordinate(), zoom: mapView.zoom, bearing: 0, pitch: 0),
-                withSpeed: 20.0)
+                 withDuration:0.2)
 
         result(200)
 
@@ -274,10 +274,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func zoomMap(_ level: Double) {
         if (level > 0) {
             let cameraPos = TGCameraPosition(center: mapView.position, zoom: mapView.zoom + CGFloat(abs(level)), bearing: 0, pitch: 0)!
-            mapView.fly(to: cameraPos, withSpeed: 25.0)
+            mapView.fly(to: cameraPos, ,withDuration:0.2)
         } else {
             let cameraPos = TGCameraPosition(center: mapView.position, zoom: mapView.zoom - CGFloat(abs(level)), bearing: 0, pitch: 0)!
-            mapView.fly(to: cameraPos, withSpeed: 25.0)
+            mapView.fly(to: cameraPos, ,withDuration:0.2)
 
         }
     }
@@ -555,7 +555,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
                         shouldRecognizeDoubleTapGesture location: CGPoint) -> Bool {
         let locationMap = view.coordinate(fromViewPosition: location)
-        view.fly(to: TGCameraPosition(center: locationMap, zoom: view.zoom + CGFloat(zoomDefault), bearing: view.bearing, pitch: view.pitch))
+        view.fly(to: TGCameraPosition(center: locationMap, zoom: view.zoom + CGFloat(zoomDefault), bearing: view.bearing, pitch: view.pitch),withDuration:0.2)
         return true
     }
 
