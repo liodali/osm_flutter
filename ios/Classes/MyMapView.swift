@@ -462,6 +462,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         if (args.keys.contains("roadWidth")) {
             roadWidth = "\(args["roadWidth"] as! Double)px"
         }
+        if(roadMarkerPolyline != nil ) {
+            mapView.markerRemove(roadMarkerPolyline!)
+            roadMarkerPolyline = nil
+        }
         var road = Road()
         road.mRouteHigh = roadEncoded
         road.roadData = RoadData(roadColor: roadColor, roadWidth: roadWidth)
