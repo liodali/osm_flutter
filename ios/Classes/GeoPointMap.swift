@@ -57,10 +57,8 @@ class StaticGeoPMarker: GeoPointMap {
 
     init(
             icon: UIImage,
-            color: UIColor?,
             coordinate: CLLocationCoordinate2D
     ) {
-        self.color = color
         super.init(icon: icon, coordinate: coordinate)
 
     }

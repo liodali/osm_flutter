@@ -215,15 +215,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let location = CLLocationCoordinate2D(latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
 
         // mapView.cameraPosition = TGCameraPosition(center: location, zoom: CGFloat(11), bearing: 0, pitch: 0)
-
+        channel.invokeMethod("map#init", arguments: true)
         mapView.fly(to: TGCameraPosition(center: location, zoom: 10.0, bearing: 0, pitch: 0),
-                withDuration: 0.2) { finish in
-            self.channel.invokeMethod("map#init", arguments: true)
+                withDuration: 0.2)
+        /*{ finish in
+            self.
             // let marker = self.mapView.markerAdd()
             //self.mapView.markerRemove(marker)
             result(200)
-        }
-        // result(200)
+        }*/
+        result(200)
     }
 
     private func changePosition(args: Any?, result: @escaping FlutterResult) {
@@ -234,7 +235,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             homeMarker = nil
         }
         let location = CLLocationCoordinate2D(latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
-        mapView.fly(to: TGCameraPosition(center: location, zoom: mapView.zoom, bearing: 0, pitch: 0), withSpeed: CGFloat(5)) { finish in
+        mapView.fly(to: TGCameraPosition(center: location, zoom: mapView.zoom, bearing: 0, pitch: 0), withSpeed: 20.0) { finish in
             let marker = self.mapView.markerAdd()
             marker.icon = self.markerIcon!
             marker.point = location
@@ -249,7 +250,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func goToSpecificLocation(call: FlutterMethodCall, result: FlutterResult) {
         let point = call.arguments as! GeoPoint
         mapView.fly(to: TGCameraPosition(center: point.toLocationCoordinate(), zoom: mapView.zoom, bearing: 0, pitch: 0),
-                withSpeed: 15.0)
+                withSpeed: 20.0)
 
         result(200)
 
@@ -303,10 +304,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
         let id = args["id"] as! String
-        let rgbList: [Int] = (args["color"] as! [Int])
         let icon = convertImage(codeImage: args["bitmap"] as! String)
-        let iconColor = rgbList.toUIColor()//UIColor.init(absoluteRed: rgbList.first!, green: rgbList.last!, blue: rgbList[1])
-        dictIconClusterAnnotation[id] = StaticMarkerData(image: icon!, color: iconColor)
+        dictIconClusterAnnotation[id] = StaticMarkerData(image: icon!)
     }
 
 
@@ -316,17 +315,13 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
 
         let listGeos: [StaticGeoPMarker] = (args["point"] as! [GeoPoint]).map { point -> StaticGeoPMarker in
-            let geo = StaticGeoPMarker(icon: dictIconClusterAnnotation[id]!.image, color: dictIconClusterAnnotation[id]!.color, coordinate: point.toLocationCoordinate())
+            let geo = StaticGeoPMarker(icon: dictIconClusterAnnotation[id]!.image,coordinate: point.toLocationCoordinate())
 
             return geo.addStaticGeosToMapView(for: geo, on: mapView)
         }
 
-        if dictClusterAnnotation.keys.contains(id) {
-            // mapView.removeAnnotations(dictClusterAnnotation[id]!)
-            dictClusterAnnotation[id] = listGeos
-        } else {
-            dictClusterAnnotation[id] = listGeos
-        }
+        dictClusterAnnotation[id] = listGeos
+
 
         // let clusterAnnotation = ClusterMarkerAnnotation(id: id,geos: listGeos)
         //mapView.addAnnotations(listGeos)

@@ -58,7 +58,11 @@ extension StaticGeoPMarker {
         annotation.marker?.stylingString = annotation.styleMarker
         annotation.marker?.point = annotation.coordinate
 
-        annotation.marker?.visible = false
+        var isVisible:Bool = false
+        if map.zoom > 12.0 {
+              isVisible = true
+        }
+        annotation.marker?.visible = isVisible
         return annotation
 
     }
