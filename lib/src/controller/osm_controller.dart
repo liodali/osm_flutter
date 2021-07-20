@@ -40,6 +40,11 @@ class OSMController {
     GeoPoint? initPosition,
     bool initWithUserPosition = false,
   }) async {
+    /// load config map scene for iOS
+    if (Platform.isIOS) {
+      await osmPlatform.initIosMap(_idMap);
+    }
+
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
 
     if (_osmFlutterState.widget.showDefaultInfoWindow == true) {
@@ -75,9 +80,7 @@ class OSMController {
           print(err);
         });*/
     }
-    if (Platform.isIOS) {
-      await osmPlatform.initIosMap(_idMap);
-    }
+
 
     /// change default icon  marker
     final defaultIcon = _osmFlutterState.widget.markerOption?.defaultMarker;
@@ -124,7 +127,6 @@ class OSMController {
             _idMap,
             _osmFlutterState.staticMarkersKeys[points.id],
             points.id,
-            colorIcon: points.markerIcon?.icon?.color ?? null,
           );
         }
         if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {
@@ -155,7 +157,6 @@ class OSMController {
           p = (await Location().getLocation()).toGeoPoint();
         }
       }
-      await osmPlatform.goToPosition(_idMap, p!);
       await osmPlatform.advancedPositionPicker(_idMap);
     }
   }

@@ -202,20 +202,18 @@ class MethodChannelOSM extends OSMPlatform {
   Future<void> customMarkerStaticPosition(
     int idOSM,
     GlobalKey? globalKey,
-    String id, {
-    Color? colorIcon,
-  }) async {
+    String id,
+  ) async {
     Uint8List icon = await _capturePng(globalKey!);
+    String iconIOS = "";
+    if (Platform.isIOS) {
+       iconIOS = icon.convertToString();
+    }
     var args = {
       "id": id,
-      "bitmap": icon,
+      "bitmap": Platform.isIOS ? iconIOS : icon,
     };
 
-    ///TODO check color is still need it in ios side or not
-    if (Platform.isIOS && colorIcon != null) {
-      args.addAll(colorIcon.toMap("color"));
-      args["bitmap"] = icon.convertToString();
-    }
     await _channels[idOSM]!.invokeMethod(
       "staticPosition#IconMarker",
       args,
@@ -251,7 +249,7 @@ class MethodChannelOSM extends OSMPlatform {
         args.addAll(roadOption.roadColor!.toHexMap("roadColor"));
       }
       if (roadOption.roadWidth != null) {
-        args.addAll({"roadWidth": roadOption.roadWidth});
+        args.addAll({"roadWidth": "${roadOption.roadWidth}px"});
       }
     } else {
       if (roadOption.roadColor != null) {
@@ -289,7 +287,7 @@ class MethodChannelOSM extends OSMPlatform {
     Map args = {};
     if (key != null) {
       bitmap = await _capturePng(key);
-      args.addAll({"icon": bitmap});
+      args.addAll({"icon": Platform.isIOS?bitmap.convertToString(): bitmap});
     }
     if (imageURL.isNotEmpty) {
       args.addAll({"imageURL": imageURL});
