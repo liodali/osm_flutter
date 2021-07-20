@@ -165,31 +165,32 @@ class OSMFlutterState extends State<OSMFlutter> {
         widgetConfigMap(),
         Container(
           color: Colors.white,
-          child: widget.mapIsLoading != null?Stack(
-            children: [
-              ValueListenableBuilder<bool>(
-                valueListenable: mapIsReadyListener,
-                builder: (ctx, isReady, _) {
-                  return Opacity(
-                    opacity: isReady ? 1.0 : 0.0,
-                    child: widgetMap,
-                  );
-                },
-              ),
-              ValueListenableBuilder<bool>(
-                valueListenable: mapIsReadyListener,
-                builder: (ctx, isReady, child) {
-                  return Visibility(
-                    visible: !isReady,
-                    child: child!,
-                  );
-                },
-                child: widget.mapIsLoading!,
-              ),
-            ],
-          ):widgetMap,
+          child: widget.mapIsLoading != null
+              ? Stack(
+                  children: [
+                    ValueListenableBuilder<bool>(
+                      valueListenable: mapIsReadyListener,
+                      builder: (ctx, isReady, _) {
+                        return Opacity(
+                          opacity: isReady ? 1.0 : 0.0,
+                          child: widgetMap,
+                        );
+                      },
+                    ),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: mapIsReadyListener,
+                      builder: (ctx, isReady, child) {
+                        return Visibility(
+                          visible: !isReady,
+                          child: child!,
+                        );
+                      },
+                      child: widget.mapIsLoading!,
+                    ),
+                  ],
+                )
+              : widgetMap,
         ),
-
         if (widget.showContributorBadgeForOSM) ...[
           Positioned(
             bottom: 0,

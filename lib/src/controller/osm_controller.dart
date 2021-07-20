@@ -81,7 +81,6 @@ class OSMController {
         });*/
     }
 
-
     /// change default icon  marker
     final defaultIcon = _osmFlutterState.widget.markerOption?.defaultMarker;
 

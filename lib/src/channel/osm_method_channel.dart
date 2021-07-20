@@ -207,7 +207,7 @@ class MethodChannelOSM extends OSMPlatform {
     Uint8List icon = await _capturePng(globalKey!);
     String iconIOS = "";
     if (Platform.isIOS) {
-       iconIOS = icon.convertToString();
+      iconIOS = icon.convertToString();
     }
     var args = {
       "id": id,
@@ -287,7 +287,7 @@ class MethodChannelOSM extends OSMPlatform {
     Map args = {};
     if (key != null) {
       bitmap = await _capturePng(key);
-      args.addAll({"icon": Platform.isIOS?bitmap.convertToString(): bitmap});
+      args.addAll({"icon": Platform.isIOS ? bitmap.convertToString() : bitmap});
     }
     if (imageURL.isNotEmpty) {
       args.addAll({"imageURL": imageURL});
