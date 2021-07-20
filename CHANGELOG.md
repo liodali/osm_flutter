@@ -1,3 +1,9 @@
+## 0.11.0-beta.0 :
+* merge stable feature with alpha 
+* remove unnecessary attribute in show static geopoint
+* check zoom when add static geopoint to set visibility of geopoint in the map
+* change `withSpeed` attribute in fly with `withDuration`
+* add remove last road when draw road manually
 ## 0.11.0-alpha.0 :
 * merge new api in 0.8.0 in alpha version
 ## 0.10.1-alpha.0 :
