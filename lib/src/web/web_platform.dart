@@ -18,6 +18,7 @@ abstract class OsmWebPlatform extends BaseOsmPlatform {
 
 void BindingWebOSM() {
   interop.initMapFinish = allowInterop(initMapFinished);
+
 }
 
 void initMapFinished(bool isReady) {
