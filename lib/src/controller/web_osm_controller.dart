@@ -1,11 +1,13 @@
 part of osm_flutter;
 
-class WebOsmController with ControllerWebMixin{
+class WebOsmController with ControllerWebMixin {
   late int _mapId;
-  late MethodChannel _channel;
+  late MethodChannel? channel;
+  late _OsmWebWidgetState _osmWebFlutterState;
 
-  WebOsmController() {
+  WebOsmController(_OsmWebWidgetState _osmWebFlutterState) {
     _init(OsmWebPlatform.idOsmWeb);
+    this._osmWebFlutterState = _osmWebFlutterState;
   }
 
   void _init(int idMap) {
@@ -24,11 +26,9 @@ class WebOsmController with ControllerWebMixin{
     ui.platformViewRegistry.registerViewFactory(
         FlutterOsmPluginWeb.getViewType(_mapId), (int viewId) => _frame);
 
-    _channel = MethodChannel(FlutterOsmPluginWeb.getViewType(_mapId));
+    channel = MethodChannel(FlutterOsmPluginWeb.getViewType(_mapId));
     //print(_getViewType(_mapId));
   }
-
-
 
   // The Flutter widget that contains the rendered Map.
   HtmlElementView? _widget;
@@ -44,18 +44,57 @@ class WebOsmController with ControllerWebMixin{
     return _widget;
   }
 
-  void dispose() {}
+  void dispose() {
+    channel = null;
+    OsmWebPlatform.instance._mapsController.remove(this);
+  }
 
   Future<void> init({
     GeoPoint? initPosition,
     bool initWithUserPosition = false,
   }) async {
-    if (initPosition != null && !initWithUserPosition) {
-      await addPosition(initPosition);
+    assert(initPosition != null || initWithUserPosition == true);
+
+    OsmWebPlatform.instance
+        .onLongPressMapClickListener(_mapId)
+        .listen((event) {
+      _osmWebFlutterState.widget.controller.listenerMapLongTapping.value =
+          event.value;
+    });
+
+    OsmWebPlatform.instance
+        .onSinglePressMapClickListener(_mapId)
+        .listen((event) {
+      _osmWebFlutterState.widget.controller.listenerMapSingleTapping.value =
+          event.value;
+    });
+    OsmWebPlatform.instance.onMapIsReady(_mapId).listen((event) async {
+      _osmWebFlutterState.widget.mapIsReadyListener.value = event.value;
+    });
+
+    if (_osmWebFlutterState.widget.onGeoPointClicked != null) {
+      OsmWebPlatform.instance
+          .onGeoPointClickListener(_mapId)
+          .listen((event) {
+        _osmWebFlutterState.widget.onGeoPointClicked!(event.value);
+      });
     }
-    if(initWithUserPosition){
-      final myLocation = await currentLocation();
-      await addPosition(myLocation);
+    if (_osmWebFlutterState.widget.onLocationChanged != null) {
+      OsmWebPlatform.instance
+          .onUserPositionListener(_mapId)
+          .listen((event) {
+        _osmWebFlutterState.widget.onLocationChanged!(event.value);
+      });
+      /* this._osmController.myLocationListener(widget.onLocationChanged, (err) {
+          print(err);
+        });*/
     }
+
+    GeoPoint? initLocation = initPosition;
+
+    if (initWithUserPosition) {
+      initLocation = await currentLocation();
+    }
+    await initMap(initLocation!);
   }
 }

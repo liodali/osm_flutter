@@ -1,58 +1,6 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
+part of osm_flutter;
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
-import 'package:location/location.dart';
-import 'package:stream_transform/stream_transform.dart';
 
-import '../../flutter_osm_plugin.dart';
-import '../interface_osm/osm_interface.dart';
-import '../types/geo_point.dart';
-
-abstract class EventOSM<T> {
-  /// The ID of the Map this event is associated to.
-  final int mapId;
-
-  /// The value wrapped by this event
-  final T value;
-
-  /// Build a Map Event, that relates a mapId with a given value.
-  ///
-  /// The `mapId` is the id of the map that triggered the event.
-  /// `value` may be `null` in events that don't transport any meaningful data.
-  EventOSM(this.mapId, this.value);
-}
-
-class MapInitialization extends EventOSM<bool> {
-  MapInitialization(int mapId, bool isMapReady) : super(mapId, isMapReady);
-}
-
-class TapEvent extends EventOSM<GeoPoint> {
-  TapEvent(int mapId, GeoPoint position) : super(mapId, position);
-}
-
-class SingleTapEvent extends TapEvent {
-  SingleTapEvent(int mapId, GeoPoint position) : super(mapId, position);
-}
-
-class LongTapEvent extends TapEvent {
-  LongTapEvent(int mapId, GeoPoint position) : super(mapId, position);
-}
-
-class GeoPointEvent extends EventOSM<GeoPoint> {
-  GeoPointEvent(int mapId, GeoPoint position) : super(mapId, position);
-}
-
-class UserLocationEvent extends EventOSM<GeoPoint> {
-  UserLocationEvent(int mapId, GeoPoint position) : super(mapId, position);
-}
 
 class MethodChannelOSM extends OSMPlatform {
   final Map<int, MethodChannel> _channels = {};

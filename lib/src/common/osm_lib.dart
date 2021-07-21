@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import '../channel/osm_method_channel.dart';
+import 'package:js/js.dart';
 import '../types/geo_point.dart';
 import '../types/road.dart';
 import '../types/shape_osm.dart';
@@ -24,9 +24,23 @@ import '../../flutter_osm_plugin.dart';
 import '../controller/osm_controller.dart';
 import '../types/geo_point.dart';
 import '../types/types.dart';
-
-import '../web/web_platform.dart';
+import '../web/interop/osm_interop.dart' as interop;
 import '../widgets/copyright_osm_widget.dart';
+
+import '../../src/types/geo_point.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
+import 'package:stream_transform/stream_transform.dart';
+
+
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+
+
+
+
 
 part '../controller/base_map_controller.dart';
 
@@ -43,3 +57,8 @@ part '../web/flutter_osm_web.dart';
 part '../web/widget/osm_web_widget.dart';
 
 part '../widgets/custom_picker_location.dart';
+part 'osm_event.dart';
+part '../channel/osm_method_channel.dart';
+part '../interface_osm/osm_interface.dart';
+part '../interface_osm/base_osm_platform.dart';
+part '../web/web_platform.dart';

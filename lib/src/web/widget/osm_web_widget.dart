@@ -2,10 +2,16 @@ part of osm_flutter;
 
 class OsmWebWidget extends StatefulWidget {
   final MapController controller;
+  final OnGeoPointClicked? onGeoPointClicked;
+  final OnLocationChanged? onLocationChanged;
+  final ValueNotifier<bool> mapIsReadyListener;
 
   OsmWebWidget({
     Key? key,
     required this.controller,
+    this.onGeoPointClicked,
+    this.onLocationChanged,
+    required this.mapIsReadyListener,
   }) : super(key: key);
 
   @override
@@ -18,8 +24,14 @@ class _OsmWebWidgetState extends State<OsmWebWidget> {
   @override
   void initState() {
     super.initState();
-    controller = WebOsmController();
+    controller = WebOsmController(this);
     widget.controller._init(osmWebController: controller);
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   @override

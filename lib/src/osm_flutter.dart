@@ -157,8 +157,31 @@ class OSMFlutterState extends State<OSMFlutter> {
         //creationParamsCodec:  StandardMessageCodec(),
       );
     } else if (kIsWeb) {
-      return OsmWebWidget(
-        controller: widget.controller as MapController,
+      return Stack(
+        children: [
+          widgetConfigMap(),
+          OsmWebWidget(
+            controller: widget.controller as MapController,
+            onGeoPointClicked: widget.onGeoPointClicked,
+            onLocationChanged: widget.onLocationChanged,
+            mapIsReadyListener: mapIsReadyListener,
+          ),
+          Positioned.fill(
+            child: ValueListenableBuilder<bool>(
+              valueListenable: mapIsReadyListener,
+              builder: (ctx, isReady, child) {
+                return Visibility(
+                  visible: !isReady,
+                  child: child!,
+                );
+              },
+              child:Container(
+                color: Colors.white,
+                child:  widget.mapIsLoading!,
+              ),
+            ),
+          ),
+        ],
       );
     }
     return Stack(
@@ -193,7 +216,7 @@ class OSMFlutterState extends State<OSMFlutter> {
                 )
               : widgetMap,
         ),
-        if (widget.showContributorBadgeForOSM) ...[
+        if (widget.showContributorBadgeForOSM && !kIsWeb) ...[
           Positioned(
             bottom: 0,
             right: 5,

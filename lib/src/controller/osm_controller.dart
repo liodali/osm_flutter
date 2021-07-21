@@ -6,7 +6,6 @@ import '../common/osm_lib.dart';
 import 'package:location/location.dart';
 
 import '../common/utilities.dart';
-import '../interface_osm/osm_interface.dart';
 import '../types/shape_osm.dart';
 import '../types/types.dart';
 

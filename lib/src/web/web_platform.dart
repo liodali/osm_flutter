@@ -1,9 +1,4 @@
-import 'package:flutter_osm_plugin/src/interface_osm/base_osm_platform.dart';
-import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-
-import '../../flutter_osm_plugin.dart';
-
-
+part of osm_flutter;
 
 abstract class OsmWebPlatform extends BaseOsmPlatform {
   OsmWebPlatform() : super();
@@ -19,4 +14,14 @@ abstract class OsmWebPlatform extends BaseOsmPlatform {
     PlatformInterface.verifyToken(instance, BaseOsmPlatform.token);
     _instance = instance;
   }
+}
+
+void BindingWebOSM() {
+  interop.initMapFinish = allowInterop(initMapFinished);
+}
+
+void initMapFinished(bool isReady) {
+  final controller =
+      OsmWebPlatform.instance._mapsController[OsmWebPlatform.idOsmWeb - 1]!;
+  controller.channel!.invokeMethod("initMap", isReady);
 }

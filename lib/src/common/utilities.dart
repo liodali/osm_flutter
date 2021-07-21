@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin/src/types/search_completion.dart';
+import 'package:flutter_osm_plugin/src/web/interop/models/geo_point_js.dart';
 import 'package:location/location.dart';
 
 const earthRadius = 6371e3; //metre
@@ -71,6 +72,7 @@ extension ExtGeoPoint on GeoPoint {
       this.latitude,
     ];
   }
+
 }
 
 extension ExtLocationData on LocationData {
@@ -97,3 +99,4 @@ extension Uint8ListConvert on Uint8List {
     return base64.encode(this);
   }
 }
+

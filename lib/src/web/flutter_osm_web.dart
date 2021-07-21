@@ -7,11 +7,21 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
     required this.messenger,
   });
 
+  final Map<int, MethodChannel> _channels = {};
+
   static String getViewType(int mapId) => 'osm_web_plugin_$mapId';
 
   Map<int, WebOsmController> _mapsController = <int, WebOsmController>{};
 
   late WebOsmController map;
+
+  //final Map<int, List<EventChannel>> _eventsChannels = {};
+  StreamController _streamController = StreamController<EventOSM>.broadcast();
+
+  // Returns a filtered view of the events in the _controller, by mapId.
+  Stream<EventOSM> _events(int mapId) =>
+      _streamController.stream.where((event) => event.mapId == mapId)
+          as Stream<EventOSM>;
 
   static void registerWith(Registrar registrar) {
     final messenger = registrar;
@@ -20,13 +30,46 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
+  Stream<MapInitialization> onMapIsReady(int idMap) {
+    return _events(idMap).whereType<MapInitialization>();
+  }
+
+  @override
+  Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
+    return _events(idMap).whereType<SingleTapEvent>();
+  }
+
+  @override
+  Stream<LongTapEvent> onLongPressMapClickListener(int idMap) {
+    return _events(idMap).whereType<LongTapEvent>();
+  }
+
+  @override
+  Stream<GeoPointEvent> onGeoPointClickListener(int idMap) {
+    return _events(idMap).whereType<GeoPointEvent>();
+  }
+
+  @override
+  Stream<UserLocationEvent> onUserPositionListener(int idMap) {
+    return _events(idMap).whereType<UserLocationEvent>();
+  }
+
+  @override
   Future<void> init(int idOSM) {
-    final MethodChannel channel = MethodChannel(
-      '${getViewType(idOSM)}',
-      const StandardMethodCodec(),
-      messenger,
-    );
-    channel.setMethodCallHandler(OsmWebPlatform.instance.handleMethodCall);
+    // if (!_mapsController.containsKey(idOSM)) {
+    //   if (_streamController.isClosed) {
+    //     _streamController = StreamController<EventOSM>.broadcast();
+    //   }
+    // }
+    if (!_channels.containsKey(idOSM)) {
+      _channels[idOSM] = MethodChannel(
+        '${getViewType(idOSM)}',
+        const StandardMethodCodec(),
+        messenger,
+      );
+      _channels[idOSM]!
+          .setMethodCallHandler(handleMethodCall);
+    }
     return Future.microtask(() => close());
   }
 
@@ -34,7 +77,9 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   void close() {
     // _mapsController.values.forEach(
     //         (WebTestController _mapsController) => _mapsController.dispose());
+    //_streamController.close();
     _mapsController.clear();
+    _channels.clear();
   }
 
   /// Handles method calls over the MethodChannel of this plugin.
@@ -42,6 +87,11 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   /// https://flutter.dev/go/federated-plugins
   Future<dynamic> handleMethodCall(MethodCall call) async {
     switch (call.method) {
+      case "initMap":
+        final result = call.arguments as bool;
+        print("init map : $result");
+        _streamController.add(MapInitialization(map._mapId, result));
+        break;
       default:
         throw PlatformException(
           code: 'Unimplemented',
@@ -66,8 +116,16 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
-  Future<void> addPosition(int idOSM, GeoPoint p) async{
-   await _mapsController[idOSM]!.addPosition(p);
+  Future<void> initMap(
+    int idOSM,
+    GeoPoint point,
+  ) async {
+    await _mapsController[idOSM]!.initMap(point);
+  }
+
+  @override
+  Future<void> addPosition(int idOSM, GeoPoint p) async {
+    await _mapsController[idOSM]!.addPosition(p);
   }
 
   @override
@@ -110,30 +168,6 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   @override
   Future<GeoPoint> myLocation(int idMap) async {
     return await _mapsController[idMap]!.currentLocation();
-  }
-
-  @override
-  Stream<GeoPointEvent> onGeoPointClickListener(int idMap) {
-    // TODO: implement onGeoPointClickListener
-    throw UnimplementedError();
-  }
-
-  @override
-  Stream<LongTapEvent> onLongPressMapClickListener(int idMap) {
-    // TODO: implement onLongPressMapClickListener
-    throw UnimplementedError();
-  }
-
-  @override
-  Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
-    // TODO: implement onSinglePressMapClickListener
-    throw UnimplementedError();
-  }
-
-  @override
-  Stream<UserLocationEvent> onUserPositionListener(int idMap) {
-    // TODO: implement onUserPositionListener
-    throw UnimplementedError();
   }
 
   @override

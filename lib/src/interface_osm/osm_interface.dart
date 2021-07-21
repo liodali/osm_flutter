@@ -1,11 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:flutter_osm_plugin/src/channel/osm_method_channel.dart';
-import 'package:location/location.dart';
-import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+part of osm_flutter;
 
-import 'base_osm_platform.dart';
 
 abstract class OSMPlatform extends BaseOsmPlatform {
   OSMPlatform() : super();
