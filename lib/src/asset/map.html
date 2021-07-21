@@ -29,6 +29,8 @@
 
 <script>
 
+    var zoom = 2.0;
+    var stepZoom = 1.0;
 
     var mymap = L.map('mapid', {
       renderer: L.canvas()
@@ -67,6 +69,10 @@
     async function addPosition(point) {
        L.marker([point.lat, point.lon]).addTo(mymap);
        mymap.setView([point.lat, point.lon],8);
+    }
+    async function initMapLocation(point) {
+       mymap.setView([point.lat, point.lon],8);
+       isMapReady(true);
     }
 
 
