@@ -852,7 +852,7 @@ class FlutterOsmView(
         val colors = args["color"] as List<Double>
         val radius = (args["radius"] as Double)
         val stokeWidth = (args["stokeWidth"] as Double).toFloat()
-        val color = Color.rgb(colors[0].toInt(), colors[1].toInt(), colors[2].toInt())
+        val color = Color.rgb(colors[0].toInt(), colors[2].toInt(), colors[1].toInt())
 
         val circle: List<GeoPoint> = Polygon.pointsAsCircle(geoPoint, radius)
         val p = Polygon(map!!)
