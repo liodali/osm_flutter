@@ -10,12 +10,14 @@ class MapController extends BaseMapController {
   MapController({
     bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
+    BoundingBox? areaLimit = const BoundingBox.world(),
   })  : assert(
           initMapWithUserPosition || initPosition != null,
         ),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
           initPosition: initPosition,
+          areaLimit: areaLimit,
         );
 
   @override

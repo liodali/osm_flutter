@@ -34,12 +34,16 @@ class OSMController {
   }
 
   /// initMap: initialisation of osm map
-  /// [initPosition] : (geoPoint) animate map to initPosition
-  /// [initWithUserPosition] : set map in user position
+  /// [initPosition]          : (geoPoint) animate map to initPosition
+  /// [initWithUserPosition]  : set map in user position
+  /// [box]                   : (BoundingBox) area limit of the map
   Future<void> initMap({
     GeoPoint? initPosition,
     bool initWithUserPosition = false,
+    BoundingBox? box,
   }) async {
+    _checkBoundingBox(box, initPosition);
+
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
 
     if (_osmFlutterState.widget.showDefaultInfoWindow == true) {
@@ -94,7 +98,12 @@ class OSMController {
     /// init location in map
     if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
       initPosition = await myLocation();
+      _checkBoundingBox(box, initPosition);
     }
+    if (box != null && !box.isWorld()) {
+      await limitAreaMap(box);
+    }
+
     if (initPosition != null) {
       await osmPlatform.initMap(
         _idMap,
@@ -148,6 +157,15 @@ class OSMController {
     }
   }
 
+  void _checkBoundingBox(BoundingBox? box, GeoPoint? initPosition) {
+    if (box != null && !box.isWorld() && initPosition != null) {
+      if (box.inBoundingBox(initPosition)) {
+        throw Exception(
+            "you want to limit the area of the map but your init location is already outside the area!");
+      }
+    }
+  }
+
   Future _initializeRoadInformation() async {
     await osmPlatform.setColorRoad(
       _idMap,
@@ -160,6 +178,13 @@ class OSMController {
         _osmFlutterState.endIconKey,
         _osmFlutterState.middleIconKey
       ],
+    );
+  }
+
+  Future<void> limitAreaMap(BoundingBox box) async {
+    await osmPlatform.limitArea(
+      _idMap,
+      box,
     );
   }
 

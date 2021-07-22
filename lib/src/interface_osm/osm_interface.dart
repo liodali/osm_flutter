@@ -201,6 +201,14 @@ abstract class OSMPlatform extends PlatformInterface {
   );
 
   Future<void> initIosMap(
-    int idMap,
+    int idOSM,
   );
+
+  Future<void> limitArea(
+    int idOSM,
+    BoundingBox box,
+  );
+  Future<void> removeLimitArea(
+      int idOSM,
+      );
 }
