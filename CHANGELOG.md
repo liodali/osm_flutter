@@ -1,3 +1,5 @@
+## 0.8.1+4 (without ios support)
+* fix: set correctly the color of the circle
 ## 0.8.1+3 (without ios support)
 * optimize draw marker before send it to native view in OSMFlutter widget
 * replace `selectAdvancedPositionPicker` to get select position with  `getCurrentPositionAdvancedPositionPicker` for ios purpose

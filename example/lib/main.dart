@@ -74,6 +74,18 @@ class _MainExampleState extends State<MainExample> {
           longitude: 8.4690184,
         ),
       );
+      await controller.drawCircle(
+        CircleOSM(
+          key: "circle1",
+          centerPoint: GeoPoint(
+            latitude: 47.433358,
+            longitude: 8.4690184,
+          ),
+          radius: 500.0,
+          color: Colors.purple,
+          strokeWidth: 0.5,
+        ),
+      );
     });
 
     Future.delayed(Duration(seconds: 10), () async {
