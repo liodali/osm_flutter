@@ -278,7 +278,11 @@ class FlutterOsmView(
         //homeMarker = addMarker(geoPoint, zoom, null)
 
         map!!.controller.setZoom(zoom)
-        map!!.controller.animateTo(geoPoint)
+        when (map!!.mapCenter.latitude == 0.0 && map!!.mapCenter.longitude == 0.0) {
+            true -> map!!.controller.animateTo(geoPoint)
+            false -> map!!.controller.setCenter(geoPoint)
+
+        }
 
         methodChannel.invokeMethod("map#init", true)
         result.success(null)
