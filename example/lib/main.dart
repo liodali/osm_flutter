@@ -50,7 +50,16 @@ class _MainExampleState extends State<MainExample> {
     super.initState();
     controller = MapController(
       initMapWithUserPosition: false,
-      initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      // areaLimit: BoundingBox(
+      //   east: 10.4922941,
+      //   north: 47.8084648,
+      //   south: 45.817995,
+      //   west: 5.9559113,
+      // ),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
     controller.listenerMapLongTapping.addListener(() {
@@ -63,7 +72,9 @@ class _MainExampleState extends State<MainExample> {
         print(controller.listenerMapSingleTapping.value);
       }
     });
-
+    // Future.delayed(Duration(minutes: 5), () async {
+    //   await controller.removeLimitAreaMap();
+    // });
     Future.delayed(Duration(seconds: 5), () async {
       await controller.zoomIn();
     });
@@ -72,6 +83,18 @@ class _MainExampleState extends State<MainExample> {
         GeoPoint(
           latitude: 47.433358,
           longitude: 8.4690184,
+        ),
+      );
+      await controller.drawCircle(
+        CircleOSM(
+          key: "circle1",
+          centerPoint: GeoPoint(
+            latitude: 47.433358,
+            longitude: 8.4690184,
+          ),
+          radius: 500.0,
+          color: Colors.purple,
+          strokeWidth: 0.5,
         ),
       );
     });

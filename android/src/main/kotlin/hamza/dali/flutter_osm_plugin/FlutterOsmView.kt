@@ -157,6 +157,10 @@ class FlutterOsmView(
     private var isEnabled = false
     private var visibilityInfoWindow = false
 
+    private val boundingWorldBox: BoundingBox by lazy {
+        BoundingBox(85.0, 180.0, -85.0, -180.0)
+    }
+
     private val staticOverlayListener by lazy {
         MapEventsOverlay(object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -202,7 +206,7 @@ class FlutterOsmView(
             it.setTileSource(MAPNIK)
             it.isVerticalMapRepetitionEnabled = false
             it.isHorizontalMapRepetitionEnabled = false
-            it.setScrollableAreaLimitDouble(BoundingBox(85.0, 180.0, -85.0, -180.0))
+            it.setScrollableAreaLimitDouble(boundingWorldBox)
             it.setScrollableAreaLimitLatitude(
                 MapView.getTileSystem().maxLatitude,
                 MapView.getTileSystem().minLatitude,
@@ -274,7 +278,11 @@ class FlutterOsmView(
         //homeMarker = addMarker(geoPoint, zoom, null)
 
         map!!.controller.setZoom(zoom)
-        map!!.controller.animateTo(geoPoint)
+        when (map!!.mapCenter.latitude == 0.0 && map!!.mapCenter.longitude == 0.0) {
+            true -> map!!.controller.animateTo(geoPoint)
+            false -> map!!.controller.setCenter(geoPoint)
+
+        }
 
         methodChannel.invokeMethod("map#init", true)
         result.success(null)
@@ -476,6 +484,13 @@ class FlutterOsmView(
             "initMap" -> {
                 initPosition(call, result)
             }
+            "limitArea" -> {
+                limitCameraArea(call, result)
+            }
+            "remove#limitArea" -> {
+                removeLimitCameraArea(call, result)
+
+            }
             "changePosition" -> {
                 changePosition(call, result)
             }
@@ -582,6 +597,21 @@ class FlutterOsmView(
                 result.notImplemented()
             }
         }
+    }
+
+    private fun removeLimitCameraArea(call: MethodCall, result: MethodChannel.Result) {
+        map!!.setScrollableAreaLimitDouble(boundingWorldBox)
+        result.success(200)
+    }
+
+    private fun limitCameraArea(call: MethodCall, result: MethodChannel.Result) {
+        val list = call.arguments as List<Double>
+        map!!.setScrollableAreaLimitDouble(
+            BoundingBox(
+                list[0], list[1], list[2], list[3]
+            )
+        )
+        result.success(200)
     }
 
     private fun mapOrientation(call: MethodCall, result: MethodChannel.Result) {
@@ -852,7 +882,7 @@ class FlutterOsmView(
         val colors = args["color"] as List<Double>
         val radius = (args["radius"] as Double)
         val stokeWidth = (args["stokeWidth"] as Double).toFloat()
-        val color = Color.rgb(colors[0].toInt(), colors[1].toInt(), colors[2].toInt())
+        val color = Color.rgb(colors[0].toInt(), colors[2].toInt(), colors[1].toInt())
 
         val circle: List<GeoPoint> = Polygon.pointsAsCircle(geoPoint, radius)
         val p = Polygon(map!!)

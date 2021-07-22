@@ -12,6 +12,12 @@
 * add draw road manually for dev that they have they own routing api 
 ## 0.9.0-alpha.0 :
 * support drawRoad in iOS
+## 0.8.2 (without ios support)
+* add new attribute `limitArea` in MapController to init map in specific area
+* add new method `limitArea` to set BoundingBox of camera in the map
+* add new method`removeLimitArea` to remove limit area in the map 
+## 0.8.1+4 (without ios support)
+* fix: set correctly the color of the circle
 ## 0.8.1+3 (without ios support)
 * optimize draw marker before send it to native view in OSMFlutter widget
 * replace `selectAdvancedPositionPicker` to get select position with  `getCurrentPositionAdvancedPositionPicker` for ios purpose
