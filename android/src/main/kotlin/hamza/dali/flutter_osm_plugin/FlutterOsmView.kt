@@ -157,6 +157,10 @@ class FlutterOsmView(
     private var isEnabled = false
     private var visibilityInfoWindow = false
 
+    private val boundingWorldBox: BoundingBox by lazy {
+        BoundingBox(85.0, 180.0, -85.0, -180.0)
+    }
+
     private val staticOverlayListener by lazy {
         MapEventsOverlay(object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -202,7 +206,7 @@ class FlutterOsmView(
             it.setTileSource(MAPNIK)
             it.isVerticalMapRepetitionEnabled = false
             it.isHorizontalMapRepetitionEnabled = false
-            it.setScrollableAreaLimitDouble(BoundingBox(85.0, 180.0, -85.0, -180.0))
+            it.setScrollableAreaLimitDouble(boundingWorldBox)
             it.setScrollableAreaLimitLatitude(
                 MapView.getTileSystem().maxLatitude,
                 MapView.getTileSystem().minLatitude,
@@ -480,6 +484,7 @@ class FlutterOsmView(
                 limitCameraArea(call, result)
             }
             "remove#limitArea" -> {
+                removeLimitCameraArea(call, result)
 
             }
             "changePosition" -> {
@@ -588,6 +593,11 @@ class FlutterOsmView(
                 result.notImplemented()
             }
         }
+    }
+
+    private fun removeLimitCameraArea(call: MethodCall, result: MethodChannel.Result) {
+        map!!.setScrollableAreaLimitDouble(boundingWorldBox)
+        result.success(200)
     }
 
     private fun limitCameraArea(call: MethodCall, result: MethodChannel.Result) {
