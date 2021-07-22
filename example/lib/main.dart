@@ -54,12 +54,12 @@ class _MainExampleState extends State<MainExample> {
         latitude: 47.4358055,
         longitude: 8.4737324,
       ),
-      // areaLimit: BoundingBox(
-      //   east: 10.4922941,
-      //   north: 47.8084648,
-      //   south: 45.817995,
-      //   west: 5.9559113,
-      // ),
+      areaLimit: BoundingBox(
+        east: 10.4922941,
+        north: 47.8084648,
+        south: 45.817995,
+        west: 5.9559113,
+      ),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
     controller.listenerMapLongTapping.addListener(() {
@@ -72,9 +72,9 @@ class _MainExampleState extends State<MainExample> {
         print(controller.listenerMapSingleTapping.value);
       }
     });
-    // Future.delayed(Duration(minutes: 5), () async {
-    //   await controller.removeLimitAreaMap();
-    // });
+    Future.delayed(Duration(minutes: 5), () async {
+      await controller.removeLimitAreaMap();
+    });
     Future.delayed(Duration(seconds: 5), () async {
       await controller.zoomIn();
     });
