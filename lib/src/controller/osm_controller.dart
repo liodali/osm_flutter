@@ -42,6 +42,7 @@ class OSMController {
     bool initWithUserPosition = false,
     BoundingBox? box,
   }) async {
+
     _checkBoundingBox(box, initPosition);
 
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
@@ -159,7 +160,7 @@ class OSMController {
 
   void _checkBoundingBox(BoundingBox? box, GeoPoint? initPosition) {
     if (box != null && !box.isWorld() && initPosition != null) {
-      if (box.inBoundingBox(initPosition)) {
+      if (!box.inBoundingBox(initPosition)) {
         throw Exception(
             "you want to limit the area of the map but your init location is already outside the area!");
       }
