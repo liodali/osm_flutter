@@ -181,10 +181,18 @@ class OSMController {
     );
   }
 
+  /// set area camera limit of the map
+  /// [box] : (BoundingBox) bounding that map cannot exceed from it
   Future<void> limitAreaMap(BoundingBox box) async {
     await osmPlatform.limitArea(
       _idMap,
       box,
+    );
+  }
+  /// remove area camera limit from the map
+  Future<void> removeLimitAreaMap() async {
+    await osmPlatform.removeLimitArea(
+      _idMap,
     );
   }
 
