@@ -476,6 +476,12 @@ class FlutterOsmView(
             "initMap" -> {
                 initPosition(call, result)
             }
+            "limitArea" -> {
+                limitCameraArea(call, result)
+            }
+            "remove#limitArea" -> {
+
+            }
             "changePosition" -> {
                 changePosition(call, result)
             }
@@ -582,6 +588,16 @@ class FlutterOsmView(
                 result.notImplemented()
             }
         }
+    }
+
+    private fun limitCameraArea(call: MethodCall, result: MethodChannel.Result) {
+        val list = call.arguments as List<Double>
+        map!!.setScrollableAreaLimitDouble(
+            BoundingBox(
+                list[0], list[1], list[2], list[3]
+            )
+        )
+        result.success(200)
     }
 
     private fun mapOrientation(call: MethodCall, result: MethodChannel.Result) {
