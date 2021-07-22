@@ -1,3 +1,7 @@
+## 0.8.2 (without ios support)
+* add new attribute `limitArea` in MapController to init map in specific area
+* add new method `limitArea` to set BoundingBox of camera in the map
+* add new method`removeLimitArea` to remove limit area in the map 
 ## 0.8.1+4 (without ios support)
 * fix: set correctly the color of the circle
 ## 0.8.1+3 (without ios support)

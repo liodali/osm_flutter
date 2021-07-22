@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.8.1%2B4-orange)
+![pub](https://img.shields.io/badge/pub-v0.8.2-orange)
 
 ![pub](https://img.shields.io/badge/pub-v0.11.0--beta.0-yellow) 
 
@@ -15,7 +15,8 @@
 * change position (Android/iOS)
 * tracking user location (Android/iOS)
 * customize Icon Marker (Android/iOS)
-* assisted selection position (Android)
+* assisted selection position (Android/iOS)
+* set BoundingBOx (Android)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
 * draw Road manually (Android/iOS) (available in alpha version)
 * ClickListener on Marker (Android)
@@ -99,6 +100,7 @@ Add the following to your `pubspec.yaml` file:
 | ---------------------------- | ----------------------------------------------------------------------- |
 | `initMapWithUserPosition`    | (bool) initialize map with user position (default:true                  |
 | `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
+| `areaLimit`                  | (Bounding) set area limit of the map (default BoundingBox.world())   |
 
 
 <b>4) Set map on user current position </b>
@@ -122,19 +124,33 @@ Add the following to your `pubspec.yaml` file:
  await controller.zoomOut();
 ```
 
-<b> 7)  Track user current position </b>
+<b> 7) BoundingBox </b>
+
+> set bounding box in the map
+
+```dart
+await controller.limitAreaMap(BoundingBox( east: 10.4922941, north: 47.8084648, south: 45.817995, west: 5.9559113,));
+```
+> remove bounding box in the map
+
+```dart
+await controller.removeLimitAreaMap();
+```
+
+
+<b> 8)  Track user current position </b>
 
 ```dart
  await controller.enableTracking();
 ```
 
-<b> 8) Disable tracking user position </b>
+<b> 9) Disable tracking user position </b>
 
 ```dart
  await controller.disabledTracking();
 ```
 
-<b>9) update the location </b>
+<b>10) update the location </b>
 
 > this method will create marker on that specific position
 
@@ -148,17 +164,17 @@ Add the following to your `pubspec.yaml` file:
 ```
 
 
-<b> 10) recuperation current position </b>
+<b> 11) recuperation current position </b>
 
 ```dart
  GeoPoint geoPoint = await controller.myLocation();
 ```
 
-<b> 11) select/create new position </b>
+<b> 12) select/create new position </b>
 
 * we have 2 way to select location in map
 
-<b>11.1 Manual selection </b>
+<b>12.1 Manual selection </b>
 
 a) select without change default marker
 ```dart
@@ -183,7 +199,7 @@ b) select position with dynamic marker
 );
  ```
  
-<b>11.2 Assisted selection </b> (for more details see example) 
+<b>12.2 Assisted selection </b> (for more details see example) 
 
 ```dart
  /// To Start assisted Selection
@@ -197,14 +213,14 @@ b) select position with dynamic marker
 ```
 * PS : selected position can be removed by long press 
 
-<b>12) Remove marker </b>
+<b>13) Remove marker </b>
 
 ```dart
  await controller.removePosition(geoPoint);
 ```
 * PS : static position cannot be removed by this method 
 
-<b>13) Draw road,recuperate distance in km and duration in sec </b>
+<b>14) Draw road,recuperate distance in km and duration in sec </b>
 
 > you can add an middle position to pass your route through them
 >
@@ -223,7 +239,7 @@ b) select position with dynamic marker
  print("${roadInfo.duration}sec");
 ```
 
-13.b) draw road manually
+<b> 14.b) draw road manually </b>
 ```dart
 await controller.drawRoadManually(
         waysPoint,
@@ -232,13 +248,13 @@ await controller.drawRoadManually(
       )
 ```
 
-<b>14) Delete last road </b>
+<b>15) Delete last road </b>
 
 ```dart
  await controller.removeLastRoad();
 ```
 
-<b>15) Change static GeoPoint position </b>
+<b>16) Change static GeoPoint position </b>
 
 > add new staticPoints with empty list of geoPoints (notice: if you add static point without marker,they will get default maker used by plugin)
 
@@ -247,7 +263,7 @@ await controller.drawRoadManually(
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
-<b>16) Change/Add Marker old/new static GeoPoint position </b>
+<b>17) Change/Add Marker old/new static GeoPoint position </b>
 
 > add marker of new static point
 
@@ -257,13 +273,13 @@ await controller.drawRoadManually(
  await controller.setMarkerOfStaticPoint(String id,MarkerIcon markerIcon );
 ```
 
-<b>17) change orientation of the map</b>
+<b>18) change orientation of the map</b>
 
 ```dart
  await controller.rotateMapCamera(degree);
 ```
 
-<b>18) Draw Shape in the map </b>
+<b>19) Draw Shape in the map </b>
 
 * Circle
 ```dart
