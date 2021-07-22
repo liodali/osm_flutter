@@ -6,7 +6,7 @@
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported (not stable yet) :  0.11.0-alpha  | under-development |
+| supported :heavy_check_mark: | supported (not stable yet) :  0.11.0-beta  | under-development |
 
 
 <b>osm plugin for flutter apps </b>
@@ -38,7 +38,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.8.1+4
+      flutter_osm_plugin: ^0.8.2
 
       
 * beta version (iOS support)
