@@ -1,4 +1,4 @@
-import 'package:flutter_osm_plugin/src/types/geo_point.dart';
+import 'geo_point.dart';
 
 import 'marker.dart';
 

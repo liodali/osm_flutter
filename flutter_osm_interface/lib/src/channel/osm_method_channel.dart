@@ -1,9 +1,25 @@
-part of osm_flutter;
 
-
-
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import '../common/road_exception.dart';
+import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
+import '../common/geo_point_exception.dart';
+import '../types/types.dart';
+import 'package:location/location.dart';
+import '../common/utilities.dart';
+import '../common/osm_event.dart';
+import '../osm_interface.dart';
+import 'package:stream_transform/stream_transform.dart';
 class MethodChannelOSM extends OSMPlatform {
   final Map<int, MethodChannel> _channels = {};
+  late Location locationService;
 
   //final Map<int, List<EventChannel>> _eventsChannels = {};
   StreamController _streamController = StreamController<EventOSM>.broadcast();
@@ -94,7 +110,7 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> initMap(
+  Future<void> initPositionMap(
     int idOSM,
     GeoPoint point,
   ) async {

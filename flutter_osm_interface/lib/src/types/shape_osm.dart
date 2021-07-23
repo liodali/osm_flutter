@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../flutter_osm_plugin.dart';
+import 'geo_point.dart';
+
 
 /// ShapeOSM : class that represent shape with be draw into map
 /// can be circle or rect

@@ -1,14 +1,20 @@
-part of osm_flutter;
 
 
+
+import 'package:flutter/material.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+
+import 'channel/osm_method_channel.dart';
+import 'base_osm_platform.dart';
+import 'types/types.dart';
 abstract class OSMPlatform extends BaseOsmPlatform {
   OSMPlatform() : super();
 
-  late Location locationService;
 
-  static OSMPlatform _instance = MethodChannelOSM();
+  static late  OSMPlatform _instance = MethodChannelOSM();
 
   static OSMPlatform get instance => _instance;
+
 
   /// Platform-specific plugins should set this with their own platform-specific
   /// class that extends [OSMPlatformInterface] when they register themselves.
@@ -16,7 +22,6 @@ abstract class OSMPlatform extends BaseOsmPlatform {
     PlatformInterface.verifyToken(instance, BaseOsmPlatform.token);
     _instance = instance;
   }
-
 
   Future<void> drawCircle(
     int idOSM,
