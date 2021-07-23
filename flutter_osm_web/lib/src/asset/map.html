@@ -26,11 +26,17 @@
 
 <body id="frame_body_map" style="margin:0px;">
 <div id="mapid"></div>
-
+<div id="render-icon" style="display:none;">
+</div>
 <script>
+
+
 
     var zoom = 2.0;
     var stepZoom = 1.0;
+    var defaultIcon = "";
+    var staticIcons = "";
+    var dynamicIcon = "";
 
     var mymap = L.map('mapid', {
       renderer: L.canvas()
@@ -45,8 +51,12 @@
     OpenStreetMap_Mapnik.addTo(mymap);
     mymap.setView([0, 0], 2);
 
+    async function initMapLocation(point) {
+       mymap.setView([point.lat, point.lon],8);
+       isMapReady(true);
+    }
 
-    async function gotMyLocation() {
+    async function getMyLocation() {
       var position = await new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
           reject({error: true, message: 'Geolocation is not supported by your browser' });
@@ -63,17 +73,19 @@
       const longitude = position.coords.longitude;
 
       return {
-        lat:latitude,
+        lat : latitude,
         lon : longitude
       };
     }
     async function addPosition(point) {
        L.marker([point.lat, point.lon]).addTo(mymap);
        mymap.setView([point.lat, point.lon],8);
+       return 200;
     }
-    async function initMapLocation(point) {
-       mymap.setView([point.lat, point.lon],8);
-       isMapReady(true);
+    
+    async function setMarkerIcon(icon) {
+      var iframe = document.getElementById("frame_map");
+      return await iframe.setMarkerIcon(icon);
     }
 
 

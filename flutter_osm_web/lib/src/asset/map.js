@@ -1,17 +1,17 @@
 
+
 async function locateMe() {
    var iframe = document.getElementById("frame_map");
-   var geoAync = await iframe.contentWindow.gotMyLocation();
-   console.log(geoAync);
-   return geoAync;
+   var geoAsync = await iframe.contentWindow.getMyLocation();
+   console.log(geoAsync);
+   return geoAsync;
 }
 
 async function addPosition(point) {
    console.log(point)
    var iframe = document.getElementById("frame_map");
-   var geoAync = await iframe.contentWindow.addPosition(point);
-   console.log(geoAync);
-   return geoAync;
+   var result = await iframe.contentWindow.addPosition(point);
+   return result;
 }
 
 async function initMapLocation(point) {
@@ -19,10 +19,16 @@ async function initMapLocation(point) {
    await iframe.contentWindow.initMapLocation(point);
 }
 
-async function isMapReady(isReady) {
-   console.log(isReady);
+function isMapReady(isReady) {
    initMapFinish(isReady);
 }
+
+async function setMarkerIcon(icon) {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.setMarkerIcon(icon);
+}
+
+
 var innerWindow = document.getElementById('frame_map').contentWindow;
 innerWindow.isMapReady = isMapReady;
 
