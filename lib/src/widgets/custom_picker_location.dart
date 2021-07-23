@@ -1,4 +1,8 @@
-part of osm_flutter;
+
+import 'package:flutter/material.dart';
+import '../controller/picker_map_controller.dart';
+
+import '../osm_flutter.dart';
 
 /// CustomPickerLocation
 ///

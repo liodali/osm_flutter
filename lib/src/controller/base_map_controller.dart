@@ -1,4 +1,11 @@
-part of osm_flutter;
+import 'package:flutter/material.dart';
+import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+
+import '../../flutter_osm_plugin.dart';
+
+import 'osm/osm_stub.dart'
+    if (dart.library.io) 'osm/osm_controller.dart'
+    if (dart.library.html) 'package:flutter_osm_web/flutter_osm_web.dart';
 
 ///  [BaseMapController] : base controller for osm flutter
 ///
@@ -6,48 +13,26 @@ part of osm_flutter;
 /// [initMapWithUserPosition] : (bool) if is true, map will show your current location
 ///
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
-abstract class BaseMapController {
-  late OSMController _osmController;
-  late WebOsmController _osmWebController;
-  final bool initMapWithUserPosition;
-  final GeoPoint? initPosition;
+abstract class BaseMapController extends IBaseMapController {
+  late IBaseOSMController _osmBaseController = getOSMMap();
 
   late ValueNotifier<GeoPoint?> listenerMapLongTapping = ValueNotifier(null);
   late ValueNotifier<GeoPoint?> listenerMapSingleTapping = ValueNotifier(null);
 
   BaseMapController({
-    this.initMapWithUserPosition = true,
-    this.initPosition,
+    bool initMapWithUserPosition = true,
+    GeoPoint? initPosition,
   }) : assert(initMapWithUserPosition || initPosition != null);
 
-  void _init({
-    OSMController? osmController,
-    WebOsmController? osmWebController,
-  }) {
-      _initMobile(osmController!);
-  }
+  void dispose();
+}
 
-  void _initMobile(
-    OSMController osmController,
-  ) {
-    this._osmController = osmController;
-    Future.delayed(Duration(milliseconds: 1250), () async {
-      await this._osmController.initMap(
-            initPosition: initPosition,
-            initWithUserPosition: initMapWithUserPosition,
-          );
-    });
-  }
+extension OSMControllerOfBaseMapController on BaseMapController {
+  @protected
+  IBaseOSMController get osmBaseController =>
+      _osmBaseController;
 
-  void _initWeb(
-    WebOsmController osmController,
-  ) {
-    this._osmWebController = osmController;
-    Future.delayed(Duration(milliseconds: 1250), () async {
-      await this._osmWebController.init(
-            initPosition: initPosition,
-            initWithUserPosition: initMapWithUserPosition,
-          );
-    });
+  void setBaseOSMController(IBaseOSMController controller) {
+    _osmBaseController = controller;
   }
 }

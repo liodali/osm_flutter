@@ -1,12 +1,12 @@
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../controller/base_map_controller.dart';
+import '../../controller/map_controller.dart';
+import '../../widgets/mobile_osm_flutter.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
-import '../controller/base_map_controller.dart';
-import '../widgets/stub.dart'
-    if (dart.library.io) '../widgets/platform/mobile_osm_widget.dart'
-    if (dart.library.html) '../widgets/platform/web_osm_widget.dart';
-
-Widget buildWidget({
+Widget getWidget({
   required BaseMapController controller,
   required bool trackMyPosition,
   OnGeoPointClicked? onGeoPointClicked,
@@ -25,22 +25,22 @@ Widget buildWidget({
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
 }) =>
-    getWidget(
-      controller: controller,
-      trackMyPosition: trackMyPosition,
-      mapIsReadyListener: mapIsReadyListener,
-      dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
-      globalKeys: globalKeys,
-      staticIconGlobalKeys: staticIconGlobalKeys,
-      defaultZoom: defaultZoom,
-      isPicker: isPicker,
-      showContributorBadgeForOSM: showContributorBadgeForOSM,
-      showDefaultInfoWindow: showDefaultInfoWindow,
-      mapIsLoading: mapIsLoading,
-      markerOption: markerOption,
+    MobileOsmFlutter(
+      controller: controller as MapController,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
-      road: road,
+      mapIsReadyListener: mapIsReadyListener,
+      mapIsLoading: mapIsLoading,
+      staticIconGlobalKeys: staticIconGlobalKeys,
+      trackMyPosition: trackMyPosition,
+      dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
+      defaultZoom: defaultZoom,
       showZoomController: showZoomController,
+      showDefaultInfoWindow: showDefaultInfoWindow,
+      showContributorBadgeForOSM: showContributorBadgeForOSM,
+      markerOption: markerOption,
+      isPicker: isPicker,
+      road: road,
       staticPoints: staticPoints,
+      globalKeys: globalKeys,
     );

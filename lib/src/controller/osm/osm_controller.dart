@@ -2,29 +2,32 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import '../common/osm_lib.dart';
+import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:location/location.dart';
 
-import '../common/utilities.dart';
-import '../types/shape_osm.dart';
-import '../types/types.dart';
+import '../../widgets/mobile_osm_flutter.dart';
 
-final OSMPlatform osmPlatform = OSMPlatform.instance;
+OSMMobileController getOSMMap() => OSMMobileController();
 
-class OSMController{
+class OSMMobileController implements IBaseOSMController {
   late int _idMap;
-  late OSMFlutterState _osmFlutterState;
+  late MobileOsmFlutterState _osmFlutterState;
 
-  OSMController();
+  static OSMPlatform get osmPlatform => OSMPlatform.instance;
 
-  OSMController._(this._idMap, this._osmFlutterState);
+  OSMMobileController();
 
-  static Future<OSMController> init(
+  OSMMobileController._(
+    this._idMap,
+    this._osmFlutterState,
+  );
+
+  static Future<OSMMobileController> init(
     int id,
-    OSMFlutterState osmState,
+    MobileOsmFlutterState osmState,
   ) async {
     await osmPlatform.init(id);
-    return OSMController._(id, osmState);
+    return OSMMobileController._(id, osmState);
   }
 
   /// dispose: close stream in osmPlatform,remove references
@@ -63,7 +66,7 @@ class OSMController{
           event.value;
     });
     osmPlatform.onMapIsReady(_idMap).listen((event) async {
-      _osmFlutterState.mapIsReadyListener.value = event.value;
+      _osmFlutterState.widget.mapIsReadyListener.value = event.value;
     });
 
     if (_osmFlutterState.widget.onGeoPointClicked != null) {
@@ -93,13 +96,13 @@ class OSMController{
     }
     if (Platform.isIOS &&
         _osmFlutterState.widget.markerOption?.advancedPickerMarker == null) {
-      _osmFlutterState.dynamicMarkerWidgetNotifier.value = Icon(
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Icon(
         Icons.location_on,
         color: Colors.red,
         size: 32,
       );
       await Future.delayed(Duration(milliseconds: 250), () async {
-        _osmFlutterState.dynamicMarkerWidgetNotifier.value = null;
+        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
         await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
       });
     }
@@ -109,7 +112,7 @@ class OSMController{
       initPosition = await myLocation();
     }
     if (initPosition != null) {
-      await osmPlatform.initMap(
+      await osmPlatform.initPositionMap(
         _idMap,
         initPosition,
       );
@@ -123,7 +126,7 @@ class OSMController{
         if (points.markerIcon != null) {
           await osmPlatform.customMarkerStaticPosition(
             _idMap,
-            _osmFlutterState.staticMarkersKeys[points.id],
+            _osmFlutterState.widget.staticIconGlobalKeys[points.id],
             points.id,
           );
         }
@@ -150,7 +153,7 @@ class OSMController{
         await _osmFlutterState.checkService();
         try {
           p = await osmPlatform.myLocation(_idMap);
-          await osmPlatform.initMap(_idMap, p);
+          await osmPlatform.initPositionMap(_idMap, p);
         } catch (e) {
           p = (await Location().getLocation()).toGeoPoint();
         }
@@ -203,9 +206,10 @@ class OSMController{
     MarkerIcon markerIcon,
   ) async {
     if (markerIcon.icon != null) {
-      _osmFlutterState.dynamicMarkerWidgetNotifier.value = markerIcon.icon;
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
+          markerIcon.icon;
     } else if (markerIcon.image != null) {
-      _osmFlutterState.dynamicMarkerWidgetNotifier.value = Image(
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Image(
         image: markerIcon.image!,
       );
     }
@@ -303,7 +307,7 @@ class OSMController{
     String imageURL = "",
   }) async {
     if (icon != null) {
-      _osmFlutterState.dynamicMarkerWidgetNotifier.value = icon;
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
       return Future.delayed(
           Duration(
             milliseconds: 200,
@@ -369,11 +373,11 @@ class OSMController{
   }
 
   Future<bool> checkServiceLocation() async {
-    bool isEnabled = await osmPlatform.locationService.serviceEnabled();
+    bool isEnabled = await (osmPlatform as MethodChannelOSM).locationService.serviceEnabled();
     if (!isEnabled) {
-      await osmPlatform.locationService.requestService();
+      await (osmPlatform as MethodChannelOSM).locationService.requestService();
       return Future.delayed(Duration(milliseconds: 55), () async {
-        isEnabled = await osmPlatform.locationService.serviceEnabled();
+        isEnabled = await (osmPlatform as MethodChannelOSM).locationService.serviceEnabled();
         return isEnabled;
       });
     }

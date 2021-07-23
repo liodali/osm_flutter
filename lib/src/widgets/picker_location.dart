@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../flutter_osm_plugin.dart';
-
+import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 /// showSimplePickerLocation : picker to select specific position
 ///
 /// [context] : (BuildContext) dialog context parent

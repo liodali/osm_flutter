@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_plugin/src/controller/base_map_controller.dart';
+import 'package:flutter_osm_plugin/src/controller/map_controller.dart';
+import 'package:flutter_osm_web/flutter_osm_web.dart';
 
-import '../controller/base_map_controller.dart';
-import '../widgets/stub.dart'
-    if (dart.library.io) '../widgets/platform/mobile_osm_widget.dart'
-    if (dart.library.html) '../widgets/platform/web_osm_widget.dart';
 
-Widget buildWidget({
+Widget getWidget({
   required BaseMapController controller,
   required bool trackMyPosition,
   OnGeoPointClicked? onGeoPointClicked,
@@ -25,22 +24,12 @@ Widget buildWidget({
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
 }) =>
-    getWidget(
-      controller: controller,
-      trackMyPosition: trackMyPosition,
-      mapIsReadyListener: mapIsReadyListener,
-      dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
-      globalKeys: globalKeys,
-      staticIconGlobalKeys: staticIconGlobalKeys,
-      defaultZoom: defaultZoom,
-      isPicker: isPicker,
-      showContributorBadgeForOSM: showContributorBadgeForOSM,
-      showDefaultInfoWindow: showDefaultInfoWindow,
-      mapIsLoading: mapIsLoading,
-      markerOption: markerOption,
+    OsmWebWidget(
+      controller: controller as MapController,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
-      road: road,
-      showZoomController: showZoomController,
-      staticPoints: staticPoints,
+      mapIsReadyListener: mapIsReadyListener,
+      mapIsLoading: mapIsLoading,
+      staticIconGlobalKeys: staticIconGlobalKeys,
+      globalKeys: globalKeys,
     );

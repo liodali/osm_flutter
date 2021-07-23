@@ -1,4 +1,7 @@
-part of osm_flutter;
+import 'package:flutter/material.dart';
+import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+
+import 'base_map_controller.dart';
 
 /// class [MapController] : map controller that will control map by select position,enable current location,
 /// draw road , show static geoPoint,
@@ -16,26 +19,11 @@ class MapController extends BaseMapController {
         super(
           initMapWithUserPosition: initMapWithUserPosition,
           initPosition: initPosition,
-        );
-
-  @override
-  void _init({
-    OSMController? osmController,
-    WebOsmController? osmWebController = null,
-  }) {
-    if (kIsWeb) {
-      _initWeb(osmWebController!);
-    } else {
-      super._init(
-        osmController: _osmController,
-      );
-    }
-  }
+        ) {}
 
   void dispose() {
     listenerMapLongTapping.dispose();
     listenerMapSingleTapping.dispose();
-    _osmController.dispose();
   }
 
   /// initialise or change of position with creating marker in that specific position
@@ -43,41 +31,41 @@ class MapController extends BaseMapController {
   /// [p] : geoPoint
   ///
   Future<void> changeLocation(GeoPoint p) async {
-    await _osmController.changeLocation(p);
+    await osmBaseController.changeLocation(p);
   }
 
   ///animate  to specific position with out add marker into the map
   ///
   /// [p] : (GeoPoint) position that will be go to map
   Future<void> goToLocation(GeoPoint p) async {
-    await _osmController.goToPosition(p);
+    await osmBaseController.goToPosition(p);
   }
 
   ///remove marker from map of position
   /// [p] : geoPoint
   Future<void> removeMarker(GeoPoint p) async {
-    _osmController.removeMarker(p);
+    osmBaseController.removeMarker(p);
   }
 
   ///change Icon Marker
   /// we need to global key to recuperate widget from tree element
   /// [key] : (GlobalKey) key of widget that represent the new marker
   Future changeIconMarker(GlobalKey key) async {
-    await _osmController.changeDefaultIconMarker(key);
+    await osmBaseController.changeDefaultIconMarker(key);
   }
 
   /*///change advanced picker Icon Marker
   /// we need to global key to recuperate widget from tree element
   /// [key] : (GlobalKey) key of widget that represent the new marker
   Future changeAdvPickerIconMarker(GlobalKey key) async {
-    await _osmController.changeIconAdvPickerMarker(key);
+    await osmBaseController.changeIconAdvPickerMarker(key);
   }*/
 
   /// change static position in runtime
   ///  [geoPoints] : list of static geoPoint
   ///  [id] : String of that list of static geoPoint
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
-    await _osmController.setStaticPosition(geoPoints, id);
+    await osmBaseController.setStaticPosition(geoPoints, id);
   }
 
   ///change  Marker of specific static points
@@ -88,45 +76,45 @@ class MapController extends BaseMapController {
     required String id,
     required MarkerIcon markerIcon,
   }) async {
-    await _osmController.setIconStaticPositions(id, markerIcon);
+    await osmBaseController.setIconStaticPositions(id, markerIcon);
   }
 
   /// zoom in/out
   /// [zoom] : (double) positive value:zoomIN or negative value:zoomOut
   Future<void> zoom(double zoom) async {
-    await _osmController.zoom(zoom);
+    await osmBaseController.zoom(zoom);
   }
 
   /// zoomIn use defaultZoom
   /// positive value:zoomIN
   Future<void> zoomIn() async {
-    await _osmController.zoomIn();
+    await osmBaseController.zoomIn();
   }
 
   /// zoomOut use defaultZoom
   /// negative value:zoomOut
   Future<void> zoomOut() async {
-    await _osmController.zoom(-1);
+    await osmBaseController.zoom(-1);
   }
 
   /// activate current location position
   Future<void> currentLocation() async {
-    await _osmController.currentLocation();
+    await osmBaseController.currentLocation();
   }
 
   /// recuperation of user current position
   Future<GeoPoint> myLocation() async {
-    return await _osmController.myLocation();
+    return await osmBaseController.myLocation();
   }
 
   /// enabled tracking user location
   Future<void> enableTracking() async {
-    await _osmController.enableTracking();
+    await osmBaseController.enableTracking();
   }
 
   /// disabled tracking user location
   Future<void> disabledTracking() async {
-    await _osmController.disabledTracking();
+    await osmBaseController.disabledTracking();
   }
 
   /// pick Position in map
@@ -134,7 +122,7 @@ class MapController extends BaseMapController {
     MarkerIcon? icon,
     String imageURL = "",
   }) async {
-    GeoPoint p = await _osmController.selectPosition(
+    GeoPoint p = await osmBaseController.selectPosition(
       icon: icon,
       imageURL: imageURL,
     );
@@ -157,7 +145,7 @@ class MapController extends BaseMapController {
     List<GeoPoint>? intersectPoint,
     RoadOption? roadOption,
   }) async {
-    return await _osmController.drawRoad(
+    return await osmBaseController.drawRoad(
       start,
       end,
       interestPoints: intersectPoint,
@@ -167,66 +155,66 @@ class MapController extends BaseMapController {
 
   ///delete last road draw in the map
   Future<void> removeLastRoad() async {
-    await _osmController.removeLastRoad();
+    await osmBaseController.removeLastRoad();
   }
 
   /// draw circle into map
   Future<void> drawCircle(CircleOSM circleOSM) async {
-    await _osmController.drawCircle(circleOSM);
+    await osmBaseController.drawCircle(circleOSM);
   }
 
   /// remove specific circle in the map
   Future<void> removeCircle(String keyCircle) async {
-    await _osmController.removeCircle(keyCircle);
+    await osmBaseController.removeCircle(keyCircle);
   }
 
   /// draw rect into map
   Future<void> drawRect(RectOSM rectOSM) async {
-    await _osmController.drawRect(rectOSM);
+    await osmBaseController.drawRect(rectOSM);
   }
 
   /// remove specific region in the map
   Future<void> removeRect(String keyRect) async {
-    await _osmController.removeRect(keyRect);
+    await osmBaseController.removeRect(keyRect);
   }
 
   /// remove all rect shape from map
   Future<void> removeAllRect() async {
-    return await _osmController.removeAllRect();
+    return await osmBaseController.removeAllRect();
   }
 
   /// clear all circle
   Future<void> removeAllCircle() async {
-    await _osmController.removeAllCircle();
+    await osmBaseController.removeAllCircle();
   }
 
   /// remove all shape from map
   Future<void> removeAllShapes() async {
-    await _osmController.removeAllShapes();
+    await osmBaseController.removeAllShapes();
   }
 
   Future<void> advancedPositionPicker() async {
-    await _osmController.advancedPositionPicker();
+    await osmBaseController.advancedPositionPicker();
   }
 
   /// select current position and finish advanced picker
   Future<GeoPoint> selectAdvancedPositionPicker() async {
-    return await _osmController.selectAdvancedPositionPicker();
+    return await osmBaseController.selectAdvancedPositionPicker();
   }
 
   /// get current position
   Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
-    return await _osmController.getCurrentPositionAdvancedPositionPicker();
+    return await osmBaseController.getCurrentPositionAdvancedPositionPicker();
   }
 
   /// cancel advanced picker
   Future<void> cancelAdvancedPositionPicker() async {
-    return await _osmController.cancelAdvancedPositionPicker();
+    return await osmBaseController.cancelAdvancedPositionPicker();
   }
 
   /// rotate camera of osm map
   Future<void> rotateMapCamera(double? degree) async {
-    return await _osmController.mapOrientation(degree);
+    return await osmBaseController.mapOrientation(degree);
   }
 
   /// draw road manually
@@ -239,10 +227,22 @@ class MapController extends BaseMapController {
     double roadWidth,
   ) async {
     assert(path.length > 3);
-    await _osmController.drawRoadManually(
+    await osmBaseController.drawRoadManually(
       path,
       roadColor,
       roadWidth,
     );
   }
+
+  void init(IBaseOSMController controller) {
+    setBaseOSMController(controller);
+    Future.delayed(Duration(milliseconds: 1250), () async {
+      await controller.initMap(
+        initPosition: initPosition,
+        initWithUserPosition: initMapWithUserPosition,
+      );
+    });
+  }
 }
+
+
