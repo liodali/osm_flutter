@@ -10,12 +10,14 @@ class MapController extends BaseMapController {
   MapController({
     bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
+    BoundingBox? areaLimit = const BoundingBox.world(),
   })  : assert(
           initMapWithUserPosition || initPosition != null,
         ),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
           initPosition: initPosition,
+          areaLimit: areaLimit,
         );
 
   @override
@@ -29,6 +31,16 @@ class MapController extends BaseMapController {
     listenerMapLongTapping.dispose();
     listenerMapSingleTapping.dispose();
     _osmController.dispose();
+  }
+
+  /// set area camera limit of the map
+  /// [box] : (BoundingBox) bounding that map cannot exceed from it
+  Future<void> limitAreaMap(BoundingBox box) async {
+    await _osmController.limitAreaMap(box);
+  }
+  /// remove area camera limit from the map
+  Future<void> removeLimitAreaMap()async{
+    await _osmController.removeLimitAreaMap();
   }
 
   /// initialise or change of position with creating marker in that specific position

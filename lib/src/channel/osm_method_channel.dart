@@ -535,4 +535,19 @@ class MethodChannelOSM extends OSMPlatform {
   Future<void> initIosMap(int idOSM) async {
     await _channels[idOSM]!.invokeMethod("init#ios#map");
   }
+
+  @override
+  Future<void> limitArea(int idOSM, BoundingBox box) async {
+    await _channels[idOSM]!.invokeMethod("limitArea", [
+      box.north,
+      box.east,
+      box.south,
+      box.west,
+    ]);
+  }
+
+  @override
+  Future<void> removeLimitArea(int idOSM) async{
+    await _channels[idOSM]!.invokeMethod("remove#limitArea");
+  }
 }

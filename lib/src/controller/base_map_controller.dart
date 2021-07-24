@@ -1,6 +1,7 @@
 library osm_flutter;
 
 import 'package:flutter/material.dart';
+import '../types/types.dart';
 
 import '../../flutter_osm_plugin.dart';
 import '../types/geo_point.dart';
@@ -10,7 +11,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:location/location.dart';
 
 import '../controller/osm_controller.dart';
@@ -31,10 +31,13 @@ part '../osm_flutter.dart';
 /// [initMapWithUserPosition] : (bool) if is true, map will show your current location
 ///
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
+///
+/// [boundingBox] : (BoundingBox) if it isn't null, the map will be pointed at this position
 abstract class BaseMapController {
   late OSMController _osmController;
   final bool initMapWithUserPosition;
   final GeoPoint? initPosition;
+  final BoundingBox? areaLimit;
 
   late ValueNotifier<GeoPoint?> listenerMapLongTapping = ValueNotifier(null);
   late ValueNotifier<GeoPoint?> listenerMapSingleTapping = ValueNotifier(null);
@@ -42,6 +45,7 @@ abstract class BaseMapController {
   BaseMapController({
     this.initMapWithUserPosition = true,
     this.initPosition,
+    this.areaLimit = const BoundingBox.world(),
   }) : assert(initMapWithUserPosition || initPosition != null);
 
   void _init(
@@ -52,6 +56,7 @@ abstract class BaseMapController {
       await this._osmController.initMap(
             initPosition: initPosition,
             initWithUserPosition: initMapWithUserPosition,
+            box: areaLimit
           );
     });
   }
