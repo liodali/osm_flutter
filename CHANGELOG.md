@@ -1,3 +1,5 @@
+## 0.11.0-beta.1 :
+fix invokeMethod in gotoPosition
 ## 0.11.0-beta.0 :
 * merge stable feature with alpha 
 * remove unnecessary attribute in show static geopoint

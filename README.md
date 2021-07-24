@@ -1,7 +1,7 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.8.1%2B3-orange)
+![pub](https://img.shields.io/badge/pub-v0.8.2-orange)
 
-![pub](https://img.shields.io/badge/pub-v0.11.0--beta.0-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.11.0--beta.1-yellow) 
 
 ## Platform Support
 | Android | iOS | Web |
@@ -41,7 +41,7 @@ Add the following to your `pubspec.yaml` file:
 * beta version (iOS support)
       ```dart
        dependencies:
-                flutter_osm_plugin: ^0.11.0-beta.0
+                flutter_osm_plugin: ^0.11.0-beta.1
       ```
       
 ## Simple Usage
@@ -63,7 +63,7 @@ Add the following to your `pubspec.yaml` file:
                 roadColor: Colors.yellowAccent,
         ),
         markerOption: MarkerOption(
-            markerIcon: MarkerIcon(
+            defaultMarker: MarkerIcon(
                 icon: Icon(
                   Icons.person_pin_circle,
                   color: Colors.blue,
