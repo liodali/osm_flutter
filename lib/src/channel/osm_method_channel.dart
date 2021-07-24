@@ -476,7 +476,7 @@ class MethodChannelOSM extends OSMPlatform {
   @override
   Future<void> goToPosition(int idOSM, GeoPoint p) async {
     Map requestData = {"lon": p.longitude, "lat": p.latitude};
-    await _channels[idOSM]!.invokeListMethod(
+    await _channels[idOSM]!.invokeMethod(
       "goto#position",
       requestData,
     );
