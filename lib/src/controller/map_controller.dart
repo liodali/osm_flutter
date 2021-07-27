@@ -153,9 +153,8 @@ class MapController extends BaseMapController {
   ///
   ///  [intersectPoint] : (List of GeoPoint) middle position that you want you road to pass through it
   ///
-  ///  [roadColor] : (Color) indicate the color that you want to be drawing the road, if Color null will draw with default color that specified in OSMFlutter or red color (default of osm map)
-  ///
-  ///  [roadWidth] : (double) indicate the width of  your road
+  ///  [roadOption] : (RoadOption) runtime configuration of the road
+
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {

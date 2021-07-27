@@ -366,10 +366,12 @@ class OSMController {
 
   /// draw road
   ///  [start] : started point of your Road
+  ///
   ///  [end] : last point of your road
+  ///
   ///  [interestPoints] : middle point that you want to be passed by your route
-  ///  [roadColor] : (color)  indicate the color that you want to be road colored
-  ///  [roadWidth] : (double) indicate the width  of your road
+  ///
+  ///  [roadOption] : (RoadOption) runtime configuration of the road
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {

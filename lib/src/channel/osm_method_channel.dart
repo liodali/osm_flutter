@@ -233,17 +233,22 @@ class MethodChannelOSM extends OSMPlatform {
     List<GeoPoint>? interestPoints,
     RoadOption roadOption = const RoadOption.empty(),
   }) async {
+    /// add point of the road
     final Map args = {
       "wayPoints": [
         start.toMap(),
         end.toMap(),
       ]
     };
+    /// disable/show markers in start,middle,end points
     args.addAll({"showMarker": roadOption.showMarkerOfPOI});
+
+    /// add middle point that will pass through it
     if (interestPoints != null && interestPoints.isNotEmpty) {
       args.addAll(
           {"middlePoints": interestPoints.map((e) => e.toMap()).toList()});
     }
+    /// road configuration
     if (Platform.isIOS) {
       if (roadOption.roadColor != null) {
         args.addAll(roadOption.roadColor!.toHexMap("roadColor"));
@@ -336,18 +341,21 @@ class MethodChannelOSM extends OSMPlatform {
     final startKey = keys.first!;
     final middleKey = keys[1]!;
     final endKey = keys.last!;
-    Map<String, Uint8List> bitmaps = {};
+    Map<String, dynamic> bitmaps = {};
     if (startKey.currentContext != null) {
       Uint8List marker = await _capturePng(startKey);
-      bitmaps.putIfAbsent("START", () => marker);
+      bitmaps.putIfAbsent(
+          "START", () => Platform.isIOS ? marker.convertToString() : marker);
     }
     if (endKey.currentContext != null) {
       Uint8List marker = await _capturePng(endKey);
-      bitmaps.putIfAbsent("END", () => marker);
+      bitmaps.putIfAbsent(
+          "END", () => Platform.isIOS ? marker.convertToString() : marker);
     }
     if (middleKey.currentContext != null) {
       Uint8List marker = await _capturePng(middleKey);
-      bitmaps.putIfAbsent("MIDDLE", () => marker);
+      bitmaps.putIfAbsent(
+          "MIDDLE", () => Platform.isIOS ? marker.convertToString() : marker);
     }
     await _channels[idOSM]!.invokeMethod("road#markers", bitmaps);
   }
@@ -547,7 +555,7 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> removeLimitArea(int idOSM) async{
+  Future<void> removeLimitArea(int idOSM) async {
     await _channels[idOSM]!.invokeMethod("remove#limitArea");
   }
 }
