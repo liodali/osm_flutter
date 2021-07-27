@@ -1,3 +1,6 @@
+## 0.11.0-beta.2 :
+* fix icon marker size in iOS
+* add init road config in iOS
 ## 0.11.0-beta.1 :
 fix invokeMethod in gotoPosition
 ## 0.11.0-beta.0 :
