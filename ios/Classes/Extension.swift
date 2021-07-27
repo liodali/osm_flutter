@@ -8,16 +8,16 @@ import TangramMap
 
 extension GeoPointMap {
     public func setupMarker(
-            for annotation: GeoPointMap, on map: TGMapView
-    ) -> GeoPointMap {
+             on map: TGMapView
+    ) -> TGMarker {
 
-        annotation.marker = map.markerAdd()
-        annotation.marker?.icon = annotation.markerIcon!
-        annotation.marker?.stylingString = annotation.styleMarker
-        annotation.marker?.point = annotation.coordinate
+        marker = map.markerAdd()
+        marker?.icon = markerIcon!
+        marker?.stylingString = styleMarker
+        marker?.point = coordinate
 
-        annotation.marker?.visible = true
-        return annotation
+        marker?.visible = true
+        return marker!
     }
 
     public func toMap() -> GeoPoint {

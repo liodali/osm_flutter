@@ -30,6 +30,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var dictClusterAnnotation = [String: [StaticGeoPMarker]]()
     var dictIconClusterAnnotation = [String: StaticMarkerData]()
     var roadMarkerPolyline: TGMarker? = nil
+    lazy var markersIconsRoadPoint : [String:UIImage] = [String:UIImage]()
+    var markerRoadPoint: [TGMarker] = []
     var homeMarker: TGMarker? = nil
     var resultFlutter: FlutterResult? = nil
     var methodCall: FlutterMethodCall? = nil
@@ -97,6 +99,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         case "initMap":
             initPosition(args: call.arguments, result: result)
             break;
+        case "limitArea":
+            setCameraAreaLimit(call:call)
+            result(200)
+            break;
+        case "remove#limitArea":
+            break;
         case "changePosition":
             changePosition(args: call.arguments, result: result)
             break;
@@ -154,6 +162,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             setStaticGeoPoint(call: call)
             result(200)
             break;
+        case "road#markers":
+            setRoadMarkersIcon(call:call,result:result)
+            break;
         case "road":
             drawRoad(call: call) { [unowned self] roadInfo, road, roadData, error in
                 if (error != nil) {
@@ -162,6 +173,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     var newRoad = road
                     newRoad?.roadData = roadData!
                     roadManager.drawRoadOnMap(on: newRoad!, for: mapView)
+
+
                     result(roadInfo!.toMap())
                 }
 
@@ -195,6 +208,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
 
 
+
+    private func setCameraAreaLimit(call: FlutterMethodCall) {
+       let  bbox = call.arguments as! [Double]
+        let bounds = TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: bbox[2], longitude: bbox[3]),
+                ne: CLLocationCoordinate2D(latitude: bbox[0], longitude: bbox[1]))
+        mapView.cameraThatFitsBounds(bounds, withPadding: UIEdgeInsets.init(top: 3.0, left: 3.0, bottom: 3.0, right: 3.0))
+        //mapView.bounds
+        //mapView.bounds = bounds
+
+    }
 
     public func view() -> UIView {
         if #available(iOS 11.0, *) {
@@ -236,12 +259,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
         let location = CLLocationCoordinate2D(latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
         mapView.fly(to: TGCameraPosition(center: location, zoom: mapView.zoom, bearing: 0, pitch: 0), withDuration:0.2) { finish in
-            let marker = self.mapView.markerAdd()
-            marker.icon = self.markerIcon!
-            marker.point = location
-            marker.visible = true
-            marker.stylingString = "{ style: points, interactive: false,color: white, order: 5000, collide: false }"
-            self.homeMarker = marker
+            let geoMarker = GeoPointMap(icon: self.markerIcon!,coordinate: location)
+            geoMarker.setupMarker( on: self.mapView)
+            self.homeMarker = geoMarker.marker
             result(200)
         }
 
@@ -364,15 +384,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     }
                     homeMarker = nil
                 }
-                let marker = mapView.markerAdd()
-                if(markerIcon != nil){
-                    marker.icon = markerIcon!
-                }
-
-                marker.point = coordinate
-                marker.visible = true
-                marker.stylingString = "{ style: points, interactive: false,color: white, order: 5000, collide: false }"
-                homeMarker = marker
+                let geoMarker = GeoPointMap(icon: markerIcon!, coordinate: coordinate)
+                geoMarker.setupMarker(on: mapView)
+                homeMarker = geoMarker.marker
                 cancelAdvancedPickerMarker()
                 isAdvancedPicker = false
             }
@@ -414,6 +428,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 mapView.markerRemove(m)
             }
         }
+        if(!markerRoadPoint.isEmpty){
+           markerRoadPoint.forEach{ m in
+               mapView.markerRemove(m)
+           }
+        }
         if(roadMarkerPolyline != nil ) {
             mapView.markerRemove(roadMarkerPolyline!)
             roadMarkerPolyline = nil
@@ -446,6 +465,21 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             let roadInfo = RoadInformation(distance: road!.distance, seconds: road!.duration)
 
             completion(roadInfo, road, RoadData(roadColor: roadColor, roadWidth: roadWidth), nil)
+            if let showMarkerInPOI = args["showMarker"] as? Bool {
+                if(showMarkerInPOI){
+                    if let start = self.markersIconsRoadPoint["start"]{
+                        let geoStartM = GeoPointMap(icon: start, coordinate: CLLocationCoordinate2D(latitude: points.first!["lat"]!, longitude: points.first!["lon"]!))
+                        geoStartM.marker = geoStartM.setupMarker(on: self.mapView)
+                        self.markerRoadPoint.append(geoStartM.marker!)
+                    }
+                    if let end = self.markersIconsRoadPoint["end"]{
+                        let geoStartM = GeoPointMap(icon: end, coordinate: CLLocationCoordinate2D(latitude: points.last!["lat"]!, longitude: points.last!["lon"]!))
+                        geoStartM.marker =  geoStartM.setupMarker(on: self.mapView)
+                        self.markerRoadPoint.append(geoStartM.marker!)
+                    }
+                }
+
+            }
         }
 
     }
@@ -475,6 +509,19 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         result(nil)
     }
 
+    private func setRoadMarkersIcon(call: FlutterMethodCall, result: FlutterResult) {
+        let iconsBase64 = call.arguments as![String:String]
+        if let startPointIconRoad = iconsBase64["START"] {
+            markersIconsRoadPoint["start"] = convertImage(codeImage: startPointIconRoad)
+        }
+        if let startPointIconRoad = iconsBase64["MIDDLE"] {
+            markersIconsRoadPoint["middle"] = convertImage(codeImage: startPointIconRoad)
+        }
+        if let startPointIconRoad = iconsBase64["END"] {
+            markersIconsRoadPoint["end"] = convertImage(codeImage: startPointIconRoad)
+        }
+        result(200)
+    }
 
     // ------- delegation func ----
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -540,7 +587,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             }
             let coordinate = view.coordinate(fromViewPosition: location)
             let geoP = GeoPointMap(icon: iconM!, coordinate: coordinate)
-            geoP.setupMarker(for: geoP, on: view)
+            geoP.setupMarker( on: view)
             resultFlutter!(geoP.toMap())
             methodCall = nil
         }else{

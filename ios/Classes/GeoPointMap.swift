@@ -24,16 +24,17 @@ class GeoPointMap {
     public var marker :TGMarker? = nil
 
     init(
-            icon: UIImage?,
+            icon: UIImage? ,
             coordinate: CLLocationCoordinate2D,
-            styleMarker:String = " { style: 'points', interactive: false,color: 'white', order: 1000, collide: false } "
+            size:Int = 32,
+            styleMarker:String? = nil
     ) {
 
         self.coordinate = coordinate
 
         self.markerIcon = icon
 
-        self.styleMarker = styleMarker
+        self.styleMarker = styleMarker ?? " { style: 'points', interactive: false,color: 'white',size: \(size)px, order: 1000, collide: false } "
     }
 
     var location: CLLocation {
@@ -46,7 +47,7 @@ class MyLocationMarker:GeoPointMap {
 
             coordinate: CLLocationCoordinate2D
     ) {
-        super.init(icon: nil, coordinate: coordinate,styleMarker: "{ style: 'ux-location-gem-overlay',sprite: ux-current-location, interactive: false,color: 'white',size: 48px ,order: 2000, collide: false } ")
+        super.init(icon: nil, coordinate: coordinate,styleMarker: "{ style: 'ux-location-gem-overlay',sprite: ux-current-location, interactive: false,color: 'white',size: 56px ,order: 2000, collide: false } ")
 
     }
 }
@@ -59,7 +60,7 @@ class StaticGeoPMarker: GeoPointMap {
             icon: UIImage,
             coordinate: CLLocationCoordinate2D
     ) {
-        super.init(icon: icon, coordinate: coordinate)
+        super.init(icon: icon, coordinate: coordinate,size: 48)
 
     }
 
