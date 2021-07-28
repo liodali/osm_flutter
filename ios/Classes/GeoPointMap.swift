@@ -27,6 +27,7 @@ class GeoPointMap {
             icon: UIImage? ,
             coordinate: CLLocationCoordinate2D,
             size:Int = 32,
+            interactive:Bool = false,
             styleMarker:String? = nil
     ) {
 
@@ -34,7 +35,7 @@ class GeoPointMap {
 
         self.markerIcon = icon
 
-        self.styleMarker = styleMarker ?? " { style: 'points', interactive: false,color: 'white',size: \(size)px, order: 1000, collide: false } "
+        self.styleMarker = styleMarker ?? " { style: 'points', interactive: \(interactive),color: 'white',size: \(size)px, order: 1000, collide: false } "
     }
 
     var location: CLLocation {
@@ -60,7 +61,7 @@ class StaticGeoPMarker: GeoPointMap {
             icon: UIImage,
             coordinate: CLLocationCoordinate2D
     ) {
-        super.init(icon: icon, coordinate: coordinate,size: 48)
+        super.init(icon: icon, coordinate: coordinate,size: 48,interactive: true)
 
     }
 

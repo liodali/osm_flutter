@@ -32,6 +32,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var roadMarkerPolyline: TGMarker? = nil
     lazy var markersIconsRoadPoint : [String:UIImage] = [String:UIImage]()
     var markerRoadPoint: [TGMarker] = []
+    var colorRoad:String = "#ff0000"
     var homeMarker: TGMarker? = nil
     var resultFlutter: FlutterResult? = nil
     var methodCall: FlutterMethodCall? = nil
@@ -65,6 +66,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         mapView.mapViewDelegate = self
 
         mapView.gestureDelegate = self
+
+
 
         locationManager.delegate = self
 
@@ -164,6 +167,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             break;
         case "road#markers":
             setRoadMarkersIcon(call:call,result:result)
+            break;
+        case "road#color":
+            colorRoad = call.arguments as! String
+            result(200)
             break;
         case "road":
             drawRoad(call: call) { [unowned self] roadInfo, road, roadData, error in
@@ -442,7 +449,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             intersectPoint = args["middlePoint"] as! [GeoPoint]
             points.insert(contentsOf: intersectPoint, at: 1)
         }
-        var roadColor = "#ff0000"
+        var roadColor = colorRoad
         if (args.keys.contains("roadColor")) {
             roadColor = args["roadColor"] as! String
         }
@@ -561,6 +568,21 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         print(error.localizedDescription)
     }
 
+    public func mapView(_ mapView: TGMapView, didSelectMarker markerPickResult: TGMarkerPickResult?, atScreenPosition position: CGPoint) {
+        //print("marker picked")
+        if let marker = markerPickResult?.marker{
+            let  staticMarkers =  dictClusterAnnotation.map { k,  markers in  markers }
+            if staticMarkers.contains {markers in markers.contains { staticMarker in staticMarker.marker?.point == marker.point} } {
+                channel.invokeMethod("receiveGeoPoint", arguments: marker.point.toGeoPoint())
+            }
+        }else{
+            let point = mapView.coordinate(fromViewPosition: position)
+
+            channel.invokeMethod("receiveSinglePress", arguments: point.toGeoPoint())
+
+        }
+    }
+
     public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
         if (!dictClusterAnnotation.isEmpty) {
             for gStaticMarker in dictClusterAnnotation {
@@ -577,6 +599,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
     }
 
+
     public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
                         didRecognizeSingleTapGesture location: CGPoint) {
         if (resultFlutter != nil && methodCall != nil && methodCall?.method == "user#pickPosition") {
@@ -591,8 +614,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             resultFlutter!(geoP.toMap())
             methodCall = nil
         }else{
-            let point = mapView.coordinate(fromViewPosition: location)
-            channel.invokeMethod("receiveSinglePress", arguments: ["lat":point.latitude,"lon":point.longitude])
+            mapView.setPickRadius(48)
+            mapView.pickMarker(at: location)
+
         }
     }
 
