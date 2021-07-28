@@ -94,6 +94,18 @@ class OSMController {
 
     if (defaultIcon != null) {
       await changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
+    }else {
+      if(Platform.isIOS){
+        _osmFlutterState.dynamicMarkerWidgetNotifier.value = Icon(
+          Icons.location_on,
+          color: Colors.red,
+          size: 32,
+        );
+        await Future.delayed(Duration(milliseconds: 250), () async {
+          _osmFlutterState.dynamicMarkerWidgetNotifier.value = null;
+          await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
+        });
+      }
     }
 
     /// change advanced picker icon marker

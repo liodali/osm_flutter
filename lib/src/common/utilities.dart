@@ -90,6 +90,9 @@ extension ColorMap on Color {
   Map<String, String> toHexMap(String key) {
     return {"$key": "#${this.value.toRadixString(16)}"};
   }
+  String toHexColor() {
+    return "#${this.value.toRadixString(16)}";
+  }
 }
 
 extension Uint8ListConvert on Uint8List {
