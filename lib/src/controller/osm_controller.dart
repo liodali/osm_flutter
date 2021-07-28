@@ -47,7 +47,6 @@ class OSMController {
       await osmPlatform.initIosMap(_idMap);
     }
 
-
     _checkBoundingBox(box, initPosition);
 
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
@@ -94,8 +93,8 @@ class OSMController {
 
     if (defaultIcon != null) {
       await changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
-    }else {
-      if(Platform.isIOS){
+    } else {
+      if (Platform.isIOS) {
         _osmFlutterState.dynamicMarkerWidgetNotifier.value = Icon(
           Icons.location_on,
           color: Colors.red,
@@ -217,6 +216,7 @@ class OSMController {
       box,
     );
   }
+
   /// remove area camera limit from the map
   Future<void> removeLimitAreaMap() async {
     await osmPlatform.removeLimitArea(

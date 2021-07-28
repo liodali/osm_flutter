@@ -208,6 +208,6 @@ abstract class OSMPlatform extends PlatformInterface {
     BoundingBox box,
   );
   Future<void> removeLimitArea(
-      int idOSM,
-      );
+    int idOSM,
+  );
 }

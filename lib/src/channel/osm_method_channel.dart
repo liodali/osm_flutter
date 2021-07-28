@@ -240,6 +240,7 @@ class MethodChannelOSM extends OSMPlatform {
         end.toMap(),
       ]
     };
+
     /// disable/show markers in start,middle,end points
     args.addAll({"showMarker": roadOption.showMarkerOfPOI});
 
@@ -248,6 +249,7 @@ class MethodChannelOSM extends OSMPlatform {
       args.addAll(
           {"middlePoints": interestPoints.map((e) => e.toMap()).toList()});
     }
+
     /// road configuration
     if (Platform.isIOS) {
       if (roadOption.roadColor != null) {
@@ -321,11 +323,10 @@ class MethodChannelOSM extends OSMPlatform {
   @override
   Future<void> setColorRoad(int idOSM, Color color) async {
     dynamic args = [color.red, color.green, color.blue];
-    if(Platform.isIOS){
-      args= color.toHexColor();
+    if (Platform.isIOS) {
+      args = color.toHexColor();
     }
-    await _channels[idOSM]!
-        .invokeMethod("road#color",args);
+    await _channels[idOSM]!.invokeMethod("road#color", args);
   }
 
   @override

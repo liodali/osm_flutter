@@ -1,3 +1,7 @@
+## 0.11.0-beta.3 :
+* add default road color for ios side
+* fix send color of road for ios side
+* add send geoPoint when the marker of static point is clicked
 ## 0.11.0-beta.2 :
 * fix icon marker size in iOS
 * add init road config in iOS

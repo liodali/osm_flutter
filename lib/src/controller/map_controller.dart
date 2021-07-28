@@ -38,8 +38,9 @@ class MapController extends BaseMapController {
   Future<void> limitAreaMap(BoundingBox box) async {
     await _osmController.limitAreaMap(box);
   }
+
   /// remove area camera limit from the map
-  Future<void> removeLimitAreaMap()async{
+  Future<void> removeLimitAreaMap() async {
     await _osmController.removeLimitAreaMap();
   }
 
