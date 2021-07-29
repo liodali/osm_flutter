@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 import '../../flutter_osm_plugin.dart';
-
 import 'osm/osm_stub.dart'
     if (dart.library.io) 'osm/osm_controller.dart'
     if (dart.library.html) 'package:flutter_osm_web/flutter_osm_web.dart';
@@ -20,17 +19,20 @@ abstract class BaseMapController extends IBaseMapController {
   late ValueNotifier<GeoPoint?> listenerMapSingleTapping = ValueNotifier(null);
 
   BaseMapController({
-    bool initMapWithUserPosition = true,
+    initMapWithUserPosition = true,
     GeoPoint? initPosition,
-  }) : assert(initMapWithUserPosition || initPosition != null);
+  })  : assert(initMapWithUserPosition || initPosition != null),
+        super(
+          initMapWithUserPosition: initMapWithUserPosition,
+          initPosition: initPosition,
+        );
 
   void dispose();
 }
 
 extension OSMControllerOfBaseMapController on BaseMapController {
   @protected
-  IBaseOSMController get osmBaseController =>
-      _osmBaseController;
+  IBaseOSMController get osmBaseController => _osmBaseController;
 
   void setBaseOSMController(IBaseOSMController controller) {
     _osmBaseController = controller;

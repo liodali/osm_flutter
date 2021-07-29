@@ -19,7 +19,7 @@ class MapController extends BaseMapController {
         super(
           initMapWithUserPosition: initMapWithUserPosition,
           initPosition: initPosition,
-        ) {}
+        );
 
   void dispose() {
     listenerMapLongTapping.dispose();

@@ -24,8 +24,6 @@ import 'widgets/copyright_osm_widget.dart';
 ///
 /// [onLocationChanged] : (callback) it's hire when you activate tracking and  user position has been changed
 ///
-/// [markerIcon] : (Icon/AssertImage) marker of geoPoint
-///
 /// [markerOption] :  contain marker of geoPoint and customisation of advanced picker marker
 ///
 /// [road] : set color and icons marker of road
@@ -126,32 +124,7 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   @override
   Widget build(BuildContext context) {
-    // final widgetMap = MobileOsmFlutter(
-    //   controller: widget.controller as MapController,
-    //   onGeoPointClicked: widget.onGeoPointClicked,
-    //   onLocationChanged: widget.onLocationChanged,
-    //   dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
-    //   mapIsLoading: widget.mapIsLoading,
-    //   trackMyPosition: widget.trackMyPosition,
-    //   mapIsReadyListener: mapIsReadyListener,
-    //   staticIconGlobalKeys: staticMarkersKeys,
-    //   road: widget.road,
-    //   defaultZoom: widget.defaultZoom,
-    //   showContributorBadgeForOSM: widget.showContributorBadgeForOSM,
-    //   isPicker: widget.isPicker,
-    //   markerOption: widget.markerOption,
-    //   showDefaultInfoWindow: widget.showDefaultInfoWindow,
-    //   showZoomController: widget.showZoomController,
-    //   staticPoints: widget.staticPoints,
-    //   globalKeys: [
-    //     defaultMarkerKey,
-    //     advancedPickerMarker,
-    //     startIconKey,
-    //     endIconKey,
-    //     middleIconKey,
-    //     dynamicMarkerKey
-    //   ],
-    // );
+
     final widgetMap = buildWidget(
       controller: widget.controller as MapController,
       onGeoPointClicked: widget.onGeoPointClicked,
