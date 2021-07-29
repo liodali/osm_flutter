@@ -27,7 +27,7 @@ class MobileOsmFlutter extends StatefulWidget {
   MobileOsmFlutter({
     Key? key,
     required this.controller,
-    required this.trackMyPosition,
+    this.trackMyPosition = false,
     this.onGeoPointClicked,
     this.onLocationChanged,
     required this.mapIsReadyListener,
@@ -55,17 +55,17 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter> {
 //permission status
   PermissionStatus? _permission;
 
-  GlobalKey get defaultMarkerKey => widget.globalKeys[0];
+  GlobalKey? get defaultMarkerKey => widget.globalKeys[0];
 
-  GlobalKey get advancedPickerMarker => widget.globalKeys[1];
+  GlobalKey? get advancedPickerMarker => widget.globalKeys[1];
 
-  GlobalKey get startIconKey => widget.globalKeys[2];
+  GlobalKey? get startIconKey => widget.globalKeys[2];
 
-  GlobalKey get endIconKey => widget.globalKeys[3];
+  GlobalKey? get endIconKey => widget.globalKeys[3];
 
-  GlobalKey get middleIconKey => widget.globalKeys[4];
+  GlobalKey? get middleIconKey => widget.globalKeys[4];
 
-  GlobalKey get dynamicMarkerKey => widget.globalKeys[5];
+  GlobalKey? get dynamicMarkerKey => widget.globalKeys[5];
 
   @override
   void initState() {

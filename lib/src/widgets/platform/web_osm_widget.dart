@@ -26,10 +26,17 @@ Widget getWidget({
 }) =>
     OsmWebWidget(
       controller: controller as MapController,
+      staticPoints: staticPoints,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
       mapIsReadyListener: mapIsReadyListener,
       mapIsLoading: mapIsLoading,
       staticIconGlobalKeys: staticIconGlobalKeys,
       globalKeys: globalKeys,
+      dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
+      defaultZoom: defaultZoom,
+      isPicker: isPicker,
+      markerOption: markerOption,
+      road: road,
+      showDefaultInfoWindow: showDefaultInfoWindow,
     );

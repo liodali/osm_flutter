@@ -92,7 +92,7 @@ class OSMMobileController implements IBaseOSMController {
 
     /// change advanced picker icon marker
     if (_osmFlutterState.widget.markerOption?.advancedPickerMarker != null) {
-      await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker);
+      await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker!);
     }
     if (Platform.isIOS &&
         _osmFlutterState.widget.markerOption?.advancedPickerMarker == null) {
@@ -103,7 +103,7 @@ class OSMMobileController implements IBaseOSMController {
       );
       await Future.delayed(Duration(milliseconds: 250), () async {
         _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
-        await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
+        await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey!);
       });
     }
 
