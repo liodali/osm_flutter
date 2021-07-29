@@ -3,7 +3,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -152,7 +151,7 @@ class MethodChannelOSM extends OSMPlatform {
 
   @override
   Future<void> customMarker(int idOSM, GlobalKey? globalKey) async {
-    Uint8List icon = await _capturePng(globalKey!);
+    Uint8List icon = await capturePng(globalKey!);
     dynamic args = icon;
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       var base64Str = base64.encode(icon);
@@ -168,7 +167,7 @@ class MethodChannelOSM extends OSMPlatform {
     GlobalKey? globalKey,
     String id,
   ) async {
-    Uint8List icon = await _capturePng(globalKey!);
+    Uint8List icon = await capturePng(globalKey!);
     String iconIOS = "";
     if (Platform.isIOS) {
       iconIOS = icon.convertToString();
@@ -250,7 +249,7 @@ class MethodChannelOSM extends OSMPlatform {
     Uint8List? bitmap;
     Map args = {};
     if (key != null) {
-      bitmap = await _capturePng(key);
+      bitmap = await capturePng(key);
       args.addAll({"icon": Platform.isIOS ? bitmap.convertToString() : bitmap});
     }
     if (imageURL.isNotEmpty) {
@@ -302,15 +301,15 @@ class MethodChannelOSM extends OSMPlatform {
     final endKey = keys.last!;
     Map<String, Uint8List> bitmaps = {};
     if (startKey.currentContext != null) {
-      Uint8List marker = await _capturePng(startKey);
+      Uint8List marker = await capturePng(startKey);
       bitmaps.putIfAbsent("START", () => marker);
     }
     if (endKey.currentContext != null) {
-      Uint8List marker = await _capturePng(endKey);
+      Uint8List marker = await capturePng(endKey);
       bitmaps.putIfAbsent("END", () => marker);
     }
     if (middleKey.currentContext != null) {
-      Uint8List marker = await _capturePng(middleKey);
+      Uint8List marker = await capturePng(middleKey);
       bitmaps.putIfAbsent("MIDDLE", () => marker);
     }
     await _channels[idOSM]!.invokeMethod("road#markers", bitmaps);
@@ -336,15 +335,7 @@ class MethodChannelOSM extends OSMPlatform {
     await _channels[idOSM]!.invokeMethod('Zoom', zoom);
   }
 
-  Future<Uint8List> _capturePng(GlobalKey globalKey) async {
-    RenderRepaintBoundary boundary =
-        globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    ui.Image image = await boundary.toImage();
-    ByteData byteData =
-        (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
-    Uint8List pngBytes = byteData.buffer.asUint8List();
-    return pngBytes;
-  }
+
 
   @override
   Future<void> visibilityInfoWindow(int idOSM, bool visible) async {
@@ -484,7 +475,7 @@ class MethodChannelOSM extends OSMPlatform {
     int idMap,
     GlobalKey key,
   ) async {
-    Uint8List icon = await _capturePng(key);
+    Uint8List icon = await capturePng(key);
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       var base64Str = base64.encode(icon);

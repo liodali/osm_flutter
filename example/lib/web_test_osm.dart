@@ -18,6 +18,13 @@ class WebTestOsm extends StatelessWidget {
           mapIsLoading: Center(
             child: Text("map is Loading"),
           ),
+          markerOption: MarkerOption(
+              defaultMarker: MarkerIcon(
+            icon: Icon(
+              Icons.add_location,
+              color: Colors.amber,
+            ),
+          )),
           showContributorBadgeForOSM: true,
         ),
       ),

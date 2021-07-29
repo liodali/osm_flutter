@@ -1,17 +1,15 @@
 import 'dart:html' as html;
-import 'dart:js_util';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import '../channel/method_channel_web.dart';
-import '../interop/models/geo_point_js.dart';
 
+import '../channel/method_channel_web.dart';
 import '../flutter_osm_web.dart';
 import '../mixin_web_controller.dart';
 import '../web_platform.dart';
-import '../interop/osm_interop.dart' as interop;
+
 WebOsmController getOSMMap() => WebOsmController();
 
 class WebOsmController with ControllerWebMixin implements IBaseOSMController {
@@ -19,7 +17,7 @@ class WebOsmController with ControllerWebMixin implements IBaseOSMController {
 
   int get mapId => mapId;
 
-  void set mapId (int mapId) {
+  void set mapId(int mapId) {
     _mapId = mapId;
   }
 
@@ -115,6 +113,10 @@ class WebOsmController with ControllerWebMixin implements IBaseOSMController {
         });*/
     }
 
+    if (_osmWebFlutterState.widget.markerOption?.defaultMarker != null) {
+      await changeDefaultIconMarker(_osmWebFlutterState.defaultMarkerKey!);
+    }
+
     GeoPoint? initLocation = initPosition;
 
     if (initWithUserPosition) {
@@ -123,33 +125,7 @@ class WebOsmController with ControllerWebMixin implements IBaseOSMController {
     await initLocationMap(initLocation!);
   }
 
-  Future<void> initLocationMap(GeoPoint p) async {
-    await promiseToFuture(interop.initMapLocation(p._toGeoJS()));
-  }
 
-
-
-  Future<void> addPosition(GeoPoint point) async {
-    await promiseToFuture(interop.addPosition(GeoPointJs(
-      lat: point.latitude,
-      lon: point.longitude,
-    )));
-  }
-
-  Future<GeoPoint> currentLocation() async {
-    Map<String, dynamic>? value =
-    await html.promiseToFutureAsMap(interop.locateMe());
-    if (value!.containsKey("error")) {
-      throw Exception(value["message"]);
-    }
-    return GeoPoint.fromMap(Map<String, double>.from(value));
-  }
 }
-extension ExtGeoPoint on GeoPoint {
-  GeoPointJs _toGeoJS() {
-    return GeoPointJs(
-      lon: longitude,
-      lat: latitude,
-    );
-  }
-}
+
+

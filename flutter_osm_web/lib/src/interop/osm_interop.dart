@@ -13,6 +13,10 @@ external Map<String, double> locateMe();
 @JS('initMapLocation')
 external dynamic initMapLocation(GeoPointJs p);
 
+
+@JS('setDefaultIcon')
+external dynamic setDefaultIcon(String base64);
+
 @JS('addPosition')
 external dynamic addPosition(GeoPointJs p);
 

@@ -145,9 +145,8 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
 
   @override
   Future<void> customMarker(
-      int idOSM, GlobalKey<State<StatefulWidget>>? globalKey) {
-    // TODO: implement customMarker
-    throw UnimplementedError();
+      int idOSM, GlobalKey<State<StatefulWidget>>? globalKey) async{
+   await  mapsController[idOSM]!.changeDefaultIconMarker(globalKey!);
   }
 
   @override

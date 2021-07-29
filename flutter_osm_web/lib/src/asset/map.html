@@ -20,6 +20,7 @@
       width: 100%;
       height: 100%;
     }
+    
 
     </style>
 </head>
@@ -78,14 +79,24 @@
       };
     }
     async function addPosition(point) {
-       L.marker([point.lat, point.lon]).addTo(mymap);
+      var args = {}
+      if(defaultIcon!=""){
+        args = {icon:L.icon(
+           { 
+             iconUrl : "data:image/png;base64,"+defaultIcon,
+             iconSize : [32,32]
+           }
+         )}
+      }
+       L.marker([point.lat, point.lon],args).addTo(mymap);
        mymap.setView([point.lat, point.lon],8);
        return 200;
     }
     
-    async function setMarkerIcon(icon) {
-      var iframe = document.getElementById("frame_map");
-      return await iframe.setMarkerIcon(icon);
+    async function setDefaultIcon(icon) {
+        defaultIcon = icon
+        console.log(defaultIcon)
+        console.log(mymap.getCenter().lat)
     }
 
 

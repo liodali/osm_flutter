@@ -23,9 +23,9 @@ function isMapReady(isReady) {
    initMapFinish(isReady);
 }
 
-async function setMarkerIcon(icon) {
+async function setDefaultIcon(icon) {
    var iframe = document.getElementById("frame_map");
-   return await iframe.setMarkerIcon(icon);
+   return await iframe.contentWindow.setDefaultIcon(icon);
 }
 
 

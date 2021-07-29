@@ -5,11 +5,38 @@ import 'package:js/js_util.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'interop/models/geo_point_js.dart';
 import 'interop/osm_interop.dart' as interop
-    show addPosition, locateMe, initMapLocation;
+    show addPosition, locateMe, initMapLocation,setDefaultIcon;
+
+extension ExtGeoPoint on GeoPoint {
+  GeoPointJs _toGeoJS() {
+    return GeoPointJs(
+      lon: longitude,
+      lat: latitude,
+    );
+  }
+}
 
 mixin ControllerWebMixin {
 
+  Future<void> initLocationMap(GeoPoint p) async {
+    await promiseToFuture(interop.initMapLocation(p._toGeoJS()));
+  }
 
+  Future<void> addPosition(GeoPoint point) async {
+    await promiseToFuture(interop.addPosition(GeoPointJs(
+      lat: point.latitude,
+      lon: point.longitude,
+    )));
+  }
+
+  Future<GeoPoint> currentLocation() async {
+    Map<String, dynamic>? value =
+    await html.promiseToFutureAsMap(interop.locateMe());
+    if (value!.containsKey("error")) {
+      throw Exception(value["message"]);
+    }
+    return GeoPoint.fromMap(Map<String, double>.from(value));
+  }
   
   Future<void> advancedPositionPicker() {
     // TODO: implement advancedPositionPicker
@@ -23,9 +50,9 @@ mixin ControllerWebMixin {
   }
 
   
-  Future changeDefaultIconMarker(GlobalKey<State<StatefulWidget>>? key) {
-    // TODO: implement changeDefaultIconMarker
-    throw UnimplementedError();
+  Future changeDefaultIconMarker(GlobalKey<State<StatefulWidget>>? key) async{
+     final base64 =  (await capturePng(key!)).convertToString();
+     await interop.setDefaultIcon(base64);
   }
 
   
