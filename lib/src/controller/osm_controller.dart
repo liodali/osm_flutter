@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
@@ -42,7 +43,6 @@ class OSMController {
     bool initWithUserPosition = false,
     BoundingBox? box,
   }) async {
-
     _checkBoundingBox(box, initPosition);
 
     osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
@@ -190,6 +190,7 @@ class OSMController {
       box,
     );
   }
+
   /// remove area camera limit from the map
   Future<void> removeLimitAreaMap() async {
     await osmPlatform.removeLimitArea(
@@ -223,10 +224,20 @@ class OSMController {
   /// [markerIcon] : (MarkerIcon) new marker that will set to the static group geopoint
   Future<void> setIconStaticPositions(
     String id,
-    MarkerIcon markerIcon,
-  ) async {
+    MarkerIcon markerIcon, {
+    double angle = 0.0,
+  }) async {
     if (markerIcon.icon != null) {
-      _osmFlutterState.dynamicMarkerWidgetNotifier.value = markerIcon.icon;
+      var rotate = angle;
+      if (angle  > pi && angle < -pi) {
+        rotate = (rotate * pi) / 180;
+      }
+      _osmFlutterState.dynamicMarkerWidgetNotifier.value = rotate == 0.0
+          ? markerIcon.icon
+          : Transform.rotate(
+              angle: rotate,
+              child: markerIcon.icon,
+            );
     } else if (markerIcon.image != null) {
       _osmFlutterState.dynamicMarkerWidgetNotifier.value = Image(
         image: markerIcon.image!,
