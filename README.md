@@ -1,7 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.8.3-orange)
-
-![pub](https://img.shields.io/badge/pub-v0.11.0--beta.0-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.8.3%2B1-orange)
 
 ## Platform Support
 | Android | iOS | Web |
@@ -38,14 +36,8 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.8.2
+      flutter_osm_plugin: ^0.8.3+1
 
-      
-* beta version (iOS support)
-      ```dart
-       dependencies:
-                flutter_osm_plugin: ^0.11.0-beta.0
-      ```
       
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :

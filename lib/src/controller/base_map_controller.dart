@@ -54,10 +54,9 @@ abstract class BaseMapController {
     this._osmController = osmController;
     Future.delayed(Duration(milliseconds: 1250), () async {
       await this._osmController.initMap(
-            initPosition: initPosition,
-            initWithUserPosition: initMapWithUserPosition,
-            box: areaLimit
-          );
+          initPosition: initPosition,
+          initWithUserPosition: initMapWithUserPosition,
+          box: areaLimit);
     });
   }
 }

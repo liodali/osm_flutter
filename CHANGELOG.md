@@ -1,3 +1,5 @@
+## 0.8.3+1 (without ios support)
+* fix readme
 ## 0.8.3 (without ios support)
 * create new class `GeoPointWithOrientation`
 * change orientation of marker of the static GeoPoint in runtime 

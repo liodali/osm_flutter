@@ -361,7 +361,8 @@ class MethodChannelOSM extends OSMPlatform {
       for (GeoPoint p in pList) {
         listGeos.add(p.toMap());
       }
-      await _channels[idOSM]!.invokeMethod("staticPosition", {"id": id, "point": listGeos});
+      await _channels[idOSM]!
+          .invokeMethod("staticPosition", {"id": id, "point": listGeos});
     } on PlatformException catch (e) {
       print(e.message);
     }
@@ -543,7 +544,7 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> removeLimitArea(int idOSM) async{
+  Future<void> removeLimitArea(int idOSM) async {
     await _channels[idOSM]!.invokeMethod("remove#limitArea");
   }
 }
