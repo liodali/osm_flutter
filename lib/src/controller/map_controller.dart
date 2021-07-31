@@ -95,7 +95,7 @@ class MapController extends BaseMapController {
     required String id,
     required MarkerIcon markerIcon,
   }) async {
-    await _osmController.setIconStaticPositions(id, markerIcon,angle: angle);
+    await _osmController.setIconStaticPositions(id, markerIcon);
   }
 
   /// zoom in/out
