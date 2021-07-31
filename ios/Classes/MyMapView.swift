@@ -207,6 +207,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             cancelAdvancedPickerMarker()
             result(200)
             break;
+        case "map#orientation":
+            rotateMap(call:call)
+            result(200)
+            break;
         default:
             result(nil)
             break;
@@ -255,6 +259,13 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
         }*/
         result(200)
+    }
+
+    private func rotateMap(call: FlutterMethodCall) {
+        let angle = call.arguments as! Double
+        if( angle > 0.0){
+            mapView.setCameraPosition(TGCameraPosition(center: mapView.position, zoom: mapView.zoom, bearing: CLLocationDirection(CGFloat(angle)), pitch: 0.0), withDuration: 0.2, easeType: TGEaseType.sine)
+        }
     }
 
     private func changePosition(args: Any?, result: @escaping FlutterResult) {
