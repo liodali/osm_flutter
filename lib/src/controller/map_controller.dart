@@ -230,7 +230,7 @@ class MapController extends BaseMapController {
   }
 
   /// rotate camera of osm map
-  Future<void> rotateMapCamera(double? degree) async {
+  Future<void> rotateMapCamera(double degree) async {
     return await _osmController.mapOrientation(degree);
   }
 

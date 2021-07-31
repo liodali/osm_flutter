@@ -191,7 +191,7 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Future<void> mapRotation(
     int idOSM,
-    double? degree,
+    double degree,
   );
 
   Future<void> customAdvancedPickerMarker(

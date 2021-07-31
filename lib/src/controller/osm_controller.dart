@@ -492,7 +492,7 @@ class OSMController {
     return await osmPlatform.cancelAdvancedPositionPicker(_idMap);
   }
 
-  Future<void> mapOrientation(double? degree) async {
+  Future<void> mapOrientation(double degree) async {
     await osmPlatform.mapRotation(_idMap, degree);
   }
 }

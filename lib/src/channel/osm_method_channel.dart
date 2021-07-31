@@ -521,7 +521,10 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> mapRotation(int idOSM, double? degree) async {
+  Future<void> mapRotation(
+    int idOSM,
+    double degree,
+  ) async {
     await _channels[idOSM]!.invokeMethod(
       "map#orientation",
       degree,
