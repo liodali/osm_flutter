@@ -1,3 +1,5 @@
+## 0.8.3+2 (without ios support)
+* remove unnecesssary att
 ## 0.8.3+1 (without ios support)
 * fix readme
 ## 0.8.3 (without ios support)
