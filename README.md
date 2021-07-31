@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.8.2-orange)
+![pub](https://img.shields.io/badge/pub-v0.8.3-orange)
 
 ![pub](https://img.shields.io/badge/pub-v0.11.0--beta.0-yellow) 
 
@@ -260,6 +260,8 @@ await controller.drawRoadManually(
 > add new staticPoints with empty list of geoPoints (notice: if you add static point without marker,they will get default maker used by plugin)
 
 > change their position over time
+
+> change their orientation use `GeoPointWithOrientation`
 
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
