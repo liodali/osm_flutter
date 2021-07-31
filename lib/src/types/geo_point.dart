@@ -14,7 +14,7 @@ class GeoPoint {
       : this.latitude = m["lat"],
         this.longitude = m["lon"];
 
-  Map<String, double?> toMap() {
+  Map<String, double> toMap() {
     return {
       "lon": longitude,
       "lat": latitude,
@@ -24,5 +24,26 @@ class GeoPoint {
   @override
   String toString() {
     return 'GeoPoint{latitude: $latitude , longitude: $longitude}';
+  }
+}
+
+class GeoPointWithOrientation extends GeoPoint {
+  final double angle;
+
+  GeoPointWithOrientation({
+    this.angle = 0.0,
+    required double latitude,
+    required double longitude,
+  }) : super(
+          latitude: latitude,
+          longitude: longitude,
+        );
+
+  Map<String, double> toMap() {
+    return super.toMap()
+      ..putIfAbsent(
+        "angle",
+        () => angle,
+      );
   }
 }
