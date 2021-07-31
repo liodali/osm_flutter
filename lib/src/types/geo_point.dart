@@ -1,3 +1,5 @@
+import 'dart:math';
+
 ///[GeoPoint]:class contain longitude and latitude of geographic position
 /// [longitude] : (double)
 /// [latitude] : (double)
@@ -24,26 +26,5 @@ class GeoPoint {
   @override
   String toString() {
     return 'GeoPoint{latitude: $latitude , longitude: $longitude}';
-  }
-}
-
-class GeoPointWithOrientation extends GeoPoint {
-  final double angle;
-
-  GeoPointWithOrientation({
-    this.angle = 0.0,
-    required double latitude,
-    required double longitude,
-  }) : super(
-          latitude: latitude,
-          longitude: longitude,
-        );
-
-  Map<String, double> toMap() {
-    return super.toMap()
-      ..putIfAbsent(
-        "angle",
-        () => angle,
-      );
   }
 }
