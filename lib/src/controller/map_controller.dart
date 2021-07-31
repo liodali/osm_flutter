@@ -90,12 +90,9 @@ class MapController extends BaseMapController {
   /// [id] : (String) id  of the static group geopoint
   ///
   /// [markerIcon] : (MarkerIcon) new marker that will set to the static group geopoint
-  ///
-  /// [angle] : (double)  to rotate icon with specific angle (default 0.0),value should be in rad
   Future<void> setMarkerOfStaticPoint({
     required String id,
     required MarkerIcon markerIcon,
-    double angle = 0.0
   }) async {
     await _osmController.setIconStaticPositions(id, markerIcon,angle: angle);
   }

@@ -211,7 +211,6 @@ class MethodChannelOSM extends OSMPlatform {
       "bitmap": icon,
     };
 
-    ///TODO check color is still need it in ios side or not
     if (Platform.isIOS && colorIcon != null) {
       args.addAll(colorIcon.toMap("color"));
       args["bitmap"] = icon.convertToString();
@@ -360,10 +359,9 @@ class MethodChannelOSM extends OSMPlatform {
     try {
       List<Map<String, double>> listGeos = [];
       for (GeoPoint p in pList) {
-        listGeos.add({"lon": p.longitude, "lat": p.latitude});
+        listGeos.add(p.toMap());
       }
-      await _channels[idOSM]!
-          .invokeMethod("staticPosition", {"id": id, "point": listGeos});
+      await _channels[idOSM]!.invokeMethod("staticPosition", {"id": id, "point": listGeos});
     } on PlatformException catch (e) {
       print(e.message);
     }
