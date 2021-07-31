@@ -1,3 +1,5 @@
+## 0.11.0-beta.4 :
+* add map rotation in ios side
 ## 0.11.0-beta.3 :
 * add default road color for ios side
 * fix send color of road for ios side
