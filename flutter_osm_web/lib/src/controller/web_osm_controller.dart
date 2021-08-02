@@ -4,15 +4,16 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_web/src/mixin_web.dart';
 
 import '../channel/method_channel_web.dart';
 import '../flutter_osm_web.dart';
-import '../mixin_web_controller.dart';
+import '../interop/osm_interop.dart' as interop;
 import '../web_platform.dart';
 
 WebOsmController getOSMMap() => WebOsmController();
 
-class WebOsmController with ControllerWebMixin implements IBaseOSMController {
+class WebOsmController with WebMixin implements IBaseOSMController {
   late int _mapId;
 
   int get mapId => mapId;
@@ -116,16 +117,58 @@ class WebOsmController with ControllerWebMixin implements IBaseOSMController {
     if (_osmWebFlutterState.widget.markerOption?.defaultMarker != null) {
       await changeDefaultIconMarker(_osmWebFlutterState.defaultMarkerKey!);
     }
+    if (_osmWebFlutterState.widget.staticIconGlobalKeys.isNotEmpty) {
+      _osmWebFlutterState.widget.staticIconGlobalKeys.forEach((id, key) {
+        markerIconsStaticPositions(id, key);
+      });
+    }
 
     GeoPoint? initLocation = initPosition;
 
     if (initWithUserPosition) {
-      initLocation = await currentLocation();
+      initLocation = await myLocation();
     }
     await initLocationMap(initLocation!);
+
+    if (_osmWebFlutterState.widget.staticPoints.isNotEmpty) {
+      _osmWebFlutterState.widget.staticPoints.forEach((ele) {
+          setStaticPosition(ele.geoPoints, ele.id);
+      });
+    }
   }
 
+  @override
+  Future<void> setIconStaticPositions(
+    String id,
+    MarkerIcon markerIcon,
+  ) async {
+    if (markerIcon.icon != null) {
+      _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value =
+          markerIcon.icon;
+    } else if (markerIcon.image != null) {
+      _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = Image(
+        image: markerIcon.image!,
+      );
+    }
+    Future.delayed(Duration(milliseconds: 250), () async {
+      final base64Icon =
+          (await capturePng(_osmWebFlutterState.dynamicMarkerKey!))
+              .convertToString();
+      await interop.setIconStaticGeoPoints(
+        id,
+        base64Icon,
+      );
+    });
+  }
 
+  Future<void> markerIconsStaticPositions(
+    String id,
+    GlobalKey key,
+  ) async {
+    final base64Icon = (await capturePng(key)).convertToString();
+    await interop.setIconStaticGeoPoints(
+      id,
+      base64Icon,
+    );
+  }
 }
-
-

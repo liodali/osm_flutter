@@ -13,7 +13,8 @@ class OSMMobileController implements IBaseOSMController {
   late int _idMap;
   late MobileOsmFlutterState _osmFlutterState;
 
-  static OSMPlatform get osmPlatform => OSMPlatform.instance;
+  static MobileOSMPlatform get osmPlatform =>
+      OSMPlatform.instance as MobileOSMPlatform;
 
   OSMMobileController();
 
@@ -373,11 +374,15 @@ class OSMMobileController implements IBaseOSMController {
   }
 
   Future<bool> checkServiceLocation() async {
-    bool isEnabled = await (osmPlatform as MethodChannelOSM).locationService.serviceEnabled();
+    bool isEnabled = await (osmPlatform as MethodChannelOSM)
+        .locationService
+        .serviceEnabled();
     if (!isEnabled) {
       await (osmPlatform as MethodChannelOSM).locationService.requestService();
       return Future.delayed(Duration(milliseconds: 55), () async {
-        isEnabled = await (osmPlatform as MethodChannelOSM).locationService.serviceEnabled();
+        isEnabled = await (osmPlatform as MethodChannelOSM)
+            .locationService
+            .serviceEnabled();
         return isEnabled;
       });
     }

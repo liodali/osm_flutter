@@ -16,7 +16,7 @@ import '../common/utilities.dart';
 import '../common/osm_event.dart';
 import '../osm_interface.dart';
 import 'package:stream_transform/stream_transform.dart';
-class MethodChannelOSM extends OSMPlatform {
+class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, MethodChannel> _channels = {};
   late Location locationService;
 

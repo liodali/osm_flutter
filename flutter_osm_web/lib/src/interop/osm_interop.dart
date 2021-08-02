@@ -20,6 +20,12 @@ external dynamic setDefaultIcon(String base64);
 @JS('addPosition')
 external dynamic addPosition(GeoPointJs p);
 
+@JS('setStaticGeoPoints')
+external dynamic setStaticGeoPoints(String id,List<GeoPointJs> points);
+
+@JS('setIconStaticGeoPoints')
+external dynamic setIconStaticGeoPoints(String id,String icons);
+
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')
 external set initMapFinish(void Function(bool) f);

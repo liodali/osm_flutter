@@ -36,8 +36,11 @@
     var zoom = 2.0;
     var stepZoom = 1.0;
     var defaultIcon = "";
-    var staticIcons = "";
+    var staticIcons = new Map();
+    var staticGeoPoint = new Map();
     var dynamicIcon = "";
+    var homeMarker;
+
 
     var mymap = L.map('mapid', {
       renderer: L.canvas()
@@ -88,15 +91,42 @@
            }
          )}
       }
-       L.marker([point.lat, point.lon],args).addTo(mymap);
+      if(homeMarker == undefined){
+       homeMarker = L.marker([point.lat, point.lon],args).addTo(mymap);
+
+      }else{
+          homeMarker.setLatLng([point.lat, point.lon])
+      }
        mymap.setView([point.lat, point.lon],8);
        return 200;
     }
     
     async function setDefaultIcon(icon) {
-        defaultIcon = icon
-        console.log(defaultIcon)
-        console.log(mymap.getCenter().lat)
+        defaultIcon = icon;
+        return 200;
+    }
+    async function setStaticGeoPointIcon(id,icon) {
+        staticIcons.set(id,icon)
+        return 200;
+    }
+    async function setStaticGeoPoint(id,points) {
+        var markers = [];
+        if(staticGeoPoint.has(id)){
+            staticGeoPoint[id].clearLayers();
+        }
+        var icon = L.icon(
+              { 
+                iconUrl : "data:image/png;base64,"+staticIcons.get(id),
+                iconSize : [32,32]
+              }
+            )
+        points.forEach(function(ele){
+            markers.push(L.marker([ele.lat, ele.lon],{icon:icon}).addTo(mymap))
+        })
+        const groupLayer = L.layerGroup(markers).addTo(mymap);
+        staticGeoPoint.set(id,groupLayer);
+
+        return 200;
     }
 
 

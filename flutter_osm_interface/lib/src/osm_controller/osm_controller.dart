@@ -27,9 +27,9 @@ abstract class IBaseOSMController {
   /// [id] : (String) id  of the static group geopoint
   /// [markerIcon] : (MarkerIcon) new marker that will set to the static group geopoint
   Future<void> setIconStaticPositions(
-      String id,
-      MarkerIcon markerIcon,
-      );
+    String id,
+    MarkerIcon markerIcon,
+  );
 
   ///change Icon  of advanced picker Marker
   /// we need to global key to recuperate widget from tree element
@@ -88,19 +88,19 @@ abstract class IBaseOSMController {
   ///  [roadColor] : (color)  indicate the color that you want to be road colored
   ///  [roadWidth] : (double) indicate the width  of your road
   Future<RoadInfo> drawRoad(
-      GeoPoint start,
-      GeoPoint end, {
-        List<GeoPoint>? interestPoints,
-        RoadOption? roadOption,
-      });
+    GeoPoint start,
+    GeoPoint end, {
+    List<GeoPoint>? interestPoints,
+    RoadOption? roadOption,
+  });
 
   /// draw road
   ///  [path] : (list) path of the road
   Future<void> drawRoadManually(
-      List<GeoPoint> path,
-      Color roadColor,
-      double width,
-      );
+    List<GeoPoint> path,
+    Color roadColor,
+    double width,
+  );
 
   ///delete last road draw in the map
   Future<void> removeLastRoad();

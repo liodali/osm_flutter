@@ -4,7 +4,6 @@ library flutter_osm_interface;
 
 export 'src/channel/osm_method_channel.dart' show MethodChannelOSM;
 export 'src/osm_interface.dart';
-export 'src/base_osm_platform.dart';
 export 'src/types/types.dart';
 export 'src/common/utilities.dart';
 export 'src/common/osm_event.dart';

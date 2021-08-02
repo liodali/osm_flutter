@@ -27,6 +27,14 @@ async function setDefaultIcon(icon) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setDefaultIcon(icon);
 }
+async function setIconStaticGeoPoints(id,icon) {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.setStaticGeoPointIcon(id,icon);
+}
+async function setStaticGeoPoints(id,points) {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.setStaticGeoPoint(id,points);
+}
 
 
 var innerWindow = document.getElementById('frame_map').contentWindow;
