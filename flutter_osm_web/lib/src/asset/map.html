@@ -121,14 +121,20 @@
               }
             )
         points.forEach(function(ele){
-            markers.push(L.marker([ele.lat, ele.lon],{icon:icon}).addTo(mymap))
+            markers.push(L.marker([ele.lat, ele.lon],{icon:icon})
+            .addTo(mymap)
+            .on("click", function(event){
+                  const geoP = event.latlng;
+                  onGeoPointClicked(geoP.lng,geoP.lat)
+            }))
         })
         const groupLayer = L.layerGroup(markers).addTo(mymap);
         staticGeoPoint.set(id,groupLayer);
 
         return 200;
     }
-
+    
+    
 
 </script>
 

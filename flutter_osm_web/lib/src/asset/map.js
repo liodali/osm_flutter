@@ -19,9 +19,7 @@ async function initMapLocation(point) {
    await iframe.contentWindow.initMapLocation(point);
 }
 
-function isMapReady(isReady) {
-   initMapFinish(isReady);
-}
+
 
 async function setDefaultIcon(icon) {
    var iframe = document.getElementById("frame_map");
@@ -36,9 +34,20 @@ async function setStaticGeoPoints(id,points) {
    return await iframe.contentWindow.setStaticGeoPoint(id,points);
 }
 
+/*
+* shared dart function that called from js
+*/
+function isMapReady(isReady) {
+   initMapFinish(isReady);
+}
+function onGeoPointClicked(lon,lat) {
+   onStaticGeoPointClicked(lon,lat);
+}
+
 
 var innerWindow = document.getElementById('frame_map').contentWindow;
 innerWindow.isMapReady = isMapReady;
+innerWindow.onGeoPointClicked = onGeoPointClicked;
 
 
 
