@@ -96,8 +96,11 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
       switch (call.method) {
         case "initMap":
           final result = call.arguments as bool;
-          print("channel init map : $result");
           _streamController.add(MapInitialization(idOSM, result));
+          break;
+        case "receiveGeoPoint":
+          final result = call.arguments as String;
+          _streamController.add(GeoPointEvent(idOSM, GeoPoint.fromString(result)));
           break;
         default:
           throw PlatformException(
@@ -123,5 +126,4 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
     onPlatformViewCreated.call(idChannel);
     return mapsController[idChannel]!.widget!;
   }
-
 }

@@ -14,6 +14,10 @@ class GeoPoint {
       : this.latitude = m["lat"],
         this.longitude = m["lon"];
 
+  GeoPoint.fromString(String m)
+      : this.latitude = double.parse(m.split(",").first),
+        this.longitude = double.parse(m.split(",").last);
+
   Map<String, double> toMap() {
     return {
       "lon": longitude,
