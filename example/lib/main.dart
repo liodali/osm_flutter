@@ -59,7 +59,10 @@ class _MainExampleState extends State<MainExample> {
     super.initState();
     controller = MapController(
       initMapWithUserPosition: false,
-      initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
     controller.listenerMapLongTapping.addListener(() {
