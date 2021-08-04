@@ -13,6 +13,9 @@ external Map<String, double> locateMe();
 @JS('initMapLocation')
 external dynamic initMapLocation(GeoPointJs p);
 
+@JS('setZoomControl')
+external dynamic setZoomControl(bool showZoomControl);
+
 
 @JS('setDefaultIcon')
 external dynamic setDefaultIcon(String base64);
