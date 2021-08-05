@@ -33,6 +33,22 @@ async function setStaticGeoPoints(id,points) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setStaticGeoPoint(id,points);
 }
+async function setZoomStep(zoomStep) {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.setZoomStep(zoomStep);
+}
+async function zoomIn() {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.zoomIn();
+}
+async function zoomOut() {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.zoomOut();
+}
+async function setZoom(zoom) {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.setZoom(zoom);
+}
 
 /*
 * shared dart function that called from js

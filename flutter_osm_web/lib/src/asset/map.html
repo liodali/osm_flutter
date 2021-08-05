@@ -135,6 +135,24 @@
         return 200;
     }
     
+
+    async function setZoomStep(zoomStep) {
+        stepZoom = zoomStep
+        return 200;
+    }
+    async function zoomIn() {
+      mymap.zoomIn(stepZoom);
+      return 200;
+    }
+    async function zoomOut() {
+        mymap.zoomOut(stepZoom);
+      return 200;
+    }
+    async function setZoom(zoom) {
+      if(zoom>=maymap.getMinZoom() && zoom<=maymap.getMaxZoom())
+        mymap.setZoom(zoom);
+      return 200;
+    }
     
 
 </script>
