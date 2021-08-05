@@ -17,6 +17,19 @@ external dynamic initMapLocation(GeoPointJs p);
 external dynamic setZoomControl(bool showZoomControl);
 
 
+@JS('setZoomStep')
+external dynamic setZoomStep(double stepZoom);
+
+@JS('zoomIn')
+external dynamic zoomIn();
+
+@JS('zoomOut')
+external dynamic zoomOut();
+
+@JS('setZoom')
+external dynamic setZoom(double zoom);
+
+
 @JS('setDefaultIcon')
 external dynamic setDefaultIcon(String base64);
 
