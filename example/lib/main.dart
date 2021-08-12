@@ -54,12 +54,12 @@ class _MainExampleState extends State<MainExample> {
         latitude: 47.4358055,
         longitude: 8.4737324,
       ),
-      areaLimit: BoundingBox(
-        east: 10.4922941,
-        north: 47.8084648,
-        south: 45.817995,
-        west: 5.9559113,
-      ),
+      // areaLimit: BoundingBox(
+      //   east: 10.4922941,
+      //   north: 47.8084648,
+      //   south: 45.817995,
+      //   west: 5.9559113,
+      // ),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
     controller.listenerMapLongTapping.addListener(() {
@@ -258,6 +258,18 @@ class _MainExampleState extends State<MainExample> {
                         CircularProgressIndicator(),
                         Text("Map is Loading..")
                       ],
+                    ),
+                  ),
+                  userLocationMarker: UserLocationMaker(
+                    personMarker: MarkerIcon(
+                      icon: Icon(
+                        Icons.location_history_rounded,
+                        color: Colors.red,
+                        size: 48,
+                      ),
+                    ),
+                    directionArrowMarker: MarkerIcon(
+                      icon: Icon(Icons.double_arrow,size: 48,),
                     ),
                   ),
                   showContributorBadgeForOSM: true,
