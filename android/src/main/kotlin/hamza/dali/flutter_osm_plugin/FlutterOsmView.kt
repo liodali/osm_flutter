@@ -104,6 +104,8 @@ class FlutterOsmView(
     private var map: MapView? = null
     private var locationNewOverlay: MyLocationNewOverlay? = null
     private var customMarkerIcon: Bitmap? = null
+    private var customPersonMarkerIcon: Bitmap? = null
+    private var customArrowMarkerIcon: Bitmap? = null
     private var customPickerMarkerIcon: Bitmap? = null
     private var staticMarkerIcon: HashMap<String, Bitmap> = HashMap()
     private val customRoadMarkerIcon = HashMap<String, Bitmap>()
@@ -422,7 +424,17 @@ class FlutterOsmView(
         if (locationNewOverlay == null) {
             locationNewOverlay = MyLocationNewOverlay(provider, map)
         }
-        //locationNewOverlay!!.setPersonIcon(customMarkerIcon)
+        //locationNewOverlay!!.setPersonIcon()
+        when  (customPersonMarkerIcon != null) {
+           true ->  when(customArrowMarkerIcon != null ){
+               true ->  locationNewOverlay!!.setDirectionArrow(customPersonMarkerIcon, customArrowMarkerIcon)
+                false -> locationNewOverlay!!.setPersonIcon(customPersonMarkerIcon)
+            }
+            false -> {
+               val defaultPerson =  BitmapFactory.decodeResource(application!!.resources, R.drawable.ic_location_on_red_24dp)
+                locationNewOverlay!!.setDirectionArrow(defaultPerson, customArrowMarkerIcon)
+            }
+        }
         locationNewOverlay?.let { location ->
             if (!location.isMyLocationEnabled) {
                 isEnabled = true
@@ -593,9 +605,25 @@ class FlutterOsmView(
             "map#orientation" -> {
                 mapOrientation(call, result)
             }
+            "user#locationMarkers" -> {
+                changeLocationMarkers(call, result)
+            }
             else -> {
                 result.notImplemented()
             }
+        }
+    }
+
+    private fun changeLocationMarkers(call: MethodCall, result: MethodChannel.Result) {
+        val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
+        try {
+            customPersonMarkerIcon = getBitmap((args["personIcon"] as ByteArray))
+            customArrowMarkerIcon = getBitmap((args["arrowDirectionIcon"] as ByteArray))
+            result.success(null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            result.success(e.message)
+
         }
     }
 
