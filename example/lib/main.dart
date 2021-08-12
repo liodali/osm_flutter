@@ -1,8 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/search_example.dart';
-
-import 'utilities.dart';
 
 void main() => runApp(MyApp());
 
@@ -100,30 +100,39 @@ class _MainExampleState extends State<MainExample> {
     });
 
     Future.delayed(Duration(seconds: 10), () async {
-      final waysPoint = list
-          .map((e) => GeoPoint(
-                latitude: e.last,
-                longitude: e.first,
-              ))
-          .toList();
-      await controller.drawRoadManually(
-        waysPoint,
-        Colors.purpleAccent,
-        6.0,
-      );
+      // final waysPoint = list
+      //     .map((e) => GeoPoint(
+      //           latitude: e.last,
+      //           longitude: e.first,
+      //         ))
+      //     .toList();
+      // await controller.drawRoadManually(
+      //   waysPoint,
+      //   Colors.purpleAccent,
+      //   6.0,
+      // );
       await controller.setMarkerOfStaticPoint(
         id: "line 2",
         markerIcon: MarkerIcon(
           icon: Icon(
             Icons.train,
-            color: Colors.red,
+            color: Colors.orange,
             size: 48,
           ),
         ),
       );
       await controller.setStaticPosition(
         [
-          GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
+          GeoPointWithOrientation(
+            latitude: 47.4433594,
+            longitude: 8.4680184,
+            angle: pi / 4,
+          ),
+          GeoPointWithOrientation(
+            latitude: 47.4517782,
+            longitude: 8.4716146,
+            angle: pi / 2,
+          ),
         ],
         "line 2",
       );
@@ -287,20 +296,20 @@ class _MainExampleState extends State<MainExample> {
                         GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
                       ],
                     ),
-                    // StaticPositionGeoPoint(
-                    //   "line 2",
-                    //   MarkerIcon(
-                    //     icon: Icon(
-                    //       Icons.train,
-                    //       color: Colors.red,
-                    //       size: 48,
-                    //     ),
-                    //   ),
-                    //   [
-                    //     GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
-                    //     GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
-                    //   ],
-                    // )
+                    StaticPositionGeoPoint(
+                      "line 2",
+                      MarkerIcon(
+                        icon: Icon(
+                          Icons.train,
+                          color: Colors.red,
+                          size: 48,
+                        ),
+                      ),
+                      [
+                        GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
+                        GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
+                      ],
+                    )
                   ],
                   road: Road(
                     startIcon: MarkerIcon(

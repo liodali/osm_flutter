@@ -1059,8 +1059,11 @@ class FlutterOsmView(
         val id = map["id"] as String?
         val points = map["point"] as MutableList<HashMap<String, Double>>?
         val geoPoints: MutableList<GeoPoint> = emptyList<GeoPoint>().toMutableList()
+        val angleGeoPoints: MutableList<Double> = emptyList<Double>().toMutableList()
         for (hashMap in points!!) {
             geoPoints.add(GeoPoint(hashMap["lat"]!!, hashMap["lon"]!!))
+            if (hashMap.containsKey("angle"))
+                angleGeoPoints.add(hashMap["angle"]!!)
         }
         if (staticPoints.containsKey(id)) {
             Log.e(id, "" + points.size)
@@ -1073,7 +1076,7 @@ class FlutterOsmView(
         } else {
             staticPoints[id!!] = geoPoints
         }
-        showStaticPosition(id!!)
+        showStaticPosition(id!!, angleGeoPoints.toList())
         result.success(null)
     }
 
@@ -1203,7 +1206,7 @@ class FlutterOsmView(
         } ?: result.error("400", "we cannot get the current position!", "")
     }
 
-    private fun showStaticPosition(idStaticPosition: String) {
+    private fun showStaticPosition(idStaticPosition: String, angles: List<Double> = emptyList()) {
 
         /* folderStaticPosition.items.retainAll {
              (it as FolderOverlay).name?.equals(idStaticPosition) == true
@@ -1213,7 +1216,7 @@ class FlutterOsmView(
         val overlay = FolderOverlay().apply {
             name = idStaticPosition
         }
-        staticPoints[idStaticPosition]?.forEach { geoPoint ->
+        staticPoints[idStaticPosition]?.forEachIndexed { index, geoPoint ->
             val marker = FlutterMarker(application!!, map!!)
             marker.position = geoPoint
 
@@ -1227,7 +1230,14 @@ class FlutterOsmView(
                 true
             }
             if (staticMarkerIcon.isNotEmpty() && staticMarkerIcon.containsKey(idStaticPosition)) {
-                marker.setIconMaker(null, staticMarkerIcon[idStaticPosition])
+                marker.setIconMaker(
+                    null,
+                    staticMarkerIcon[idStaticPosition],
+                    angle = when (angles.isNotEmpty()) {
+                        true -> angles[index]
+                        else -> 0.0
+                    }
+                )
             } else {
                 marker.setIconMaker(null, null)
             }

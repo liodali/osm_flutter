@@ -23,6 +23,13 @@ fix invokeMethod in gotoPosition
 * add draw road manually for dev that they have they own routing api 
 ## 0.9.0-alpha.0 :
 * support drawRoad in iOS
+## 0.8.3+2 (without ios support)
+* remove unnecesssary att
+## 0.8.3+1 (without ios support)
+* fix readme
+## 0.8.3 (without ios support)
+* create new class `GeoPointWithOrientation`
+* change orientation of marker of the static GeoPoint in runtime
 ## 0.8.2 (without ios support)
 * add new attribute `limitArea` in MapController to init map in specific area
 * add new method `limitArea` to set BoundingBox of camera in the map

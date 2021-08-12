@@ -150,6 +150,7 @@ class OSMController {
             _idMap,
             _osmFlutterState.staticMarkersKeys[points.id],
             points.id,
+            colorIcon: points.markerIcon?.icon?.color ?? null,
           );
         }
         if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {

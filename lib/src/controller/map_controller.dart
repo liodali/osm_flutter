@@ -89,6 +89,7 @@ class MapController extends BaseMapController {
   ///change  Marker of specific static points
   /// we need to global key to recuperate widget from tree element
   /// [id] : (String) id  of the static group geopoint
+  ///
   /// [markerIcon] : (MarkerIcon) new marker that will set to the static group geopoint
   Future<void> setMarkerOfStaticPoint({
     required String id,
