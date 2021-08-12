@@ -20,9 +20,9 @@ typedef OnLocationChanged = void Function(GeoPoint);
 ///
 /// [onLocationChanged] : (callback) it's hire when you activate tracking and  user position has been changed
 ///
-/// [markerIcon] : (Icon/AssertImage) marker of geoPoint
-///
 /// [markerOption] :  contain marker of geoPoint and customisation of advanced picker marker
+///
+/// [userLocationMarker] : change user marker or direction marker icon in tracking location
 ///
 /// [road] : set color and icons marker of road
 ///
@@ -40,6 +40,7 @@ class OSMFlutter extends StatefulWidget {
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
   final MarkerOption? markerOption;
+  final UserLocationMaker? userLocationMarker;
   final Road? road;
   final double defaultZoom;
   final bool showDefaultInfoWindow;
@@ -54,6 +55,7 @@ class OSMFlutter extends StatefulWidget {
     this.showZoomController = false,
     this.staticPoints = const [],
     this.markerOption,
+    this.userLocationMarker,
     this.onGeoPointClicked,
     this.onLocationChanged,
     this.road,
@@ -82,7 +84,9 @@ class OSMFlutterState extends State<OSMFlutter> {
       startIconKey,
       endIconKey,
       middleIconKey,
-      dynamicMarkerKey;
+      dynamicMarkerKey,
+      personIconMarkerKey,
+      arrowDirectionMarkerKey;
   late Map<String, GlobalKey> staticMarkersKeys;
 
   @override
@@ -107,6 +111,8 @@ class OSMFlutterState extends State<OSMFlutter> {
     startIconKey = GlobalKey();
     endIconKey = GlobalKey();
     middleIconKey = GlobalKey();
+    personIconMarkerKey = GlobalKey();
+    arrowDirectionMarkerKey = GlobalKey();
     staticMarkersKeys = {};
     widget.staticPoints.forEach((gs) {
       staticMarkersKeys.putIfAbsent(gs.id, () => GlobalKey());
@@ -281,6 +287,18 @@ class OSMFlutterState extends State<OSMFlutter> {
             RepaintBoundary(
               key: middleIconKey,
               child: widget.road!.middleIcon,
+            ),
+          ],
+          if (widget.userLocationMarker?.personMarker != null) ...[
+            RepaintBoundary(
+              key: personIconMarkerKey,
+              child: widget.userLocationMarker?.personMarker,
+            ),
+          ],
+          if (widget.userLocationMarker?.directionArrowMarker != null) ...[
+            RepaintBoundary(
+              key: arrowDirectionMarkerKey,
+              child: widget.userLocationMarker?.directionArrowMarker,
             ),
           ],
         ],

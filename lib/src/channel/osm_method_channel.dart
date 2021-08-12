@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -565,5 +566,26 @@ class MethodChannelOSM extends OSMPlatform {
   @override
   Future<void> removeLimitArea(int idOSM) async {
     await _channels[idOSM]!.invokeMethod("remove#limitArea");
+  }
+
+  @override
+  Future<void> customUserLocationMarker(
+    int idOSM,
+    GlobalKey personGlobalKey,
+    GlobalKey directionArrowGlobalKey,
+  ) async {
+    Uint8List iconPerson = await _capturePng(personGlobalKey);
+    Uint8List iconArrowDirection = await _capturePng(directionArrowGlobalKey);
+    HashMap<String, dynamic> args = HashMap();
+    args["personIcon"] = iconPerson;
+    args["arrowDirectionIcon"] = iconArrowDirection;
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      var base64StrPerson = base64.encode(iconPerson);
+      var base64StrArrowDirection = base64.encode(iconPerson);
+      args["personIcon"] = base64StrPerson;
+      args["arrowDirectionIcon"] = base64StrArrowDirection;
+    }
+
+    await _channels[idOSM]!.invokeMethod("user#locationMarkers", args);
   }
 }

@@ -67,6 +67,12 @@ abstract class OSMPlatform extends PlatformInterface {
     GlobalKey? globalKey,
   );
 
+  Future<void> customUserLocationMarker(
+      int idOSM,
+      GlobalKey personGlobalKey,
+      GlobalKey directionArrowGlobalKey,
+      );
+
   Future<void> setColorRoad(
     int idOSM,
     Color color,

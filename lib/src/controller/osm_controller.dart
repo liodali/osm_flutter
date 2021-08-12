@@ -123,6 +123,14 @@ class OSMController {
         await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
       });
     }
+    /// change user person Icon and arrow Icon
+    if(_osmFlutterState.widget.userLocationMarker!=null){
+      await osmPlatform.customUserLocationMarker(
+        _idMap,
+        _osmFlutterState.personIconMarkerKey,
+        _osmFlutterState.arrowDirectionMarkerKey,
+      );
+    }
 
     /// init location in map
     if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
@@ -150,7 +158,6 @@ class OSMController {
             _idMap,
             _osmFlutterState.staticMarkersKeys[points.id],
             points.id,
-            colorIcon: points.markerIcon?.icon?.color ?? null,
           );
         }
         if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {
