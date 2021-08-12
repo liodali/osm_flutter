@@ -425,15 +425,35 @@ class FlutterOsmView(
             locationNewOverlay = MyLocationNewOverlay(provider, map)
         }
         //locationNewOverlay!!.setPersonIcon()
-        when  (customPersonMarkerIcon != null) {
-           true ->  when(customArrowMarkerIcon != null ){
-               true ->  locationNewOverlay!!.setDirectionArrow(customPersonMarkerIcon, customArrowMarkerIcon)
-                false -> locationNewOverlay!!.setPersonIcon(customPersonMarkerIcon)
+        when (customPersonMarkerIcon != null) {
+            true -> {
+                when (customArrowMarkerIcon != null) {
+                    true -> locationNewOverlay!!.setDirectionArrow(
+                        customPersonMarkerIcon,
+                        customArrowMarkerIcon
+                    )
+                    false -> locationNewOverlay!!.setPersonIcon(customPersonMarkerIcon)
+                }
+
             }
             false -> {
-               val defaultPerson =  BitmapFactory.decodeResource(application!!.resources, R.drawable.ic_location_on_red_24dp)
+                val defaultPerson = BitmapFactory.decodeResource(
+                    application!!.resources,
+                    R.drawable.ic_location_on_red_24dp
+                )
                 locationNewOverlay!!.setDirectionArrow(defaultPerson, customArrowMarkerIcon)
+                locationNewOverlay!!.setPersonHotspot(0f, 0f)
+
             }
+        }
+        if (customPersonMarkerIcon != null) {
+            val mScale = map!!.context.resources.displayMetrics.density
+
+            locationNewOverlay!!.setPersonHotspot(
+                mScale *( customPersonMarkerIcon!!.width/4f) + 0.5f,
+                mScale * ( customPersonMarkerIcon!!.width/3f) + 0.5f,
+            )
+
         }
         locationNewOverlay?.let { location ->
             if (!location.isMyLocationEnabled) {
