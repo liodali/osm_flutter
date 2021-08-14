@@ -369,6 +369,14 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let args = call.arguments as! [String: Any]
         let id = args["id"] as! String
 
+        if(dictClusterAnnotation.keys.contains(id) ){
+             dictClusterAnnotation[id]?.forEach { staticMarkers in
+                 if(staticMarkers.marker != nil) {
+                     staticMarkers.marker?.visible = false
+                     mapView.markerRemove(staticMarkers.marker!)
+                 }
+            }
+        }
 
         let listGeos: [StaticGeoPMarker] = (args["point"] as! [GeoPoint]).map { point -> StaticGeoPMarker in
             var angle = 0
