@@ -21,6 +21,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     let mapView: TGMapView
     let locationManager: CLLocationManager = CLLocationManager()
     var markerIcon: UIImage? = nil
+    var personMarkerIcon :UIImage? = nil
+    var arrowDirectionIcon : UIImage? = nil
     var isFollowUserLocation: Bool = false
     var canGetLastUserLocation = false
     var canTrackUserLocation = false
@@ -211,6 +213,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             rotateMap(call:call)
             result(200)
             break;
+        case "user#locationMarkers":
+            setUserLocationMarker(call:call)
+            result(200)
+            break
         default:
             result(nil)
             break;
@@ -301,6 +307,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func trackUserLocation() {
         locationManager.startUpdatingLocation()
+        locationManager.startUpdatingHeading()
         canTrackUserLocation = true
     }
 
@@ -325,6 +332,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func deactivateTrackMe() {
         canTrackUserLocation = false
         locationManager.stopUpdatingLocation()
+        locationManager.stopUpdatingHeading()
         if userLocation != nil && userLocation!.marker != nil {
             mapView.removeUserLocation(for: userLocation!.marker!)
         }
@@ -336,6 +344,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let image = convertImage(codeImage: call.arguments as! String)
         pickerMarker = UIImageView(image: image)
         result(200)
+    }
+
+    private func setUserLocationMarker(call: FlutterMethodCall) {
+        let args = call.arguments as! [String:String]
+        if let personIconString = args["personIcon"] {
+            personMarkerIcon = convertImage(codeImage: personIconString)
+        }
+        if let arrowDirectionIconString = args["arrowDirectionIcon"] {
+            arrowDirectionIcon = convertImage(codeImage: arrowDirectionIconString)
+        }
     }
 
 
@@ -353,7 +371,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
 
         let listGeos: [StaticGeoPMarker] = (args["point"] as! [GeoPoint]).map { point -> StaticGeoPMarker in
-            let geo = StaticGeoPMarker(icon: dictIconClusterAnnotation[id]!.image,coordinate: point.toLocationCoordinate())
+            var angle = 0
+            if( point.keys.contains("angle") ){
+                angle = Int(CGFloat(point["angle"] as! Double).toDegrees)
+            }
+            let geo = StaticGeoPMarker(icon: dictIconClusterAnnotation[id]!.image,
+                    coordinate: point.toLocationCoordinate(),angle: angle)
 
             return geo.addStaticGeosToMapView(for: geo, on: mapView)
         }
@@ -549,6 +572,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 if (canTrackUserLocation) {
                     if (userLocation == nil) {
                         userLocation = mapView.addUserLocation(for: location, on: mapView)
+                        userLocation?.setDirectionArrow(personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
+                    }
+                    let angle = CGFloat(manager.heading?.trueHeading ?? 0.0).toDegrees
+                    if(angle != 0){
+                        userLocation?.rotateMarker(angle: Int(angle))
                     }
                     userLocation?.marker?.point = location
                     //userLocation?.marker?.point = location
@@ -574,6 +602,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             }
         }
     }
+
+
 
     public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print(error.localizedDescription)
