@@ -1,10 +1,10 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.11.0--beta.4-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.11.0-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported (not stable yet) :  0.11.0-beta  | under-development |
+| supported :heavy_check_mark: | supported :heavy_check_mark: :  0.11.0  | under-development |
 
 
 <b>osm plugin for flutter apps </b>
@@ -13,6 +13,7 @@
 * change position (Android/iOS)
 * tracking user location (Android/iOS)
 * customize Icon Marker (Android/iOS)
+* customize user Marker (Android/iOS)
 * assisted selection position (Android/iOS)
 * set BoundingBOx (Android)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
@@ -34,14 +35,8 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.8.2
+      flutter_osm_plugin: ^0.11.0
 
-      
-* beta version (iOS support)
-      ```dart
-       dependencies:
-                flutter_osm_plugin: ^0.11.0-beta.3
-      ```
       
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
@@ -266,6 +261,9 @@ await controller.drawRoadManually(
 
 > change their position over time
 
+>  change orientation of the static GeoPoint with `GeoPointWithOrientation`
+
+
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
@@ -333,7 +331,7 @@ await controller.drawRoadManually(
 | `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
 | `trackMyPosition`             | enable tracking user position.     |
 | `showZoomController`          | show default zoom controller.       |
-| `markerIcon`                  | set icon Marker  (deprecated replaced with `markerOption` )                   |
+| `userLocationMarker`          |  change user marker or direction marker icon in tracking location                |
 | `markerOption`                | configure marker of osm map                   |
 | `defaultZoom`                 | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
 | `road`                        | set color and start/end/middle markers in road |

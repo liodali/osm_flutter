@@ -1,3 +1,7 @@
+## 0.11.0 :
+* add customization of user location marker 
+* implement ortiention of the user marker in ios
+* add orientation of static geopoint in ios
 ## 0.11.0-beta.4 :
 * add map rotation in ios side
 ## 0.11.0-beta.3 :
