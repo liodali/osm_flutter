@@ -123,8 +123,9 @@ class OSMController {
         await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
       });
     }
+
     /// change user person Icon and arrow Icon
-    if(_osmFlutterState.widget.userLocationMarker!=null){
+    if (_osmFlutterState.widget.userLocationMarker != null) {
       await osmPlatform.customUserLocationMarker(
         _idMap,
         _osmFlutterState.personIconMarkerKey,
@@ -341,6 +342,33 @@ class OSMController {
   /// [p] : (GeoPoint) desired location
   Future<void> goToPosition(GeoPoint p) async {
     await osmPlatform.goToPosition(_idMap, p);
+  }
+
+  /// create marker int specific position without change map camera
+  ///
+  /// [p] : (GeoPoint) desired location
+  ///
+  /// [markerIcon] : (MarkerIcon) set icon of the marker
+  Future<void> addMarker(
+    GeoPoint p, {
+    MarkerIcon? markerIcon,
+  }) async {
+    if (markerIcon != null &&
+        (markerIcon.icon != null || markerIcon.image != null)) {
+      if (markerIcon.icon != null) {
+        _osmFlutterState.dynamicMarkerWidgetNotifier.value = markerIcon.icon;
+      } else if (markerIcon.image != null) {
+        _osmFlutterState.dynamicMarkerWidgetNotifier.value = Image(
+          image: markerIcon.image!,
+        );
+      }
+      Future.delayed(Duration(milliseconds: 250), () async {
+        await osmPlatform.addMarker(_idMap, p,
+            globalKeyIcon: _osmFlutterState.dynamicMarkerKey);
+      });
+    } else {
+      await osmPlatform.addMarker(_idMap, p);
+    }
   }
 
   /// enabled tracking user location

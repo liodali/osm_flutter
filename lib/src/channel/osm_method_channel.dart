@@ -588,4 +588,20 @@ class MethodChannelOSM extends OSMPlatform {
 
     await _channels[idOSM]!.invokeMethod("user#locationMarkers", args);
   }
+
+  @override
+  Future<void> addMarker(
+    int idOSM,
+    GeoPoint p, {
+    GlobalKey? globalKeyIcon,
+  }) async {
+    Map<String, dynamic> args = {"point": p.toMap()};
+    if (globalKeyIcon != null) {
+      var icon = await _capturePng(globalKeyIcon);
+      args["icon"] = Platform.isIOS ? icon.convertToString() : icon;
+    }
+    
+    await _channels[idOSM]!.invokeMethod("add#Marker",args);
+    
+  }
 }
