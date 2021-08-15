@@ -10,7 +10,8 @@
 <b>osm plugin for flutter apps </b>
 
 * current position (Android/iOS)
-* change position (Android/iOS)
+* change position (Android/iOS) 
+* create Marker manually (Android/iOS)
 * tracking user location (Android/iOS)
 * customize Icon Marker (Android/iOS)
 * customize user Marker (Android/iOS)
@@ -121,7 +122,7 @@ Add the following to your `pubspec.yaml` file:
 > set bounding box in the map
 
 ```dart
-            await controller.limitAreaMap(BoundingBox( east: 10.4922941, north: 47.8084648, south: 45.817995, west: 5.9559113,));
+await controller.limitAreaMap(BoundingBox( east: 10.4922941, north: 47.8084648, south: 45.817995, west: 5.9559113,));
 ```
 > remove bounding box in the map
 
@@ -214,7 +215,13 @@ b) select position with dynamic marker
 ```
 * PS : selected position can be removed by long press 
 
-<b>13) Remove marker </b>
+<b>13) Create Marker Programmatically </b>
+> you can change marker icon by using attribute `markerIcon`
+```dart
+await controller.addMarker(GeoPoint,markerIcon:MarkerIcon);
+```
+
+<b> 13.1) Remove marker </b>
 
 ```dart
  await controller.removePosition(geoPoint);
