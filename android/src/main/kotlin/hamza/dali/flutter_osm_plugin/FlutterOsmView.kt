@@ -313,9 +313,11 @@ class FlutterOsmView(
         color: Int? = null,
         dynamicMarkerBitmap: Drawable? = null,
         imageURL: String? = null,
+        animateTo: Boolean = true,
     ): FlutterMarker {
         map!!.controller.setZoom(zoom)
-        map!!.controller.animateTo(geoPoint)
+        if (animateTo)
+            map!!.controller.animateTo(geoPoint)
         val marker: FlutterMarker = createMarker(geoPoint, color) as FlutterMarker
         when {
             dynamicMarkerBitmap != null -> {
@@ -376,7 +378,7 @@ class FlutterOsmView(
         return marker
     }
 
-    private fun createMarker(geoPoint: GeoPoint, color: Int?): Marker {
+    private fun createMarker(geoPoint: GeoPoint, color: Int?, icon: Bitmap? = null): Marker {
         val marker = FlutterMarker(application!!, map!!, geoPoint)
         marker.visibilityInfoWindow(visibilityInfoWindow)
 //        marker.longPress = object : LongClickHandler {
@@ -386,7 +388,7 @@ class FlutterOsmView(
 //                return true
 //            }
 //        }
-        val iconDrawable: Drawable = getDefaultIconDrawable(color)
+        val iconDrawable: Drawable = getDefaultIconDrawable(color, icon = icon)
         //marker.setPosition(geoPoint);
         marker.icon = iconDrawable
         //marker.setInfoWindow(new FlutterInfoWindow(creatWindowInfoView(),map!!,geoPoint));
@@ -394,9 +396,17 @@ class FlutterOsmView(
         return marker
     }
 
-    private fun getDefaultIconDrawable(color: Int?): Drawable {
+    private fun getDefaultIconDrawable(color: Int?, icon: Bitmap? = null): Drawable {
         val iconDrawable: Drawable
-        if (customMarkerIcon != null) {
+        if (icon != null) {
+            iconDrawable = BitmapDrawable(activity!!.resources, icon)
+            if (color != null) iconDrawable.setColorFilter(
+                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                    color,
+                    BlendModeCompat.SRC_OVER
+                )
+            )
+        } else if (customMarkerIcon != null) {
             iconDrawable = BitmapDrawable(activity!!.resources, customMarkerIcon)
             if (color != null) iconDrawable.setColorFilter(
                 BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
@@ -450,8 +460,8 @@ class FlutterOsmView(
             val mScale = map!!.context.resources.displayMetrics.density
 
             locationNewOverlay!!.setPersonHotspot(
-                mScale *( customPersonMarkerIcon!!.width/4f) + 0.5f,
-                mScale * ( customPersonMarkerIcon!!.width/3f) + 0.5f,
+                mScale * (customPersonMarkerIcon!!.width / 4f) + 0.5f,
+                mScale * (customPersonMarkerIcon!!.width / 3f) + 0.5f,
             )
 
         }
@@ -628,10 +638,34 @@ class FlutterOsmView(
             "user#locationMarkers" -> {
                 changeLocationMarkers(call, result)
             }
+            "add#Marker" -> {
+                addMarkerManually(call, result)
+            }
             else -> {
                 result.notImplemented()
             }
         }
+    }
+
+    private fun addMarkerManually(call: MethodCall, result: MethodChannel.Result) {
+        var args = call.arguments as HashMap<String, Any>
+        var bitmap = customMarkerIcon
+        if (args.containsKey("icon")) {
+            bitmap = getBitmap(args["icon"] as ByteArray)
+        }
+        val point = (args["point"] as HashMap<String, Double>).toGeoPoint()
+
+
+        val marker = addMarker(
+            point,
+            dynamicMarkerBitmap = getDefaultIconDrawable(null, icon = bitmap),
+            zoom = map!!.zoomLevelDouble,
+            animateTo = false
+        )
+
+        map!!.overlays.add(marker)
+        result.success(null)
+
     }
 
     private fun changeLocationMarkers(call: MethodCall, result: MethodChannel.Result) {

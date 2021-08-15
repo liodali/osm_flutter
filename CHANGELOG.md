@@ -1,3 +1,5 @@
+## 0.12.0 :
+* add new method addMarker to create marker in specific location programmatically
 ## 0.11.0 :
 * add customization of user location marker 
 * implement ortiention of the user marker in ios

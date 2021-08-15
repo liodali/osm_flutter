@@ -62,9 +62,17 @@ class _MainExampleState extends State<MainExample> {
       // ),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
-    controller.listenerMapLongTapping.addListener(() {
+    controller.listenerMapLongTapping.addListener(() async {
       if (controller.listenerMapLongTapping.value != null) {
         print(controller.listenerMapLongTapping.value);
+        await controller.addMarker(controller.listenerMapLongTapping.value!,
+            markerIcon: MarkerIcon(
+              icon: Icon(
+                Icons.store,
+                color: Colors.brown,
+                size: 48,
+              ),
+            ));
       }
     });
     controller.listenerMapSingleTapping.addListener(() {
@@ -77,26 +85,6 @@ class _MainExampleState extends State<MainExample> {
     });
     Future.delayed(Duration(seconds: 5), () async {
       await controller.zoomIn();
-    });
-    Future.delayed(Duration(seconds: 15), () async {
-      await controller.changeLocation(
-        GeoPoint(
-          latitude: 47.433358,
-          longitude: 8.4690184,
-        ),
-      );
-      await controller.drawCircle(
-        CircleOSM(
-          key: "circle1",
-          centerPoint: GeoPoint(
-            latitude: 47.433358,
-            longitude: 8.4690184,
-          ),
-          radius: 500.0,
-          color: Colors.purple,
-          strokeWidth: 0.5,
-        ),
-      );
     });
 
     Future.delayed(Duration(seconds: 10), () async {
@@ -269,7 +257,10 @@ class _MainExampleState extends State<MainExample> {
                       ),
                     ),
                     directionArrowMarker: MarkerIcon(
-                      icon: Icon(Icons.double_arrow,size: 48,),
+                      icon: Icon(
+                        Icons.double_arrow,
+                        size: 48,
+                      ),
                     ),
                   ),
                   showContributorBadgeForOSM: true,

@@ -251,4 +251,14 @@ class MapController extends BaseMapController {
       roadWidth,
     );
   }
+
+  Future<void> addMarker(
+    GeoPoint p, {
+    MarkerIcon? markerIcon,
+  }) async {
+    await _osmController.addMarker(
+      p,
+      markerIcon: markerIcon,
+    );
+  }
 }

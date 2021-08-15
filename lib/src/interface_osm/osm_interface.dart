@@ -68,10 +68,10 @@ abstract class OSMPlatform extends PlatformInterface {
   );
 
   Future<void> customUserLocationMarker(
-      int idOSM,
-      GlobalKey personGlobalKey,
-      GlobalKey directionArrowGlobalKey,
-      );
+    int idOSM,
+    GlobalKey personGlobalKey,
+    GlobalKey directionArrowGlobalKey,
+  );
 
   Future<void> setColorRoad(
     int idOSM,
@@ -96,6 +96,12 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM,
     GeoPoint p,
   );
+
+  Future<void> addMarker(
+    int idOSM,
+    GeoPoint p, {
+    GlobalKey? globalKeyIcon,
+  });
 
   Future<void> removePosition(
     int idOSM,
@@ -213,6 +219,7 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM,
     BoundingBox box,
   );
+
   Future<void> removeLimitArea(
     int idOSM,
   );
