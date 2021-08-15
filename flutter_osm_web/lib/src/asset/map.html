@@ -149,8 +149,9 @@
       return 200;
     }
     async function setZoom(zoom) {
-      if(zoom>=maymap.getMinZoom() && zoom<=maymap.getMaxZoom())
-        mymap.setZoom(zoom);
+      var nzoomlevel = mymap.getZoom()+zoom;
+      if(nzoomlevel>=mymap.getMinZoom() && nzoomlevel<=mymap.getMaxZoom())
+        mymap.setZoom(nzoomlevel);
       return 200;
     }
     

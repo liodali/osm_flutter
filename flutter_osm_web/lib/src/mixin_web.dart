@@ -174,18 +174,15 @@ mixin WebMixin {
     );
   }
 
-  Future<void> zoom(double zoom) {
-    // TODO: implement zoom
-    throw UnimplementedError();
+  Future<void> zoom(double zoom) async {
+    await interop.setZoom(zoom);
   }
 
-  Future<void> zoomIn() {
-    // TODO: implement zoomIn
-    throw UnimplementedError();
+  Future<void> zoomIn() async {
+    await interop.zoomIn();
   }
 
-  Future<void> zoomOut() {
-    // TODO: implement zoomOut
-    throw UnimplementedError();
+  Future<void> zoomOut() async {
+    await interop.zoomOut();
   }
 }
