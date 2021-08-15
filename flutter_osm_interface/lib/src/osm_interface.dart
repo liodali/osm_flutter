@@ -8,6 +8,7 @@ import 'channel/osm_method_channel.dart';
 import 'types/types.dart';
 
 import 'common/osm_event.dart';
+
 abstract class OSMPlatform extends PlatformInterface {
   OSMPlatform() : super(token: token);
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
-import '../controller/base_map_controller.dart';
 import '../widgets/stub.dart'
     if (dart.library.io) '../widgets/platform/mobile_osm_widget.dart'
     if (dart.library.html) '../widgets/platform/web_osm_widget.dart';

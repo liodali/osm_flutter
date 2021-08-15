@@ -7,11 +7,10 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/src/mixin_web.dart';
 
 import '../channel/method_channel_web.dart';
-import '../flutter_osm_web.dart';
+import '../osm_web.dart';
 import '../interop/osm_interop.dart' as interop;
 import '../web_platform.dart';
 
-WebOsmController getOSMMap() => WebOsmController();
 
 class WebOsmController with WebMixin implements IBaseOSMController {
   late int _mapId;
@@ -122,6 +121,8 @@ class WebOsmController with WebMixin implements IBaseOSMController {
         markerIconsStaticPositions(id, key);
       });
     }
+
+    await defaultZoom(_osmWebFlutterState.widget.defaultZoom);
 
     GeoPoint? initLocation = initPosition;
 

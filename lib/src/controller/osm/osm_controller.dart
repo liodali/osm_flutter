@@ -131,9 +131,12 @@ class OSMMobileController implements IBaseOSMController {
             points.id,
           );
         }
-        if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {
+        if (points.geoPoints.isNotEmpty) {
           await osmPlatform.staticPosition(
-              _idMap, points.geoPoints!, points.id);
+            _idMap,
+            points.geoPoints,
+            points.id,
+          );
         }
       });
     }

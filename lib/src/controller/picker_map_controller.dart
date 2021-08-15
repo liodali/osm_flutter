@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
-import 'base_map_controller.dart';
 
 /// controller for custom picker location widget
 /// you will cancel/get/finish advanced picker
@@ -55,8 +54,8 @@ class PickerMapController extends BaseMapController {
     // TODO: implement dispose
   }
 
-  void init(IBaseOSMController controller) {
-    setBaseOSMController(controller);
+  void init() {
+    //setBaseOSMController(controller);
     Future.delayed(Duration(milliseconds: 1250), () async {
       await osmBaseController.initMap(
         initPosition: initPosition,

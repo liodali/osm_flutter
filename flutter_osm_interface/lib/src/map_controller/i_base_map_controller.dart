@@ -21,7 +21,7 @@ abstract class IBaseMapController {
     this.initPosition,
   }) : assert(initMapWithUserPosition || initPosition != null);
 
-  void init(IBaseOSMController controller);
+  void init();
 
   void dispose();
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_interface/src/map_controller/base_map_controller.dart';
 import '../controller/map_controller.dart';
 import '../controller/osm/osm_controller.dart';
 import 'package:location/location.dart';
@@ -131,8 +132,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter> {
 
   void _onPlatformViewCreated(int id) async {
     this._osmController = await OSMMobileController.init(id, this);
-    (widget.controller).init(
-      this._osmController!,
-    );
+    widget.controller.setBaseOSMController(this._osmController!);
+    widget.controller.init();
   }
 }

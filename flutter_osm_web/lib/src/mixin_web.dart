@@ -55,9 +55,8 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<void> defaultZoom(double zoom) {
-    // TODO: implement defaultZoom
-    throw UnimplementedError();
+  Future<void> defaultZoom(double zoom) async {
+    await interop.setZoomStep(zoom);
   }
 
   Future<void> disabledTracking() {

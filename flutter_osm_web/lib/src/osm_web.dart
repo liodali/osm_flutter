@@ -109,9 +109,7 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
 
   Future<void> onPlatformViewCreated(int id) async {
     print(id);
-    widget.controller.init(controller);
-    // final WebTestController controller = await WebTestController.init(
-    //   id,
-    // );
+    (widget.controller as BaseMapController).setBaseOSMController(controller);
+    widget.controller.init();
   }
 }
