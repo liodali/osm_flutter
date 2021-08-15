@@ -216,7 +216,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         case "user#locationMarkers":
             setUserLocationMarker(call:call)
             result(200)
-            break
+            break;
+        case "add#Marker":
+            addMarkerManually(call:call)
+            result(200)
+            break;
         default:
             result(nil)
             break;
@@ -295,9 +299,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let point = call.arguments as! GeoPoint
         mapView.fly(to: TGCameraPosition(center: point.toLocationCoordinate(), zoom: mapView.zoom, bearing: 0, pitch: 0),
                  withDuration:0.2)
-
         result(200)
-
+    }
+    private func addMarkerManually(call: FlutterMethodCall) {
+        let args = call.arguments as! [String:Any]
+        var icon = markerIcon
+        if(args.keys.contains("icon")){
+            icon = convertImage(codeImage: args["icon"] as! String)
+        }
+        let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
+        GeoPointMap(icon: icon, coordinate: coordinate).setupMarker(on: mapView)
     }
 
     private func currentUserLocation() {
