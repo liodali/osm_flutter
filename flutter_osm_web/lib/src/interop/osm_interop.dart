@@ -36,6 +36,10 @@ external dynamic setDefaultIcon(String base64);
 @JS('addPosition')
 external dynamic addPosition(GeoPointJs p);
 
+
+@JS('currentUserLocation')
+external dynamic currentUserLocation();
+
 @JS('setStaticGeoPoints')
 external dynamic setStaticGeoPoints(String id,List<GeoPointJs> points);
 

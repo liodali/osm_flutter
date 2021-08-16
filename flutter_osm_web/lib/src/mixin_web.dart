@@ -28,7 +28,9 @@ mixin WebMixin {
     )));
   }
 
-  Future<void> currentLocation() async {}
+  Future<void> currentLocation() async {
+    await interop.currentUserLocation();
+  }
 
   Future<void> advancedPositionPicker() {
     // TODO: implement advancedPositionPicker

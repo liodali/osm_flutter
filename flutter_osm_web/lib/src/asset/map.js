@@ -49,6 +49,10 @@ async function setZoom(zoom) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setZoom(zoom);
 }
+async function currentUserLocation() {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.userLocation();
+}
 
 /*
 * shared dart function that called from js

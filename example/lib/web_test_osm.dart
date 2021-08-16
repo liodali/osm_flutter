@@ -29,6 +29,17 @@ class _WebTestOsmState extends State<WebTestOsm>{
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        appBar: AppBar(
+          title: Text("osm web"),
+          actions: [
+            IconButton(
+              onPressed: ()async{
+                await controller.currentLocation();
+              },
+              icon: Icon(Icons.location_history),
+            ),
+          ],
+        ),
         body: OSMFlutter(
           controller: controller,
           onGeoPointClicked: (geoPoint) {

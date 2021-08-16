@@ -50,18 +50,28 @@
       attribution: 'Leaflet | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
       minZoom: 2,
-      tileSize: 512,
-      zoomOffset: -1,
+      tileSize: 256,
+      zoomOffset: 0,
     });
     OpenStreetMap_Mapnik.addTo(mymap);
     mymap.setView([0, 0], 2);
 
-    async function initMapLocation(point) {
+  async function initMapLocation(point) {
        mymap.setView([point.lat, point.lon],8);
        isMapReady(true);
-    }
+  }
 
-    async function getMyLocation() {
+   async function userLocation() {
+      getMyLocation().then((user)=>{
+         mymap.flyTo([user.lat, user.lon],mymap.getZoom());
+      });
+     
+    
+      return 200;
+    
+  }
+
+  async function getMyLocation() {
       var position = await new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
           reject({error: true, message: 'Geolocation is not supported by your browser' });
@@ -81,36 +91,31 @@
         lat : latitude,
         lon : longitude
       };
-    }
-    async function addPosition(point) {
+  }
+  async function addPosition(point) {
       var args = {}
       if(defaultIcon!=""){
-        args = {icon:L.icon(
-           { 
-             iconUrl : "data:image/png;base64,"+defaultIcon,
-             iconSize : [32,32]
-           }
-         )}
+        args = {
+          icon:L.icon(
+              { 
+                iconUrl : "data:image/png;base64,"+defaultIcon,
+                iconSize : [32,32]
+              }
+            )
+          }
       }
-      if(homeMarker == undefined){
-       homeMarker = L.marker([point.lat, point.lon],args).addTo(mymap);
+  }
 
-      }else{
-          homeMarker.setLatLng([point.lat, point.lon])
-      }
-       mymap.setView([point.lat, point.lon],8);
-       return 200;
-    }
     
-    async function setDefaultIcon(icon) {
+  async function setDefaultIcon(icon) {
         defaultIcon = icon;
         return 200;
-    }
-    async function setStaticGeoPointIcon(id,icon) {
+  }
+  async function setStaticGeoPointIcon(id,icon) {
         staticIcons.set(id,icon)
         return 200;
-    }
-    async function setStaticGeoPoint(id,points) {
+  }
+  async function setStaticGeoPoint(id,points) {
         var markers = [];
         if(staticGeoPoint.has(id)){
             staticGeoPoint[id].clearLayers();
@@ -133,29 +138,41 @@
         staticGeoPoint.set(id,groupLayer);
 
         return 200;
-    }
+  }
     
 
-    async function setZoomStep(zoomStep) {
+  async function setZoomStep(zoomStep) {
         stepZoom = zoomStep
         return 200;
-    }
-    async function zoomIn() {
+  }
+  async function zoomIn() {
       mymap.zoomIn(stepZoom);
       return 200;
-    }
-    async function zoomOut() {
+  }
+  async function zoomOut() {
         mymap.zoomOut(stepZoom);
       return 200;
-    }
-    async function setZoom(zoom) {
+  }
+  async function setZoom(zoom) {
       var nzoomlevel = mymap.getZoom()+zoom;
-      if(nzoomlevel>=mymap.getMinZoom() && nzoomlevel<=mymap.getMaxZoom())
+      if(nzoomlevel>=mymap.getMinZoom() && nzoomlevel<=mymap.getMaxZoom()){
         mymap.setZoom(nzoomlevel);
+      }
       return 200;
-    }
-    
+  }
+  function setHomeMarker(point){
+      if(homeMarker == undefined){
+        homeMarker = L.marker([point.lat, point.lon],args).addTo(mymap);
 
+      }else{
+        homeMarker.setLatLng([point.lat, point.lon])
+      }
+  }
+
+ 
+
+
+  
 </script>
 
 
