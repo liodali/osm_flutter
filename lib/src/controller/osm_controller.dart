@@ -42,6 +42,10 @@ class OSMController {
     bool initWithUserPosition = false,
     BoundingBox? box,
   }) async {
+    if (_osmFlutterState.widget.onMapIsReady != null) {
+      _osmFlutterState.widget.onMapIsReady!(false);
+    }
+
     /// load config map scene for iOS
     if (Platform.isIOS) {
       await osmPlatform.initIosMap(_idMap);
@@ -59,16 +63,21 @@ class OSMController {
     /// listen to data send from native map
 
     osmPlatform.onLongPressMapClickListener(_idMap).listen((event) {
-      _osmFlutterState.widget.controller.listenerMapLongTapping.value =
-          event.value;
+      _osmFlutterState.widget.controller
+          .setValueListenerMapLongTapping(event.value);
     });
 
     osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
-      _osmFlutterState.widget.controller.listenerMapSingleTapping.value =
-          event.value;
+      _osmFlutterState.widget.controller
+          .setValueListenerMapSingleTapping(event.value);
     });
     osmPlatform.onMapIsReady(_idMap).listen((event) async {
       _osmFlutterState.mapIsReadyListener.value = event.value;
+      if (_osmFlutterState.widget.onMapIsReady != null) {
+        _osmFlutterState.widget.onMapIsReady!(event.value);
+      }
+      _osmFlutterState.widget.controller
+          .setValueListenerMapIsReady(event.value);
     });
 
     if (_osmFlutterState.widget.onGeoPointClicked != null) {
@@ -83,9 +92,6 @@ class OSMController {
       /* this._osmController.myLocationListener(widget.onLocationChanged, (err) {
           print(err);
         });*/
-    }
-    if (Platform.isIOS) {
-      await osmPlatform.initIosMap(_idMap);
     }
 
     /// change default icon  marker
