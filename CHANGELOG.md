@@ -1,3 +1,6 @@
+## 0.13.0 :
+* add `onMapIsReady` attribute in OSMFluter to get notified when map is initialized
+* add valueListenable `listenerMapIsReady` to `MapController` as notifier for map initialization
 ## 0.12.0 :
 * add new method addMarker to create marker in specific location programmatically
 ## 0.11.0 :

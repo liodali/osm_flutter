@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.12.0-orange) 
+![pub](https://img.shields.io/badge/pub-v0.13.0-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
@@ -36,7 +36,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.12.0
+      flutter_osm_plugin: ^0.13.0
 
       
 ## Simple Usage
@@ -344,7 +344,8 @@ await controller.drawRoadManually(
 | `road`                        | set color and start/end/middle markers in road |
 | `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
-| `onLocationChanged`           | (callback) it is hire when you activate tracking and  user position has been changed          |
+| `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |
+| `onMapIsReady`                | (callback) listener trigger to get map is initialized or not |
 | `showDefaultInfoWindow`       | (bool) enable/disable default infoWindow of marker (default = false)         |
 | `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |
 | `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |

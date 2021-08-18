@@ -1,29 +1,26 @@
 library osm_flutter;
 
-import 'package:flutter/material.dart';
-import '../types/types.dart';
-
-import '../../flutter_osm_plugin.dart';
-import '../types/geo_point.dart';
-import 'osm_controller.dart';
-
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:location/location.dart';
 
+import '../../flutter_osm_plugin.dart';
 import '../controller/osm_controller.dart';
+import '../types/geo_point.dart';
 import '../types/types.dart';
 import '../widgets/copyright_osm_widget.dart';
+import 'osm_controller.dart';
+
+part '../osm_flutter.dart';
 
 part '../widgets/custom_picker_location.dart';
 
 part 'map_controller.dart';
 
 part 'picker_map_controller.dart';
-
-part '../osm_flutter.dart';
 
 ///  [BaseMapController] : base controller for osm flutter
 ///
@@ -39,8 +36,17 @@ abstract class BaseMapController {
   final GeoPoint? initPosition;
   final BoundingBox? areaLimit;
 
-  late ValueNotifier<GeoPoint?> listenerMapLongTapping = ValueNotifier(null);
-  late ValueNotifier<GeoPoint?> listenerMapSingleTapping = ValueNotifier(null);
+  late ValueNotifier<GeoPoint?> _listenerMapLongTapping = ValueNotifier(null);
+  late ValueNotifier<GeoPoint?> _listenerMapSingleTapping = ValueNotifier(null);
+  late ValueNotifier<bool> _listenerMapIsReady = ValueNotifier(false);
+
+  ValueListenable<GeoPoint?> get listenerMapLongTapping =>
+      _listenerMapLongTapping;
+
+  ValueListenable<GeoPoint?> get listenerMapSingleTapping =>
+      _listenerMapSingleTapping;
+
+  ValueListenable<bool> get listenerMapIsReady => _listenerMapIsReady;
 
   BaseMapController({
     this.initMapWithUserPosition = true,
@@ -58,5 +64,19 @@ abstract class BaseMapController {
           initWithUserPosition: initMapWithUserPosition,
           box: areaLimit);
     });
+  }
+}
+
+extension setLiteners on BaseMapController {
+  void setValueListenerMapLongTapping(GeoPoint p) {
+    _listenerMapLongTapping.value = p;
+  }
+
+  void setValueListenerMapSingleTapping(GeoPoint p) {
+    _listenerMapSingleTapping.value = p;
+  }
+
+  void setValueListenerMapIsReady(bool isReady) {
+    _listenerMapIsReady.value = isReady;
   }
 }

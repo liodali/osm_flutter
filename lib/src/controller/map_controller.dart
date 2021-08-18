@@ -28,8 +28,8 @@ class MapController extends BaseMapController {
   }
 
   void dispose() {
-    listenerMapLongTapping.dispose();
-    listenerMapSingleTapping.dispose();
+    _listenerMapLongTapping.dispose();
+    _listenerMapSingleTapping.dispose();
     _osmController.dispose();
   }
 

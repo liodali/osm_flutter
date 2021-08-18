@@ -18,7 +18,9 @@ typedef OnLocationChanged = void Function(GeoPoint);
 ///
 /// [onGeoPointClicked] : (callback) is trigger when you clicked on marker,return current  geoPoint of the Marker
 ///
-/// [onLocationChanged] : (callback) it's hire when you activate tracking and  user position has been changed
+/// [onLocationChanged] : (callback) it's fired when you activate tracking and  user position has been changed
+///
+/// [onMapIsReady] : (callabck) it's fired when map initialization is complet
 ///
 /// [markerOption] :  contain marker of geoPoint and customisation of advanced picker marker
 ///
@@ -39,6 +41,7 @@ class OSMFlutter extends StatefulWidget {
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
+  final Function(bool)? onMapIsReady;
   final MarkerOption? markerOption;
   final UserLocationMaker? userLocationMarker;
   final Road? road;
@@ -58,6 +61,7 @@ class OSMFlutter extends StatefulWidget {
     this.userLocationMarker,
     this.onGeoPointClicked,
     this.onLocationChanged,
+    this.onMapIsReady,
     this.road,
     this.defaultZoom = 1.0,
     this.showDefaultInfoWindow = false,
