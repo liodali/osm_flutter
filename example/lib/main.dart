@@ -80,55 +80,60 @@ class _MainExampleState extends State<MainExample> {
         print(controller.listenerMapSingleTapping.value);
       }
     });
-    Future.delayed(Duration(minutes: 5), () async {
-      await controller.removeLimitAreaMap();
-    });
-    Future.delayed(Duration(seconds: 5), () async {
-      await controller.zoomIn();
-    });
 
-    Future.delayed(Duration(seconds: 10), () async {
-      // final waysPoint = list
-      //     .map((e) => GeoPoint(
-      //           latitude: e.last,
-      //           longitude: e.first,
-      //         ))
-      //     .toList();
-      // await controller.drawRoadManually(
-      //   waysPoint,
-      //   Colors.purpleAccent,
-      //   6.0,
-      // );
-      await controller.setMarkerOfStaticPoint(
-        id: "line 2",
-        markerIcon: MarkerIcon(
-          icon: Icon(
-            Icons.train,
-            color: Colors.orange,
-            size: 48,
+    controller.listenerMapIsReady.addListener(mapIsInitialized);
+  }
+
+  void mapIsInitialized() {
+    if (controller.listenerMapIsReady.value) {
+      Future.delayed(Duration(seconds: 5), () async {
+        await controller.zoomIn();
+      });
+
+      Future.delayed(Duration(seconds: 10), () async {
+        // final waysPoint = list
+        //     .map((e) => GeoPoint(
+        //           latitude: e.last,
+        //           longitude: e.first,
+        //         ))
+        //     .toList();
+        // await controller.drawRoadManually(
+        //   waysPoint,
+        //   Colors.purpleAccent,
+        //   6.0,
+        // );
+        await controller.setMarkerOfStaticPoint(
+          id: "line 2",
+          markerIcon: MarkerIcon(
+            icon: Icon(
+              Icons.train,
+              color: Colors.orange,
+              size: 48,
+            ),
           ),
-        ),
-      );
-      await controller.setStaticPosition(
-        [
-          GeoPointWithOrientation(
-            latitude: 47.4433594,
-            longitude: 8.4680184,
-            angle: pi / 4,
-          ),
-          GeoPointWithOrientation(
-            latitude: 47.4517782,
-            longitude: 8.4716146,
-            angle: pi / 2,
-          ),
-        ],
-        "line 2",
-      );
-    });
+        );
+        await controller.setStaticPosition(
+          [
+            GeoPointWithOrientation(
+              latitude: 47.4433594,
+              longitude: 8.4680184,
+              angle: pi / 4,
+            ),
+            GeoPointWithOrientation(
+              latitude: 47.4517782,
+              longitude: 8.4716146,
+              angle: pi / 2,
+            ),
+          ],
+          "line 2",
+        );
+      });
+    }
   }
 
   @override
   void dispose() {
+    controller.listenerMapIsReady.removeListener(mapIsInitialized);
     controller.dispose();
     super.dispose();
   }
