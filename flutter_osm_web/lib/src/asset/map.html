@@ -92,18 +92,29 @@
         lon : longitude
       };
   }
-  async function addPosition(point) {
-      var args = {}
-      if(defaultIcon!=""){
-        args = {
-          icon:L.icon(
-              { 
-                iconUrl : "data:image/png;base64,"+defaultIcon,
-                iconSize : [32,32]
+
+  async function changePosition(point,showMarker,animate) {
+       const position = [point.lat, point.lon];
+       if(showMarker){
+         var args = {}
+          if(defaultIcon!=""){
+            args = {
+              icon:L.icon(
+                  { 
+                    iconUrl : "data:image/png;base64,"+defaultIcon,
+                    iconSize : [32,32]
+                  }
+                )
               }
-            )
           }
-      }
+          setHomeMarker(point,args);
+       }
+       if(!animate){
+         mymap.setView(position,mymap.getZoom());
+       }else{
+          mymap.flyTo(position,mymap.getZoom());
+       }
+       return 200;
   }
 
     
@@ -111,10 +122,12 @@
         defaultIcon = icon;
         return 200;
   }
+
   async function setStaticGeoPointIcon(id,icon) {
         staticIcons.set(id,icon)
         return 200;
   }
+
   async function setStaticGeoPoint(id,points) {
         var markers = [];
         if(staticGeoPoint.has(id)){
@@ -160,12 +173,12 @@
       }
       return 200;
   }
-  function setHomeMarker(point){
+  function setHomeMarker(point,args){
       if(homeMarker == undefined){
         homeMarker = L.marker([point.lat, point.lon],args).addTo(mymap);
 
       }else{
-        homeMarker.setLatLng([point.lat, point.lon])
+        homeMarker.setLatLng([point.lat, point.lon]);
       }
   }
 

@@ -7,19 +7,15 @@ async function locateMe() {
    return geoAsync;
 }
 
-async function addPosition(point) {
-   console.log(point)
+async function addPosition(point,showMarker,animate) {
    var iframe = document.getElementById("frame_map");
-   var result = await iframe.contentWindow.addPosition(point);
-   return result;
+   return  await iframe.contentWindow.changePosition(point,showMarker,animate);
 }
 
 async function initMapLocation(point) {
    var iframe = document.getElementById("frame_map");
    await iframe.contentWindow.initMapLocation(point);
 }
-
-
 
 async function setDefaultIcon(icon) {
    var iframe = document.getElementById("frame_map");

@@ -21,13 +21,6 @@ mixin WebMixin {
     await promiseToFuture(interop.initMapLocation(p._toGeoJS()));
   }
 
-  Future<void> addPosition(GeoPoint point) async {
-    await promiseToFuture(interop.addPosition(GeoPointJs(
-      lat: point.latitude,
-      lon: point.longitude,
-    )));
-  }
-
   Future<void> currentLocation() async {
     await interop.currentUserLocation();
   }
@@ -52,9 +45,12 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<void> changeLocation(GeoPoint p) {
-    // TODO: implement changeLocation
-    throw UnimplementedError();
+  Future<void> changeLocation(GeoPoint p) async {
+    await _addPosition(
+      p,
+      showMarker: true,
+      animate: true,
+    );
   }
 
   Future<void> defaultZoom(double zoom) async {
@@ -105,9 +101,8 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<void> goToPosition(GeoPoint p) {
-    // TODO: implement goToPosition
-    throw UnimplementedError();
+  Future<void> goToPosition(GeoPoint p) async {
+    await _addPosition(p, animate: true, showMarker: false);
   }
 
   Future<void> mapOrientation(double? degree) {
@@ -164,11 +159,6 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<GeoPoint> selectPosition({MarkerIcon? icon, String imageURL = ""}) {
-    // TODO: implement selectPosition
-    throw UnimplementedError();
-  }
-
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
     await interop.setStaticGeoPoints(
       id,
@@ -186,5 +176,21 @@ mixin WebMixin {
 
   Future<void> zoomOut() async {
     await interop.zoomOut();
+  }
+
+  Future<void> _addPosition(
+    GeoPoint point, {
+    bool showMarker = true,
+    bool animate = false,
+  }) async {
+    //await promiseToFuture();
+    await interop.addPosition(
+      GeoPointJs(
+        lat: point.latitude,
+        lon: point.longitude,
+      ),
+      showMarker,
+      animate,
+    );
   }
 }

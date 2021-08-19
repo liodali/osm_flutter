@@ -34,8 +34,7 @@ external dynamic setZoom(double zoom);
 external dynamic setDefaultIcon(String base64);
 
 @JS('addPosition')
-external dynamic addPosition(GeoPointJs p);
-
+external dynamic addPosition(GeoPointJs p,bool showMarker,bool animate);
 
 @JS('currentUserLocation')
 external dynamic currentUserLocation();

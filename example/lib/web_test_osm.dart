@@ -3,12 +3,11 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 //import 'package:flutter_osm_plugin/web_osm_plugin.dart';
 
 class WebTestOsm extends StatefulWidget {
-
   @override
   State<StatefulWidget> createState() => _WebTestOsmState();
-
 }
-class _WebTestOsmState extends State<WebTestOsm>{
+
+class _WebTestOsmState extends State<WebTestOsm> {
   late final MapController controller = MapController(
     initMapWithUserPosition: false,
     initPosition: GeoPoint(
@@ -16,14 +15,23 @@ class _WebTestOsmState extends State<WebTestOsm>{
       longitude: 8.4737324,
     ),
   );
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 2),()async{
+    Future.delayed(Duration(seconds: 2), () async {
       await controller.zoom(6);
     });
-  }
 
+    Future.delayed(Duration(seconds: 6), () async {
+      await controller.changeLocation(
+        GeoPoint(
+          latitude: 47.433358,
+          longitude: 8.4690184,
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +41,7 @@ class _WebTestOsmState extends State<WebTestOsm>{
           title: Text("osm web"),
           actions: [
             IconButton(
-              onPressed: ()async{
+              onPressed: () async {
                 await controller.currentLocation();
               },
               icon: Icon(Icons.location_history),
@@ -88,5 +96,3 @@ class _WebTestOsmState extends State<WebTestOsm>{
     );
   }
 }
-
-

@@ -7,10 +7,9 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/src/mixin_web.dart';
 
 import '../channel/method_channel_web.dart';
-import '../osm_web.dart';
 import '../interop/osm_interop.dart' as interop;
+import '../osm_web.dart';
 import '../web_platform.dart';
-
 
 class WebOsmController with WebMixin implements IBaseOSMController {
   late int _mapId;
@@ -133,7 +132,7 @@ class WebOsmController with WebMixin implements IBaseOSMController {
 
     if (_osmWebFlutterState.widget.staticPoints.isNotEmpty) {
       _osmWebFlutterState.widget.staticPoints.forEach((ele) {
-          setStaticPosition(ele.geoPoints, ele.id);
+        setStaticPosition(ele.geoPoints, ele.id);
       });
     }
   }
@@ -171,5 +170,13 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       id,
       base64Icon,
     );
+  }
+
+  Future<GeoPoint> selectPosition({
+    MarkerIcon? icon,
+    String imageURL = "",
+  }) {
+    // TODO: implement selectPosition
+    throw UnimplementedError();
   }
 }
