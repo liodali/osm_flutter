@@ -7,7 +7,6 @@ part of osm_flutter;
 ///
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 class MapController extends BaseMapController {
-
   MapController({
     bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
@@ -33,6 +32,7 @@ class MapController extends BaseMapController {
     _listenerMapSingleTapping.dispose();
     _osmController.dispose();
   }
+
 
   /// set area camera limit of the map
   /// [box] : (BoundingBox) bounding that map cannot exceed from it
@@ -98,6 +98,11 @@ class MapController extends BaseMapController {
   }) async {
     await _osmController.setIconStaticPositions(id, markerIcon);
   }
+
+  /// recuperate current zoom level
+  Future<double>  getZoom() async => await _osmController.getZoom();
+
+
 
   @Deprecated("will be remove in next version,use setZoom")
   /// change zoom level of the map

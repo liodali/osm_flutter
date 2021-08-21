@@ -54,7 +54,7 @@ class OSMFlutter extends StatefulWidget {
   @Deprecated("will be remove in next version,use stepZoom")
   double? defaultZoom;
   final double stepZoom;
-  final int initZoom;
+  final double initZoom;
   final int minZoomLevel;
   final int maxZoomLevel;
   final bool showDefaultInfoWindow;
@@ -82,7 +82,10 @@ class OSMFlutter extends StatefulWidget {
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
-  }) : super(key: key);
+  })  : assert(maxZoomLevel <= 19),
+        assert(minZoomLevel >= 2),
+        assert(initZoom >= 2 && initZoom <= 19),
+        super(key: key);
 
   @override
   OSMFlutterState createState() => OSMFlutterState();

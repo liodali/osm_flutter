@@ -240,7 +240,11 @@ class OSMController {
   }
 
   Future<void> configureZoomMap(
-      int minZoomLevel, int maxZoomLevel, double stepZoom, int initZoom) async {
+    int minZoomLevel,
+    int maxZoomLevel,
+    double stepZoom,
+    double initZoom,
+  ) async {
     await (osmPlatform as MethodChannelOSM).configureZoomMap(
       _idMap,
       initZoom,
@@ -430,14 +434,20 @@ class OSMController {
   }
 
   Future<void> setZoom({int? zoomLevel, double? stepZoom}) async {
-    if(zoomLevel != null && (zoomLevel>=maxZoomLevel || zoomLevel<=minZoomLevel)){
-      throw Exception("zoom level should be between $minZoomLevel and $maxZoomLevel");
+    if (zoomLevel != null &&
+        (zoomLevel >= maxZoomLevel || zoomLevel <= minZoomLevel)) {
+      throw Exception(
+          "zoom level should be between $minZoomLevel and $maxZoomLevel");
     }
     await osmPlatform.setZoom(
       _idMap,
       stepZoom: stepZoom,
       zoomLevel: zoomLevel,
     );
+  }
+
+  Future<double> getZoom() async {
+    return await osmPlatform.getZoom(_idMap);
   }
 
   /// draw road

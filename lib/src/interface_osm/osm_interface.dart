@@ -159,7 +159,7 @@ abstract class OSMPlatform extends PlatformInterface {
     String id,
   );
 
-  Future<int> getZoom(
+  Future<double> getZoom(
     int idOSM,
   );
 
