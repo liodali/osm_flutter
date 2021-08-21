@@ -50,7 +50,6 @@ import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.bonuspack.utils.PolylineEncoder
 import org.osmdroid.config.Configuration
-import org.osmdroid.config.IConfigurationProvider
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
@@ -86,6 +85,22 @@ fun HashMap<String, Double>.toGeoPoint(): GeoPoint {
 
 }
 
+fun FlutterOsmView.configZoomMap(call: MethodCall, result: MethodChannel.Result) {
+    var args = call.arguments as HashMap<String, Any>
+    this.map!!.minZoomLevel = (args["minZoomLevel"] as Int).toDouble()
+    this.map!!.maxZoomLevel = (args["maxZoomLevel"] as Int).toDouble()
+    stepZoom = args["stepZoom"] as Double
+    initZoom = args["initZoom"] as Double
+
+
+    result.success(200)
+}
+
+fun FlutterOsmView.getZoom(result: MethodChannel.Result) {
+
+    result.success(this.map!!.zoomLevelDouble)
+}
+
 class FlutterOsmView(
     private val context: Context?,
     private val binaryMessenger: BinaryMessenger,
@@ -100,8 +115,7 @@ class FlutterOsmView(
     PlatformView,
     MethodCallHandler {
 
-    private var configuration: IConfigurationProvider? = null
-    private var map: MapView? = null
+    internal var map: MapView? = null
     private var locationNewOverlay: MyLocationNewOverlay? = null
     private var customMarkerIcon: Bitmap? = null
     private var customPersonMarkerIcon: Bitmap? = null
@@ -153,8 +167,8 @@ class FlutterOsmView(
 
     private var roadManager: OSRMRoadManager? = null
     private var roadColor: Int? = null
-    private var defaultZoom = Constants.defaultZoom
-    private val initPositionZoom = 10.0
+    internal var stepZoom = Constants.stepZoom
+    internal var initZoom = 10.0
     private var isTracking = false
     private var isEnabled = false
     private var visibilityInfoWindow = false
@@ -250,16 +264,189 @@ class FlutterOsmView(
 
     }
 
+
+    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        when (call.method) {
+
+            "use#visiblityInfoWindow" -> {
+                visibilityInfoWindow = call.arguments as Boolean
+                result.success(null)
+            }
+            "config#Zoom" -> {
+                configZoomMap(call = call, result = result)
+            }
+            "Zoom" -> {
+                setZoom(call, result)
+            }
+            "get#Zoom" -> {
+                getZoom(result)
+            }
+//            "stepZoom" -> {
+//                defaultZoom = call.arguments as Double
+//                result.success(null)
+//            }
+
+            "currentLocation" -> {
+                enableMyLocation(result)
+            }
+
+            "showZoomController" -> {
+                val isZoomControllerVisible = call.arguments as Boolean
+                val visibility = if (isZoomControllerVisible) {
+                    CustomZoomButtonsController.Visibility.SHOW_AND_FADEOUT
+                } else
+                    CustomZoomButtonsController.Visibility.NEVER
+                map!!.zoomController.setVisibility(visibility)
+                result.success(null)
+            }
+
+            "initMap" -> {
+                initPosition(call, result)
+            }
+            "limitArea" -> {
+                limitCameraArea(call, result)
+            }
+            "remove#limitArea" -> {
+                removeLimitCameraArea(call, result)
+
+            }
+            "changePosition" -> {
+                changePosition(call, result)
+            }
+            "trackMe" -> {
+                trackUserLocation(call, result)
+            }
+            "deactivateTrackMe" -> {
+                deactivateTrackMe(call, result)
+            }
+            "user#position" -> {
+                if (locationNewOverlay == null) {
+                    locationNewOverlay = MyLocationNewOverlay(provider, map)
+                }
+                locationNewOverlay?.let {
+                    if (!it.isMyLocationEnabled) {
+                        it.enableMyLocation()
+                    }
+                    currentUserPosition(call, result)
+                } ?: result.error("400", "Opps!error locationOverlay is NULL", "")
+            }
+
+            "user#pickPosition" -> {
+                pickPosition(call, result)
+            }
+            "goto#position" -> {
+                goToSpecificPosition(call, result)
+            }
+            "user#removeMarkerPosition" -> {
+                removePosition(call, result)
+            }
+            "user#removeroad" -> {
+                if (folderRoad.items.isNotEmpty()) {
+                    folderRoad.items.clear()
+                    map!!.invalidate()
+                }
+                result.success(null)
+
+            }
+            "road" -> {
+                drawRoad(call, result)
+            }
+            "marker#icon" -> {
+                changeIcon(call, result)
+            }
+            "road#color" -> {
+                setRoadColor(call, result)
+            }
+            "drawRoad#manually" -> {
+                drawRoadManually(call, result)
+            }
+            "road#markers" -> {
+                setRoadMaker(call, result)
+            }
+            "staticPosition" -> {
+                staticPosition(call, result)
+            }
+            "staticPosition#IconMarker" -> {
+                staticPositionIconMaker(call, result)
+            }
+            "draw#circle" -> {
+                drawCircle(call, result)
+            }
+            "remove#circle" -> {
+                removeCircle(call, result)
+            }
+            "draw#rect" -> {
+                drawRect(call, result)
+            }
+            "remove#rect" -> {
+                removeRect(call, result)
+            }
+            "clear#shapes" -> {
+                folderCircles.items.clear()
+                folderRect.items.clear()
+                map!!.invalidate()
+                result.success(null)
+
+            }
+            "advancedPicker#marker#icon" -> {
+                setCustomAdvancedPickerMarker(
+                    call = call,
+                    result = result,
+                )
+            }
+            "advanced#selection" -> {
+                startAdvancedSelection(call)
+                result.success(null)
+            }
+            "get#position#advanced#selection" -> {
+                confirmAdvancedSelection(result)
+            }
+            "confirm#advanced#selection" -> {
+                confirmAdvancedSelection(result, isFinished = true)
+            }
+
+            "cancel#advanced#selection" -> {
+                cancelAdvancedSelection()
+                result.success(null)
+            }
+            "map#orientation" -> {
+                mapOrientation(call, result)
+            }
+            "user#locationMarkers" -> {
+                changeLocationMarkers(call, result)
+            }
+            "add#Marker" -> {
+                addMarkerManually(call, result)
+            }
+            else -> {
+                result.notImplemented()
+            }
+        }
+    }
+
     private fun setZoom(methodCall: MethodCall, result: MethodChannel.Result) {
         try {
-            var zoomInput = methodCall.arguments as Double
-            if (zoomInput == 0.0) {
-                zoomInput = defaultZoom
-            } else if (zoomInput == -1.0) {
-                zoomInput = -defaultZoom
+            val args = methodCall.arguments as HashMap<String, Any>
+            when (args.containsKey("stepZoom")) {
+                true -> {
+                    var zoomInput = args["stepZoom"] as Double
+                    if (zoomInput == 0.0) {
+                        zoomInput = stepZoom
+                    } else if (zoomInput == -1.0) {
+                        zoomInput = -stepZoom
+                    }
+                    val zoom = map!!.zoomLevelDouble + zoomInput
+                    map!!.controller.setZoom(zoom)
+                }
+                false -> {
+                    if (args.containsKey("zoomLevel")) {
+                        val level = args["zoomLevel"] as Double
+                        map!!.controller.setZoom(level)
+                    }
+
+                }
             }
-            val zoom = map!!.zoomLevelDouble + zoomInput
-            map!!.controller.setZoom(zoom)
+
             result.success(null)
         } catch (e: Exception) {
         }
@@ -273,10 +460,7 @@ class FlutterOsmView(
 //        }
         //map!!.overlays.clear()
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
-        val zoom = when (map!!.zoomLevelDouble) {
-            2.0 -> initPositionZoom
-            else -> map!!.zoomLevelDouble
-        }
+        val zoom = initZoom
         //homeMarker = addMarker(geoPoint, zoom, null)
 
         map!!.controller.setZoom(zoom)
@@ -299,7 +483,7 @@ class FlutterOsmView(
         //map!!.overlays.clear()
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
         val zoom = when (map!!.zoomLevelDouble) {
-            0.0 -> initPositionZoom
+            0.0 -> initZoom
             else -> map!!.zoomLevelDouble
         }
         homeMarker = addMarker(geoPoint, zoom, null)
@@ -494,158 +678,6 @@ class FlutterOsmView(
         }
     }
 
-    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        when (call.method) {
-
-            "use#visiblityInfoWindow" -> {
-                visibilityInfoWindow = call.arguments as Boolean
-                result.success(null)
-            }
-            "Zoom" -> {
-                setZoom(call, result)
-            }
-            "defaultZoom" -> {
-                defaultZoom = call.arguments as Double
-                result.success(null)
-            }
-
-            "currentLocation" -> {
-                enableMyLocation(result)
-            }
-
-            "showZoomController" -> {
-                val isZoomControllerVisible = call.arguments as Boolean
-                val visibility = if (isZoomControllerVisible) {
-                    CustomZoomButtonsController.Visibility.SHOW_AND_FADEOUT
-                } else
-                    CustomZoomButtonsController.Visibility.NEVER
-                map!!.zoomController.setVisibility(visibility)
-                result.success(null)
-            }
-
-            "initMap" -> {
-                initPosition(call, result)
-            }
-            "limitArea" -> {
-                limitCameraArea(call, result)
-            }
-            "remove#limitArea" -> {
-                removeLimitCameraArea(call, result)
-
-            }
-            "changePosition" -> {
-                changePosition(call, result)
-            }
-            "trackMe" -> {
-                trackUserLocation(call, result)
-            }
-            "deactivateTrackMe" -> {
-                deactivateTrackMe(call, result)
-            }
-            "user#position" -> {
-                if (locationNewOverlay == null) {
-                    locationNewOverlay = MyLocationNewOverlay(provider, map)
-                }
-                locationNewOverlay?.let {
-                    if (!it.isMyLocationEnabled) {
-                        it.enableMyLocation()
-                    }
-                    currentUserPosition(call, result)
-                } ?: result.error("400", "Opps!error locationOverlay is NULL", "")
-            }
-
-            "user#pickPosition" -> {
-                pickPosition(call, result)
-            }
-            "goto#position" -> {
-                goToSpecificPosition(call, result)
-            }
-            "user#removeMarkerPosition" -> {
-                removePosition(call, result)
-            }
-            "user#removeroad" -> {
-                if (folderRoad.items.isNotEmpty()) {
-                    folderRoad.items.clear()
-                    map!!.invalidate()
-                }
-                result.success(null)
-
-            }
-            "road" -> {
-                drawRoad(call, result)
-            }
-            "marker#icon" -> {
-                changeIcon(call, result)
-            }
-            "road#color" -> {
-                setRoadColor(call, result)
-            }
-            "drawRoad#manually" -> {
-                drawRoadManually(call, result)
-            }
-            "road#markers" -> {
-                setRoadMaker(call, result)
-            }
-            "staticPosition" -> {
-                staticPosition(call, result)
-            }
-            "staticPosition#IconMarker" -> {
-                staticPositionIconMaker(call, result)
-            }
-            "draw#circle" -> {
-                drawCircle(call, result)
-            }
-            "remove#circle" -> {
-                removeCircle(call, result)
-            }
-            "draw#rect" -> {
-                drawRect(call, result)
-            }
-            "remove#rect" -> {
-                removeRect(call, result)
-            }
-            "clear#shapes" -> {
-                folderCircles.items.clear()
-                folderRect.items.clear()
-                map!!.invalidate()
-                result.success(null)
-
-            }
-            "advancedPicker#marker#icon" -> {
-                setCustomAdvancedPickerMarker(
-                    call = call,
-                    result = result,
-                )
-            }
-            "advanced#selection" -> {
-                startAdvancedSelection(call)
-                result.success(null)
-            }
-            "get#position#advanced#selection" -> {
-                confirmAdvancedSelection(result)
-            }
-            "confirm#advanced#selection" -> {
-                confirmAdvancedSelection(result, isFinished = true)
-            }
-
-            "cancel#advanced#selection" -> {
-                cancelAdvancedSelection()
-                result.success(null)
-            }
-            "map#orientation" -> {
-                mapOrientation(call, result)
-            }
-            "user#locationMarkers" -> {
-                changeLocationMarkers(call, result)
-            }
-            "add#Marker" -> {
-                addMarkerManually(call, result)
-            }
-            else -> {
-                result.notImplemented()
-            }
-        }
-    }
 
     private fun addMarkerManually(call: MethodCall, result: MethodChannel.Result) {
         var args = call.arguments as HashMap<String, Any>
