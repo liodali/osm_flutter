@@ -51,11 +51,6 @@ abstract class OSMPlatform extends PlatformInterface {
     int idMap,
   );
 
-  Future<void> zoom(
-    int idOSM,
-    double zoom,
-  );
-
   Future<GeoPoint> pickLocation(
     int idOSM, {
     GlobalKey? key,
@@ -164,9 +159,29 @@ abstract class OSMPlatform extends PlatformInterface {
     String id,
   );
 
-  Future<void> setDefaultZoom(
+  Future<int> getZoom(
     int idOSM,
-    double defaultZoom,
+  );
+
+  Future<void> setZoom(
+    int idOSM, {
+    int? zoomLevel,
+    double? stepZoom,
+  });
+
+  Future<void> setStepZoom(
+    int idOSM,
+    int stepZoom,
+  );
+
+  Future<void> setMinimumZoomLevel(
+    int idOSM,
+    int minZoom,
+  );
+
+  Future<void> setMaximumZoomLevel(
+    int idOSM,
+    int maxZoom,
   );
 
   Future<void> disableTracking(
@@ -211,9 +226,6 @@ abstract class OSMPlatform extends PlatformInterface {
     GlobalKey key,
   );
 
-  Future<void> initIosMap(
-    int idOSM,
-  );
 
   Future<void> limitArea(
     int idOSM,

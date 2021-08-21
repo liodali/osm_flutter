@@ -53,7 +53,7 @@ class OSMFlutter extends StatefulWidget {
   final Road? road;
   @Deprecated("will be remove in next version,use stepZoom")
   double? defaultZoom;
-  final int stepZoom;
+  final double stepZoom;
   final int initZoom;
   final int minZoomLevel;
   final int maxZoomLevel;

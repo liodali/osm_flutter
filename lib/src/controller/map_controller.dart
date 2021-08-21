@@ -7,6 +7,7 @@ part of osm_flutter;
 ///
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 class MapController extends BaseMapController {
+
   MapController({
     bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
@@ -98,10 +99,20 @@ class MapController extends BaseMapController {
     await _osmController.setIconStaticPositions(id, markerIcon);
   }
 
-  /// zoom in/out
-  /// [zoom] : (double) positive value:zoomIN or negative value:zoomOut
+  @Deprecated("will be remove in next version,use setZoom")
+  /// change zoom level of the map
+  /// [zoom] : (double) step zoom that will be added to current zoom
   Future<void> zoom(double zoom) async {
-    await _osmController.zoom(zoom);
+    await _osmController.setZoom(stepZoom: zoom);
+  }
+
+  /// change zoom level of the map
+  ///
+  /// [zoomLevel] : (double) should be between minZoomLevel and maxZoomLevel
+  ///
+  /// [stepZoom] : (double) step zoom that will be added to current zoom
+  Future<void> setZoom({int? zoomLevel, double? stepZoom}) async {
+    await _osmController.setZoom(zoomLevel: zoomLevel, stepZoom: stepZoom);
   }
 
   /// zoomIn use defaultZoom
@@ -113,7 +124,7 @@ class MapController extends BaseMapController {
   /// zoomOut use defaultZoom
   /// negative value:zoomOut
   Future<void> zoomOut() async {
-    await _osmController.zoom(-1);
+    await _osmController.zoomOut();
   }
 
   /// activate current location position

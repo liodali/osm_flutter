@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_plugin/src/channel/osm_method_channel.dart';
 import 'package:location/location.dart';
 
 import '../common/utilities.dart';
@@ -16,9 +17,16 @@ class OSMController {
   late int _idMap;
   late OSMFlutterState _osmFlutterState;
 
+  late double stepZoom = 1;
+  late int minZoomLevel = 2;
+  late int maxZoomLevel = 18;
+
   OSMController();
 
-  OSMController._(this._idMap, this._osmFlutterState);
+  OSMController._(this._idMap, this._osmFlutterState) {
+    minZoomLevel = this._osmFlutterState.widget.minZoomLevel;
+    maxZoomLevel = this._osmFlutterState.widget.maxZoomLevel;
+  }
 
   static Future<OSMController> init(
     int id,
@@ -48,12 +56,20 @@ class OSMController {
 
     /// load config map scene for iOS
     if (Platform.isIOS) {
-      await osmPlatform.initIosMap(_idMap);
+      await (osmPlatform as MethodChannelOSM).initIosMap(_idMap);
     }
 
     _checkBoundingBox(box, initPosition);
-
-    osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
+    stepZoom = _osmFlutterState.widget.stepZoom;
+    if (_osmFlutterState.widget.defaultZoom != null) {
+      stepZoom = _osmFlutterState.widget.defaultZoom!;
+    }
+    await configureZoomMap(
+      _osmFlutterState.widget.minZoomLevel,
+      _osmFlutterState.widget.maxZoomLevel,
+      stepZoom,
+      _osmFlutterState.widget.initZoom,
+    );
 
     if (_osmFlutterState.widget.showDefaultInfoWindow == true) {
       osmPlatform.visibilityInfoWindow(
@@ -223,6 +239,17 @@ class OSMController {
     );
   }
 
+  Future<void> configureZoomMap(
+      int minZoomLevel, int maxZoomLevel, double stepZoom, int initZoom) async {
+    await (osmPlatform as MethodChannelOSM).configureZoomMap(
+      _idMap,
+      initZoom,
+      minZoomLevel,
+      maxZoomLevel,
+      stepZoom,
+    );
+  }
+
   /// set area camera limit of the map
   /// [box] : (BoundingBox) bounding that map cannot exceed from it
   Future<void> limitAreaMap(BoundingBox box) async {
@@ -303,26 +330,14 @@ class OSMController {
     await osmPlatform.staticPosition(_idMap, geoPoints, id);
   }
 
-  /// zoom in/out
-  ///
-  /// [zoom] : (double) positive value:zoomIN or negative value:zoomOut
-  Future<void> zoom(double zoom) async {
-    assert(zoom != 0, "zoom value should different from zero");
-    await osmPlatform.zoom(_idMap, zoom);
-  }
-
-  /// zoomIn use defaultZoom
-  ///
-  /// positive value:zoomIN
+  /// zoomIn use stepZoom
   Future<void> zoomIn() async {
-    await osmPlatform.zoom(_idMap, 0);
+    await osmPlatform.setZoom(_idMap, stepZoom: 0);
   }
 
-  /// zoomOut use defaultZoom
-  ///
-  /// negative value:zoomOut
+  /// zoomOut use stepZoom
   Future<void> zoomOut() async {
-    await osmPlatform.zoom(_idMap, -1);
+    await osmPlatform.setZoom(_idMap, stepZoom: -1);
   }
 
   /// activate current location position
@@ -414,8 +429,15 @@ class OSMController {
     return p;
   }
 
-  Future<void> defaultZoom(double zoom) async {
-    await osmPlatform.setDefaultZoom(_idMap, zoom);
+  Future<void> setZoom({int? zoomLevel, double? stepZoom}) async {
+    if(zoomLevel != null && (zoomLevel>=maxZoomLevel || zoomLevel<=minZoomLevel)){
+      throw Exception("zoom level should be between $minZoomLevel and $maxZoomLevel");
+    }
+    await osmPlatform.setZoom(
+      _idMap,
+      stepZoom: stepZoom,
+      zoomLevel: zoomLevel,
+    );
   }
 
   /// draw road
