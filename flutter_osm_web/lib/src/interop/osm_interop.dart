@@ -36,6 +36,10 @@ external dynamic setDefaultIcon(String base64);
 @JS('addPosition')
 external dynamic addPosition(GeoPointJs p,bool showMarker,bool animate);
 
+
+@JS('removeMarker')
+external dynamic removeMarker(GeoPointJs p);
+
 @JS('currentUserLocation')
 external dynamic currentUserLocation();
 

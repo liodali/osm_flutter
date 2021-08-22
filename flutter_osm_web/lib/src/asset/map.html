@@ -116,7 +116,17 @@
        }
        return 200;
   }
-
+  
+  async function removeMarker(point){
+    mymap.eachLayer(function(layer){
+       if(layer instanceof L.Marker) {
+         const latlng = layer.getLatLng()
+        if(latlng.lat == point.lat && latlng.lng == point.lon) {
+          mymap.removeLayer(layer);
+        }
+    }
+    });
+  }
     
   async function setDefaultIcon(icon) {
         defaultIcon = icon;

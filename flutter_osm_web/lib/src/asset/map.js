@@ -49,6 +49,10 @@ async function currentUserLocation() {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.userLocation();
 }
+async function removeMarker(point){
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.removeMarker(point);
+}
 
 /*
 * shared dart function that called from js
