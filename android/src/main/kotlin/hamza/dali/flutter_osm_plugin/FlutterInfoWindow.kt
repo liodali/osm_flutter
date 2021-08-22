@@ -52,7 +52,7 @@ class FlutterInfoWindow(view: View, mapView: MapView?) :
                     Log.e("error address", e.stackTrace.toString())
                     withContext(Main) {
                         infoView.progressCircularOsm.gone()
-                        infoView.adresseInfowindow.text = Constants.unvailableAdress
+                        infoView.adresseInfowindow.text = Constants.unavailableAddress
                         infoView.adresseInfowindow.visible()
                     }
                 }

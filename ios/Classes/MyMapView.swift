@@ -47,8 +47,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     // var tileRenderer:MKTileOverlayRenderer!
 
-    var span = MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3)
-    var zoomDefault = 0.9
+    var stepZoom = 1.0
+    var initZoom = 10.0
 
     init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?) {
         self.frame = frame
@@ -104,11 +104,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         case "initMap":
             initPosition(args: call.arguments, result: result)
             break;
+        case "config#Zoom":
+            configZoomMap(call: call)
+            result(200)
+            break;
         case "limitArea":
             setCameraAreaLimit(call:call)
             result(200)
             break;
         case "remove#limitArea":
+            result(200)
             break;
         case "changePosition":
             changePosition(args: call.arguments, result: result)
@@ -139,20 +144,33 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break;
         case "Zoom":
-            let levelZoom = call.arguments! as! Double
-            if (levelZoom == 0 || levelZoom == -1) {
-                var alpha: Double = -1
-                if levelZoom == 0 {
-                    alpha = 1
+            let args = call.arguments! as! [String:Any]
+            var step = stepZoom
+            if(args.keys.contains("stepZoom")){
+                let stepZ = args["stepZoom"] as! Double
+                if(stepZ == 0 || stepZ == -1){
+                    if(stepZ == -1){
+                        step = -step
+                    }
+                }else{
+                    step = stepZ
                 }
-                zoomMap(zoomDefault * alpha)
-            } else {
-                zoomMap(levelZoom)
+
+                zoomMap(step,nil)
+            }else{
+                let levelZoom = args["zoomLevel"] as! Double
+
+                zoomMap(nil,levelZoom)
+
             }
+
             result(nil)
             break;
-        case "defaultZoom":
-            zoomDefault = call.arguments! as! Double
+        case "get#Zoom":
+            result(getZoom())
+            break;
+        case "change#stepZoom":
+            stepZoom = call.arguments! as! Double
             result(200)
             break;
         case "marker#icon":
@@ -260,7 +278,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
         // mapView.cameraPosition = TGCameraPosition(center: location, zoom: CGFloat(11), bearing: 0, pitch: 0)
         channel.invokeMethod("map#init", arguments: true)
-        mapView.fly(to: TGCameraPosition(center: location, zoom: 10.0, bearing: 0, pitch: 0),
+        mapView.fly(to: TGCameraPosition(center: location, zoom: CGFloat(initZoom), bearing: 0, pitch: 0),
                 withDuration: 0.2)
         /*{ finish in
             self.
@@ -327,15 +345,20 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         return UIImage(data: dataImage!)// Note it's optional. Don't force unwrap!!!
     }
 
-    private func zoomMap(_ level: Double) {
-        if (level > 0) {
-            let cameraPos = TGCameraPosition(center: mapView.position, zoom: mapView.zoom + CGFloat(abs(level)), bearing: 0, pitch: 0)!
-            mapView.fly(to: cameraPos, withDuration:0.2)
-        } else {
-            let cameraPos = TGCameraPosition(center: mapView.position, zoom: mapView.zoom - CGFloat(abs(level)), bearing: 0, pitch: 0)!
+    private func zoomMap(_ step: Double?,_ level : Double?) {
+            var zoomLvl: CGFloat? =  nil
+            if( step != nil ){
+               zoomLvl = mapView.zoom + CGFloat(step!)
+                if(zoomLvl! < mapView.minimumZoomLevel || zoomLvl! > mapView.maximumZoomLevel){
+                    return;
+                }
+            }else{
+                zoomLvl = CGFloat(level!)
+            }
+            let cameraPos = TGCameraPosition(center: mapView.position, zoom: zoomLvl!, bearing: mapView.bearing, pitch: mapView.pitch)!
             mapView.fly(to: cameraPos, withDuration:0.2)
 
-        }
+
     }
 
     private func setupTileRenderer() {}
@@ -690,7 +713,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
                         shouldRecognizeDoubleTapGesture location: CGPoint) -> Bool {
         let locationMap = view.coordinate(fromViewPosition: location)
-        view.fly(to: TGCameraPosition(center: locationMap, zoom: view.zoom + CGFloat(zoomDefault), bearing: view.bearing, pitch: view.pitch),withDuration:0.2)
+        view.fly(to: TGCameraPosition(center: locationMap, zoom: view.zoom + CGFloat(stepZoom), bearing: view.bearing, pitch: view.pitch),withDuration:0.2)
         return true
     }
 
@@ -702,17 +725,15 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
 }
 
-private extension MKMapView {
-    func centerToLocation(
-            _ location: CLLocation,
-            regionRadius: CLLocationDistance = 1000
-    ) {
-        let coordinateRegion = MKCoordinateRegion(
-                center: location.coordinate,
-                latitudinalMeters: regionRadius,
-                longitudinalMeters: regionRadius
-
-        )
-        setRegion(coordinateRegion, animated: true)
+private extension MyMapView {
+   func configZoomMap(call:FlutterMethodCall){
+       let args = call.arguments as! [String:Any]
+       stepZoom = args["stepZoom"] as! Double
+       initZoom = args["initZoom"] as! Double
+       mapView.minimumZoomLevel = CGFloat(args["minZoomLevel"] as! Int)
+       mapView.maximumZoomLevel = CGFloat(args["maxZoomLevel"] as! Int)
+   }
+    func getZoom()-> Double{
+         Double(mapView.zoom)
     }
 }

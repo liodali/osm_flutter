@@ -331,9 +331,9 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> setDefaultZoom(int idOSM, double defaultZoom) async {
+  Future<void> setStepZoom(int idOSM, int defaultZoom) async {
     try {
-      await _channels[idOSM]!.invokeMethod("defaultZoom", defaultZoom);
+      await _channels[idOSM]!.invokeMethod("change#stepZoom", defaultZoom);
     } on PlatformException catch (e) {
       print(e.message);
     }
@@ -379,11 +379,6 @@ class MethodChannelOSM extends OSMPlatform {
     } on PlatformException catch (e) {
       print(e.message);
     }
-  }
-
-  @override
-  Future<void> zoom(int idOSM, double zoom) async {
-    await _channels[idOSM]!.invokeMethod('Zoom', zoom);
   }
 
   Future<Uint8List> _capturePng(GlobalKey globalKey) async {
@@ -549,11 +544,6 @@ class MethodChannelOSM extends OSMPlatform {
   }
 
   @override
-  Future<void> initIosMap(int idOSM) async {
-    await _channels[idOSM]!.invokeMethod("init#ios#map");
-  }
-
-  @override
   Future<void> limitArea(int idOSM, BoundingBox box) async {
     await _channels[idOSM]!.invokeMethod("limitArea", [
       box.north,
@@ -602,5 +592,58 @@ class MethodChannelOSM extends OSMPlatform {
     }
 
     await _channels[idOSM]!.invokeMethod("add#Marker", args);
+  }
+
+  @override
+  Future<void> setMaximumZoomLevel(int idOSM, int maxZoom) async {
+    await _channels[idOSM]!.invokeMethod("set#minZoom", maxZoom);
+  }
+
+  @override
+  Future<void> setMinimumZoomLevel(int idOSM, int minZoom) async {
+    await _channels[idOSM]!.invokeMethod("set#maxZoom", minZoom);
+  }
+
+  @override
+  Future<double> getZoom(int idOSM) async {
+    return await _channels[idOSM]!.invokeMethod('get#Zoom');
+  }
+
+  @override
+  Future<void> setZoom(
+    int idOSM, {
+    int? zoomLevel,
+    double? stepZoom,
+  }) async {
+    var args = {};
+    if (zoomLevel != null) {
+      args["zoomLevel"] = zoomLevel;
+    } else if (stepZoom != null) {
+      args["stepZoom"] = stepZoom;
+    }
+    await _channels[idOSM]!.invokeMethod('Zoom', args);
+  }
+}
+
+extension config on MethodChannelOSM {
+  Future<void> configureZoomMap(
+    int idOSM,
+    double initZoom,
+    int minZoomLevel,
+    int maxZoomLevel,
+    double stepZoom,
+  ) async {
+    var args = {
+      "initZoom": initZoom,
+      "minZoomLevel": minZoomLevel,
+      "maxZoomLevel": maxZoomLevel,
+      "stepZoom": stepZoom,
+    };
+
+    await _channels[idOSM]!.invokeMethod('config#Zoom', args);
+  }
+
+  Future<void> initIosMap(int idOSM) async {
+    await _channels[idOSM]!.invokeMethod("init#ios#map");
   }
 }

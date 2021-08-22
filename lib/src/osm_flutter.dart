@@ -28,7 +28,13 @@ typedef OnLocationChanged = void Function(GeoPoint);
 ///
 /// [road] : set color and icons marker of road
 ///
-/// [defaultZoom] : set default zoom value (default = 1)
+/// [stepZoom] : set default step zoom value (default = 1)
+///
+/// [initZoom] : set initialized zoom in specific location  (default = 2)
+///
+/// [minZoomLevel] : set default zoom value (default = 1)
+///
+/// [maxZoomLevel] : set default zoom value (default = 1)
 ///
 /// [showDefaultInfoWindow] : (bool) enable/disable default infoWindow of marker (default = false)
 ///
@@ -45,7 +51,12 @@ class OSMFlutter extends StatefulWidget {
   final MarkerOption? markerOption;
   final UserLocationMaker? userLocationMarker;
   final Road? road;
-  final double defaultZoom;
+  @Deprecated("will be remove in next version,use stepZoom")
+  double? defaultZoom;
+  final double stepZoom;
+  final double initZoom;
+  final int minZoomLevel;
+  final int maxZoomLevel;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
@@ -63,11 +74,18 @@ class OSMFlutter extends StatefulWidget {
     this.onLocationChanged,
     this.onMapIsReady,
     this.road,
-    this.defaultZoom = 1.0,
+    this.defaultZoom,
+    this.stepZoom = 1,
+    this.initZoom = 2,
+    this.minZoomLevel = 2,
+    this.maxZoomLevel = 18,
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
-  }) : super(key: key);
+  })  : assert(maxZoomLevel <= 19),
+        assert(minZoomLevel >= 2),
+        assert(initZoom >= 2 && initZoom <= 19),
+        super(key: key);
 
   @override
   OSMFlutterState createState() => OSMFlutterState();
