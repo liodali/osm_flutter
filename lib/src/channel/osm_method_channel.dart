@@ -333,7 +333,7 @@ class MethodChannelOSM extends OSMPlatform {
   @override
   Future<void> setStepZoom(int idOSM, int defaultZoom) async {
     try {
-      await _channels[idOSM]!.invokeMethod("defaultZoom", defaultZoom);
+      await _channels[idOSM]!.invokeMethod("change#stepZoom", defaultZoom);
     } on PlatformException catch (e) {
       print(e.message);
     }
