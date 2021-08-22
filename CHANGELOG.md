@@ -1,3 +1,10 @@
+## 0.14.0 :
+* deprecate attribute `defaultZoom`
+* replace `defaultZoom` with new attribute `stepZoom`
+* deprecated method `zoom` and replaced with `setZoom`
+* change logic of setZoom by adding two attribute stepZoom,zoomLevel
+* add new attribute `minZoomLevel` and `maxZoomLevel`
+* add new attribute `initZoom` to initialize map with that zoom
 ## 0.13.0 :
 * add `onMapIsReady` attribute in OSMFluter to get notified when map is initialized
 * add valueListenable `listenerMapIsReady` to `MapController` as notifier for map initialization

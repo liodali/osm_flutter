@@ -86,9 +86,9 @@ class _MainExampleState extends State<MainExample> {
 
   void mapIsInitialized() {
     if (controller.listenerMapIsReady.value) {
-      Future.delayed(Duration(seconds: 5), () async {
-        await controller.zoomIn();
-      });
+      // Future.delayed(Duration(seconds: 5), () async {
+      //   await controller.zoomIn();
+      // });
 
       Future.delayed(Duration(seconds: 10), () async {
         // final waysPoint = list
@@ -253,6 +253,10 @@ class _MainExampleState extends State<MainExample> {
                       ],
                     ),
                   ),
+                  initZoom: 12,
+                  minZoomLevel: 8,
+                  maxZoomLevel: 14,
+                  stepZoom: 1.0,
                   userLocationMarker: UserLocationMaker(
                     personMarker: MarkerIcon(
                       icon: Icon(
@@ -271,7 +275,6 @@ class _MainExampleState extends State<MainExample> {
                   showContributorBadgeForOSM: true,
                   //trackMyPosition: trackingNotifier.value,
                   showDefaultInfoWindow: false,
-                  defaultZoom: 3.0,
                   onLocationChanged: (myLocation) {
                     print(myLocation);
                   },

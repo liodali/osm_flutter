@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.13.0-orange) 
+![pub](https://img.shields.io/badge/pub-v0.14.0-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
@@ -36,7 +36,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.13.0
+      flutter_osm_plugin: ^0.14.0
 
       
 ## Simple Usage
@@ -47,6 +47,25 @@ Add the following to your `pubspec.yaml` file:
  OSMFlutter( 
         controller:mapController,
         trackMyPosition: false,
+        initZoom: 12,
+        minZoomLevel: 8,
+        maxZoomLevel: 14,
+        stepZoom: 1.0,
+        userLocationMarker: UserLocationMaker(
+            personMarker: MarkerIcon(
+                icon: Icon(
+                    Icons.location_history_rounded,
+                    color: Colors.red,
+                    size: 48,
+                ),
+            ),
+            directionArrowMarker: MarkerIcon(
+                icon: Icon(
+                    Icons.double_arrow,
+                    size: 48,
+                ),
+            ),
+        ),
         road: Road(
                 startIcon: MarkerIcon(
                   icon: Icon(
@@ -104,17 +123,31 @@ Add the following to your `pubspec.yaml` file:
 <b> 5) Zoom IN </b>
 
 ```dart
- await controller.zoom(2.);
+ await controller.setZoom(stepZoom: 2);
  // or 
  await controller.zoomIn();
 ```
 
-<b> 6Android) Zoom Out </b>
+<b> 5.1) Zoom Out </b>
 
 ```dart
- await controller.zoom(-2.);
+ await controller.setZoom(stepZoom: -2);
  // or 
  await controller.zoomOut();
+ 
+```
+<b> 5.2) change zoom level </b>
+
+> `zoomLevel` should be between `minZoomLevel` and `maxZoomLevel`
+
+```dart
+ await controller.setZoom(zoomLevel: 8);
+```
+
+<b> 6) get current zoom level </b>b>
+
+```dart
+await controller.getZoom();
 ```
 
 <b> 7) BoundingBox </b>
@@ -338,9 +371,12 @@ await controller.drawRoadManually(
 | `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
 | `trackMyPosition`             | enable tracking user position.     |
 | `showZoomController`          | show default zoom controller.       |
-| `userLocationMarker`          |  change user marker or direction marker icon in tracking location                |
+| `userLocationMarker`          | change user marker or direction marker icon in tracking location                |
 | `markerOption`                | configure marker of osm map                   |
-| `defaultZoom`                 | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
+| `stepZoom`                    | set step zoom to use in zoomIn()/zoomOut() (default 1)       |
+| `initZoom`                    | set init zoom level in the map (default 10)       |
+| `maxZoomLevel`                | set maximum zoom level in the map  (2 <= x <= 19)       |
+| `minZoomLevel`                | set minimum zoom level in the map  (2 <= x <= 19 )       |
 | `road`                        | set color and start/end/middle markers in road |
 | `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
