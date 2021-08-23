@@ -111,6 +111,7 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM,
     GeoPoint start,
     GeoPoint end, {
+    RoadType roadType = RoadType.car,
     List<GeoPoint>? interestPoints,
     RoadOption roadOption,
   });
@@ -225,7 +226,6 @@ abstract class OSMPlatform extends PlatformInterface {
     int idMap,
     GlobalKey key,
   );
-
 
   Future<void> limitArea(
     int idOSM,

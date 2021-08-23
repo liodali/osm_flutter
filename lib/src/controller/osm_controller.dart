@@ -461,6 +461,7 @@ class OSMController {
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
+    RoadType roadType = RoadType.car,
     List<GeoPoint>? interestPoints,
     RoadOption? roadOption,
   }) async {
@@ -470,6 +471,7 @@ class OSMController {
       _idMap,
       start,
       end,
+      roadType: roadType,
       interestPoints: interestPoints,
       roadOption: roadOption ?? const RoadOption.empty(),
     );

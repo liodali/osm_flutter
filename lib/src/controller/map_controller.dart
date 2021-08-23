@@ -33,7 +33,6 @@ class MapController extends BaseMapController {
     _osmController.dispose();
   }
 
-
   /// set area camera limit of the map
   /// [box] : (BoundingBox) bounding that map cannot exceed from it
   Future<void> limitAreaMap(BoundingBox box) async {
@@ -100,11 +99,10 @@ class MapController extends BaseMapController {
   }
 
   /// recuperate current zoom level
-  Future<double>  getZoom() async => await _osmController.getZoom();
-
-
+  Future<double> getZoom() async => await _osmController.getZoom();
 
   @Deprecated("will be remove in next version,use setZoom")
+
   /// change zoom level of the map
   /// [zoom] : (double) step zoom that will be added to current zoom
   Future<void> zoom(double zoom) async {
@@ -176,6 +174,7 @@ class MapController extends BaseMapController {
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
+    RoadType roadType = RoadType.car,
     List<GeoPoint>? intersectPoint,
     RoadOption? roadOption,
   }) async {
