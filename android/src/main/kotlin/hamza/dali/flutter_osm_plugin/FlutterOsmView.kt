@@ -282,7 +282,7 @@ class FlutterOsmView(
                 getZoom(result)
             }
             "change#stepZoom" -> {
-                defaultZoom = call.arguments as Double
+                stepZoom = call.arguments as Double
                 result.success(null)
             }
             "currentLocation" -> {
