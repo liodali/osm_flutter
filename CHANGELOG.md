@@ -1,4 +1,6 @@
-## 0.14.0 :
+## 0.14.1 : fix bug
+* forget to replace the removed attribute `defaultZoom` with `stepZoom`
+## 0.14.0 : improve zoom 
 * deprecate attribute `defaultZoom`
 * replace `defaultZoom` with new attribute `stepZoom`
 * deprecated method `zoom` and replaced with `setZoom`

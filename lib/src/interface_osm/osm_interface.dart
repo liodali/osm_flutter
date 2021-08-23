@@ -226,7 +226,6 @@ abstract class OSMPlatform extends PlatformInterface {
     GlobalKey key,
   );
 
-
   Future<void> limitArea(
     int idOSM,
     BoundingBox box,
