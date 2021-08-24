@@ -114,7 +114,7 @@ class MapController extends BaseMapController {
   /// [zoomLevel] : (double) should be between minZoomLevel and maxZoomLevel
   ///
   /// [stepZoom] : (double) step zoom that will be added to current zoom
-  Future<void> setZoom({int? zoomLevel, double? stepZoom}) async {
+  Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
     await _osmController.setZoom(zoomLevel: zoomLevel, stepZoom: stepZoom);
   }
 

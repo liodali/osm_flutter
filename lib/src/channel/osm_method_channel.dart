@@ -619,7 +619,7 @@ class MethodChannelOSM extends OSMPlatform {
   @override
   Future<void> setZoom(
     int idOSM, {
-    int? zoomLevel,
+    double? zoomLevel,
     double? stepZoom,
   }) async {
     var args = {};

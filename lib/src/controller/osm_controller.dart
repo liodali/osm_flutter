@@ -433,7 +433,7 @@ class OSMController {
     return p;
   }
 
-  Future<void> setZoom({int? zoomLevel, double? stepZoom}) async {
+  Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
     if (zoomLevel != null &&
         (zoomLevel >= maxZoomLevel || zoomLevel <= minZoomLevel)) {
       throw Exception(

@@ -1,3 +1,5 @@
+## 0.14.2 : fix bug
+* fix `setZoom` method by change type variable of `zoomLevel` from int to double
 ## 0.14.1 : fix bug
 * forget to replace the removed attribute `defaultZoom` with `stepZoom`
 ## 0.14.0 : improve zoom 

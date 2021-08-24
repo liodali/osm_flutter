@@ -84,13 +84,14 @@ class _MainExampleState extends State<MainExample> {
     controller.listenerMapIsReady.addListener(mapIsInitialized);
   }
 
-  void mapIsInitialized() {
+  void mapIsInitialized() async {
     if (controller.listenerMapIsReady.value) {
       // Future.delayed(Duration(seconds: 5), () async {
       //   await controller.zoomIn();
       // });
-
       Future.delayed(Duration(seconds: 10), () async {
+        await controller.setZoom(zoomLevel: 12);
+
         // final waysPoint = list
         //     .map((e) => GeoPoint(
         //           latitude: e.last,
@@ -253,7 +254,7 @@ class _MainExampleState extends State<MainExample> {
                       ],
                     ),
                   ),
-                  initZoom: 12,
+                  initZoom: 8,
                   minZoomLevel: 8,
                   maxZoomLevel: 14,
                   stepZoom: 1.0,

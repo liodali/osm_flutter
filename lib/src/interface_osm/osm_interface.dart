@@ -166,7 +166,7 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Future<void> setZoom(
     int idOSM, {
-    int? zoomLevel,
+    double? zoomLevel,
     double? stepZoom,
   });
 
