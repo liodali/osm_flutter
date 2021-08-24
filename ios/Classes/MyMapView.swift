@@ -503,6 +503,21 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func drawRoad(call: FlutterMethodCall, completion: @escaping (_ roadInfo: RoadInformation?, _ road: Road?, _ roadData: RoadData?, _ error: Error?) -> ()) {
         let args = call.arguments as! [String: Any]
         var points = args["wayPoints"] as! [GeoPoint]
+        var roadType = RoadType.car
+        switch args["roadType"] as! String {
+        case "car":
+            roadType = RoadType.car
+            break
+        case "bike":
+            roadType = RoadType.bike
+            break
+        case "foot":
+            roadType = RoadType.foot
+            break
+        default:
+            roadType = RoadType.car
+            break
+        }
         points.forEach { p in
             let markers = mapView.markers.filter { m in
                 m.point == p.toLocationCoordinate()
@@ -538,7 +553,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             let wayP = String(format: "%F,%F", point["lon"]!, point["lat"]!)
             return wayP
         }
-        roadManager.getRoad(wayPoints: waysPoint, typeRoad: RoadType.car) { road in
+        roadManager.getRoad(wayPoints: waysPoint, typeRoad: roadType) { road in
             var error: Error? = nil
             if road == nil {
                 error = NSError()
