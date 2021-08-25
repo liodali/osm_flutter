@@ -1,3 +1,6 @@
+## 0.15.0 : add bike,foot routing
+* create RoadType and added as paramter to drawRoad, default value : RoadType.car
+* add small example in main
 ## 0.14.2 : fix bug
 * fix `setZoom` method by change type variable of `zoomLevel` from int to double
 ## 0.14.1 : fix bug
