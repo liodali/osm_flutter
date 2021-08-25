@@ -181,6 +181,7 @@ class MapController extends BaseMapController {
     return await _osmController.drawRoad(
       start,
       end,
+      roadType: roadType,
       interestPoints: intersectPoint,
       roadOption: roadOption,
     );
