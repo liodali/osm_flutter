@@ -1029,7 +1029,12 @@ class FlutterOsmView(
         val args = call.arguments!! as HashMap<String, Any>
 
         val showPoiMarker = args["showMarker"] as Boolean
-
+        val meanUrl = when (args["roadType"] as String) {
+            "car" -> OSRMRoadManager.MEAN_BY_CAR
+            "bike" -> OSRMRoadManager.MEAN_BY_BIKE
+            "foot" -> OSRMRoadManager.MEAN_BY_FOOT
+            else -> OSRMRoadManager.MEAN_BY_CAR
+        }
         val listPointsArgs = args["wayPoints"] as List<HashMap<String, Double>>
 
         val listInterestPoints: List<GeoPoint> = when (args.containsKey("middlePoints")) {
@@ -1063,6 +1068,7 @@ class FlutterOsmView(
         if (roadManager == null)
             roadManager = OSRMRoadManager(application!!, "json/application")
         roadManager?.let { manager ->
+            manager.setMean(meanUrl)
 
             job = scope?.launch(Default) {
                 val wayPoints = listPointsArgs.map {

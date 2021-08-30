@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MainExample(),
+      initialRoute: "/home",
       routes: {
         "/home": (ctx) => MainExample(),
         "/second": (ctx) => Scaffold(
@@ -44,6 +44,7 @@ class _MainExampleState extends State<MainExample> {
   ValueNotifier<bool> visibilityZoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
+  ValueNotifier<bool> showFab = ValueNotifier(true);
 
   @override
   void initState() {
@@ -168,49 +169,12 @@ class _MainExampleState extends State<MainExample> {
               await Navigator.popAndPushNamed(context, "/second");
             },
           ),
-          IconButton(
-            onPressed: () async {
-              try {
-                await controller.removeLastRoad();
-
-                ///selection geoPoint
-                GeoPoint point = await controller.selectPosition(
-                    icon: MarkerIcon(
-                  icon: Icon(
-                    Icons.location_history,
-                    color: Colors.amber,
-                    size: 48,
-                  ),
-                ));
-
-                // GeoPoint pointM1 = await controller.selectPosition();
-                // GeoPoint pointM2 = await controller.selectPosition(
-                //     imageURL:
-                //         "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png");
-                //
-                GeoPoint point2 = await controller.selectPosition();
-                RoadInfo roadInformation = await controller.drawRoad(
-                    point, point2,
-                    //interestPoints: [pointM1, pointM2],
-                    roadOption: RoadOption(
-                        roadWidth: 10,
-                        roadColor: Colors.blue,
-                        showMarkerOfPOI: false));
-                print(
-                    "duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
-                print("distance:${roadInformation.distance}Km");
-              } on RoadException catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      "${e.errorMessage()}",
-                    ),
-                  ),
-                );
-              }
-            },
-            icon: Icon(Icons.map),
-          ),
+          Builder(builder: (ctx) {
+            return IconButton(
+              onPressed: () => roadActionBt(ctx),
+              icon: Icon(Icons.map),
+            );
+          }),
           IconButton(
             onPressed: () async {
               visibilityZoomNotifierActivation.value =
@@ -425,27 +389,152 @@ class _MainExampleState extends State<MainExample> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          if (!trackingNotifier.value) {
-            await controller.currentLocation();
-            await controller.enableTracking();
-            //await controller.zoom(5.0);
-          } else {
-            await controller.disabledTracking();
+      floatingActionButton: ValueListenableBuilder<bool>(
+        valueListenable: showFab,
+        builder: (ctx, isShow, child) {
+          if (!isShow) {
+            return SizedBox.shrink();
           }
-          trackingNotifier.value = !trackingNotifier.value;
+          return child!;
         },
-        child: ValueListenableBuilder<bool>(
-          valueListenable: trackingNotifier,
-          builder: (ctx, isTracking, _) {
-            if (isTracking) {
-              return Icon(Icons.gps_off_sharp);
+        child: FloatingActionButton(
+          onPressed: () async {
+            if (!trackingNotifier.value) {
+              await controller.currentLocation();
+              await controller.enableTracking();
+              //await controller.zoom(5.0);
+            } else {
+              await controller.disabledTracking();
             }
-            return Icon(Icons.my_location);
+            trackingNotifier.value = !trackingNotifier.value;
           },
+          child: ValueListenableBuilder<bool>(
+            valueListenable: trackingNotifier,
+            builder: (ctx, isTracking, _) {
+              if (isTracking) {
+                return Icon(Icons.gps_off_sharp);
+              }
+              return Icon(Icons.my_location);
+            },
+          ),
         ),
       ),
     );
+  }
+
+  void roadActionBt(BuildContext ctx) async {
+    try {
+      await controller.removeLastRoad();
+
+      ///selection geoPoint
+      GeoPoint point = await controller.selectPosition(
+          icon: MarkerIcon(
+        icon: Icon(
+          Icons.location_history,
+          color: Colors.amber,
+          size: 48,
+        ),
+      ));
+      GeoPoint point2 = await controller.selectPosition();
+      showFab.value = false;
+      ValueNotifier<RoadType> notifierRoadType = ValueNotifier(RoadType.car);
+      final bottomPersistant = showBottomSheet(
+        context: ctx,
+        backgroundColor: Colors.transparent,
+        elevation: 0.0,
+        builder: (ctx) {
+          return Container(
+            height: 96,
+            child: WillPopScope(
+              onWillPop: () async => false,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  height: 64,
+                  width: 196,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.all(12.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          notifierRoadType.value = RoadType.car;
+                          Navigator.pop(ctx, RoadType.car);
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.directions_car),
+                            Text("Car"),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          notifierRoadType.value = RoadType.bike;
+                          Navigator.pop(ctx, RoadType.bike);
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.directions_bike),
+                            Text("Bike"),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          notifierRoadType.value = RoadType.foot;
+                          Navigator.pop(ctx, RoadType.foot);
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.directions_walk),
+                            Text("Foot"),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+
+      await bottomPersistant.closed.whenComplete(() {
+        showFab.value = true;
+      }).then((roadType) async {
+        RoadInfo roadInformation = await controller.drawRoad(
+          point, point2,
+          roadType: notifierRoadType.value,
+          //interestPoints: [pointM1, pointM2],
+          roadOption: RoadOption(
+            roadWidth: 10,
+            roadColor: Colors.blue,
+            showMarkerOfPOI: false,
+          ),
+        );
+        print(
+            "duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
+        print("distance:${roadInformation.distance}Km");
+      });
+    } on RoadException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "${e.errorMessage()}",
+          ),
+        ),
+      );
+    }
   }
 }

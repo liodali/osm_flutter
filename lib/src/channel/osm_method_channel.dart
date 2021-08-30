@@ -231,6 +231,7 @@ class MethodChannelOSM extends OSMPlatform {
     int idOSM,
     GeoPoint start,
     GeoPoint end, {
+    RoadType roadType = RoadType.car,
     List<GeoPoint>? interestPoints,
     RoadOption roadOption = const RoadOption.empty(),
   }) async {
@@ -243,7 +244,14 @@ class MethodChannelOSM extends OSMPlatform {
     };
 
     /// disable/show markers in start,middle,end points
-    args.addAll({"showMarker": roadOption.showMarkerOfPOI});
+    args.addAll({
+      "showMarker": roadOption.showMarkerOfPOI,
+    });
+
+    ///
+    args.addAll({
+      "roadType": roadType.toString().split(".").last,
+    });
 
     /// add middle point that will pass through it
     if (interestPoints != null && interestPoints.isNotEmpty) {

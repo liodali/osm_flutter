@@ -1,10 +1,10 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.14.2-orange) 
+![pub](https://img.shields.io/badge/pub-v0.15.0-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 13) | under-development |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | under-development |
 
 
 <b>osm plugin for flutter apps </b>
@@ -36,7 +36,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.14.2
+      flutter_osm_plugin: ^0.15.0
 
       
 ## Simple Usage
@@ -269,6 +269,7 @@ await controller.addMarker(GeoPoint,markerIcon:MarkerIcon);
  RoadInfo roadInfo = await controller.drawRoad( 
    GeoPoint(latitude: 47.35387, longitude: 8.43609),
    GeoPoint(latitude: 47.4371, longitude: 8.6136),
+   roadType: RoadType.car,
    intersectPoint : [ GeoPoint(latitude: 47.4361, longitude: 8.6156), GeoPoint(latitude: 47.4481, longitude: 8.6266)]
    roadOption: RoadOption(
        roadWidth: 10,

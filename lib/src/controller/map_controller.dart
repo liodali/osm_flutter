@@ -174,12 +174,14 @@ class MapController extends BaseMapController {
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
+    RoadType roadType = RoadType.car,
     List<GeoPoint>? intersectPoint,
     RoadOption? roadOption,
   }) async {
     return await _osmController.drawRoad(
       start,
       end,
+      roadType: roadType,
       interestPoints: intersectPoint,
       roadOption: roadOption,
     );
