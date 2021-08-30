@@ -247,6 +247,7 @@ class MethodChannelOSM extends OSMPlatform {
     args.addAll({
       "showMarker": roadOption.showMarkerOfPOI,
     });
+
     ///
     args.addAll({
       "roadType": roadType.toString().split(".").last,
