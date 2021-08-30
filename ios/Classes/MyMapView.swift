@@ -441,11 +441,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 deactivateTrackMe()
             }
 
-            if (pickerMarker == nil) {
-                var image = UIImage(systemName: "markLocation")
-                image = image?.withTintColor(.red)
-                pickerMarker = UIImageView(image: image)
-            }
+//             if (pickerMarker == nil) {
+//                 var image = UIImage(systemName: "markLocation")
+//                 image = image?.withTintColor(.red)
+//                 pickerMarker = UIImageView(image: image)
+//             }
             //pickerMarker?.frame = CGRect(x: frame.width/2,y: frame.height/2,width: 32,height: 32)
             pickerMarker?.center = mainView.center
             mainView.addSubview(pickerMarker!)
