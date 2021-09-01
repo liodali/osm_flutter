@@ -1,12 +1,7 @@
-import 'dart:convert';
 import 'dart:math' as Math;
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:flutter_osm_plugin/src/types/search_completion.dart';
-import 'package:location/location.dart';
+import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 const earthRadius = 6371e3; //metre
 
@@ -64,40 +59,3 @@ Future<List<SearchInfo>> addressSuggestion(String searchText,
       .toList();
 }
 
-extension ExtGeoPoint on GeoPoint {
-  List<num> toListNum() {
-    return [
-      this.longitude,
-      this.latitude,
-    ];
-  }
-}
-
-extension ExtLocationData on LocationData {
-  GeoPoint toGeoPoint() {
-    return GeoPoint(
-        longitude: this.longitude ?? 0.0, latitude: this.latitude ?? 0.0);
-  }
-}
-
-extension ColorMap on Color {
-  Map<String, List<int>> toMap(String key) {
-    return {
-      "$key": [this.red, this.blue, this.green]
-    };
-  }
-
-  Map<String, String> toHexMap(String key) {
-    return {"$key": "#${this.value.toRadixString(16)}"};
-  }
-
-  String toHexColor() {
-    return "#${this.value.toRadixString(16)}";
-  }
-}
-
-extension Uint8ListConvert on Uint8List {
-  String convertToString() {
-    return base64.encode(this);
-  }
-}

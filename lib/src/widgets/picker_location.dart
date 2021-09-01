@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-
 import '../../flutter_osm_plugin.dart';
+import '../controller/map_controller.dart';
+import '../osm_flutter.dart';
+
 
 /// showSimplePickerLocation : picker to select specific position
 ///

@@ -13,49 +13,16 @@ import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:location/location.dart';
 import 'package:stream_transform/stream_transform.dart';
 
-import '../../flutter_osm_plugin.dart';
-import '../interface_osm/osm_interface.dart';
-import '../types/geo_point.dart';
+import '../common/road_exception.dart';
+import '../common/geo_point_exception.dart';
+import '../common/utilities.dart';
+import '../osm_interface.dart';
+import '../types/types.dart';
+import '../common/osm_event.dart';
 
-abstract class EventOSM<T> {
-  /// The ID of the Map this event is associated to.
-  final int mapId;
 
-  /// The value wrapped by this event
-  final T value;
 
-  /// Build a Map Event, that relates a mapId with a given value.
-  ///
-  /// The `mapId` is the id of the map that triggered the event.
-  /// `value` may be `null` in events that don't transport any meaningful data.
-  EventOSM(this.mapId, this.value);
-}
-
-class MapInitialization extends EventOSM<bool> {
-  MapInitialization(int mapId, bool isMapReady) : super(mapId, isMapReady);
-}
-
-class TapEvent extends EventOSM<GeoPoint> {
-  TapEvent(int mapId, GeoPoint position) : super(mapId, position);
-}
-
-class SingleTapEvent extends TapEvent {
-  SingleTapEvent(int mapId, GeoPoint position) : super(mapId, position);
-}
-
-class LongTapEvent extends TapEvent {
-  LongTapEvent(int mapId, GeoPoint position) : super(mapId, position);
-}
-
-class GeoPointEvent extends EventOSM<GeoPoint> {
-  GeoPointEvent(int mapId, GeoPoint position) : super(mapId, position);
-}
-
-class UserLocationEvent extends EventOSM<GeoPoint> {
-  UserLocationEvent(int mapId, GeoPoint position) : super(mapId, position);
-}
-
-class MethodChannelOSM extends OSMPlatform {
+class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, MethodChannel> _channels = {};
 
   //final Map<int, List<EventChannel>> _eventsChannels = {};
@@ -65,6 +32,10 @@ class MethodChannelOSM extends OSMPlatform {
   Stream<EventOSM> _events(int mapId) =>
       _streamController.stream.where((event) => event.mapId == mapId)
           as Stream<EventOSM>;
+
+  late Location locationService;
+
+
 
   @override
   Future<void> init(int idOSMMap) async {
@@ -617,7 +588,6 @@ class MethodChannelOSM extends OSMPlatform {
     return await _channels[idOSM]!.invokeMethod('get#Zoom');
   }
 
-  @override
   Future<void> setZoom(
     int idOSM, {
     double? zoomLevel,
@@ -631,6 +601,21 @@ class MethodChannelOSM extends OSMPlatform {
     }
     await _channels[idOSM]!.invokeMethod('Zoom', args);
   }
+
+  @override
+  Future<void> initIosMap(int idMap) {
+    // TODO: implement initIosMap
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> setInitZoom(int idOSM, double defaultZoom) {
+    // TODO: implement setInitZoom
+    throw UnimplementedError();
+  }
+
+
+
 }
 
 extension config on MethodChannelOSM {
