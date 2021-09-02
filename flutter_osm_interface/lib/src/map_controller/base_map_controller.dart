@@ -10,9 +10,9 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 abstract class BaseMapController extends IBaseMapController {
   late IBaseOSMController _osmBaseController;
+  final BoundingBox? areaLimit;
 
   IBaseOSMController get osmBaseController => _osmBaseController;
-  final BoundingBox? areaLimit;
 
 
   BaseMapController({

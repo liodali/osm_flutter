@@ -21,8 +21,6 @@ class MapController extends BaseMapController {
           areaLimit: areaLimit,
         );
 
-
-
   void dispose() {
     (osmBaseController as BaseMapController).dispose();
     super.dispose();
@@ -116,13 +114,13 @@ class MapController extends BaseMapController {
   /// zoomIn use defaultZoom
   /// positive value:zoomIN
   Future<void> zoomIn() async {
-    await osmBaseController.setZoom(zoomLevel: 0);
+    await osmBaseController.zoomIn();
   }
 
   /// zoomOut use defaultZoom
   /// negative value:zoomOut
   Future<void> zoomOut() async {
-    await osmBaseController.setZoom(zoomLevel: -1);
+    await osmBaseController.zoomOut();
   }
 
   /// activate current location position
@@ -272,6 +270,4 @@ class MapController extends BaseMapController {
       markerIcon: markerIcon,
     );
   }
-
-
 }

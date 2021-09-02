@@ -59,6 +59,12 @@ abstract class IBaseOSMController {
     double? stepZoom,
   });
 
+  /// zoomIn use stepZoom
+  Future<void> zoomIn();
+
+  /// zoomOut use stepZoom
+  Future<void> zoomOut();
+
   Future<void> setStepZoom(
     int stepZoom,
   );

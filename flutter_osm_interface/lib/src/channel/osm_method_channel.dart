@@ -602,17 +602,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     await _channels[idOSM]!.invokeMethod('Zoom', args);
   }
 
-  @override
-  Future<void> initIosMap(int idMap) {
-    // TODO: implement initIosMap
-    throw UnimplementedError();
-  }
 
-  @override
-  Future<void> setInitZoom(int idOSM, double defaultZoom) {
-    // TODO: implement setInitZoom
-    throw UnimplementedError();
-  }
 
 
 
