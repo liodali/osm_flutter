@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+
 import 'controller/map_controller.dart';
 import 'interface_osm/base_osm_platform.dart';
 import 'widgets/copyright_osm_widget.dart';
+
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
 
@@ -96,7 +98,6 @@ class OSMFlutterState extends State<OSMFlutter> {
   ValueNotifier<Widget?> dynamicMarkerWidgetNotifier = ValueNotifier(null);
   ValueNotifier<bool> mapIsReadyListener = ValueNotifier(false);
 
-
   //_OsmCreatedCallback _osmCreatedCallback;
   late GlobalKey defaultMarkerKey,
       advancedPickerMarker,
@@ -141,7 +142,11 @@ class OSMFlutterState extends State<OSMFlutter> {
   @override
   void didUpdateWidget(covariant OSMFlutter oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (this.widget != oldWidget) {}
+    if (this.widget != oldWidget) {
+      widget.controller
+          .setValueListenerMapIsReady(false);
+      mapIsReadyListener.value = false;
+    }
   }
 
   @override
@@ -152,39 +157,6 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   @override
   Widget build(BuildContext context) {
-    final widgetMap = buildWidget(
-      controller: widget.controller as MapController,
-      onGeoPointClicked: widget.onGeoPointClicked,
-      onLocationChanged: widget.onLocationChanged,
-      dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
-      mapIsLoading: widget.mapIsLoading,
-      trackMyPosition: widget.trackMyPosition,
-      mapIsReadyListener: mapIsReadyListener,
-      staticIconGlobalKeys: staticMarkersKeys,
-      road: widget.road,
-      showContributorBadgeForOSM: widget.showContributorBadgeForOSM,
-      isPicker: widget.isPicker,
-      markerOption: widget.markerOption,
-      showDefaultInfoWindow: widget.showDefaultInfoWindow,
-      showZoomController: widget.showZoomController,
-      staticPoints: widget.staticPoints,
-      globalKeys: [
-        defaultMarkerKey,
-        advancedPickerMarker,
-        startIconKey,
-        endIconKey,
-        middleIconKey,
-        dynamicMarkerKey,
-        personIconMarkerKey,
-        arrowDirectionMarkerKey,
-      ],
-      stepZoom: widget.stepZoom,
-      initZoom: widget.initZoom,
-      minZoomLevel: widget.minZoomLevel,
-      maxZoomLevel: widget.maxZoomLevel,
-      userLocationMarker: widget.userLocationMarker,
-      onMapIsReady: widget.onMapIsReady
-    );
     return Stack(
       clipBehavior: Clip.none,
       children: <Widget>[
@@ -193,29 +165,95 @@ class OSMFlutterState extends State<OSMFlutter> {
           color: Colors.white,
           child: widget.mapIsLoading != null
               ? Stack(
-            children: [
-              Container(
-                color: Colors.white,
-                child: widgetMap,
-              ),
-              Positioned.fill(
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: mapIsReadyListener,
-                  builder: (ctx, isReady, child) {
-                    return Visibility(
-                      visible: !isReady,
-                      child: child!,
-                    );
-                  },
-                  child: Container(
-                    color: Colors.white,
-                    child: widget.mapIsLoading!,
-                  ),
+                  children: [
+                    Container(
+                      color: Colors.white,
+                      child: buildWidget(
+                        controller: widget.controller as MapController,
+                        onGeoPointClicked: widget.onGeoPointClicked,
+                        onLocationChanged: widget.onLocationChanged,
+                        dynamicMarkerWidgetNotifier:
+                            dynamicMarkerWidgetNotifier,
+                        mapIsLoading: widget.mapIsLoading,
+                        trackMyPosition: widget.trackMyPosition,
+                        mapIsReadyListener: mapIsReadyListener,
+                        staticIconGlobalKeys: staticMarkersKeys,
+                        road: widget.road,
+                        showContributorBadgeForOSM:
+                            widget.showContributorBadgeForOSM,
+                        isPicker: widget.isPicker,
+                        markerOption: widget.markerOption,
+                        showDefaultInfoWindow: widget.showDefaultInfoWindow,
+                        showZoomController: widget.showZoomController,
+                        staticPoints: widget.staticPoints,
+                        globalKeys: [
+                          defaultMarkerKey,
+                          advancedPickerMarker,
+                          startIconKey,
+                          endIconKey,
+                          middleIconKey,
+                          dynamicMarkerKey,
+                          personIconMarkerKey,
+                          arrowDirectionMarkerKey,
+                        ],
+                        stepZoom: widget.stepZoom,
+                        initZoom: widget.initZoom,
+                        minZoomLevel: widget.minZoomLevel,
+                        maxZoomLevel: widget.maxZoomLevel,
+                        userLocationMarker: widget.userLocationMarker,
+                        onMapIsReady: widget.onMapIsReady,
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: mapIsReadyListener,
+                        builder: (ctx, isReady, child) {
+                          return Visibility(
+                            visible: !isReady,
+                            child: child!,
+                          );
+                        },
+                        child: Container(
+                          color: Colors.white,
+                          child: widget.mapIsLoading!,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : buildWidget(
+                  controller: widget.controller as MapController,
+                  onGeoPointClicked: widget.onGeoPointClicked,
+                  onLocationChanged: widget.onLocationChanged,
+                  dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
+                  mapIsLoading: widget.mapIsLoading,
+                  trackMyPosition: widget.trackMyPosition,
+                  mapIsReadyListener: mapIsReadyListener,
+                  staticIconGlobalKeys: staticMarkersKeys,
+                  road: widget.road,
+                  showContributorBadgeForOSM: widget.showContributorBadgeForOSM,
+                  isPicker: widget.isPicker,
+                  markerOption: widget.markerOption,
+                  showDefaultInfoWindow: widget.showDefaultInfoWindow,
+                  showZoomController: widget.showZoomController,
+                  staticPoints: widget.staticPoints,
+                  globalKeys: [
+                    defaultMarkerKey,
+                    advancedPickerMarker,
+                    startIconKey,
+                    endIconKey,
+                    middleIconKey,
+                    dynamicMarkerKey,
+                    personIconMarkerKey,
+                    arrowDirectionMarkerKey,
+                  ],
+                  stepZoom: widget.stepZoom,
+                  initZoom: widget.initZoom,
+                  minZoomLevel: widget.minZoomLevel,
+                  maxZoomLevel: widget.maxZoomLevel,
+                  userLocationMarker: widget.userLocationMarker,
+                  onMapIsReady: widget.onMapIsReady,
                 ),
-              ),
-            ],
-          )
-              : widgetMap,
         ),
         if (widget.showContributorBadgeForOSM && !kIsWeb) ...[
           Positioned(
@@ -227,8 +265,6 @@ class OSMFlutterState extends State<OSMFlutter> {
       ],
     );
   }
-
-
 
   Widget widgetConfigMap() {
     return Positioned(
@@ -304,6 +340,4 @@ class OSMFlutterState extends State<OSMFlutter> {
       ),
     );
   }
-
-
 }
