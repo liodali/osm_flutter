@@ -14,17 +14,6 @@ abstract class BaseMapController extends IBaseMapController {
   IBaseOSMController get osmBaseController => _osmBaseController;
   final BoundingBox? areaLimit;
 
-  late ValueNotifier<GeoPoint?> _listenerMapLongTapping = ValueNotifier(null);
-  late ValueNotifier<GeoPoint?> _listenerMapSingleTapping = ValueNotifier(null);
-  late ValueNotifier<bool> _listenerMapIsReady = ValueNotifier(false);
-
-  ValueListenable<GeoPoint?> get listenerMapLongTapping =>
-      _listenerMapLongTapping;
-
-  ValueListenable<GeoPoint?> get listenerMapSingleTapping =>
-      _listenerMapSingleTapping;
-
-  ValueListenable<bool> get listenerMapIsReady => _listenerMapIsReady;
 
   BaseMapController({
     initMapWithUserPosition = true,
@@ -37,8 +26,17 @@ abstract class BaseMapController extends IBaseMapController {
           areaLimit: areaLimit,
         );
 
-  void dispose();
+  void dispose(){
+    super.dispose();
+  }
 
+
+}
+
+extension OSMControllerOfBaseMapController on BaseMapController {
+  void setBaseOSMController(IBaseOSMController controller) {
+    _osmBaseController = controller;
+  }
   void init() {
     Future.delayed(Duration(milliseconds: 1250), () async {
       await osmBaseController.initMap(
@@ -49,22 +47,4 @@ abstract class BaseMapController extends IBaseMapController {
   }
 }
 
-extension OSMControllerOfBaseMapController on BaseMapController {
-  void setBaseOSMController(IBaseOSMController controller) {
-    _osmBaseController = controller;
-  }
-}
 
-extension setLiteners on BaseMapController {
-  void setValueListenerMapLongTapping(GeoPoint p) {
-    _listenerMapLongTapping.value = p;
-  }
-
-  void setValueListenerMapSingleTapping(GeoPoint p) {
-    _listenerMapSingleTapping.value = p;
-  }
-
-  void setValueListenerMapIsReady(bool isReady) {
-    _listenerMapIsReady.value = isReady;
-  }
-}

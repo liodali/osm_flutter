@@ -25,6 +25,7 @@ class MapController extends BaseMapController {
 
   void dispose() {
     (osmBaseController as BaseMapController).dispose();
+    super.dispose();
   }
 
   /// set area camera limit of the map

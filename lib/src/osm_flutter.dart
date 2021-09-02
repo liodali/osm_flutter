@@ -174,8 +174,16 @@ class OSMFlutterState extends State<OSMFlutter> {
         startIconKey,
         endIconKey,
         middleIconKey,
-        dynamicMarkerKey
+        dynamicMarkerKey,
+        personIconMarkerKey,
+        arrowDirectionMarkerKey,
       ],
+      stepZoom: widget.stepZoom,
+      initZoom: widget.initZoom,
+      minZoomLevel: widget.minZoomLevel,
+      maxZoomLevel: widget.maxZoomLevel,
+      userLocationMarker: widget.userLocationMarker,
+      onMapIsReady: widget.onMapIsReady
     );
     return Stack(
       clipBehavior: Clip.none,

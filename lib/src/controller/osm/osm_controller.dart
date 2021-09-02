@@ -6,13 +6,14 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import '../../widgets/mobile_osm_flutter.dart';
 import 'package:location/location.dart';
 
-import '../../common/utilities.dart';
 
-final MobileOSMPlatform osmPlatform = OSMPlatform.instance as MobileOSMPlatform;
 
 class MobileOSMController extends IBaseOSMController {
   late int _idMap;
   late MobileOsmFlutterState _osmFlutterState;
+
+  static MobileOSMPlatform osmPlatform = OSMPlatform.instance as MobileOSMPlatform;
+
 
   late double stepZoom = 1;
   late int minZoomLevel = 2;
