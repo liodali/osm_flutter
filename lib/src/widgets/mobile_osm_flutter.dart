@@ -3,11 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:location/location.dart';
 
-import '../controller/map_controller.dart';
 import '../controller/osm/osm_controller.dart';
 
 class MobileOsmFlutter extends StatefulWidget {
-  final MapController controller;
+  final BaseMapController controller;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
   final ValueNotifier<bool> mapIsReadyListener;
@@ -62,6 +61,7 @@ class MobileOsmFlutter extends StatefulWidget {
 
 class MobileOsmFlutterState extends State<MobileOsmFlutter> {
   MobileOSMController? _osmController;
+  final mobileKey = GlobalKey();
 
 //permission status
   PermissionStatus? _permission;
@@ -81,6 +81,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter> {
   GlobalKey get personIconMarkerKey => widget.globalKeys[6];
 
   GlobalKey get arrowDirectionMarkerKey => widget.globalKeys[7];
+  late Widget widgetMap;
 
   @override
   void initState() {
@@ -101,11 +102,13 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter> {
         }
       }
     });
+
   }
+
 
   @override
   Widget build(BuildContext context) {
-    Widget widgetMap = AndroidView(
+    widgetMap = AndroidView(
       key: GlobalKey(),
       viewType: 'plugins.dali.hamza/osmview',
       onPlatformViewCreated: _onPlatformViewCreated,
@@ -113,6 +116,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter> {
     );
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       widgetMap = UiKitView(
+        key: mobileKey,
         viewType: 'plugins.dali.hamza/osmview',
         onPlatformViewCreated: _onPlatformViewCreated,
         //creationParamsCodec:  StandardMessageCodec(),

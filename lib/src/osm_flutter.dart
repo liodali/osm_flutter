@@ -222,7 +222,7 @@ class OSMFlutterState extends State<OSMFlutter> {
                   ],
                 )
               : buildWidget(
-                  controller: widget.controller as MapController,
+                  controller: widget.controller,
                   onGeoPointClicked: widget.onGeoPointClicked,
                   onLocationChanged: widget.onLocationChanged,
                   dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,

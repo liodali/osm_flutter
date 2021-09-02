@@ -20,11 +20,20 @@ class CustomPickerLocation extends StatefulWidget {
   final Widget? bottomWidgetPicker;
   final PickerMapController controller;
 
+  final double stepZoom;
+  final double initZoom;
+  final int minZoomLevel;
+  final int maxZoomLevel;
+
   CustomPickerLocation({
     required this.controller,
     this.appBarPicker,
     this.bottomWidgetPicker,
     this.topWidgetPicker,
+    this.stepZoom = 1,
+    this.initZoom = 2,
+    this.minZoomLevel = 2,
+    this.maxZoomLevel = 18,
     Key? key,
   }) : super(key: key);
 
@@ -72,6 +81,10 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
                 child: OSMFlutter(
                   controller: widget.controller,
                   isPicker: true,
+                  stepZoom: widget.stepZoom,
+                  initZoom: widget.initZoom,
+                  minZoomLevel: widget.minZoomLevel,
+                  maxZoomLevel: widget.maxZoomLevel,
                 ),
               ),
               if (widget.topWidgetPicker != null) ...[

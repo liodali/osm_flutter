@@ -31,7 +31,7 @@ Widget getWidget({
 
 }) =>
     MobileOsmFlutter(
-      controller: controller as MapController,
+      controller: controller,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
       mapIsReadyListener: mapIsReadyListener,
