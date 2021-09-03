@@ -53,6 +53,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                       title: "location picker",
                       textConfirmPicker: "pick",
                       initCurrentUserPosition: false,
+                      initZoom: 8,
                       initPosition:
                           GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
                       radius: 8.0,
@@ -149,8 +150,9 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ),
       topWidgetPicker: TopSearchWidget(),
-      bottomWidgetPicker: Align(
-        alignment: Alignment.bottomRight,
+      bottomWidgetPicker: Positioned(
+        bottom: 12,
+        right: 8,
         child: FloatingActionButton(
           onPressed: () async {
             GeoPoint p = await controller.selectAdvancedPositionPicker();
@@ -159,6 +161,7 @@ class _SearchPageState extends State<SearchPage> {
           child: Icon(Icons.arrow_forward),
         ),
       ),
+      initZoom: 8,
     );
   }
 }

@@ -50,11 +50,11 @@ class PickerMapController extends BaseMapController {
 
   @override
   void dispose() {
-    // TODO: implement dispose
+    super.dispose();
   }
 
   @override
   void init() {
-    // TODO: implement init
+    super.init();
   }
 }

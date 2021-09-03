@@ -29,7 +29,6 @@ class BaseMapController extends IBaseMapController {
     super.dispose();
   }
 
-  @protected
   @mustCallSuper
   @override
   void init() {

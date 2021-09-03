@@ -151,7 +151,7 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   @override
   void dispose() {
-    //this._osmController?.close();
+    widget.controller.dispose();
     super.dispose();
   }
 
