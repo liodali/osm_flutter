@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+
 import '../types/types.dart';
 
 ///  [BaseMapController] : base controller for osm flutter
@@ -14,9 +15,6 @@ abstract class IBaseMapController {
   final GeoPoint? initPosition;
   final BoundingBox? areaLimit;
 
-
-  // late ValueNotifier<GeoPoint?> listenerMapLongTapping = ValueNotifier(null);
-  // late ValueNotifier<GeoPoint?> listenerMapSingleTapping = ValueNotifier(null);
   late ValueNotifier<GeoPoint?> _listenerMapLongTapping = ValueNotifier(null);
   late ValueNotifier<GeoPoint?> _listenerMapSingleTapping = ValueNotifier(null);
   late ValueNotifier<bool> _listenerMapIsReady = ValueNotifier(false);
@@ -33,12 +31,11 @@ abstract class IBaseMapController {
     this.initMapWithUserPosition = true,
     this.initPosition,
     this.areaLimit = const BoundingBox.world(),
-
   }) : assert(initMapWithUserPosition || initPosition != null);
 
-  //void init();
+  void init();
 
-  void dispose(){
+  void dispose() {
     _listenerMapLongTapping.dispose();
     _listenerMapSingleTapping.dispose();
     _listenerMapIsReady.dispose();
