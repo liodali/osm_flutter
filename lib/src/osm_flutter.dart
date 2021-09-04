@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
@@ -142,7 +144,7 @@ class OSMFlutterState extends State<OSMFlutter> {
   @override
   void didUpdateWidget(covariant OSMFlutter oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (this.widget != oldWidget) {
+    if (this.widget != oldWidget && Platform.isAndroid) {
       widget.controller
           .setValueListenerMapIsReady(false);
       mapIsReadyListener.value = false;
