@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
 
 /// class [MapController] : map controller that will control map by select position,enable current location,
 /// draw road , show static geoPoint,
@@ -22,7 +23,7 @@ class MapController extends BaseMapController {
         );
 
   void dispose() {
-    (osmBaseController as BaseMapController).dispose();
+    (osmBaseController as MobileOSMController).dispose();
     super.dispose();
   }
 
