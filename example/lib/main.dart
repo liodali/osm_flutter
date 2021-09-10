@@ -1,7 +1,4 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/search_example.dart';
 
 import 'src/home/home_example.dart';
@@ -31,7 +28,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-
-

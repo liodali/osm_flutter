@@ -49,7 +49,7 @@ class MapNavigationSheet extends StatelessWidget {
   }
 }
 
-class SearchCard extends StatelessWidget{
+class SearchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -57,10 +57,8 @@ class SearchCard extends StatelessWidget{
         mainAxisSize: MainAxisSize.max,
         children: [
           ListTile(
-            leading: Chip(
-              backgroundColor: Colors.grey,
-              shape: CircleBorder(),
-              label: Icon(
+            leading: CirculaireIcon(
+              icon: Icon(
                 Icons.search,
                 color: Colors.white,
               ),
@@ -82,11 +80,10 @@ class SearchCard extends StatelessWidget{
               Expanded(
                 flex: 3,
                 child: ListTile(
-                  leading: Chip(
-                    labelPadding: EdgeInsets.all(2),
+                  leading: CirculaireIcon(
+                    padding: EdgeInsets.all(2),
                     backgroundColor: Colors.grey,
-                    shape: CircleBorder(),
-                    label: Icon(
+                    icon: Icon(
                       Icons.home,
                       color: Colors.white,
                     ),
@@ -106,11 +103,9 @@ class SearchCard extends StatelessWidget{
               Expanded(
                 flex: 1,
                 child: CustomTileList(
-                  leading: Chip(
-                    labelPadding: EdgeInsets.all(2),
+                  leading: CirculaireIcon(
                     backgroundColor: Colors.grey,
-                    shape: CircleBorder(),
-                    label: Icon(
+                    icon: Icon(
                       Icons.star,
                       color: Colors.white,
                       size: 24,
@@ -126,9 +121,38 @@ class SearchCard extends StatelessWidget{
       ),
     );
   }
-
 }
 
+class CirculaireIcon extends StatelessWidget {
+  final Widget icon;
+  final Color backgroundColor;
+  final double height;
+  final double width;
+  final EdgeInsets? padding;
+
+  const CirculaireIcon({
+    Key? key,
+    required this.icon,
+    this.backgroundColor = Colors.grey,
+    this.height = 28,
+    this.width = 28,
+    this.padding,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: height,
+      height: width,
+      padding: padding,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: backgroundColor,
+      ),
+      child: icon,
+    );
+  }
+}
 
 class CustomTileList extends StatelessWidget {
   final Widget leading;

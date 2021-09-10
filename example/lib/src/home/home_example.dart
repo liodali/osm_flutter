@@ -101,6 +101,40 @@ class _MainExampleState extends State<MainExample> {
   }
 
   @override
+  void didUpdateWidget(covariant MainExample oldWidget) {
+    if(oldWidget!=widget){
+      controller = MapController(
+        initMapWithUserPosition: false,
+        initPosition: GeoPoint(
+          latitude: 47.4358055,
+          longitude: 8.4737324,
+        ),
+      );
+      controller.listenerMapLongTapping.addListener(() async {
+        if (controller.listenerMapLongTapping.value != null) {
+          print(controller.listenerMapLongTapping.value);
+          await controller.addMarker(controller.listenerMapLongTapping.value!,
+              markerIcon: MarkerIcon(
+                icon: Icon(
+                  Icons.store,
+                  color: Colors.brown,
+                  size: 48,
+                ),
+              ));
+        }
+      });
+      controller.listenerMapSingleTapping.addListener(() {
+        if (controller.listenerMapSingleTapping.value != null) {
+          print(controller.listenerMapSingleTapping.value);
+        }
+      });
+
+      controller.listenerMapIsReady.addListener(mapIsInitialized);
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   void dispose() {
     controller.listenerMapIsReady.removeListener(mapIsInitialized);
     controller.dispose();
@@ -127,111 +161,118 @@ class _MainExampleState extends State<MainExample> {
         },
         child: Stack(
           children: [
-            OSMFlutter(
-              controller: controller,
-              mapIsLoading: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    Text("Map is Loading..")
-                  ],
-                ),
-              ),
-              initZoom: 8,
-              minZoomLevel: 8,
-              maxZoomLevel: 14,
-              stepZoom: 1.0,
-              userLocationMarker: UserLocationMaker(
-                personMarker: MarkerIcon(
-                  icon: Icon(
-                    Icons.location_history_rounded,
-                    color: Colors.red,
-                    size: 48,
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: MediaQuery.of(context).size.height *
+                  (minAlpha) - 96,
+              child:  OSMFlutter(
+                controller: controller,
+                mapIsLoading: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      Text("Map is Loading..")
+                    ],
                   ),
                 ),
-                directionArrowMarker: MarkerIcon(
-                  icon: Icon(
-                    Icons.double_arrow,
-                    size: 48,
-                  ),
-                ),
-              ),
-              showContributorBadgeForOSM: true,
-              //trackMyPosition: trackingNotifier.value,
-              showDefaultInfoWindow: false,
-              onLocationChanged: (myLocation) {
-                print(myLocation);
-              },
-              onGeoPointClicked: (geoPoint) async {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      "${geoPoint.toMap().toString()}",
-                    ),
-                    action: SnackBarAction(
-                      onPressed: () =>
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-                      label: "hide",
-                    ),
-                  ),
-                );
-              },
-              staticPoints: [
-                StaticPositionGeoPoint(
-                  "line 1",
-                  MarkerIcon(
+                initZoom: 8,
+                minZoomLevel: 8,
+                maxZoomLevel: 14,
+                stepZoom: 1.0,
+                userLocationMarker: UserLocationMaker(
+                  personMarker: MarkerIcon(
                     icon: Icon(
-                      Icons.train,
-                      color: Colors.green,
-                      size: 48,
-                    ),
-                  ),
-                  [
-                    GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
-                    GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
-                  ],
-                ),
-                StaticPositionGeoPoint(
-                  "line 2",
-                  MarkerIcon(
-                    icon: Icon(
-                      Icons.train,
+                      Icons.location_history_rounded,
                       color: Colors.red,
                       size: 48,
                     ),
                   ),
-                  [
-                    GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
-                    GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
-                  ],
-                )
-              ],
-              road: Road(
-                startIcon: MarkerIcon(
-                  icon: Icon(
-                    Icons.person,
-                    size: 64,
-                    color: Colors.brown,
+                  directionArrowMarker: MarkerIcon(
+                    icon: Icon(
+                      Icons.double_arrow,
+                      size: 48,
+                    ),
                   ),
                 ),
-                roadColor: Colors.red,
-              ),
-              markerOption: MarkerOption(
-                defaultMarker: MarkerIcon(
-                  icon: Icon(
-                    Icons.home,
-                    color: Colors.orange,
-                    size: 64,
+                showContributorBadgeForOSM: true,
+                //trackMyPosition: trackingNotifier.value,
+                showDefaultInfoWindow: false,
+                onLocationChanged: (myLocation) {
+                  print(myLocation);
+                },
+                onGeoPointClicked: (geoPoint) async {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "${geoPoint.toMap().toString()}",
+                      ),
+                      action: SnackBarAction(
+                        onPressed: () =>
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                        label: "hide",
+                      ),
+                    ),
+                  );
+                },
+                staticPoints: [
+                  StaticPositionGeoPoint(
+                    "line 1",
+                    MarkerIcon(
+                      icon: Icon(
+                        Icons.train,
+                        color: Colors.green,
+                        size: 48,
+                      ),
+                    ),
+                    [
+                      GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+                      GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
+                    ],
                   ),
+                  StaticPositionGeoPoint(
+                    "line 2",
+                    MarkerIcon(
+                      icon: Icon(
+                        Icons.train,
+                        color: Colors.red,
+                        size: 48,
+                      ),
+                    ),
+                    [
+                      GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
+                      GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
+                    ],
+                  )
+                ],
+                road: Road(
+                  startIcon: MarkerIcon(
+                    icon: Icon(
+                      Icons.person,
+                      size: 64,
+                      color: Colors.brown,
+                    ),
+                  ),
+                  roadColor: Colors.red,
                 ),
-                advancedPickerMarker: MarkerIcon(
-                  icon: Icon(
-                    Icons.location_searching,
-                    color: Colors.green,
-                    size: 64,
+                markerOption: MarkerOption(
+                  defaultMarker: MarkerIcon(
+                    icon: Icon(
+                      Icons.home,
+                      color: Colors.orange,
+                      size: 64,
+                    ),
+                  ),
+                  advancedPickerMarker: MarkerIcon(
+                    icon: Icon(
+                      Icons.location_searching,
+                      color: Colors.green,
+                      size: 64,
+                    ),
                   ),
                 ),
               ),
@@ -364,7 +405,6 @@ class _MainExampleState extends State<MainExample> {
               minChildSize: minAlpha,
               expand: true,
               builder: (ctx, sheetController) {
-
                 return ScrollConfiguration(
                   behavior: ScrollBehavior().copyWith(
                     overscroll: false,

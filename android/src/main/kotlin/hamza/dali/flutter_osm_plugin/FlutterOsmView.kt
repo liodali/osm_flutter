@@ -1387,11 +1387,12 @@ class FlutterOsmView(
 
 
     override fun onSaveInstanceState(bundle: Bundle) {
-        TODO("Not yet implemented")
+        bundle.putString("center", "${map!!.mapCenter.latitude},${map!!.mapCenter.longitude}")
+        bundle.putString("zoom", map!!.zoomLevelDouble.toString())
     }
 
     override fun onRestoreInstanceState(bundle: Bundle?) {
-        TODO("Not yet implemented")
+        Log.d("osm data", bundle?.getString("center") ?: "")
     }
 
     override fun onCreate(owner: LifecycleOwner) {
