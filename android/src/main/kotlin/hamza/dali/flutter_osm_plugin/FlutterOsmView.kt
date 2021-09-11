@@ -1088,7 +1088,10 @@ class FlutterOsmView(
                 withContext(Main) {
                     if (road.mRouteHigh.size > 2) {
                         val polyLine = RoadManager.buildRoadOverlay(road)
-
+                        polyLine?.setOnClickListener { _, _, eventPos ->
+                             methodChannel.invokeMethod("receiveSinglePress",eventPos?.toHashMap())
+                             true
+                        }
                         /// set polyline color
                         polyLine.outlinePaint.color = colorRoad ?: Color.GREEN
 
