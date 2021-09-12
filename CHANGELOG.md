@@ -1,3 +1,7 @@
+## 0.16.0 : update kotlin version and gralde,add listener on polylines 
+* update kotlin version to `1.5.21` (migration instruction in the readme)
+* update gradle version to `7.0.2`  (migration instruction in the readme)
+* add listener to polylines to get geoPoint selected on the map
 ## 0.15.0 : add bike,foot routing
 * create RoadType and added as paramter to drawRoad, default value : RoadType.car
 * add small example in main
