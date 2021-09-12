@@ -53,10 +53,6 @@ mixin WebMixin {
     );
   }
 
-  Future<void> defaultZoom(double zoom) async {
-    await interop.setZoomStep(zoom);
-  }
-
   Future<void> disabledTracking() {
     // TODO: implement disabledTracking
     throw UnimplementedError();
@@ -69,16 +65,6 @@ mixin WebMixin {
 
   Future<void> drawRect(RectOSM rectOSM) {
     // TODO: implement drawRect
-    throw UnimplementedError();
-  }
-
-  Future<RoadInfo> drawRoad(
-    GeoPoint start,
-    GeoPoint end, {
-    List<GeoPoint>? interestPoints,
-    RoadOption? roadOption,
-  }) {
-    // TODO: implement drawRoad
     throw UnimplementedError();
   }
 
@@ -176,6 +162,74 @@ mixin WebMixin {
 
   Future<void> zoomOut() async {
     await interop.zoomOut();
+  }
+
+  Future<void> addMarker(GeoPoint p, {MarkerIcon? markerIcon}) {
+    // TODO: implement addMarker
+    throw UnimplementedError();
+  }
+
+  Future<double> getZoom() {
+    // TODO: implement getZoom
+    throw UnimplementedError();
+  }
+
+  Future<void> limitArea(BoundingBox box) {
+    // TODO: implement limitArea
+    throw UnimplementedError();
+  }
+
+  Future<void> removeLimitArea() {
+    // TODO: implement removeLimitArea
+    throw UnimplementedError();
+  }
+
+  Future<void> setMaximumZoomLevel(int maxZoom) {
+    // TODO: implement setMaximumZoomLevel
+    throw UnimplementedError();
+  }
+
+  Future<void> setMinimumZoomLevel(int minZoom) {
+    // TODO: implement setMinimumZoomLevel
+    throw UnimplementedError();
+  }
+
+  Future<void> setStepZoom(int stepZoom) async {
+    await interop.setZoomStep(stepZoom.toDouble());
+  }
+
+  Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
+    assert(zoomLevel != null || stepZoom != null);
+    if (zoomLevel != null) {
+      await interop.setZoom(zoomLevel);
+    } else if (stepZoom != null) {
+      await interop.setZoomStep(stepZoom);
+    }
+  }
+
+  Future<RoadInfo> drawRoad(
+    GeoPoint start,
+    GeoPoint end, {
+    RoadType roadType = RoadType.car,
+    List<GeoPoint>? interestPoints,
+    RoadOption? roadOption,
+  }) {
+    // TODO: implement drawRoad
+    throw UnimplementedError();
+  }
+
+  Future<void> configureZoomMap(
+    int minZoomLevel,
+    int maxZoomLevel,
+    double stepZoom,
+    double initZoom,
+  ) async {
+    await interop.configZoom(
+      stepZoom,
+      initZoom,
+      minZoomLevel,
+      maxZoomLevel,
+    );
   }
 
   Future<void> _addPosition(

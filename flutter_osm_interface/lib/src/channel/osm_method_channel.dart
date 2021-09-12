@@ -25,11 +25,11 @@ import '../osm_interface.dart';
 import '../types/types.dart';
 import '../common/osm_event.dart';
 
+import 'dart:ui' as ui;
 
 
 class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, MethodChannel> _channels = {};
-  late Location locationService;
 
   //final Map<int, List<EventChannel>> _eventsChannels = {};
   StreamController _streamController = StreamController<EventOSM>.broadcast();
@@ -606,6 +606,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
       args["stepZoom"] = stepZoom;
     }
     await _channels[idOSM]!.invokeMethod('Zoom', args);
+  }
+
+
+
+  @override
+  Future<void> initMap(int idOSM, GeoPoint point) {
+    // TODO: implement initMap
+    throw UnimplementedError();
   }
 
 

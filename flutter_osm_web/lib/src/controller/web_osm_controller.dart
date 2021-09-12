@@ -78,20 +78,20 @@ class WebOsmController with WebMixin implements IBaseOSMController {
   }
 
   @override
-  Future<void> initMap({
+  Future<void> initPositionMap({
     GeoPoint? initPosition,
     bool initWithUserPosition = false,
   }) async {
     assert(initPosition != null || initWithUserPosition == true);
 
     webPlatform.onLongPressMapClickListener(_mapId).listen((event) {
-      _osmWebFlutterState.widget.controller.listenerMapLongTapping.value =
-          event.value;
+      _osmWebFlutterState.widget.controller
+          .setValueListenerMapLongTapping(event.value);
     });
-
     webPlatform.onSinglePressMapClickListener(_mapId).listen((event) {
-      _osmWebFlutterState.widget.controller.listenerMapSingleTapping.value =
-          event.value;
+      _osmWebFlutterState.widget.controller
+          .setValueListenerMapSingleTapping(event.value);
+      event.value;
     });
     webPlatform.onMapIsReady(_mapId).listen((event) async {
       print(event.value);
@@ -121,7 +121,12 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       });
     }
 
-    await defaultZoom(_osmWebFlutterState.widget.defaultZoom);
+    await configureZoomMap(
+      _osmWebFlutterState.widget.minZoomLevel,
+      _osmWebFlutterState.widget.maxZoomLevel,
+      _osmWebFlutterState.widget.stepZoom,
+      _osmWebFlutterState.widget.initZoom,
+    );
 
     GeoPoint? initLocation = initPosition;
 
@@ -179,4 +184,6 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     // TODO: implement selectPosition
     throw UnimplementedError();
   }
+
+
 }

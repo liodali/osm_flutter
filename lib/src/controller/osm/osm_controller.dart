@@ -45,7 +45,7 @@ class MobileOSMController extends IBaseOSMController {
   /// [initPosition]          : (geoPoint) animate map to initPosition
   /// [initWithUserPosition]  : set map in user position
   /// [box]                   : (BoundingBox) area limit of the map
-  Future<void> initMap({
+  Future<void> initPositionMap({
     GeoPoint? initPosition,
     bool initWithUserPosition = false,
     BoundingBox? box,
@@ -129,7 +129,7 @@ class MobileOSMController extends IBaseOSMController {
 
     /// change advanced picker icon marker
     if (_osmFlutterState.widget.markerOption?.advancedPickerMarker != null) {
-      await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker!);
+      await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker);
     }
     if (Platform.isIOS &&
         _osmFlutterState.widget.markerOption?.advancedPickerMarker == null) {
@@ -240,6 +240,7 @@ class MobileOSMController extends IBaseOSMController {
     );
   }
 
+  @override
   Future<void> configureZoomMap(
     int minZoomLevel,
     int maxZoomLevel,
@@ -604,4 +605,6 @@ class MobileOSMController extends IBaseOSMController {
   Future<void> removeLimitArea() async{
    await osmPlatform.removeLimitArea(_idMap);
   }
+
+
 }

@@ -45,6 +45,10 @@ async function setZoom(zoom) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setZoom(zoom);
 }
+async function configZoom(step,zoom,minZoomLevel,maxZoomLevel) {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.configInitZoomMap(step,zoom,minZoomLevel,maxZoomLevel);
+}
 async function currentUserLocation() {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.userLocation();

@@ -4,10 +4,17 @@ import 'package:flutter_osm_interface/src/types/road.dart';
 import '../types/types.dart';
 
 abstract class IBaseOSMController {
-  Future<void> initMap({
+  Future<void> initPositionMap({
     GeoPoint? initPosition,
     bool initWithUserPosition = false,
   });
+
+  Future<void> configureZoomMap(
+    int minZoomLevel,
+    int maxZoomLevel,
+    double stepZoom,
+    double initZoom,
+  );
 
   ///initialise or change of position
   ///

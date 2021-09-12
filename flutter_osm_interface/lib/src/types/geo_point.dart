@@ -1,3 +1,5 @@
+import 'dart:math';
+
 ///[GeoPoint]:class contain longitude and latitude of geographic position
 /// [longitude] : (double)
 /// [latitude] : (double)

@@ -17,6 +17,9 @@ external dynamic initMapLocation(GeoPointJs p);
 external dynamic setZoomControl(bool showZoomControl);
 
 
+@JS('configZoom')
+external dynamic configZoom(double stepZoom,double initZoom,int minZoomLevel,int maxZoomLevel);
+
 @JS('setZoomStep')
 external dynamic setZoomStep(double stepZoom);
 

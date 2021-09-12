@@ -93,10 +93,10 @@ class OSMFlutter extends StatefulWidget {
         super(key: key);
 
   @override
-  OSMFlutterState createState() => OSMFlutterState();
+  _OSMFlutterState createState() => _OSMFlutterState();
 }
 
-class OSMFlutterState extends State<OSMFlutter> {
+class _OSMFlutterState extends State<OSMFlutter> {
   ValueNotifier<Widget?> dynamicMarkerWidgetNotifier = ValueNotifier(null);
   ValueNotifier<bool> mapIsReadyListener = ValueNotifier(false);
 

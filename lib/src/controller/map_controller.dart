@@ -261,15 +261,6 @@ class MapController extends BaseMapController {
     );
   }
 
-  void init() {
-    //setBaseOSMController(controller);
-    Future.delayed(Duration(milliseconds: 1250), () async {
-      await osmBaseController.initMap(
-        initPosition: initPosition,
-        initWithUserPosition: initMapWithUserPosition,
-      );
-    });
-  }
 
   Future<void> addMarker(
     GeoPoint p, {

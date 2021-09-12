@@ -16,11 +16,16 @@ class OsmWebWidget extends StatefulWidget {
   final Map<String, GlobalKey> staticIconGlobalKeys;
   final MarkerOption? markerOption;
   final Road? road;
-  final double defaultZoom;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool trackMyPosition;
   final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
+  final double stepZoom;
+  final double initZoom;
+  final int minZoomLevel;
+  final int maxZoomLevel;
+  final Function(bool)? onMapIsReady;
+  final UserLocationMaker? userLocationMarker;
 
   OsmWebWidget({
     Key? key,
@@ -34,11 +39,16 @@ class OsmWebWidget extends StatefulWidget {
     this.trackMyPosition = false,
     this.markerOption,
     this.road,
-    this.defaultZoom = 1.0,
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
     required this.dynamicMarkerWidgetNotifier,
     this.staticPoints = const [],
+    this.stepZoom = 1.0,
+    this.initZoom = 2,
+    this.minZoomLevel = 2,
+    this.maxZoomLevel = 18,
+    this.onMapIsReady,
+    this.userLocationMarker,
   }) : super(key: key);
 
   @override
@@ -59,6 +69,10 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
   GlobalKey? get middleIconKey => widget.globalKeys[4];
 
   GlobalKey? get dynamicMarkerKey => widget.globalKeys[5];
+
+  GlobalKey get personIconMarkerKey => widget.globalKeys[6];
+
+  GlobalKey get arrowDirectionMarkerKey => widget.globalKeys[7];
 
   @override
   void initState() {

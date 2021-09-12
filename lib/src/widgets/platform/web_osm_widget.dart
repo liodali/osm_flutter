@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_interface/src/map_controller/base_map_controller.dart';
-import 'package:flutter_osm_plugin/src/controller/map_controller.dart';
+import '../../controller/map_controller.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 
 
@@ -19,10 +18,15 @@ Widget getWidget({
   MarkerOption? markerOption,
   Road? road,
   bool showZoomController = false,
-  double defaultZoom = 1.0,
   bool showDefaultInfoWindow = false,
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
+  double stepZoom = 1,
+  double initZoom = 2,
+  int minZoomLevel = 2,
+  int maxZoomLevel = 18,
+  UserLocationMaker? userLocationMarker,
+  Function(bool)? onMapIsReady,
 }) =>
     OsmWebWidget(
       controller: controller as MapController,
@@ -34,9 +38,14 @@ Widget getWidget({
       staticIconGlobalKeys: staticIconGlobalKeys,
       globalKeys: globalKeys,
       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
-      defaultZoom: defaultZoom,
       isPicker: isPicker,
       markerOption: markerOption,
       road: road,
       showDefaultInfoWindow: showDefaultInfoWindow,
+      onMapIsReady: onMapIsReady,
+      userLocationMarker: userLocationMarker,
+      initZoom: initZoom,
+      minZoomLevel: minZoomLevel,
+      maxZoomLevel: maxZoomLevel,
+      stepZoom: stepZoom,
     );

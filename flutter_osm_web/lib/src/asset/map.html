@@ -163,6 +163,13 @@
         return 200;
   }
     
+  async function configInitZoomMap(step,initZoom,minZoomLevel,maxZoomLevel){
+      mymap.setMinZoom(minZoomLevel);
+      mymap.setMinZoom(maxZoomLevel);
+      zoom = initZoom;
+      stepZoom = step;
+      return 200;
+  }
 
   async function setZoomStep(zoomStep) {
         stepZoom = zoomStep

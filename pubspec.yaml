@@ -43,7 +43,8 @@ flutter:
         pluginClass: FlutterOsmPlugin
       ios:
         pluginClass: FlutterOsmPlugin
-
+      web:
+        default_package: flutter_osm_web
 
 
   # To add assets to your plugin package, add an assets section, like this:

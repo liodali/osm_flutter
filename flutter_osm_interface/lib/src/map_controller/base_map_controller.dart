@@ -33,7 +33,7 @@ class BaseMapController extends IBaseMapController {
   @override
   void init() {
     Future.delayed(Duration(milliseconds: 1250), () async {
-      await osmBaseController.initMap(
+      await osmBaseController.initPositionMap(
         initPosition: initPosition,
         initWithUserPosition: initMapWithUserPosition,
       );
