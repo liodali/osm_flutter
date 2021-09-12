@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.15.0-orange) 
+![pub](https://img.shields.io/badge/pub-v0.16.0-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
@@ -36,9 +36,16 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.15.0
+      flutter_osm_plugin: ^0.16.0
 
-      
+### Migration to `0.16.0` (Android Only)
+> if you are using this plugin before Flutter 2 
+> you should make some modification in build.gradle before that run flutter clean && flutter pub get
+> open file build.gradle inside android file
+    * change kotlin version from `1.4.21` to `1.5.21`
+    * change gradle version from `4.1.1` to `7.0.2`
+
+
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
