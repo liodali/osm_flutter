@@ -8,6 +8,7 @@ class MarkerOption {
     this.defaultMarker,
     this.advancedPickerMarker,
   });
+
   MarkerOption copyWith({
     MarkerIcon? defaultMarker,
     MarkerIcon? advancedPickerMarker,
@@ -17,6 +18,16 @@ class MarkerOption {
         advancedPickerMarker:
             advancedPickerMarker ?? this.advancedPickerMarker);
   }
+}
+
+class UserLocationMaker {
+  final MarkerIcon personMarker;
+  final MarkerIcon directionArrowMarker;
+
+  UserLocationMaker({
+    required this.personMarker,
+    required this.directionArrowMarker,
+  });
 }
 
 class MarkerIcon extends StatelessWidget {

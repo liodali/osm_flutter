@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_interface/src/types/road.dart';
 
 import '../types/types.dart';
 
@@ -12,6 +13,16 @@ abstract class IBaseOSMController {
   ///
   /// [p] : (GeoPoint) position that will be added to map
   Future<void> changeLocation(GeoPoint p);
+
+  /// create marker int specific position without change map camera
+  ///
+  /// [p] : (GeoPoint) desired location
+  ///
+  /// [markerIcon] : (MarkerIcon) set icon of the marker
+  Future<void> addMarker(
+    GeoPoint p, {
+    MarkerIcon? markerIcon,
+  });
 
   ///remove marker from map of position
   /// [p] : geoPoint
@@ -41,20 +52,30 @@ abstract class IBaseOSMController {
   ///  [id] : String of that list of static geoPoint
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id);
 
-  /// zoom in/out
-  ///
-  /// [zoom] : (double) positive value:zoomIN or negative value:zoomOut
-  Future<void> zoom(double zoom);
+  Future<double> getZoom();
 
-  /// zoomIn use defaultZoom
-  ///
-  /// positive value:zoomIN
+  Future<void> setZoom({
+    double? zoomLevel,
+    double? stepZoom,
+  });
+
+  /// zoomIn use stepZoom
   Future<void> zoomIn();
 
-  /// zoomOut use defaultZoom
-  ///
-  /// negative value:zoomOut
+  /// zoomOut use stepZoom
   Future<void> zoomOut();
+
+  Future<void> setStepZoom(
+    int stepZoom,
+  );
+
+  Future<void> setMinimumZoomLevel(
+    int minZoom,
+  );
+
+  Future<void> setMaximumZoomLevel(
+    int maxZoom,
+  );
 
   /// activate current location position
   Future<void> currentLocation();
@@ -79,8 +100,6 @@ abstract class IBaseOSMController {
     String imageURL = "",
   });
 
-  Future<void> defaultZoom(double zoom);
-
   /// draw road
   ///  [start] : started point of your Road
   ///  [end] : last point of your road
@@ -90,6 +109,7 @@ abstract class IBaseOSMController {
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
+    RoadType roadType = RoadType.car,
     List<GeoPoint>? interestPoints,
     RoadOption? roadOption,
   });
@@ -143,5 +163,11 @@ abstract class IBaseOSMController {
   /// to cancel the assisted selection in tge map
   Future<void> cancelAdvancedPositionPicker();
 
-  Future<void> mapOrientation(double? degree);
+  Future<void> mapOrientation(double degree);
+
+  Future<void> limitArea(
+    BoundingBox box,
+  );
+
+  Future<void> removeLimitArea();
 }

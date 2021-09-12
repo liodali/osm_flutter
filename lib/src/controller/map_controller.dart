@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-
+import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
 
 /// class [MapController] : map controller that will control map by select position,enable current location,
 /// draw road , show static geoPoint,
@@ -12,17 +12,30 @@ class MapController extends BaseMapController {
   MapController({
     bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
+    BoundingBox? areaLimit = const BoundingBox.world(),
   })  : assert(
           initMapWithUserPosition || initPosition != null,
         ),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
           initPosition: initPosition,
+          areaLimit: areaLimit,
         );
 
   void dispose() {
-    listenerMapLongTapping.dispose();
-    listenerMapSingleTapping.dispose();
+    (osmBaseController as MobileOSMController).dispose();
+    super.dispose();
+  }
+
+  /// set area camera limit of the map
+  /// [box] : (BoundingBox) bounding that map cannot exceed from it
+  Future<void> limitAreaMap(BoundingBox box) async {
+    await osmBaseController.limitArea(box);
+  }
+
+  /// remove area camera limit from the map
+  Future<void> removeLimitAreaMap() async {
+    await osmBaseController.removeLimitArea();
   }
 
   /// initialise or change of position with creating marker in that specific position
@@ -78,10 +91,24 @@ class MapController extends BaseMapController {
     await osmBaseController.setIconStaticPositions(id, markerIcon);
   }
 
-  /// zoom in/out
-  /// [zoom] : (double) positive value:zoomIN or negative value:zoomOut
+  /// recuperate current zoom level
+  Future<double> getZoom() async => await osmBaseController.getZoom();
+
+  @Deprecated("will be remove in next version,use setZoom")
+
+  /// change zoom level of the map
+  /// [zoom] : (double) step zoom that will be added to current zoom
   Future<void> zoom(double zoom) async {
-    await osmBaseController.zoom(zoom);
+    await osmBaseController.setZoom(stepZoom: zoom);
+  }
+
+  /// change zoom level of the map
+  ///
+  /// [zoomLevel] : (double) should be between minZoomLevel and maxZoomLevel
+  ///
+  /// [stepZoom] : (double) step zoom that will be added to current zoom
+  Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
+    await osmBaseController.setZoom(zoomLevel: zoomLevel, stepZoom: stepZoom);
   }
 
   /// zoomIn use defaultZoom
@@ -93,7 +120,7 @@ class MapController extends BaseMapController {
   /// zoomOut use defaultZoom
   /// negative value:zoomOut
   Future<void> zoomOut() async {
-    await osmBaseController.zoom(-1);
+    await osmBaseController.zoomOut();
   }
 
   /// activate current location position
@@ -135,18 +162,19 @@ class MapController extends BaseMapController {
   ///
   ///  [intersectPoint] : (List of GeoPoint) middle position that you want you road to pass through it
   ///
-  ///  [roadColor] : (Color) indicate the color that you want to be drawing the road, if Color null will draw with default color that specified in OSMFlutter or red color (default of osm map)
-  ///
-  ///  [roadWidth] : (double) indicate the width of  your road
+  ///  [roadOption] : (RoadOption) runtime configuration of the road
+
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
+    RoadType roadType = RoadType.car,
     List<GeoPoint>? intersectPoint,
     RoadOption? roadOption,
   }) async {
     return await osmBaseController.drawRoad(
       start,
       end,
+      roadType: roadType,
       interestPoints: intersectPoint,
       roadOption: roadOption,
     );
@@ -212,7 +240,7 @@ class MapController extends BaseMapController {
   }
 
   /// rotate camera of osm map
-  Future<void> rotateMapCamera(double? degree) async {
+  Future<void> rotateMapCamera(double degree) async {
     return await osmBaseController.mapOrientation(degree);
   }
 
@@ -241,6 +269,16 @@ class MapController extends BaseMapController {
         initWithUserPosition: initMapWithUserPosition,
       );
     });
+  }
+
+  Future<void> addMarker(
+    GeoPoint p, {
+    MarkerIcon? markerIcon,
+  }) async {
+    await osmBaseController.addMarker(
+      p,
+      markerIcon: markerIcon,
+    );
   }
 }
 

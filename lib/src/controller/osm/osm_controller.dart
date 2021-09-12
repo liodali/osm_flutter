@@ -3,32 +3,37 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import '../../widgets/mobile_osm_flutter.dart';
 import 'package:location/location.dart';
 
 import '../../widgets/mobile_osm_flutter.dart';
 
-OSMMobileController getOSMMap() => OSMMobileController();
+MobileOSMController getOSMMap() => MobileOSMController();
 
-class OSMMobileController implements IBaseOSMController {
+class MobileOSMController extends IBaseOSMController {
   late int _idMap;
   late MobileOsmFlutterState _osmFlutterState;
 
-  static MobileOSMPlatform get osmPlatform =>
-      OSMPlatform.instance as MobileOSMPlatform;
+  static MobileOSMPlatform osmPlatform = OSMPlatform.instance as MobileOSMPlatform;
 
-  OSMMobileController();
 
-  OSMMobileController._(
-    this._idMap,
-    this._osmFlutterState,
-  );
+  late double stepZoom = 1;
+  late int minZoomLevel = 2;
+  late int maxZoomLevel = 18;
 
-  static Future<OSMMobileController> init(
+  MobileOSMController();
+
+  MobileOSMController._(this._idMap, this._osmFlutterState) {
+    minZoomLevel = this._osmFlutterState.widget.minZoomLevel;
+    maxZoomLevel = this._osmFlutterState.widget.maxZoomLevel;
+  }
+
+  static Future<MobileOSMController> init(
     int id,
-    MobileOsmFlutterState osmState,
+      MobileOsmFlutterState osmState,
   ) async {
     await osmPlatform.init(id);
-    return OSMMobileController._(id, osmState);
+    return MobileOSMController._(id, osmState);
   }
 
   /// dispose: close stream in osmPlatform,remove references
@@ -37,18 +42,32 @@ class OSMMobileController implements IBaseOSMController {
   }
 
   /// initMap: initialisation of osm map
-  /// [initPosition] : (geoPoint) animate map to initPosition
-  /// [initWithUserPosition] : set map in user position
+  /// [initPosition]          : (geoPoint) animate map to initPosition
+  /// [initWithUserPosition]  : set map in user position
+  /// [box]                   : (BoundingBox) area limit of the map
   Future<void> initMap({
     GeoPoint? initPosition,
     bool initWithUserPosition = false,
+    BoundingBox? box,
   }) async {
-    /// load config map scene for iOS
-    if (Platform.isIOS) {
-      await osmPlatform.initIosMap(_idMap);
+    if (_osmFlutterState.widget.onMapIsReady != null) {
+      _osmFlutterState.widget.onMapIsReady!(false);
     }
 
-    osmPlatform.setDefaultZoom(_idMap, _osmFlutterState.widget.defaultZoom);
+    /// load config map scene for iOS
+    if (Platform.isIOS) {
+      await (osmPlatform as MethodChannelOSM).initIosMap(_idMap);
+    }
+
+    _checkBoundingBox(box, initPosition);
+    stepZoom = _osmFlutterState.widget.stepZoom;
+
+    await configureZoomMap(
+      _osmFlutterState.widget.minZoomLevel,
+      _osmFlutterState.widget.maxZoomLevel,
+      stepZoom,
+      _osmFlutterState.widget.initZoom,
+    );
 
     if (_osmFlutterState.widget.showDefaultInfoWindow == true) {
       osmPlatform.visibilityInfoWindow(
@@ -58,16 +77,21 @@ class OSMMobileController implements IBaseOSMController {
     /// listen to data send from native map
 
     osmPlatform.onLongPressMapClickListener(_idMap).listen((event) {
-      _osmFlutterState.widget.controller.listenerMapLongTapping.value =
-          event.value;
+      _osmFlutterState.widget.controller
+          .setValueListenerMapLongTapping(event.value);
     });
 
     osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
-      _osmFlutterState.widget.controller.listenerMapSingleTapping.value =
-          event.value;
+      _osmFlutterState.widget.controller
+          .setValueListenerMapSingleTapping(event.value);
     });
     osmPlatform.onMapIsReady(_idMap).listen((event) async {
       _osmFlutterState.widget.mapIsReadyListener.value = event.value;
+      if (_osmFlutterState.widget.onMapIsReady != null) {
+        _osmFlutterState.widget.onMapIsReady!(event.value);
+      }
+      _osmFlutterState.widget.controller
+          .setValueListenerMapIsReady(event.value);
     });
 
     if (_osmFlutterState.widget.onGeoPointClicked != null) {
@@ -89,6 +113,18 @@ class OSMMobileController implements IBaseOSMController {
 
     if (defaultIcon != null) {
       await changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
+    } else {
+      if (Platform.isIOS) {
+        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Icon(
+          Icons.location_on,
+          color: Colors.red,
+          size: 32,
+        );
+        await Future.delayed(Duration(milliseconds: 250), () async {
+          _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
+          await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
+        });
+      }
     }
 
     /// change advanced picker icon marker
@@ -104,14 +140,28 @@ class OSMMobileController implements IBaseOSMController {
       );
       await Future.delayed(Duration(milliseconds: 250), () async {
         _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
-        await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey!);
+        await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
       });
+    }
+
+    /// change user person Icon and arrow Icon
+    if (_osmFlutterState.widget.userLocationMarker != null) {
+      await osmPlatform.customUserLocationMarker(
+        _idMap,
+        _osmFlutterState.personIconMarkerKey,
+        _osmFlutterState.arrowDirectionMarkerKey,
+      );
     }
 
     /// init location in map
     if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
       initPosition = await myLocation();
+      _checkBoundingBox(box, initPosition);
     }
+    if (box != null && !box.isWorld()) {
+      await limitAreaMap(box);
+    }
+
     if (initPosition != null) {
       await osmPlatform.initPositionMap(
         _idMap,
@@ -166,6 +216,15 @@ class OSMMobileController implements IBaseOSMController {
     }
   }
 
+  void _checkBoundingBox(BoundingBox? box, GeoPoint? initPosition) {
+    if (box != null && !box.isWorld() && initPosition != null) {
+      if (!box.inBoundingBox(initPosition)) {
+        throw Exception(
+            "you want to limit the area of the map but your init location is already outside the area!");
+      }
+    }
+  }
+
   Future _initializeRoadInformation() async {
     await osmPlatform.setColorRoad(
       _idMap,
@@ -178,6 +237,37 @@ class OSMMobileController implements IBaseOSMController {
         _osmFlutterState.endIconKey,
         _osmFlutterState.middleIconKey
       ],
+    );
+  }
+
+  Future<void> configureZoomMap(
+    int minZoomLevel,
+    int maxZoomLevel,
+    double stepZoom,
+    double initZoom,
+  ) async {
+    await (osmPlatform as MethodChannelOSM).configureZoomMap(
+      _idMap,
+      initZoom,
+      minZoomLevel,
+      maxZoomLevel,
+      stepZoom,
+    );
+  }
+
+  /// set area camera limit of the map
+  /// [box] : (BoundingBox) bounding that map cannot exceed from it
+  Future<void> limitAreaMap(BoundingBox box) async {
+    await osmPlatform.limitArea(
+      _idMap,
+      box,
+    );
+  }
+
+  /// remove area camera limit from the map
+  Future<void> removeLimitAreaMap() async {
+    await osmPlatform.removeLimitArea(
+      _idMap,
     );
   }
 
@@ -210,8 +300,7 @@ class OSMMobileController implements IBaseOSMController {
     MarkerIcon markerIcon,
   ) async {
     if (markerIcon.icon != null) {
-      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
-          markerIcon.icon;
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon.icon;
     } else if (markerIcon.image != null) {
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Image(
         image: markerIcon.image!,
@@ -246,26 +335,14 @@ class OSMMobileController implements IBaseOSMController {
     await osmPlatform.staticPosition(_idMap, geoPoints, id);
   }
 
-  /// zoom in/out
-  ///
-  /// [zoom] : (double) positive value:zoomIN or negative value:zoomOut
-  Future<void> zoom(double zoom) async {
-    assert(zoom != 0, "zoom value should different from zero");
-    await osmPlatform.zoom(_idMap, zoom);
-  }
-
-  /// zoomIn use defaultZoom
-  ///
-  /// positive value:zoomIN
+  /// zoomIn use stepZoom
   Future<void> zoomIn() async {
-    await osmPlatform.zoom(_idMap, 0);
+    await osmPlatform.setZoom(_idMap, stepZoom: 0);
   }
 
-  /// zoomOut use defaultZoom
-  ///
-  /// negative value:zoomOut
+  /// zoomOut use stepZoom
   Future<void> zoomOut() async {
-    await osmPlatform.zoom(_idMap, -1);
+    await osmPlatform.setZoom(_idMap, stepZoom: -1);
   }
 
   /// activate current location position
@@ -291,6 +368,33 @@ class OSMMobileController implements IBaseOSMController {
   /// [p] : (GeoPoint) desired location
   Future<void> goToPosition(GeoPoint p) async {
     await osmPlatform.goToPosition(_idMap, p);
+  }
+
+  /// create marker int specific position without change map camera
+  ///
+  /// [p] : (GeoPoint) desired location
+  ///
+  /// [markerIcon] : (MarkerIcon) set icon of the marker
+  Future<void> addMarker(
+    GeoPoint p, {
+    MarkerIcon? markerIcon,
+  }) async {
+    if (markerIcon != null &&
+        (markerIcon.icon != null || markerIcon.image != null)) {
+      if (markerIcon.icon != null) {
+        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon.icon;
+      } else if (markerIcon.image != null) {
+        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Image(
+          image: markerIcon.image!,
+        );
+      }
+      Future.delayed(Duration(milliseconds: 250), () async {
+        await osmPlatform.addMarker(_idMap, p,
+            globalKeyIcon: _osmFlutterState.dynamicMarkerKey);
+      });
+    } else {
+      await osmPlatform.addMarker(_idMap, p);
+    }
   }
 
   /// enabled tracking user location
@@ -330,19 +434,35 @@ class OSMMobileController implements IBaseOSMController {
     return p;
   }
 
-  Future<void> defaultZoom(double zoom) async {
-    await osmPlatform.setDefaultZoom(_idMap, zoom);
+  Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
+    if (zoomLevel != null &&
+        (zoomLevel >= maxZoomLevel || zoomLevel <= minZoomLevel)) {
+      throw Exception(
+          "zoom level should be between $minZoomLevel and $maxZoomLevel");
+    }
+    await osmPlatform.setZoom(
+      _idMap,
+      stepZoom: stepZoom,
+      zoomLevel: zoomLevel,
+    );
+  }
+
+  Future<double> getZoom() async {
+    return await osmPlatform.getZoom(_idMap);
   }
 
   /// draw road
   ///  [start] : started point of your Road
+  ///
   ///  [end] : last point of your road
+  ///
   ///  [interestPoints] : middle point that you want to be passed by your route
-  ///  [roadColor] : (color)  indicate the color that you want to be road colored
-  ///  [roadWidth] : (double) indicate the width  of your road
+  ///
+  ///  [roadOption] : (RoadOption) runtime configuration of the road
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
+    RoadType roadType = RoadType.car,
     List<GeoPoint>? interestPoints,
     RoadOption? roadOption,
   }) async {
@@ -352,6 +472,7 @@ class OSMMobileController implements IBaseOSMController {
       _idMap,
       start,
       end,
+      roadType: roadType,
       interestPoints: interestPoints,
       roadOption: roadOption ?? const RoadOption.empty(),
     );
@@ -452,7 +573,35 @@ class OSMMobileController implements IBaseOSMController {
     return await osmPlatform.cancelAdvancedPositionPicker(_idMap);
   }
 
-  Future<void> mapOrientation(double? degree) async {
+  Future<void> mapOrientation(double degree) async {
     await osmPlatform.mapRotation(_idMap, degree);
+  }
+
+
+
+  @override
+  Future<void> setMaximumZoomLevel(int maxZoom) async{
+    await osmPlatform.setMaximumZoomLevel(_idMap, maxZoom);
+  }
+
+  @override
+  Future<void> setMinimumZoomLevel(int minZoom) async{
+    await osmPlatform.setMaximumZoomLevel(_idMap, minZoom);
+  }
+
+  @override
+  Future<void> setStepZoom(int stepZoom) async{
+    await osmPlatform.setStepZoom(_idMap, stepZoom);
+  }
+
+  @override
+  Future<void> limitArea(BoundingBox box) async{
+    await osmPlatform.limitArea(_idMap, box);
+
+  }
+
+  @override
+  Future<void> removeLimitArea() async{
+   await osmPlatform.removeLimitArea(_idMap);
   }
 }

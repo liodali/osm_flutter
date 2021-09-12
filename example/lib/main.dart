@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'search_example.dart';
 
+import 'home/home_example.dart';
 import 'search_example.dart';
 import 'utilities.dart';
 import 'web_test_osm.dart';
@@ -19,7 +21,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MainExample(),
+      initialRoute: "/home",
       routes: {
         "/home": (ctx) => MainExample(),
         "/second": (ctx) => Scaffold(
@@ -59,10 +61,7 @@ class _MainExampleState extends State<MainExample> {
     super.initState();
     controller = MapController(
       initMapWithUserPosition: false,
-      initPosition: GeoPoint(
-        latitude: 47.4358055,
-        longitude: 8.4737324,
-      ),
+      initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
     );
     scaffoldKey = GlobalKey<ScaffoldState>();
     controller.listenerMapLongTapping.addListener(() {
@@ -417,5 +416,3 @@ class _MainExampleState extends State<MainExample> {
     );
   }
 }
-
-

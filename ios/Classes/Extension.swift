@@ -8,16 +8,16 @@ import TangramMap
 
 extension GeoPointMap {
     public func setupMarker(
-            for annotation: GeoPointMap, on map: TGMapView
-    ) -> GeoPointMap {
+             on map: TGMapView
+    ) -> TGMarker {
 
-        annotation.marker = map.markerAdd()
-        annotation.marker?.icon = annotation.markerIcon!
-        annotation.marker?.stylingString = annotation.styleMarker
-        annotation.marker?.point = annotation.coordinate
+        marker = map.markerAdd()
+        marker?.icon = markerIcon!
+        marker?.stylingString = styleMarker
+        marker?.point = coordinate
 
-        annotation.marker?.visible = true
-        return annotation
+        marker?.visible = true
+        return marker!
     }
 
     public func toMap() -> GeoPoint {
@@ -26,8 +26,10 @@ extension GeoPointMap {
 }
 
 extension TGMapView {
-    func addUserLocation(for userLocation: CLLocationCoordinate2D, on map: TGMapView) -> MyLocationMarker {
-        let userLocationMarker = MyLocationMarker(coordinate: userLocation)
+    func addUserLocation(for userLocation: CLLocationCoordinate2D, on map: TGMapView,
+                         userLocationMarkerType:UserLocationMarkerType = UserLocationMarkerType.person) -> MyLocationMarker {
+        let userLocationMarker = MyLocationMarker(coordinate: userLocation,
+                userLocationMarkerType: userLocationMarkerType)
 
         userLocationMarker.marker = map.markerAdd()
         userLocationMarker.marker!.point = userLocationMarker.coordinate
@@ -43,6 +45,56 @@ extension TGMapView {
 
     func removeUserLocation(for marker: TGMarker) {
         self.markerRemove(marker)
+    }
+}
+extension MyLocationMarker {
+    func setDirectionArrow(personIcon:UIImage? ,arrowDirection: UIImage?){
+        self.personIcon = personIcon
+        arrowDirectionIcon = arrowDirection
+        var iconM :UIImage? = nil
+        if(arrowDirectionIcon == nil && personIcon == nil ){
+            switch (self.userLocationMarkerType){
+            case .person:
+                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , angle: \(self.angle) } "
+                break;
+            case .arrow:
+                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , angle: \(angle)  } "
+                break;
+            }
+        }else{
+            if( arrowDirectionIcon != nil && self.personIcon == nil ) {
+                iconM = arrowDirectionIcon
+            } else if( arrowDirectionIcon == nil && self.personIcon != nil ) {
+                iconM = self.personIcon
+            }else{
+                switch (userLocationMarkerType){
+                case .person:
+                    iconM = self.personIcon
+                    break;
+                case .arrow:
+                    iconM = arrowDirectionIcon
+                    break;
+                }
+            }
+            marker?.icon = iconM!
+            marker?.stylingString = " { style: 'points', interactive: \(interactive),color: 'white',size: \(size)px, order: 1000, collide: false , angle : \(angle) } "
+        }
+    }
+    func rotateMarker(angle:Int){
+        userLocationMarkerType = UserLocationMarkerType.arrow
+        self.angle = angle
+        if(arrowDirectionIcon == nil || personIcon == nil ){
+            switch (userLocationMarkerType){
+            case .person:
+                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , angle: \(self.angle) } "
+                break;
+            case .arrow:
+                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , angle: \(self.angle)  } "
+                break;
+            }
+        }else{
+            self.marker?.stylingString = "{ style: 'points', interactive: \(interactive),color: 'white',size: \(size)px, order: 1000, collide: false , angle: \(angle)  } "
+        }
     }
 }
 
@@ -95,7 +147,33 @@ extension CLLocationCoordinate2D {
          ["lat":latitude,"lon":longitude]
     }
 }
+extension UIImage {
+    func rotate(radians: Float) -> UIImage {
+        var newSize = CGRect(origin: CGPoint.zero, size: self.size).applying(CGAffineTransform(rotationAngle: CGFloat(radians))).size
+        // Trim off the extremely small float value to prevent core graphics from rounding it up
+        newSize.width = floor(newSize.width)
+        newSize.height = floor(newSize.height)
 
+        UIGraphicsBeginImageContextWithOptions(newSize, false, self.scale)
+        let context = UIGraphicsGetCurrentContext()!
+
+        // Move origin to middle
+        context.translateBy(x: newSize.width/2, y: newSize.height/2)
+        // Rotate around middle
+        context.rotate(by: CGFloat(radians))
+        // Draw the image at its center
+        self.draw(in: CGRect(x: -self.size.width/2, y: -self.size.height/2, width: self.size.width, height: self.size.height))
+
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        return newImage ?? self
+    }
+}
+extension CGFloat {
+    var toRadians: CGFloat {  self * .pi / 180 }
+    var toDegrees: CGFloat {  self * 180 / .pi }
+}
 extension UIColor {
 
     /// Create color from RGB(A)

@@ -1,21 +1,22 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.8.1%2B3-orange)
-
-![pub](https://img.shields.io/badge/pub-v0.11.0--beta.0-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.16.0-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported (not stable yet) :  0.11.0-beta  | under-development |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | under-development |
 
 
 <b>osm plugin for flutter apps </b>
 
 * current position (Android/iOS)
-* change position (Android/iOS)
+* change position (Android/iOS) 
+* create Marker manually (Android/iOS)
 * tracking user location (Android/iOS)
 * customize Icon Marker (Android/iOS)
+* customize user Marker (Android/iOS)
 * assisted selection position (Android/iOS)
+* set BoundingBOx (Android)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
 * draw Road manually (Android/iOS)
 * ClickListener on Marker (Android/iOS)
@@ -35,15 +36,19 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.8.1+3
+      flutter_osm_plugin: ^0.16.0
 
-      
-* beta version (iOS support)
-      ```dart
-       dependencies:
-                flutter_osm_plugin: ^0.11.0-beta.0
-      ```
-      
+### Migration to `0.16.0` (Android Only)
+> if you are using this plugin before Flutter 2 
+
+> you should make some modification in build.gradle before that run flutter clean && flutter pub get
+
+> open file build.gradle inside android file
+
+    * change kotlin version from `1.4.21` to `1.5.21`
+    * change gradle version from `4.1.1` to `7.0.2`
+
+
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
@@ -52,6 +57,25 @@ Add the following to your `pubspec.yaml` file:
  OSMFlutter( 
         controller:mapController,
         trackMyPosition: false,
+        initZoom: 12,
+        minZoomLevel: 8,
+        maxZoomLevel: 14,
+        stepZoom: 1.0,
+        userLocationMarker: UserLocationMaker(
+            personMarker: MarkerIcon(
+                icon: Icon(
+                    Icons.location_history_rounded,
+                    color: Colors.red,
+                    size: 48,
+                ),
+            ),
+            directionArrowMarker: MarkerIcon(
+                icon: Icon(
+                    Icons.double_arrow,
+                    size: 48,
+                ),
+            ),
+        ),
         road: Road(
                 startIcon: MarkerIcon(
                   icon: Icon(
@@ -63,7 +87,7 @@ Add the following to your `pubspec.yaml` file:
                 roadColor: Colors.yellowAccent,
         ),
         markerOption: MarkerOption(
-            markerIcon: MarkerIcon(
+            defaultMarker: MarkerIcon(
                 icon: Icon(
                   Icons.person_pin_circle,
                   color: Colors.blue,
@@ -85,6 +109,7 @@ Add the following to your `pubspec.yaml` file:
  MapController controller = MapController(
                             initMapWithUserPosition: false,
                             initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+                            areaLimit: BoundingBox( east: 10.4922941, north: 47.8084648, south: 45.817995, west: 5.9559113,),
                        );
 ```
 <b>2) Dispose </b>
@@ -97,6 +122,7 @@ Add the following to your `pubspec.yaml` file:
 | ---------------------------- | ----------------------------------------------------------------------- |
 | `initMapWithUserPosition`    | (bool) initialize map with user position (default:true                  |
 | `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
+| `areaLimit`                  | (Bounding) set area limit of the map (default BoundingBox.world())   |
 
 
 <b>4) Set map on user current position </b>
@@ -107,20 +133,48 @@ Add the following to your `pubspec.yaml` file:
 <b> 5) Zoom IN </b>
 
 ```dart
- await controller.zoom(2.);
+ await controller.setZoom(stepZoom: 2);
  // or 
  await controller.zoomIn();
 ```
 
-<b> 6Android) Zoom Out </b>
+<b> 5.1) Zoom Out </b>
 
 ```dart
- await controller.zoom(-2.);
+ await controller.setZoom(stepZoom: -2);
  // or 
  await controller.zoomOut();
+ 
+```
+<b> 5.2) change zoom level </b>
+
+> `zoomLevel` should be between `minZoomLevel` and `maxZoomLevel`
+
+```dart
+ await controller.setZoom(zoomLevel: 8);
 ```
 
-<b> 7)  Track user current position </b>
+<b> 6) get current zoom level </b>b>
+
+```dart
+await controller.getZoom();
+```
+
+<b> 7) BoundingBox </b>
+
+> set bounding box in the map
+
+```dart
+await controller.limitAreaMap(BoundingBox( east: 10.4922941, north: 47.8084648, south: 45.817995, west: 5.9559113,));
+```
+> remove bounding box in the map
+
+```dart
+await controller.removeLimitAreaMap();
+```
+
+
+<b> 8)  Track user current position </b>
 
 > for iOS,you should add those line in your info.plist file
 ```text
@@ -135,13 +189,13 @@ Add the following to your `pubspec.yaml` file:
  await controller.enableTracking();
 ```
 
-<b> 8) Disable tracking user position </b>
+<b> 9) Disable tracking user position </b>
 
 ```dart
  await controller.disabledTracking();
 ```
 
-<b>9) update the location </b>
+<b>10) update the location </b>
 
 > this method will create marker on that specific position
 
@@ -155,17 +209,17 @@ Add the following to your `pubspec.yaml` file:
 ```
 
 
-<b> 10) recuperation current position </b>
+<b> 11) recuperation current position </b>
 
 ```dart
  GeoPoint geoPoint = await controller.myLocation();
 ```
 
-<b> 11) select/create new position </b>
+<b> 12) select/create new position </b>
 
 * we have 2 way to select location in map
 
-<b>11.1 Manual selection </b>
+<b>12.1 Manual selection </b>
 
 a) select without change default marker
 ```dart
@@ -190,7 +244,7 @@ b) select position with dynamic marker
 );
  ```
  
-<b>11.2 Assisted selection </b> (for more details see example) 
+<b>12.2 Assisted selection </b> (for more details see example) 
 
 ```dart
  /// To Start assisted Selection
@@ -204,14 +258,20 @@ b) select position with dynamic marker
 ```
 * PS : selected position can be removed by long press 
 
-<b>12) Remove marker </b>
+<b>13) Create Marker Programmatically </b>
+> you can change marker icon by using attribute `markerIcon`
+```dart
+await controller.addMarker(GeoPoint,markerIcon:MarkerIcon);
+```
+
+<b> 13.1) Remove marker </b>
 
 ```dart
  await controller.removePosition(geoPoint);
 ```
 * PS : static position cannot be removed by this method 
 
-<b>13) Draw road,recuperate distance in km and duration in sec </b>
+<b>14) Draw road,recuperate distance in km and duration in sec </b>
 
 > you can add an middle position to pass your route through them
 >
@@ -219,6 +279,7 @@ b) select position with dynamic marker
  RoadInfo roadInfo = await controller.drawRoad( 
    GeoPoint(latitude: 47.35387, longitude: 8.43609),
    GeoPoint(latitude: 47.4371, longitude: 8.6136),
+   roadType: RoadType.car,
    intersectPoint : [ GeoPoint(latitude: 47.4361, longitude: 8.6156), GeoPoint(latitude: 47.4481, longitude: 8.6266)]
    roadOption: RoadOption(
        roadWidth: 10,
@@ -230,7 +291,7 @@ b) select position with dynamic marker
  print("${roadInfo.duration}sec");
 ```
 
-13.b) draw road manually
+<b> 14.b) draw road manually </b>
 ```dart
 await controller.drawRoadManually(
         waysPoint,
@@ -239,22 +300,25 @@ await controller.drawRoadManually(
       )
 ```
 
-<b>14) Delete last road </b>
+<b>15) Delete last road </b>
 
 ```dart
  await controller.removeLastRoad();
 ```
 
-<b>15) Change static GeoPoint position </b>
+<b>16) Change static GeoPoint position </b>
 
 > add new staticPoints with empty list of geoPoints (notice: if you add static point without marker,they will get default maker used by plugin)
 
 > change their position over time
 
+>  change orientation of the static GeoPoint with `GeoPointWithOrientation`
+
+
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
-<b>16) Change/Add Marker old/new static GeoPoint position </b>
+<b>17) Change/Add Marker old/new static GeoPoint position </b>
 
 > add marker of new static point
 
@@ -264,13 +328,13 @@ await controller.drawRoadManually(
  await controller.setMarkerOfStaticPoint(String id,MarkerIcon markerIcon );
 ```
 
-<b>17) change orientation of the map</b>
+<b>18) change orientation of the map</b>
 
 ```dart
  await controller.rotateMapCamera(degree);
 ```
 
-<b>18) Draw Shape in the map </b>
+<b>19) Draw Shape in the map </b>
 
 * Circle
 ```dart
@@ -318,13 +382,17 @@ await controller.drawRoadManually(
 | `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
 | `trackMyPosition`             | enable tracking user position.     |
 | `showZoomController`          | show default zoom controller.       |
-| `markerIcon`                  | set icon Marker  (deprecated replaced with `markerOption` )                   |
+| `userLocationMarker`          | change user marker or direction marker icon in tracking location                |
 | `markerOption`                | configure marker of osm map                   |
-| `defaultZoom`                 | set default zoom to use in zoomIn()/zoomOut() (default 1)       |
+| `stepZoom`                    | set step zoom to use in zoomIn()/zoomOut() (default 1)       |
+| `initZoom`                    | set init zoom level in the map (default 10)       |
+| `maxZoomLevel`                | set maximum zoom level in the map  (2 <= x <= 19)       |
+| `minZoomLevel`                | set minimum zoom level in the map  (2 <= x <= 19 )       |
 | `road`                        | set color and start/end/middle markers in road |
 | `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
-| `onLocationChanged`           | (callback) it is hire when you activate tracking and  user position has been changed          |
+| `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |
+| `onMapIsReady`                | (callback) listener trigger to get map is initialized or not |
 | `showDefaultInfoWindow`       | (bool) enable/disable default infoWindow of marker (default = false)         |
 | `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |
 | `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
@@ -378,11 +446,7 @@ GeoPoint p = await showSimplePickerLocation(
 
 
 ## NOTICE:
-> `iOS version in beta, will stable soon`
-
-> `minimum requirement in iOS version is 13`
-
-> `web is under-dev,will enter to alpha version soon`
+> `For now the map working only for android,iOS will be available soon `
 
 > ` If you get ssl certfiction exception,use can use http by following instruction below `
 

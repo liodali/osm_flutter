@@ -3,7 +3,7 @@ description: OpenStreetMap plugin for flutter apps (only Android for now, iOS wi
 version: 2.0.0-alpha.0
 homepage: https://github.com/liodali/osm_flutter
 environment:
-  sdk: '>=2.12.0 <3.0.0'
+  sdk: '>=2.14.0 <3.0.0'
   flutter: ">=1.17.0"
 dependencies:
   flutter:
@@ -43,8 +43,7 @@ flutter:
         pluginClass: FlutterOsmPlugin
       ios:
         pluginClass: FlutterOsmPlugin
-      web:
-        default_package: flutter_osm_web
+
 
 
   # To add assets to your plugin package, add an assets section, like this:

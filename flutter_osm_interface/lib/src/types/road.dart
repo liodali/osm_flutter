@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'marker.dart';
 
+enum RoadType {
+  car,
+  foot,
+  bike,
+}
+
 class Road {
   final Color roadColor;
   final MarkerIcon? startIcon;

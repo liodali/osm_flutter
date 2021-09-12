@@ -20,7 +20,6 @@ extension ExtGeoPoint on GeoPoint {
       this.latitude,
     ];
   }
-
 }
 
 extension ExtLocationData on LocationData {
@@ -40,6 +39,10 @@ extension ColorMap on Color {
   Map<String, String> toHexMap(String key) {
     return {"$key": "#${this.value.toRadixString(16)}"};
   }
+
+  String toHexColor() {
+    return "#${this.value.toRadixString(16)}";
+  }
 }
 
 extension Uint8ListConvert on Uint8List {
@@ -47,6 +50,7 @@ extension Uint8ListConvert on Uint8List {
     return base64.encode(this);
   }
 }
+
 
 Future<Uint8List> capturePng(GlobalKey globalKey) async {
   RenderRepaintBoundary boundary =

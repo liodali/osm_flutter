@@ -1,3 +1,41 @@
+## 0.16.0 : update kotlin version and gralde,add listener on polylines 
+* update kotlin version to `1.5.21` (migration instruction in the readme)
+* update gradle version to `7.0.2`  (migration instruction in the readme)
+* add listener to polylines to get geoPoint selected on the map
+## 0.15.0 : add bike,foot routing
+* create RoadType and added as paramter to drawRoad, default value : RoadType.car
+* add small example in main
+## 0.14.2 : fix bug
+* fix `setZoom` method by change type variable of `zoomLevel` from int to double
+## 0.14.1 : fix bug
+* forget to replace the removed attribute `defaultZoom` with `stepZoom`
+## 0.14.0 : improve zoom 
+* deprecate attribute `defaultZoom`
+* replace `defaultZoom` with new attribute `stepZoom`
+* deprecated method `zoom` and replaced with `setZoom`
+* change logic of setZoom by adding two attribute stepZoom,zoomLevel
+* add new attribute `minZoomLevel` and `maxZoomLevel`
+* add new attribute `initZoom` to initialize map with that zoom
+## 0.13.0 :
+* add `onMapIsReady` attribute in OSMFluter to get notified when map is initialized
+* add valueListenable `listenerMapIsReady` to `MapController` as notifier for map initialization
+## 0.12.0 :
+* add new method addMarker to create marker in specific location programmatically
+## 0.11.0 :
+* add customization of user location marker 
+* implement ortiention of the user marker in ios
+* add orientation of static geopoint in ios
+## 0.11.0-beta.4 :
+* add map rotation in ios side
+## 0.11.0-beta.3 :
+* add default road color for ios side
+* fix send color of road for ios side
+* add send geoPoint when the marker of static point is clicked
+## 0.11.0-beta.2 :
+* fix icon marker size in iOS
+* add init road config in iOS
+## 0.11.0-beta.1 :
+fix invokeMethod in gotoPosition
 ## 0.11.0-beta.0 :
 * merge stable feature with alpha 
 * remove unnecessary attribute in show static geopoint
@@ -12,6 +50,19 @@
 * add draw road manually for dev that they have they own routing api 
 ## 0.9.0-alpha.0 :
 * support drawRoad in iOS
+## 0.8.3+2 (without ios support)
+* remove unnecesssary att
+## 0.8.3+1 (without ios support)
+* fix readme
+## 0.8.3 (without ios support)
+* create new class `GeoPointWithOrientation`
+* change orientation of marker of the static GeoPoint in runtime
+## 0.8.2 (without ios support)
+* add new attribute `limitArea` in MapController to init map in specific area
+* add new method `limitArea` to set BoundingBox of camera in the map
+* add new method`removeLimitArea` to remove limit area in the map 
+## 0.8.1+4 (without ios support)
+* fix: set correctly the color of the circle
 ## 0.8.1+3 (without ios support)
 * optimize draw marker before send it to native view in OSMFlutter widget
 * replace `selectAdvancedPositionPicker` to get select position with  `getCurrentPositionAdvancedPositionPicker` for ios purpose
