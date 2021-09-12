@@ -42,6 +42,7 @@ Add the following to your `pubspec.yaml` file:
 > if you are using this plugin before Flutter 2 
 > you should make some modification in build.gradle before that run flutter clean && flutter pub get
 > open file build.gradle inside android file
+
     * change kotlin version from `1.4.21` to `1.5.21`
     * change gradle version from `4.1.1` to `7.0.2`
 
