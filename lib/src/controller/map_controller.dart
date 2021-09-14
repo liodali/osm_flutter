@@ -22,6 +22,7 @@ class MapController extends BaseMapController {
           areaLimit: areaLimit,
         );
 
+
   void dispose() {
     (osmBaseController as MobileOSMController).dispose();
     super.dispose();
