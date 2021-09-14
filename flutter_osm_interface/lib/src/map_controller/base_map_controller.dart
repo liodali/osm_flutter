@@ -25,12 +25,14 @@ abstract class BaseMapController extends IBaseMapController {
           areaLimit: areaLimit,
         );
 
+  /// implement this method,should be end with super.dispose()
   @mustCallSuper
   @override
   void dispose() {
     super.dispose();
   }
 
+  /// implement this method,should be start with super.init()
   @mustCallSuper
   @override
   void init() {
