@@ -13,14 +13,12 @@ import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:location/location.dart';
 import 'package:stream_transform/stream_transform.dart';
 
-import '../common/road_exception.dart';
 import '../common/geo_point_exception.dart';
+import '../common/osm_event.dart';
+import '../common/road_exception.dart';
 import '../common/utilities.dart';
 import '../osm_interface.dart';
 import '../types/types.dart';
-import '../common/osm_event.dart';
-
-
 
 class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, MethodChannel> _channels = {};
@@ -34,8 +32,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
           as Stream<EventOSM>;
 
   late Location locationService;
-
-
 
   @override
   Future<void> init(int idOSMMap) async {
@@ -113,8 +109,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
-  void close() {
+  void close(int idOSM) {
     _streamController.close();
+    if (_channels.containsKey(idOSM)) {
+      _channels.remove(idOSM);
+    }
   }
 
   @override
@@ -123,7 +122,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GeoPoint point,
   ) async {
     Map requestData = {"lon": point.longitude, "lat": point.latitude};
-    await _channels[idOSM]!.invokeMethod(
+    await _channels[idOSM]?.invokeMethod(
       "initMap",
       requestData,
     );
@@ -132,7 +131,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @override
   Future<void> currentLocation(int? idOSM) async {
     try {
-      await _channels[idOSM]!.invokeMethod("currentLocation", null);
+      await _channels[idOSM]?.invokeMethod("currentLocation", null);
     } on PlatformException catch (e) {
       throw GeoPointException(msg: e.message);
     }
@@ -152,7 +151,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @override
   Future<void> addPosition(int idOSM, GeoPoint p) async {
     Map requestData = {"lon": p.longitude, "lat": p.latitude};
-    await _channels[idOSM]!.invokeMethod(
+    await _channels[idOSM]?.invokeMethod(
       "changePosition",
       requestData,
     );
@@ -167,7 +166,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       args = base64Str;
     }
 
-    await _channels[idOSM]!.invokeMethod("marker#icon", args);
+    await _channels[idOSM]?.invokeMethod("marker#icon", args);
   }
 
   @override
@@ -176,25 +175,27 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GlobalKey? globalKey,
     String id,
   ) async {
-    Uint8List icon = await _capturePng(globalKey!);
-    String iconIOS = "";
-    if (Platform.isIOS) {
-      iconIOS = icon.convertToString();
-    }
-    var args = {
-      "id": id,
-      "bitmap": Platform.isIOS ? iconIOS : icon,
-    };
+    if (globalKey?.currentContext != null) {
+      Uint8List icon = await _capturePng(globalKey!);
+      String iconIOS = "";
+      if (Platform.isIOS) {
+        iconIOS = icon.convertToString();
+      }
+      var args = {
+        "id": id,
+        "bitmap": Platform.isIOS ? iconIOS : icon,
+      };
 
-    await _channels[idOSM]!.invokeMethod(
-      "staticPosition#IconMarker",
-      args,
-    );
+      await _channels[idOSM]?.invokeMethod(
+        "staticPosition#IconMarker",
+        args,
+      );
+    }
   }
 
   @override
   Future<void> disableTracking(int idOSM) async {
-    await _channels[idOSM]!.invokeMethod('deactivateTrackMe', null);
+    await _channels[idOSM]?.invokeMethod('deactivateTrackMe', null);
   }
 
   @override
@@ -248,7 +249,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     }
 
     try {
-      Map map = (await (_channels[idOSM]!.invokeMethod(
+      Map map = (await (_channels[idOSM]?.invokeMethod(
         "road",
         args,
       )))!;
@@ -260,7 +261,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> enableTracking(int idOSM) async {
-    await _channels[idOSM]!.invokeMethod('trackMe', null);
+    await _channels[idOSM]?.invokeMethod('trackMe', null);
   }
 
   /// select position and show marker on it
@@ -281,9 +282,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     }
 
     try {
-      Map<String, dynamic> map = (await (_channels[idOSM]!
-          .invokeMapMethod("user#pickPosition", args)))!;
-      return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
+      Map<String, dynamic>? map = (await (_channels[idOSM]
+          ?.invokeMapMethod("user#pickPosition", args)));
+      return GeoPoint(latitude: map!["lat"], longitude: map["lon"]);
     } on PlatformException catch (e) {
       throw GeoPointException(msg: e.message);
     }
@@ -291,13 +292,13 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> removeLastRoad(int idOSM) async {
-    await _channels[idOSM]!.invokeListMethod("user#removeroad");
+    await _channels[idOSM]?.invokeListMethod("user#removeroad");
   }
 
   @override
   Future<void> removePosition(int idOSM, GeoPoint p) async {
-    await _channels[idOSM]!
-        .invokeListMethod("user#removeMarkerPosition", p.toMap());
+    await _channels[idOSM]
+        ?.invokeListMethod("user#removeMarkerPosition", p.toMap());
   }
 
   @override
@@ -306,13 +307,13 @@ class MethodChannelOSM extends MobileOSMPlatform {
     if (Platform.isIOS) {
       args = color.toHexColor();
     }
-    await _channels[idOSM]!.invokeMethod("road#color", args);
+    await _channels[idOSM]?.invokeMethod("road#color", args);
   }
 
   @override
   Future<void> setStepZoom(int idOSM, int defaultZoom) async {
     try {
-      await _channels[idOSM]!.invokeMethod("change#stepZoom", defaultZoom);
+      await _channels[idOSM]?.invokeMethod("change#stepZoom", defaultZoom);
     } on PlatformException catch (e) {
       print(e.message);
     }
@@ -342,7 +343,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       bitmaps.putIfAbsent(
           "MIDDLE", () => Platform.isIOS ? marker.convertToString() : marker);
     }
-    await _channels[idOSM]!.invokeMethod("road#markers", bitmaps);
+    await _channels[idOSM]?.invokeMethod("road#markers", bitmaps);
   }
 
   @override
@@ -353,8 +354,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
       for (GeoPoint p in pList) {
         listGeos.add(p.toMap());
       }
-      await _channels[idOSM]!
-          .invokeMethod("staticPosition", {"id": id, "point": listGeos});
+      await _channels[idOSM]
+          ?.invokeMethod("staticPosition", {"id": id, "point": listGeos});
     } on PlatformException catch (e) {
       print(e.message);
     }
@@ -372,7 +373,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> visibilityInfoWindow(int idOSM, bool visible) async {
-    await _channels[idOSM]!.invokeMethod("use#visiblityInfoWindow", visible);
+    await _channels[idOSM]?.invokeMethod("use#visiblityInfoWindow", visible);
   }
 
   @override
@@ -389,35 +390,35 @@ class MethodChannelOSM extends MobileOSMPlatform {
         circleOSM.color.green,
       ],
     };
-    await _channels[idOSM]!.invokeMethod("draw#circle", requestData);
+    await _channels[idOSM]?.invokeMethod("draw#circle", requestData);
   }
 
   @override
   Future<void> removeAllCircle(int idOSM) async {
-    await _channels[idOSM]!.invokeMethod("remove#circle", null);
+    await _channels[idOSM]?.invokeMethod("remove#circle", null);
   }
 
   @override
   Future<void> removeCircle(int idOSM, String key) async {
-    await _channels[idOSM]!.invokeMethod("remove#circle", key);
+    await _channels[idOSM]?.invokeMethod("remove#circle", key);
   }
 
   @override
   Future<void> advancedPositionPicker(int idOSM) async {
-    await _channels[idOSM]!.invokeMethod("advanced#selection");
+    await _channels[idOSM]?.invokeMethod("advanced#selection");
   }
 
   @override
   Future<void> cancelAdvancedPositionPicker(int idOSM) async {
-    await _channels[idOSM]!.invokeMethod(
+    await _channels[idOSM]?.invokeMethod(
       "cancel#advanced#selection",
     );
   }
 
   @override
   Future<GeoPoint> selectAdvancedPositionPicker(int idOSM) async {
-    Map mGeoPoint = (await (_channels[idOSM]!
-        .invokeMapMethod("confirm#advanced#selection")))!;
+    Map mGeoPoint = (await (_channels[idOSM]
+        ?.invokeMapMethod("confirm#advanced#selection")))!;
     return GeoPoint.fromMap(mGeoPoint);
   }
 
@@ -435,36 +436,40 @@ class MethodChannelOSM extends MobileOSMPlatform {
         rectOSM.color.green,
       ],
     };
-    await _channels[idOSM]!.invokeMethod("draw#rect", requestData);
+    await _channels[idOSM]?.invokeMethod("draw#rect", requestData);
   }
 
   @override
   Future<void> removeRect(int idOSM, String key) async {
-    await _channels[idOSM]!.invokeMethod("remove#rect", key);
+    await _channels[idOSM]?.invokeMethod("remove#rect", key);
   }
 
   @override
   Future<void> removeAllRect(int idOSM) async {
-    await _channels[idOSM]!.invokeMethod("remove#rect", null);
+    await _channels[idOSM]?.invokeMethod("remove#rect", null);
   }
 
   @override
   Future<void> removeAllShapes(int idOSM) async {
-    await _channels[idOSM]!.invokeMethod("clear#shapes");
+    await _channels[idOSM]?.invokeMethod("clear#shapes");
   }
 
   /// get position without finish advanced picker
   @override
   Future<GeoPoint> getPositionOnlyAdvancedPositionPicker(int idOSM) async {
-    Map mGeoPoint = (await (_channels[idOSM]!
-        .invokeMapMethod("get#position#advanced#selection")))!;
-    return GeoPoint.fromMap(mGeoPoint);
+    try {
+      Map? mGeoPoint = (await (_channels[idOSM]
+          ?.invokeMapMethod("get#position#advanced#selection")));
+      return GeoPoint.fromMap(mGeoPoint!);
+    } on Exception catch (e) {
+      throw Exception(e);
+    }
   }
 
   @override
   Future<void> goToPosition(int idOSM, GeoPoint p) async {
     Map requestData = {"lon": p.longitude, "lat": p.latitude};
-    await _channels[idOSM]!.invokeMethod(
+    await _channels[idOSM]?.invokeMethod(
       "goto#position",
       requestData,
     );
@@ -489,7 +494,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       data.addAll(roadColor.toMap("roadColor"));
     }
 
-    await _channels[idOSM]!.invokeMethod(
+    await _channels[idOSM]?.invokeMethod(
       "drawRoad#manually",
       data,
     );
@@ -500,7 +505,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     int idOSM,
     double degree,
   ) async {
-    await _channels[idOSM]!.invokeMethod(
+    await _channels[idOSM]?.invokeMethod(
       "map#orientation",
       degree,
     );
@@ -524,7 +529,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> limitArea(int idOSM, BoundingBox box) async {
-    await _channels[idOSM]!.invokeMethod("limitArea", [
+    await _channels[idOSM]?.invokeMethod("limitArea", [
       box.north,
       box.east,
       box.south,
@@ -534,7 +539,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> removeLimitArea(int idOSM) async {
-    await _channels[idOSM]!.invokeMethod("remove#limitArea");
+    await _channels[idOSM]?.invokeMethod("remove#limitArea");
   }
 
   @override
@@ -555,7 +560,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       args["arrowDirectionIcon"] = base64StrArrowDirection;
     }
 
-    await _channels[idOSM]!.invokeMethod("user#locationMarkers", args);
+    await _channels[idOSM]?.invokeMethod("user#locationMarkers", args);
   }
 
   @override
@@ -570,22 +575,22 @@ class MethodChannelOSM extends MobileOSMPlatform {
       args["icon"] = Platform.isIOS ? icon.convertToString() : icon;
     }
 
-    await _channels[idOSM]!.invokeMethod("add#Marker", args);
+    await _channels[idOSM]?.invokeMethod("add#Marker", args);
   }
 
   @override
   Future<void> setMaximumZoomLevel(int idOSM, int maxZoom) async {
-    await _channels[idOSM]!.invokeMethod("set#minZoom", maxZoom);
+    await _channels[idOSM]?.invokeMethod("set#minZoom", maxZoom);
   }
 
   @override
   Future<void> setMinimumZoomLevel(int idOSM, int minZoom) async {
-    await _channels[idOSM]!.invokeMethod("set#maxZoom", minZoom);
+    await _channels[idOSM]?.invokeMethod("set#maxZoom", minZoom);
   }
 
   @override
   Future<double> getZoom(int idOSM) async {
-    return await _channels[idOSM]!.invokeMethod('get#Zoom');
+    return await _channels[idOSM]?.invokeMethod('get#Zoom');
   }
 
   Future<void> setZoom(
@@ -599,13 +604,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
     } else if (stepZoom != null) {
       args["stepZoom"] = stepZoom;
     }
-    await _channels[idOSM]!.invokeMethod('Zoom', args);
+    await _channels[idOSM]?.invokeMethod('Zoom', args);
   }
-
-
-
-
-
 }
 
 extension config on MethodChannelOSM {
@@ -623,10 +623,10 @@ extension config on MethodChannelOSM {
       "stepZoom": stepZoom,
     };
 
-    await _channels[idOSM]!.invokeMethod('config#Zoom', args);
+    await _channels[idOSM]?.invokeMethod('config#Zoom', args);
   }
 
   Future<void> initIosMap(int idOSM) async {
-    await _channels[idOSM]!.invokeMethod("init#ios#map");
+    await _channels[idOSM]?.invokeMethod("init#ios#map");
   }
 }

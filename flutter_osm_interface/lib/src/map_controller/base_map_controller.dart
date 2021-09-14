@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
@@ -11,6 +13,8 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 class BaseMapController extends IBaseMapController {
   late IBaseOSMController _osmBaseController;
   final BoundingBox? areaLimit;
+
+  late Timer? _timer;
 
   IBaseOSMController get osmBaseController => _osmBaseController;
 
@@ -26,17 +30,21 @@ class BaseMapController extends IBaseMapController {
         );
 
   void dispose() {
+    if (_timer != null && _timer!.isActive) {
+      _timer?.cancel();
+    }
     super.dispose();
   }
 
   @mustCallSuper
   @override
   void init() {
-    Future.delayed(Duration(milliseconds: 1250), () async {
+    _timer = Timer(Duration(milliseconds: 1250), () async {
       await osmBaseController.initMap(
         initPosition: initPosition,
         initWithUserPosition: initMapWithUserPosition,
       );
+      _timer?.cancel();
     });
   }
 }

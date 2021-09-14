@@ -35,7 +35,7 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM,
   );
 
-  void close();
+  void close(int idOSM);
 
 // Future<void> configureZoomMap(
 //   int idOSM,
