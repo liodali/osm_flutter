@@ -7,11 +7,8 @@ import '../types/types.dart';
 import 'package:location/location.dart';
 import 'dart:ui' as ui;
 
-
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
-
-
 
 extension ExtGeoPoint on GeoPoint {
   List<num> toListNum() {
@@ -51,13 +48,12 @@ extension Uint8ListConvert on Uint8List {
   }
 }
 
-
 Future<Uint8List> capturePng(GlobalKey globalKey) async {
   RenderRepaintBoundary boundary =
-  globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
   ui.Image image = await boundary.toImage();
   ByteData byteData =
-  (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
+      (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
   Uint8List pngBytes = byteData.buffer.asUint8List();
   return pngBytes;
 }

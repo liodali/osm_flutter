@@ -145,8 +145,7 @@ class OSMFlutterState extends State<OSMFlutter> {
   void didUpdateWidget(covariant OSMFlutter oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (this.widget != oldWidget && Platform.isAndroid) {
-      widget.controller
-          .setValueListenerMapIsReady(false);
+      widget.controller.setValueListenerMapIsReady(false);
       mapIsReadyListener.value = false;
     }
   }

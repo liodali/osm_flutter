@@ -58,4 +58,3 @@ Future<List<SearchInfo>> addressSuggestion(String searchText,
       .map((d) => SearchInfo.fromPhotonAPI(d))
       .toList();
 }
-

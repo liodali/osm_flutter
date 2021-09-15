@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../controller/map_controller.dart';
@@ -28,7 +27,6 @@ Widget getWidget({
   int maxZoomLevel = 18,
   UserLocationMaker? userLocationMarker,
   Function(bool)? onMapIsReady,
-
 }) =>
     MobileOsmFlutter(
       controller: controller,

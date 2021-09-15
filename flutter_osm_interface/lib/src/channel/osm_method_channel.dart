@@ -20,8 +20,6 @@ import '../osm_interface.dart';
 import '../types/types.dart';
 import '../common/osm_event.dart';
 
-
-
 class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, MethodChannel> _channels = {};
 
@@ -34,8 +32,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
           as Stream<EventOSM>;
 
   late Location locationService;
-
-
 
   @override
   Future<void> init(int idOSMMap) async {
@@ -601,11 +597,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
     }
     await _channels[idOSM]!.invokeMethod('Zoom', args);
   }
-
-
-
-
-
 }
 
 extension config on MethodChannelOSM {

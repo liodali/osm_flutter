@@ -1,5 +1,6 @@
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 void main() {
   test("calculation of distance between two points", () async {
     double distance = await distance2point(
