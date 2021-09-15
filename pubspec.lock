@@ -65,10 +65,10 @@ packages:
   flutter_osm_interface:
     dependency: "direct main"
     description:
-      path: flutter_osm_interface
-      relative: true
-    source: path
-    version: "1.0.0"
+      name: flutter_osm_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.0"
   flutter_plugin_android_lifecycle:
     dependency: "direct main"
     description:
@@ -87,7 +87,7 @@ packages:
     source: sdk
     version: "0.0.0"
   google_polyline_algorithm:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: google_polyline_algorithm
       url: "https://pub.dartlang.org"
@@ -150,7 +150,7 @@ packages:
     source: hosted
     version: "1.8.0"
   plugin_platform_interface:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: plugin_platform_interface
       url: "https://pub.dartlang.org"

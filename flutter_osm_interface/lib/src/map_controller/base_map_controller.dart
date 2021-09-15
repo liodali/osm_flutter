@@ -10,7 +10,7 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 /// [initMapWithUserPosition] : (bool) if is true, map will show your current location
 ///
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
-class BaseMapController extends IBaseMapController {
+abstract class BaseMapController extends IBaseMapController {
   late IBaseOSMController _osmBaseController;
   final BoundingBox? areaLimit;
 
@@ -29,6 +29,9 @@ class BaseMapController extends IBaseMapController {
           areaLimit: areaLimit,
         );
 
+  /// implement this method,should be end with super.dispose()
+  @mustCallSuper
+  @override
   void dispose() {
     if (_timer != null && _timer!.isActive) {
       _timer?.cancel();
@@ -36,6 +39,7 @@ class BaseMapController extends IBaseMapController {
     super.dispose();
   }
 
+  /// implement this method,should be start with super.init()
   @mustCallSuper
   @override
   void init() {

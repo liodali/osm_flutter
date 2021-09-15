@@ -26,16 +26,16 @@ class MapNavigationSheet extends StatelessWidget {
             color: Colors.blue,
             shape: const RoundedRectangleBorder(
               borderRadius: const BorderRadius.only(
-                topLeft: const Radius.circular(32.0),
-                topRight: const Radius.circular(32.0),
+                topLeft: const Radius.circular(16.0),
+                topRight: const Radius.circular(16.0),
               ),
             ),
           ),
         ),
         Positioned(
           top: 0,
-          left: 24,
-          right: 24,
+          left: 32,
+          right: 32,
           child: Visibility(
             visible: opacitySearch == 0 ? false : true,
             child: Opacity(
@@ -56,67 +56,83 @@ class SearchCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.max,
         children: [
-          ListTile(
-            leading: CirculaireIcon(
-              icon: Icon(
-                Icons.search,
-                color: Colors.white,
+          SizedBox(
+            height: 56,
+            child: ListTile(
+              contentPadding: EdgeInsets.symmetric(
+                vertical: 2.0,
+                horizontal: 12.0,
               ),
-            ),
-            title: Text(
-              MaterialLocalizations.of(context).searchFieldLabel,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              leading: CirculaireIcon(
+                icon: Icon(
+                  Icons.search,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+              title: Text(
+                MaterialLocalizations.of(context).searchFieldLabel,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
           Divider(
             color: Colors.grey,
+            height: 1,
           ),
-          Row(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Expanded(
-                flex: 3,
-                child: ListTile(
-                  leading: CirculaireIcon(
-                    padding: EdgeInsets.all(2),
-                    backgroundColor: Colors.grey,
-                    icon: Icon(
-                      Icons.home,
-                      color: Colors.white,
+          SizedBox(
+            height: 56,
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: ListTile(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12.0,
                     ),
-                  ),
-                  title: Text(
-                    "Home Address",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                    leading: CirculaireIcon(
+                      padding: EdgeInsets.all(2),
+                      backgroundColor: Colors.grey,
+                      icon: Icon(
+                        Icons.home,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                    title: Text(
+                      "Home Address",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              VerticalDivider(
-                color: Colors.grey,
-              ),
-              Expanded(
-                flex: 1,
-                child: CustomTileList(
-                  leading: CirculaireIcon(
-                    backgroundColor: Colors.grey,
-                    icon: Icon(
-                      Icons.star,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  title: Text("Address"),
-                  isVertical: false,
+                VerticalDivider(
+                  color: Colors.grey,
                 ),
-              )
-            ],
-          )
+                Expanded(
+                  flex: 1,
+                  child: CustomTileList(
+                    leading: CirculaireIcon(
+                      backgroundColor: Colors.grey,
+                      icon: Icon(
+                        Icons.star,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                    title: Text("Address"),
+                    isVertical: false,
+                  ),
+                )
+              ],
+            ),
+          ),
         ],
       ),
     );
