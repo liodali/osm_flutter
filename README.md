@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.16.0-orange) 
+![pub](https://img.shields.io/badge/pub-v0.20.0-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
@@ -36,7 +36,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.16.0
+      flutter_osm_plugin: ^0.20.0
 
 ### Migration to `0.16.0` (Android Only)
 > if you are using this plugin before Flutter 2 
@@ -396,6 +396,31 @@ await controller.drawRoadManually(
 | `showDefaultInfoWindow`       | (bool) enable/disable default infoWindow of marker (default = false)         |
 | `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |
 | `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
+
+
+### Custom Controller
+> To create your own MapController to need to extends from `BaseMapController`,
+> if you want to make a custom initialization to need to call init() and put your code after super.init()
+
+* example
+```dart
+class CustomMapController extends BaseMapController {
+
+  @override
+  void dispose() {
+    /// TODO put you logic here
+    super.dispose();
+  }
+
+  @override
+  void init() {
+    super.init();
+    /// TODO put you logic here
+  }
+}
+```
+
+
 
 ## STATIC METHODS:
 
