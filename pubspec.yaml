@@ -13,6 +13,7 @@ dependencies:
   stream_transform: ^2.0.0
   location: ^4.3.0
   url_launcher: ^6.0.7
+  dio: ^4.0.0
   flutter_osm_interface:
 dev_dependencies:
   flutter_test:
