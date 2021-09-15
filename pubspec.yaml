@@ -10,15 +10,10 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_plugin_android_lifecycle: ^2.0.2
-  plugin_platform_interface: ^2.0.0
   stream_transform: ^2.0.0
   location: ^4.3.0
-  dio: ^4.0.0
   url_launcher: ^6.0.7
-  google_polyline_algorithm: ^3.1.0
   flutter_osm_interface:
-    path: ./flutter_osm_interface
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
