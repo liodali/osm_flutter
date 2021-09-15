@@ -1,3 +1,5 @@
+## 0.20.0+2 : 
+*fix pubspec
 ## 0.20.0+1 : 
 * format files
 * update dependencies
