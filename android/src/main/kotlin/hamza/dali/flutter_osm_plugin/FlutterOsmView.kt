@@ -86,7 +86,7 @@ fun HashMap<String, Double>.toGeoPoint(): GeoPoint {
 }
 
 fun FlutterOsmView.configZoomMap(call: MethodCall, result: MethodChannel.Result) {
-    var args = call.arguments as HashMap<String, Any>
+    val args = call.arguments as HashMap<String, Any>
     this.map!!.minZoomLevel = (args["minZoomLevel"] as Int).toDouble()
     this.map!!.maxZoomLevel = (args["maxZoomLevel"] as Int).toDouble()
     stepZoom = args["stepZoom"] as Double
@@ -462,12 +462,12 @@ class FlutterOsmView(
         val zoom = initZoom
         //homeMarker = addMarker(geoPoint, zoom, null)
 
-        map!!.controller.setZoom(zoom)
         when (map!!.mapCenter.latitude == 0.0 && map!!.mapCenter.longitude == 0.0) {
-            true -> map!!.controller.animateTo(geoPoint)
+            true -> map!!.controller.animateTo(geoPoint, zoom, 500)
             false -> map!!.controller.setCenter(geoPoint)
 
         }
+
 
         methodChannel.invokeMethod("map#init", true)
         result.success(null)
@@ -1390,11 +1390,12 @@ class FlutterOsmView(
 
 
     override fun onSaveInstanceState(bundle: Bundle) {
-        TODO("Not yet implemented")
+        bundle.putString("center", "${map!!.mapCenter.latitude},${map!!.mapCenter.longitude}")
+        bundle.putString("zoom", map!!.zoomLevelDouble.toString())
     }
 
     override fun onRestoreInstanceState(bundle: Bundle?) {
-        TODO("Not yet implemented")
+        Log.d("osm data", bundle?.getString("center") ?: "")
     }
 
     override fun onCreate(owner: LifecycleOwner) {

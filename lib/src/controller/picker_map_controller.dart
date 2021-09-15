@@ -1,4 +1,5 @@
-part of osm_flutter;
+import 'package:flutter/material.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 
 /// controller for custom picker location widget
 /// you will cancel/get/finish advanced picker
@@ -25,25 +26,35 @@ class PickerMapController extends BaseMapController {
   ///
   /// [p] : (GeoPoint) position that will be go to map
   Future<void> goToLocation(GeoPoint p) async {
-    await _osmController.goToPosition(p);
+    await osmBaseController.goToPosition(p);
   }
 
   Future<void> advancedPositionPicker() async {
-    await _osmController.advancedPositionPicker();
+    await osmBaseController.advancedPositionPicker();
   }
 
   /// select current position and finish advanced picker
   Future<GeoPoint> selectAdvancedPositionPicker() async {
-    return await _osmController.selectAdvancedPositionPicker();
+    return await osmBaseController.selectAdvancedPositionPicker();
   }
 
   /// get current position
   Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
-    return await _osmController.getCurrentPositionAdvancedPositionPicker();
+    return await osmBaseController.getCurrentPositionAdvancedPositionPicker();
   }
 
   /// cancel advanced picker
   Future<void> cancelAdvancedPositionPicker() async {
-    return await _osmController.cancelAdvancedPositionPicker();
+    return await osmBaseController.cancelAdvancedPositionPicker();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  void init() {
+    super.init();
   }
 }

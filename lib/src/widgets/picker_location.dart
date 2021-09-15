@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-
 import '../../flutter_osm_plugin.dart';
+import '../controller/map_controller.dart';
+import '../osm_flutter.dart';
+
 
 /// showSimplePickerLocation : picker to select specific position
 ///
@@ -19,6 +21,10 @@ Future<GeoPoint?> showSimplePickerLocation({
   String? textCancelPicker,
   double radius = 0.0,
   GeoPoint? initPosition,
+  double stepZoom = 1,
+  double initZoom = 2,
+  int minZoomLevel = 2,
+  int maxZoomLevel = 18,
   bool isDismissible = false,
   bool initCurrentUserPosition = true,
 }) async {
@@ -47,6 +53,10 @@ Future<GeoPoint?> showSimplePickerLocation({
             child: OSMFlutter(
               controller: controller,
               isPicker: true,
+              stepZoom: stepZoom,
+              initZoom: initZoom,
+              minZoomLevel: minZoomLevel,
+              maxZoomLevel: maxZoomLevel,
             ),
           ),
         ),

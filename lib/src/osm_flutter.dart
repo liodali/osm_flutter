@@ -1,4 +1,12 @@
-part of osm_flutter;
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+
+import 'controller/map_controller.dart';
+import 'interface_osm/base_osm_platform.dart';
+import 'widgets/copyright_osm_widget.dart';
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
@@ -51,8 +59,6 @@ class OSMFlutter extends StatefulWidget {
   final MarkerOption? markerOption;
   final UserLocationMaker? userLocationMarker;
   final Road? road;
-  @Deprecated("will be remove in next version,use stepZoom")
-  double? defaultZoom;
   final double stepZoom;
   final double initZoom;
   final int minZoomLevel;
@@ -74,7 +80,6 @@ class OSMFlutter extends StatefulWidget {
     this.onLocationChanged,
     this.onMapIsReady,
     this.road,
-    this.defaultZoom,
     this.stepZoom = 1,
     this.initZoom = 2,
     this.minZoomLevel = 2,
@@ -92,13 +97,8 @@ class OSMFlutter extends StatefulWidget {
 }
 
 class OSMFlutterState extends State<OSMFlutter> {
-  GlobalKey androidViewKey = GlobalKey();
-  OSMController? _osmController;
   ValueNotifier<Widget?> dynamicMarkerWidgetNotifier = ValueNotifier(null);
   ValueNotifier<bool> mapIsReadyListener = ValueNotifier(false);
-
-  //permission status
-  PermissionStatus? _permission;
 
   //_OsmCreatedCallback _osmCreatedCallback;
   late GlobalKey defaultMarkerKey,
@@ -139,54 +139,26 @@ class OSMFlutterState extends State<OSMFlutter> {
     widget.staticPoints.forEach((gs) {
       staticMarkersKeys.putIfAbsent(gs.id, () => GlobalKey());
     });
-    Future.delayed(Duration.zero, () async {
-      //check location permission
-      if ((widget.controller).initMapWithUserPosition ||
-          widget.trackMyPosition) {
-        await requestPermission();
-        if (widget.controller.initMapWithUserPosition) {
-          bool isEnabled = await _osmController!.checkServiceLocation();
-          Future.delayed(Duration(seconds: 1), () async {
-            if (isEnabled) {
-              return;
-            }
-            //await _osmController!.currentLocation();
-          });
-        }
-      }
-    });
   }
 
   @override
   void didUpdateWidget(covariant OSMFlutter oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (this.widget != oldWidget) {}
+    if (this.widget != oldWidget && Platform.isAndroid) {
+      widget.controller
+          .setValueListenerMapIsReady(false);
+      mapIsReadyListener.value = false;
+    }
   }
 
   @override
   void dispose() {
-    //this._osmController?.close();
+    widget.controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget widgetMap = AndroidView(
-      key: androidViewKey,
-      viewType: 'plugins.dali.hamza/osmview',
-      onPlatformViewCreated: _onPlatformViewCreated,
-      //creationParamsCodec:  StandardMessageCodec(),
-    );
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      widgetMap = UiKitView(
-        viewType: 'plugins.dali.hamza/osmview',
-        onPlatformViewCreated: _onPlatformViewCreated,
-        //creationParamsCodec:  StandardMessageCodec(),
-      );
-    } else if (kIsWeb) {
-      return Text(
-          '$defaultTargetPlatform is not yet supported by the osm plugin');
-    }
     return Stack(
       clipBehavior: Clip.none,
       children: <Widget>[
@@ -196,30 +168,96 @@ class OSMFlutterState extends State<OSMFlutter> {
           child: widget.mapIsLoading != null
               ? Stack(
                   children: [
-                    ValueListenableBuilder<bool>(
-                      valueListenable: mapIsReadyListener,
-                      builder: (ctx, isReady, _) {
-                        return Opacity(
-                          opacity: isReady ? 1.0 : 0.0,
-                          child: widgetMap,
-                        );
-                      },
+                    Container(
+                      color: Colors.white,
+                      child: buildWidget(
+                        controller: widget.controller as MapController,
+                        onGeoPointClicked: widget.onGeoPointClicked,
+                        onLocationChanged: widget.onLocationChanged,
+                        dynamicMarkerWidgetNotifier:
+                            dynamicMarkerWidgetNotifier,
+                        mapIsLoading: widget.mapIsLoading,
+                        trackMyPosition: widget.trackMyPosition,
+                        mapIsReadyListener: mapIsReadyListener,
+                        staticIconGlobalKeys: staticMarkersKeys,
+                        road: widget.road,
+                        showContributorBadgeForOSM:
+                            widget.showContributorBadgeForOSM,
+                        isPicker: widget.isPicker,
+                        markerOption: widget.markerOption,
+                        showDefaultInfoWindow: widget.showDefaultInfoWindow,
+                        showZoomController: widget.showZoomController,
+                        staticPoints: widget.staticPoints,
+                        globalKeys: [
+                          defaultMarkerKey,
+                          advancedPickerMarker,
+                          startIconKey,
+                          endIconKey,
+                          middleIconKey,
+                          dynamicMarkerKey,
+                          personIconMarkerKey,
+                          arrowDirectionMarkerKey,
+                        ],
+                        stepZoom: widget.stepZoom,
+                        initZoom: widget.initZoom,
+                        minZoomLevel: widget.minZoomLevel,
+                        maxZoomLevel: widget.maxZoomLevel,
+                        userLocationMarker: widget.userLocationMarker,
+                        onMapIsReady: widget.onMapIsReady,
+                      ),
                     ),
-                    ValueListenableBuilder<bool>(
-                      valueListenable: mapIsReadyListener,
-                      builder: (ctx, isReady, child) {
-                        return Visibility(
-                          visible: !isReady,
-                          child: child!,
-                        );
-                      },
-                      child: widget.mapIsLoading!,
+                    Positioned.fill(
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: mapIsReadyListener,
+                        builder: (ctx, isReady, child) {
+                          return Visibility(
+                            visible: !isReady,
+                            child: child!,
+                          );
+                        },
+                        child: Container(
+                          color: Colors.white,
+                          child: widget.mapIsLoading!,
+                        ),
+                      ),
                     ),
                   ],
                 )
-              : widgetMap,
+              : buildWidget(
+                  controller: widget.controller,
+                  onGeoPointClicked: widget.onGeoPointClicked,
+                  onLocationChanged: widget.onLocationChanged,
+                  dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
+                  mapIsLoading: widget.mapIsLoading,
+                  trackMyPosition: widget.trackMyPosition,
+                  mapIsReadyListener: mapIsReadyListener,
+                  staticIconGlobalKeys: staticMarkersKeys,
+                  road: widget.road,
+                  showContributorBadgeForOSM: widget.showContributorBadgeForOSM,
+                  isPicker: widget.isPicker,
+                  markerOption: widget.markerOption,
+                  showDefaultInfoWindow: widget.showDefaultInfoWindow,
+                  showZoomController: widget.showZoomController,
+                  staticPoints: widget.staticPoints,
+                  globalKeys: [
+                    defaultMarkerKey,
+                    advancedPickerMarker,
+                    startIconKey,
+                    endIconKey,
+                    middleIconKey,
+                    dynamicMarkerKey,
+                    personIconMarkerKey,
+                    arrowDirectionMarkerKey,
+                  ],
+                  stepZoom: widget.stepZoom,
+                  initZoom: widget.initZoom,
+                  minZoomLevel: widget.minZoomLevel,
+                  maxZoomLevel: widget.maxZoomLevel,
+                  userLocationMarker: widget.userLocationMarker,
+                  onMapIsReady: widget.onMapIsReady,
+                ),
         ),
-        if (widget.showContributorBadgeForOSM) ...[
+        if (widget.showContributorBadgeForOSM && !kIsWeb) ...[
           Positioned(
             bottom: 0,
             right: 5,
@@ -228,29 +266,6 @@ class OSMFlutterState extends State<OSMFlutter> {
         ],
       ],
     );
-  }
-
-  /// requestPermission callback to request location in your phone
-  Future<bool> requestPermission() async {
-    Location location = new Location();
-
-    _permission = await location.hasPermission();
-    if (_permission == PermissionStatus.denied) {
-      //request location permission
-      _permission = await location.requestPermission();
-      if (_permission == PermissionStatus.granted) {
-        return true;
-      }
-      return false;
-    } else if (_permission == PermissionStatus.granted) {
-      return true;
-      //  if (widget.currentLocation) await _checkServiceLocation();
-    }
-    return false;
-  }
-
-  Future<bool> checkService() async {
-    return await _osmController!.checkServiceLocation();
   }
 
   Widget widgetConfigMap() {
@@ -326,10 +341,5 @@ class OSMFlutterState extends State<OSMFlutter> {
         ],
       ),
     );
-  }
-
-  void _onPlatformViewCreated(int id) async {
-    this._osmController = await OSMController.init(id, this);
-    widget.controller._init(this._osmController!);
   }
 }

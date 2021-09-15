@@ -1,4 +1,5 @@
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+
+import 'geo_point.dart';
 
 class BoundingBox {
   final double north;
