@@ -14,7 +14,7 @@ class MobileOSMController extends IBaseOSMController {
   static MobileOSMPlatform osmPlatform =
       OSMPlatform.instance as MobileOSMPlatform;
 
-  late Timer? _timer = null;
+  Timer? _timer;
 
   late double stepZoom = 1;
   late int minZoomLevel = 2;
@@ -122,16 +122,20 @@ class MobileOSMController extends IBaseOSMController {
           color: Colors.red,
           size: 32,
         );
-        await Future.delayed(Duration(milliseconds: 250), () async {
+        Future.delayed(Duration(milliseconds: 250), () async {
           _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
-          await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
+          if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
+            await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
+          }
         });
       }
     }
 
     /// change advanced picker icon marker
     if (_osmFlutterState.widget.markerOption?.advancedPickerMarker != null) {
-      await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker);
+      if (_osmFlutterState.advancedPickerMarker.currentContext != null) {
+        await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker);
+      }
     }
     if (Platform.isIOS &&
         _osmFlutterState.widget.markerOption?.advancedPickerMarker == null) {
@@ -140,9 +144,11 @@ class MobileOSMController extends IBaseOSMController {
         color: Colors.red,
         size: 32,
       );
-      await Future.delayed(Duration(milliseconds: 250), () async {
+      Future.delayed(Duration(milliseconds: 250), () async {
         _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
-        await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
+        if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
+          await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
+        }
       });
     }
 
@@ -306,15 +312,13 @@ class MobileOSMController extends IBaseOSMController {
         image: markerIcon.image!,
       );
     }
-    _timer = Timer(Duration(milliseconds: 300), () async {
+    await Future.delayed(Duration(milliseconds: 300), () async {
       await osmPlatform.customMarkerStaticPosition(
         _idMap,
         _osmFlutterState.dynamicMarkerKey,
         id,
       );
-      _timer?.cancel();
     });
-    // await Future.delayed(Duration(milliseconds: 300), () async {});
   }
 
   ///change Icon  of advanced picker Marker

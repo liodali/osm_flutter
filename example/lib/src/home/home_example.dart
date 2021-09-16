@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ class _MainExampleState extends State<MainExample> {
   ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
   ValueNotifier<bool> showFab = ValueNotifier(true);
+  Timer? timer;
 
   @override
   void initState() {
@@ -63,20 +65,8 @@ class _MainExampleState extends State<MainExample> {
       // Future.delayed(Duration(seconds: 5), () async {
       //   await controller.zoomIn();
       // });
-      Future.delayed(Duration(seconds: 10), () async {
+      timer = Timer(Duration(seconds: 10), () async {
         await controller.setZoom(zoomLevel: 12);
-
-        // final waysPoint = list
-        //     .map((e) => GeoPoint(
-        //           latitude: e.last,
-        //           longitude: e.first,
-        //         ))
-        //     .toList();
-        // await controller.drawRoadManually(
-        //   waysPoint,
-        //   Colors.purpleAccent,
-        //   6.0,
-        // );
         await controller.setMarkerOfStaticPoint(
           id: "line 2",
           markerIcon: MarkerIcon(
@@ -102,13 +92,17 @@ class _MainExampleState extends State<MainExample> {
           ],
           "line 2",
         );
+        timer?.cancel();
       });
     }
   }
 
   @override
   void dispose() {
-    controller.listenerMapIsReady.removeListener(mapIsInitialized);
+    if (timer != null && timer!.isActive) {
+      timer?.cancel();
+    }
+    //controller.listenerMapIsReady.removeListener(mapIsInitialized);
     controller.dispose();
     super.dispose();
   }
