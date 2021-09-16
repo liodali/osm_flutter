@@ -28,7 +28,6 @@ Widget buildWidget({
   int minZoomLevel = 2,
   int maxZoomLevel = 18,
   UserLocationMaker? userLocationMarker,
-
 }) =>
     getWidget(
       controller: controller,

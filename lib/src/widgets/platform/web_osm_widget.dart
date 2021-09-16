@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
-
 Widget getWidget({
   required BaseMapController controller,
   required bool trackMyPosition,
@@ -19,21 +18,22 @@ Widget getWidget({
   bool showDefaultInfoWindow = false,
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
-}) => throw Exception("not implemented yet");
+}) =>
+    throw Exception("not implemented yet");
 
-    // OsmWebWidget(
-    //   controller: controller as MapController,
-    //   staticPoints: staticPoints,
-    //   onGeoPointClicked: onGeoPointClicked,
-    //   onLocationChanged: onLocationChanged,
-    //   mapIsReadyListener: mapIsReadyListener,
-    //   mapIsLoading: mapIsLoading,
-    //   staticIconGlobalKeys: staticIconGlobalKeys,
-    //   globalKeys: globalKeys,
-    //   dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
-    //   defaultZoom: defaultZoom,
-    //   isPicker: isPicker,
-    //   markerOption: markerOption,
-    //   road: road,
-    //   showDefaultInfoWindow: showDefaultInfoWindow,
-    // );
+// OsmWebWidget(
+//   controller: controller as MapController,
+//   staticPoints: staticPoints,
+//   onGeoPointClicked: onGeoPointClicked,
+//   onLocationChanged: onLocationChanged,
+//   mapIsReadyListener: mapIsReadyListener,
+//   mapIsLoading: mapIsLoading,
+//   staticIconGlobalKeys: staticIconGlobalKeys,
+//   globalKeys: globalKeys,
+//   dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
+//   defaultZoom: defaultZoom,
+//   isPicker: isPicker,
+//   markerOption: markerOption,
+//   road: road,
+//   showDefaultInfoWindow: showDefaultInfoWindow,
+// );

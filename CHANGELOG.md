@@ -1,3 +1,8 @@
+## 0.20.0+2 : 
+*fix pubspec
+## 0.20.0+1 : 
+* format files
+* update dependencies
 ## 0.20.0 : 
 * separate osm_interface in another flutter package
 * add IBaseMapController and make BaseMapController api more flexible to be used in custom controller

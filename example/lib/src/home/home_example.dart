@@ -151,7 +151,7 @@ class _MainExampleState extends State<MainExample> {
           IconButton(
             onPressed: () async {
               visibilityZoomNotifierActivation.value =
-              !visibilityZoomNotifierActivation.value;
+                  !visibilityZoomNotifierActivation.value;
               zoomNotifierActivation.value = !zoomNotifierActivation.value;
             },
             icon: Icon(Icons.zoom_out_map),
@@ -309,7 +309,7 @@ class _MainExampleState extends State<MainExample> {
                       onPressed: () async {
                         advPickerNotifierActivation.value = false;
                         GeoPoint p =
-                        await controller.selectAdvancedPositionPicker();
+                            await controller.selectAdvancedPositionPicker();
                         print(p);
                       },
                     ),
@@ -402,12 +402,12 @@ class _MainExampleState extends State<MainExample> {
       ///selection geoPoint
       GeoPoint point = await controller.selectPosition(
           icon: MarkerIcon(
-            icon: Icon(
-              Icons.location_history,
-              color: Colors.amber,
-              size: 48,
-            ),
-          ));
+        icon: Icon(
+          Icons.location_history,
+          color: Colors.amber,
+          size: 48,
+        ),
+      ));
       GeoPoint point2 = await controller.selectPosition();
       showFab.value = false;
       ValueNotifier<RoadType> notifierRoadType = ValueNotifier(RoadType.car);

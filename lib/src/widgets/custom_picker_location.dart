@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../controller/picker_map_controller.dart';
 import '../osm_flutter.dart';

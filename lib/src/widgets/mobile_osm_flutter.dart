@@ -102,9 +102,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter> {
         }
       }
     });
-
   }
-
 
   @override
   Widget build(BuildContext context) {

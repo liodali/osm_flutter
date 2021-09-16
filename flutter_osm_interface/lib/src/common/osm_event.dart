@@ -1,6 +1,3 @@
-
-
-
 import '../types/types.dart';
 
 abstract class EventOSM<T> {

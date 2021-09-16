@@ -20,6 +20,8 @@ import '../common/utilities.dart';
 import '../osm_interface.dart';
 import '../types/types.dart';
 
+import '../common/osm_event.dart';
+
 class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, MethodChannel> _channels = {};
 
