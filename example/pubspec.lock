@@ -70,7 +70,7 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_osm_interface:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: flutter_osm_interface
       url: "https://pub.dartlang.org"
@@ -79,10 +79,10 @@ packages:
   flutter_osm_plugin:
     dependency: "direct main"
     description:
-      path: ".."
-      relative: true
-    source: path
-    version: "0.20.0+1"
+      name: flutter_osm_plugin
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.20.0+2"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
