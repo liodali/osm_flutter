@@ -9,8 +9,9 @@ jobs:
       image:  google/dart:latest
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v2
-      - with:
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
             python-version: '3.8.10'
             architecture: 'x64'
       - name: Setup credentials
