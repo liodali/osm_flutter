@@ -9,8 +9,8 @@ jobs:
       image:  google/dart:latest
     steps:
       - uses: actions/checkout@v1
-      - name: Set Python environment variable
-          run: echo '::set-env name=LD_LIBRARY_PATH::/tmp/runner/work/_tool/Python/3.8.11/x64/lib'
+      - name: set Python environment variable
+        run: echo '::set-env name=LD_LIBRARY_PATH::/tmp/runner/work/_tool/Python/3.8.11/x64/lib'
       - name: setup python
         uses: actions/setup-python@v1
         with:
