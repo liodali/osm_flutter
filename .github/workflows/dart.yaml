@@ -15,7 +15,7 @@ jobs:
             python-version: '3.8'
             architecture: 'x64'
       - name: install dependencies
-        run: pip3 install requests
+        run: python3 -m pip install requests
       - name: Setup credentials
         run: |
           mkdir -p ~/.pub-cache
