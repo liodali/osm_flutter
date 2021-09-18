@@ -1,3 +1,5 @@
+## 0.21.0-rc :
+* fix crash app when close page contain mapView and make request to PlatformChannel [#157]
 ## 0.20.0+2 : 
 *fix pubspec
 ## 0.20.0+1 : 
