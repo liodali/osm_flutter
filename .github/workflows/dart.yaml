@@ -16,7 +16,9 @@ jobs:
         with:
             python-version: 3.8.11
       - name: install dependencies
-        run: python -m pip install requests
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
       - name: Setup credentials
         run: |
           mkdir -p ~/.pub-cache
