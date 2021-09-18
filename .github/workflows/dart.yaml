@@ -14,6 +14,8 @@ jobs:
         with:
             python-version: '3.8'
             architecture: 'x64'
+      - name: install dependencies
+        run: pip3 install requests
       - name: Setup credentials
         run: |
           mkdir -p ~/.pub-cache
@@ -26,8 +28,6 @@ jobs:
             "expiration": 1583530852703
           }
           EOF
-      - name: install dependencies
-        run: pip install requests
       - name: preparation release
         run: python check_pubspec_release.py
       - name: Publish package
