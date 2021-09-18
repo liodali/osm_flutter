@@ -20,7 +20,7 @@ def check_version_exist(version):
 
 
 def publish_osm_interface():
-      stream = os.popen("cd flutter_osm_interface && flutter pub publish -f && cd ..")
+      stream = os.popen("cd flutter_osm_interface && pub publish -f && cd ..")
       lines = stream.readlines()
       print(lines)
 
