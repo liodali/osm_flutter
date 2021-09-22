@@ -36,5 +36,10 @@ jobs:
           EOF
       - name: preparation release
         run: python check_pubspec_release.py
+      - name: clear before release
+        run: |
+          rm -f *.gif
+          rm -rf flutter_osm_interface
+          rm -f check_pubspec_release.py
       - name: Publish package
         run: pub publish -f

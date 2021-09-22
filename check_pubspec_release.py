@@ -20,9 +20,10 @@ def check_version_exist(version):
 
 
 def publish_osm_interface():
-      stream = os.popen("cd flutter_osm_interface && pub publish -f && cd ..")
-      lines = stream.readlines()
-      print(lines)
+    stream = os.popen("cd flutter_osm_interface && pub publish -f && cd ..")
+    lines = stream.readlines()
+    for line in lines:
+        print(line)
 
 
 def change_pubspec_osm_interface(version):
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     msg = "exist" if isExist else "doesn't exist"
     print(f"the flutter_osm_interface with version :{version} {msg}\n")
     if isExist == False:
-          print(f"publishing flutter_osm_interface : {version} ...\n")
-          publish_osm_interface()
+        print(f"publishing flutter_osm_interface : {version} ...\n")
+        publish_osm_interface()
     change_dependencies_version(
         "flutter_osm_interface:", version, isLocal=True)
