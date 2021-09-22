@@ -362,6 +362,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   Future<Uint8List> _capturePng(GlobalKey globalKey) async {
+    if (globalKey.currentContext == null) {
+      throw Exception("Error to draw you custom icon");
+    }
     RenderRepaintBoundary boundary =
         globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     ui.Image image = await boundary.toImage();

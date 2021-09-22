@@ -122,7 +122,7 @@ class MobileOSMController extends IBaseOSMController {
           color: Colors.red,
           size: 32,
         );
-        Future.delayed(Duration(milliseconds: 250), () async {
+        await Future.delayed(Duration(milliseconds: 300), () async {
           _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
           if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
             await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
@@ -144,10 +144,10 @@ class MobileOSMController extends IBaseOSMController {
         color: Colors.red,
         size: 32,
       );
-      Future.delayed(Duration(milliseconds: 250), () async {
-        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
+      await Future.delayed(Duration(milliseconds: 300), () async {
         if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
           await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
+          _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
         }
       });
     }
@@ -395,7 +395,7 @@ class MobileOSMController extends IBaseOSMController {
           image: markerIcon.image!,
         );
       }
-      Future.delayed(Duration(milliseconds: 250), () async {
+      Future.delayed(Duration(milliseconds: 300), () async {
         await osmPlatform.addMarker(_idMap, p,
             globalKeyIcon: _osmFlutterState.dynamicMarkerKey);
       });
@@ -423,22 +423,20 @@ class MobileOSMController extends IBaseOSMController {
   }) async {
     if (icon != null) {
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
-      return Future.delayed(
-          Duration(
-            milliseconds: 200,
-          ), () async {
+      return await Future.delayed(Duration(milliseconds: 300), () async {
         GeoPoint p = await osmPlatform.pickLocation(
           _idMap,
           key: _osmFlutterState.dynamicMarkerKey,
         );
         return p;
       });
+    } else {
+      GeoPoint p = await osmPlatform.pickLocation(
+        _idMap,
+        imageURL: imageURL,
+      );
+      return p;
     }
-    GeoPoint p = await osmPlatform.pickLocation(
-      _idMap,
-      imageURL: imageURL,
-    );
-    return p;
   }
 
   Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
