@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 
 import 'map_navigation_sheet.dart';
+import 'map_search_sheet.dart';
 
 class AdvandedMainExample extends StatefulWidget {
   AdvandedMainExample({Key? key}) : super(key: key);
@@ -35,8 +36,11 @@ class _AdvancedMainExampleState extends State<AdvandedMainExample> {
   late ValueNotifier<double> extentHeight;
   late double maxHeight, minHeight;
   double minAlpha = 0.20;
-  double maxAlpha = 0.65;
-  late double diffAlpha = maxAlpha - minAlpha;
+  ValueNotifier<double> maxAlphaNotifier = ValueNotifier(0.65);
+  late ValueNotifier<double> diffAlphaNotifier =
+      ValueNotifier(maxAlphaNotifier.value - minAlpha);
+
+  var sheetIndexNotifier = ValueNotifier(0);
 
   @override
   void initState() {
@@ -143,9 +147,9 @@ class _AdvancedMainExampleState extends State<AdvandedMainExample> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    maxHeight = MediaQuery.of(context).size.height * maxAlpha;
+    maxHeight = MediaQuery.of(context).size.height * maxAlphaNotifier.value;
     minHeight = MediaQuery.of(context).size.height * minAlpha;
-    extentHeight = ValueNotifier(maxAlpha);
+    extentHeight = ValueNotifier(maxAlphaNotifier.value);
   }
 
   @override
@@ -275,35 +279,42 @@ class _AdvancedMainExampleState extends State<AdvandedMainExample> {
                 ),
               ),
             ),
-            ValueListenableBuilder<double>(
-              valueListenable: extentHeight,
-              builder: (ctx, extent, child) {
-                final scrollSheet = ((extent - minAlpha) / diffAlpha);
-                return Positioned(
-                  top: 32,
-                  left: 12,
-                  child: AnimatedContainer(
-                    height: extent > minAlpha ? scrollSheet * 40 : 0,
-                    width: extent > minAlpha ? scrollSheet * 40 : 0,
-                    duration: Duration(
-                      milliseconds: 250,
-                    ),
-                    child: FloatingActionButton(
-                      onPressed: () {
-                        Navigator.popAndPushNamed(context, "/second");
-                      },
-                      backgroundColor: Colors.white,
-                      mini: true,
-                      elevation: 0,
-                      child: Icon(
-                        Icons.settings,
-                        color: Colors.black,
-                        size: scrollSheet * 24,
-                      ),
+            ValueListenableBuilder<int>(
+              valueListenable: sheetIndexNotifier,
+              builder: (ctx, index, child) {
+                if (index == 1) {
+                  return child!;
+                }
+                return SizedBox.shrink();
+              },
+              child: Positioned(
+                top: 32,
+                left: 12,
+                child: AnimatedContainer(
+                  height: sheetIndexNotifier.value == 1 ? 48 : 0,
+                  width: sheetIndexNotifier.value == 1 ? 48 : 0,
+                  duration: Duration(
+                    milliseconds: 250,
+                  ),
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      maxAlphaNotifier.value = 0.65;
+                      sheetIndexNotifier.value = 0;
+                      DraggableScrollableActuator.reset(
+                        context,
+                      );
+                    },
+                    backgroundColor: Colors.white,
+                    mini: true,
+                    elevation: 0,
+                    child: Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.black,
+                      size: 24,
                     ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
             ValueListenableBuilder<double>(
               valueListenable: extentHeight,
@@ -328,6 +339,41 @@ class _AdvancedMainExampleState extends State<AdvandedMainExample> {
                   ),
                 ),
               ),
+            ),
+            ValueListenableBuilder<double>(
+              valueListenable: extentHeight,
+              builder: (ctx, extent, child) {
+                final scrollSheet =
+                    ((extent - minAlpha) / diffAlphaNotifier.value);
+                return Positioned(
+                  top: 32,
+                  left: 12,
+                  child: AnimatedContainer(
+                    height: extent > minAlpha && sheetIndexNotifier.value == 0
+                        ? scrollSheet * 40
+                        : 0,
+                    width: extent > minAlpha && sheetIndexNotifier.value == 0
+                        ? scrollSheet * 40
+                        : 0,
+                    duration: Duration(
+                      milliseconds: 250,
+                    ),
+                    child: FloatingActionButton(
+                      onPressed: () {
+                        Navigator.popAndPushNamed(context, "/second");
+                      },
+                      backgroundColor: Colors.white,
+                      mini: true,
+                      elevation: 0,
+                      child: Icon(
+                        Icons.settings,
+                        color: Colors.black,
+                        size: scrollSheet * 24,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             Positioned(
               bottom: minHeight + 24,
@@ -399,39 +445,62 @@ class _AdvancedMainExampleState extends State<AdvandedMainExample> {
                 ),
               ),
             ),
-            DraggableScrollableSheet(
-              initialChildSize: 0.55,
-              maxChildSize: maxAlpha,
-              minChildSize: minAlpha,
-              expand: true,
-              builder: (ctx, sheetController) {
-                return ScrollConfiguration(
-                  behavior: ScrollBehavior().copyWith(
-                    overscroll: false,
-                    scrollbars: false,
-                  ),
-                  child: SingleChildScrollView(
-                    controller: sheetController,
-                    physics: AlwaysScrollableScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: minHeight,
-                        maxHeight: maxHeight,
-                      ),
-                      child: LayoutBuilder(
-                        builder: (ctx, constraint) {
-                          final opacitySearch =
-                              ((extentHeight.value - minAlpha) / diffAlpha);
-                          return MapNavigationSheet(
-                            controller: controller,
-                            opacitySearch: opacitySearch,
-                          );
-                        },
+            DraggableScrollableActuator(
+              child: DraggableScrollableSheet(
+                initialChildSize: maxAlphaNotifier.value == 0.90 ? 0.85 : 0.55,
+                maxChildSize: maxAlphaNotifier.value,
+                minChildSize: minAlpha,
+                expand: true,
+                builder: (draggableContext, sheetController) {
+                  return ScrollConfiguration(
+                    behavior: CustomScroll(),
+                    child: SingleChildScrollView(
+                      controller: sheetController,
+                      physics: AlwaysScrollableScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: minHeight,
+                          maxHeight: maxHeight,
+                        ),
+                        child: LayoutBuilder(
+                          builder: (layoutContext, constraint) {
+                            diffAlphaNotifier.value =
+                                maxAlphaNotifier.value - minAlpha;
+                            final opacitySearch =
+                                ((extentHeight.value - minAlpha) /
+                                    diffAlphaNotifier.value);
+                            return ValueListenableBuilder<int>(
+                              valueListenable: sheetIndexNotifier,
+                              builder: (ctx, index, _) {
+                                return IndexedStack(
+                                  index: index,
+                                  children: [
+                                    MapNavigationSheet(
+                                      controller: controller,
+                                      opacitySearch: opacitySearch,
+                                      activeSearchModeCallback: () {
+                                        maxAlphaNotifier.value = 0.90;
+                                        sheetIndexNotifier.value = 1;
+                                        DraggableScrollableActuator.reset(
+                                          context,
+                                        );
+                                      },
+                                    ),
+                                    MapSearchSheet(
+                                      controller: controller,
+                                      opacitySearch: opacitySearch,
+                                    )
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -553,5 +622,17 @@ class _AdvancedMainExampleState extends State<AdvandedMainExample> {
         ),
       );
     }
+  }
+}
+
+class CustomScroll extends ScrollBehavior {
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    return child;
+  }
+
+  Widget buildScrollbar(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    return child;
   }
 }

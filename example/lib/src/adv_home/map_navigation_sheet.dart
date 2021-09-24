@@ -4,11 +4,13 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 class MapNavigationSheet extends StatelessWidget {
   final double opacitySearch;
   final MapController controller;
+  final VoidCallback activeSearchModeCallback;
 
   const MapNavigationSheet({
     Key? key,
     required this.opacitySearch,
     required this.controller,
+    required this.activeSearchModeCallback,
   }) : super(key: key);
 
   @override
@@ -21,9 +23,9 @@ class MapNavigationSheet extends StatelessWidget {
           left: 0,
           right: 0,
           bottom: 0,
-          child: const Card(
+          child: Card(
             margin: EdgeInsets.zero,
-            color: Colors.blue,
+            color: Colors.grey[300],
             shape: const RoundedRectangleBorder(
               borderRadius: const BorderRadius.only(
                 topLeft: const Radius.circular(16.0),
@@ -40,7 +42,9 @@ class MapNavigationSheet extends StatelessWidget {
             visible: opacitySearch == 0 ? false : true,
             child: Opacity(
               opacity: opacitySearch > 1.0 ? 1.0 : opacitySearch,
-              child: SearchCard(),
+              child: SearchCard(
+                activeSearchModeCallback: activeSearchModeCallback,
+              ),
             ),
           ),
         ),
@@ -50,6 +54,13 @@ class MapNavigationSheet extends StatelessWidget {
 }
 
 class SearchCard extends StatelessWidget {
+  final VoidCallback activeSearchModeCallback;
+
+  const SearchCard({
+    Key? key,
+    required this.activeSearchModeCallback,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -59,6 +70,9 @@ class SearchCard extends StatelessWidget {
           SizedBox(
             height: 56,
             child: ListTile(
+              onTap: () {
+                activeSearchModeCallback();
+              },
               contentPadding: EdgeInsets.symmetric(
                 vertical: 2.0,
                 horizontal: 12.0,
