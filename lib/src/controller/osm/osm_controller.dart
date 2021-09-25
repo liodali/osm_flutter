@@ -3,8 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import '../../widgets/mobile_osm_flutter.dart';
 import 'package:location/location.dart';
+
+import '../../widgets/mobile_osm_flutter.dart';
 
 class MobileOSMController extends IBaseOSMController {
   late int _idMap;
@@ -12,6 +13,8 @@ class MobileOSMController extends IBaseOSMController {
 
   static MobileOSMPlatform osmPlatform =
       OSMPlatform.instance as MobileOSMPlatform;
+
+  Timer? _timer;
 
   late double stepZoom = 1;
   late int minZoomLevel = 2;
@@ -34,7 +37,10 @@ class MobileOSMController extends IBaseOSMController {
 
   /// dispose: close stream in osmPlatform,remove references
   void dispose() {
-    osmPlatform.close();
+    if (_timer != null && _timer!.isActive) {
+      _timer?.cancel();
+    }
+    osmPlatform.close(_idMap);
   }
 
   /// initMap: initialisation of osm map
@@ -116,16 +122,20 @@ class MobileOSMController extends IBaseOSMController {
           color: Colors.red,
           size: 32,
         );
-        await Future.delayed(Duration(milliseconds: 250), () async {
+        await Future.delayed(Duration(milliseconds: 300), () async {
           _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
-          await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
+          if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
+            await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
+          }
         });
       }
     }
 
     /// change advanced picker icon marker
     if (_osmFlutterState.widget.markerOption?.advancedPickerMarker != null) {
-      await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker);
+      if (_osmFlutterState.advancedPickerMarker.currentContext != null) {
+        await changeIconAdvPickerMarker(_osmFlutterState.advancedPickerMarker);
+      }
     }
     if (Platform.isIOS &&
         _osmFlutterState.widget.markerOption?.advancedPickerMarker == null) {
@@ -134,9 +144,11 @@ class MobileOSMController extends IBaseOSMController {
         color: Colors.red,
         size: 32,
       );
-      await Future.delayed(Duration(milliseconds: 250), () async {
-        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
-        await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
+      await Future.delayed(Duration(milliseconds: 300), () async {
+        if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
+          await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
+          _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
+        }
       });
     }
 
@@ -149,20 +161,9 @@ class MobileOSMController extends IBaseOSMController {
       );
     }
 
-    /// init location in map
-    if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
-      initPosition = await myLocation();
-      _checkBoundingBox(box, initPosition);
-    }
-    if (box != null && !box.isWorld()) {
-      await limitAreaMap(box);
-    }
-
-    if (initPosition != null) {
-      await osmPlatform.initMap(
-        _idMap,
-        initPosition,
-      );
+    /// road configuration
+    if (_osmFlutterState.widget.road != null) {
+      await Future.microtask(() => _initializeRoadInformation());
     }
 
     /// draw static position
@@ -184,9 +185,20 @@ class MobileOSMController extends IBaseOSMController {
       });
     }
 
-    /// road configuration
-    if (_osmFlutterState.widget.road != null) {
-      Future.microtask(() => _initializeRoadInformation());
+    /// init location in map
+    if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
+      initPosition = await myLocation();
+      _checkBoundingBox(box, initPosition);
+    }
+    if (box != null && !box.isWorld()) {
+      await limitAreaMap(box);
+    }
+
+    if (initPosition != null) {
+      await osmPlatform.initMap(
+        _idMap,
+        initPosition,
+      );
     }
 
     /// picker config
@@ -383,7 +395,7 @@ class MobileOSMController extends IBaseOSMController {
           image: markerIcon.image!,
         );
       }
-      Future.delayed(Duration(milliseconds: 250), () async {
+      Future.delayed(Duration(milliseconds: 300), () async {
         await osmPlatform.addMarker(_idMap, p,
             globalKeyIcon: _osmFlutterState.dynamicMarkerKey);
       });
@@ -411,22 +423,20 @@ class MobileOSMController extends IBaseOSMController {
   }) async {
     if (icon != null) {
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
-      return Future.delayed(
-          Duration(
-            milliseconds: 200,
-          ), () async {
+      return await Future.delayed(Duration(milliseconds: 300), () async {
         GeoPoint p = await osmPlatform.pickLocation(
           _idMap,
           key: _osmFlutterState.dynamicMarkerKey,
         );
         return p;
       });
+    } else {
+      GeoPoint p = await osmPlatform.pickLocation(
+        _idMap,
+        imageURL: imageURL,
+      );
+      return p;
     }
-    GeoPoint p = await osmPlatform.pickLocation(
-      _idMap,
-      imageURL: imageURL,
-    );
-    return p;
   }
 
   Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {

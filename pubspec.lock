@@ -65,10 +65,10 @@ packages:
   flutter_osm_interface:
     dependency: "direct main"
     description:
-      name: flutter_osm_interface
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.1.0"
+      path: flutter_osm_interface
+      relative: true
+    source: path
+    version: "0.1.3"
   flutter_plugin_android_lifecycle:
     dependency: "direct main"
     description:

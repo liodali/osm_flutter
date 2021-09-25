@@ -1,7 +1,28 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+
+class CustomController extends MapController {
+  CustomController({
+    bool initMapWithUserPosition = true,
+    GeoPoint? initPosition,
+    BoundingBox? areaLimit = const BoundingBox.world(),
+  })  : assert(
+          initMapWithUserPosition || initPosition != null,
+        ),
+        super(
+          initMapWithUserPosition: initMapWithUserPosition,
+          initPosition: initPosition,
+          areaLimit: areaLimit,
+        );
+
+  @override
+  void init() {
+    super.init();
+  }
+}
 
 class MainExample extends StatefulWidget {
   MainExample({Key? key}) : super(key: key);
@@ -11,18 +32,19 @@ class MainExample extends StatefulWidget {
 }
 
 class _MainExampleState extends State<MainExample> {
-  late MapController controller;
+  late CustomController controller;
   late GlobalKey<ScaffoldState> scaffoldKey;
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> visibilityZoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
   ValueNotifier<bool> showFab = ValueNotifier(true);
+  Timer? timer;
 
   @override
   void initState() {
     super.initState();
-    controller = MapController(
+    controller = CustomController(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
         latitude: 47.4358055,
@@ -63,20 +85,8 @@ class _MainExampleState extends State<MainExample> {
       // Future.delayed(Duration(seconds: 5), () async {
       //   await controller.zoomIn();
       // });
-      Future.delayed(Duration(seconds: 10), () async {
+      timer = Timer(Duration(seconds: 10), () async {
         await controller.setZoom(zoomLevel: 12);
-
-        // final waysPoint = list
-        //     .map((e) => GeoPoint(
-        //           latitude: e.last,
-        //           longitude: e.first,
-        //         ))
-        //     .toList();
-        // await controller.drawRoadManually(
-        //   waysPoint,
-        //   Colors.purpleAccent,
-        //   6.0,
-        // );
         await controller.setMarkerOfStaticPoint(
           id: "line 2",
           markerIcon: MarkerIcon(
@@ -102,13 +112,17 @@ class _MainExampleState extends State<MainExample> {
           ],
           "line 2",
         );
+        timer?.cancel();
       });
     }
   }
 
   @override
   void dispose() {
-    controller.listenerMapIsReady.removeListener(mapIsInitialized);
+    if (timer != null && timer!.isActive) {
+      timer?.cancel();
+    }
+    //controller.listenerMapIsReady.removeListener(mapIsInitialized);
     controller.dispose();
     super.dispose();
   }
@@ -403,9 +417,9 @@ class _MainExampleState extends State<MainExample> {
       GeoPoint point = await controller.selectPosition(
           icon: MarkerIcon(
         icon: Icon(
-          Icons.location_history,
+          Icons.person_pin_circle,
           color: Colors.amber,
-          size: 48,
+          size: 100,
         ),
       ));
       GeoPoint point2 = await controller.selectPosition();

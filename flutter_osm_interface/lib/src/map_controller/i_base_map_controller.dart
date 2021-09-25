@@ -36,9 +36,9 @@ abstract class IBaseMapController {
   void init();
 
   void dispose() {
-    _listenerMapLongTapping.dispose();
-    _listenerMapSingleTapping.dispose();
-    _listenerMapIsReady.dispose();
+    // _listenerMapLongTapping.dispose();
+    // _listenerMapSingleTapping.dispose();
+    // _listenerMapIsReady.dispose();
   }
 }
 
