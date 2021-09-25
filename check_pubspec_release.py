@@ -12,7 +12,8 @@ URL_VER_PACKAGE = "https://pub.dartlang.org/api/packages/flutter_osm_interface/v
 
 
 def check_version_exist(version):
-    data = requests.get(f"{URL_VER_PACKAGE}{version}")
+    url = f"{URL_VER_PACKAGE}{version}"
+    data = requests.get(url.strip())
     if data.status_code == 200:
         return True
     else:
