@@ -76,16 +76,17 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
       );
       handleMethodCall(idOSM);
     }
-    return Future.microtask(() => close());
+    return Future.microtask(() => close(idOSM));
   }
 
+
   @override
-  void close() {
+  void close(int idOSM) {
     // mapsController.values.forEach(
     //         (WebTestController mapsController) => mapsController.dispose());
     //_streamController.close();
-    mapsController.clear();
-    _channels.clear();
+    mapsController.remove(idOSM);
+    _channels.remove(idOSM);
   }
 
   /// Handles method calls over the MethodChannel of this plugin.
