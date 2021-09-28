@@ -68,7 +68,7 @@ packages:
       path: flutter_osm_interface
       relative: true
     source: path
-    version: "1.0.0"
+    version: "0.1.3"
   flutter_osm_web:
     dependency: "direct main"
     description:
@@ -157,7 +157,7 @@ packages:
     source: hosted
     version: "1.8.0"
   plugin_platform_interface:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: plugin_platform_interface
       url: "https://pub.dartlang.org"
