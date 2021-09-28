@@ -1,3 +1,20 @@
+## 0.21.0 :
+* fix crash app when close page contain mapView and make request to PlatformChannel [#157]
+* fix integrate  version of flutter_osm_interface in flutter_osm_plugin
+## 0.21.0-rc.2 :
+## 0.21.0-rc :
+* fix crash app when close page contain mapView and make request to PlatformChannel [#157]
+## 0.20.0+2 : 
+*fix pubspec
+## 0.20.0+1 : 
+* format files
+* update dependencies
+## 0.20.0 : 
+* separate osm_interface in another flutter package
+* add IBaseMapController and make BaseMapController api more flexible to be used in custom controller
+* create MobileOSMController as inner controller for mobile platform
+* create MobileWidget for mobile platform
+* fix hotreload problem [#77]
 ## 0.16.0 : update kotlin version and gralde,add listener on polylines 
 * update kotlin version to `1.5.21` (migration instruction in the readme)
 * update gradle version to `7.0.2`  (migration instruction in the readme)

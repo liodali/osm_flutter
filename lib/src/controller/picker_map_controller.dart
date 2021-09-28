@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 
@@ -8,7 +9,7 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 class PickerMapController extends BaseMapController {
   late ValueNotifier<String> _searchableText = ValueNotifier("");
 
-  ValueNotifier<String> get searchableText => _searchableText;
+  ValueListenable<String> get searchableText => _searchableText;
 
   PickerMapController({
     bool initMapWithUserPosition = true,

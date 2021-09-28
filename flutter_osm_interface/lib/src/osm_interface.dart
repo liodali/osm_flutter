@@ -41,7 +41,7 @@ abstract class OSMPlatform extends PlatformInterface {
       int idOSM,
       );
 
-  void close();
+  void close(int idOSM);
 
 
 }

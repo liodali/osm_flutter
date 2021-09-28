@@ -1,4 +1,3 @@
-
 import 'geo_point.dart';
 
 class BoundingBox {

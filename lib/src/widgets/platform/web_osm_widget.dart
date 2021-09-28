@@ -3,7 +3,6 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import '../../controller/map_controller.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 
-
 Widget getWidget({
   required BaseMapController controller,
   required bool trackMyPosition,
