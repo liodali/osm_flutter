@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.21.1-orange) 
+![pub](https://img.shields.io/badge/pub-v0.21.2-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
@@ -36,7 +36,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.21.1
+      flutter_osm_plugin: ^0.21.2
 
 ### Migration to `0.16.0` (Android Only)
 > if you are using this plugin before Flutter 2 
@@ -243,7 +243,25 @@ b) select position with dynamic marker
           imageURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png"
 );
  ```
- 
+
+c) select using listener from controller directly
+* for more example  see  home_example.dart 
+c.1) single tap listener
+```dart
+controller.listenerMapSingleTapping.addListener(() {
+      if (controller.listenerMapSingleTapping.value != null) {
+        /// put you logic here
+      }
+    });
+```
+c.2) long tap listener
+```dart
+controller.listenerMapLongTapping.addListener(() {
+      if (controller.listenerMapLongTapping.value != null) {
+        /// put you logic here
+      }
+    });
+```
 <b>12.2 Assisted selection </b> (for more details see example) 
 
 ```dart
