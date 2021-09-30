@@ -39,6 +39,7 @@ class _MainExampleState extends State<MainExample> {
   ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
   ValueNotifier<bool> showFab = ValueNotifier(true);
+  ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
   Timer? timer;
 
   @override
@@ -73,7 +74,20 @@ class _MainExampleState extends State<MainExample> {
     });
     controller.listenerMapSingleTapping.addListener(() {
       if (controller.listenerMapSingleTapping.value != null) {
+        if (lastGeoPoint.value != null) {
+          controller.removeMarker(lastGeoPoint.value!);
+        }
         print(controller.listenerMapSingleTapping.value);
+        lastGeoPoint.value = controller.listenerMapSingleTapping.value;
+        controller.addMarker(
+          lastGeoPoint.value!,
+          markerIcon: MarkerIcon(
+            icon: Icon(
+              Icons.person,
+              color: Colors.red,
+            ),
+          ),
+        );
       }
     });
 

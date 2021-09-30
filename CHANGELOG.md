@@ -1,5 +1,8 @@
+## 0.21.2 :
+* fix bug in removeMarker [#171]
+* improve readme
 ## 0.21.1 :
-* fix bug in currentLocation
+* fix bug in currentLocation [#169]
 ## 0.21.0 :
 * fix crash app when close page contain mapView and make request to PlatformChannel [#157]
 * fix integrate  version of flutter_osm_interface in flutter_osm_plugin
