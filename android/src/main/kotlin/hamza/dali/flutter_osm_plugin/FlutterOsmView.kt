@@ -77,6 +77,10 @@ fun GeoPoint.toHashMap(): HashMap<String, Double> {
 
 }
 
+fun GeoPoint.eq(other: GeoPoint): Boolean {
+    return this.latitude == other.latitude && this.longitude == other.longitude
+}
+
 fun HashMap<String, Double>.toGeoPoint(): GeoPoint {
     if (this.keys.contains("lat") && this.keys.contains("lon")) {
         return GeoPoint(this["lat"]!!, this["lon"]!!)
@@ -1287,15 +1291,11 @@ class FlutterOsmView(
     }
 
     private fun deleteMarker(geoPoint: GeoPoint) {
-        val geoMarker = map!!.overlays.firstOrNull {
-            if (it is FlutterMarker) {
-                (it.position.latitude == geoPoint.latitude
-                        && it.position.longitude == geoPoint.longitude)
-            } else
-                false
+        val geoMarkers = map!!.overlays.filterIsInstance<FlutterMarker>().filter { marker ->
+            marker.position.eq(geoPoint)
         }
-        geoMarker?.let {
-            map!!.overlays.remove(it)
+        if (geoMarkers.isNotEmpty()) {
+            map!!.overlays.removeAll(geoMarkers)
             map!!.invalidate()
         }
 
