@@ -94,13 +94,6 @@ class MapController extends BaseMapController {
   /// recuperate current zoom level
   Future<double> getZoom() async => await osmBaseController.getZoom();
 
-  @Deprecated("will be remove in next version,use setZoom")
-
-  /// change zoom level of the map
-  /// [zoom] : (double) step zoom that will be added to current zoom
-  Future<void> zoom(double zoom) async {
-    await osmBaseController.setZoom(stepZoom: zoom);
-  }
 
   /// change zoom level of the map
   ///

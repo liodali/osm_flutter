@@ -51,13 +51,13 @@
       maxZoom: 19,
       minZoom: 2,
       tileSize: 256,
-      zoomOffset: 0,
     });
     OpenStreetMap_Mapnik.addTo(mymap);
     mymap.setView([0, 0], 2);
 
   async function initMapLocation(point) {
-       mymap.setView([point.lat, point.lon],8);
+       console.log("zoom init map :"+zoom);
+       mymap.setView([point.lat, point.lon],zoom);
        isMapReady(true);
   }
 
@@ -165,7 +165,7 @@
     
   async function configInitZoomMap(step,initZoom,minZoomLevel,maxZoomLevel){
       mymap.setMinZoom(minZoomLevel);
-      mymap.setMinZoom(maxZoomLevel);
+      mymap.setMaxZoom(maxZoomLevel);
       zoom = initZoom;
       stepZoom = step;
       return 200;
