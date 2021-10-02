@@ -20,10 +20,7 @@ class _WebTestOsmState extends State<WebTestOsm> {
   void initState() {
     super.initState();
     Future.delayed(Duration(seconds: 2), () async {
-      await controller.zoom(6);
-    });
-
-    Future.delayed(Duration(seconds: 6), () async {
+      await controller.setZoom(zoomLevel: 8);
       await controller.changeLocation(
         GeoPoint(
           latitude: 47.433358,
@@ -31,6 +28,7 @@ class _WebTestOsmState extends State<WebTestOsm> {
         ),
       );
     });
+
   }
 
   @override
