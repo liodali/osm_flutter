@@ -45,6 +45,14 @@ async function setZoom(zoom) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setZoom(zoom);
 }
+async function setZoomWithStep(step) {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.setZoomWithStep(step);
+}
+async function getZoom(){
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.getZoom();
+}
 async function configZoom(step,zoom,minZoomLevel,maxZoomLevel) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.configInitZoomMap(step,zoom,minZoomLevel,maxZoomLevel);
@@ -56,6 +64,14 @@ async function currentUserLocation() {
 async function removeMarker(point){
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.removeMarker(point);
+}
+async function setMaxZoomLevel(zoomLevel){
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.setMaxZoomLevel(point);
+}
+async function setMinZoomLevel(zoomLevel){
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.setMinZoomLevel(point);
 }
 
 /*

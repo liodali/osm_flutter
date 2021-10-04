@@ -32,6 +32,17 @@ external dynamic zoomOut();
 @JS('setZoom')
 external dynamic setZoom(double zoom);
 
+@JS('setZoomStep')
+external dynamic setZoomWithStep(double stepZoom);
+
+@JS('getZoom')
+external dynamic getZoom();
+
+@JS('setMaxZoomLevel')
+external dynamic setMaxZoomLevel(double maxZoomLvl);
+
+@JS('setMinZoomLevel')
+external dynamic setMinZoomLevel(double mminZoomLvl);
 
 @JS('setDefaultIcon')
 external dynamic setDefaultIcon(String base64);

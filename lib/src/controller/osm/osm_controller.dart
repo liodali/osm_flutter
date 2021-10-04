@@ -604,12 +604,12 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<void> setMaximumZoomLevel(int maxZoom) async {
+  Future<void> setMaximumZoomLevel(double maxZoom) async {
     await osmPlatform.setMaximumZoomLevel(_idMap, maxZoom);
   }
 
   @override
-  Future<void> setMinimumZoomLevel(int minZoom) async {
+  Future<void> setMinimumZoomLevel(double minZoom) async {
     await osmPlatform.setMaximumZoomLevel(_idMap, minZoom);
   }
 

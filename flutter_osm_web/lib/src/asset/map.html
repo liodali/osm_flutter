@@ -184,12 +184,36 @@
       return 200;
   }
   async function setZoom(zoom) {
-      var nzoomlevel = mymap.getZoom()+zoom;
-      if(nzoomlevel>=mymap.getMinZoom() && nzoomlevel<=mymap.getMaxZoom()){
+      var nzoomlevel = zoom;
+      if(nzoomlevel >= mymap.getMinZoom() && nzoomlevel <= mymap.getMaxZoom()){
         mymap.setZoom(nzoomlevel);
       }
       return 200;
   }
+  async function setZoomWithStep(step){
+      var nzoomlevel = mymap.getZoom() + step;
+      if(nzoomlevel >= mymap.getMinZoom() && nzoomlevel <= mymap.getMaxZoom()){
+        mymap.setZoom(nzoomlevel);
+      }else{
+        if(nzoomlevel > mymap.getMaxZoom()){
+          mymap.setZoom(mymap.getMaxZoom());
+        }else if(nzoomlevel < mymap.getMinZoom()){
+          mymap.setZoom(mymap.getMinZoom());
+        }
+      }
+      return 200;
+  }
+  async function getZoom(){
+    return mymap.getZoom();
+  }
+  async function setMaxZoomLevel(zoomLevel){
+      mymap.setMaxZoom(zoomLevel);
+  }
+  async function setMinZoomLevel(zoomLevel){
+      mymap.setMinZoom(zoomLevel);
+  }
+
+
   function setHomeMarker(point,args){
       if(homeMarker == undefined){
         homeMarker = L.marker([point.lat, point.lon],args).addTo(mymap);

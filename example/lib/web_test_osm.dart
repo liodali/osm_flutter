@@ -27,6 +27,8 @@ class _WebTestOsmState extends State<WebTestOsm> {
           longitude: 8.4690184,
         ),
       );
+      double zoom = await controller.getZoom();
+      print("zoom:$zoom");
     });
 
   }

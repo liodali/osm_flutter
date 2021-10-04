@@ -152,10 +152,6 @@ mixin WebMixin {
     );
   }
 
-  Future<void> zoom(double zoom) async {
-    await interop.setZoom(zoom);
-  }
-
   Future<void> zoomIn() async {
     await interop.zoomIn();
   }
@@ -169,9 +165,9 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<double> getZoom() {
-    // TODO: implement getZoom
-    throw UnimplementedError();
+  Future<double> getZoom() async {
+    return await promiseToFuture(interop.getZoom());
+
   }
 
   Future<void> limitArea(BoundingBox box) {
@@ -184,14 +180,12 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<void> setMaximumZoomLevel(int maxZoom) {
-    // TODO: implement setMaximumZoomLevel
-    throw UnimplementedError();
+  Future<void> setMaximumZoomLevel(double maxZoom) async {
+    await interop.setMaxZoomLevel(maxZoom);
   }
 
-  Future<void> setMinimumZoomLevel(int minZoom) {
-    // TODO: implement setMinimumZoomLevel
-    throw UnimplementedError();
+  Future<void> setMinimumZoomLevel(double minZoom) async {
+    await interop.setMinZoomLevel(minZoom);
   }
 
   Future<void> setStepZoom(int stepZoom) async {
