@@ -25,8 +25,8 @@ Widget buildWidget({
   bool showContributorBadgeForOSM = false,
   double stepZoom = 1,
   double initZoom = 2,
-  int minZoomLevel = 2,
-  int maxZoomLevel = 18,
+  double minZoomLevel = 2,
+  double maxZoomLevel = 18,
   UserLocationMaker? userLocationMarker,
 }) =>
     getWidget(

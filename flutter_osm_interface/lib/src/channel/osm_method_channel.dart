@@ -582,12 +582,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
-  Future<void> setMaximumZoomLevel(int idOSM, int maxZoom) async {
+  Future<void> setMaximumZoomLevel(int idOSM, double maxZoom) async {
     await _channels[idOSM]?.invokeMethod("set#minZoom", maxZoom);
   }
 
   @override
-  Future<void> setMinimumZoomLevel(int idOSM, int minZoom) async {
+  Future<void> setMinimumZoomLevel(int idOSM, double minZoom) async {
     await _channels[idOSM]?.invokeMethod("set#maxZoom", minZoom);
   }
 
@@ -615,8 +615,8 @@ extension config on MethodChannelOSM {
   Future<void> configureZoomMap(
     int idOSM,
     double initZoom,
-    int minZoomLevel,
-    int maxZoomLevel,
+    double minZoomLevel,
+    double maxZoomLevel,
     double stepZoom,
   ) async {
     var args = {

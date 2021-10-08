@@ -17,8 +17,8 @@ class MobileOSMController extends IBaseOSMController {
   Timer? _timer;
 
   late double stepZoom = 1;
-  late int minZoomLevel = 2;
-  late int maxZoomLevel = 18;
+  late double minZoomLevel = 2;
+  late double maxZoomLevel = 18;
 
   MobileOSMController();
 
@@ -246,8 +246,8 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   Future<void> configureZoomMap(
-    int minZoomLevel,
-    int maxZoomLevel,
+      double minZoomLevel,
+      double maxZoomLevel,
     double stepZoom,
     double initZoom,
   ) async {
@@ -583,12 +583,12 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<void> setMaximumZoomLevel(int maxZoom) async {
+  Future<void> setMaximumZoomLevel(double maxZoom) async {
     await osmPlatform.setMaximumZoomLevel(_idMap, maxZoom);
   }
 
   @override
-  Future<void> setMinimumZoomLevel(int minZoom) async {
+  Future<void> setMinimumZoomLevel(double minZoom) async {
     await osmPlatform.setMaximumZoomLevel(_idMap, minZoom);
   }
 

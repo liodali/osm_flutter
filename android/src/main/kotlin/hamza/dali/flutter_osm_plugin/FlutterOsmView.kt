@@ -91,8 +91,8 @@ fun HashMap<String, Double>.toGeoPoint(): GeoPoint {
 
 fun FlutterOsmView.configZoomMap(call: MethodCall, result: MethodChannel.Result) {
     val args = call.arguments as HashMap<String, Any>
-    this.map?.minZoomLevel = (args["minZoomLevel"] as Int).toDouble()
-    this.map?.maxZoomLevel = (args["maxZoomLevel"] as Int).toDouble()
+    this.map?.minZoomLevel = (args["minZoomLevel"] as Double)
+    this.map?.maxZoomLevel = (args["maxZoomLevel"] as Double)
     stepZoom = args["stepZoom"] as Double
     initZoom = args["initZoom"] as Double
 
