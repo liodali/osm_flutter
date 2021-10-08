@@ -146,8 +146,8 @@ class MobileOSMController extends IBaseOSMController {
       );
       await Future.delayed(Duration(milliseconds: 300), () async {
         if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
-          await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
-          _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
+          await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
+          //_osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
         }
       });
     }
