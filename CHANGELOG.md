@@ -1,3 +1,5 @@
+## 0.21.3 :
+* fix set default advPicker Icon in ios 
 ## 0.21.2 :
 * fix bug in removeMarker [#171]
 * improve readme
