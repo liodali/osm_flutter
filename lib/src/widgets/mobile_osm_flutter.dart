@@ -24,8 +24,8 @@ class MobileOsmFlutter extends StatefulWidget {
   final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
   final double stepZoom;
   final double initZoom;
-  final int minZoomLevel;
-  final int maxZoomLevel;
+  final double minZoomLevel;
+  final double maxZoomLevel;
   final Function(bool)? onMapIsReady;
   final UserLocationMaker? userLocationMarker;
 

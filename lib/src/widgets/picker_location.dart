@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../flutter_osm_plugin.dart';
 import '../controller/map_controller.dart';
 import '../osm_flutter.dart';
@@ -6,24 +7,32 @@ import '../osm_flutter.dart';
 /// showSimplePickerLocation : picker to select specific position
 ///
 /// [context] : (BuildContext) dialog context parent
+///
 /// [title] : (String) text title widget of dialog
+///
 /// [textConfirmPicker] : (String) text confirm button widget of dialog
+///
 /// [textCancelPicker] : (String) text cancel button widget of dialog
+///
 /// [radius] : (double) rounded radius of the dialog
+///
 /// [isDismissible] : (bool) to indicate if tapping out side of dialog will dismiss the dialog
+///
 /// [initCurrentUserPosition] : (GeoPoint) to indicate initialize position in the map
+///
 /// [initPosition] : (bool) to initialize the map  in user location
 Future<GeoPoint?> showSimplePickerLocation({
   required BuildContext context,
   required String title,
   String? textConfirmPicker,
   String? textCancelPicker,
+  EdgeInsets contentPadding = EdgeInsets.zero,
   double radius = 0.0,
   GeoPoint? initPosition,
   double stepZoom = 1,
   double initZoom = 2,
-  int minZoomLevel = 2,
-  int maxZoomLevel = 18,
+  double minZoomLevel = 2,
+  double maxZoomLevel = 18,
   bool isDismissible = false,
   bool initCurrentUserPosition = true,
 }) async {
@@ -43,6 +52,7 @@ Future<GeoPoint?> showSimplePickerLocation({
             Radius.circular(radius),
           ),
         ),
+        contentPadding: contentPadding,
         content: WillPopScope(
           onWillPop: () async {
             return isDismissible;

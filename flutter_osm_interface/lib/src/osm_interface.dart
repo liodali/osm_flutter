@@ -186,12 +186,12 @@ abstract class MobileOSMPlatform extends OSMPlatform {
 
   Future<void> setMinimumZoomLevel(
     int idOSM,
-    int minZoom,
+    double minZoom,
   );
 
   Future<void> setMaximumZoomLevel(
     int idOSM,
-    int maxZoom,
+    double maxZoom,
   );
 
   Future<void> disableTracking(

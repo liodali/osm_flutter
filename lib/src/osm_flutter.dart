@@ -61,8 +61,8 @@ class OSMFlutter extends StatefulWidget {
   final Road? road;
   final double stepZoom;
   final double initZoom;
-  final int minZoomLevel;
-  final int maxZoomLevel;
+  final double minZoomLevel;
+  final double maxZoomLevel;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;

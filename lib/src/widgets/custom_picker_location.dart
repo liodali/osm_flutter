@@ -21,8 +21,8 @@ class CustomPickerLocation extends StatefulWidget {
 
   final double stepZoom;
   final double initZoom;
-  final int minZoomLevel;
-  final int maxZoomLevel;
+  final double minZoomLevel;
+  final double maxZoomLevel;
 
   CustomPickerLocation({
     required this.controller,
