@@ -246,8 +246,8 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   Future<void> configureZoomMap(
-      double minZoomLevel,
-      double maxZoomLevel,
+    double minZoomLevel,
+    double maxZoomLevel,
     double stepZoom,
     double initZoom,
   ) async {

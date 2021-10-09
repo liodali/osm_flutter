@@ -70,11 +70,11 @@ abstract class IBaseOSMController {
   );
 
   Future<void> setMinimumZoomLevel(
-      double minZoom,
+    double minZoom,
   );
 
   Future<void> setMaximumZoomLevel(
-      double maxZoom,
+    double maxZoom,
   );
 
   /// activate current location position
