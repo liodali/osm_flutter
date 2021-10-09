@@ -1,3 +1,6 @@
+## 0.21.4 :
+* change type of `minZoomLevel` and `maxZoomLevel` from int to double
+* replace sceneURL in ios with our custom raster tile
 ## 0.21.3 :
 * fix set default advPicker Icon in ios 
 ## 0.21.2 :
