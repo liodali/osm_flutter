@@ -745,8 +745,8 @@ private extension MyMapView {
        let args = call.arguments as! [String:Any]
        stepZoom = args["stepZoom"] as! Double
        initZoom = args["initZoom"] as! Double
-       mapView.minimumZoomLevel = CGFloat(args["minZoomLevel"] as! Int)
-       mapView.maximumZoomLevel = CGFloat(args["maxZoomLevel"] as! Int)
+       mapView.minimumZoomLevel = CGFloat(args["minZoomLevel"] as! Double)
+       mapView.maximumZoomLevel = CGFloat(args["maxZoomLevel"] as! Double)
    }
     func getZoom()-> Double{
          Double(mapView.zoom)
