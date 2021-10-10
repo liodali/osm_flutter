@@ -106,21 +106,10 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter> {
 
   @override
   Widget build(BuildContext context) {
-    widgetMap = AndroidView(
-      key: GlobalKey(),
-      viewType: 'plugins.dali.hamza/osmview',
-      onPlatformViewCreated: _onPlatformViewCreated,
-      //creationParamsCodec:  StandardMessageCodec(),
+    return PlatformView(
+      mobileKey: mobileKey,
+      onPlatformCreatedView: _onPlatformViewCreated,
     );
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      widgetMap = UiKitView(
-        key: mobileKey,
-        viewType: 'plugins.dali.hamza/osmview',
-        onPlatformViewCreated: _onPlatformViewCreated,
-        //creationParamsCodec:  StandardMessageCodec(),
-      );
-    }
-    return widgetMap;
   }
 
   /// requestPermission callback to request location in your phone
@@ -150,5 +139,34 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter> {
     this._osmController = await MobileOSMController.init(id, this);
     widget.controller.setBaseOSMController(this._osmController!);
     widget.controller.init();
+  }
+}
+
+class PlatformView extends StatelessWidget {
+  final Function(int) onPlatformCreatedView;
+  final Key? mobileKey;
+
+  const PlatformView({
+    this.mobileKey,
+    required this.onPlatformCreatedView,
+  }) : super(key: mobileKey);
+
+  @override
+  Widget build(BuildContext context) {
+    Widget widgetMap = AndroidView(
+      key: GlobalKey(),
+      viewType: 'plugins.dali.hamza/osmview',
+      onPlatformViewCreated: onPlatformCreatedView,
+      //creationParamsCodec:  StandardMessageCodec(),
+    );
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      widgetMap = UiKitView(
+        //  key: mobileKey,
+        viewType: 'plugins.dali.hamza/osmview',
+        onPlatformViewCreated: onPlatformCreatedView,
+        //creationParamsCodec:  StandardMessageCodec(),
+      );
+    }
+    return widgetMap;
   }
 }

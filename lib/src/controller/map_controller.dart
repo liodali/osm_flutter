@@ -138,6 +138,11 @@ class MapController extends BaseMapController {
     await osmBaseController.disabledTracking();
   }
 
+  @Deprecated(
+    "this method will be removed in 0.25.0,use callback `listenerMapSingleTapping` or `listenerMapLongTapping` "
+    "to listener to click on the map, and use `addMarker` to create marker in that specific location",
+  )
+
   /// pick Position in map
   Future<GeoPoint> selectPosition({
     MarkerIcon? icon,
@@ -261,13 +266,9 @@ class MapController extends BaseMapController {
     MarkerIcon? markerIcon,
     double? angle,
   }) async {
-    if(angle!=null){
-      assert(angle>=-pi && angle<=pi,"angle should be between -pi and pi");
+    if (angle != null) {
+      assert(angle >= -pi && angle <= pi, "angle should be between -pi and pi");
     }
-    await osmBaseController.addMarker(
-      p,
-      markerIcon: markerIcon,
-      angle: angle
-    );
+    await osmBaseController.addMarker(p, markerIcon: markerIcon, angle: angle);
   }
 }

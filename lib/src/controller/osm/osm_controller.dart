@@ -390,7 +390,7 @@ class MobileOSMController extends IBaseOSMController {
         (markerIcon.icon != null || markerIcon.image != null)) {
       if (markerIcon.icon != null) {
         _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
-            angle == null
+            angle == null || (angle == 0.0)
                 ? markerIcon.icon
                 : Transform.rotate(
                     angle: angle,
@@ -398,7 +398,7 @@ class MobileOSMController extends IBaseOSMController {
                   );
       } else if (markerIcon.image != null) {
         _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
-            angle == null
+            angle == null || (angle == 0.0)
                 ? Image(
                     image: markerIcon.image!,
                   )
