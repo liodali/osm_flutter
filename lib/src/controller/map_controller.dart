@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
@@ -95,14 +97,6 @@ class MapController extends BaseMapController {
   /// recuperate current zoom level
   Future<double> getZoom() async => await osmBaseController.getZoom();
 
-  @Deprecated("will be remove in next version,use setZoom")
-
-  /// change zoom level of the map
-  /// [zoom] : (double) step zoom that will be added to current zoom
-  Future<void> zoom(double zoom) async {
-    await osmBaseController.setZoom(stepZoom: zoom);
-  }
-
   /// change zoom level of the map
   ///
   /// [zoomLevel] : (double) should be between minZoomLevel and maxZoomLevel
@@ -143,6 +137,11 @@ class MapController extends BaseMapController {
   Future<void> disabledTracking() async {
     await osmBaseController.disabledTracking();
   }
+
+  @Deprecated(
+    "this method will be removed in 0.25.0,use callback `listenerMapSingleTapping` or `listenerMapLongTapping` "
+    "to listener to click on the map, and use `addMarker` to create marker in that specific location",
+  )
 
   /// pick Position in map
   Future<GeoPoint> selectPosition({
@@ -265,10 +264,11 @@ class MapController extends BaseMapController {
   Future<void> addMarker(
     GeoPoint p, {
     MarkerIcon? markerIcon,
+    double? angle,
   }) async {
-    await osmBaseController.addMarker(
-      p,
-      markerIcon: markerIcon,
-    );
+    if (angle != null) {
+      assert(angle >= -pi && angle <= pi, "angle should be between -pi and pi");
+    }
+    await osmBaseController.addMarker(p, markerIcon: markerIcon, angle: angle);
   }
 }

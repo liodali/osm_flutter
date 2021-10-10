@@ -62,14 +62,17 @@ class _MainExampleState extends State<MainExample> {
     controller.listenerMapLongTapping.addListener(() async {
       if (controller.listenerMapLongTapping.value != null) {
         print(controller.listenerMapLongTapping.value);
-        await controller.addMarker(controller.listenerMapLongTapping.value!,
-            markerIcon: MarkerIcon(
-              icon: Icon(
-                Icons.store,
-                color: Colors.brown,
-                size: 48,
-              ),
-            ));
+        await controller.addMarker(
+          controller.listenerMapLongTapping.value!,
+          markerIcon: MarkerIcon(
+            icon: Icon(
+              Icons.store,
+              color: Colors.brown,
+              size: 48,
+            ),
+          ),
+          angle: pi / 3,
+        );
       }
     });
     controller.listenerMapSingleTapping.addListener(() {
@@ -87,6 +90,7 @@ class _MainExampleState extends State<MainExample> {
               color: Colors.red,
             ),
           ),
+          angle: -pi / 4,
         );
       }
     });

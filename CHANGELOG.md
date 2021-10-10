@@ -1,3 +1,7 @@
+## 0.22.0 :
+* add attribute `angle` to the method `addMarker` to rotate icon marker or image with any animation
+* deprecation of the method `selectPosition`,use callback to listen to click or long click on the map and addMarker to add marker on that location if it needed
+* fix removeMarker,addMarker in ios part
 ## 0.21.4 :
 * change type of `minZoomLevel` and `maxZoomLevel` from int to double
 * replace sceneURL in ios with our custom raster tile

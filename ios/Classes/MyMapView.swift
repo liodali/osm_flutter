@@ -34,6 +34,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var roadMarkerPolyline: TGMarker? = nil
     lazy var markersIconsRoadPoint : [String:UIImage] = [String:UIImage]()
     var markerRoadPoint: [TGMarker] = []
+    var pickedLocationSingleTap : CLLocationCoordinate2D? = nil
     var colorRoad:String = "#ff0000"
     var homeMarker: TGMarker? = nil
     var resultFlutter: FlutterResult? = nil
@@ -138,6 +139,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             //let frameV = UIView()
             methodCall = call
             resultFlutter = result
+            break;
+        case "user#removeMarkerPosition":
+            removeMarkerFromMap(call:call)
+            result(200)
             break;
         case "deactivateTrackMe":
             deactivateTrackMe()
@@ -328,7 +333,15 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
         GeoPointMap(icon: icon, coordinate: coordinate).setupMarker(on: mapView)
     }
-
+    private func removeMarkerFromMap(call: FlutterMethodCall) {
+        var point = call.arguments as! GeoPoint
+        let markers = mapView.markers.filter { m in
+            m.point == point.toLocationCoordinate()
+        }
+        markers.forEach { m in
+            mapView.markerRemove(m)
+        }
+    }
     private func currentUserLocation() {
         locationManager.requestLocation()
         canGetLastUserLocation = true
@@ -461,7 +474,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
                 if (homeMarker != nil) {
                     homeMarker?.visible = false
-                   let index = cacheMarkers.index(of:homeMarker!)
+                   let index = cacheMarkers.firstIndex(of: homeMarker!)
                     if(index != nil) {
                         cacheMarkers.remove(at: index!)
                     }
@@ -666,17 +679,21 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         print(error.localizedDescription)
     }
 
-    public func mapView(_ mapView: TGMapView, didSelectMarker markerPickResult: TGMarkerPickResult?, atScreenPosition position: CGPoint) {
+    public func mapView(_ mapView: TGMapView,
+                        didSelectMarker markerPickResult: TGMarkerPickResult?,
+                        atScreenPosition position: CGPoint) {
         //print("marker picked")
+        print("receive pick  x: \(position.x) y: \(position.y)")
         if let marker = markerPickResult?.marker{
             let  staticMarkers =  dictClusterAnnotation.map { k,  markers in  markers }
             if staticMarkers.contains {markers in markers.contains { staticMarker in staticMarker.marker?.point == marker.point} } {
                 channel.invokeMethod("receiveGeoPoint", arguments: marker.point.toGeoPoint())
             }
         }else{
-            let point = mapView.coordinate(fromViewPosition: position)
+            let point = pickedLocationSingleTap!// mapView.coordinate(fromViewPosition: position)
 
             channel.invokeMethod("receiveSinglePress", arguments: point.toGeoPoint())
+            pickedLocationSingleTap = nil
 
         }
     }
@@ -712,7 +729,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             resultFlutter!(geoP.toMap())
             methodCall = nil
         }else{
+            pickedLocationSingleTap = view.coordinate(fromViewPosition: location)
             mapView.setPickRadius(48)
+            print("pick  x: \(location.x) y: \(location.y)")
             mapView.pickMarker(at: location)
 
         }

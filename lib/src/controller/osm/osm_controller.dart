@@ -384,16 +384,30 @@ class MobileOSMController extends IBaseOSMController {
   Future<void> addMarker(
     GeoPoint p, {
     MarkerIcon? markerIcon,
+    double? angle,
   }) async {
     if (markerIcon != null &&
         (markerIcon.icon != null || markerIcon.image != null)) {
       if (markerIcon.icon != null) {
         _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
-            markerIcon.icon;
+            angle == null || (angle == 0.0)
+                ? markerIcon.icon
+                : Transform.rotate(
+                    angle: angle,
+                    child: markerIcon.icon,
+                  );
       } else if (markerIcon.image != null) {
-        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Image(
-          image: markerIcon.image!,
-        );
+        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
+            angle == null || (angle == 0.0)
+                ? Image(
+                    image: markerIcon.image!,
+                  )
+                : Transform.rotate(
+                    angle: angle,
+                    child: Image(
+                      image: markerIcon.image!,
+                    ),
+                  );
       }
       Future.delayed(Duration(milliseconds: 300), () async {
         await osmPlatform.addMarker(_idMap, p,
