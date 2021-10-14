@@ -409,9 +409,12 @@ class MobileOSMController extends IBaseOSMController {
                     ),
                   );
       }
-      Future.delayed(Duration(milliseconds: 300), () async {
-        await osmPlatform.addMarker(_idMap, p,
-            globalKeyIcon: _osmFlutterState.dynamicMarkerKey);
+      await Future.delayed(Duration(milliseconds: 300), () async {
+        await osmPlatform.addMarker(
+          _idMap,
+          p,
+          globalKeyIcon: _osmFlutterState.dynamicMarkerKey,
+        );
       });
     } else {
       await osmPlatform.addMarker(_idMap, p);
