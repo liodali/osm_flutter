@@ -34,6 +34,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var roadMarkerPolyline: TGMarker? = nil
     lazy var markersIconsRoadPoint : [String:UIImage] = [String:UIImage]()
     var markerRoadPoint: [TGMarker] = []
+    var pickedLocationSingleTap : CLLocationCoordinate2D? = nil
     var colorRoad:String = "#ff0000"
     var homeMarker: TGMarker? = nil
     var resultFlutter: FlutterResult? = nil
@@ -93,9 +94,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             //mapView.loadSceneAsync(from:URL.init(string: "https://drive.google.com/uc?export=download&id=1F67AW3Yaj5N7MEmMSd0OgeEK1bD69_CM")!, with: nil)
             // mapView.requestRender()
 
-            let sceneUpdates = [TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
-            let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
-           //var sceneUrl = URL(string: "https://download1490.mediafire.com/79k6g435fjgg/7wmbaskfom9undp/osm-style.zip")
+            let sceneUpdates = [TGSceneUpdate]() //[TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
+           // let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
+           var sceneUrl = URL(string: "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
             mapView.loadSceneAsync(from: sceneUrl, with: sceneUpdates)
 
             //channel.invokeMethod("map#init", arguments: true)
@@ -138,6 +139,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             //let frameV = UIView()
             methodCall = call
             resultFlutter = result
+            break;
+        case "user#removeMarkerPosition":
+            removeMarkerFromMap(call:call)
+            result(200)
             break;
         case "deactivateTrackMe":
             deactivateTrackMe()
@@ -328,7 +333,15 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
         GeoPointMap(icon: icon, coordinate: coordinate).setupMarker(on: mapView)
     }
-
+    private func removeMarkerFromMap(call: FlutterMethodCall) {
+        var point = call.arguments as! GeoPoint
+        let markers = mapView.markers.filter { m in
+            m.point == point.toLocationCoordinate()
+        }
+        markers.forEach { m in
+            mapView.markerRemove(m)
+        }
+    }
     private func currentUserLocation() {
         locationManager.requestLocation()
         canGetLastUserLocation = true
@@ -461,7 +474,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
                 if (homeMarker != nil) {
                     homeMarker?.visible = false
-                   let index = cacheMarkers.index(of:homeMarker!)
+                   let index = cacheMarkers.firstIndex(of: homeMarker!)
                     if(index != nil) {
                         cacheMarkers.remove(at: index!)
                     }
@@ -666,17 +679,21 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         print(error.localizedDescription)
     }
 
-    public func mapView(_ mapView: TGMapView, didSelectMarker markerPickResult: TGMarkerPickResult?, atScreenPosition position: CGPoint) {
+    public func mapView(_ mapView: TGMapView,
+                        didSelectMarker markerPickResult: TGMarkerPickResult?,
+                        atScreenPosition position: CGPoint) {
         //print("marker picked")
+        print("receive pick  x: \(position.x) y: \(position.y)")
         if let marker = markerPickResult?.marker{
             let  staticMarkers =  dictClusterAnnotation.map { k,  markers in  markers }
             if staticMarkers.contains {markers in markers.contains { staticMarker in staticMarker.marker?.point == marker.point} } {
                 channel.invokeMethod("receiveGeoPoint", arguments: marker.point.toGeoPoint())
             }
         }else{
-            let point = mapView.coordinate(fromViewPosition: position)
+            let point = pickedLocationSingleTap!// mapView.coordinate(fromViewPosition: position)
 
             channel.invokeMethod("receiveSinglePress", arguments: point.toGeoPoint())
+            pickedLocationSingleTap = nil
 
         }
     }
@@ -712,7 +729,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             resultFlutter!(geoP.toMap())
             methodCall = nil
         }else{
+            pickedLocationSingleTap = view.coordinate(fromViewPosition: location)
             mapView.setPickRadius(48)
+            print("pick  x: \(location.x) y: \(location.y)")
             mapView.pickMarker(at: location)
 
         }
@@ -745,8 +764,8 @@ private extension MyMapView {
        let args = call.arguments as! [String:Any]
        stepZoom = args["stepZoom"] as! Double
        initZoom = args["initZoom"] as! Double
-       mapView.minimumZoomLevel = CGFloat(args["minZoomLevel"] as! Int)
-       mapView.maximumZoomLevel = CGFloat(args["maxZoomLevel"] as! Int)
+       mapView.minimumZoomLevel = CGFloat(args["minZoomLevel"] as! Double)
+       mapView.maximumZoomLevel = CGFloat(args["maxZoomLevel"] as! Double)
    }
     func getZoom()-> Double{
          Double(mapView.zoom)

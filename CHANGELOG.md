@@ -1,3 +1,19 @@
+## 0.22.1 :
+* fix duplication of last icon when addMarker called twice  (#178)
+## 0.22.0 :
+* add attribute `angle` to the method `addMarker` to rotate icon marker or image with any animation
+* deprecation of the method `selectPosition`,use callback to listen to click or long click on the map and addMarker to add marker on that location if it needed
+* fix removeMarker,addMarker in ios part
+## 0.21.4 :
+* change type of `minZoomLevel` and `maxZoomLevel` from int to double
+* replace sceneURL in ios with our custom raster tile
+## 0.21.3 :
+* fix set default advPicker Icon in ios 
+## 0.21.2 :
+* fix bug in removeMarker [#171]
+* improve readme
+## 0.21.1 :
+* fix bug in currentLocation [#169]
 ## 0.21.0 :
 * fix crash app when close page contain mapView and make request to PlatformChannel [#157]
 * fix integrate  version of flutter_osm_interface in flutter_osm_plugin

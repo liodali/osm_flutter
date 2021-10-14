@@ -292,13 +292,13 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> removeLastRoad(int idOSM) async {
-    await _channels[idOSM]?.invokeListMethod("user#removeroad");
+    await _channels[idOSM]?.invokeMethod("user#removeroad");
   }
 
   @override
   Future<void> removePosition(int idOSM, GeoPoint p) async {
     await _channels[idOSM]
-        ?.invokeListMethod("user#removeMarkerPosition", p.toMap());
+        ?.invokeMethod("user#removeMarkerPosition", p.toMap());
   }
 
   @override
@@ -615,8 +615,8 @@ extension config on MethodChannelOSM {
   Future<void> configureZoomMap(
     int idOSM,
     double initZoom,
-    int minZoomLevel,
-    int maxZoomLevel,
+    double minZoomLevel,
+    double maxZoomLevel,
     double stepZoom,
   ) async {
     var args = {

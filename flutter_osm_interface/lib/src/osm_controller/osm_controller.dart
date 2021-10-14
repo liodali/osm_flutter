@@ -29,6 +29,7 @@ abstract class IBaseOSMController {
   Future<void> addMarker(
     GeoPoint p, {
     MarkerIcon? markerIcon,
+    double? angle,
   });
 
   ///remove marker from map of position
