@@ -1,3 +1,5 @@
+## 0.22.1 :
+* fix duplication of last icon when addMarker called twice  (#178)
 ## 0.22.0 :
 * add attribute `angle` to the method `addMarker` to rotate icon marker or image with any animation
 * deprecation of the method `selectPosition`,use callback to listen to click or long click on the map and addMarker to add marker on that location if it needed

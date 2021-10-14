@@ -75,14 +75,14 @@ class _MainExampleState extends State<MainExample> {
         );
       }
     });
-    controller.listenerMapSingleTapping.addListener(() {
+    controller.listenerMapSingleTapping.addListener(() async{
       if (controller.listenerMapSingleTapping.value != null) {
         if (lastGeoPoint.value != null) {
           controller.removeMarker(lastGeoPoint.value!);
         }
         print(controller.listenerMapSingleTapping.value);
         lastGeoPoint.value = controller.listenerMapSingleTapping.value;
-        controller.addMarker(
+        await controller.addMarker(
           lastGeoPoint.value!,
           markerIcon: MarkerIcon(
             icon: Icon(
@@ -103,9 +103,9 @@ class _MainExampleState extends State<MainExample> {
       // Future.delayed(Duration(seconds: 5), () async {
       //   await controller.zoomIn();
       // });
-      timer = Timer(Duration(seconds: 10), () async {
+      timer = Timer(Duration(seconds: 3), () async {
         await controller.setZoom(zoomLevel: 12);
-        await controller.setMarkerOfStaticPoint(
+        /*await controller.setMarkerOfStaticPoint(
           id: "line 2",
           markerIcon: MarkerIcon(
             icon: Icon(
@@ -129,6 +129,32 @@ class _MainExampleState extends State<MainExample> {
             ),
           ],
           "line 2",
+        );*/
+       await controller.addMarker(
+          GeoPoint(
+            latitude: 47.4517782,
+            longitude: 8.4716146,
+          ),
+          markerIcon: MarkerIcon(
+            icon: Icon(
+              Icons.person,
+              color: Colors.red,
+            ),
+          ),
+          angle: -pi / 4,
+        );
+        await controller.addMarker(
+          GeoPoint(
+            latitude: 47.4433594,
+            longitude: 8.4680184,
+          ),
+          markerIcon: MarkerIcon(
+            icon: Icon(
+              Icons.local_hospital,
+              color: Colors.red,
+            ),
+          ),
+          angle: pi / 4,
         );
         timer?.cancel();
       });
@@ -277,7 +303,7 @@ class _MainExampleState extends State<MainExample> {
                         GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
                       ],
                     ),
-                    StaticPositionGeoPoint(
+                    /*StaticPositionGeoPoint(
                       "line 2",
                       MarkerIcon(
                         icon: Icon(
@@ -290,7 +316,7 @@ class _MainExampleState extends State<MainExample> {
                         GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
                         GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
                       ],
-                    )
+                    )*/
                   ],
                   road: Road(
                     startIcon: MarkerIcon(
