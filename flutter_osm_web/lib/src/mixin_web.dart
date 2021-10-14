@@ -160,14 +160,17 @@ mixin WebMixin {
     await interop.zoomOut();
   }
 
-  Future<void> addMarker(GeoPoint p, {MarkerIcon? markerIcon}) {
+  Future<void> addMarker(
+    GeoPoint p, {
+    MarkerIcon? markerIcon,
+    double? angle,
+  }) {
     // TODO: implement addMarker
     throw UnimplementedError();
   }
 
   Future<double> getZoom() async {
     return await promiseToFuture(interop.getZoom());
-
   }
 
   Future<void> limitArea(BoundingBox box) {
@@ -213,8 +216,8 @@ mixin WebMixin {
   }
 
   Future<void> configureZoomMap(
-    int minZoomLevel,
-    int maxZoomLevel,
+    double minZoomLevel,
+    double maxZoomLevel,
     double stepZoom,
     double initZoom,
   ) async {

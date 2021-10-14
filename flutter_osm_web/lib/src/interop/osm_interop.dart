@@ -18,7 +18,7 @@ external dynamic setZoomControl(bool showZoomControl);
 
 
 @JS('configZoom')
-external dynamic configZoom(double stepZoom,double initZoom,int minZoomLevel,int maxZoomLevel);
+external dynamic configZoom(double stepZoom,double initZoom,double minZoomLevel,double maxZoomLevel);
 
 @JS('setZoomStep')
 external dynamic setZoomStep(double stepZoom);
