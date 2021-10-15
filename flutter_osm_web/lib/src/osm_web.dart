@@ -73,13 +73,14 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
   GlobalKey get personIconMarkerKey => widget.globalKeys[6];
 
   GlobalKey get arrowDirectionMarkerKey => widget.globalKeys[7];
+  late Key keyWidget = GlobalKey();
 
   @override
   void initState() {
     super.initState();
-    controller = WebOsmController.init(this);
+    controller = WebOsmController();
     if (widget.mapIsLoading == null) {
-      widget.mapIsReadyListener.value = true;
+      widget.mapIsReadyListener.value = false;
     }
   }
 
@@ -91,38 +92,19 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          color: Colors.white,
-          child: (OSMPlatform.instance as FlutterOsmPluginWeb).buildMap(
-            OsmWebPlatform.idOsmWeb,
-            onPlatformViewCreated,
-            controller,
-          ),
-        ),
-        if (widget.mapIsLoading != null)
-          Positioned.fill(
-            child: ValueListenableBuilder<bool>(
-              valueListenable: widget.mapIsReadyListener,
-              builder: (ctx, isReady, child) {
-                return Visibility(
-                  visible: !isReady,
-                  child: child!,
-                );
-              },
-              child: Container(
-                color: Colors.white,
-                child: widget.mapIsLoading!,
-              ),
-            ),
-          ),
-      ],
+    return HtmlElementView(
+      key: keyWidget,
+      viewType: FlutterOsmPluginWeb.getViewType(mapId: 0),
+      onPlatformViewCreated: onPlatformViewCreated,
     );
   }
 
   Future<void> onPlatformViewCreated(int id) async {
-    print(id);
+    controller.init(this, id);
+    (OSMPlatform.instance as FlutterOsmPluginWeb).setWebMapController(
+      id,
+      controller,
+    );
     (widget.controller as BaseMapController).setBaseOSMController(controller);
     widget.controller.init();
   }

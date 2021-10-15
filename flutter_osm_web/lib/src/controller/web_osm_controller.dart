@@ -9,7 +9,6 @@ import 'package:flutter_osm_web/src/mixin_web.dart';
 import '../channel/method_channel_web.dart';
 import '../interop/osm_interop.dart' as interop;
 import '../osm_web.dart';
-import '../web_platform.dart';
 
 class WebOsmController with WebMixin implements IBaseOSMController {
   late int _mapId;
@@ -26,21 +25,20 @@ class WebOsmController with WebMixin implements IBaseOSMController {
   FlutterOsmPluginWeb get webPlatform =>
       OSMPlatform.instance as FlutterOsmPluginWeb;
 
-  WebOsmController();
+  WebOsmController() {
+    createHtml();
+  }
 
-  WebOsmController._(OsmWebWidgetState _osmWebFlutterState) {
-    createHtml(OsmWebPlatform.idOsmWeb);
+  WebOsmController._(OsmWebWidgetState _osmWebFlutterState) {}
+
+  void init(OsmWebWidgetState _osmWebFlutterState, int idMap) {
+    OSMPlatform.instance.init(idMap);
     this._osmWebFlutterState = _osmWebFlutterState;
-  }
-
-  static WebOsmController init(OsmWebWidgetState _osmWebFlutterState) {
-    OSMPlatform.instance.init(OsmWebPlatform.idOsmWeb);
-    return WebOsmController._(_osmWebFlutterState);
-  }
-
-  void createHtml(int idMap) {
     this._mapId = idMap;
+    channel = MethodChannel(FlutterOsmPluginWeb.getViewType(mapId: idMap));
+  }
 
+  void createHtml() {
     final body = html.window.document.querySelector('body')!;
 
     _frame = html.IFrameElement()
@@ -52,9 +50,8 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       ..type = 'application/javascript');
 
     ui.platformViewRegistry.registerViewFactory(
-        FlutterOsmPluginWeb.getViewType(_mapId), (int viewId) => _frame);
+        FlutterOsmPluginWeb.getViewType(mapId: 0), (int viewId) => _frame);
 
-    channel = MethodChannel(FlutterOsmPluginWeb.getViewType(_mapId));
     //print(_getViewType(_mapId));
   }
 
@@ -63,14 +60,15 @@ class WebOsmController with WebMixin implements IBaseOSMController {
   late html.IFrameElement _frame;
 
   /// The Flutter widget that will contain the rendered Map. Used for caching.
-  Widget? get widget {
-    if (_widget == null) {
-      _widget = HtmlElementView(
-        viewType: FlutterOsmPluginWeb.getViewType(_mapId),
-      );
-    }
-    return _widget;
-  }
+  // Widget? get widget {
+  //   if (_widget == null) {
+  //     _widget = HtmlElementView(
+  //       key: keyWidget,
+  //       viewType: FlutterOsmPluginWeb.getViewType(_mapId),
+  //     );
+  //   }
+  //   return _widget;
+  // }
 
   void dispose() {
     channel = null;
@@ -91,11 +89,15 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     webPlatform.onSinglePressMapClickListener(_mapId).listen((event) {
       _osmWebFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
-      event.value;
+      //event.value;
     });
     webPlatform.onMapIsReady(_mapId).listen((event) async {
-      print(event.value);
       _osmWebFlutterState.widget.mapIsReadyListener.value = event.value;
+      _osmWebFlutterState.widget.controller
+          .setValueListenerMapIsReady(event.value);
+      if (_osmWebFlutterState.widget.onMapIsReady != null) {
+        _osmWebFlutterState.widget.onMapIsReady!(event.value);
+      }
     });
 
     if (_osmWebFlutterState.widget.onGeoPointClicked != null) {
@@ -184,6 +186,4 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     // TODO: implement selectPosition
     throw UnimplementedError();
   }
-
-
 }

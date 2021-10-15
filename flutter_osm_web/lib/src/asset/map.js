@@ -83,11 +83,15 @@ function isMapReady(isReady) {
 function onGeoPointClicked(lon,lat) {
    onStaticGeoPointClicked(lon,lat);
 }
+function onMapSingleTapClicked(lon,lat) {
+   onMapSingleTapListener(lon,lat);
+}
 
 
 var innerWindow = document.getElementById('frame_map').contentWindow;
 innerWindow.isMapReady = isMapReady;
 innerWindow.onGeoPointClicked = onGeoPointClicked;
+innerWindow.onMapSingleTapClicked = onMapSingleTapClicked;
 
 
 

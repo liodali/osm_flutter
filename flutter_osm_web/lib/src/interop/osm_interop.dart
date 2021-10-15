@@ -67,9 +67,13 @@ external dynamic setIconStaticGeoPoints(String id,String icons);
 @JS('initMapFinish')
 external set initMapFinish(void Function(bool) f);
 
-/// Allows assigning a function to be callable from `window.initMapFinish()`
+/// Allows assigning a function to be callable from `window.onGeoPointClicked(lat,lon)`
 @JS('onStaticGeoPointClicked')
 external set onStaticGeoPointClicked(void Function(double,double) f);
+
+/// Allows assigning a function to be callable from `window.onMapSingleTapClicked(lat,lon)`
+@JS('onMapSingleTapListener')
+external set onMapSingleTapListener(void Function(double,double) f);
 
 
 

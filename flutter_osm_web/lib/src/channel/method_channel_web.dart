@@ -12,13 +12,16 @@ import '../web_platform.dart';
 class FlutterOsmPluginWeb extends OsmWebPlatform {
   late BinaryMessenger? messenger;
 
+  static const String viewType = "osm_web_plugin";
+
   FlutterOsmPluginWeb({
     required this.messenger,
   });
 
   final Map<int, MethodChannel> _channels = {};
 
-  static String getViewType(int mapId) => 'osm_web_plugin_$mapId';
+  static String getViewType({int? mapId = null}) =>
+      mapId != null ? "${viewType}_$mapId" : viewType;
 
   Map<int, WebOsmController> mapsController = <int, WebOsmController>{};
 
@@ -64,21 +67,20 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
-  Future<void> init(int idOSM) {
+  Future<void> init(int idOSM) async{
     if (_streamController.isClosed) {
       _streamController = StreamController<EventOSM>.broadcast();
     }
     if (!_channels.containsKey(idOSM)) {
       _channels[idOSM] = MethodChannel(
-        '${getViewType(idOSM)}',
+        '${getViewType(mapId: idOSM)}',
         const StandardMethodCodec(),
         messenger,
       );
       handleMethodCall(idOSM);
     }
-    return Future.microtask(() => close(idOSM));
+   // return Future.microtask(() => close(idOSM));
   }
-
 
   @override
   void close(int idOSM) {
@@ -93,15 +95,22 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   /// Note: Check the "federated" architecture for a new way of doing this:
   /// https://flutter.dev/go/federated-plugins
   Future<dynamic> handleMethodCall(int idOSM) async {
+    print("handle $idOSM");
     _channels[idOSM]!.setMethodCallHandler((call) async {
       switch (call.method) {
         case "initMap":
           final result = call.arguments as bool;
           _streamController.add(MapInitialization(idOSM, result));
           break;
+        case "onSingleTapListener":
+          final result = call.arguments as String;
+          _streamController
+              .add(SingleTapEvent(idOSM, GeoPoint.fromString(result)));
+          break;
         case "receiveGeoPoint":
           final result = call.arguments as String;
-          _streamController.add(GeoPointEvent(idOSM, GeoPoint.fromString(result)));
+          _streamController
+              .add(GeoPointEvent(idOSM, GeoPoint.fromString(result)));
           break;
         default:
           throw PlatformException(
@@ -113,18 +122,15 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
     });
   }
 
-  Widget buildMap(
+  void setWebMapController(
     int idChannel,
-    PlatformViewCreatedCallback onPlatformViewCreated,
     WebOsmController controller,
   ) {
     if (!mapsController.containsKey(idChannel)) {
       map = controller;
       map!.mapId = idChannel;
       mapsController.putIfAbsent(idChannel, () => map!);
-      OsmWebPlatform.idOsmWeb++;
+      //OsmWebPlatform.idOsmWeb++;
     }
-    onPlatformViewCreated.call(idChannel);
-    return mapsController[idChannel]!.widget!;
   }
 }

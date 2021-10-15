@@ -55,6 +55,11 @@
     OpenStreetMap_Mapnik.addTo(mymap);
     mymap.setView([0, 0], 2);
 
+     mymap.on('click',function(event){
+        const geoP = event.latlng;
+        onMapSingleTapClicked(geoP.lng,geoP.lat);
+    });
+
   async function initMapLocation(point) {
        console.log("zoom init map :"+zoom);
        mymap.setView([point.lat, point.lon],zoom);
@@ -95,10 +100,9 @@
 
   async function changePosition(point,showMarker,animate) {
        const position = [point.lat, point.lon];
-       if(showMarker){
-         var args = {}
-          if(defaultIcon!=""){
-            args = {
+       var args = {}
+       if(showMarker && defaultIcon!="" ){
+          args = {
               icon:L.icon(
                   { 
                     iconUrl : "data:image/png;base64,"+defaultIcon,
@@ -106,9 +110,9 @@
                   }
                 )
               }
-          }
-          setHomeMarker(point,args);
+      
        }
+       setHomeMarker(point,args);
        if(!animate){
          mymap.setView(position,mymap.getZoom());
        }else{
@@ -140,7 +144,7 @@
 
   async function setStaticGeoPoint(id,points) {
         var markers = [];
-        if(staticGeoPoint.has(id)){
+        if(staticGeoPoint.has(id) && staticGeoPoint[id]!=undefined){
             staticGeoPoint[id].clearLayers();
         }
         var icon = L.icon(

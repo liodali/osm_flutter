@@ -10,7 +10,7 @@ import 'web_test_osm.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (kIsWeb) {
-    runApp(WebTestOsm());
+    runApp(WebApp());
   } else {
     runApp(MyApp());
   }
