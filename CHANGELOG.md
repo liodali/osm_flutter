@@ -1,3 +1,5 @@
+## 0.22.2 :
+* add click of simple marker hit the callback `onGeoPointClicked`
 ## 0.22.1 :
 * fix duplication of last icon when addMarker called twice  (#178)
 ## 0.22.0 :
