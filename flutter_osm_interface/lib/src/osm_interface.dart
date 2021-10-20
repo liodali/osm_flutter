@@ -56,6 +56,10 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idOSM,
   );
 
+  Future<GeoPoint> getMapCenter(
+    int idMap,
+  );
+
   Future<GeoPoint> myLocation(
     int idMap,
   );

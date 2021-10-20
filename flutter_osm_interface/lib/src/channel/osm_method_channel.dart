@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_osm_interface/src/types/geo_point.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:location/location.dart';
 import 'package:stream_transform/stream_transform.dart';
@@ -83,7 +84,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
         case "map#init":
           final result = call.arguments as bool;
           _streamController.add(MapInitialization(idMap, result));
-
           break;
         case "receiveLongPress":
           final result = call.arguments;
@@ -609,6 +609,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
     }
     await _channels[idOSM]?.invokeMethod('Zoom', args);
   }
+
+  @override
+  Future<GeoPoint> getMapCenter(int idMap) async {
+    final result = await _channels[idMap]?.invokeMethod('map#center', []);
+    return GeoPoint.fromMap(result);
+  }
 }
 
 extension config on MethodChannelOSM {
@@ -631,5 +637,15 @@ extension config on MethodChannelOSM {
 
   Future<void> initIosMap(int idOSM) async {
     await _channels[idOSM]?.invokeMethod("init#ios#map");
+  }
+}
+
+extension mapCache on MethodChannelOSM {
+  Future<void> saveCacheMap(int id) async {
+    await _channels[id]?.invokeMethod("map#saveCache#view");
+  }
+
+  Future<void> setCacheMap(int id) async {
+    await _channels[id]?.invokeMethod("map#setCache");
   }
 }

@@ -60,6 +60,7 @@ abstract class IBaseOSMController {
     double? stepZoom,
   });
 
+
   /// zoomIn use stepZoom
   Future<void> zoomIn();
 
@@ -78,6 +79,7 @@ abstract class IBaseOSMController {
     double maxZoom,
   );
 
+  Future<GeoPoint> getMapCenter();
   /// activate current location position
   Future<void> currentLocation();
 
