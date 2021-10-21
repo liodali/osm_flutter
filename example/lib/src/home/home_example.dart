@@ -31,7 +31,7 @@ class MainExample extends StatefulWidget {
   _MainExampleState createState() => _MainExampleState();
 }
 
-class _MainExampleState extends State<MainExample> {
+class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   late CustomController controller;
   late GlobalKey<ScaffoldState> scaffoldKey;
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
@@ -58,6 +58,7 @@ class _MainExampleState extends State<MainExample> {
       //   west: 5.9559113,
       // ),
     );
+    controller.addObserver(this);
     scaffoldKey = GlobalKey<ScaffoldState>();
     controller.listenerMapLongTapping.addListener(() async {
       if (controller.listenerMapLongTapping.value != null) {
@@ -75,7 +76,7 @@ class _MainExampleState extends State<MainExample> {
         );
       }
     });
-    controller.listenerMapSingleTapping.addListener(() async{
+    controller.listenerMapSingleTapping.addListener(() async {
       if (controller.listenerMapSingleTapping.value != null) {
         if (lastGeoPoint.value != null) {
           controller.removeMarker(lastGeoPoint.value!);
@@ -95,17 +96,12 @@ class _MainExampleState extends State<MainExample> {
       }
     });
 
-    controller.listenerMapIsReady.addListener(mapIsInitialized);
+    //controller.listenerMapIsReady.addListener(mapIsInitialized);
   }
 
-  void mapIsInitialized() async {
-    if (controller.listenerMapIsReady.value) {
-      // Future.delayed(Duration(seconds: 5), () async {
-      //   await controller.zoomIn();
-      // });
-      timer = Timer(Duration(seconds: 3), () async {
-        await controller.setZoom(zoomLevel: 12);
-        /*await controller.setMarkerOfStaticPoint(
+  Future<void> mapIsInitialized() async {
+    await controller.setZoom(zoomLevel: 12);
+    /*await controller.setMarkerOfStaticPoint(
           id: "line 2",
           markerIcon: MarkerIcon(
             icon: Icon(
@@ -130,34 +126,38 @@ class _MainExampleState extends State<MainExample> {
           ],
           "line 2",
         );*/
-       await controller.addMarker(
-          GeoPoint(
-            latitude: 47.4517782,
-            longitude: 8.4716146,
-          ),
-          markerIcon: MarkerIcon(
-            icon: Icon(
-              Icons.person,
-              color: Colors.red,
-            ),
-          ),
-          angle: -pi / 4,
-        );
-        await controller.addMarker(
-          GeoPoint(
-            latitude: 47.4433594,
-            longitude: 8.4680184,
-          ),
-          markerIcon: MarkerIcon(
-            icon: Icon(
-              Icons.local_hospital,
-              color: Colors.red,
-            ),
-          ),
-          angle: pi / 4,
-        );
-        timer?.cancel();
-      });
+    await controller.addMarker(
+      GeoPoint(
+        latitude: 47.4517782,
+        longitude: 8.4716146,
+      ),
+      markerIcon: MarkerIcon(
+        icon: Icon(
+          Icons.person,
+          color: Colors.red,
+        ),
+      ),
+      angle: -pi / 4,
+    );
+    await controller.addMarker(
+      GeoPoint(
+        latitude: 47.4433594,
+        longitude: 8.4680184,
+      ),
+      markerIcon: MarkerIcon(
+        icon: Icon(
+          Icons.local_hospital,
+          color: Colors.red,
+        ),
+      ),
+      angle: pi / 4,
+    );
+  }
+
+  @override
+  Future<void> mapIsReady(bool isReady) async {
+    if (isReady) {
+      await mapIsInitialized();
     }
   }
 

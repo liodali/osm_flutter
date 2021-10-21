@@ -19,6 +19,7 @@ class MobileOSMController extends IBaseOSMController {
   late double stepZoom = 1;
   late double minZoomLevel = 2;
   late double maxZoomLevel = 18;
+  AndroidLifecycleMixin? _androidOSMLifecycle;
 
   MobileOSMController();
 
@@ -33,6 +34,10 @@ class MobileOSMController extends IBaseOSMController {
   ) async {
     await osmPlatform.init(id);
     return MobileOSMController._(id, osmState);
+  }
+
+  void addObserver(AndroidLifecycleMixin androidOSMLifecycle) {
+    _androidOSMLifecycle = androidOSMLifecycle;
   }
 
   /// dispose: close stream in osmPlatform,remove references
@@ -51,6 +56,7 @@ class MobileOSMController extends IBaseOSMController {
     GeoPoint? initPosition,
     bool initWithUserPosition = false,
     BoundingBox? box,
+    double? initZoom,
   }) async {
     if (_osmFlutterState.widget.onMapIsReady != null) {
       _osmFlutterState.widget.onMapIsReady!(false);
@@ -68,7 +74,7 @@ class MobileOSMController extends IBaseOSMController {
       _osmFlutterState.widget.minZoomLevel,
       _osmFlutterState.widget.maxZoomLevel,
       stepZoom,
-      _osmFlutterState.widget.initZoom,
+      initZoom ?? _osmFlutterState.widget.initZoom,
     );
 
     if (_osmFlutterState.widget.showDefaultInfoWindow == true) {
@@ -88,6 +94,11 @@ class MobileOSMController extends IBaseOSMController {
           .setValueListenerMapSingleTapping(event.value);
     });
     osmPlatform.onMapIsReady(_idMap).listen((event) async {
+      if (_androidOSMLifecycle != null &&
+          _osmFlutterState.widget.controller.listenerMapIsReady.value !=
+              event.value) {
+        _androidOSMLifecycle!.mapIsReady(event.value);
+      }
       _osmFlutterState.widget.mapIsReadyListener.value = event.value;
       if (_osmFlutterState.widget.onMapIsReady != null) {
         _osmFlutterState.widget.onMapIsReady!(event.value);
@@ -163,7 +174,7 @@ class MobileOSMController extends IBaseOSMController {
 
     /// road configuration
     if (_osmFlutterState.widget.road != null) {
-      await Future.microtask(() => _initializeRoadInformation());
+      await _initializeRoadInformation();
     }
 
     /// draw static position
@@ -180,7 +191,10 @@ class MobileOSMController extends IBaseOSMController {
         }
         if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {
           await osmPlatform.staticPosition(
-              _idMap, points.geoPoints!, points.id);
+            _idMap,
+            points.geoPoints!,
+            points.id,
+          );
         }
       });
     }
@@ -623,4 +637,23 @@ class MobileOSMController extends IBaseOSMController {
   Future<void> removeLimitArea() async {
     await osmPlatform.removeLimitArea(_idMap);
   }
+
+  @override
+  Future<GeoPoint> getMapCenter() async {
+    return osmPlatform.getMapCenter(_idMap);
+  }
+}
+
+extension PrivateMethodOSMController on MobileOSMController {
+  Future<void> saveCacheMap() async {
+    await (MobileOSMController.osmPlatform as MethodChannelOSM)
+        .saveCacheMap(_idMap);
+  }
+
+  Future<void> setCacheMap() async {
+    await (MobileOSMController.osmPlatform as MethodChannelOSM)
+        .setCacheMap(_idMap);
+  }
+
+  AndroidLifecycleMixin? get androidMixinObserver => _androidOSMLifecycle;
 }
