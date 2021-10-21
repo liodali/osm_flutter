@@ -1,13 +1,13 @@
 package hamza.dali.flutter_osm_plugin
 
-import android.app.Application
+import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 
-class FlutterRoadMarker(application: Application, mapView: MapView, point: GeoPoint) :
-        FlutterMarker(application, mapView, point) {
+class FlutterRoadMarker(context: Context, mapView: MapView, point: GeoPoint) :
+        FlutterMarker(context, mapView, point) {
     var mapIconsBitmaps: HashMap<String, Bitmap> = HashMap()
         set(hashMap) {
             if (hashMap.isNotEmpty()) field = hashMap
