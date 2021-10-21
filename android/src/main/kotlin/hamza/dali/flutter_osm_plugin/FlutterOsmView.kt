@@ -185,6 +185,27 @@ class FlutterOsmView(
         BoundingBox(85.0, 180.0, -85.0, -180.0)
     }
 
+    private val mapViewListener by lazy {
+        object : MapListener {
+            override fun onScroll(event: ScrollEvent?): Boolean {
+                return true
+            }
+
+            override fun onZoom(event: ZoomEvent?): Boolean {
+                if (event!!.zoomLevel < Constants.zoomStaticPosition) {
+                    val rect = Rect()
+                    map?.getDrawingRect(rect)
+                    map?.overlays?.remove(folderStaticPosition)
+                } else if (markerSelectionPicker == null) {
+                    if (map != null && !map!!.overlays.contains(folderStaticPosition)) {
+                        map!!.overlays.add(folderStaticPosition)
+                    }
+                }
+                return true
+            }
+        }
+    }
+
     private val staticOverlayListener by lazy {
         MapEventsOverlay(object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -243,24 +264,7 @@ class FlutterOsmView(
             it.controller.setCenter(GeoPoint(0.0, 0.0))
         }
 
-        map?.addMapListener(object : MapListener {
-            override fun onScroll(event: ScrollEvent?): Boolean {
-                return true
-            }
-
-            override fun onZoom(event: ZoomEvent?): Boolean {
-                if (event!!.zoomLevel < Constants.zoomStaticPosition) {
-                    val rect = Rect()
-                    map?.getDrawingRect(rect)
-                    map?.overlays?.remove(folderStaticPosition)
-                } else if (markerSelectionPicker == null) {
-                    if (map != null && !map!!.overlays.contains(folderStaticPosition)) {
-                        map!!.overlays.add(folderStaticPosition)
-                    }
-                }
-                return true
-            }
-        })
+        map?.addMapListener(mapViewListener)
         map?.overlays?.add(0, staticOverlayListener)
 
 
@@ -403,7 +407,7 @@ class FlutterOsmView(
                     )
                 }
                 "advanced#selection" -> {
-                    startAdvancedSelection(call)
+                    startAdvancedSelection()
                     result.success(null)
                 }
                 "get#position#advanced#selection" -> {
@@ -909,6 +913,8 @@ class FlutterOsmView(
                 map!!.overlays.add(folderShape)
                 map!!.overlays.add(folderRoad)
                 map!!.overlays.add(folderStaticPosition)
+                map?.overlays?.add(0, staticOverlayListener)
+
                 if (isTracking) {
                     isTracking = false
                     isEnabled = false
@@ -937,11 +943,12 @@ class FlutterOsmView(
             map!!.overlays.add(folderShape)
             map!!.overlays.add(folderRoad)
             map!!.overlays.add(folderStaticPosition)
+            map?.overlays?.add(0, staticOverlayListener)
             markerSelectionPicker = null
         }
     }
 
-    private fun startAdvancedSelection(call: MethodCall) {
+    private fun startAdvancedSelection() {
         map!!.overlays.clear()
         if (isTracking) {
             try {
