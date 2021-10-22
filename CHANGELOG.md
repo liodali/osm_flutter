@@ -1,3 +1,5 @@
+## 0.22.3 :
+* fix map listener not working after cancel or confirm advanced picker (#181)
 ## 0.22.2 :
 * add click of simple marker hit the callback `onGeoPointClicked`
 ## 0.22.1 :

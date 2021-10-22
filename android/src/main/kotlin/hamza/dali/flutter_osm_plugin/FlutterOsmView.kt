@@ -428,7 +428,7 @@ class FlutterOsmView(
                     )
                 }
                 "advanced#selection" -> {
-                    startAdvancedSelection(call)
+                    startAdvancedSelection()
                     result.success(null)
                 }
                 "get#position#advanced#selection" -> {
@@ -756,7 +756,7 @@ class FlutterOsmView(
     private fun addMarkerManually(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as HashMap<*, *>
         var bitmap = customMarkerIcon
-        if (args.containsKey("icon")) {
+        if (args.containsKey("icon")) {cancelAdvancedSelection
             bitmap = getBitmap(args["icon"] as ByteArray)
         }
         val point = (args["point"] as HashMap<String, Double>).toGeoPoint()
@@ -954,6 +954,8 @@ class FlutterOsmView(
                 map!!.overlays.add(folderShape)
                 map!!.overlays.add(folderRoad)
                 map!!.overlays.add(folderStaticPosition)
+                map?.overlays?.add(0, staticOverlayListener)
+
                 if (isTracking) {
                     isTracking = false
                     isEnabled = false
@@ -982,11 +984,12 @@ class FlutterOsmView(
             map!!.overlays.add(folderShape)
             map!!.overlays.add(folderRoad)
             map!!.overlays.add(folderStaticPosition)
+            map?.overlays?.add(0, staticOverlayListener)
             markerSelectionPicker = null
         }
     }
 
-    private fun startAdvancedSelection(call: MethodCall) {
+    private fun startAdvancedSelection() {
         map!!.overlays.clear()
         if (isTracking) {
             try {

@@ -453,6 +453,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             if (canTrackUserLocation) {
                 deactivateTrackMe()
             }
+            mapView.gestureDelegate = nil
 
 //             if (pickerMarker == nil) {
 //                 var image = UIImage(systemName: "markLocation")
@@ -507,6 +508,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 }
                 m.visible = marker.visible
             }
+            mapView.gestureDelegate = self
             cacheMarkers = [TGMarker]()
             isAdvancedPicker = false
         }
