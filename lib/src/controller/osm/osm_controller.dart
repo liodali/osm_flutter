@@ -179,23 +179,23 @@ class MobileOSMController extends IBaseOSMController {
 
     /// draw static position
     if (_osmFlutterState.widget.staticPoints.isNotEmpty) {
-      _osmFlutterState.widget.staticPoints
-          .asMap()
-          .forEach((index, points) async {
-        if (points.markerIcon != null) {
-          await osmPlatform.customMarkerStaticPosition(
-            _idMap,
-            _osmFlutterState.widget.staticIconGlobalKeys[points.id],
-            points.id,
-          );
-        }
-        if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {
-          await osmPlatform.staticPosition(
-            _idMap,
-            points.geoPoints!,
-            points.id,
-          );
-        }
+      await Future.microtask(() {
+        _osmFlutterState.widget.staticPoints.forEach((points) async {
+          if (points.markerIcon != null) {
+            await osmPlatform.customMarkerStaticPosition(
+              _idMap,
+              _osmFlutterState.widget.staticIconGlobalKeys[points.id],
+              points.id,
+            );
+          }
+          if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {
+            await osmPlatform.staticPosition(
+              _idMap,
+              points.geoPoints!,
+              points.id,
+            );
+          }
+        });
       });
     }
 
@@ -208,11 +208,17 @@ class MobileOSMController extends IBaseOSMController {
       await limitAreaMap(box);
     }
 
-    if (initPosition != null) {
+    if (initPosition != null && !_osmFlutterState.setCache.value) {
       await osmPlatform.initMap(
         _idMap,
         initPosition,
       );
+    }
+    if (_osmFlutterState.setCache.value && Platform.isAndroid) {
+      await (osmPlatform as MethodChannelOSM).setCacheMap(
+        _idMap,
+      );
+      _osmFlutterState.setCache.value = false;
     }
 
     /// picker config
@@ -653,6 +659,11 @@ extension PrivateMethodOSMController on MobileOSMController {
   Future<void> setCacheMap() async {
     await (MobileOSMController.osmPlatform as MethodChannelOSM)
         .setCacheMap(_idMap);
+  }
+
+  Future<void> clearCacheMap() async {
+    await (MobileOSMController.osmPlatform as MethodChannelOSM)
+        .clearCacheMap(_idMap);
   }
 
   AndroidLifecycleMixin? get androidMixinObserver => _androidOSMLifecycle;

@@ -144,10 +144,6 @@ class OSMFlutterState extends State<OSMFlutter> {
   @override
   void didUpdateWidget(covariant OSMFlutter oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (this.widget != oldWidget && Platform.isAndroid) {
-      widget.controller.setValueListenerMapIsReady(false);
-      mapIsReadyListener.value = false;
-    }
   }
 
   @override
@@ -158,112 +154,116 @@ class OSMFlutterState extends State<OSMFlutter> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: <Widget>[
-        widgetConfigMap(),
-        Container(
-          color: Colors.white,
-          child: widget.mapIsLoading != null
-              ? Stack(
-                  children: [
-                    Container(
-                      color: Colors.white,
-                      child: buildWidget(
-                        controller: widget.controller as MapController,
-                        onGeoPointClicked: widget.onGeoPointClicked,
-                        onLocationChanged: widget.onLocationChanged,
-                        dynamicMarkerWidgetNotifier:
-                            dynamicMarkerWidgetNotifier,
-                        mapIsLoading: widget.mapIsLoading,
-                        trackMyPosition: widget.trackMyPosition,
-                        mapIsReadyListener: mapIsReadyListener,
-                        staticIconGlobalKeys: staticMarkersKeys,
-                        road: widget.road,
-                        showContributorBadgeForOSM:
-                            widget.showContributorBadgeForOSM,
-                        isPicker: widget.isPicker,
-                        markerOption: widget.markerOption,
-                        showDefaultInfoWindow: widget.showDefaultInfoWindow,
-                        showZoomController: widget.showZoomController,
-                        staticPoints: widget.staticPoints,
-                        globalKeys: [
-                          defaultMarkerKey,
-                          advancedPickerMarker,
-                          startIconKey,
-                          endIconKey,
-                          middleIconKey,
-                          dynamicMarkerKey,
-                          personIconMarkerKey,
-                          arrowDirectionMarkerKey,
-                        ],
-                        stepZoom: widget.stepZoom,
-                        initZoom: widget.initZoom,
-                        minZoomLevel: widget.minZoomLevel,
-                        maxZoomLevel: widget.maxZoomLevel,
-                        userLocationMarker: widget.userLocationMarker,
-                        onMapIsReady: widget.onMapIsReady,
+    return OrientationBuilder(
+      builder: (ctx,_){
+        return Stack(
+          clipBehavior: Clip.none,
+          children: <Widget>[
+            widgetConfigMap(),
+            Container(
+              color: Colors.white,
+              child: widget.mapIsLoading != null
+                  ? Stack(
+                children: [
+                  Container(
+                    color: Colors.white,
+                    child: buildWidget(
+                      controller: widget.controller as MapController,
+                      onGeoPointClicked: widget.onGeoPointClicked,
+                      onLocationChanged: widget.onLocationChanged,
+                      dynamicMarkerWidgetNotifier:
+                      dynamicMarkerWidgetNotifier,
+                      mapIsLoading: widget.mapIsLoading,
+                      trackMyPosition: widget.trackMyPosition,
+                      mapIsReadyListener: mapIsReadyListener,
+                      staticIconGlobalKeys: staticMarkersKeys,
+                      road: widget.road,
+                      showContributorBadgeForOSM:
+                      widget.showContributorBadgeForOSM,
+                      isPicker: widget.isPicker,
+                      markerOption: widget.markerOption,
+                      showDefaultInfoWindow: widget.showDefaultInfoWindow,
+                      showZoomController: widget.showZoomController,
+                      staticPoints: widget.staticPoints,
+                      globalKeys: [
+                        defaultMarkerKey,
+                        advancedPickerMarker,
+                        startIconKey,
+                        endIconKey,
+                        middleIconKey,
+                        dynamicMarkerKey,
+                        personIconMarkerKey,
+                        arrowDirectionMarkerKey,
+                      ],
+                      stepZoom: widget.stepZoom,
+                      initZoom: widget.initZoom,
+                      minZoomLevel: widget.minZoomLevel,
+                      maxZoomLevel: widget.maxZoomLevel,
+                      userLocationMarker: widget.userLocationMarker,
+                      onMapIsReady: widget.onMapIsReady,
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: mapIsReadyListener,
+                      builder: (ctx, isReady, child) {
+                        return Visibility(
+                          visible: !isReady,
+                          child: child!,
+                        );
+                      },
+                      child: Container(
+                        color: Colors.white,
+                        child: widget.mapIsLoading!,
                       ),
                     ),
-                    Positioned.fill(
-                      child: ValueListenableBuilder<bool>(
-                        valueListenable: mapIsReadyListener,
-                        builder: (ctx, isReady, child) {
-                          return Visibility(
-                            visible: !isReady,
-                            child: child!,
-                          );
-                        },
-                        child: Container(
-                          color: Colors.white,
-                          child: widget.mapIsLoading!,
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : buildWidget(
-                  controller: widget.controller,
-                  onGeoPointClicked: widget.onGeoPointClicked,
-                  onLocationChanged: widget.onLocationChanged,
-                  dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
-                  mapIsLoading: widget.mapIsLoading,
-                  trackMyPosition: widget.trackMyPosition,
-                  mapIsReadyListener: mapIsReadyListener,
-                  staticIconGlobalKeys: staticMarkersKeys,
-                  road: widget.road,
-                  showContributorBadgeForOSM: widget.showContributorBadgeForOSM,
-                  isPicker: widget.isPicker,
-                  markerOption: widget.markerOption,
-                  showDefaultInfoWindow: widget.showDefaultInfoWindow,
-                  showZoomController: widget.showZoomController,
-                  staticPoints: widget.staticPoints,
-                  globalKeys: [
-                    defaultMarkerKey,
-                    advancedPickerMarker,
-                    startIconKey,
-                    endIconKey,
-                    middleIconKey,
-                    dynamicMarkerKey,
-                    personIconMarkerKey,
-                    arrowDirectionMarkerKey,
-                  ],
-                  stepZoom: widget.stepZoom,
-                  initZoom: widget.initZoom,
-                  minZoomLevel: widget.minZoomLevel,
-                  maxZoomLevel: widget.maxZoomLevel,
-                  userLocationMarker: widget.userLocationMarker,
-                  onMapIsReady: widget.onMapIsReady,
-                ),
-        ),
-        if (widget.showContributorBadgeForOSM && !kIsWeb) ...[
-          Positioned(
-            bottom: 0,
-            right: 5,
-            child: CopyrightOSMWidget(),
-          ),
-        ],
-      ],
+                  ),
+                ],
+              )
+                  : buildWidget(
+                controller: widget.controller,
+                onGeoPointClicked: widget.onGeoPointClicked,
+                onLocationChanged: widget.onLocationChanged,
+                dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
+                mapIsLoading: widget.mapIsLoading,
+                trackMyPosition: widget.trackMyPosition,
+                mapIsReadyListener: mapIsReadyListener,
+                staticIconGlobalKeys: staticMarkersKeys,
+                road: widget.road,
+                showContributorBadgeForOSM: widget.showContributorBadgeForOSM,
+                isPicker: widget.isPicker,
+                markerOption: widget.markerOption,
+                showDefaultInfoWindow: widget.showDefaultInfoWindow,
+                showZoomController: widget.showZoomController,
+                staticPoints: widget.staticPoints,
+                globalKeys: [
+                  defaultMarkerKey,
+                  advancedPickerMarker,
+                  startIconKey,
+                  endIconKey,
+                  middleIconKey,
+                  dynamicMarkerKey,
+                  personIconMarkerKey,
+                  arrowDirectionMarkerKey,
+                ],
+                stepZoom: widget.stepZoom,
+                initZoom: widget.initZoom,
+                minZoomLevel: widget.minZoomLevel,
+                maxZoomLevel: widget.maxZoomLevel,
+                userLocationMarker: widget.userLocationMarker,
+                onMapIsReady: widget.onMapIsReady,
+              ),
+            ),
+            if (widget.showContributorBadgeForOSM && !kIsWeb) ...[
+              Positioned(
+                bottom: 0,
+                right: 5,
+                child: CopyrightOSMWidget(),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 

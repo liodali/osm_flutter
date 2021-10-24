@@ -348,7 +348,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> staticPosition(
-      int idOSM, List<GeoPoint> pList, String id) async {
+    int idOSM,
+    List<GeoPoint> pList,
+    String id,
+  ) async {
     try {
       List<Map<String, double>> listGeos = [];
       for (GeoPoint p in pList) {
@@ -644,6 +647,11 @@ extension mapCache on MethodChannelOSM {
   Future<void> saveCacheMap(int id) async {
     await _channels[id]?.invokeMethod("map#saveCache#view");
   }
+
+  Future<void> clearCacheMap(int id) async {
+    await _channels[id]?.invokeMethod("map#clearCache#view");
+  }
+
 
   Future<void> setCacheMap(int id) async {
     await _channels[id]?.invokeMethod("map#setCache");

@@ -34,6 +34,7 @@ class MainExample extends StatefulWidget {
 class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   late CustomController controller;
   late GlobalKey<ScaffoldState> scaffoldKey;
+   Key mapGlobalkey = UniqueKey();
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> visibilityZoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
@@ -101,7 +102,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
 
   Future<void> mapIsInitialized() async {
     await controller.setZoom(zoomLevel: 12);
-    /*await controller.setMarkerOfStaticPoint(
+    await controller.setMarkerOfStaticPoint(
           id: "line 2",
           markerIcon: MarkerIcon(
             icon: Icon(
@@ -125,7 +126,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             ),
           ],
           "line 2",
-        );*/
+        );
     await controller.addMarker(
       GeoPoint(
         latitude: 47.4517782,
@@ -231,79 +232,77 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           )
         ],
       ),
-      body: OrientationBuilder(
-        builder: (ctx, orientation) {
-          return Container(
-            child: Stack(
-              children: [
-                OSMFlutter(
-                  controller: controller,
-                  mapIsLoading: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(),
-                        Text("Map is Loading..")
-                      ],
+      body: Container(
+        child: Stack(
+          children: [
+            OSMFlutter(
+              controller: controller,
+              mapIsLoading: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    Text("Map is Loading..")
+                  ],
+                ),
+              ),
+              initZoom: 8,
+              minZoomLevel: 8,
+              maxZoomLevel: 14,
+              stepZoom: 1.0,
+              userLocationMarker: UserLocationMaker(
+                personMarker: MarkerIcon(
+                  icon: Icon(
+                    Icons.location_history_rounded,
+                    color: Colors.red,
+                    size: 48,
+                  ),
+                ),
+                directionArrowMarker: MarkerIcon(
+                  icon: Icon(
+                    Icons.double_arrow,
+                    size: 48,
+                  ),
+                ),
+              ),
+              showContributorBadgeForOSM: true,
+              //trackMyPosition: trackingNotifier.value,
+              showDefaultInfoWindow: false,
+              onLocationChanged: (myLocation) {
+                print(myLocation);
+              },
+              onGeoPointClicked: (geoPoint) async {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      "${geoPoint.toMap().toString()}",
+                    ),
+                    action: SnackBarAction(
+                      onPressed: () => ScaffoldMessenger.of(context)
+                          .hideCurrentSnackBar(),
+                      label: "hide",
                     ),
                   ),
-                  initZoom: 8,
-                  minZoomLevel: 8,
-                  maxZoomLevel: 14,
-                  stepZoom: 1.0,
-                  userLocationMarker: UserLocationMaker(
-                    personMarker: MarkerIcon(
-                      icon: Icon(
-                        Icons.location_history_rounded,
-                        color: Colors.red,
-                        size: 48,
-                      ),
-                    ),
-                    directionArrowMarker: MarkerIcon(
-                      icon: Icon(
-                        Icons.double_arrow,
-                        size: 48,
-                      ),
+                );
+              },
+              staticPoints: [
+                StaticPositionGeoPoint(
+                  "line 1",
+                  MarkerIcon(
+                    icon: Icon(
+                      Icons.train,
+                      color: Colors.green,
+                      size: 48,
                     ),
                   ),
-                  showContributorBadgeForOSM: true,
-                  //trackMyPosition: trackingNotifier.value,
-                  showDefaultInfoWindow: false,
-                  onLocationChanged: (myLocation) {
-                    print(myLocation);
-                  },
-                  onGeoPointClicked: (geoPoint) async {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "${geoPoint.toMap().toString()}",
-                        ),
-                        action: SnackBarAction(
-                          onPressed: () => ScaffoldMessenger.of(context)
-                              .hideCurrentSnackBar(),
-                          label: "hide",
-                        ),
-                      ),
-                    );
-                  },
-                  staticPoints: [
-                    StaticPositionGeoPoint(
-                      "line 1",
-                      MarkerIcon(
-                        icon: Icon(
-                          Icons.train,
-                          color: Colors.green,
-                          size: 48,
-                        ),
-                      ),
-                      [
-                        GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
-                        GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
-                      ],
-                    ),
-                    /*StaticPositionGeoPoint(
+                  [
+                    GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+                    GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
+                  ],
+                ),
+                /*StaticPositionGeoPoint(
                       "line 2",
                       MarkerIcon(
                         icon: Icon(
@@ -317,108 +316,106 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                         GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
                       ],
                     )*/
-                  ],
-                  road: Road(
-                    startIcon: MarkerIcon(
-                      icon: Icon(
-                        Icons.person,
-                        size: 64,
-                        color: Colors.brown,
-                      ),
-                    ),
-                    roadColor: Colors.red,
-                  ),
-                  markerOption: MarkerOption(
-                    defaultMarker: MarkerIcon(
-                      icon: Icon(
-                        Icons.home,
-                        color: Colors.orange,
-                        size: 64,
-                      ),
-                    ),
-                    advancedPickerMarker: MarkerIcon(
-                      icon: Icon(
-                        Icons.location_searching,
-                        color: Colors.green,
-                        size: 64,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 10,
-                  left: 10,
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: advPickerNotifierActivation,
-                    builder: (ctx, visible, child) {
-                      return Visibility(
-                        visible: visible,
-                        child: AnimatedOpacity(
-                          opacity: visible ? 1.0 : 0.0,
-                          duration: Duration(milliseconds: 500),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: FloatingActionButton(
-                      key: UniqueKey(),
-                      child: Icon(Icons.arrow_forward),
-                      heroTag: "confirmAdvPicker",
-                      onPressed: () async {
-                        advPickerNotifierActivation.value = false;
-                        GeoPoint p =
-                            await controller.selectAdvancedPositionPicker();
-                        print(p);
-                      },
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 10,
-                  left: 10,
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: visibilityZoomNotifierActivation,
-                    builder: (ctx, visibility, child) {
-                      return Visibility(
-                        visible: visibility,
-                        child: child!,
-                      );
-                    },
-                    child: ValueListenableBuilder<bool>(
-                      valueListenable: zoomNotifierActivation,
-                      builder: (ctx, isVisible, child) {
-                        return AnimatedOpacity(
-                          opacity: isVisible ? 1.0 : 0.0,
-                          onEnd: () {
-                            visibilityZoomNotifierActivation.value = isVisible;
-                          },
-                          duration: Duration(milliseconds: 500),
-                          child: child,
-                        );
-                      },
-                      child: Column(
-                        children: [
-                          ElevatedButton(
-                            child: Icon(Icons.add),
-                            onPressed: () async {
-                              controller.zoomIn();
-                            },
-                          ),
-                          ElevatedButton(
-                            child: Icon(Icons.remove),
-                            onPressed: () async {
-                              controller.zoomOut();
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
               ],
+              road: Road(
+                startIcon: MarkerIcon(
+                  icon: Icon(
+                    Icons.person,
+                    size: 64,
+                    color: Colors.brown,
+                  ),
+                ),
+                roadColor: Colors.red,
+              ),
+              markerOption: MarkerOption(
+                defaultMarker: MarkerIcon(
+                  icon: Icon(
+                    Icons.home,
+                    color: Colors.orange,
+                    size: 64,
+                  ),
+                ),
+                advancedPickerMarker: MarkerIcon(
+                  icon: Icon(
+                    Icons.location_searching,
+                    color: Colors.green,
+                    size: 64,
+                  ),
+                ),
+              ),
             ),
-          );
-        },
+            Positioned(
+              bottom: 10,
+              left: 10,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: advPickerNotifierActivation,
+                builder: (ctx, visible, child) {
+                  return Visibility(
+                    visible: visible,
+                    child: AnimatedOpacity(
+                      opacity: visible ? 1.0 : 0.0,
+                      duration: Duration(milliseconds: 500),
+                      child: child,
+                    ),
+                  );
+                },
+                child: FloatingActionButton(
+                  key: UniqueKey(),
+                  child: Icon(Icons.arrow_forward),
+                  heroTag: "confirmAdvPicker",
+                  onPressed: () async {
+                    advPickerNotifierActivation.value = false;
+                    GeoPoint p =
+                    await controller.selectAdvancedPositionPicker();
+                    print(p);
+                  },
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 10,
+              left: 10,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: visibilityZoomNotifierActivation,
+                builder: (ctx, visibility, child) {
+                  return Visibility(
+                    visible: visibility,
+                    child: child!,
+                  );
+                },
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: zoomNotifierActivation,
+                  builder: (ctx, isVisible, child) {
+                    return AnimatedOpacity(
+                      opacity: isVisible ? 1.0 : 0.0,
+                      onEnd: () {
+                        visibilityZoomNotifierActivation.value = isVisible;
+                      },
+                      duration: Duration(milliseconds: 500),
+                      child: child,
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      ElevatedButton(
+                        child: Icon(Icons.add),
+                        onPressed: () async {
+                          controller.zoomIn();
+                        },
+                      ),
+                      ElevatedButton(
+                        child: Icon(Icons.remove),
+                        onPressed: () async {
+                          controller.zoomOut();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: ValueListenableBuilder<bool>(
         valueListenable: showFab,
