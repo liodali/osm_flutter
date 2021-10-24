@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.ArrayMap
 import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -28,9 +29,11 @@ class FlutterOsmPlugin :
         var customPickerMarkerIcon: Bitmap? = null
         var staticMarkerIcon: HashMap<String, Bitmap> = HashMap()
         var customRoadMarkerIcon = HashMap<String, Bitmap>()
-        var staticPoints: HashMap<String, MutableList<GeoPoint>> = HashMap()
+        var staticPoints: HashMap<String, Triple<List<GeoPoint>,List<Double>,ByteArray?>> = HashMap()
         var centerMap: GeoPoint? = null
         var zoom: Double? = null
+        var isAdvancedPicker: Boolean = false
+        var markers: ArrayMap<GeoPoint, ByteArray?> = ArrayMap<GeoPoint,ByteArray?>()
 
         var state = AtomicInteger(0)
         var pluginBinding: FlutterPluginBinding? = null

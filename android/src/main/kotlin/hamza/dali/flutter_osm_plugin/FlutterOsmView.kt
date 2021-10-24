@@ -6,6 +6,7 @@ import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.ArrayMap
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -28,7 +29,7 @@ import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.DESTROYED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.PAUSED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STARTED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STOPPED
-import hamza.dali.flutter_osm_plugin.utilities.FlutterPickerViewOverlay
+import hamza.dali.flutter_osm_plugin.utilities.*
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding.OnSaveInstanceStateListener
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
@@ -57,30 +58,11 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.*
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.io.ByteArrayOutputStream
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 
-
-fun GeoPoint.toHashMap(): HashMap<String, Double> {
-    return HashMap<String, Double>().apply {
-        this[Constants.latLabel] = latitude
-        this[Constants.lonLabel] = longitude
-    }
-
-}
-
-fun GeoPoint.eq(other: GeoPoint): Boolean {
-    return this.latitude == other.latitude && this.longitude == other.longitude
-}
-
-fun HashMap<String, Double>.toGeoPoint(): GeoPoint {
-    if (this.keys.contains("lat") && this.keys.contains("lon")) {
-        return GeoPoint(this["lat"]!!, this["lon"]!!)
-    }
-    throw IllegalArgumentException("cannot map this hashMap to GeoPoint")
-
-}
 
 fun FlutterOsmView.configZoomMap(call: MethodCall, result: MethodChannel.Result) {
     val args = call.arguments as HashMap<String, Any>
@@ -145,6 +127,11 @@ class FlutterOsmView(
     private val folderRoad: FolderOverlay by lazy {
         FolderOverlay().apply {
             this.name = Constants.roadName
+        }
+    }
+    private val folderMarkers: FolderOverlay by lazy {
+        FolderOverlay().apply {
+            this.name = Constants.markerNameOverlay
         }
     }
 
@@ -251,28 +238,13 @@ class FlutterOsmView(
         map!!.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         //
         map!!.minZoomLevel = 2.0
-        map!!.controller.setZoom(2.0)
-        map!!.controller.setCenter(GeoPoint(0.0, 0.0))
+        map!!.controller.setZoom(FlutterOsmPlugin.zoom ?: 2.0)
+        map!!.controller.setCenter(FlutterOsmPlugin.centerMap ?: GeoPoint(0.0, 0.0))
 
 
         map!!.addMapListener(mapListener)
-        map!!.overlayManager.add(0, MapEventsOverlay(object : MapEventsReceiver {
-            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-
-                methodChannel.invokeMethod("receiveSinglePress", p!!.toHashMap())
-
-                return true
-            }
-
-            override fun longPressHelper(p: GeoPoint?): Boolean {
-
-                methodChannel.invokeMethod("receiveLongPress", p!!.toHashMap())
-
-                return true
-
-            }
-
-        }))
+        map!!.overlayManager.add(0, staticOverlayListener)
+        map!!.overlayManager.add(folderMarkers)
 
         mainLinearLayout.addView(map)
 
@@ -284,17 +256,18 @@ class FlutterOsmView(
         try {
             when (call.method) {
                 "map#setCache" -> {
-                    if (FlutterOsmPlugin.centerMap != null &&
-                        !FlutterOsmPlugin.centerMap!!.eq(GeoPoint(0.0, 0.0))
-                    ) {
-
-                        map!!.controller.setCenter(FlutterOsmPlugin.centerMap)
-                        map!!.controller.setZoom(FlutterOsmPlugin.zoom ?: initZoom)
-                    }
+                    setCacheMap()
+                    result.success(null)
+                }
+                "map#clearCache#view" -> {
+                    FlutterOsmPlugin.centerMap = null
+                    FlutterOsmPlugin.zoom = null
+                    FlutterOsmPlugin.staticPoints.clear()
+                    FlutterOsmPlugin.isAdvancedPicker = false
+                    clearCacheMap()
                     result.success(null)
                 }
                 "map#saveCache#view" -> {
-                    clearCacheMap()
                     saveCacheMap()
                     Log.e("map center", FlutterOsmPlugin.centerMap!!.toHashMap().toString())
                     result.success(null)
@@ -317,7 +290,8 @@ class FlutterOsmView(
                     result.success(null)
                 }
                 "currentLocation" -> {
-                    enableMyLocation(result)
+                    enableMyLocation()
+                    result.success(isEnabled)
                 }
 
                 "showZoomController" -> {
@@ -462,26 +436,67 @@ class FlutterOsmView(
         }
     }
 
+    private fun setCacheMap() {
+        if (FlutterOsmPlugin.centerMap != null &&
+            !FlutterOsmPlugin.centerMap!!.eq(GeoPoint(0.0, 0.0))
+        ) {
+
+            map!!.controller.setCenter(FlutterOsmPlugin.centerMap)
+            map!!.controller.setZoom(FlutterOsmPlugin.zoom ?: initZoom)
+            scope?.launch {
+                FlutterOsmPlugin.markers.forEach { (point, bytes) ->
+                    val icon = bytes?.let { getBitmap(bytes = it) }
+                    val drawable = getDefaultIconDrawable(icon = icon, color = null)
+                    withContext(Main) {
+                        addMarker(
+                            point,
+                            dynamicMarkerBitmap = drawable,
+                            animateTo = false,
+                            zoom = FlutterOsmPlugin.zoom!!
+                        )
+                    }
+                }
+            }
+
+        }
+        if (FlutterOsmPlugin.staticPoints.isNotEmpty()) {
+            /**/
+            scope?.launch {
+                FlutterOsmPlugin.staticPoints.forEach { staticPoint ->
+                    staticPoints[staticPoint.key] = staticPoint.value.first.toMutableList()
+                    staticMarkerIcon[staticPoint.key] = when (staticPoint.value.third != null) {
+                        true -> getBitmap(staticPoint.value.third!!)
+                        false -> getDefaultIconDrawable(icon = null, color = null).toBitmap()
+                    }
+                    withContext(Main) {
+                        showStaticPosition(
+                            staticPoint.key,
+                            staticPoint.value.second.toList()
+                        )
+                    }
+                }
+            }
+        }
+        if (FlutterOsmPlugin.isAdvancedPicker) {
+            startAdvancedSelection()
+        }
+        clearCacheMap()
+    }
+
     private fun saveCacheMap() {
         FlutterOsmPlugin.centerMap = map!!.mapCenter as GeoPoint
         FlutterOsmPlugin.zoom = map!!.zoomLevelDouble
         FlutterOsmPlugin.staticMarkerIcon = HashMap()
         FlutterOsmPlugin.staticMarkerIcon.putAll(staticMarkerIcon)
-        FlutterOsmPlugin.staticPoints = HashMap()
-        FlutterOsmPlugin.staticPoints.putAll(staticPoints)
         FlutterOsmPlugin.customRoadMarkerIcon = HashMap()
         FlutterOsmPlugin.customRoadMarkerIcon.putAll(customRoadMarkerIcon)
         FlutterOsmPlugin.customPersonMarkerIcon = customPersonMarkerIcon
         FlutterOsmPlugin.customArrowMarkerIcon = customArrowMarkerIcon
         FlutterOsmPlugin.customPickerMarkerIcon = customPickerMarkerIcon
-
     }
 
     private fun clearCacheMap() {
-        FlutterOsmPlugin.centerMap = null
-        FlutterOsmPlugin.zoom = null
         FlutterOsmPlugin.staticMarkerIcon.clear()
-        FlutterOsmPlugin.staticPoints.clear()
         FlutterOsmPlugin.customRoadMarkerIcon.clear()
         FlutterOsmPlugin.customPersonMarkerIcon = null
         FlutterOsmPlugin.customArrowMarkerIcon = null
@@ -519,8 +534,8 @@ class FlutterOsmView(
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
         val zoom = initZoom
         //homeMarker = addMarker(geoPoint, zoom, null)
-        map!!.controller.setZoom(zoom)
-        map!!.controller.setCenter(geoPoint)
+        map!!.controller.setZoom(FlutterOsmPlugin.zoom ?: zoom)
+        map!!.controller.setCenter(FlutterOsmPlugin.centerMap ?: geoPoint)
         methodChannel.invokeMethod("map#init", true)
         result.success(null)
     }
@@ -564,7 +579,7 @@ class FlutterOsmView(
         when {
             dynamicMarkerBitmap != null -> {
                 marker.icon = dynamicMarkerBitmap
-                map!!.overlays.add(marker)
+                folderMarkers.items.add(marker)
 
             }
             imageURL != null && imageURL.isNotEmpty() -> {
@@ -613,10 +628,11 @@ class FlutterOsmView(
 
 
             }
-            else -> map!!.overlays.add(marker)
+            else -> folderMarkers.items.add(marker)
 
         }
 
+        map?.invalidate()
         return marker
     }
 
@@ -663,13 +679,16 @@ class FlutterOsmView(
         return iconDrawable
     }
 
-    private fun enableMyLocation(result: MethodChannel.Result) {
+    private fun enableMyLocation() {
 
         if (markerSelectionPicker != null) {
             mainLinearLayout.removeView(markerSelectionPicker)
-            map!!.overlays.add(folderShape)
-            map!!.overlays.add(folderRoad)
-            map!!.overlays.add(folderStaticPosition)
+            if (!map!!.overlays.contains(folderShape))
+                map!!.overlays.add(folderShape)
+            if (!map!!.overlays.contains(folderRoad))
+                map!!.overlays.add(folderRoad)
+            if (!map!!.overlays.contains(folderStaticPosition))
+                map!!.overlays.add(folderStaticPosition)
             markerSelectionPicker = null
         }
 
@@ -738,7 +757,7 @@ class FlutterOsmView(
         if (!map!!.overlays.contains(locationNewOverlay)) {
             map!!.overlays.add(locationNewOverlay)
         }
-        result.success(isEnabled)
+
     }
 
     private fun onChangedLocation(locationOverlay: MyLocationNewOverlay) {
@@ -755,21 +774,25 @@ class FlutterOsmView(
 
     private fun addMarkerManually(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as HashMap<*, *>
-        var bitmap = customMarkerIcon
-        if (args.containsKey("icon")) {cancelAdvancedSelection
-            bitmap = getBitmap(args["icon"] as ByteArray)
-        }
         val point = (args["point"] as HashMap<String, Double>).toGeoPoint()
 
+        var bitmap = customMarkerIcon
+        if (args.containsKey("icon")) {
+            bitmap = getBitmap(args["icon"] as ByteArray)
+            scope?.launch {
+                FlutterOsmPlugin.markers[point] = args["icon"] as ByteArray
+            }
+        }
 
-        val marker = addMarker(
+
+        addMarker(
             point,
             dynamicMarkerBitmap = getDefaultIconDrawable(null, icon = bitmap),
             zoom = map!!.zoomLevelDouble,
             animateTo = false
         )
 
-        map!!.overlays.add(marker)
+        //map!!.overlays.add(marker)
         result.success(null)
 
     }
@@ -838,22 +861,6 @@ class FlutterOsmView(
         folderRoad.items.add(polyLine)
 
 
-        /*
-            flutterRoad = FlutterRoad(application!!, map!!)
-
-            flutterRoad?.let {
-                it.markersIcons = customRoadMarkerIcon
-                polyLine.outlinePaint.strokeWidth = 5.0f
-                it.road = polyLine
-                // if (it.start != null)
-//                folderRoad.items.add(it.start.apply {
-//                    this.visibilityInfoWindow(visibilityInfoWindow)
-//                })
-//                //  if (it.end != null)
-//                folderRoad.items.add(it.end.apply {
-//                    this.visibilityInfoWindow(visibilityInfoWindow)
-//                })
-            }*/
 
         map!!.invalidate()
         result.success(null)
@@ -954,7 +961,10 @@ class FlutterOsmView(
                 map!!.overlays.add(folderShape)
                 map!!.overlays.add(folderRoad)
                 map!!.overlays.add(folderStaticPosition)
+                map!!.overlays.add(folderMarkers)
                 map?.overlays?.add(0, staticOverlayListener)
+                map?.invalidate()
+                FlutterOsmPlugin.isAdvancedPicker = false
 
                 if (isTracking) {
                     isTracking = false
@@ -962,6 +972,7 @@ class FlutterOsmView(
                 }
             }
             result.success(position.toHashMap())
+
         }
 
     }
@@ -984,8 +995,11 @@ class FlutterOsmView(
             map!!.overlays.add(folderShape)
             map!!.overlays.add(folderRoad)
             map!!.overlays.add(folderStaticPosition)
+            map!!.overlays.add(folderMarkers)
             map?.overlays?.add(0, staticOverlayListener)
             markerSelectionPicker = null
+            FlutterOsmPlugin.isAdvancedPicker = false
+
         }
     }
 
@@ -1011,7 +1025,7 @@ class FlutterOsmView(
         map!!.projection.toPixels(map!!.mapCenter, point)
         val bitmap: Bitmap = customPickerMarkerIcon
             ?: ResourcesCompat.getDrawable(
-                context!!.resources,
+                context.resources,
                 R.drawable.ic_location_on_red_24dp,
                 null
             )!!.toBitmap(
@@ -1028,6 +1042,7 @@ class FlutterOsmView(
         )
         markerSelectionPicker!!.layoutParams = params
         mainLinearLayout.addView(markerSelectionPicker)
+        FlutterOsmPlugin.isAdvancedPicker = true
 
     }
 
@@ -1234,8 +1249,10 @@ class FlutterOsmView(
         val angleGeoPoints: MutableList<Double> = emptyList<Double>().toMutableList()
         for (hashMap in points!!) {
             geoPoints.add(GeoPoint(hashMap["lat"]!!, hashMap["lon"]!!))
-            if (hashMap.containsKey("angle"))
-                angleGeoPoints.add(hashMap["angle"]!!)
+            when (hashMap.containsKey("angle")) {
+                true -> angleGeoPoints.add(hashMap["angle"] ?: 0.0)
+                else -> angleGeoPoints.add(0.0)
+            }
         }
         if (staticPoints.containsKey(id)) {
             Log.e(id, "" + points.size)
@@ -1249,6 +1266,13 @@ class FlutterOsmView(
             staticPoints[id!!] = geoPoints
         }
         showStaticPosition(id!!, angleGeoPoints.toList())
+        scope?.launch {
+            FlutterOsmPlugin.staticPoints[id] = Triple(
+                geoPoints.toList(),
+                angleGeoPoints.toList(),
+                getBytesFromBitmap(staticMarkerIcon[id]),
+            )
+        }
         result.success(null)
     }
 
@@ -1346,11 +1370,21 @@ class FlutterOsmView(
     }
 
     private fun deleteMarker(geoPoint: GeoPoint) {
-        val geoMarkers = map!!.overlays.filterIsInstance<FlutterMarker>().filter { marker ->
+        val geoMarkers = folderMarkers.items.filterIsInstance<FlutterMarker>().filter { marker ->
             marker.position.eq(geoPoint)
         }
         if (geoMarkers.isNotEmpty()) {
-            map!!.overlays.removeAll(geoMarkers)
+            folderMarkers.items.removeAll(geoMarkers)
+            scope?.launch {
+                val geoPoints = FlutterOsmPlugin.markers.filter { geo ->
+                    geoMarkers.map {
+                        it.position
+                    }.containGeoPoint(geo.key)
+                }.keys
+                FlutterOsmPlugin.markers.removeAll(geoPoints)
+            }
+            map!!.overlays.remove(folderMarkers)
+            map!!.overlays.add(folderMarkers)
             map!!.invalidate()
         }
 
@@ -1412,12 +1446,12 @@ class FlutterOsmView(
             overlay.add(marker)
         }
         folderStaticPosition.add(overlay)
-        if (map!!.zoomLevelDouble > 10.0) {
+        if (map!!.zoomLevelDouble > 10.0 && !FlutterOsmPlugin.isAdvancedPicker) {
             if (map!!.overlays.contains(folderStaticPosition)) {
                 map!!.overlays.remove(folderStaticPosition)
-                map!!.overlays.add(folderStaticPosition)
-                map!!.invalidate()
             }
+            map!!.overlays.add(folderStaticPosition)
+            map!!.invalidate()
         }
 
     }
@@ -1427,16 +1461,21 @@ class FlutterOsmView(
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
     }
 
+    private fun getBytesFromBitmap(bitmap: Bitmap?): ByteArray? {
+        if (bitmap == null) {
+            return null
+        }
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream)
+        return stream.toByteArray()
+    }
+
 
     override fun getView(): View {
         return mainLinearLayout
     }
 
     override fun dispose() {
-        staticMarkerIcon.clear()
-        staticPoints.clear()
-        customMarkerIcon = null
-        customRoadMarkerIcon.clear()
         mainLinearLayout.removeAllViews()
         //clearCacheMap()
         //map!!.onDetach()
@@ -1458,6 +1497,10 @@ class FlutterOsmView(
 
     override fun onFlutterViewDetached() {
         map!!.onDetach()
+        staticMarkerIcon.clear()
+        staticPoints.clear()
+        customMarkerIcon = null
+        customRoadMarkerIcon.clear()
 //        mainLinearLayout.removeAllViews()
 //        map!!.onDetach()
 //        map = null
@@ -1547,6 +1590,7 @@ class FlutterOsmView(
     fun onDestroy(owner: LifecycleOwner) {
         mainLinearLayout.removeAllViews()
         clearCacheMap()
+        FlutterOsmPlugin.markers = ArrayMap()
 
         //map!!.onDetach()
         methodChannel.setMethodCallHandler(null)
