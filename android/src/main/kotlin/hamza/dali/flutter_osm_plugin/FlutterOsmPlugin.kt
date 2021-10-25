@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import hamza.dali.flutter_osm_plugin.utilities.MapSnapShot
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -24,16 +25,8 @@ class FlutterOsmPlugin :
     FlutterPlugin, ActivityAware {
 
     companion object {
-        var customPersonMarkerIcon: Bitmap? = null
-        var customArrowMarkerIcon: Bitmap? = null
-        var customPickerMarkerIcon: Bitmap? = null
-        var staticMarkerIcon: HashMap<String, Bitmap> = HashMap()
-        var customRoadMarkerIcon = HashMap<String, Bitmap>()
-        var staticPoints: HashMap<String, Triple<List<GeoPoint>,List<Double>,ByteArray?>> = HashMap()
-        var centerMap: GeoPoint? = null
-        var zoom: Double? = null
-        var isAdvancedPicker: Boolean = false
-        var markers: ArrayMap<GeoPoint, ByteArray?> = ArrayMap<GeoPoint,ByteArray?>()
+        var mapSnapShot = MapSnapShot()
+
 
         var state = AtomicInteger(0)
         var pluginBinding: FlutterPluginBinding? = null
