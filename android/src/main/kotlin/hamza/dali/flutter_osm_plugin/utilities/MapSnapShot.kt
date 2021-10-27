@@ -14,6 +14,8 @@ class MapSnapShot {
 
     private var zoom: Double? = null
     private var isAdvancedPicker: Boolean = false
+    private var isTrackMe: Boolean = false
+    private var enableLocation: Boolean = false
 
     private var markers: ArrayMap<GeoPoint, ByteArray?> = ArrayMap<GeoPoint, ByteArray?>()
 
@@ -24,6 +26,17 @@ class MapSnapShot {
     fun staticGeoPoints() = staticPoints
     fun addToStaticGeoPoints(id: String, value: Triple<List<GeoPoint>, List<Double>, ByteArray?>) {
         staticPoints[id] = value
+    }
+
+    fun getEnableMyLocation() = enableLocation
+    fun trackMyLocation() = isTrackMe
+
+    fun setTrackLocation(isTracking: Boolean) {
+        isTrackMe = isTracking
+    }
+
+    fun setEnableMyLocation(isEnabled: Boolean) {
+        enableLocation = isEnabled
     }
 
     fun cache(
@@ -64,6 +77,8 @@ class MapSnapShot {
             markers.clear()
             staticPoints.clear()
             isAdvancedPicker = false
+            isTrackMe = false
+            enableLocation = false
         }
         customRoadMarkerIcon.clear()
         customPersonMarkerIcon = null
