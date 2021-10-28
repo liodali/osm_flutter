@@ -45,51 +45,56 @@ Future<GeoPoint?> showSimplePickerLocation({
   GeoPoint? point = await showDialog(
     context: context,
     builder: (ctx) {
-      return AlertDialog(
-        title: Text(title),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(radius),
+      return WillPopScope(
+        onWillPop: () async {
+          return isDismissible;
+        },
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height / 2.4,
+          width: MediaQuery.of(context).size.height / 2,
+          child: AlertDialog(
+            title: Text(title),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(radius),
+              ),
+            ),
+            contentPadding: contentPadding,
+            content: SizedBox(
+              height: MediaQuery.of(context).size.height / 2.5,
+              width: MediaQuery.of(context).size.height / 2,
+              child: OSMFlutter(
+                controller: controller,
+                isPicker: true,
+                stepZoom: stepZoom,
+                initZoom: initZoom,
+                minZoomLevel: minZoomLevel,
+                maxZoomLevel: maxZoomLevel,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  textCancelPicker ??
+                      MaterialLocalizations.of(context).cancelButtonLabel,
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final p = await controller
+                      .getCurrentPositionAdvancedPositionPicker();
+                  await controller.cancelAdvancedPositionPicker();
+                  Navigator.pop(ctx, p);
+                },
+                child: Text(
+                  textConfirmPicker ??
+                      MaterialLocalizations.of(context).okButtonLabel,
+                ),
+              ),
+            ],
           ),
         ),
-        contentPadding: contentPadding,
-        content: WillPopScope(
-          onWillPop: () async {
-            return isDismissible;
-          },
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height / 2.5,
-            child: OSMFlutter(
-              controller: controller,
-              isPicker: true,
-              stepZoom: stepZoom,
-              initZoom: initZoom,
-              minZoomLevel: minZoomLevel,
-              maxZoomLevel: maxZoomLevel,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              textCancelPicker ??
-                  MaterialLocalizations.of(context).cancelButtonLabel,
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final p =
-                  await controller.getCurrentPositionAdvancedPositionPicker();
-              await controller.cancelAdvancedPositionPicker();
-              Navigator.pop(ctx, p);
-            },
-            child: Text(
-              textConfirmPicker ??
-                  MaterialLocalizations.of(context).okButtonLabel,
-            ),
-          ),
-        ],
       );
     },
   );
