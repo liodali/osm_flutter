@@ -1,6 +1,7 @@
 package hamza.dali.flutter_osm_plugin.utilities
 
 import android.util.ArrayMap
+import hamza.dali.flutter_osm_plugin.FlutterOsmView
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 
@@ -12,7 +13,8 @@ class MapSnapShot {
     private var staticPoints: HashMap<String, Triple<List<GeoPoint>, List<Double>, ByteArray?>> =
         HashMap()
     private var centerMap: GeoPoint? = null
-    private var boundingWorldBox: BoundingBox? = null
+    private var boundingWorldBox: BoundingBox = FlutterOsmView.boundingWorldBox
+
     private var lastRoadCache: RoadSnapShot? = null
     private var zoom: Double? = null
     private var isAdvancedPicker: Boolean = false

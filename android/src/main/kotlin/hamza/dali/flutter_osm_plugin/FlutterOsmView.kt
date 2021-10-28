@@ -159,11 +159,18 @@ class FlutterOsmView(
     private var isEnabled = false
     private var visibilityInfoWindow = false
 
-    private val boundingWorldBox: BoundingBox by lazy {
-        BoundingBox(85.0, 180.0, -85.0, -180.0)
+    companion object {
+        val boundingWorldBox: BoundingBox =
+            BoundingBox(
+                85.0,
+                180.0,
+                -85.0,
+                -180.0,
+            )
+
     }
 
-    private val staticOverlayListener =
+    private val staticOverlayListener by lazy {
         MapEventsOverlay(object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
 
@@ -181,9 +188,10 @@ class FlutterOsmView(
             }
 
         })
+    }
 
 
-    private val mapListener =
+    private val mapListener by lazy {
         object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
                 return true
@@ -202,11 +210,12 @@ class FlutterOsmView(
                 return true
             }
         }
+    }
 
 
     private var mainLinearLayout: FrameLayout = FrameLayout(context).apply {
         this.layoutParams =
-            MapView.LayoutParams(FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            FrameLayout.LayoutParams(FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
     }
     private var markerSelectionPicker: FlutterPickerViewOverlay? = null
 
@@ -229,7 +238,7 @@ class FlutterOsmView(
         map!!.setTileSource(MAPNIK)
         map!!.isVerticalMapRepetitionEnabled = false
         map!!.isHorizontalMapRepetitionEnabled = false
-        map!!.setScrollableAreaLimitDouble(boundingWorldBox)
+        map!!.setScrollableAreaLimitDouble(mapSnapShot.boundingWorld())
         map!!.setScrollableAreaLimitLatitude(
             MapView.getTileSystem().maxLatitude,
             MapView.getTileSystem().minLatitude,
@@ -307,7 +316,7 @@ class FlutterOsmView(
                     limitCameraArea(call, result)
                 }
                 "remove#limitArea" -> {
-                    removeLimitCameraArea(call, result)
+                    removeLimitCameraArea(result)
 
                 }
                 "changePosition" -> {
@@ -475,7 +484,7 @@ class FlutterOsmView(
             }
         }
         mapSnapShot.lastCachedRoad()?.let { lastRoad ->
-            if(lastRoad.roadPoints.isNotEmpty()){
+            if (lastRoad.roadPoints.isNotEmpty()) {
                 if (!map!!.overlayManager.contains(folderRoad)) {
                     map!!.overlayManager.add(folderRoad)
                 }
@@ -752,30 +761,6 @@ class FlutterOsmView(
                 }
 
             }
-            false -> {
-                val defaultPerson = ContextCompat
-                    .getDrawable(
-                        context,
-                        R.drawable.ic_location_on_red_24dp
-                    )!!.toBitmap()
-                when (customArrowMarkerIcon != null) {
-                    true -> {
-                        locationNewOverlay!!.setDirectionArrow(
-                            defaultPerson,
-                            customArrowMarkerIcon
-                        )
-                        locationNewOverlay!!.setPersonHotspot(0f, 0f)
-                        val mScale = map!!.context.resources.displayMetrics.density
-
-                        locationNewOverlay!!.setPersonHotspot(
-                            mScale * (customPersonMarkerIcon!!.width / 4f) + 0.5f,
-                            mScale * (customPersonMarkerIcon!!.width / 3f) + 0.5f,
-                        )
-                    }
-                    false -> locationNewOverlay!!.setPersonIcon(defaultPerson)
-                }
-
-            }
         }
         locationNewOverlay?.let { location ->
             if (!location.isMyLocationEnabled) {
@@ -849,17 +834,20 @@ class FlutterOsmView(
         }
     }
 
-    private fun removeLimitCameraArea(call: MethodCall, result: MethodChannel.Result) {
+    private fun removeLimitCameraArea(result: MethodChannel.Result) {
         map!!.setScrollableAreaLimitDouble(boundingWorldBox)
+        mapSnapShot.setBoundingWorld(boundingWorldBox)
         result.success(200)
     }
 
     private fun limitCameraArea(call: MethodCall, result: MethodChannel.Result) {
         val list = call.arguments as List<Double>
-        map!!.setScrollableAreaLimitDouble(
-            BoundingBox(
-                list[0], list[1], list[2], list[3]
-            )
+        val box = BoundingBox(
+            list[0], list[1], list[2], list[3]
+        )
+        map!!.setScrollableAreaLimitDouble(box)
+        mapSnapShot.setBoundingWorld(
+            box = box
         )
         result.success(200)
     }
