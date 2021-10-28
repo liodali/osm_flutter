@@ -1,6 +1,7 @@
 package hamza.dali.flutter_osm_plugin.utilities
 
 import android.util.ArrayMap
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 
 class MapSnapShot {
@@ -11,7 +12,8 @@ class MapSnapShot {
     private var staticPoints: HashMap<String, Triple<List<GeoPoint>, List<Double>, ByteArray?>> =
         HashMap()
     private var centerMap: GeoPoint? = null
-
+    private var boundingWorldBox: BoundingBox? = null
+    private var lastRoadCache: RoadSnapShot? = null
     private var zoom: Double? = null
     private var isAdvancedPicker: Boolean = false
     private var isTrackMe: Boolean = false
@@ -21,6 +23,7 @@ class MapSnapShot {
 
     fun advancedPicker() = isAdvancedPicker
     fun centerGeoPoint() = centerMap
+    fun boundingWorld() = boundingWorldBox
     fun zoomLevel(initZoom: Double) = zoom ?: initZoom
     fun markers() = markers
     fun staticGeoPoints() = staticPoints
@@ -30,6 +33,19 @@ class MapSnapShot {
 
     fun getEnableMyLocation() = enableLocation
     fun trackMyLocation() = isTrackMe
+    fun lastCachedRoad() = lastRoadCache
+    fun clearCachedRoad() {
+        lastRoadCache = null
+    }
+
+    fun setBoundingWorld(box: BoundingBox) {
+        this.boundingWorldBox = box
+    }
+
+    fun cacheRoad(road: RoadSnapShot) {
+        lastRoadCache = road
+    }
+
 
     fun setTrackLocation(isTracking: Boolean) {
         isTrackMe = isTracking
@@ -79,6 +95,7 @@ class MapSnapShot {
             isAdvancedPicker = false
             isTrackMe = false
             enableLocation = false
+            lastRoadCache = null
         }
         customRoadMarkerIcon.clear()
         customPersonMarkerIcon = null
@@ -87,3 +104,11 @@ class MapSnapShot {
     }
 
 }
+
+data class RoadSnapShot(
+    val roadPoints: List<GeoPoint>,
+    val showIcons: Boolean,
+    val roadColor: Int?,
+    val roadWith: Float,
+    val listInterestPoints: List<GeoPoint> = emptyList(),
+)
