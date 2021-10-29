@@ -398,7 +398,7 @@ await controller.drawRoadManually(
 ```
 
 ### Interfaces:
-* OSMMixin :
+* OSMMixinObserver :
 > override mapIsReady to implement your own logic after initialisation of the map
 
 > `mapIsReady` will replace `listenerMapIsReady`
@@ -410,7 +410,7 @@ await controller.drawRoadManually(
 
 ** example 
 ```dart
-class YourOwnStateWidget extends State<YourWidget> with OSMMixin {
+class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 
    //etc
     
