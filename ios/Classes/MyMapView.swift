@@ -123,6 +123,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             currentUserLocation()
             result(200)
             break;
+        case "map#center":
+            result(mapView.position.toGeoPoint())
+            break;
         case "trackMe":
             trackUserLocation()
             result(200)

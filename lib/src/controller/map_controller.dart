@@ -271,4 +271,7 @@ class MapController extends BaseMapController {
     }
     await osmBaseController.addMarker(p, markerIcon: markerIcon, angle: angle);
   }
+
+  Future<GeoPoint> get centerMapasync async =>
+      await osmBaseController.getMapCenter();
 }
