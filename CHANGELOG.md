@@ -1,3 +1,10 @@
+## 0.25.0 : improve rebuilding map in android
+* store last map state before reloading widget in android
+* create OSMMixin to replace ValueListenable in MapController
+  * OSMMixin contain for now one method `mapIsReady`
+* fix show picker map
+* add titleWidget for osm picker 
+* add textStyle for title osm picker
 ## 0.22.3 :
 * fix map listener not working after cancel or confirm advanced picker (#181)
 ## 0.22.2 :

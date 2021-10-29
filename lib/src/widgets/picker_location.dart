@@ -8,11 +8,15 @@ import '../osm_flutter.dart';
 ///
 /// [context] : (BuildContext) dialog context parent
 ///
-/// [title] : (String) text title widget of dialog
+/// [titleWidget] : (Widget) widget title  of the dialog
 ///
-/// [textConfirmPicker] : (String) text confirm button widget of dialog
+/// [title] : (String) text title widget of the dialog
 ///
-/// [textCancelPicker] : (String) text cancel button widget of dialog
+/// [titleStyle] : (TextStyle) style text title widget of the dialog
+///
+/// [textConfirmPicker] : (String) text confirm button widget of the dialog
+///
+/// [textCancelPicker] : (String) text cancel button widget of the dialog
 ///
 /// [radius] : (double) rounded radius of the dialog
 ///
@@ -23,7 +27,9 @@ import '../osm_flutter.dart';
 /// [initPosition] : (bool) to initialize the map  in user location
 Future<GeoPoint?> showSimplePickerLocation({
   required BuildContext context,
-  required String title,
+  Widget? titleWidget,
+  String? title,
+  TextStyle? titleStyle,
   String? textConfirmPicker,
   String? textCancelPicker,
   EdgeInsets contentPadding = EdgeInsets.zero,
@@ -36,12 +42,14 @@ Future<GeoPoint?> showSimplePickerLocation({
   bool isDismissible = false,
   bool initCurrentUserPosition = true,
 }) async {
+  assert(title == null || titleWidget == null);
   assert((initCurrentUserPosition && initPosition == null) ||
       !initCurrentUserPosition && initPosition != null);
   final MapController controller = MapController(
     initMapWithUserPosition: initCurrentUserPosition,
     initPosition: initPosition,
   );
+
   GeoPoint? point = await showDialog(
     context: context,
     builder: (ctx) {
@@ -53,7 +61,12 @@ Future<GeoPoint?> showSimplePickerLocation({
           height: MediaQuery.of(context).size.height / 2.4,
           width: MediaQuery.of(context).size.height / 2,
           child: AlertDialog(
-            title: Text(title),
+            title: title != null
+                ? Text(
+                    title,
+                    style: titleStyle,
+                  )
+                : titleWidget,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(
                 Radius.circular(radius),
