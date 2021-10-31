@@ -652,7 +652,6 @@ extension mapCache on MethodChannelOSM {
     await _channels[id]?.invokeMethod("map#clearCache#view");
   }
 
-
   Future<void> setCacheMap(int id) async {
     await _channels[id]?.invokeMethod("map#setCache");
   }

@@ -34,7 +34,7 @@ class MainExample extends StatefulWidget {
 class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   late CustomController controller;
   late GlobalKey<ScaffoldState> scaffoldKey;
-   Key mapGlobalkey = UniqueKey();
+  Key mapGlobalkey = UniqueKey();
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> visibilityZoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
@@ -103,30 +103,30 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   Future<void> mapIsInitialized() async {
     await controller.setZoom(zoomLevel: 12);
     await controller.setMarkerOfStaticPoint(
-          id: "line 2",
-          markerIcon: MarkerIcon(
-            icon: Icon(
-              Icons.train,
-              color: Colors.orange,
-              size: 48,
-            ),
-          ),
-        );
-        await controller.setStaticPosition(
-          [
-            GeoPointWithOrientation(
-              latitude: 47.4433594,
-              longitude: 8.4680184,
-              angle: pi / 4,
-            ),
-            GeoPointWithOrientation(
-              latitude: 47.4517782,
-              longitude: 8.4716146,
-              angle: pi / 2,
-            ),
-          ],
-          "line 2",
-        );
+      id: "line 2",
+      markerIcon: MarkerIcon(
+        icon: Icon(
+          Icons.train,
+          color: Colors.orange,
+          size: 48,
+        ),
+      ),
+    );
+    await controller.setStaticPosition(
+      [
+        GeoPointWithOrientation(
+          latitude: 47.4433594,
+          longitude: 8.4680184,
+          angle: pi / 4,
+        ),
+        GeoPointWithOrientation(
+          latitude: 47.4517782,
+          longitude: 8.4716146,
+          angle: pi / 2,
+        ),
+      ],
+      "line 2",
+    );
     await controller.addMarker(
       GeoPoint(
         latitude: 47.4517782,
@@ -280,8 +280,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                       "${geoPoint.toMap().toString()}",
                     ),
                     action: SnackBarAction(
-                      onPressed: () => ScaffoldMessenger.of(context)
-                          .hideCurrentSnackBar(),
+                      onPressed: () =>
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                       label: "hide",
                     ),
                   ),
@@ -366,7 +366,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   onPressed: () async {
                     advPickerNotifierActivation.value = false;
                     GeoPoint p =
-                    await controller.selectAdvancedPositionPicker();
+                        await controller.selectAdvancedPositionPicker();
                     print(p);
                   },
                 ),
