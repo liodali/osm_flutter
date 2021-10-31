@@ -413,7 +413,11 @@ await controller.drawRoadManually(
 class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 
    //etc
-    
+  @override
+  void initState() {
+    super.initState();
+    controller.addObserver(this);
+  }
     @override
     Future<void> mapIsReady(bool isReady) async {
       if (isReady) {

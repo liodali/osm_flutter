@@ -45,6 +45,7 @@ class MobileOSMController extends IBaseOSMController {
     if (_timer != null && _timer!.isActive) {
       _timer?.cancel();
     }
+    _androidOSMLifecycle = null;
     osmPlatform.close(_idMap);
   }
 
