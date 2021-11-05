@@ -23,6 +23,8 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Stream<MapInitialization> onMapIsReady(int idMap);
 
+  Stream<MapRestoration> onMapRestored(int idMap);
+
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap);
 
   Stream<LongTapEvent> onLongPressMapClickListener(int idMap);

@@ -529,6 +529,7 @@ class FlutterOsmView(
             }
         }
         clearCacheMap()
+        methodChannel.invokeMethod("map#restored", null)
     }
 
     private fun saveCacheMap() {

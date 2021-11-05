@@ -101,6 +101,9 @@ class MobileOSMController extends IBaseOSMController {
       }
       _osmFlutterState.widget.controller.setValueListenerMapIsReady(event.value);
     });
+    osmPlatform.onMapRestored(_idMap).listen((event) {
+      _osmFlutterState.widget.controller.osMMixin?.mapRestored();
+    });
 
     if (_osmFlutterState.widget.onGeoPointClicked != null) {
       osmPlatform.onGeoPointClickListener(_idMap).listen((event) {

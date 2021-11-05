@@ -57,6 +57,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
+  Stream<MapRestoration> onMapRestored(int idMap) {
+    return _events(idMap).whereType<MapRestoration>();
+  }
+
+  @override
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
     return _events(idMap).whereType<SingleTapEvent>();
   }
