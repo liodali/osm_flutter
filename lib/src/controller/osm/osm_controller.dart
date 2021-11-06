@@ -92,7 +92,8 @@ class MobileOSMController extends IBaseOSMController {
     });
     osmPlatform.onMapIsReady(_idMap).listen((event) async {
       if (_androidOSMLifecycle != null &&
-          _osmFlutterState.widget.controller.listenerMapIsReady.value != event.value) {
+          _osmFlutterState.widget.controller.listenerMapIsReady.value != event.value &&
+          !_osmFlutterState.setCache.value) {
         _androidOSMLifecycle!.mapIsReady(event.value);
       }
       _osmFlutterState.widget.mapIsReadyListener.value = event.value;
@@ -316,8 +317,9 @@ class MobileOSMController extends IBaseOSMController {
   /// [markerIcon] : (MarkerIcon) new marker that will set to the static group geopoint
   Future<void> setIconStaticPositions(
     String id,
-    MarkerIcon markerIcon,
-  ) async {
+    MarkerIcon markerIcon, {
+    bool refresh = false,
+  }) async {
     if (markerIcon.icon != null) {
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon.icon;
     } else if (markerIcon.image != null) {
@@ -330,6 +332,7 @@ class MobileOSMController extends IBaseOSMController {
         _idMap,
         _osmFlutterState.dynamicMarkerKey,
         id,
+        refresh: refresh,
       );
     });
   }

@@ -176,8 +176,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> customMarkerStaticPosition(
     int idOSM,
     GlobalKey? globalKey,
-    String id,
-  ) async {
+    String id, {
+    bool refresh = false,
+  }) async {
     if (globalKey?.currentContext != null) {
       Uint8List icon = await _capturePng(globalKey!);
       String iconIOS = "";
@@ -187,6 +188,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       var args = {
         "id": id,
         "bitmap": Platform.isIOS ? iconIOS : icon,
+        "refresh": refresh,
       };
 
       await _channels[idOSM]?.invokeMethod(

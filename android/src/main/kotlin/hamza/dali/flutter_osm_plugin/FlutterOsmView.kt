@@ -470,10 +470,11 @@ class FlutterOsmView(
             scope?.launch {
                 mapSnapShot.staticGeoPoints().forEach { staticPoint ->
                     staticPoints[staticPoint.key] = staticPoint.value.first.toMutableList()
-                    staticMarkerIcon[staticPoint.key] = when (staticPoint.value.third != null) {
+                    val bitmapIcon = when (staticPoint.value.third != null) {
                         true -> getBitmap(staticPoint.value.third!!)
                         false -> getDefaultIconDrawable(icon = null, color = null).toBitmap()
                     }
+                    staticMarkerIcon[staticPoint.key] = bitmapIcon
                     withContext(Main) {
                         showStaticPosition(
                             staticPoint.key,
@@ -668,7 +669,7 @@ class FlutterOsmView(
                         }
 
                         override fun onError(e: java.lang.Exception?) {
-                            TODO("Not yet implemented")
+                            Log.e("error image", e?.stackTraceToString() ?: "")
                         }
 
                     })
@@ -1305,8 +1306,27 @@ class FlutterOsmView(
         val hashMap: HashMap<String, Any> = call.arguments as HashMap<String, Any>
 
         try {
+            val key = (hashMap["id"] as String)
             val bitmap = getBitmap((hashMap["bitmap"] as ByteArray))
-            staticMarkerIcon[(hashMap["id"] as String)] = bitmap
+            val refresh = hashMap["refresh"] as Boolean
+            staticMarkerIcon[key] = bitmap
+            scope?.launch {
+                if (staticPoints.containsKey(key) && refresh) {
+                    showStaticPosition(
+                        key,
+                        mapSnapShot.staticGeoPoints()[key]!!.second
+                    )
+                }
+                if (mapSnapShot.staticGeoPoints().containsKey(key)) {
+                    val triples = mapSnapShot.staticGeoPoints()[key]
+                    mapSnapShot.addToStaticGeoPoints(
+                        key,
+                        triples!!.copy(
+                            third = getBytesFromBitmap(bitmap)
+                        )
+                    )
+                }
+            }
             result.success(null)
         } catch (e: java.lang.Exception) {
             Log.e("id", hashMap["id"].toString())
@@ -1492,14 +1512,22 @@ class FlutterOsmView(
 
     private fun showStaticPosition(idStaticPosition: String, angles: List<Double> = emptyList()) {
 
-        /* folderStaticPosition.items.retainAll {
-             (it as FolderOverlay).name?.equals(idStaticPosition) == true
-         }*/
+        var overlay: FolderOverlay? = folderStaticPosition.items.firstOrNull {
+            (it as FolderOverlay).name?.equals(idStaticPosition) == true
+        } as FolderOverlay?
 
-
-        val overlay = FolderOverlay().apply {
-            name = idStaticPosition
+        overlay?.let {
+            it.items.clear()
         }
+        if (overlay != null) {
+            folderStaticPosition.add(overlay)
+        }
+        if (overlay == null) {
+            overlay = FolderOverlay().apply {
+                name = idStaticPosition
+            }
+        }
+
         staticPoints[idStaticPosition]?.forEachIndexed { index, geoPoint ->
             val marker = FlutterMarker(context, map!!)
             marker.position = geoPoint

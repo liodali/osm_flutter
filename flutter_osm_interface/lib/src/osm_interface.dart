@@ -166,8 +166,9 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   Future<void> customMarkerStaticPosition(
     int idOSM,
     GlobalKey? globalKey,
-    String id,
-  );
+    String id, {
+    bool refresh = false,
+  });
 
   Future<void> staticPosition(
     int idOSM,
