@@ -465,16 +465,29 @@ class FlutterOsmView(
             }
 
         }
+        if (mapSnapShot.staticGeoPointsIcons().isNotEmpty()) {
+            scope?.launch {
+                mapSnapShot.staticGeoPointsIcons().forEach { (key, icon) ->
+                    staticMarkerIcon[key] = getBitmap(icon)
+                }
+            }
+        }
+
         if (mapSnapShot.staticGeoPoints().isNotEmpty()) {
             /**/
             scope?.launch {
+                withContext(Default) {
+                    mapSnapShot.staticGeoPointsIcons().forEach { (key, icon) ->
+                        staticMarkerIcon[key] = getBitmap(icon)
+                    }
+                }
                 mapSnapShot.staticGeoPoints().forEach { staticPoint ->
                     staticPoints[staticPoint.key] = staticPoint.value.first.toMutableList()
-                    val bitmapIcon = when (staticPoint.value.third != null) {
-                        true -> getBitmap(staticPoint.value.third!!)
-                        false -> getDefaultIconDrawable(icon = null, color = null).toBitmap()
-                    }
-                    staticMarkerIcon[staticPoint.key] = bitmapIcon
+//                    val bitmapIcon = when (staticPoint.value.third != null) {
+//                        true -> getBitmap(staticPoint.value.third!!)
+//                        false -> getDefaultIconDrawable(icon = null, color = null).toBitmap()
+//                    }
+//                    staticMarkerIcon[staticPoint.key] = bitmapIcon
                     withContext(Main) {
                         showStaticPosition(
                             staticPoint.key,
@@ -585,6 +598,9 @@ class FlutterOsmView(
         map!!.controller.setZoom(mapSnapShot.zoomLevel(zoom))
         map!!.controller.setCenter(mapSnapShot.centerGeoPoint() ?: geoPoint)
         methodChannel.invokeMethod("map#init", true)
+        scope?.launch {
+            mapSnapShot.cacheLocation(geoPoint, zoom)
+        }
         result.success(null)
     }
 
@@ -1307,23 +1323,16 @@ class FlutterOsmView(
 
         try {
             val key = (hashMap["id"] as String)
-            val bitmap = getBitmap((hashMap["bitmap"] as ByteArray))
+            val bytes = (hashMap["bitmap"] as ByteArray)
+            val bitmap = getBitmap(bytes)
             val refresh = hashMap["refresh"] as Boolean
             staticMarkerIcon[key] = bitmap
             scope?.launch {
+                mapSnapShot.addToIconsStaticGeoPoints(key, bytes)
                 if (staticPoints.containsKey(key) && refresh) {
                     showStaticPosition(
                         key,
                         mapSnapShot.staticGeoPoints()[key]!!.second
-                    )
-                }
-                if (mapSnapShot.staticGeoPoints().containsKey(key)) {
-                    val triples = mapSnapShot.staticGeoPoints()[key]
-                    mapSnapShot.addToStaticGeoPoints(
-                        key,
-                        triples!!.copy(
-                            third = getBytesFromBitmap(bitmap)
-                        )
                     )
                 }
             }
@@ -1363,10 +1372,9 @@ class FlutterOsmView(
         showStaticPosition(id!!, angleGeoPoints.toList())
         scope?.launch {
             mapSnapShot.addToStaticGeoPoints(
-                id, Triple(
+                id, Pair(
                     geoPoints.toList(),
                     angleGeoPoints.toList(),
-                    getBytesFromBitmap(staticMarkerIcon[id]),
                 )
             )
         }
@@ -1520,7 +1528,7 @@ class FlutterOsmView(
             it.items.clear()
         }
         if (overlay != null) {
-            folderStaticPosition.add(overlay)
+            folderStaticPosition.remove(overlay)
         }
         if (overlay == null) {
             overlay = FolderOverlay().apply {
@@ -1556,11 +1564,14 @@ class FlutterOsmView(
             overlay.add(marker)
         }
         folderStaticPosition.add(overlay)
-        if (map!!.zoomLevelDouble > 10.0 && !FlutterOsmPlugin.mapSnapShot.advancedPicker()) {
+        if (map!!.zoomLevelDouble > 10.0 && !mapSnapShot.advancedPicker()) {
             if (map!!.overlays.contains(folderStaticPosition)) {
                 map!!.overlays.remove(folderStaticPosition)
             }
-            map!!.overlays.add(folderStaticPosition)
+            if (!map!!.overlays.contains(folderStaticPosition)) {
+                map!!.overlays.add(folderStaticPosition)
+
+            }
             map!!.invalidate()
         }
 

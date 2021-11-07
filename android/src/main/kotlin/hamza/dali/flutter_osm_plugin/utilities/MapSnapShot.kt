@@ -10,7 +10,8 @@ class MapSnapShot {
     private var customArrowMarkerIcon: ByteArray? = null
     private var customPickerMarkerIcon: ByteArray? = null
     private var customRoadMarkerIcon = HashMap<String, ByteArray>()
-    private var staticPoints: HashMap<String, Triple<List<GeoPoint>, List<Double>, ByteArray?>> =
+    private var staticPointsIcons = HashMap<String, ByteArray>()
+    private var staticPoints: HashMap<String, Pair<List<GeoPoint>, List<Double>>> =
         HashMap()
     private var centerMap: GeoPoint? = null
     private var boundingWorldBox: BoundingBox = FlutterOsmView.boundingWorldBox
@@ -29,8 +30,13 @@ class MapSnapShot {
     fun zoomLevel(initZoom: Double) = zoom ?: initZoom
     fun markers() = markers
     fun staticGeoPoints() = staticPoints
-    fun addToStaticGeoPoints(id: String, value: Triple<List<GeoPoint>, List<Double>, ByteArray?>) {
+    fun staticGeoPointsIcons() = staticPointsIcons
+    fun addToStaticGeoPoints(id: String, value: Pair<List<GeoPoint>, List<Double>>) {
         staticPoints[id] = value
+    }
+
+    fun addToIconsStaticGeoPoints(id: String, value: ByteArray) {
+        staticPointsIcons[id] = value
     }
 
     fun getEnableMyLocation() = enableLocation
@@ -55,6 +61,14 @@ class MapSnapShot {
 
     fun setEnableMyLocation(isEnabled: Boolean) {
         enableLocation = isEnabled
+    }
+
+    fun cacheLocation(
+        geoPoint: GeoPoint,
+        zoom: Double,
+    ) {
+        centerMap = geoPoint
+        this.zoom = zoom
     }
 
     fun cache(
