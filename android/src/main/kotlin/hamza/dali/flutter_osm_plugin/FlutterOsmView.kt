@@ -1327,8 +1327,8 @@ class FlutterOsmView(
             val bitmap = getBitmap(bytes)
             val refresh = hashMap["refresh"] as Boolean
             staticMarkerIcon[key] = bitmap
+            mapSnapShot.addToIconsStaticGeoPoints(key, bytes)
             scope?.launch {
-                mapSnapShot.addToIconsStaticGeoPoints(key, bytes)
                 if (staticPoints.containsKey(key) && refresh) {
                     showStaticPosition(
                         key,
