@@ -553,6 +553,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
 
   @override
   Future<void> mapRestored() async {
+    super.mapRestored();
     print("log map restored");
   }
 }
