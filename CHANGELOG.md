@@ -1,3 +1,5 @@
+## 0.22.3+1 : version versioning in osm_interface package
+* improve prepare publish script to manage max version supported by osm_interface
 ## 0.22.3 :
 * fix map listener not working after cancel or confirm advanced picker (#181)
 ## 0.22.2 :
