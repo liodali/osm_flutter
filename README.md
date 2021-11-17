@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.25.0--rc.5-orange) 
+![pub](https://img.shields.io/badge/pub-v0.26.0--rc.1-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
@@ -36,7 +36,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.25.0-rc.5
+      flutter_osm_plugin: ^0.26.0-rc.1
 
 ### Migration to `0.16.0` (Android Only)
 > if you are using this plugin before Flutter 2 
@@ -405,7 +405,8 @@ await controller.drawRoadManually(
 
 | Methods                       | Description                         |
 | ----------------------------- | ----------------------------------- |
-| `mapIsReady`                  | (callback) should be override this method, to get notified when map is ready to go or not     |
+| `mapIsReady`                  | (callback) should be override this method, to get notified when map is ready to go or not,     |
+| `mapRestored`                 | (callback) should be override this method, to get notified when map is restored you can also add you bakcup   |
 
 
 ** example 
@@ -424,7 +425,11 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
         /// put you logic
       }
     }
-    
+  @override
+  Future<void> mapRestored() async {
+    super.mapRestored();
+    /// TODO
+  }
     //etc
 }
 ```
