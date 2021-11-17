@@ -2,7 +2,6 @@ package hamza.dali.flutter_osm_plugin
 
 import android.app.Activity
 import android.app.Application
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.ArrayMap
 import android.util.Log
@@ -17,15 +16,15 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.embedding.engine.plugins.lifecycle.FlutterLifecycleAdapter
 import io.flutter.plugin.common.PluginRegistry
 import org.osmdroid.config.Configuration
-import org.osmdroid.util.GeoPoint
 import java.util.concurrent.atomic.AtomicInteger
 
 
 class FlutterOsmPlugin :
-    FlutterPlugin, ActivityAware {
+        FlutterPlugin, ActivityAware {
 
     companion object {
-        var mapSnapShot = MapSnapShot()
+        var mapSnapShots = ArrayMap<String, MapSnapShot>()
+        var lastKeysRestarted: ArrayMap<String,Boolean>? = ArrayMap()
 
 
         var state = AtomicInteger(0)
@@ -51,28 +50,28 @@ class FlutterOsmPlugin :
             val flutterOsmView = FlutterOsmPlugin()
             //register.activity().application.registerActivityLifecycleCallbacks(flutterOsmView)
             register.platformViewRegistry().registerViewFactory(
-                VIEW_TYPE,
-                OsmFactory(
-                    register.messenger(),
-                    object : ProviderLifecycle {
-                        override fun getLifecyle(): Lifecycle =
-                            ProxyLifecycleProvider(activity = register.activity()).lifecycle
-                    },
-                ),
+                    VIEW_TYPE,
+                    OsmFactory(
+                            register.messenger(),
+                            object : ProviderLifecycle {
+                                override fun getLifecyle(): Lifecycle =
+                                        ProxyLifecycleProvider(activity = register.activity()).lifecycle
+                            },
+                    ),
             )
         }
     }
 
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
         binding.platformViewRegistry.registerViewFactory(
-            VIEW_TYPE,
-            OsmFactory(
-                binding.binaryMessenger,
-                object : ProviderLifecycle {
-                    override fun getLifecyle(): Lifecycle? = lifecycle
+                VIEW_TYPE,
+                OsmFactory(
+                        binding.binaryMessenger,
+                        object : ProviderLifecycle {
+                            override fun getLifecyle(): Lifecycle? = lifecycle
 
-                },
-            ),
+                        },
+                ),
         )
     }
 
@@ -130,7 +129,7 @@ interface ProviderLifecycle {
 }
 
 private class ProxyLifecycleProvider constructor(
-    private val activity: Activity
+        private val activity: Activity
 ) : Application.ActivityLifecycleCallbacks, LifecycleOwner, ProviderLifecycle {
 
     val lifecycle: LifecycleRegistry = LifecycleRegistry(this)
