@@ -284,10 +284,7 @@ class FlutterOsmView(
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
-                "setupKey" -> {
-                    setupKeySnapShot(call.arguments as String)
-                    result.success(null)
-                }
+
                 "map#setCache" -> {
                     setCacheMap()
                     result.success(null)
@@ -471,9 +468,7 @@ class FlutterOsmView(
         }
     }
 
-    private fun setupKeySnapShot(key: String) {
-        keyMapSnapshot = key
-    }
+
 
     private fun setCacheMap() {
         val mapSnapShot = mapSnapShot()
