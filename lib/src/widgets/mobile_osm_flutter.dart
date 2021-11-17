@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:location/location.dart';
+import 'package:uuid/uuid.dart';
 
 import '../controller/osm/osm_controller.dart';
 
@@ -85,6 +87,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   GlobalKey get personIconMarkerKey => widget.globalKeys[6];
 
   GlobalKey get arrowDirectionMarkerKey => widget.globalKeys[7];
+  late String keyUUID;
   late Widget widgetMap;
   late ValueNotifier<Orientation> orientation;
   late ValueNotifier<Size> sizeNotifier;
@@ -93,18 +96,17 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   @override
   void initState() {
     super.initState();
+    keyUUID = Uuid().v4();
     WidgetsBinding.instance?.addObserver(this);
     Future.delayed(Duration.zero, () async {
-      orientation = ValueNotifier(
-          Orientation.values[MediaQuery.of(context).orientation.index]);
+      orientation = ValueNotifier(Orientation.values[MediaQuery.of(context).orientation.index]);
       orientation.addListener(changeOrientationDetected);
 
       sizeNotifier = ValueNotifier(MediaQuery.of(context).size);
       sizeNotifier.addListener(changeOrientationDetected);
 
       //check location permission
-      if (((widget.controller).initMapWithUserPosition ||
-          widget.trackMyPosition)) {
+      if (((widget.controller).initMapWithUserPosition || widget.trackMyPosition)) {
         await requestPermission();
         if (widget.controller.initMapWithUserPosition) {
           bool isEnabled = await _osmController!.checkServiceLocation();
@@ -133,7 +135,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
 
   @override
   void dispose() {
-    Future.microtask(() async => await _osmController?.clearCacheMap());
+    Future.microtask(() async => await _osmController?.removeCacheMap());
     orientation.removeListener(changeOrientationDetected);
     WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
@@ -202,6 +204,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       mobileKey: mobileKey,
       androidKey: androidKey,
       onPlatformCreatedView: _onPlatformViewCreated,
+      uuidMapCache: keyUUID,
     );
   }
 
@@ -241,11 +244,13 @@ class PlatformView extends StatelessWidget {
   final Function(int) onPlatformCreatedView;
   final Key? mobileKey;
   final Key? androidKey;
+  final String uuidMapCache;
 
   const PlatformView({
     this.mobileKey,
     this.androidKey,
     required this.onPlatformCreatedView,
+    required this.uuidMapCache,
   }) : super(key: mobileKey);
 
   @override
@@ -254,7 +259,9 @@ class PlatformView extends StatelessWidget {
       key: androidKey,
       viewType: 'plugins.dali.hamza/osmview',
       onPlatformViewCreated: onPlatformCreatedView,
-      //creationParamsCodec:  StandardMessageCodec(),
+      creationParams: uuidMapCache,
+      //creationParamsCodec: null,
+      creationParamsCodec:  StandardMethodCodec().messageCodec,
     );
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       widgetMap = UiKitView(

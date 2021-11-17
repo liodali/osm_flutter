@@ -469,7 +469,6 @@ class FlutterOsmView(
     }
 
 
-
     private fun setCacheMap() {
         val mapSnapShot = mapSnapShot()
         if (mapSnapShot.centerGeoPoint() != null &&
@@ -1676,7 +1675,6 @@ class FlutterOsmView(
         //methodChannel.invokeMethod("map#init", true)
 
 
-
         scope = owner.lifecycle.coroutineScope
         folderStaticPosition.name = Constants.nameFolderStatic
         Configuration.getInstance().load(
@@ -1742,7 +1740,7 @@ class FlutterOsmView(
     fun onDestroy(owner: LifecycleOwner) {
         mainLinearLayout.removeAllViews()
 
-        mapSnapShot().reset(all = true)
+        removeCurrentCache()
 
         //map!!.onDetach()
         methodChannel.setMethodCallHandler(null)
