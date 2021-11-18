@@ -139,7 +139,6 @@ class FlutterOsmView(
 
     private var flutterRoad: FlutterRoad? = null
     private var job: Job? = null
-    private var jobFlow: Job? = null
     private var scope: CoroutineScope? = null
 
 
@@ -564,7 +563,7 @@ class FlutterOsmView(
                                 when {
                                     !locationOverlay.isFollowLocationEnabled -> {
                                         locationOverlay.enableFollowLocation()
-                                        onChangedLocation(locationOverlay)
+                                        onChangedLocation()
                                     }
                                 }
                             }
@@ -834,15 +833,20 @@ class FlutterOsmView(
         }
     }
 
-    private fun onChangedLocation(locationOverlay: MyLocationNewOverlay) {
+    private fun onChangedLocation() {
         //
-        provider.startLocationProvider { location, source ->
-            locationOverlay.onLocationChanged(location, source)
-            val geoPMap = GeoPoint(location).toHashMap()
-            methodChannel.invokeMethod("receiveUserLocation", geoPMap)
-
-            //eventLocationSink?.success(geoPMap)
+        locationNewOverlay?.let { locationOverlay ->
+            locationOverlay.runOnFirstFix {
+                val location = locationOverlay.lastFix
+                val geoPMap = GeoPoint(location).toHashMap()
+                scope?.launch {
+                    withContext(Main) {
+                        methodChannel.invokeMethod("receiveUserLocation", geoPMap)
+                    }
+                }
+            }
         }
+
     }
 
 
@@ -970,7 +974,7 @@ class FlutterOsmView(
                     !locationOverlay.isFollowLocationEnabled -> {
                         isTracking = true
                         locationOverlay.enableFollowLocation()
-                        onChangedLocation(locationOverlay)
+                        onChangedLocation()
                         mapSnapShot().setTrackLocation(isTracking)
                         mapSnapShot().setEnableMyLocation(isEnabled)
                         result.success(true)
@@ -1088,7 +1092,7 @@ class FlutterOsmView(
                         if (!locationOverlay.isFollowLocationEnabled) {
                             isTracking = true
                             locationOverlay.enableFollowLocation()
-                            onChangedLocation(locationOverlay)
+                            onChangedLocation()
                         }
                     }
                 } catch (e: Exception) {
@@ -1715,14 +1719,14 @@ class FlutterOsmView(
         }
         map?.onResume()
         reStartFollowLocation()
-
+        locationNewOverlay?.onResume()
 
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onPause(owner: LifecycleOwner) {
         FlutterOsmPlugin.state.set(PAUSED)
-        stopFollowLocation()
+        locationNewOverlay?.onPause()
         //val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         //Configuration.getInstance().save(context, prefs)
         map?.onPause()
@@ -1739,12 +1743,8 @@ class FlutterOsmView(
                 it.cancel()
             }
         }
-        jobFlow?.let {
-            if (it.isActive) {
-                it.cancel()
-            }
-        }
-        jobFlow = null
+
+
         job = null
 
     }
@@ -1778,7 +1778,7 @@ class FlutterOsmView(
                 }
                 if (isTracking) {
                     myLocation.enableFollowLocation()
-                    onChangedLocation(myLocation)
+                    onChangedLocation()
 
                 }
             }
