@@ -511,11 +511,6 @@ class FlutterOsmView(
                 }
                 mapSnapShot.staticGeoPoints().forEach { staticPoint ->
                     staticPoints[staticPoint.key] = staticPoint.value.first.toMutableList()
-//                    val bitmapIcon = when (staticPoint.value.third != null) {
-//                        true -> getBitmap(staticPoint.value.third!!)
-//                        false -> getDefaultIconDrawable(icon = null, color = null).toBitmap()
-//                    }
-//                    staticMarkerIcon[staticPoint.key] = bitmapIcon
                     withContext(Main) {
                         showStaticPosition(
                                 staticPoint.key,
@@ -553,6 +548,14 @@ class FlutterOsmView(
                 isEnabled = mapSnapShot.getEnableMyLocation()
                 when (isEnabled || isTracking) {
                     true -> {
+                        mapSnapShot.getPersonUserTrackMarker()?.let { bytes ->
+                            customPersonMarkerIcon = getBitmap(bytes)
+
+                        }
+                        mapSnapShot.getArrowDirectionTrackMarker()?.let { bytes ->
+                            customArrowMarkerIcon = getBitmap(bytes)
+
+                        }
                         if (isEnabled) {
                             enableMyLocation()
                         }
@@ -578,8 +581,8 @@ class FlutterOsmView(
         mapSnapShot().cache(
                 geoPoint = map!!.mapCenter as GeoPoint,
                 zoom = map!!.zoomLevelDouble,
-                customArrowMarkerIcon = getBytesFromBitmap(customArrowMarkerIcon),
-                customPersonMarkerIcon = getBytesFromBitmap(customPersonMarkerIcon),
+//                customArrowMarkerIcon = getBytesFromBitmap(customArrowMarkerIcon),
+//                customPersonMarkerIcon = getBytesFromBitmap(customPersonMarkerIcon),
                 customPickerMarkerIcon = getBytesFromBitmap(customPickerMarkerIcon),
                 customRoadMarkerIcon = HashMap(
                         customRoadMarkerIcon.mapValues { m ->
@@ -788,6 +791,27 @@ class FlutterOsmView(
             locationNewOverlay = MyLocationNewOverlay(provider, map)
         }
         //locationNewOverlay!!.setPersonIcon()
+        setMarkerTracking()
+        locationNewOverlay?.let { location ->
+            if (!location.isMyLocationEnabled) {
+                isEnabled = true
+                location.enableMyLocation()
+            }
+            mapSnapShot().setEnableMyLocation(isEnabled)
+            location.runOnFirstFix {
+                scope!!.launch(Main) {
+                    val currentPosition = GeoPoint(location.lastFix)
+                    map!!.controller.animateTo(currentPosition)
+                }
+            }
+        }
+        if (!map!!.overlays.contains(locationNewOverlay)) {
+            map!!.overlays.add(locationNewOverlay)
+        }
+
+    }
+
+    private fun setMarkerTracking() {
         when (customPersonMarkerIcon != null) {
             true -> {
                 when (customArrowMarkerIcon != null) {
@@ -808,23 +832,6 @@ class FlutterOsmView(
 
             }
         }
-        locationNewOverlay?.let { location ->
-            if (!location.isMyLocationEnabled) {
-                isEnabled = true
-                location.enableMyLocation()
-            }
-            mapSnapShot().setEnableMyLocation(isEnabled)
-            location.runOnFirstFix {
-                scope!!.launch(Main) {
-                    val currentPosition = GeoPoint(location.lastFix)
-                    map!!.controller.animateTo(currentPosition)
-                }
-            }
-        }
-        if (!map!!.overlays.contains(locationNewOverlay)) {
-            map!!.overlays.add(locationNewOverlay)
-        }
-
     }
 
     private fun onChangedLocation(locationOverlay: MyLocationNewOverlay) {
@@ -870,8 +877,14 @@ class FlutterOsmView(
     private fun changeLocationMarkers(call: MethodCall, result: MethodChannel.Result) {
         val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
         try {
-            customPersonMarkerIcon = getBitmap((args["personIcon"] as ByteArray))
-            customArrowMarkerIcon = getBitmap((args["arrowDirectionIcon"] as ByteArray))
+            val personIcon = (args["personIcon"] as ByteArray)
+            val arrowIcon = (args["arrowDirectionIcon"] as ByteArray)
+            customPersonMarkerIcon = getBitmap(personIcon)
+            customArrowMarkerIcon = getBitmap(arrowIcon)
+            mapSnapShot().setUserTrackMarker(
+                    personMarker = personIcon,
+                    arrowMarker = arrowIcon
+            )
             result.success(null)
         } catch (e: Exception) {
             e.printStackTrace()

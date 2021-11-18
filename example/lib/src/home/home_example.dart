@@ -112,32 +112,32 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     //     ),
     //   ),
     // );
-    // await controller.setMarkerOfStaticPoint(
-    //   id: "line 2",
-    //   markerIcon: MarkerIcon(
-    //     icon: Icon(
-    //       Icons.train,
-    //       color: Colors.orange,
-    //       size: 48,
-    //     ),
-    //   ),
-    // );
+    await controller.setMarkerOfStaticPoint(
+      id: "line 2",
+      markerIcon: MarkerIcon(
+        icon: Icon(
+          Icons.train,
+          color: Colors.orange,
+          size: 48,
+        ),
+      ),
+    );
 
-    // await controller.setStaticPosition(
-    //   [
-    //     GeoPointWithOrientation(
-    //       latitude: 47.4433594,
-    //       longitude: 8.4680184,
-    //       angle: pi / 4,
-    //     ),
-    //     GeoPointWithOrientation(
-    //       latitude: 47.4517782,
-    //       longitude: 8.4716146,
-    //       angle: pi / 2,
-    //     ),
-    //   ],
-    //   "line 1",
-    // );
+    await controller.setStaticPosition(
+      [
+        GeoPointWithOrientation(
+          latitude: 47.4433594,
+          longitude: 8.4680184,
+          angle: pi / 4,
+        ),
+        GeoPointWithOrientation(
+          latitude: 47.4517782,
+          longitude: 8.4716146,
+          angle: pi / 2,
+        ),
+      ],
+      "line 2",
+    );
   }
 
   @override
@@ -283,8 +283,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     ),
                   ),
                   [
-                    // GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
-                    // GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
+                    GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+                    GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
                   ],
                 ),
                 /*StaticPositionGeoPoint(

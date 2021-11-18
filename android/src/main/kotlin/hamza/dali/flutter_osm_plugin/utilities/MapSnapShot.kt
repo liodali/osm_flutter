@@ -12,7 +12,7 @@ class MapSnapShot {
     private var customRoadMarkerIcon = HashMap<String, ByteArray>()
     private var staticPointsIcons = HashMap<String, ByteArray>()
     private var staticPoints: HashMap<String, Pair<List<GeoPoint>, List<Double>>> =
-        HashMap()
+            HashMap()
     private var centerMap: GeoPoint? = null
     private var boundingWorldBox: BoundingBox = FlutterOsmView.boundingWorldBox
 
@@ -64,26 +64,34 @@ class MapSnapShot {
     }
 
     fun cacheLocation(
-        geoPoint: GeoPoint,
-        zoom: Double,
+            geoPoint: GeoPoint,
+            zoom: Double,
     ) {
         centerMap = geoPoint
         this.zoom = zoom
     }
 
+    fun setUserTrackMarker(
+            personMarker: ByteArray?,
+            arrowMarker: ByteArray?
+    ) {
+        this.customPersonMarkerIcon = personMarker
+        this.customArrowMarkerIcon = arrowMarker
+    }
+
+    fun getPersonUserTrackMarker() = this.customPersonMarkerIcon
+    fun getArrowDirectionTrackMarker() = this.customArrowMarkerIcon
+
+
     fun cache(
-        geoPoint: GeoPoint,
-        zoom: Double,
-        customRoadMarkerIcon: HashMap<String, ByteArray>,
-        customPersonMarkerIcon: ByteArray?,
-        customArrowMarkerIcon: ByteArray?,
-        customPickerMarkerIcon: ByteArray?,
+            geoPoint: GeoPoint,
+            zoom: Double,
+            customRoadMarkerIcon: HashMap<String, ByteArray>,
+            customPickerMarkerIcon: ByteArray?,
     ) {
         centerMap = geoPoint
         this.zoom = zoom
         this.customRoadMarkerIcon = customRoadMarkerIcon
-        this.customPersonMarkerIcon = customPersonMarkerIcon
-        this.customArrowMarkerIcon = customArrowMarkerIcon
         this.customPickerMarkerIcon = customPickerMarkerIcon
     }
 
@@ -122,9 +130,9 @@ class MapSnapShot {
 }
 
 data class RoadSnapShot(
-    val roadPoints: List<GeoPoint>,
-    val showIcons: Boolean,
-    val roadColor: Int?,
-    val roadWith: Float,
-    val listInterestPoints: List<GeoPoint> = emptyList(),
+        val roadPoints: List<GeoPoint>,
+        val showIcons: Boolean,
+        val roadColor: Int?,
+        val roadWith: Float,
+        val listInterestPoints: List<GeoPoint> = emptyList(),
 )
