@@ -1,5 +1,6 @@
 ## 0.26.0 : add multi map cache
 * improve cache map in android 
+* fix tracking location in android side
 ## 0.25.0 : improve rebuilding map in android (skipped)
 * store last map state before reloading widget in android
 * create OSMMixinObserver to replace ValueListenable in MapController

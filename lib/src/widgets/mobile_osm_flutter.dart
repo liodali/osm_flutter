@@ -99,14 +99,16 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     keyUUID = Uuid().v4();
     WidgetsBinding.instance?.addObserver(this);
     Future.delayed(Duration.zero, () async {
-      orientation = ValueNotifier(Orientation.values[MediaQuery.of(context).orientation.index]);
+      orientation = ValueNotifier(
+          Orientation.values[MediaQuery.of(context).orientation.index]);
       orientation.addListener(changeOrientationDetected);
 
       sizeNotifier = ValueNotifier(MediaQuery.of(context).size);
       sizeNotifier.addListener(changeOrientationDetected);
 
       //check location permission
-      if (((widget.controller).initMapWithUserPosition || widget.trackMyPosition)) {
+      if (((widget.controller).initMapWithUserPosition ||
+          widget.trackMyPosition)) {
         await requestPermission();
         if (widget.controller.initMapWithUserPosition) {
           bool isEnabled = await _osmController!.checkServiceLocation();
@@ -261,7 +263,7 @@ class PlatformView extends StatelessWidget {
       onPlatformViewCreated: onPlatformCreatedView,
       creationParams: uuidMapCache,
       //creationParamsCodec: null,
-      creationParamsCodec:  StandardMethodCodec().messageCodec,
+      creationParamsCodec: StandardMethodCodec().messageCodec,
     );
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       widgetMap = UiKitView(
