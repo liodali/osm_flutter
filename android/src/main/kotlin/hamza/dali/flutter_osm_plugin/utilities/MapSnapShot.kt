@@ -21,6 +21,7 @@ class MapSnapShot {
     private var isAdvancedPicker: Boolean = false
     private var isTrackMe: Boolean = false
     private var enableLocation: Boolean = false
+    private var mapOrientation: Float = 0f
 
     private var markers: ArrayMap<GeoPoint, ByteArray?> = ArrayMap<GeoPoint, ByteArray?>()
 
@@ -38,10 +39,14 @@ class MapSnapShot {
     fun addToIconsStaticGeoPoints(id: String, value: ByteArray) {
         staticPointsIcons[id] = value
     }
+    fun saveMapOrientation(orientation:Float) {
+        mapOrientation = orientation
+    }
 
     fun getEnableMyLocation() = enableLocation
     fun trackMyLocation() = isTrackMe
     fun lastCachedRoad() = lastRoadCache
+    fun mapOrientation() = mapOrientation
     fun clearCachedRoad() {
         lastRoadCache = null
     }

@@ -470,12 +470,16 @@ class FlutterOsmView(
 
     private fun setCacheMap() {
         val mapSnapShot = mapSnapShot()
+        // set last location and zoom level and orientation 
         if (mapSnapShot.centerGeoPoint() != null &&
                 !mapSnapShot.centerGeoPoint()!!.eq(GeoPoint(0.0, 0.0))
         ) {
-
+            if (mapSnapShot.mapOrientation() != 0f) {
+                map!!.mapOrientation = mapSnapShot.mapOrientation()
+            }
             map!!.controller.setCenter(mapSnapShot.centerGeoPoint())
             map!!.controller.setZoom(mapSnapShot.zoomLevel(initZoom))
+
             scope?.launch {
                 mapSnapShot.markers().forEach { (point, bytes) ->
                     val icon = bytes?.let { getBitmap(bytes = it) }
@@ -492,6 +496,7 @@ class FlutterOsmView(
             }
 
         }
+        // set geo marker drawable 
         if (mapSnapShot.staticGeoPointsIcons().isNotEmpty()) {
             scope?.launch {
                 mapSnapShot.staticGeoPointsIcons().forEach { (key, icon) ->
@@ -499,25 +504,9 @@ class FlutterOsmView(
                 }
             }
         }
-
+        // set static geo marker position in the map
         if (mapSnapShot.staticGeoPoints().isNotEmpty()) {
-            /**/
-            scope?.launch {
-                withContext(Default) {
-                    mapSnapShot.staticGeoPointsIcons().forEach { (key, icon) ->
-                        staticMarkerIcon[key] = getBitmap(icon)
-                    }
-                }
-                mapSnapShot.staticGeoPoints().forEach { staticPoint ->
-                    staticPoints[staticPoint.key] = staticPoint.value.first.toMutableList()
-                    withContext(Main) {
-                        showStaticPosition(
-                                staticPoint.key,
-                                staticPoint.value.second.toList()
-                        )
-                    }
-                }
-            }
+            resetLastGeoPointPosition(mapSnapShot)
         }
         mapSnapShot.lastCachedRoad()?.let { lastRoad ->
             if (lastRoad.roadPoints.isNotEmpty()) {
@@ -540,41 +529,11 @@ class FlutterOsmView(
 
         }
 
-        when (mapSnapShot.advancedPicker()) {
-            true -> startAdvancedSelection()
-            false -> {
-                isTracking = mapSnapShot.trackMyLocation()
-                isEnabled = mapSnapShot.getEnableMyLocation()
-                when (isEnabled || isTracking) {
-                    true -> {
-                        mapSnapShot.getPersonUserTrackMarker()?.let { bytes ->
-                            customPersonMarkerIcon = getBitmap(bytes)
-
-                        }
-                        mapSnapShot.getArrowDirectionTrackMarker()?.let { bytes ->
-                            customArrowMarkerIcon = getBitmap(bytes)
-
-                        }
-                        if (isEnabled) {
-                            enableMyLocation()
-                        }
-                        if (isTracking) {
-                            locationNewOverlay?.let { locationOverlay ->
-                                when {
-                                    !locationOverlay.isFollowLocationEnabled -> {
-                                        locationOverlay.enableFollowLocation()
-                                        onChangedLocation()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        resetAdvPickerOrTrackLocation(mapSnapShot)
         clearCacheMap()
         methodChannel.invokeMethod("map#restored", null)
     }
+
 
     private fun saveCacheMap() {
         mapSnapShot().cache(
@@ -923,6 +882,7 @@ class FlutterOsmView(
                 null,
                 (call.arguments as Double?)?.toFloat() ?: 0f
         )
+        mapSnapShot().saveMapOrientation(map!!.mapOrientation)
         map!!.invalidate()
         result.success(null)
     }
@@ -1792,22 +1752,60 @@ class FlutterOsmView(
         }
     }
 
-    private fun stopFollowLocation() {
-        if (isTracking || isEnabled) {
-            locationNewOverlay?.also { myLocation ->
 
-                if (myLocation.isFollowLocationEnabled) {
-                    myLocation.disableFollowLocation()
+    private fun resetAdvPickerOrTrackLocation(mapSnapShot: MapSnapShot) {
+        when (mapSnapShot.advancedPicker()) {
+            true -> startAdvancedSelection()
+            false -> {
+                isTracking = mapSnapShot.trackMyLocation()
+                isEnabled = mapSnapShot.getEnableMyLocation()
+                when (isEnabled || isTracking) {
+                    true -> {
+                        mapSnapShot.getPersonUserTrackMarker()?.let { bytes ->
+                            customPersonMarkerIcon = getBitmap(bytes)
 
+                        }
+                        mapSnapShot.getArrowDirectionTrackMarker()?.let { bytes ->
+                            customArrowMarkerIcon = getBitmap(bytes)
+
+                        }
+                        if (isEnabled) {
+                            enableMyLocation()
+                        }
+                        if (isTracking) {
+                            locationNewOverlay?.let { locationOverlay ->
+                                when {
+                                    !locationOverlay.isFollowLocationEnabled -> {
+                                        locationOverlay.enableFollowLocation()
+                                        onChangedLocation()
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-                if (myLocation.isMyLocationEnabled) {
-                    myLocation.disableMyLocation()
-                    //provider.stopLocationProvider()
-                }
-                provider.stopLocationProvider()
             }
-            locationNewOverlay = null
         }
     }
+
+    private fun resetLastGeoPointPosition(mapSnapShot: MapSnapShot) {
+        scope?.launch {
+            withContext(Default) {
+                mapSnapShot.staticGeoPointsIcons().forEach { (key, icon) ->
+                    staticMarkerIcon[key] = getBitmap(icon)
+                }
+            }
+            mapSnapShot.staticGeoPoints().forEach { staticPoint ->
+                staticPoints[staticPoint.key] = staticPoint.value.first.toMutableList()
+                withContext(Main) {
+                    showStaticPosition(
+                            staticPoint.key,
+                            staticPoint.value.second.toList()
+                    )
+                }
+            }
+        }
+    }
+
 }
 
