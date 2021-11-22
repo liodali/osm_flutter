@@ -1,3 +1,8 @@
+## 0.1.10+2 :
+* remove annotation protected from mapRestored in OSMMixin
+## 0.1.10+1 :
+## 0.1.10 :
+## 0.1.9 :
 ## 0.1.5 :
 * add attribute `angle` to method `addMarker`
 ## 0.1.4 :

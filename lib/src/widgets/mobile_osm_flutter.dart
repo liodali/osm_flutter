@@ -173,7 +173,6 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     }
     super.didUpdateWidget(oldWidget);
     if (this.widget != oldWidget && Platform.isAndroid) {
-      widget.controller.setValueListenerMapIsReady(false);
       setState(() {
         androidKey = GlobalKey();
       });
