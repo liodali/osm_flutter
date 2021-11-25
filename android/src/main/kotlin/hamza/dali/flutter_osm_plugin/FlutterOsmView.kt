@@ -1120,21 +1120,18 @@ class FlutterOsmView(
         mapSnapShot().setTrackLocation(isTracking)
         mapSnapShot().setEnableMyLocation(isEnabled)
         try {
-            locationNewOverlay?.let { locationOverlay ->
-                when {
-                    locationOverlay.isFollowLocationEnabled -> {
-                        locationOverlay.disableFollowLocation()
-                        locationOverlay.disableMyLocation()
-                        provider.stopLocationProvider()
-                    }
-                    else -> result.success(null)
+            when {
+                locationNewOverlay != null && locationNewOverlay!!.isFollowLocationEnabled -> {
+                    locationNewOverlay!!.disableFollowLocation()
+                    locationNewOverlay!!.disableMyLocation()
+                    provider.stopLocationProvider()
+                    result.success(true)
                 }
-
+                else -> result.success(false)
             }
         } catch (e: Exception) {
             result.error("400", e.stackTraceToString(), "")
         }
-        result.success(false)
     }
 
     private fun removeCircle(call: MethodCall, result: MethodChannel.Result) {
