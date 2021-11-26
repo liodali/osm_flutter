@@ -83,6 +83,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
     return _events(idMap).whereType<UserLocationEvent>();
   }
 
+  @override
+  Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap) {
+    return _events(idMap).whereType<RegionIsChangingEvent>();
+  }
+
   void setGeoPointHandler(int idMap) async {
     _channels[idMap]!.setMethodCallHandler((call) async {
       switch (call.method) {
@@ -110,6 +115,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
           final result = call.arguments;
           _streamController
               .add(UserLocationEvent(idMap, GeoPoint.fromMap(result)));
+          break;
+        case "receiveRegionIsChanging":
+          final result = call.arguments;
+          _streamController
+              .add(RegionIsChangingEvent(idMap, GeoPoint.fromMap(result)));
           break;
       }
       return true;

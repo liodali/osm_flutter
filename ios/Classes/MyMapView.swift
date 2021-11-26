@@ -749,6 +749,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     }
 
+    public func mapViewRegionIsChanging(_ mapView: TGMapView){
+        let point = mapView.coordinate(fromViewPosition: mapView.center)
+        channel.invokeMethod("receiveRegionIsChanging", arguments: ["lat":point.latitude,"lon":point.longitude])
+    }
+
     public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
                         shouldRecognizeDoubleTapGesture location: CGPoint) -> Bool {
         let locationMap = view.coordinate(fromViewPosition: location)

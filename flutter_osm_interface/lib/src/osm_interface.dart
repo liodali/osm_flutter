@@ -33,6 +33,8 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Stream<UserLocationEvent> onUserPositionListener(int idMap);
 
+  Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap);
+
   Future<void> init(
     int idOSM,
   );

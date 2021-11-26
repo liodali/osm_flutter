@@ -27,8 +27,10 @@ class MobileOSMController extends IBaseOSMController {
     maxZoomLevel = this._osmFlutterState.widget.maxZoomLevel;
   }
 
-  static Future<MobileOSMController> init(int id,
-      MobileOsmFlutterState osmState,) async {
+  static Future<MobileOSMController> init(
+    int id,
+    MobileOsmFlutterState osmState,
+  ) async {
     await osmPlatform.init(id);
     return MobileOSMController._(id, osmState);
   }
@@ -100,6 +102,11 @@ class MobileOSMController extends IBaseOSMController {
       }
       _osmFlutterState.widget.controller.setValueListenerMapIsReady(event.value);
     });
+
+    osmPlatform.onRegionIsChangingListener(_idMap).listen((event) {
+      _osmFlutterState.widget.controller.setValueListenerRegionIsChanging(event.value);
+    });
+
     osmPlatform.onMapRestored(_idMap).listen((event) {
       Future.delayed(Duration(milliseconds: 300), () {
         _osmFlutterState.widget.controller.osMMixin?.mapRestored();
@@ -242,8 +249,7 @@ class MobileOSMController extends IBaseOSMController {
   void _checkBoundingBox(BoundingBox? box, GeoPoint? initPosition) {
     if (box != null && !box.isWorld() && initPosition != null) {
       if (!box.inBoundingBox(initPosition)) {
-        throw Exception(
-            "you want to limit the area of the map but your init location is already outside the area!");
+        throw Exception("you want to limit the area of the map but your init location is already outside the area!");
       }
     }
   }
@@ -259,10 +265,12 @@ class MobileOSMController extends IBaseOSMController {
     );
   }
 
-  Future<void> configureZoomMap(double minZoomLevel,
-      double maxZoomLevel,
-      double stepZoom,
-      double initZoom,) async {
+  Future<void> configureZoomMap(
+    double minZoomLevel,
+    double maxZoomLevel,
+    double stepZoom,
+    double initZoom,
+  ) async {
     await (osmPlatform as MethodChannelOSM).configureZoomMap(
       _idMap,
       initZoom,
@@ -312,10 +320,11 @@ class MobileOSMController extends IBaseOSMController {
   /// we need to global key to recuperate widget from tree element
   /// [id] : (String) id  of the static group geopoint
   /// [markerIcon] : (MarkerIcon) new marker that will set to the static group geopoint
-  Future<void> setIconStaticPositions(String id,
-      MarkerIcon markerIcon, {
-        bool refresh = false,
-      }) async {
+  Future<void> setIconStaticPositions(
+    String id,
+    MarkerIcon markerIcon, {
+    bool refresh = false,
+  }) async {
     if (markerIcon.icon != null) {
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon.icon;
     } else if (markerIcon.image != null) {
@@ -393,7 +402,8 @@ class MobileOSMController extends IBaseOSMController {
   /// [p] : (GeoPoint) desired location
   ///
   /// [markerIcon] : (MarkerIcon) set icon of the marker
-  Future<void> addMarker(GeoPoint p, {
+  Future<void> addMarker(
+    GeoPoint p, {
     MarkerIcon? markerIcon,
     double? angle,
   }) async {
@@ -402,20 +412,20 @@ class MobileOSMController extends IBaseOSMController {
         _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = angle == null || (angle == 0.0)
             ? markerIcon.icon
             : Transform.rotate(
-          angle: angle,
-          child: markerIcon.icon,
-        );
+                angle: angle,
+                child: markerIcon.icon,
+              );
       } else if (markerIcon.image != null) {
         _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = angle == null || (angle == 0.0)
             ? Image(
-          image: markerIcon.image!,
-        )
+                image: markerIcon.image!,
+              )
             : Transform.rotate(
-          angle: angle,
-          child: Image(
-            image: markerIcon.image!,
-          ),
-        );
+                angle: angle,
+                child: Image(
+                  image: markerIcon.image!,
+                ),
+              );
       }
       await Future.delayed(Duration(milliseconds: 300), () async {
         await osmPlatform.addMarker(
@@ -487,14 +497,15 @@ class MobileOSMController extends IBaseOSMController {
   ///  [interestPoints] : middle point that you want to be passed by your route
   ///
   ///  [roadOption] : (RoadOption) runtime configuration of the road
-  Future<RoadInfo> drawRoad(GeoPoint start,
-      GeoPoint end, {
-        RoadType roadType = RoadType.car,
-        List<GeoPoint>? interestPoints,
-        RoadOption? roadOption,
-      }) async {
-    assert(start.latitude != end.latitude || start.longitude != end.longitude,
-    "you cannot make road with same geoPoint");
+  Future<RoadInfo> drawRoad(
+    GeoPoint start,
+    GeoPoint end, {
+    RoadType roadType = RoadType.car,
+    List<GeoPoint>? interestPoints,
+    RoadOption? roadOption,
+  }) async {
+    assert(
+        start.latitude != end.latitude || start.longitude != end.longitude, "you cannot make road with same geoPoint");
     return await osmPlatform.drawRoad(
       _idMap,
       start,
@@ -507,11 +518,13 @@ class MobileOSMController extends IBaseOSMController {
 
   /// draw road
   ///  [path] : (list) path of the road
-  Future<void> drawRoadManually(List<GeoPoint> path,
-      Color roadColor,
-      double width,) async {
+  Future<void> drawRoadManually(
+    List<GeoPoint> path,
+    Color roadColor,
+    double width,
+  ) async {
     assert(path.first.latitude != path.last.latitude || path.first.longitude != path.last.longitude,
-    "you cannot make road with same geoPoint");
+        "you cannot make road with same geoPoint");
     await osmPlatform.drawRoadManually(_idMap, path, roadColor, width);
   }
 
