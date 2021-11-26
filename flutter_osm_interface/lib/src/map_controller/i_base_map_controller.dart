@@ -18,6 +18,7 @@ abstract class IBaseMapController {
   late ValueNotifier<GeoPoint?> _listenerMapLongTapping = ValueNotifier(null);
   late ValueNotifier<GeoPoint?> _listenerMapSingleTapping = ValueNotifier(null);
   late ValueNotifier<bool> _listenerMapIsReady = ValueNotifier(false);
+  late ValueNotifier<GeoPoint?> _listenerRegionIsChanging = ValueNotifier(null);
 
   ValueListenable<GeoPoint?> get listenerMapLongTapping =>
       _listenerMapLongTapping;
@@ -28,6 +29,9 @@ abstract class IBaseMapController {
   @Deprecated("this callback is deprecated,will be removed in next version,"
       "use OSMMixinObserver instead,see readme for more details")
   ValueListenable<bool> get listenerMapIsReady => _listenerMapIsReady;
+
+  ValueListenable<GeoPoint?> get listenerRegionIsChanging =>
+      _listenerRegionIsChanging;
 
   IBaseMapController({
     this.initMapWithUserPosition = true,
@@ -41,6 +45,7 @@ abstract class IBaseMapController {
     // _listenerMapLongTapping.dispose();
     // _listenerMapSingleTapping.dispose();
     // _listenerMapIsReady.dispose();
+    // _listenerRegionIsChanging.dispose();
   }
 }
 
@@ -55,5 +60,9 @@ extension setLiteners on BaseMapController {
 
   void setValueListenerMapIsReady(bool isReady) {
     _listenerMapIsReady.value = isReady;
+  }
+
+  void setValueListenerRegionIsChanging(GeoPoint p) {
+    _listenerRegionIsChanging.value = p;
   }
 }

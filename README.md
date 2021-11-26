@@ -25,6 +25,7 @@
 * address suggestion
 * draw shapes (Only Android)
 * simple dialog location picker (Android/iOS)
+* listen to region change (Android/iOS)
 
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
@@ -263,6 +264,14 @@ c.2) long tap listener
 ```dart
 controller.listenerMapLongTapping.addListener(() {
       if (controller.listenerMapLongTapping.value != null) {
+        /// put you logic here
+      }
+    });
+```
+c.3) region change listener
+```dart
+controller.listenerRegionIsChanging.addListener(() {
+      if (controller.listenerRegionIsChanging.value != null) {
         /// put you logic here
       }
     });

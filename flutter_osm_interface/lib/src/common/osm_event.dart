@@ -46,3 +46,7 @@ class GeoPointEvent extends EventOSM<GeoPoint> {
 class UserLocationEvent extends EventOSM<GeoPoint> {
   UserLocationEvent(int mapId, GeoPoint position) : super(mapId, position);
 }
+
+class RegionIsChangingEvent extends EventOSM<GeoPoint> {
+  RegionIsChangingEvent(int mapId, GeoPoint position) : super(mapId, position);
+}
