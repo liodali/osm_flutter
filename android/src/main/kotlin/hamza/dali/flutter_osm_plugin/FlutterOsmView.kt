@@ -294,12 +294,10 @@ class FlutterOsmView(
                 }
                 "map#saveCache#view" -> {
                     saveCacheMap()
-                    Log.e("map center", mapSnapShot().centerGeoPoint()!!.toHashMap().toString())
                     result.success(null)
                 }
                 "removeCache" -> {
                     removeCurrentCache()
-                    Log.e("map center", mapSnapShot().centerGeoPoint()!!.toHashMap().toString())
                     result.success(null)
                 }
                 "use#visiblityInfoWindow" -> {
