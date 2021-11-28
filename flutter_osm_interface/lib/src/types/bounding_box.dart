@@ -6,7 +6,7 @@ class BoundingBox {
   final double south;
   final double west;
 
-  BoundingBox({
+  const BoundingBox({
     required this.north,
     required this.east,
     required this.south,
@@ -21,6 +21,13 @@ class BoundingBox {
         this.east = 180.0,
         this.south = -85.0,
         this.west = -180.0;
+
+   BoundingBox.fromMap(Map map):
+      this.north = map["north"],
+      this.east = map["east"],
+      this.south = map["south"],
+      this.west = map["west"];
+
 }
 
 extension ExtBoundingBox on BoundingBox {
