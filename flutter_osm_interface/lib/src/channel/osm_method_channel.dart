@@ -118,9 +118,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   void close(int idOSM) {
-    _streamController.close();
     if (_channels.containsKey(idOSM)) {
       _channels.remove(idOSM);
+    }
+    if(_channels.isEmpty){
+      _streamController.close();
     }
   }
 
