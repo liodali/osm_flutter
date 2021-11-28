@@ -210,7 +210,10 @@ class FlutterOsmView(
     private val mapListener by lazy {
         object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
-                methodChannel.invokeMethod("receiveRegionIsChanging", (map?.mapCenter as GeoPoint).toHashMap())
+                val hashMap = HashMap<String, Any?>()
+                hashMap["bounding"] = map?.boundingBox?.toHashMap()
+                hashMap["center"] = (map?.mapCenter as GeoPoint).toHashMap()
+                methodChannel.invokeMethod("receiveRegionIsChanging", hashMap)
                 return true
             }
 
