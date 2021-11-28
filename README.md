@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.26.0--rc.3-orange) 
+![pub](https://img.shields.io/badge/pub-v0.26.0-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
@@ -36,7 +36,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.26.0-rc.3
+      flutter_osm_plugin: ^0.26.0
 
 ### Migration to `0.16.0` (Android Only)
 > if you are using this plugin before Flutter 2 
@@ -399,6 +399,10 @@ await controller.drawRoadManually(
 
 ### Interfaces:
 * OSMMixinObserver :
+> contain listener methods to get event from native map view like when mapIsReady,mapRestored
+
+> you should add ths line `controller.addObserver(this);` in initState
+
 > override mapIsReady to implement your own logic after initialisation of the map
 
 > `mapIsReady` will replace `listenerMapIsReady`
