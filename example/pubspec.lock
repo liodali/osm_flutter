@@ -43,6 +43,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.15.0"
+  crypto:
+    dependency: transitive
+    description:
+      name: crypto
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.0.1"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -70,19 +77,19 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_osm_interface:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
-      name: flutter_osm_interface
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.1.5"
+      path: "../flutter_osm_interface"
+      relative: true
+    source: path
+    version: "0.1.10+1"
   flutter_osm_plugin:
     dependency: "direct main"
     description:
-      name: flutter_osm_plugin
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.22.3"
+      path: ".."
+      relative: true
+    source: path
+    version: "0.26.0-rc.2"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -273,6 +280,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.0"
+  uuid:
+    dependency: transitive
+    description:
+      name: uuid
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.0.5"
   vector_math:
     dependency: transitive
     description:

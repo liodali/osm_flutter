@@ -23,6 +23,8 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Stream<MapInitialization> onMapIsReady(int idMap);
 
+  Stream<MapRestoration> onMapRestored(int idMap);
+
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap);
 
   Stream<LongTapEvent> onLongPressMapClickListener(int idMap);
@@ -54,6 +56,10 @@ abstract class MobileOSMPlatform extends OSMPlatform {
 
   Future<void> currentLocation(
     int idOSM,
+  );
+
+  Future<GeoPoint> getMapCenter(
+    int idMap,
   );
 
   Future<GeoPoint> myLocation(
@@ -160,8 +166,9 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   Future<void> customMarkerStaticPosition(
     int idOSM,
     GlobalKey? globalKey,
-    String id,
-  );
+    String id, {
+    bool refresh = false,
+  });
 
   Future<void> staticPosition(
     int idOSM,

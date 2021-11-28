@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.22.3%2B1-orange) 
+![pub](https://img.shields.io/badge/pub-v0.26.0-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
@@ -36,7 +36,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.22.3+1
+      flutter_osm_plugin: ^0.26.0
 
 ### Migration to `0.16.0` (Android Only)
 > if you are using this plugin before Flutter 2 
@@ -124,11 +124,11 @@ Add the following to your `pubspec.yaml` file:
 | `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
 | `areaLimit`                  | (Bounding) set area limit of the map (default BoundingBox.world())   |
 
-
 <b>4) Set map on user current position </b>
 
 ```dart
  await controller.currentPosition();
+
 ```
 <b> 5) Zoom IN </b>
 
@@ -214,14 +214,19 @@ await controller.removeLimitAreaMap();
 ```dart
  GeoPoint geoPoint = await controller.myLocation();
 ```
+<b> 12) get center map </b>b>
 
-<b> 12) select/create new position </b>
+```dart
+GeoPoint centerMap = await controller.centerMapasync;
+```
+
+<b> 13) select/create new position </b>
 
 * we have 2 way to select location in map
 
-<b>12.1 Manual selection </b>
+<b>13.1 Manual selection (deprecated) </b>
 
-a) select without change default marker
+a) select without change default marker 
 ```dart
  GeoPoint geoPoint = await controller.selectPosition();
 ```
@@ -262,7 +267,7 @@ controller.listenerMapLongTapping.addListener(() {
       }
     });
 ```
-<b>12.2 Assisted selection </b> (for more details see example) 
+<b>13.2 Assisted selection </b> (for more details see example) 
 
 ```dart
  /// To Start assisted Selection
@@ -274,22 +279,21 @@ controller.listenerMapLongTapping.addListener(() {
  /// To cancel assisted Selection
  await controller.cancelAdvancedPositionPicker();
 ```
-* PS : selected position can be removed by long press 
 
-<b>13) Create Marker Programmatically </b>
+<b>14) Create Marker Programmatically </b>
 > you can change marker icon by using attribute `markerIcon`
 ```dart
 await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
 ```
 
-<b> 13.1) Remove marker </b>
+<b> 14.1) Remove marker </b>
 
 ```dart
  await controller.removeMarker(geoPoint);
 ```
 * PS : static position cannot be removed by this method 
 
-<b>14) Draw road,recuperate distance in km and duration in sec </b>
+<b>15) Draw road,recuperate distance in km and duration in sec </b>
 
 > you can add an middle position to pass your route through them
 >
@@ -309,7 +313,7 @@ await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
  print("${roadInfo.duration}sec");
 ```
 
-<b> 14.b) draw road manually </b>
+<b> 15.b) draw road manually </b>
 ```dart
 await controller.drawRoadManually(
         waysPoint,
@@ -318,13 +322,13 @@ await controller.drawRoadManually(
       )
 ```
 
-<b>15) Delete last road </b>
+<b>16) Delete last road </b>
 
 ```dart
  await controller.removeLastRoad();
 ```
 
-<b>16) Change static GeoPoint position </b>
+<b>17) Change static GeoPoint position </b>
 
 > add new staticPoints with empty list of geoPoints (notice: if you add static point without marker,they will get default maker used by plugin)
 
@@ -336,7 +340,7 @@ await controller.drawRoadManually(
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
-<b>17) Change/Add Marker old/new static GeoPoint position </b>
+<b>18) Change/Add Marker old/new static GeoPoint position </b>
 
 > add marker of new static point
 
@@ -346,13 +350,13 @@ await controller.drawRoadManually(
  await controller.setMarkerOfStaticPoint(String id,MarkerIcon markerIcon );
 ```
 
-<b>18) change orientation of the map</b>
+<b>19) change orientation of the map</b>
 
 ```dart
  await controller.rotateMapCamera(degree);
 ```
 
-<b>19) Draw Shape in the map </b>
+<b>20) Draw Shape in the map </b>
 
 * Circle
 ```dart
@@ -392,6 +396,49 @@ await controller.drawRoadManually(
 ```dart
  await controller.removeAllShapes();
 ```
+
+### Interfaces:
+* OSMMixinObserver :
+> contain listener methods to get event from native map view like when mapIsReady,mapRestored
+
+> you should add ths line `controller.addObserver(this);` in initState
+
+> override mapIsReady to implement your own logic after initialisation of the map
+
+> `mapIsReady` will replace `listenerMapIsReady`
+
+| Methods                       | Description                         |
+| ----------------------------- | ----------------------------------- |
+| `mapIsReady`                  | (callback) should be override this method, to get notified when map is ready to go or not,     |
+| `mapRestored`                 | (callback) should be override this method, to get notified when map is restored you can also add you bakcup   |
+
+
+** example 
+```dart
+class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
+
+   //etc
+  @override
+  void initState() {
+    super.initState();
+    controller.addObserver(this);
+  }
+    @override
+    Future<void> mapIsReady(bool isReady) async {
+      if (isReady) {
+        /// put you logic
+      }
+    }
+  @override
+  Future<void> mapRestored() async {
+    super.mapRestored();
+    /// TODO
+  }
+    //etc
+}
+```
+
+
 
 ##  `OSMFlutter`
 

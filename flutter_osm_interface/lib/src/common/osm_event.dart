@@ -18,6 +18,15 @@ class MapInitialization extends EventOSM<bool> {
   MapInitialization(int mapId, bool isMapReady) : super(mapId, isMapReady);
 }
 
+class MapRestoration extends EventOSM<void> {
+  MapRestoration(
+    int mapId,
+  ) : super(
+          mapId,
+          null,
+        );
+}
+
 class TapEvent extends EventOSM<GeoPoint> {
   TapEvent(int mapId, GeoPoint position) : super(mapId, position);
 }

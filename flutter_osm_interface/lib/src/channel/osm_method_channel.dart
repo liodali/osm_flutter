@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_osm_interface/src/types/geo_point.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:location/location.dart';
 import 'package:stream_transform/stream_transform.dart';
@@ -58,6 +59,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
+  Stream<MapRestoration> onMapRestored(int idMap) {
+    return _events(idMap).whereType<MapRestoration>();
+  }
+
+  @override
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
     return _events(idMap).whereType<SingleTapEvent>();
   }
@@ -83,7 +89,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
         case "map#init":
           final result = call.arguments as bool;
           _streamController.add(MapInitialization(idMap, result));
-
+          break;
+        case "map#restored":
+          _streamController.add(MapRestoration(idMap));
           break;
         case "receiveLongPress":
           final result = call.arguments;
@@ -110,9 +118,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   void close(int idOSM) {
-    _streamController.close();
     if (_channels.containsKey(idOSM)) {
       _channels.remove(idOSM);
+    }
+    if (_channels.isEmpty) {
+      _streamController.close();
     }
   }
 
@@ -173,8 +183,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> customMarkerStaticPosition(
     int idOSM,
     GlobalKey? globalKey,
-    String id,
-  ) async {
+    String id, {
+    bool refresh = false,
+  }) async {
     if (globalKey?.currentContext != null) {
       Uint8List icon = await _capturePng(globalKey!);
       String iconIOS = "";
@@ -184,6 +195,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       var args = {
         "id": id,
         "bitmap": Platform.isIOS ? iconIOS : icon,
+        "refresh": refresh,
       };
 
       await _channels[idOSM]?.invokeMethod(
@@ -348,14 +360,19 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> staticPosition(
-      int idOSM, List<GeoPoint> pList, String id) async {
+    int idOSM,
+    List<GeoPoint> pList,
+    String id,
+  ) async {
     try {
       List<Map<String, double>> listGeos = [];
       for (GeoPoint p in pList) {
         listGeos.add(p.toMap());
       }
-      await _channels[idOSM]
-          ?.invokeMethod("staticPosition", {"id": id, "point": listGeos});
+      await _channels[idOSM]?.invokeMethod("staticPosition", {
+        "id": id,
+        "point": listGeos,
+      });
     } on PlatformException catch (e) {
       print(e.message);
     }
@@ -609,6 +626,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
     }
     await _channels[idOSM]?.invokeMethod('Zoom', args);
   }
+
+  @override
+  Future<GeoPoint> getMapCenter(int idMap) async {
+    final result = await _channels[idMap]?.invokeMethod('map#center', []);
+    return GeoPoint.fromMap(result);
+  }
 }
 
 extension config on MethodChannelOSM {
@@ -631,5 +654,23 @@ extension config on MethodChannelOSM {
 
   Future<void> initIosMap(int idOSM) async {
     await _channels[idOSM]?.invokeMethod("init#ios#map");
+  }
+}
+
+extension mapCache on MethodChannelOSM {
+  Future<void> saveCacheMap(int id) async {
+    await _channels[id]?.invokeMethod("map#saveCache#view");
+  }
+
+  Future<void> removeCache(int id) async {
+    await _channels[id]?.invokeMethod("removeCache");
+  }
+
+  Future<void> clearCacheMap(int id) async {
+    await _channels[id]?.invokeMethod("map#clearCache#view");
+  }
+
+  Future<void> setCacheMap(int id) async {
+    await _channels[id]?.invokeMethod("map#setCache");
   }
 }

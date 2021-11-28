@@ -25,6 +25,8 @@ abstract class IBaseMapController {
   ValueListenable<GeoPoint?> get listenerMapSingleTapping =>
       _listenerMapSingleTapping;
 
+  @Deprecated("this callback is deprecated,will be removed in the future,"
+      "use OSMMixinObserver instead,see readme for more details")
   ValueListenable<bool> get listenerMapIsReady => _listenerMapIsReady;
 
   IBaseMapController({

@@ -1,6 +1,7 @@
 package hamza.dali.flutter_osm_plugin
 
 import android.app.Application
+import android.content.Context
 import android.graphics.Bitmap
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -8,9 +9,9 @@ import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.Polyline
 
 open class FlutterRoad(
-        val application: Application,
-        private val mapView: MapView,
-        private val interestPoint: List<GeoPoint> = emptyList(),
+    val context: Context,
+    private val mapView: MapView,
+    private val interestPoint: List<GeoPoint> = emptyList(),
 ) : Overlay() {
 
     lateinit var start: FlutterRoadMarker//? = null
@@ -33,18 +34,18 @@ open class FlutterRoad(
             destinationRoad: GeoPoint,
             interestPoint: List<GeoPoint> = emptyList()
     ) {
-        start = FlutterRoadMarker(application, mapView, startRoad).apply {
+        start = FlutterRoadMarker(context, mapView, startRoad).apply {
             this.mapIconsBitmaps = markersIcons
             this.iconPosition(Constants.PositionMarker.START)
         }
 
-        end = FlutterRoadMarker(application, mapView, destinationRoad).apply {
+        end = FlutterRoadMarker(context, mapView, destinationRoad).apply {
             this.mapIconsBitmaps = markersIcons
             this.iconPosition(Constants.PositionMarker.END)
         }
         interestPoint.forEach { geoPoint ->
             middlePoints.add(
-                    FlutterRoadMarker(application, mapView, geoPoint).apply {
+                    FlutterRoadMarker(context, mapView, geoPoint).apply {
                         this.mapIconsBitmaps = markersIcons
                         this.iconPosition(Constants.PositionMarker.MIDDLE)
                         this.visibilityInfoWindow(false)
