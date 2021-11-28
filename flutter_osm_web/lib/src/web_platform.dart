@@ -10,7 +10,6 @@ abstract class OsmWebPlatform extends OSMPlatform {
 
   //static FlutterOsmPluginWeb _instance = FlutterOsmPluginWeb(messenger: null);
 
-
 // static FlutterOsmPluginWeb get instance => _instance;
 //
 // /// Platform-specific plugins should set this with their own platform-specific
@@ -37,8 +36,8 @@ void onStaticGeoPointClicked(double lon, double lat) {
   final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
   controller.channel!.invokeMethod("receiveGeoPoint", "$lat,$lon");
 }
-void onMapSingleTapListener(double lon, double lat){
+
+void onMapSingleTapListener(double lon, double lat) {
   final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
   controller.channel!.invokeMethod("onSingleTapListener", "$lat,$lon");
 }
-

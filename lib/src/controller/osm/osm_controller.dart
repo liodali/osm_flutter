@@ -198,10 +198,10 @@ class MobileOSMController extends IBaseOSMController {
               points.id,
             );
           }
-          if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {
+          if (points.geoPoints.isNotEmpty) {
             await osmPlatform.staticPosition(
               _idMap,
-              points.geoPoints!,
+              points.geoPoints,
               points.id,
             );
           }
@@ -209,14 +209,14 @@ class MobileOSMController extends IBaseOSMController {
       });
     }
 
-      /// init location in map
-      if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
-        initPosition = await myLocation();
-        _checkBoundingBox(box, initPosition);
-      }
-      if (box != null && !box.isWorld()) {
-        await limitAreaMap(box);
-      }
+    /// init location in map
+    if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
+      initPosition = await myLocation();
+      _checkBoundingBox(box, initPosition);
+    }
+    if (box != null && !box.isWorld()) {
+      await limitAreaMap(box);
+    }
 
     if (initPosition != null && !_osmFlutterState.setCache.value) {
       await osmPlatform.initPositionMap(
@@ -231,26 +231,26 @@ class MobileOSMController extends IBaseOSMController {
       _osmFlutterState.setCache.value = false;
     }
 
-      /// picker config
-      if (_osmFlutterState.widget.isPicker) {
-        GeoPoint? p = _osmFlutterState.widget.controller.initPosition;
-        if (p == null && initWithUserPosition) {
-          bool granted = await _osmFlutterState.requestPermission();
-          if (!granted) {
-            throw Exception("you should open gps to get current position");
-          }
-          await _osmFlutterState.checkService();
-          try {
-            p = await osmPlatform.myLocation(_idMap);
-            await osmPlatform.initPositionMap(_idMap, p);
-          } catch (e) {
-            p = (await Location().getLocation()).toGeoPoint();
-          }
+    /// picker config
+    if (_osmFlutterState.widget.isPicker) {
+      GeoPoint? p = _osmFlutterState.widget.controller.initPosition;
+      if (p == null && initWithUserPosition) {
+        bool granted = await _osmFlutterState.requestPermission();
+        if (!granted) {
+          throw Exception("you should open gps to get current position");
         }
-        await osmPlatform.advancedPositionPicker(_idMap);
+        await _osmFlutterState.checkService();
+        try {
+          p = await osmPlatform.myLocation(_idMap);
+          await osmPlatform.initPositionMap(_idMap, p);
+        } catch (e) {
+          p = (await Location().getLocation()).toGeoPoint();
+        }
       }
+      await osmPlatform.advancedPositionPicker(_idMap);
     }
   }
+
   void _checkBoundingBox(BoundingBox? box, GeoPoint? initPosition) {
     if (box != null && !box.isWorld() && initPosition != null) {
       if (!box.inBoundingBox(initPosition)) {

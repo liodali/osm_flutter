@@ -26,10 +26,10 @@ abstract class BaseMapController extends IBaseMapController {
     this.areaLimit = const BoundingBox.world(),
   })  : assert(initMapWithUserPosition || initPosition != null),
         super(
-        initMapWithUserPosition: initMapWithUserPosition,
-        initPosition: initPosition,
-        areaLimit: areaLimit,
-      );
+          initMapWithUserPosition: initMapWithUserPosition,
+          initPosition: initPosition,
+          areaLimit: areaLimit,
+        );
 
   /// implement this method,should be end with super.dispose()
   @mustCallSuper

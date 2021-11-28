@@ -16,9 +16,9 @@ external dynamic initMapLocation(GeoPointJs p);
 @JS('setZoomControl')
 external dynamic setZoomControl(bool showZoomControl);
 
-
 @JS('configZoom')
-external dynamic configZoom(double stepZoom,double initZoom,double minZoomLevel,double maxZoomLevel);
+external dynamic configZoom(
+    double stepZoom, double initZoom, double minZoomLevel, double maxZoomLevel);
 
 @JS('setZoomStep')
 external dynamic setZoomStep(double stepZoom);
@@ -48,8 +48,7 @@ external dynamic setMinZoomLevel(double mminZoomLvl);
 external dynamic setDefaultIcon(String base64);
 
 @JS('addPosition')
-external dynamic addPosition(GeoPointJs p,bool showMarker,bool animate);
-
+external dynamic addPosition(GeoPointJs p, bool showMarker, bool animate);
 
 @JS('removeMarker')
 external dynamic removeMarker(GeoPointJs p);
@@ -58,10 +57,10 @@ external dynamic removeMarker(GeoPointJs p);
 external dynamic currentUserLocation();
 
 @JS('setStaticGeoPoints')
-external dynamic setStaticGeoPoints(String id,List<GeoPointJs> points);
+external dynamic setStaticGeoPoints(String id, List<GeoPointJs> points);
 
 @JS('setIconStaticGeoPoints')
-external dynamic setIconStaticGeoPoints(String id,String icons);
+external dynamic setIconStaticGeoPoints(String id, String icons);
 
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')
@@ -69,11 +68,8 @@ external set initMapFinish(void Function(bool) f);
 
 /// Allows assigning a function to be callable from `window.onGeoPointClicked(lat,lon)`
 @JS('onStaticGeoPointClicked')
-external set onStaticGeoPointClicked(void Function(double,double) f);
+external set onStaticGeoPointClicked(void Function(double, double) f);
 
 /// Allows assigning a function to be callable from `window.onMapSingleTapClicked(lat,lon)`
 @JS('onMapSingleTapListener')
-external set onMapSingleTapListener(void Function(double,double) f);
-
-
-
+external set onMapSingleTapListener(void Function(double, double) f);

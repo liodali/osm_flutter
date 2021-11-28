@@ -1,4 +1,3 @@
-
 export 'geo_point.dart';
 export 'geo_static.dart';
 export 'marker.dart';

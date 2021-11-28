@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'geo_point.dart';
 
-
 /// ShapeOSM : class that represent shape with be draw into map
 /// can be circle or rect
 /// [key] : (String) unique key should be given to each shape

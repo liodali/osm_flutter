@@ -67,7 +67,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
-  Future<void> init(int idOSM) async{
+  Future<void> init(int idOSM) async {
     if (_streamController.isClosed) {
       _streamController = StreamController<EventOSM>.broadcast();
     }
@@ -79,7 +79,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
       );
       handleMethodCall(idOSM);
     }
-   // return Future.microtask(() => close(idOSM));
+    // return Future.microtask(() => close(idOSM));
   }
 
   @override

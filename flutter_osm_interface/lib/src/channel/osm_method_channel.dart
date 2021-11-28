@@ -19,7 +19,6 @@ import '../osm_interface.dart';
 import 'package:stream_transform/stream_transform.dart';
 import 'dart:ui' as ui;
 
-
 class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, MethodChannel> _channels = {};
 

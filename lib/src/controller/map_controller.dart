@@ -98,7 +98,6 @@ class MapController extends BaseMapController {
   /// recuperate current zoom level
   Future<double> getZoom() async => await osmBaseController.getZoom();
 
-
   /// change zoom level of the map
   ///
   /// [zoomLevel] : (double) should be between minZoomLevel and maxZoomLevel
@@ -263,7 +262,6 @@ class MapController extends BaseMapController {
     );
   }
 
-
   Future<void> addMarker(
     GeoPoint p, {
     MarkerIcon? markerIcon,
@@ -278,5 +276,3 @@ class MapController extends BaseMapController {
   Future<GeoPoint> get centerMapasync async =>
       await osmBaseController.getMapCenter();
 }
-
-

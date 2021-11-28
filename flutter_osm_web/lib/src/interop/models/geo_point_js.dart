@@ -10,5 +10,5 @@ class GeoPointJs {
   external double get lat;
 
   // Must have an unnamed factory constructor with named arguments.
-  external factory GeoPointJs({double lon,double lat});
+  external factory GeoPointJs({double lon, double lat});
 }

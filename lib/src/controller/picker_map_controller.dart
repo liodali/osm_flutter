@@ -69,5 +69,3 @@ class PickerMapController extends BaseMapController {
   //   });
   // }
 }
-
-

@@ -5,8 +5,6 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 const earthRadius = 6371e3; //metre
 
-
-
 /// calculate square of sin : sin²
 /// [x] : (num) number that you want to calculate it's sin²
 double sqrtSin(num x) {
@@ -60,5 +58,3 @@ Future<List<SearchInfo>> addressSuggestion(String searchText,
       .map((d) => SearchInfo.fromPhotonAPI(d))
       .toList();
 }
-
-

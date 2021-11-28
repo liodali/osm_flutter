@@ -145,10 +145,8 @@ class WebOsmController with WebMixin implements IBaseOSMController {
   }
 
   @override
-  Future<void> setIconStaticPositions(
-    String id,
-    MarkerIcon markerIcon,
-  ) async {
+  Future<void> setIconStaticPositions(String id, MarkerIcon markerIcon,
+      {bool refresh = false}) async {
     if (markerIcon.icon != null) {
       _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value =
           markerIcon.icon;
@@ -184,6 +182,12 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     String imageURL = "",
   }) {
     // TODO: implement selectPosition
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<GeoPoint> getMapCenter() {
+    // TODO: implement getMapCenter
     throw UnimplementedError();
   }
 }
