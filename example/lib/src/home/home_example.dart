@@ -88,8 +88,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           lastGeoPoint.value!,
           markerIcon: MarkerIcon(
             icon: Icon(
-              Icons.person,
+              Icons.person_pin,
               color: Colors.red,
+              size: 32,
             ),
           ),
           angle: -pi / 4,

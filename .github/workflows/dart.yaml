@@ -42,6 +42,6 @@ jobs:
           rm -rf flutter_osm_interface
           rm -f check_pubspec_release.py
       - name: fomarting files
-        run : dart format --output=none --set-exit-if-changed .
+        run : dart format .
       - name: Publish package
         run: pub publish -f
