@@ -71,9 +71,14 @@
          mymap.flyTo([user.lat, user.lon],mymap.getZoom());
       });
      
-    
       return 200;
-    
+  }
+  async function centerMap(){
+    var center =  mymap.getCenter();
+    return {
+        lat : center.lat,
+        lon : center.lng
+      };
   }
 
   async function getMyLocation() {
@@ -112,12 +117,12 @@
               }
       
        }
-       setHomeMarker(point,args);
        if(!animate){
          mymap.setView(position,mymap.getZoom());
        }else{
           mymap.flyTo(position,mymap.getZoom());
        }
+       setHomeMarker(point,args);
        return 200;
   }
   

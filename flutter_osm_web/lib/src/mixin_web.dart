@@ -244,4 +244,20 @@ mixin WebMixin {
       animate,
     );
   }
+  Future<GeoPoint> selectPosition({
+    MarkerIcon? icon,
+    String imageURL = "",
+  }) {
+    // TODO: implement selectPosition
+    throw UnimplementedError();
+  }
+
+
+  Future<GeoPoint> getMapCenter() async{
+    final mapCenterPoint = await  html.promiseToFutureAsMap(interop.centerMap());
+    if(mapCenterPoint == null){
+      throw Exception("web osm : error to get center geopoint");
+    }
+    return GeoPoint.fromMap(Map<String, double>.from(mapCenterPoint));
+  }
 }

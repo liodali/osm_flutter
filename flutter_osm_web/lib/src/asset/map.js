@@ -1,4 +1,8 @@
-
+async function centerMap(){
+   var iframe = document.getElementById("frame_map");
+   var geoAsync = await iframe.contentWindow.centerMap();
+   return geoAsync;
+}
 
 async function locateMe() {
    var iframe = document.getElementById("frame_map");

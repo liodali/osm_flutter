@@ -177,17 +177,5 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     );
   }
 
-  Future<GeoPoint> selectPosition({
-    MarkerIcon? icon,
-    String imageURL = "",
-  }) {
-    // TODO: implement selectPosition
-    throw UnimplementedError();
-  }
 
-  @override
-  Future<GeoPoint> getMapCenter() {
-    // TODO: implement getMapCenter
-    throw UnimplementedError();
-  }
 }

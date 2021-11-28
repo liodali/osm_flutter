@@ -1,10 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_web/src/controller/web_osm_controller.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import '../controller/web_osm_controller.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import '../web_platform.dart';

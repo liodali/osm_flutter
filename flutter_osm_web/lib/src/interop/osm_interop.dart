@@ -7,6 +7,10 @@ import 'package:js/js.dart';
 
 import 'models/geo_point_js.dart';
 
+@JS('centerMap')
+external Map<String, double> centerMap();
+
+
 @JS('locateMe')
 external Map<String, double> locateMe();
 
