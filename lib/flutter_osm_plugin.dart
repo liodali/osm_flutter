@@ -1,9 +1,9 @@
 library osm_flutter;
 
 export 'package:flutter_osm_interface/src/map_controller/base_map_controller.dart'
-    hide  OSMControllerOfBaseMapController;
-
+    hide OSMControllerOfBaseMapController, PrivateBaseMapController;
 export 'package:flutter_osm_interface/src/types/types.dart';
+export 'package:flutter_osm_interface/src/mixin/interface_mixin.dart';
 
 export 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
 export 'package:flutter_osm_interface/src/common/road_exception.dart';

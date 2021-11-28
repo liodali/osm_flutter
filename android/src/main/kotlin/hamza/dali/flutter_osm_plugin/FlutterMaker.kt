@@ -21,7 +21,7 @@ typealias LongClickHandler = (marker: Marker) -> Boolean
 
 open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClickListener,
         (Marker) -> Boolean {
-    protected lateinit var application: Application
+    protected lateinit var context: Context
     private var canvas: Canvas? = null
     var longPress: LongClickHandler? = null
         set(longPress) {
@@ -39,8 +39,8 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
             field = infoWindow
         }
 
-    constructor(application: Application, mapView: MapView) : this(mapView = mapView) {
-        this.application = application
+    constructor(context: Context, mapView: MapView) : this(mapView = mapView) {
+        this.context = context
         this.mapView = mapView
         this.setOnMarkerClickListener { marker, map ->
             onMarkerClick(marker, map)
@@ -49,11 +49,11 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
     }
 
     constructor(
-        application: Application,
+        context: Context,
         mapView: MapView,
         point: GeoPoint
     ) : this(mapView = mapView) {
-        this.application = application
+        this.context = context
         this.mapView = mapView
         this.mPosition = point
         this.setOnMarkerClickListener { marker, map ->
@@ -124,7 +124,7 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
 
         } ?: run {
             iconDrawable =
-                ContextCompat.getDrawable(application, R.drawable.ic_location_on_red_24dp)!!
+                ContextCompat.getDrawable(context, R.drawable.ic_location_on_red_24dp)!!
         }
         return iconDrawable!!
 
@@ -138,7 +138,7 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
 
     private fun createWindowInfoView(): View {
         val inflater =
-            application.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         infoWindow = inflater.inflate(R.layout.infowindow, null)
         return infoWindow!!
     }

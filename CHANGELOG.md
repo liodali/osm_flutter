@@ -1,3 +1,18 @@
+## 0.26.0 : add multi map cache (0.25.0 skipped)
+* store last map state before reloading widget in android
+* create OSMMixinObserver to replace ValueListenable in MapController
+* fix show picker map
+* add titleWidget for osm picker
+* add textStyle for title osm picker
+* improve cache map in android 
+* fix tracking location in android side
+* fix close streamController when we already have another widget use the osmFlutter
+## 0.22.3+1 : version versioning in osm_interface package
+* improve prepare publish script to manage max version supported by osm_interface
+## 0.22.3 :
+* fix map listener not working after cancel or confirm advanced picker (#181)
+## 0.22.2 :
+* add click of simple marker hit the callback `onGeoPointClicked`
 ## 0.22.1 :
 * fix duplication of last icon when addMarker called twice  (#178)
 ## 0.22.0 :

@@ -16,6 +16,8 @@ abstract class BaseMapController extends IBaseMapController {
 
   late Timer? _timer;
 
+  OSMMixinObserver? _mixinObserver;
+
   IBaseOSMController get osmBaseController => _osmBaseController;
 
   BaseMapController({
@@ -36,6 +38,7 @@ abstract class BaseMapController extends IBaseMapController {
     if (_timer != null && _timer!.isActive) {
       _timer?.cancel();
     }
+    removeObserver();
     super.dispose();
   }
 
@@ -51,10 +54,22 @@ abstract class BaseMapController extends IBaseMapController {
       _timer?.cancel();
     });
   }
+
+  void addObserver(OSMMixinObserver osmMixinObserver) {
+    _mixinObserver = osmMixinObserver;
+  }
 }
 
 extension OSMControllerOfBaseMapController on BaseMapController {
   void setBaseOSMController(IBaseOSMController controller) {
     _osmBaseController = controller;
+  }
+}
+
+extension PrivateBaseMapController on BaseMapController {
+  OSMMixinObserver? get osMMixin => _mixinObserver;
+
+  void removeObserver() {
+    _mixinObserver = null;
   }
 }

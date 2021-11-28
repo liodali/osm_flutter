@@ -21,7 +21,8 @@ class Constants {
         const val shapesNames: String = "static_shapes"
         const val regionNames: String = "static_regions"
         const val circlesNames: String = "static_circles"
-        const val roadName: String="DYNAMIC-ROAD"
+        const val roadName: String="Dynamic-Road"
+        const val markerNameOverlay: String="Markers"
         const val zoomStaticPosition: Double = 12.0
         const val latLabel: String = "lat"
         const val lonLabel: String = "lon"

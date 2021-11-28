@@ -47,8 +47,9 @@ abstract class IBaseOSMController {
   /// [markerIcon] : (MarkerIcon) new marker that will set to the static group geopoint
   Future<void> setIconStaticPositions(
     String id,
-    MarkerIcon markerIcon,
-  );
+    MarkerIcon markerIcon, {
+    bool refresh = false,
+  });
 
   ///change Icon  of advanced picker Marker
   /// we need to global key to recuperate widget from tree element
@@ -84,6 +85,8 @@ abstract class IBaseOSMController {
   Future<void> setMaximumZoomLevel(
     double maxZoom,
   );
+
+  Future<GeoPoint> getMapCenter();
 
   /// activate current location position
   Future<void> currentLocation();

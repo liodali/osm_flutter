@@ -1,34 +1,34 @@
 package hamza.dali.flutter_osm_plugin
 
-import android.app.Activity
-import android.app.Application
 import android.content.Context
-import androidx.lifecycle.Lifecycle
+import androidx.preference.PreferenceManager
 import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugin.common.PluginRegistry
 import io.flutter.plugin.common.StandardMessageCodec
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
-import java.util.concurrent.atomic.AtomicInteger
+import org.osmdroid.config.Configuration
+import org.osmdroid.views.MapView
 
 open class OsmFactory(
         private val binaryMessenger: BinaryMessenger,
-        val application: Application?,
-        private val lifecycle: Lifecycle?,
-        private val activity: Activity?,
+        private val provider: ProviderLifecycle,
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(
             context: Context,
             viewId: Int,
             args: Any?,
     ): PlatformView {
+        Configuration.getInstance().load(
+                context,
+                PreferenceManager.getDefaultSharedPreferences(context)
+        )
         return FlutterOsmView(
                 context,
                 binaryMessenger,
                 viewId,
-                application,
-                activity,
-                lifecycle,
+                provider,
+                MapView(context),
+                args as String
         )
     }
 

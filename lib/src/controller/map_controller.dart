@@ -91,7 +91,8 @@ class MapController extends BaseMapController {
     required String id,
     required MarkerIcon markerIcon,
   }) async {
-    await osmBaseController.setIconStaticPositions(id, markerIcon);
+    await osmBaseController.setIconStaticPositions(id, markerIcon,
+        refresh: true);
   }
 
   /// recuperate current zoom level
@@ -273,6 +274,9 @@ class MapController extends BaseMapController {
     }
     await osmBaseController.addMarker(p, markerIcon: markerIcon, angle: angle);
   }
+
+  Future<GeoPoint> get centerMapasync async =>
+      await osmBaseController.getMapCenter();
 }
 
 

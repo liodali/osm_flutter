@@ -42,23 +42,50 @@ def get_version_osm_interface():
         lines = pub.readlines()
         version_line = lines[LINE_VERSION]
         version = version_line.split(":")[-1]
-        return version.replace(" ", "")
+        version = version.replace(" ", "")
+        version = version.replace("\n", "")
+        return version
+
+
+def get_max_version(version):
+    index_max = 3
+    range_max = 1
+    package_v = version
+    if("+" in version):
+        package_v = str(version).split("+")[0]
+    if "-" in version:
+        package_v = str(version).split("-")[0]
+
+    listInnerVersionNumbers = str(package_v).split(".")
+    x, y, z = [int(i) for i in listInnerVersionNumbers]
+    z += 1
+    if z > 99:
+        y += 1
+        z = 0
+    if y > 99:
+        z = 0
+        y = 0
+        x += 1
+    max_version = str(x) + "." + str(y) + "."+str(z)
+    return max_version
 
 
 def change_dependencies_version(name, version, isLocal=False):
+    mVersion = get_max_version(version=version)
     with open(FILE_PUBSEPEC_OSM, "r+") as pub:
         pub.seek(0, 0)
         lines = []
         removeNext = False
         for line in pub.readlines():
             if(name in line):
-                lines.append(f"  {name} ^{version}")
+                v = f"\">={version} <{mVersion}\"".strip()
+                lines.append(f"  {name} {v}")
                 if(isLocal):
                     removeNext = True
             else:
                 if(removeNext):
                     removeNext = False
-                    lines.append("")
+                    lines.append("\n")
                 else:
                     lines.append(line)
 

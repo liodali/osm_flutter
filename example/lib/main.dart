@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin_example/src/search_example.dart';
 
-import 'src/adv_home/home_example.dart';
+//import 'src/adv_home/home_example.dart';
 import 'src/home/home_example.dart';
 import 'src/search_example.dart';
 import 'web_test_osm.dart';
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
       initialRoute: "/home",
       routes: {
         "/home": (ctx) => MainExample(),
-        "/adv-home": (ctx) => AdvandedMainExample(),
+        //"/adv-home": (ctx) => AdvandedMainExample(),
         "/second": (ctx) => Scaffold(
               body: Center(
                 child: ElevatedButton(
