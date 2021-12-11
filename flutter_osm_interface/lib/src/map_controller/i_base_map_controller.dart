@@ -18,7 +18,7 @@ abstract class IBaseMapController {
   late ValueNotifier<GeoPoint?> _listenerMapLongTapping = ValueNotifier(null);
   late ValueNotifier<GeoPoint?> _listenerMapSingleTapping = ValueNotifier(null);
   late ValueNotifier<bool> _listenerMapIsReady = ValueNotifier(false);
-  late ValueNotifier<GeoPoint?> _listenerRegionIsChanging = ValueNotifier(null);
+  late ValueNotifier<Region?> _listenerRegionIsChanging = ValueNotifier(null);
 
   ValueListenable<GeoPoint?> get listenerMapLongTapping =>
       _listenerMapLongTapping;
@@ -30,7 +30,7 @@ abstract class IBaseMapController {
       "use OSMMixinObserver instead,see readme for more details")
   ValueListenable<bool> get listenerMapIsReady => _listenerMapIsReady;
 
-  ValueListenable<GeoPoint?> get listenerRegionIsChanging =>
+  ValueListenable<Region?> get listenerRegionIsChanging =>
       _listenerRegionIsChanging;
 
   IBaseMapController({
@@ -62,7 +62,7 @@ extension setLiteners on BaseMapController {
     _listenerMapIsReady.value = isReady;
   }
 
-  void setValueListenerRegionIsChanging(GeoPoint p) {
-    _listenerRegionIsChanging.value = p;
+  void setValueListenerRegionIsChanging(Region region) {
+    _listenerRegionIsChanging.value = region;
   }
 }
