@@ -97,12 +97,17 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         );
       }
     });
+    controller.listenerRegionIsChanging.addListener(() async {
+      if (controller.listenerRegionIsChanging.value != null) {
+          print(controller.listenerRegionIsChanging.value);
+      }
+    });
 
     //controller.listenerMapIsReady.addListener(mapIsInitialized);
   }
 
   Future<void> mapIsInitialized() async {
-    await controller.setZoom(zoomLevel: 12);
+    //await controller.setZoom(zoomLevel: 12);
     // await controller.setMarkerOfStaticPoint(
     //   id: "line 1",
     //   markerIcon: MarkerIcon(

@@ -11,4 +11,9 @@ class Region {
   Region.fromMap(Map map):
       this.center = GeoPoint.fromMap(map["center"]),
       this.boundingBox = BoundingBox.fromMap(map["bounding"]);
+
+  @override
+  String toString() {
+    return "region : ${boundingBox.toString()},center:$center";
+  }
 }

@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 import '../types/types.dart';
+import 'base_map_controller.dart';
 
 ///  [BaseMapController] : base controller for osm flutter
 ///

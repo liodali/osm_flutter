@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_interface/src/types/road.dart';
 
 import '../types/types.dart';
 
