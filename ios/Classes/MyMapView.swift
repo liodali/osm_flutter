@@ -717,6 +717,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 }
             }
         }
+        let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
+        let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.height)
+        let data :[String:Any] = ["center":point,"bounding":bounding]
+        channel.invokeMethod("receiveRegionIsChanging", arguments: data)
     }
 
 
@@ -744,15 +748,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
                         didRecognizeLongPressGesture location: CGPoint) {
-        let point = mapView.coordinate(fromViewPosition: location)
-        channel.invokeMethod("receiveLongPress", arguments: ["lat":point.latitude,"lon":point.longitude])
+        let point = mapView.coordinate(fromViewPosition: location).toGeoPoint()
+        channel.invokeMethod("receiveLongPress", arguments: point)
 
     }
 
-    public func mapViewRegionIsChanging(_ mapView: TGMapView){
-        let point = mapView.coordinate(fromViewPosition: mapView.center)
-        channel.invokeMethod("receiveRegionIsChanging", arguments: ["lat":point.latitude,"lon":point.longitude])
-    }
 
     public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
                         shouldRecognizeDoubleTapGesture location: CGPoint) -> Bool {
