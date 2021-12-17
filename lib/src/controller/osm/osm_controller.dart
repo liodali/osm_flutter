@@ -663,6 +663,12 @@ class MobileOSMController extends IBaseOSMController {
   Future<GeoPoint> getMapCenter() async {
     return osmPlatform.getMapCenter(_idMap);
   }
+
+  @override
+  Future<BoundingBox> getBounds() {
+    return osmPlatform.getBounds(_idMap);
+
+  }
 }
 
 extension PrivateMethodOSMController on MobileOSMController {

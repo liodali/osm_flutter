@@ -627,6 +627,13 @@ class MethodChannelOSM extends MobileOSMPlatform {
     final result = await _channels[idMap]?.invokeMethod('map#center', []);
     return GeoPoint.fromMap(result);
   }
+
+  @override
+  Future<BoundingBox> getBounds(int idOSM) async{
+    final Map mapBounds = await _channels[idOSM]?.invokeMethod('map#bounds');
+    return BoundingBox.fromMap(mapBounds);
+
+  }
 }
 
 extension config on MethodChannelOSM {

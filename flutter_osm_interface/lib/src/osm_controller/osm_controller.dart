@@ -53,6 +53,9 @@ abstract class IBaseOSMController {
   ///  [id] : String of that list of static geoPoint
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id);
 
+  /// getZoom
+  /// this method will return current zoom level of the map
+  /// the type of the value returned is double,this value should be between minZoomLevel and maxZoomLevel
   Future<double> getZoom();
 
   Future<void> setZoom({
@@ -86,8 +89,10 @@ abstract class IBaseOSMController {
   /// recuperation of user current position
   Future<GeoPoint> myLocation();
 
-  /// go to specific position without create marker
-  ///
+  /// goToPosition
+  /// this method will to change current camera location
+  /// to another specific position without create marker
+  /// has attribute which is the desired location
   /// [p] : (GeoPoint) desired location
   Future<void> goToPosition(GeoPoint p);
 
@@ -167,6 +172,8 @@ abstract class IBaseOSMController {
   Future<void> cancelAdvancedPositionPicker();
 
   Future<void> mapOrientation(double degree);
+
+  Future<BoundingBox> getBounds();
 
   Future<void> limitArea(
     BoundingBox box,

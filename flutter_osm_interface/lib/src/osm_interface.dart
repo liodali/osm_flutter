@@ -253,4 +253,8 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   Future<void> removeLimitArea(
     int idOSM,
   );
+
+  Future<BoundingBox> getBounds(
+    int idOSM,
+  );
 }
