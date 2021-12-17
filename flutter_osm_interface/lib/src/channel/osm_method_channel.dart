@@ -120,11 +120,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
           _streamController
               .add(RegionIsChangingEvent(idMap, Region.fromMap(result)));
           break;
-        case "receiveRegionIsChanging":
-          final result = call.arguments;
-          _streamController
-              .add(RegionIsChangingEvent(idMap, GeoPoint.fromMap(result)));
-          break;
       }
       return true;
     });
