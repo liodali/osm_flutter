@@ -257,8 +257,7 @@ class MobileOSMController extends IBaseOSMController {
   void _checkBoundingBox(BoundingBox? box, GeoPoint? initPosition) {
     if (box != null && !box.isWorld() && initPosition != null) {
       if (!box.inBoundingBox(initPosition)) {
-        throw Exception(
-            "you want to limit the area of the map but your init location is already outside the area!");
+        throw Exception("you want to limit the area of the map but your init location is already outside the area!");
       }
     }
   }
@@ -525,6 +524,7 @@ class MobileOSMController extends IBaseOSMController {
   }) async {
     assert(start.latitude != end.latitude || start.longitude != end.longitude,
         "you cannot make road with same geoPoint");
+
     return await osmPlatform.drawRoad(
       _idMap,
       start,
@@ -542,9 +542,11 @@ class MobileOSMController extends IBaseOSMController {
     Color roadColor,
     double width,
   ) async {
+
     assert(
         path.first.latitude != path.last.latitude ||
             path.first.longitude != path.last.longitude,
+
         "you cannot make road with same geoPoint");
     await osmPlatform.drawRoadManually(_idMap, path, roadColor, width);
   }
