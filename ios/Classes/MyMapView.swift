@@ -138,6 +138,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         case "goto#position":
             goToSpecificLocation(call: call, result: result)
             break;
+        case "map#bounds":
+            getMapBounds(result:result)
+            break;
         case "user#pickPosition":
             //let frameV = UIView()
             methodCall = call
@@ -254,7 +257,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
 
-
+    private func getMapBounds(result:  FlutterResult) {
+       let bounds =  mapView.getBounds(width:mainView.bounds.width,height:mainView.bounds.height)
+        result(bounds)
+    }
 
     private func setCameraAreaLimit(call: FlutterMethodCall) {
        let  bbox = call.arguments as! [Double]

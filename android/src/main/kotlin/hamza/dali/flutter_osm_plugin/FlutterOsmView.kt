@@ -475,7 +475,7 @@ class FlutterOsmView(
 
     private fun getMapBounds(result: MethodChannel.Result) {
         val bounds = map?.boundingBox ?: boundingWorldBox
-        result.success(boundingWorldBox.toHashMap())
+        result.success(bounds.toHashMap())
     }
 
 
