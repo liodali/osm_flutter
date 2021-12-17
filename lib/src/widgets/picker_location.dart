@@ -4,7 +4,6 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import '../controller/map_controller.dart';
 import '../osm_flutter.dart';
 
-
 /// showSimplePickerLocation : picker to select specific position
 ///
 /// [context] : (BuildContext) dialog context parent

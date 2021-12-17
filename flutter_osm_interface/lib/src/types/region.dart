@@ -8,9 +8,9 @@ class Region {
     required this.center,
     required this.boundingBox,
   });
-  Region.fromMap(Map map):
-      this.center = GeoPoint.fromMap(map["center"]),
-      this.boundingBox = BoundingBox.fromMap(map["bounding"]);
+  Region.fromMap(Map map)
+      : this.center = GeoPoint.fromMap(map["center"]),
+        this.boundingBox = BoundingBox.fromMap(map["bounding"]);
 
   @override
   String toString() {
