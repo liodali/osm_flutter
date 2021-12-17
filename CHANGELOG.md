@@ -1,13 +1,12 @@
-## 0.26.0 : add multi map cache
-* improve cache map in android 
-* fix tracking location in android side
-## 0.25.0 : improve rebuilding map in android (skipped)
+## 0.26.0 : add multi map cache (0.25.0 skipped)
 * store last map state before reloading widget in android
 * create OSMMixinObserver to replace ValueListenable in MapController
-  * OSMMixinObserver contain for now one method `mapIsReady`
 * fix show picker map
-* add titleWidget for osm picker 
+* add titleWidget for osm picker
 * add textStyle for title osm picker
+* improve cache map in android 
+* fix tracking location in android side
+* fix close streamController when we already have another widget use the osmFlutter
 ## 0.22.3+1 : version versioning in osm_interface package
 * improve prepare publish script to manage max version supported by osm_interface
 ## 0.22.3 :

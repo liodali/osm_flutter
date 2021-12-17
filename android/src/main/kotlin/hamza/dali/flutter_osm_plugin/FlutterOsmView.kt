@@ -182,7 +182,9 @@ class FlutterOsmView(
         return mapSnapShots[keyMapSnapshot]!!
     }
 
-    private fun removeCurrentCache() = mapSnapShots.remove(keyMapSnapshot)
+    private fun removeCurrentCache() {
+        mapSnapShots.remove(keyMapSnapshot)
+    }
 
     private val staticOverlayListener by lazy {
         MapEventsOverlay(object : MapEventsReceiver {
@@ -208,7 +210,10 @@ class FlutterOsmView(
     private val mapListener by lazy {
         object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
-                methodChannel.invokeMethod("receiveRegionIsChanging", (map?.mapCenter as GeoPoint).toHashMap())
+                val hashMap = HashMap<String, Any?>()
+                hashMap["bounding"] = map?.boundingBox?.toHashMap()
+                hashMap["center"] = (map?.mapCenter as GeoPoint).toHashMap()
+                methodChannel.invokeMethod("receiveRegionIsChanging", hashMap)
                 return true
             }
 
@@ -238,7 +243,6 @@ class FlutterOsmView(
         providerLifecycle.getLifecyle()?.addObserver(this)
 
     }
-
 
     private fun initMap() {
 
@@ -295,12 +299,10 @@ class FlutterOsmView(
                 }
                 "map#saveCache#view" -> {
                     saveCacheMap()
-                    Log.e("map center", mapSnapShot().centerGeoPoint()!!.toHashMap().toString())
                     result.success(null)
                 }
                 "removeCache" -> {
                     removeCurrentCache()
-                    Log.e("map center", mapSnapShot().centerGeoPoint()!!.toHashMap().toString())
                     result.success(null)
                 }
                 "use#visiblityInfoWindow" -> {
@@ -356,6 +358,9 @@ class FlutterOsmView(
                 }
                 "map#center" -> {
                     result.success((map?.mapCenter as GeoPoint).toHashMap())
+                }
+                "map#bounds"-> {
+                    getMapBounds(result=result)
                 }
                 "user#position" -> {
                     if (locationNewOverlay == null) {
@@ -468,6 +473,11 @@ class FlutterOsmView(
         }
     }
 
+    private fun getMapBounds(result: MethodChannel.Result) {
+        val bounds = map?.boundingBox ?: boundingWorldBox
+        result.success(bounds.toHashMap())
+    }
+
 
     private fun setCacheMap() {
         val mapSnapShot = mapSnapShot()
@@ -480,22 +490,23 @@ class FlutterOsmView(
             }
             map!!.controller.setCenter(mapSnapShot.centerGeoPoint())
             map!!.controller.setZoom(mapSnapShot.zoomLevel(initZoom))
-
-            scope?.launch {
-                mapSnapShot.markers().forEach { (point, bytes) ->
-                    val icon = bytes?.let { getBitmap(bytes = it) }
-                    val drawable = getDefaultIconDrawable(icon = icon, color = null)
-                    withContext(Main) {
-                        addMarker(
-                                point,
-                                dynamicMarkerBitmap = drawable,
-                                animateTo = false,
-                                zoom = mapSnapShot.zoomLevel(initZoom)
-                        )
-                    }
+        }
+        /**
+         * show  cached markers
+         */
+        scope?.launch {
+            mapSnapShot.markers().forEach { (point, bytes) ->
+                val icon = bytes?.let { getBitmap(bytes = it) }
+                val drawable = getDefaultIconDrawable(icon = icon, color = null)
+                withContext(Main) {
+                    addMarker(
+                            point,
+                            dynamicMarkerBitmap = drawable,
+                            animateTo = false,
+                            zoom = mapSnapShot.zoomLevel(initZoom)
+                    )
                 }
             }
-
         }
         // set geo marker drawable 
         if (mapSnapShot.staticGeoPointsIcons().isNotEmpty()) {
@@ -540,8 +551,6 @@ class FlutterOsmView(
         mapSnapShot().cache(
                 geoPoint = map!!.mapCenter as GeoPoint,
                 zoom = map!!.zoomLevelDouble,
-//                customArrowMarkerIcon = getBytesFromBitmap(customArrowMarkerIcon),
-//                customPersonMarkerIcon = getBytesFromBitmap(customPersonMarkerIcon),
                 customPickerMarkerIcon = getBytesFromBitmap(customPickerMarkerIcon),
                 customRoadMarkerIcon = HashMap(
                         customRoadMarkerIcon.mapValues { m ->
@@ -1804,6 +1813,7 @@ class FlutterOsmView(
             }
         }
     }
+
 
 }
 

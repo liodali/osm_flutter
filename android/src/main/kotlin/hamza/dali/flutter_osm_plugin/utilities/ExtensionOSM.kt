@@ -35,3 +35,12 @@ fun BoundingBox.isWorld(): Boolean {
             && this.lonEast == 180.0
             && this.lonWest == -180.0
 }
+fun BoundingBox.toHashMap(): HashMap<String, Double> {
+    return HashMap<String, Double>().apply {
+        this["north"] = latNorth
+        this["east"] = lonEast
+        this["south"] = latSouth
+        this["west"] = lonWest
+    }
+
+}

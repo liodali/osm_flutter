@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../controller/map_controller.dart';
 import '../../widgets/mobile_osm_flutter.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
