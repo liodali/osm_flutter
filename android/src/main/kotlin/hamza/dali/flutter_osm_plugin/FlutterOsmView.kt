@@ -359,6 +359,9 @@ class FlutterOsmView(
                 "map#center" -> {
                     result.success((map?.mapCenter as GeoPoint).toHashMap())
                 }
+                "map#bounds"-> {
+                    getMapBounds(result=result)
+                }
                 "user#position" -> {
                     if (locationNewOverlay == null) {
                         locationNewOverlay = MyLocationNewOverlay(provider, map)
@@ -468,6 +471,11 @@ class FlutterOsmView(
             Log.e(e.cause.toString(), e.stackTraceToString())
             result.error("404", e.message, e.stackTraceToString())
         }
+    }
+
+    private fun getMapBounds(result: MethodChannel.Result) {
+        val bounds = map?.boundingBox ?: boundingWorldBox
+        result.success(boundingWorldBox.toHashMap())
     }
 
 
