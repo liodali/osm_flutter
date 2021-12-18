@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 
+import 'geo_point.dart';
 import 'marker.dart';
 
 enum RoadType {
@@ -42,13 +44,24 @@ class RoadOption {
 class RoadInfo {
   final double? distance;
   final double? duration;
+  final List<GeoPoint> route;
 
   RoadInfo({
     this.distance,
     this.duration,
+    this.route = const [],
   });
 
   RoadInfo.fromMap(Map map)
       : this.duration = map["duration"],
-        this.distance = map["distance"];
+        this.distance = map["distance"],
+        this.route = decodePolyline(
+          map["routePoints"],
+          accuracyExponent: 10,
+        )
+            .map((e) => GeoPoint(
+                  latitude: e.first.toDouble(),
+                  longitude: e.last.toDouble(),
+                ))
+            .toList();
 }
