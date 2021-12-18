@@ -41,6 +41,14 @@ class RoadOption {
         this.showMarkerOfPOI = false;
 }
 
+/// RoadInfo
+/// this class is represent road information for specific road
+/// contain 3 object distance,duration and list of route
+/// [distance] : (double) distance of  the road in km, can be null
+///
+/// [duration] : (double) duration of the road in seconds,can be null
+///
+/// [route]   :  (List of GeoPoint) the point route of the road can be empty
 class RoadInfo {
   final double? distance;
   final double? duration;
