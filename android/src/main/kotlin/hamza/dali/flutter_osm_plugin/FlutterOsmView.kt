@@ -359,8 +359,8 @@ class FlutterOsmView(
                 "map#center" -> {
                     result.success((map?.mapCenter as GeoPoint).toHashMap())
                 }
-                "map#bounds"-> {
-                    getMapBounds(result=result)
+                "map#bounds" -> {
+                    getMapBounds(result = result)
                 }
                 "user#position" -> {
                     if (locationNewOverlay == null) {
@@ -1238,7 +1238,7 @@ class FlutterOsmView(
             roadManager = OSRMRoadManager(context, "json/application")
         roadManager?.let { manager ->
             manager.setMean(meanUrl)
-
+            var routePointsEncoded = ""
             job = scope?.launch(Default) {
                 val wayPoints = listPointsArgs.map {
                     GeoPoint(it["lat"]!!, it["lon"]!!)
@@ -1257,6 +1257,7 @@ class FlutterOsmView(
                 val road = manager.getRoad(roadPoints)
                 withContext(Main) {
                     if (road.mRouteHigh.size > 2) {
+                        routePointsEncoded = PolylineEncoder.encode(road.mRouteHigh, 10)
                         val polyLine = RoadManager.buildRoadOverlay(road)
                         createRoad(
                                 polyLine = polyLine,
@@ -1278,9 +1279,10 @@ class FlutterOsmView(
 
                         map!!.invalidate()
                     }
-                    result.success(HashMap<String, Double>().apply {
+                    result.success(HashMap<String, Any>().apply {
                         this["duration"] = road.mDuration
                         this["distance"] = road.mLength
+                        this["routePoints"] = routePointsEncoded
                     })
                 }
 
