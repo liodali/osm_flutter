@@ -8,6 +8,7 @@ import MapKit
 struct RoadInformation {
     let distance:Double
     let seconds:Double
+    let encodedRoute:String
 }
 
 

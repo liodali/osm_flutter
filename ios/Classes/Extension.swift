@@ -129,8 +129,8 @@ extension GeoPoint {
 }
 
 extension RoadInformation {
-    func toMap() -> [String: Double] {
-        ["distance": self.distance, "duration": self.seconds]
+    func toMap() -> [String: Any] {
+        ["distance": self.distance, "duration": self.seconds,"routePoints":self.encodedRoute]
     }
 }
 
