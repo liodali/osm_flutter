@@ -15,8 +15,7 @@ class MarkerOption {
   }) {
     return MarkerOption(
         defaultMarker: defaultMarker ?? this.defaultMarker,
-        advancedPickerMarker:
-            advancedPickerMarker ?? this.advancedPickerMarker);
+        advancedPickerMarker: advancedPickerMarker ?? this.advancedPickerMarker);
   }
 }
 
@@ -30,15 +29,30 @@ class UserLocationMaker {
   });
 }
 
+class AssetMarker {
+  final AssetImage image;
+  final double? scaleAssetImage;
+  final Color? color;
+
+  AssetMarker({
+    required this.image,
+    this.scaleAssetImage,
+    this.color,
+  });
+}
+
 class MarkerIcon extends StatelessWidget {
   final Icon? icon;
+  @Deprecated("use assetMarker,this will be removed next version")
   final AssetImage? image;
+  final AssetMarker? assetMarker;
 
-  MarkerIcon({
+  const MarkerIcon({
     this.icon,
+    this.assetMarker,
     this.image,
     Key? key,
-  })  : assert(icon != null || image != null),
+  })  : assert(icon != null || (assetMarker != null || image != null)),
         super(key: key);
 
   @override
@@ -46,10 +60,20 @@ class MarkerIcon extends StatelessWidget {
     Widget? child = SizedBox.shrink();
     if (icon != null) {
       child = icon;
-    } else if (image != null)
-      child = Image(
-        image: image!,
+    } else if (assetMarker != null || image != null) {
+      if (image != null) {
+        return Image(
+          image: image!,
+        );
+      }
+      child = Image.asset(
+        assetMarker!.image.assetName,
+        bundle: assetMarker!.image.bundle,
+        scale: assetMarker?.scaleAssetImage,
+        color: assetMarker?.color,
       );
+    }
+
     return child!;
   }
 }
