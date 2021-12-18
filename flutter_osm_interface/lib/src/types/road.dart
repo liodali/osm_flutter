@@ -57,7 +57,6 @@ class RoadInfo {
         this.distance = map["distance"],
         this.route = decodePolyline(
           map["routePoints"],
-          accuracyExponent: 10,
         )
             .map((e) => GeoPoint(
                   latitude: e.first.toDouble(),
