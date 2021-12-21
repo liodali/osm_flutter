@@ -732,10 +732,13 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 }
             }
         }
-        let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
-        let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.height)
-        let data: [String: Any] = ["center": point, "bounding": bounding]
-        channel.invokeMethod("receiveRegionIsChanging", arguments: data)
+        if !canTrackUserLocation {
+                let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
+                let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.height)
+                let data: [String: Any] = ["center": point, "bounding": bounding]
+                channel.invokeMethod("receiveRegionIsChanging", arguments: data)
+        }
+
     }
 
 
