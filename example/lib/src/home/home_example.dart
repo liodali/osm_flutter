@@ -92,13 +92,13 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             //   color: Colors.red,
             //   size: 32,
             // ),
-            image: AssetImage("asset/pin.png"),
+           image: AssetImage("asset/pin.png"),
             // assetMarker: AssetMarker(
             //   image: AssetImage("asset/pin.png"),
-            //   scaleAssetImage: 0.75,
+            //   //scaleAssetImage: 2,
             // ),
           ),
-          angle: -pi / 4,
+          //angle: -pi / 4,
         );
       }
     });

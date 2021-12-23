@@ -275,6 +275,6 @@ class MapController extends BaseMapController {
 
   Future<BoundingBox> get bounds async => await osmBaseController.getBounds();
 
-  Future<GeoPoint> get centerMapasync async =>
+  Future<GeoPoint> get centerMap async =>
       await osmBaseController.getMapCenter();
 }

@@ -68,7 +68,6 @@ class MarkerIcon extends StatelessWidget {
       }
       child = Image.asset(
         assetMarker!.image.assetName,
-        bundle: assetMarker!.image.bundle,
         scale: assetMarker?.scaleAssetImage,
         color: assetMarker?.color,
       );
