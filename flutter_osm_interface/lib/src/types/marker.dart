@@ -15,7 +15,8 @@ class MarkerOption {
   }) {
     return MarkerOption(
         defaultMarker: defaultMarker ?? this.defaultMarker,
-        advancedPickerMarker: advancedPickerMarker ?? this.advancedPickerMarker);
+        advancedPickerMarker:
+            advancedPickerMarker ?? this.advancedPickerMarker);
   }
 }
 
