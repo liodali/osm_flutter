@@ -1,4 +1,9 @@
-## 0.26.1 : 
+## 0.27.0 : add changing region listener and get bounds from mapview
+* add `listenerRegionIsChanging` listener to get new region when map was moved
+* add `bounds` in map_controller to get bounding box 
+* add new attribue `AssetMarker` in `MarkerIcon` 
+* add new attribue `route` in `Road` 
+## 0.26.1 : fix bug
 * clause job coroutine of getRoads when flutter widget call dispose native method
 * fix name of centerMapasync to centerMap
 ## 0.26.0 : add multi map cache (0.25.0 skipped)

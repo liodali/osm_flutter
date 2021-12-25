@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 import '../types/types.dart';
+import 'base_map_controller.dart';
 
 ///  [BaseMapController] : base controller for osm flutter
 ///
@@ -18,6 +17,7 @@ abstract class IBaseMapController {
   late ValueNotifier<GeoPoint?> _listenerMapLongTapping = ValueNotifier(null);
   late ValueNotifier<GeoPoint?> _listenerMapSingleTapping = ValueNotifier(null);
   late ValueNotifier<bool> _listenerMapIsReady = ValueNotifier(false);
+  late ValueNotifier<Region?> _listenerRegionIsChanging = ValueNotifier(null);
 
   ValueListenable<GeoPoint?> get listenerMapLongTapping =>
       _listenerMapLongTapping;
@@ -28,6 +28,8 @@ abstract class IBaseMapController {
   @Deprecated("this callback is deprecated,will be removed in the future,"
       "use OSMMixinObserver instead,see readme for more details")
   ValueListenable<bool> get listenerMapIsReady => _listenerMapIsReady;
+  ValueListenable<Region?> get listenerRegionIsChanging =>
+      _listenerRegionIsChanging;
 
   IBaseMapController({
     this.initMapWithUserPosition = true,
@@ -41,6 +43,7 @@ abstract class IBaseMapController {
     // _listenerMapLongTapping.dispose();
     // _listenerMapSingleTapping.dispose();
     // _listenerMapIsReady.dispose();
+    // _listenerRegionIsChanging.dispose();
   }
 }
 
@@ -55,5 +58,9 @@ extension setLiteners on BaseMapController {
 
   void setValueListenerMapIsReady(bool isReady) {
     _listenerMapIsReady.value = isReady;
+  }
+
+  void setValueListenerRegionIsChanging(Region region) {
+    _listenerRegionIsChanging.value = region;
   }
 }

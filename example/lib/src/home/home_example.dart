@@ -87,14 +87,24 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         await controller.addMarker(
           lastGeoPoint.value!,
           markerIcon: MarkerIcon(
-            icon: Icon(
-              Icons.person_pin,
-              color: Colors.red,
-              size: 32,
-            ),
+            // icon: Icon(
+            //   Icons.person_pin,
+            //   color: Colors.red,
+            //   size: 32,
+            // ),
+            image: AssetImage("asset/pin.png"),
+            // assetMarker: AssetMarker(
+            //   image: AssetImage("asset/pin.png"),
+            //   //scaleAssetImage: 2,
+            // ),
           ),
-          angle: -pi / 4,
+          //angle: -pi / 4,
         );
+      }
+    });
+    controller.listenerRegionIsChanging.addListener(() async {
+      if (controller.listenerRegionIsChanging.value != null) {
+        print(controller.listenerRegionIsChanging.value);
       }
     });
 
@@ -102,7 +112,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   }
 
   Future<void> mapIsInitialized() async {
-    await controller.setZoom(zoomLevel: 12);
+    //await controller.setZoom(zoomLevel: 12);
     // await controller.setMarkerOfStaticPoint(
     //   id: "line 1",
     //   markerIcon: MarkerIcon(
@@ -139,6 +149,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       ],
       "line 2",
     );
+    final bounds = await controller.bounds;
+    print(bounds.toString());
   }
 
   @override
@@ -540,6 +552,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         print(
             "duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         print("distance:${roadInformation.distance}Km");
+        print(roadInformation.route.length);
       });
     } on RoadException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

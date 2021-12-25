@@ -108,6 +108,12 @@ class MobileOSMController extends IBaseOSMController {
       _osmFlutterState.widget.controller
           .setValueListenerMapIsReady(event.value);
     });
+
+    osmPlatform.onRegionIsChangingListener(_idMap).listen((event) {
+      _osmFlutterState.widget.controller
+          .setValueListenerRegionIsChanging(event.value);
+    });
+
     osmPlatform.onMapRestored(_idMap).listen((event) {
       Future.delayed(Duration(milliseconds: 300), () {
         _osmFlutterState.widget.controller.osMMixin?.mapRestored();
@@ -417,29 +423,19 @@ class MobileOSMController extends IBaseOSMController {
     double? angle,
   }) async {
     if (markerIcon != null &&
-        (markerIcon.icon != null || markerIcon.image != null)) {
-      if (markerIcon.icon != null) {
-        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
-            angle == null || (angle == 0.0)
-                ? markerIcon.icon
-                : Transform.rotate(
-                    angle: angle,
-                    child: markerIcon.icon,
-                  );
-      } else if (markerIcon.image != null) {
-        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
-            angle == null || (angle == 0.0)
-                ? Image(
-                    image: markerIcon.image!,
-                  )
-                : Transform.rotate(
-                    angle: angle,
-                    child: Image(
-                      image: markerIcon.image!,
-                    ),
-                  );
-      }
-      await Future.delayed(Duration(milliseconds: 300), () async {
+        (markerIcon.icon != null ||
+            markerIcon.image != null ||
+            markerIcon.assetMarker != null)) {
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
+          ((angle == null) || (angle == 0.0))
+              ? markerIcon
+              : Transform.rotate(
+                  angle: angle,
+                  child: markerIcon,
+                );
+      int duration =
+          markerIcon.icon != null || markerIcon.assetMarker != null ? 300 : 350;
+      await Future.delayed(Duration(milliseconds: duration), () async {
         await osmPlatform.addMarker(
           _idMap,
           p,
@@ -520,6 +516,7 @@ class MobileOSMController extends IBaseOSMController {
   }) async {
     assert(start.latitude != end.latitude || start.longitude != end.longitude,
         "you cannot make road with same geoPoint");
+
     return await osmPlatform.drawRoad(
       _idMap,
       start,
@@ -657,6 +654,11 @@ class MobileOSMController extends IBaseOSMController {
   @override
   Future<GeoPoint> getMapCenter() async {
     return osmPlatform.getMapCenter(_idMap);
+  }
+
+  @override
+  Future<BoundingBox> getBounds() {
+    return osmPlatform.getBounds(_idMap);
   }
 }
 
