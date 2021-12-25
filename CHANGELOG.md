@@ -7,7 +7,6 @@
 * clause job coroutine of getRoads when flutter widget call dispose native method
 * fix name of centerMapasync to centerMap
 ## 0.26.0 : add multi map cache (0.25.0 skipped)
-## 0.26.0 : add multi map cache (0.25.0 skipped)
 * store last map state before reloading widget in android
 * create OSMMixinObserver to replace ValueListenable in MapController
 * fix show picker map

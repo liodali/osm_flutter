@@ -1,6 +1,7 @@
 # flutter_osm_plugin
 ![pub](https://img.shields.io/badge/pub-v0.27.0-orange) 
 
+
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
@@ -38,6 +39,7 @@ Add the following to your `pubspec.yaml` file:
 
     dependencies:
       flutter_osm_plugin: ^0.27.0
+
 
 ### Migration to `0.16.0` (Android Only)
 > if you are using this plugin before Flutter 2 

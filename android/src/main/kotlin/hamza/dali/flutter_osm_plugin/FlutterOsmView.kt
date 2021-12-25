@@ -1615,6 +1615,11 @@ class FlutterOsmView(
     }
 
     override fun dispose() {
+        job?.let {
+            if (it.isActive) {
+                it.cancel()
+            }
+        }
         mainLinearLayout.removeAllViews()
         //clearCacheMap()
         //map!!.onDetach()
