@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.26.0-orange) 
+![pub](https://img.shields.io/badge/pub-v0.27.0-orange) 
 
 ## Platform Support
 | Android | iOS | Web |
@@ -37,7 +37,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.26.0
+      flutter_osm_plugin: ^0.27.0
 
 ### Migration to `0.16.0` (Android Only)
 > if you are using this plugin before Flutter 2 
@@ -218,14 +218,19 @@ await controller.removeLimitAreaMap();
 <b> 12) get center map </b>b>
 
 ```dart
-GeoPoint centerMap = await controller.centerMapasync;
+GeoPoint centerMap = await controller.centerMap;
+```
+<b> 13) get bounding box  map </b>b>
+
+```dart
+BoundingBox bounds = await controller.bounds;
 ```
 
-<b> 13) select/create new position </b>
+<b> 14) select/create new position </b>
 
 * we have 2 way to select location in map
 
-<b>13.1 Manual selection (deprecated) </b>
+<b>14.1 Manual selection (deprecated) </b>
 
 a) select without change default marker 
 ```dart
@@ -276,7 +281,7 @@ controller.listenerRegionIsChanging.addListener(() {
       }
     });
 ```
-<b>13.2 Assisted selection </b> (for more details see example) 
+<b>14.2 Assisted selection </b> (for more details see example) 
 
 ```dart
  /// To Start assisted Selection
@@ -289,20 +294,20 @@ controller.listenerRegionIsChanging.addListener(() {
  await controller.cancelAdvancedPositionPicker();
 ```
 
-<b>14) Create Marker Programmatically </b>
+<b>15) Create Marker Programmatically </b>
 > you can change marker icon by using attribute `markerIcon`
 ```dart
 await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
 ```
 
-<b> 14.1) Remove marker </b>
+<b> 15.1) Remove marker </b>
 
 ```dart
  await controller.removeMarker(geoPoint);
 ```
 * PS : static position cannot be removed by this method 
 
-<b>15) Draw road,recuperate distance in km and duration in sec </b>
+<b>16) Draw road,recuperate distance in km and duration in sec </b>
 
 > you can add an middle position to pass your route through them
 >
@@ -322,7 +327,7 @@ await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
  print("${roadInfo.duration}sec");
 ```
 
-<b> 15.b) draw road manually </b>
+<b> 16.b) draw road manually </b>
 ```dart
 await controller.drawRoadManually(
         waysPoint,
@@ -331,13 +336,13 @@ await controller.drawRoadManually(
       )
 ```
 
-<b>16) Delete last road </b>
+<b>17) Delete last road </b>
 
 ```dart
  await controller.removeLastRoad();
 ```
 
-<b>17) Change static GeoPoint position </b>
+<b>18) Change static GeoPoint position </b>
 
 > add new staticPoints with empty list of geoPoints (notice: if you add static point without marker,they will get default maker used by plugin)
 
@@ -349,7 +354,7 @@ await controller.drawRoadManually(
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
-<b>18) Change/Add Marker old/new static GeoPoint position </b>
+<b>19) Change/Add Marker old/new static GeoPoint position </b>
 
 > add marker of new static point
 
@@ -359,13 +364,13 @@ await controller.drawRoadManually(
  await controller.setMarkerOfStaticPoint(String id,MarkerIcon markerIcon );
 ```
 
-<b>19) change orientation of the map</b>
+<b>20) change orientation of the map</b>
 
 ```dart
  await controller.rotateMapCamera(degree);
 ```
 
-<b>20) Draw Shape in the map </b>
+<b>21) Draw Shape in the map </b>
 
 * Circle
 ```dart
