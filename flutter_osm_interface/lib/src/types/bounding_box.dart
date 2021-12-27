@@ -32,6 +32,19 @@ class BoundingBox {
   String toString() {
     return "noth:$north,east:$east,south:$south,west:$west";
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BoundingBox &&
+          runtimeType == other.runtimeType &&
+          north == other.north &&
+          east == other.east &&
+          south == other.south &&
+          west == other.west;
+
+  @override
+  int get hashCode => north.hashCode ^ east.hashCode ^ south.hashCode ^ west.hashCode;
 }
 
 extension ExtBoundingBox on BoundingBox {
