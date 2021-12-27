@@ -1,3 +1,5 @@
+## 0.27.0+1:
+* add == operator to osm types
 ## 0.27.0 : add changing region listener and get bounds from mapview
 * add `listenerRegionIsChanging` listener to get new region when map was moved
 * add `bounds` in map_controller to get bounding box 

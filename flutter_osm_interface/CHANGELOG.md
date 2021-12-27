@@ -1,3 +1,9 @@
+## 0.1.12+1 :
+* fix ==operator in osm types 
+## 0.1.12 : 
+* add listenerRegionIsChanging listenable to get bounding box when user navigate with map
+* get boundingbox direclty from map
+
 ## 0.1.10+2 :
 * remove annotation protected from mapRestored in OSMMixin
 ## 0.1.10+1 :
