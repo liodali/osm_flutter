@@ -64,6 +64,7 @@ class OSMFlutter extends StatefulWidget {
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
+  final bool androidHotReloadSupport;
 
   OSMFlutter({
     Key? key,
@@ -85,6 +86,7 @@ class OSMFlutter extends StatefulWidget {
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
+    this.androidHotReloadSupport = false,
   })  : assert(maxZoomLevel <= 19),
         assert(minZoomLevel >= 2),
         assert(initZoom >= 2 && initZoom <= 19),
@@ -199,6 +201,7 @@ class OSMFlutterState extends State<OSMFlutter> {
                             maxZoomLevel: widget.maxZoomLevel,
                             userLocationMarker: widget.userLocationMarker,
                             onMapIsReady: widget.onMapIsReady,
+                              androidHotReloadSupport:widget.androidHotReloadSupport
                           ),
                         ),
                         Positioned.fill(

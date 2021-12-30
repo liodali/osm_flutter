@@ -32,6 +32,7 @@ class MobileOsmFlutter extends StatefulWidget {
   final double maxZoomLevel;
   final Function(bool)? onMapIsReady;
   final UserLocationMaker? userLocationMarker;
+  final bool androidHotReloadSupport;
 
   MobileOsmFlutter({
     Key? key,
@@ -57,6 +58,7 @@ class MobileOsmFlutter extends StatefulWidget {
     this.maxZoomLevel = 18,
     this.onMapIsReady,
     this.userLocationMarker,
+    this.androidHotReloadSupport = false,
   }) : super(key: key);
 
   @override
@@ -99,16 +101,14 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     keyUUID = Uuid().v4();
     WidgetsBinding.instance?.addObserver(this);
     Future.delayed(Duration.zero, () async {
-      orientation = ValueNotifier(
-          Orientation.values[MediaQuery.of(context).orientation.index]);
+      orientation = ValueNotifier(Orientation.values[MediaQuery.of(context).orientation.index]);
       orientation.addListener(changeOrientationDetected);
 
       sizeNotifier = ValueNotifier(MediaQuery.of(context).size);
       sizeNotifier.addListener(changeOrientationDetected);
 
       //check location permission
-      if (((widget.controller).initMapWithUserPosition ||
-          widget.trackMyPosition)) {
+      if (((widget.controller).initMapWithUserPosition || widget.trackMyPosition)) {
         await requestPermission();
         if (widget.controller.initMapWithUserPosition) {
           bool isEnabled = await _osmController!.checkServiceLocation();
@@ -172,7 +172,10 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       }
     }
     super.didUpdateWidget(oldWidget);
-    if (this.widget != oldWidget && Platform.isAndroid) {
+    if (this.widget != oldWidget &&
+        Platform.isAndroid &&
+        widget.androidHotReloadSupport &&
+        kDebugMode) {
       setState(() {
         androidKey = GlobalKey();
       });
@@ -184,6 +187,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     //await _osmController!.saveCacheMap();
     setState(() {
       mobileKey = GlobalKey();
+      androidKey = GlobalKey();
     });
   }
 

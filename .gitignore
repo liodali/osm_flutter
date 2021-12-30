@@ -44,3 +44,5 @@ build/
 **/ios/Flutter/flutter_export_environment.sh
 **/ios/ServiceDefinitions.json
 **/ios/Runner/GeneratedPluginRegistrant.*
+
+/example/lib/src/test_bottom_nav/app_with_bottom_nav.dart

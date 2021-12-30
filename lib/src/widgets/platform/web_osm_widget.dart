@@ -18,6 +18,7 @@ Widget getWidget({
   bool showDefaultInfoWindow = false,
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
+  bool androidHotReloadSupport = false,
 }) =>
     throw Exception("not implemented yet");
 
