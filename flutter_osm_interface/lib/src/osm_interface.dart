@@ -203,6 +203,11 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     double maxZoom,
   );
 
+  Future<void> zoomToBoundingBox(
+    BoundingBox box, {
+    int paddinInPixel = 0,
+  });
+
   Future<void> disableTracking(
     int idOSM,
   );

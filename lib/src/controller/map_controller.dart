@@ -143,7 +143,6 @@ class MapController extends BaseMapController {
     "this method will be removed in 0.25.0,use callback `listenerMapSingleTapping` or `listenerMapLongTapping` "
     "to listener to click on the map, and use `addMarker` to create marker in that specific location",
   )
-
   /// pick Position in map
   Future<GeoPoint> selectPosition({
     MarkerIcon? icon,

@@ -81,6 +81,17 @@ abstract class IBaseOSMController {
     double maxZoom,
   );
 
+  /// zoomToBoundingBox
+  ///this method will change region and adjust the zoom level to the sepecific region
+  ///
+  /// [box] : (BoundingBox) the region that will change zoom level to be visible in the mapview
+  ///
+  ///  [paddinInPixel] : (int) the padding that will be added to region to adjust the zoomLevel
+  Future<void> zoomToBoundingBox(
+    BoundingBox box, {
+    int paddinInPixel = 0,
+  });
+
   Future<GeoPoint> getMapCenter();
 
   /// activate current location position
