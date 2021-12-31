@@ -325,6 +325,9 @@ class FlutterOsmView(
                     stepZoom = call.arguments as Double
                     result.success(null)
                 }
+                "zoomToRegion" -> {
+                    zoomingMapToBoundingBox(call, result)
+                }
                 "currentLocation" -> {
                     enableMyLocation()
                     result.success(isEnabled)
@@ -474,6 +477,21 @@ class FlutterOsmView(
             Log.e(e.cause.toString(), e.stackTraceToString())
             result.error("404", e.message, e.stackTraceToString())
         }
+    }
+
+    private fun zoomingMapToBoundingBox(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as Map<String, Any>
+        val box = BoundingBox(
+            args["north"]!! as Double,
+            args["east"]!! as Double,
+            args["south"]!! as Double,
+            args["west"]!! as Double,
+        )
+
+        map?.zoomToBoundingBox(
+            box, true, args["padding"]!! as Int
+        )
+        result.success(null)
     }
 
     private fun getMapBounds(result: MethodChannel.Result) {
