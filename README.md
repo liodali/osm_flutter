@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.27.0%2B1-orange) 
+![pub](https://img.shields.io/badge/pub-v0.27.1-orange) 
 
 
 ## Platform Support
@@ -38,7 +38,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.27.0+1
+      flutter_osm_plugin: ^0.27.1
 
 
 ### Migration to `0.16.0` (Android Only)
@@ -477,6 +477,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `showDefaultInfoWindow`       | (bool) enable/disable default infoWindow of marker (default = false)         |
 | `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |
 | `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
+| `androidHotReloadSupport`     | (bool) enable to restart  osm map in android to support hotReload, default: false  |
 
 
 ### Custom Controller

@@ -42,7 +42,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   ValueNotifier<bool> showFab = ValueNotifier(true);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
   Timer? timer;
-
+  int x=0;
   @override
   void initState() {
     super.initState();
@@ -207,8 +207,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           }),
           IconButton(
             onPressed: () async {
-              visibilityZoomNotifierActivation.value =
-                  !visibilityZoomNotifierActivation.value;
+              visibilityZoomNotifierActivation.value = !visibilityZoomNotifierActivation.value;
               zoomNotifierActivation.value = !zoomNotifierActivation.value;
             },
             icon: Icon(Icons.zoom_out_map),
@@ -235,15 +234,13 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           children: [
             OSMFlutter(
               controller: controller,
+              androidHotReloadSupport: false,
               mapIsLoading: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    Text("Map is Loading..")
-                  ],
+                  children: [CircularProgressIndicator(), Text("Map is Loading..")],
                 ),
               ),
               initZoom: 8,
@@ -278,8 +275,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                       "${geoPoint.toMap().toString()}",
                     ),
                     action: SnackBarAction(
-                      onPressed: () =>
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                      onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                       label: "hide",
                     ),
                   ),
@@ -363,8 +359,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   heroTag: "confirmAdvPicker",
                   onPressed: () async {
                     advPickerNotifierActivation.value = false;
-                    GeoPoint p =
-                        await controller.selectAdvancedPositionPicker();
+                    GeoPoint p = await controller.selectAdvancedPositionPicker();
                     print(p);
                   },
                 ),
@@ -549,8 +544,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             showMarkerOfPOI: false,
           ),
         );
-        print(
-            "duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
+        print("duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         print("distance:${roadInformation.distance}Km");
         print(roadInformation.route.length);
       });

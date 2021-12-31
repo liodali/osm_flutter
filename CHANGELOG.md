@@ -1,3 +1,6 @@
+## 0.27.1:
+* add new attribute `androidHotReloadSupport` to activate or desactivate hotreload support in mapview on android
+
 ## 0.27.0+1:
 * add == operator to osm types
 ## 0.27.0 : add changing region listener and get bounds from mapview
