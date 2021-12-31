@@ -16,4 +16,15 @@ class Region {
   String toString() {
     return "region : ${boundingBox.toString()},center:$center";
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Region &&
+          runtimeType == other.runtimeType &&
+          center == other.center &&
+          boundingBox == other.boundingBox;
+
+  @override
+  int get hashCode => center.hashCode ^ boundingBox.hashCode;
 }

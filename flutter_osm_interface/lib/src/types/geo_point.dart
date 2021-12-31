@@ -27,6 +27,17 @@ class GeoPoint {
   String toString() {
     return 'GeoPoint{latitude: $latitude , longitude: $longitude}';
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GeoPoint &&
+          runtimeType == other.runtimeType &&
+          longitude == other.longitude &&
+          latitude == other.latitude;
+
+  @override
+  int get hashCode => longitude.hashCode ^ latitude.hashCode;
 }
 
 class GeoPointWithOrientation extends GeoPoint {
@@ -48,4 +59,17 @@ class GeoPointWithOrientation extends GeoPoint {
         () => angle * (180 / pi),
       );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      super == other &&
+          other is GeoPointWithOrientation &&
+          runtimeType == other.runtimeType &&
+          angle == other.angle &&
+          latitude == other.latitude &&
+          longitude == other.longitude;
+
+  @override
+  int get hashCode => super.hashCode ^ angle.hashCode ^ longitude.hashCode ^ latitude.hashCode;
 }

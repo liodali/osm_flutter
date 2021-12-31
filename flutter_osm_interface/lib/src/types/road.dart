@@ -71,4 +71,16 @@ class RoadInfo {
                   longitude: e.last.toDouble(),
                 ))
             .toList();
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RoadInfo &&
+          runtimeType == other.runtimeType &&
+          distance == other.distance &&
+          duration == other.duration &&
+          route == other.route;
+
+  @override
+  int get hashCode => distance.hashCode ^ duration.hashCode ^ route.hashCode;
 }
