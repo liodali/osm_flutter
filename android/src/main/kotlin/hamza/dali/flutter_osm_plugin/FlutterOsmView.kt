@@ -481,11 +481,17 @@ class FlutterOsmView(
 
     private fun zoomingMapToBoundingBox(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as Map<String, Any>
-        val box = BoundingBox(
-            args["north"]!! as Double,
-            args["east"]!! as Double,
-            args["south"]!! as Double,
-            args["west"]!! as Double,
+        val box = BoundingBox.fromGeoPoints(
+            arrayOf(
+                GeoPoint(
+                    args["north"]!! as Double,
+                    args["east"]!! as Double,
+                ),
+                GeoPoint(
+                    args["south"]!! as Double,
+                    args["west"]!! as Double,
+                ),
+            ).toMutableList()
         )
 
         map?.zoomToBoundingBox(
