@@ -45,6 +45,15 @@ class BoundingBox {
 
   @override
   int get hashCode => north.hashCode ^ east.hashCode ^ south.hashCode ^ west.hashCode;
+
+  Map<String, double> toMap() {
+    return {
+      "north": north,
+      "east": east,
+      "west": west,
+      "south": south,
+    };
+  }
 }
 
 extension ExtBoundingBox on BoundingBox {

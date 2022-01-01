@@ -640,9 +640,12 @@ class MobileOSMController extends IBaseOSMController {
   Future<void> zoomToBoundingBox(
     BoundingBox box, {
     int paddinInPixel = 0,
-  }) {
-    // TODO: implement zoomToBoundingBox
-    throw UnimplementedError();
+  }) async {
+    await (MobileOSMController.osmPlatform as MethodChannelOSM).zoomToBoundingBox(
+      _idMap,
+      box,
+      paddinInPixel: paddinInPixel,
+    );
   }
 }
 

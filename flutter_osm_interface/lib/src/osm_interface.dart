@@ -204,7 +204,8 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   );
 
   Future<void> zoomToBoundingBox(
-    BoundingBox box, {
+      int idOSM,
+      BoundingBox box, {
     int paddinInPixel = 0,
   });
 

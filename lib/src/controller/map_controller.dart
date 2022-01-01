@@ -91,8 +91,7 @@ class MapController extends BaseMapController {
     required String id,
     required MarkerIcon markerIcon,
   }) async {
-    await osmBaseController.setIconStaticPositions(id, markerIcon,
-        refresh: true);
+    await osmBaseController.setIconStaticPositions(id, markerIcon, refresh: true);
   }
 
   /// recuperate current zoom level
@@ -117,6 +116,22 @@ class MapController extends BaseMapController {
   /// negative value:zoomOut
   Future<void> zoomOut() async {
     await osmBaseController.zoomOut();
+  }
+  /// zoomToBoundingBox
+  /// this method used to change zoom level to show specific region,
+  /// get [box] and [paddinInPixel] as parameter
+  ///
+  /// [box] : (BoundingBox) the region that the map will move to and adjust the zoom level to be visible
+  ///
+  /// [paddinInPixel] : (int) padding that will be used to show specific region
+  Future<void> zoomToBoundingBox(
+    BoundingBox box, {
+    int paddinInPixel = 0,
+  }) async {
+    await osmBaseController.zoomToBoundingBox(
+      box,
+      paddinInPixel: paddinInPixel,
+    );
   }
 
   /// activate current location position
@@ -143,6 +158,7 @@ class MapController extends BaseMapController {
     "this method will be removed in 0.25.0,use callback `listenerMapSingleTapping` or `listenerMapLongTapping` "
     "to listener to click on the map, and use `addMarker` to create marker in that specific location",
   )
+
   /// pick Position in map
   Future<GeoPoint> selectPosition({
     MarkerIcon? icon,
@@ -274,6 +290,5 @@ class MapController extends BaseMapController {
 
   Future<BoundingBox> get bounds async => await osmBaseController.getBounds();
 
-  Future<GeoPoint> get centerMap async =>
-      await osmBaseController.getMapCenter();
+  Future<GeoPoint> get centerMap async => await osmBaseController.getMapCenter();
 }

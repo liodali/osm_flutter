@@ -82,7 +82,7 @@ abstract class IBaseOSMController {
   );
 
   /// zoomToBoundingBox
-  ///this method will change region and adjust the zoom level to the sepecific region
+  ///this method will change region and adjust the zoom level to the specific region
   ///
   /// [box] : (BoundingBox) the region that will change zoom level to be visible in the mapview
   ///

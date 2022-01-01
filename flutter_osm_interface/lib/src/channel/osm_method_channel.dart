@@ -636,11 +636,17 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> zoomToBoundingBox(
+    int idOSM,
     BoundingBox box, {
     int paddinInPixel = 0,
-  }) {
-    // TODO: implement zoomToBoundingBox
-    throw UnimplementedError();
+  }) async {
+    final Map<String, dynamic> args = {};
+    args.addAll(box.toMap());
+    args.putIfAbsent("padding", () => paddinInPixel);
+    await _channels[idOSM]!.invokeMethod(
+      "zoomToRegion",
+      args,
+    );
   }
 }
 
