@@ -28,17 +28,17 @@ class BoundingBox {
     if (geoPoints.isEmpty) {
       throw Exception("list of geopint shouldn't be empty");
     }
-    double maxLat = 85.0;
-    double maxLon = 180.0;
-    double minLat = -85.0;
-    double minLon = -180.0;
+    double maxLat = -85.0;
+    double maxLon = -180.0;
+    double minLat = 85.0;
+    double minLon = 180.0;
     for (final gp in geoPoints) {
       final lat = gp.latitude;
       final lng = gp.longitude;
-      maxLat = max(lat, maxLat);
-      maxLon = max(lng, maxLon);
-      minLat = min(lat, minLat);
-      minLon = min(lng, minLon);
+      maxLat = max(maxLat, lat);
+      maxLon = max(maxLon, lng);
+      minLat = min(minLat, lat);
+      minLon = min(minLon, lng);
     }
     return BoundingBox(
       north: maxLat,
