@@ -185,7 +185,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             break;
         case "zoomToRegion":
             zoomMapToBoundingBox(call: call)
-            resul(200)
+            result(200)
             break;
         case "marker#icon":
             markerIcon = convertImage(codeImage: call.arguments as! String)!
@@ -269,11 +269,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     private func zoomMapToBoundingBox(call: FlutterMethodCall) {
-        let bbox = call.arguments as! [String:Any]
-        let bounds = TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: bbox["south"], longitude: bbox["west"]),
-                ne: CLLocationCoordinate2D(latitude: bbox["north"], longitude: bbox["east"]))
+        let bbox = call.arguments as! [String: Any]
+        let bounds = TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: bbox["south"] as! Double, longitude: bbox["west"] as! Double),
+                ne: CLLocationCoordinate2D(latitude: bbox["north"] as! Double, longitude: bbox["east"] as! Double))
         let padding = CGFloat(bbox["padding"] as! Int)
-        mapView.cameraThatFitsBounds(bounds, withPadding: UIEdgeInsets.init(top: padding, left: padding, bottom: padding, right: padding))
+       mapView.cameraPosition = mapView.cameraThatFitsBounds(bounds, withPadding: UIEdgeInsets.init(top: padding, left: padding, bottom: padding, right: padding))
         //mapView.bounds
         //mapView.bounds = bounds
 
@@ -748,10 +748,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             }
         }
         if !canTrackUserLocation {
-                let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
-                let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.height)
-                let data: [String: Any] = ["center": point, "bounding": bounding]
-                channel.invokeMethod("receiveRegionIsChanging", arguments: data)
+            let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
+            let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.height)
+            let data: [String: Any] = ["center": point, "bounding": bounding]
+            channel.invokeMethod("receiveRegionIsChanging", arguments: data)
         }
 
     }
