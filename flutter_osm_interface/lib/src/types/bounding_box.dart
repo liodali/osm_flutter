@@ -25,8 +25,8 @@ class BoundingBox {
         this.west = -180.0;
 
   static BoundingBox fromGeoPoints(List<GeoPoint> geoPoints) {
-    if(geoPoints.isEmpty){
-     throw Exception("list of geopint shouldn't be empty");
+    if (geoPoints.isEmpty) {
+      throw Exception("list of geopint shouldn't be empty");
     }
     double maxLat = 85.0;
     double maxLon = 180.0;
@@ -38,7 +38,7 @@ class BoundingBox {
       maxLat = max(lat, maxLat);
       maxLon = max(lng, maxLon);
       minLat = min(lat, minLat);
-      minLon = min(lat, minLon);
+      minLon = min(lng, minLon);
     }
     return BoundingBox(
       north: maxLat,
