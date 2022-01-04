@@ -44,7 +44,7 @@ class BoundingBox {
       north: maxLat,
       east: maxLon,
       south: minLat,
-      west: minLat,
+      west: minLon,
     );
   }
 
