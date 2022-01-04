@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'geo_point.dart';
 
 class BoundingBox {
@@ -6,7 +8,7 @@ class BoundingBox {
   final double south;
   final double west;
 
-  const BoundingBox({
+  BoundingBox({
     required this.north,
     required this.east,
     required this.south,
@@ -21,6 +23,30 @@ class BoundingBox {
         this.east = 180.0,
         this.south = -85.0,
         this.west = -180.0;
+
+  static BoundingBox fromGeoPoints(List<GeoPoint> geoPoints) {
+    if(geoPoints.isEmpty){
+     throw Exception("list of geopint shouldn't be empty");
+    }
+    double maxLat = 85.0;
+    double maxLon = 180.0;
+    double minLat = -85.0;
+    double minLon = -180.0;
+    for (final gp in geoPoints) {
+      final lat = gp.latitude;
+      final lng = gp.longitude;
+      maxLat = max(lat, maxLat);
+      maxLon = max(lng, maxLon);
+      minLat = min(lat, minLat);
+      minLon = min(lat, minLon);
+    }
+    return BoundingBox(
+      north: maxLat,
+      east: maxLon,
+      south: minLat,
+      west: minLat,
+    );
+  }
 
   BoundingBox.fromMap(Map map)
       : this.north = map["north"],
