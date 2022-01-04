@@ -183,6 +183,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             stepZoom = call.arguments! as! Double
             result(200)
             break;
+        case "zoomToRegion":
+            zoomMapToBoundingBox(call: call)
+            resul(200)
+            break;
         case "marker#icon":
             markerIcon = convertImage(codeImage: call.arguments as! String)!
             result(200)
@@ -259,6 +263,17 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let bounds = TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: bbox[2], longitude: bbox[3]),
                 ne: CLLocationCoordinate2D(latitude: bbox[0], longitude: bbox[1]))
         mapView.cameraThatFitsBounds(bounds, withPadding: UIEdgeInsets.init(top: 3.0, left: 3.0, bottom: 3.0, right: 3.0))
+        //mapView.bounds
+        //mapView.bounds = bounds
+
+    }
+
+    private func zoomMapToBoundingBox(call: FlutterMethodCall) {
+        let bbox = call.arguments as! [String:Any]
+        let bounds = TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: bbox["south"], longitude: bbox["west"]),
+                ne: CLLocationCoordinate2D(latitude: bbox["north"], longitude: bbox["east"]))
+        let padding = CGFloat(bbox["padding"] as! Int)
+        mapView.cameraThatFitsBounds(bounds, withPadding: UIEdgeInsets.init(top: padding, left: padding, bottom: padding, right: padding))
         //mapView.bounds
         //mapView.bounds = bounds
 
