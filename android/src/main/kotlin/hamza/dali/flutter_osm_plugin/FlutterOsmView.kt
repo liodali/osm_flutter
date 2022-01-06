@@ -1231,6 +1231,7 @@ class FlutterOsmView(
             "foot" -> OSRMRoadManager.MEAN_BY_FOOT
             else -> OSRMRoadManager.MEAN_BY_CAR
         }
+        val zoomToRegion = args["zoomIntoRegion"] as Boolean
         val listPointsArgs = args["wayPoints"] as List<HashMap<String, Double>>
 
         val listInterestPoints: List<GeoPoint> = when (args.containsKey("middlePoints")) {
@@ -1303,6 +1304,13 @@ class FlutterOsmView(
                                 showIcons = showPoiMarker
                             )
                         )
+                        if (zoomToRegion) {
+                            map!!.zoomToBoundingBox(
+                                BoundingBox.fromGeoPoints(road.mRouteHigh),
+                                true,
+                                64,
+                            )
+                        }
 
                         map!!.invalidate()
                     }
