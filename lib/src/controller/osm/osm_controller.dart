@@ -178,7 +178,7 @@ class MobileOSMController extends IBaseOSMController {
     }
 
     /// road configuration
-    if (_osmFlutterState.widget.road != null) {
+    if (_osmFlutterState.widget.roadConfig != null) {
       await _initializeRoadInformation();
     }
 
@@ -258,11 +258,15 @@ class MobileOSMController extends IBaseOSMController {
   Future _initializeRoadInformation() async {
     await osmPlatform.setColorRoad(
       _idMap,
-      _osmFlutterState.widget.road!.roadColor,
+      _osmFlutterState.widget.roadConfig!.roadColor,
     );
     await osmPlatform.setMarkersRoad(
       _idMap,
-      [_osmFlutterState.startIconKey, _osmFlutterState.endIconKey, _osmFlutterState.middleIconKey],
+      [
+        _osmFlutterState.startIconKey,
+        _osmFlutterState.endIconKey,
+        _osmFlutterState.middleIconKey,
+      ],
     );
   }
 

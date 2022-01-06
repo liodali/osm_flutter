@@ -119,12 +119,20 @@ abstract class IBaseOSMController {
     String imageURL = "",
   });
 
-  /// draw road
-  ///  [start] : started point of your Road
-  ///  [end] : last point of your road
-  ///  [interestPoints] : middle point that you want to be passed by your route
-  ///  [roadColor] : (color)  indicate the color that you want to be road colored
-  ///  [roadWidth] : (double) indicate the width  of your road
+  /// drawRoad
+  /// this method will call ORSM api to get list of geopoint and
+  /// that will be transformed into polyline to be drawn in the map
+  ///
+  ///  parameters :
+  ///  [start] : (GeoPoint) started point of your Road
+  ///
+  ///  [end] : (GeoPoint) destination point of your road
+  ///
+  ///  [interestPoints] : (List of GeoPoint) middle point that you want to be passed by your route
+  ///
+  ///  [roadType] : (RoadType)  indicate the type of the route  that you want to be road to be used (default :RoadType.car)
+  ///
+  ///  [roadOption] : (RoadOption) option of the road width, color,zoomInto,etc ...
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {

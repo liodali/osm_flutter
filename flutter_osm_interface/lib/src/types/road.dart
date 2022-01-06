@@ -10,13 +10,13 @@ enum RoadType {
   bike,
 }
 
-class Road {
+class RoadConfiguration {
   final Color roadColor;
   final MarkerIcon? startIcon;
   final MarkerIcon? endIcon;
   final MarkerIcon? middleIcon;
 
-  Road({
+  RoadConfiguration({
     this.roadColor = Colors.blue,
     this.startIcon,
     this.middleIcon,
@@ -28,16 +28,19 @@ class RoadOption {
   final Color? roadColor;
   final int? roadWidth;
   final bool showMarkerOfPOI;
+  final bool zoomInto;
 
   RoadOption({
     this.roadColor,
     this.roadWidth,
     this.showMarkerOfPOI = false,
+    this.zoomInto = false,
   });
 
   const RoadOption.empty()
       : this.roadWidth = null,
         this.roadColor = null,
+        this.zoomInto = false,
         this.showMarkerOfPOI = false;
 }
 
