@@ -235,9 +235,13 @@ class MethodChannelOSM extends MobileOSMPlatform {
       "showMarker": roadOption.showMarkerOfPOI,
     });
 
-    ///
+    /// add road type that will change api call to get route
     args.addAll({
       "roadType": roadType.toString().split(".").last,
+    });
+
+    args.addAll({
+      "zoomIntoRegion": roadOption.zoomInto,
     });
 
     /// add middle point that will pass through it

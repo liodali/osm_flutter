@@ -8,15 +8,16 @@ class CustomController extends MapController {
   CustomController({
     bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
-    BoundingBox? areaLimit =  const BoundingBox.world(),
-  })  : assert(
-          initMapWithUserPosition || initPosition != null,
-        ),
+    BoundingBox? areaLimit = const BoundingBox.world(),
+  })
+      : assert(
+  initMapWithUserPosition || initPosition != null,
+  ),
         super(
-          initMapWithUserPosition: initMapWithUserPosition,
-          initPosition: initPosition,
-          areaLimit: areaLimit,
-        );
+        initMapWithUserPosition: initMapWithUserPosition,
+        initPosition: initPosition,
+        areaLimit: areaLimit,
+      );
 
   @override
   void init() {
@@ -312,7 +313,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                       ],
                     )*/
               ],
-              road: Road(
+              roadConfiguration: RoadConfiguration(
                 startIcon: MarkerIcon(
                   icon: Icon(
                     Icons.person,
@@ -451,18 +452,18 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       ///selection geoPoint
       GeoPoint point = await controller.selectPosition(
           icon: MarkerIcon(
-        icon: Icon(
-          Icons.person_pin_circle,
-          color: Colors.amber,
-          size: 100,
-        ),
-      ));
+            icon: Icon(
+              Icons.person_pin_circle,
+              color: Colors.amber,
+              size: 100,
+            ),
+          ));
       GeoPoint point2 = await controller.selectPosition();
       showFab.value = false;
       ValueNotifier<RoadType> notifierRoadType = ValueNotifier(RoadType.car);
 
       final bottomPersistant = scaffoldKey.currentState!.showBottomSheet(
-        (ctx) {
+            (ctx) {
           return RoadTypeChoiceWidget(
             setValueCallback: (roadType) {
               notifierRoadType.value = roadType;
@@ -479,18 +480,20 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           roadType: notifierRoadType.value,
           //interestPoints: [pointM1, pointM2],
           roadOption: RoadOption(
-            roadWidth: 10,
-            roadColor: Colors.blue,
-            showMarkerOfPOI: false,
+              roadWidth: 10,
+              roadColor: Colors.blue,
+              showMarkerOfPOI: false,
+              zoomInto: true
           ),
         );
         print("duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         print("distance:${roadInformation.distance}Km");
         print(roadInformation.route.length);
-        controller.zoomToBoundingBox(
-          BoundingBox.fromGeoPoints([point2,point]),
-          paddinInPixel: 64,
-        );
+        // final box = await BoundingBox.fromGeoPointsAsync([point2, point]);
+        // controller.zoomToBoundingBox(
+        //   box,
+        //   paddinInPixel: 64,
+        // );
       });
     } on RoadException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
