@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import 'geo_point.dart';
 
 class BoundingBox {
@@ -45,6 +47,13 @@ class BoundingBox {
       east: maxLon,
       south: minLat,
       west: minLon,
+    );
+  }
+
+  static Future<BoundingBox> fromGeoPointsAsync(List<GeoPoint> geoPoints) async {
+    return await compute(
+      (List<GeoPoint> list) async => BoundingBox.fromGeoPoints(list),
+      geoPoints,
     );
   }
 
