@@ -11,6 +11,7 @@ import UIKit
 import MapKit
 import Flutter
 import TangramMap
+import Polyline
 
 public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, TGMapViewDelegate, TGRecognizerDelegate {
 
@@ -207,13 +208,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break;
         case "road":
-            drawRoad(call: call) { [unowned self] roadInfo, road, roadData, error in
+            drawRoad(call: call) { [unowned self] roadInfo, road, roadData,box, error in
                 if (error != nil) {
                     result(FlutterError(code: "400", message: "error to draw road", details: nil))
                 } else {
                     var newRoad = road
                     newRoad?.roadData = roadData!
                     roadManager.drawRoadOnMap(on: newRoad!, for: mapView)
+                    if let bounding = box {
+                      mapView.cameraPosition = mapView.cameraThatFitsBounds(bounding, withPadding: UIEdgeInsets.init(top: 0.0, left: 0.0, bottom: 0.0, right: 0.0))
+                    }
                     result(roadInfo!.toMap())
                 }
 
@@ -542,7 +546,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
 
-    private func drawRoad(call: FlutterMethodCall, completion: @escaping (_ roadInfo: RoadInformation?, _ road: Road?, _ roadData: RoadData?, _ error: Error?) -> ()) {
+    private func drawRoad(call: FlutterMethodCall, completion: @escaping (_ roadInfo: RoadInformation?, _ road: Road?, _ roadData: RoadData?,_ boundingBox:TGCoordinateBounds?, _ error: Error?) -> ()) {
         let args = call.arguments as! [String: Any]
         var points = args["wayPoints"] as! [GeoPoint]
         var roadType = RoadType.car
@@ -595,16 +599,26 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             let wayP = String(format: "%F,%F", point["lon"]!, point["lat"]!)
             return wayP
         }
-        roadManager.getRoad(wayPoints: waysPoint, typeRoad: roadType) { road in
+
+        let zoomInto = args["zoomIntoRegion"] as! Bool
+
+        roadManager.getRoad(wayPoints: waysPoint, typeRoad: roadType) { road  in
             var error: Error? = nil
             if road == nil {
                 error = NSError()
-                completion(nil, nil, nil, error)
+                completion(nil, nil, nil,nil, error)
 
             }
             let roadInfo = RoadInformation(distance: road!.distance, seconds: road!.duration, encodedRoute: road!.mRouteHigh)
 
-            completion(roadInfo, road, RoadData(roadColor: roadColor, roadWidth: roadWidth), nil)
+            var box:TGCoordinateBounds?  = nil
+            if (zoomInto) {
+                let route:Polyline = Polyline(encodedPolyline: road!.mRouteHigh, precision: 1e5)
+                box = route.coordinates?.toBounds()
+            }
+
+
+            completion(roadInfo, road, RoadData(roadColor: roadColor, roadWidth: roadWidth),box, nil)
             if let showMarkerInPOI = args["showMarker"] as? Bool {
                 if (showMarkerInPOI) {
                     if let start = self.markersIconsRoadPoint["start"] {

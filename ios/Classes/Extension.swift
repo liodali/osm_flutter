@@ -130,7 +130,7 @@ extension GeoPoint {
 
 extension RoadInformation {
     func toMap() -> [String: Any] {
-        ["distance": self.distance, "duration": self.seconds,"routePoints":self.encodedRoute]
+        ["distance": self.distance, "duration": self.seconds, "routePoints": self.encodedRoute]
     }
 }
 
@@ -243,5 +243,25 @@ extension TGMapView {
         }
 
         return ["north": latMin ?? 0.0, "east": lonMin ?? 0.0, "south": latMax ?? 0.0, "west": lonMax ?? 0.0]
+    }
+}
+
+extension Array where Element == CLLocationCoordinate2D {
+    func toBounds() -> TGCoordinateBounds {
+        var maxLat = -85.0
+        var maxLon = -180.0
+        var minLat = 85.0
+        var minLon = 180.0
+
+        for location in self {
+            let lat = location.latitude
+            let lon = location.longitude
+            maxLat = Swift.max(maxLat, lat)
+            maxLon = Swift.max(maxLon, lon)
+            minLat = Swift.min(minLat, lat)
+            minLon = Swift.min(minLon, lon)
+        }
+       return  TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat, longitude: minLon),
+                ne: CLLocationCoordinate2D(latitude: maxLat, longitude: maxLon))
     }
 }
