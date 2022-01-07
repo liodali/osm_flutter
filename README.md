@@ -18,7 +18,7 @@
 * customize user Marker (Android/iOS)
 * assisted selection position (Android/iOS)
 * set BoundingBox (Android)
-* zoom into region (Android/iOS)
+* zoom into regon (Android/iOS)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
 * draw Road manually (Android/iOS)
 * ClickListener on Marker (Android/iOS)
@@ -328,7 +328,7 @@ await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
        roadWidth: 10,
        roadColor: Colors.blue,
        showMarkerOfPOI: false,
-        zoomInto: true,
+       zoomInto: true,
    ),
 );
  print("${roadInfo.distance}km");
@@ -341,7 +341,7 @@ await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
 
 | Properties               | Description                         |
 | ------------------------ | ----------------------------------- |
-| `roadColor`              | (Color?)  change the default color of the route runtime    |
+| `roadColor`              | (Color?)  change the default color of the route in runtime    |
 | `roadWidth`              | (int?)    change the road width       |
 | `showMarkerOfPOI`        | (bool)    change the visibility of the markers of the POI (default:false)       |
 | `zoomInto`               | (bool)    change zoom level to make the all the road visible (default:true)    |
