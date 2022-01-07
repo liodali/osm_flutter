@@ -171,7 +171,13 @@ class MapController extends BaseMapController {
     return p;
   }
 
-  /// draw road
+  ///  draw road
+  ///
+  ///  this method show route from 2 point and pass throught interesect points in the map,
+  ///
+  ///  you can configure your road in runtime with [roadOption], and change the road type drawn by modify
+  ///  the [routeType].
+  ///
   ///  [start] : started point of your Road
   ///
   ///  [end] : last point of your road
@@ -179,7 +185,6 @@ class MapController extends BaseMapController {
   ///  [intersectPoint] : (List of GeoPoint) middle position that you want you road to pass through it
   ///
   ///  [roadOption] : (RoadOption) runtime configuration of the road
-
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {

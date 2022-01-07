@@ -23,7 +23,12 @@ class RoadConfiguration {
     this.endIcon,
   });
 }
-
+/// [RoadOption]
+///
+/// this class used to configure road in runtime by change default color
+/// or width and show interest poi markers
+/// and zoom to region of the road.
+///
 class RoadOption {
   final Color? roadColor;
   final int? roadWidth;
@@ -34,7 +39,7 @@ class RoadOption {
     this.roadColor,
     this.roadWidth,
     this.showMarkerOfPOI = false,
-    this.zoomInto = false,
+    this.zoomInto = true,
   });
 
   const RoadOption.empty()
