@@ -1,3 +1,5 @@
+## 0.28.0+1:
+* fix version osm_interface
 ## 0.28.0:
 * add method `zoomToBoundingBox` to adjust zoom level in the map to make the region visible
 * add attribute `zoomInto` in RoadOption that used in the method drawRoad
