@@ -1,5 +1,5 @@
 ## 0.28.0:
-* add method `zoomToBoundingBox` to adjust zoom level in the map to make all region visible
+* add method `zoomToBoundingBox` to adjust zoom level in the map to make the region visible
 * add attribute `zoomInto` in RoadOption that used in the method drawRoad
 * add 2 method in class `BoundingBox` to convert list of geopoint to Boundingbox
 * change the name of class `Road` to `RoadConfiguration`
