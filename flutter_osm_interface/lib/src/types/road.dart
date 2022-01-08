@@ -10,34 +10,42 @@ enum RoadType {
   bike,
 }
 
-class Road {
+class RoadConfiguration {
   final Color roadColor;
   final MarkerIcon? startIcon;
   final MarkerIcon? endIcon;
   final MarkerIcon? middleIcon;
 
-  Road({
+  RoadConfiguration({
     this.roadColor = Colors.blue,
     this.startIcon,
     this.middleIcon,
     this.endIcon,
   });
 }
-
+/// [RoadOption]
+///
+/// this class used to configure road in runtime by change default color
+/// or width and show interest poi markers
+/// and zoom to region of the road.
+///
 class RoadOption {
   final Color? roadColor;
   final int? roadWidth;
   final bool showMarkerOfPOI;
+  final bool zoomInto;
 
   RoadOption({
     this.roadColor,
     this.roadWidth,
     this.showMarkerOfPOI = false,
+    this.zoomInto = true,
   });
 
   const RoadOption.empty()
       : this.roadWidth = null,
         this.roadColor = null,
+        this.zoomInto = false,
         this.showMarkerOfPOI = false;
 }
 

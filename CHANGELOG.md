@@ -1,6 +1,13 @@
+## 0.28.0+1:
+* fix version osm_interface
+## 0.28.0:
+* add method `zoomToBoundingBox` to adjust zoom level in the map to make the region visible
+* add attribute `zoomInto` in RoadOption that used in the method drawRoad
+* add 2 method in class `BoundingBox` to convert list of geopoint to Boundingbox
+* change the name of class `Road` to `RoadConfiguration`
+* change the attribute name `road` in OSMFlutter to `roadConfiguration`
 ## 0.27.1:
 * add new attribute `androidHotReloadSupport` to activate or desactivate hotreload support in mapview on android
-
 ## 0.27.0+1:
 * add == operator to osm types
 ## 0.27.0 : add changing region listener and get bounds from mapview

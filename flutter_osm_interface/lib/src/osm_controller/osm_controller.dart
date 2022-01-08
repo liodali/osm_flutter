@@ -81,6 +81,17 @@ abstract class IBaseOSMController {
     double maxZoom,
   );
 
+  /// zoomToBoundingBox
+  ///this method will change region and adjust the zoom level to the specific region
+  ///
+  /// [box] : (BoundingBox) the region that will change zoom level to be visible in the mapview
+  ///
+  ///  [paddinInPixel] : (int) the padding that will be added to region to adjust the zoomLevel
+  Future<void> zoomToBoundingBox(
+    BoundingBox box, {
+    int paddinInPixel = 0,
+  });
+
   Future<GeoPoint> getMapCenter();
 
   /// activate current location position
@@ -108,12 +119,20 @@ abstract class IBaseOSMController {
     String imageURL = "",
   });
 
-  /// draw road
-  ///  [start] : started point of your Road
-  ///  [end] : last point of your road
-  ///  [interestPoints] : middle point that you want to be passed by your route
-  ///  [roadColor] : (color)  indicate the color that you want to be road colored
-  ///  [roadWidth] : (double) indicate the width  of your road
+  /// drawRoad
+  /// this method will call ORSM api to get list of geopoint and
+  /// that will be transformed into polyline to be drawn in the map
+  ///
+  ///  parameters :
+  ///  [start] : (GeoPoint) started point of your Road
+  ///
+  ///  [end] : (GeoPoint) destination point of your road
+  ///
+  ///  [interestPoints] : (List of GeoPoint) middle point that you want to be passed by your route
+  ///
+  ///  [roadType] : (RoadType)  indicate the type of the route  that you want to be road to be used (default :RoadType.car)
+  ///
+  ///  [roadOption] : (RoadOption) option of the road width, color,zoomInto,etc ...
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {

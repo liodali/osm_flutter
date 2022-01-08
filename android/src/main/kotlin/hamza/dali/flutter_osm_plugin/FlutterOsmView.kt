@@ -325,6 +325,9 @@ class FlutterOsmView(
                     stepZoom = call.arguments as Double
                     result.success(null)
                 }
+                "zoomToRegion" -> {
+                    zoomingMapToBoundingBox(call, result)
+                }
                 "currentLocation" -> {
                     enableMyLocation()
                     result.success(isEnabled)
@@ -474,6 +477,27 @@ class FlutterOsmView(
             Log.e(e.cause.toString(), e.stackTraceToString())
             result.error("404", e.message, e.stackTraceToString())
         }
+    }
+
+    private fun zoomingMapToBoundingBox(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as Map<String, Any>
+        val box = BoundingBox.fromGeoPoints(
+            arrayOf(
+                GeoPoint(
+                    args["north"]!! as Double,
+                    args["east"]!! as Double,
+                ),
+                GeoPoint(
+                    args["south"]!! as Double,
+                    args["west"]!! as Double,
+                ),
+            ).toMutableList()
+        )
+
+        map?.zoomToBoundingBox(
+            box, true, args["padding"]!! as Int
+        )
+        result.success(null)
     }
 
     private fun getMapBounds(result: MethodChannel.Result) {
@@ -1207,6 +1231,7 @@ class FlutterOsmView(
             "foot" -> OSRMRoadManager.MEAN_BY_FOOT
             else -> OSRMRoadManager.MEAN_BY_CAR
         }
+        val zoomToRegion = args["zoomIntoRegion"] as Boolean
         val listPointsArgs = args["wayPoints"] as List<HashMap<String, Double>>
 
         val listInterestPoints: List<GeoPoint> = when (args.containsKey("middlePoints")) {
@@ -1279,6 +1304,13 @@ class FlutterOsmView(
                                 showIcons = showPoiMarker
                             )
                         )
+                        if (zoomToRegion) {
+                            map!!.zoomToBoundingBox(
+                                BoundingBox.fromGeoPoints(road.mRouteHigh),
+                                true,
+                                64,
+                            )
+                        }
 
                         map!!.invalidate()
                     }

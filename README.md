@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.27.1-orange) 
+![pub](https://img.shields.io/badge/pub-v0.28.0%2B1-orange) 
 
 
 ## Platform Support
@@ -17,7 +17,8 @@
 * customize Icon Marker (Android/iOS)
 * customize user Marker (Android/iOS)
 * assisted selection position (Android/iOS)
-* set BoundingBOx (Android)
+* set BoundingBox (Android)
+* zoom into regon (Android/iOS)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
 * draw Road manually (Android/iOS)
 * ClickListener on Marker (Android/iOS)
@@ -27,6 +28,7 @@
 * draw shapes (Only Android)
 * simple dialog location picker (Android/iOS)
 * listen to region change (Android/iOS)
+
 
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
@@ -38,7 +40,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.27.1
+      flutter_osm_plugin: ^0.28.0+1
 
 
 ### Migration to `0.16.0` (Android Only)
@@ -309,10 +311,13 @@ await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
 ```
 * PS : static position cannot be removed by this method 
 
-<b>16) Draw road,recuperate distance in km and duration in sec </b>
+<b>16) Draw road,recuperate distance in km and duration in sec</b>
 
 > you can add an middle position to pass your route through them
->
+> change configuration of the road in runtime
+> zoom into the region of the road
+> change the type of the road that user want to use
+
 ```dart
  RoadInfo roadInfo = await controller.drawRoad( 
    GeoPoint(latitude: 47.35387, longitude: 8.43609),
@@ -322,12 +327,27 @@ await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
    roadOption: RoadOption(
        roadWidth: 10,
        roadColor: Colors.blue,
-       showMarkerOfPOI: false
+       showMarkerOfPOI: false,
+       zoomInto: true,
    ),
 );
  print("${roadInfo.distance}km");
  print("${roadInfo.duration}sec");
 ```
+
+
+### properties of `RoadOption` 
+
+
+| Properties               | Description                         |
+| ------------------------ | ----------------------------------- |
+| `roadColor`              | (Color?)  change the default color of the route in runtime    |
+| `roadWidth`              | (int?)    change the road width       |
+| `showMarkerOfPOI`        | (bool)    change the visibility of the markers of the POI (default:false)       |
+| `zoomInto`               | (bool)    change zoom level to make the all the road visible (default:true)    |
+
+
+
 
 <b> 16.b) draw road manually </b>
 ```dart

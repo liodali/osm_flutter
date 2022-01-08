@@ -20,7 +20,7 @@ class MobileOsmFlutter extends StatefulWidget {
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
   final MarkerOption? markerOption;
-  final Road? road;
+  final RoadConfiguration? roadConfig;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
@@ -47,7 +47,7 @@ class MobileOsmFlutter extends StatefulWidget {
     required this.globalKeys,
     required this.staticIconGlobalKeys,
     this.markerOption,
-    this.road,
+    this.roadConfig,
     this.showZoomController = false,
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
