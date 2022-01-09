@@ -66,6 +66,12 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
+  Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap) {
+    // TODO: implement onRegionIsChangingListener
+    throw UnimplementedError();
+  }
+
+  @override
   Future<void> init(int idOSM) async {
     if (_streamController.isClosed) {
       _streamController = StreamController<EventOSM>.broadcast();
@@ -132,4 +138,6 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
       //OsmWebPlatform.idOsmWeb++;
     }
   }
+
+
 }

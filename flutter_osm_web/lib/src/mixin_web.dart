@@ -260,4 +260,17 @@ mixin WebMixin {
     }
     return GeoPoint.fromMap(Map<String, double>.from(mapCenterPoint));
   }
+
+
+  Future<BoundingBox> getBounds() {
+    // TODO: implement getBounds
+    throw UnimplementedError();
+  }
+
+
+  Future<void> zoomToBoundingBox(BoundingBox box, {int paddinInPixel = 0}) {
+    // TODO: implement zoomToBoundingBox
+    throw UnimplementedError();
+  }
+
 }

@@ -40,7 +40,7 @@ Widget getWidget({
       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
       isPicker: isPicker,
       markerOption: markerOption,
-      road: roadConfiguration,
+      roadConfiguration: roadConfiguration,
       showDefaultInfoWindow: showDefaultInfoWindow,
       onMapIsReady: onMapIsReady,
       userLocationMarker: userLocationMarker,
