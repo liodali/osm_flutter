@@ -47,7 +47,7 @@ async function zoomOut() {
 }
 async function setZoom(zoom) {
    var iframe = document.getElementById("frame_map");
-   return await iframe.contentWindow.setZoom(zoom);
+   return await iframe.contentWindow.setZoomLevel(zoom);
 }
 async function setZoomWithStep(step) {
    var iframe = document.getElementById("frame_map");
@@ -77,6 +77,18 @@ async function setMinZoomLevel(zoomLevel){
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setMinZoomLevel(point);
 }
+async function limitArea(box){
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.limitBoundingBox(box);
+}
+async function getBounds(){
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.getBounds();
+}
+async function flyToBounds(box,padding){
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.flyToBoundingBox(box,padding);
+}
 
 /*
 * shared dart function that called from js
@@ -90,12 +102,16 @@ function onGeoPointClicked(lon,lat) {
 function onMapSingleTapClicked(lon,lat) {
    onMapSingleTapListener(lon,lat);
 }
+function onRegionChanged(box,center) {
+   onRegionChangedListener(box.north,box.east,box.south,box.west,center.lon,center.lat);
+}
 
 
 var innerWindow = document.getElementById('frame_map').contentWindow;
 innerWindow.isMapReady = isMapReady;
 innerWindow.onGeoPointClicked = onGeoPointClicked;
 innerWindow.onMapSingleTapClicked = onMapSingleTapClicked;
+innerWindow.onRegionChanged = onRegionChanged;
 
 
 

@@ -44,7 +44,11 @@ class _WebTestOsmState extends State<WebTestOsm> {
         );
         double zoom = await controller.getZoom();
         print("zoom:$zoom");
-
+      }
+    });
+    controller.listenerRegionIsChanging.addListener(() {
+      if (controller.listenerRegionIsChanging.value != null) {
+        print("${controller.listenerRegionIsChanging.value}");
       }
     });
   }

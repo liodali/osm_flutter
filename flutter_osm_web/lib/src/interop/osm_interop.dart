@@ -5,11 +5,14 @@ library osm_interop;
 
 import 'package:js/js.dart';
 
+import 'models/bounding_box_js.dart';
 import 'models/geo_point_js.dart';
 
 @JS('centerMap')
 external Map<String, double> centerMap();
 
+@JS('getBounds')
+external Map<String, double> getBounds();
 
 @JS('locateMe')
 external Map<String, double> locateMe();
@@ -66,6 +69,12 @@ external dynamic setStaticGeoPoints(String id, List<GeoPointJs> points);
 @JS('setIconStaticGeoPoints')
 external dynamic setIconStaticGeoPoints(String id, String icons);
 
+@JS('limitArea')
+external dynamic limitArea(BoundingBoxJs box);
+
+@JS('flyToBounds')
+external dynamic flyToBounds(BoundingBoxJs box, int padding);
+
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')
 external set initMapFinish(void Function(bool) f);
@@ -77,3 +86,7 @@ external set onStaticGeoPointClicked(void Function(double, double) f);
 /// Allows assigning a function to be callable from `window.onMapSingleTapClicked(lat,lon)`
 @JS('onMapSingleTapListener')
 external set onMapSingleTapListener(void Function(double, double) f);
+
+/// Allows assigning a function to be callable from `window.onRegionChangedListener(region)`
+@JS('onRegionChangedListener')
+external set onRegionChangedListener(void Function(double, double,double, double,double, double) f);

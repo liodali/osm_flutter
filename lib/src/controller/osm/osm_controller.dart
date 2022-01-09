@@ -104,8 +104,9 @@ class MobileOSMController extends IBaseOSMController {
       }
       _osmFlutterState.widget.controller.setValueListenerMapIsReady(event.value);
     });
-
+    print(_idMap);
     osmPlatform.onRegionIsChangingListener(_idMap).listen((event) {
+      print(event.value);
       _osmFlutterState.widget.controller.setValueListenerRegionIsChanging(event.value);
     });
 

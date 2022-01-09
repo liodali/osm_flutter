@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import '../controller/web_osm_controller.dart';
 import 'package:stream_transform/stream_transform.dart';
 
+import '../controller/web_osm_controller.dart';
 import '../web_platform.dart';
 
 class FlutterOsmPluginWeb extends OsmWebPlatform {
@@ -19,8 +19,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
 
   final Map<int, MethodChannel> _channels = {};
 
-  static String getViewType({int? mapId = null}) =>
-      mapId != null ? "${viewType}_$mapId" : viewType;
+  static String getViewType({int? mapId = null}) => mapId != null ? "${viewType}_$mapId" : viewType;
 
   Map<int, WebOsmController> mapsController = <int, WebOsmController>{};
 
@@ -31,8 +30,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
 
   // Returns a filtered view of the events in the _controller, by mapId.
   Stream<EventOSM> _events(int mapId) =>
-      _streamController.stream.where((event) => event.mapId == mapId)
-          as Stream<EventOSM>;
+      _streamController.stream.where((event) => event.mapId == mapId) as Stream<EventOSM>;
 
   static void registerWith(Registrar registrar) {
     final messenger = registrar;
@@ -67,8 +65,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
 
   @override
   Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap) {
-    // TODO: implement onRegionIsChangingListener
-    throw UnimplementedError();
+    return _events(idMap).whereType<RegionIsChangingEvent>();
   }
 
   @override
@@ -109,19 +106,20 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
           break;
         case "onSingleTapListener":
           final result = call.arguments as String;
-          _streamController
-              .add(SingleTapEvent(idOSM, GeoPoint.fromString(result)));
+          _streamController.add(SingleTapEvent(idOSM, GeoPoint.fromString(result)));
           break;
         case "receiveGeoPoint":
           final result = call.arguments as String;
-          _streamController
-              .add(GeoPointEvent(idOSM, GeoPoint.fromString(result)));
+          _streamController.add(GeoPointEvent(idOSM, GeoPoint.fromString(result)));
+          break;
+        case "receiveRegionIsChanging":
+          final result = call.arguments;
+          _streamController.add(RegionIsChangingEvent(idOSM, Region.fromMap(result)));
           break;
         default:
           throw PlatformException(
             code: 'Unimplemented',
-            details:
-                'osm_web_plugin for web doesn\'t implement \'${call.method}\'',
+            details: 'osm_web_plugin for web doesn\'t implement \'${call.method}\'',
           );
       }
     });
@@ -138,6 +136,4 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
       //OsmWebPlatform.idOsmWeb++;
     }
   }
-
-
 }

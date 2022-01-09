@@ -4,21 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:js/js_util.dart';
 
+import 'common/extensions.dart';
 import 'interop/models/geo_point_js.dart';
 import 'interop/osm_interop.dart' as interop hide initMapFinish;
 
-extension ExtGeoPoint on GeoPoint {
-  GeoPointJs _toGeoJS() {
-    return GeoPointJs(
-      lon: longitude,
-      lat: latitude,
-    );
-  }
-}
-
 mixin WebMixin {
   Future<void> initLocationMap(GeoPoint p) async {
-    await promiseToFuture(interop.initMapLocation(p._toGeoJS()));
+    await promiseToFuture(interop.initMapLocation(p.toGeoJS()));
   }
 
   Future<void> currentLocation() async {
@@ -97,8 +89,7 @@ mixin WebMixin {
   }
 
   Future<GeoPoint> myLocation() async {
-    Map<String, dynamic>? value =
-        await html.promiseToFutureAsMap(interop.locateMe());
+    Map<String, dynamic>? value = await html.promiseToFutureAsMap(interop.locateMe());
     if (value!.containsKey("error")) {
       throw Exception(value["message"]);
     }
@@ -148,7 +139,7 @@ mixin WebMixin {
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
     await interop.setStaticGeoPoints(
       id,
-      geoPoints.map((e) => e._toGeoJS()).toList(),
+      geoPoints.map((e) => e.toGeoJS()).toList(),
     );
   }
 
@@ -173,14 +164,12 @@ mixin WebMixin {
     return await promiseToFuture(interop.getZoom());
   }
 
-  Future<void> limitArea(BoundingBox box) {
-    // TODO: implement limitArea
-    throw UnimplementedError();
+  Future<void> limitArea(BoundingBox box) async {
+    await interop.limitArea(box.toBoundsJS());
   }
 
-  Future<void> removeLimitArea() {
-    // TODO: implement removeLimitArea
-    throw UnimplementedError();
+  Future<void> removeLimitArea() async {
+    await interop.limitArea(BoundingBox.world().toBoundsJS());
   }
 
   Future<void> setMaximumZoomLevel(double maxZoom) async {
@@ -244,6 +233,7 @@ mixin WebMixin {
       animate,
     );
   }
+
   Future<GeoPoint> selectPosition({
     MarkerIcon? icon,
     String imageURL = "",
@@ -252,25 +242,26 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-
-  Future<GeoPoint> getMapCenter() async{
-    final mapCenterPoint = await  html.promiseToFutureAsMap(interop.centerMap());
-    if(mapCenterPoint == null){
+  Future<GeoPoint> getMapCenter() async {
+    final mapCenterPoint = await html.promiseToFutureAsMap(interop.centerMap());
+    if (mapCenterPoint == null) {
       throw Exception("web osm : error to get center geopoint");
     }
     return GeoPoint.fromMap(Map<String, double>.from(mapCenterPoint));
   }
 
-
-  Future<BoundingBox> getBounds() {
-    // TODO: implement getBounds
-    throw UnimplementedError();
+  Future<BoundingBox> getBounds() async {
+    final boundingBoxMap = await html.promiseToFutureAsMap(interop.getBounds());
+    if (boundingBoxMap == null) {
+      throw Exception("web osm : error to get bounds");
+    }
+    return BoundingBox.fromMap(Map<String, double>.from(boundingBoxMap));
   }
 
-
-  Future<void> zoomToBoundingBox(BoundingBox box, {int paddinInPixel = 0}) {
-    // TODO: implement zoomToBoundingBox
-    throw UnimplementedError();
+  Future<void> zoomToBoundingBox(BoundingBox box, {int paddinInPixel = 0}) async {
+    await promiseToFuture(interop.flyToBounds(
+      box.toBoundsJS(),
+      paddinInPixel,
+    ));
   }
-
 }

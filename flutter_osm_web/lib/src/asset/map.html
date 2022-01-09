@@ -40,7 +40,7 @@
     var staticGeoPoint = new Map();
     var dynamicIcon = "";
     var homeMarker;
-
+    var isReady = false;
 
     var mymap = L.map('mapid', {
       renderer: L.canvas(), 
@@ -59,11 +59,30 @@
         const geoP = event.latlng;
         onMapSingleTapClicked(geoP.lng,geoP.lat);
     });
+    mymap.on('moveend', function(e) {
+      if(isReady){
+        var bounds = mymap.getBounds();
+        var center = mymap.getCenter();
+        var box = {
+          north: bounds.getNorth(),
+          east: bounds.getEast(),
+          west: bounds.getWest(),
+          south: bounds.getSouth(),
+        };
+        var centerP =  {
+          lat : center.lat,
+          lon : center.lng
+        };
+        onRegionChanged(box,centerP);
+      }
+      
+   });
 
   async function initMapLocation(point) {
        console.log("zoom init map :"+zoom);
        mymap.setView([point.lat, point.lon],zoom);
-       isMapReady(true);
+       isReady = true;
+       isMapReady(isReady);
   }
 
    async function userLocation() {
@@ -192,7 +211,7 @@
         mymap.zoomOut(stepZoom);
       return 200;
   }
-  async function setZoom(zoom) {
+  async function setZoomLevel(zoom) {
       var nzoomlevel = zoom;
       if(nzoomlevel >= mymap.getMinZoom() && nzoomlevel <= mymap.getMaxZoom()){
         mymap.setZoom(nzoomlevel);
@@ -220,6 +239,31 @@
   }
   async function setMinZoomLevel(zoomLevel){
       mymap.setMinZoom(zoomLevel);
+  }
+  async function limitBoundingBox(box){
+    var bounds = L.latLngBounds(
+      L.latLng(box.north,box.east),
+      L.latLng(box.south,box.west)
+    );
+    mymap.setMaxBounds(bounds);
+    return 200;
+  }
+  async function getBounds(){
+    var box = mymap.getBounds();
+    return {
+      south:box.getSouth(),
+      west: box.getWest(),
+      east: box.getEast(),
+      north: box.getNorth()
+    };
+  }
+  async function flyToBoundingBox(box,pad){
+    var bounds = L.latLngBounds(
+      L.latLng(box.north,box.east),
+      L.latLng(box.south,box.west)
+    );
+    mymap.flyToBounds(bounds,{padding:[pad,pad]});
+    return 200;
   }
 
 

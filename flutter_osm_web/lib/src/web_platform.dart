@@ -1,3 +1,5 @@
+import 'dart:js';
+
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
 import 'package:js/js.dart';
@@ -8,7 +10,7 @@ import 'interop/osm_interop.dart' as interop;
 abstract class OsmWebPlatform extends OSMPlatform {
   OsmWebPlatform() : super();
 
-  //static FlutterOsmPluginWeb _instance = FlutterOsmPluginWeb(messenger: null);
+//static FlutterOsmPluginWeb _instance = FlutterOsmPluginWeb(messenger: null);
 
 // static FlutterOsmPluginWeb get instance => _instance;
 //
@@ -24,6 +26,7 @@ void BindingWebOSM() {
   interop.initMapFinish = allowInterop(initMapFinished);
   interop.onStaticGeoPointClicked = allowInterop(onStaticGeoPointClicked);
   interop.onMapSingleTapListener = allowInterop(onMapSingleTapListener);
+  interop.onRegionChangedListener = allowInterop(onRegionChangedListener);
 }
 
 void initMapFinished(bool isReady) {
@@ -40,4 +43,28 @@ void onStaticGeoPointClicked(double lon, double lat) {
 void onMapSingleTapListener(double lon, double lat) {
   final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
   controller.channel!.invokeMethod("onSingleTapListener", "$lat,$lon");
+}
+
+void onRegionChangedListener(
+  double north,
+  double east,
+  double south,
+  double west,
+  double lon,
+  double lat,
+) {
+  final region = {
+    "bounding":{
+      "south":south,
+      "east":east,
+      "north":north,
+      "west":west
+    },
+    "center":{
+      "lon":lon,
+      "lat":lat
+    }
+  };
+  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
+  controller.channel!.invokeMethod("receiveRegionIsChanging", region);
 }
