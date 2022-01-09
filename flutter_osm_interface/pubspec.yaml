@@ -1,10 +1,10 @@
 name: flutter_osm_interface
 description: osm flutter controller and utilities.
-version: 0.1.10+3
+version: 0.1.14
 homepage: https://github.com/liodali/osm_flutter
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=2.15.0 <3.0.0"
   flutter: ">=1.17.0"
 
 dependencies:

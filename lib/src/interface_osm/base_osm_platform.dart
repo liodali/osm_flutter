@@ -18,7 +18,7 @@ Widget buildWidget({
   required List<GlobalKey> globalKeys,
   required Map<String, GlobalKey> staticIconGlobalKeys,
   MarkerOption? markerOption,
-  Road? road,
+  RoadConfiguration? roadConfiguration,
   bool showZoomController = false,
   bool showDefaultInfoWindow = false,
   bool isPicker = false,
@@ -28,6 +28,7 @@ Widget buildWidget({
   double minZoomLevel = 2,
   double maxZoomLevel = 18,
   UserLocationMaker? userLocationMarker,
+  bool androidHotReloadSupport = false
 }) =>
     getWidget(
       controller: controller,
@@ -43,7 +44,7 @@ Widget buildWidget({
       markerOption: markerOption,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
-      road: road,
+      roadConfiguration: roadConfiguration,
       stepZoom: stepZoom,
       maxZoomLevel: maxZoomLevel,
       minZoomLevel: minZoomLevel,
@@ -52,4 +53,5 @@ Widget buildWidget({
       onMapIsReady: onMapIsReady,
       showZoomController: showZoomController,
       staticPoints: staticPoints,
+      androidHotReloadSupport: androidHotReloadSupport
     );

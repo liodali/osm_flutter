@@ -31,6 +31,8 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Stream<UserLocationEvent> onUserPositionListener(int idMap);
 
+  Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap);
+
   Future<void> init(
     int idOSM,
   );
@@ -193,6 +195,12 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     double maxZoom,
   );
 
+  Future<void> zoomToBoundingBox(
+      int idOSM,
+      BoundingBox box, {
+    int paddinInPixel = 0,
+  });
+
   Future<void> disableTracking(
     int idOSM,
   );
@@ -241,6 +249,10 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   );
 
   Future<void> removeLimitArea(
+    int idOSM,
+  );
+
+  Future<BoundingBox> getBounds(
     int idOSM,
   );
 }

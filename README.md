@@ -1,5 +1,6 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.26.0-orange) 
+![pub](https://img.shields.io/badge/pub-v0.28.0%2B1-orange) 
+
 
 ## Platform Support
 | Android | iOS | Web |
@@ -16,7 +17,8 @@
 * customize Icon Marker (Android/iOS)
 * customize user Marker (Android/iOS)
 * assisted selection position (Android/iOS)
-* set BoundingBOx (Android)
+* set BoundingBox (Android)
+* zoom into regon (Android/iOS)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
 * draw Road manually (Android/iOS)
 * ClickListener on Marker (Android/iOS)
@@ -25,6 +27,8 @@
 * address suggestion
 * draw shapes (Only Android)
 * simple dialog location picker (Android/iOS)
+* listen to region change (Android/iOS)
+
 
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
@@ -36,7 +40,8 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.26.0
+      flutter_osm_plugin: ^0.28.0+1
+
 
 ### Migration to `0.16.0` (Android Only)
 > if you are using this plugin before Flutter 2 
@@ -217,14 +222,19 @@ await controller.removeLimitAreaMap();
 <b> 12) get center map </b>b>
 
 ```dart
-GeoPoint centerMap = await controller.centerMapasync;
+GeoPoint centerMap = await controller.centerMap;
+```
+<b> 13) get bounding box  map </b>b>
+
+```dart
+BoundingBox bounds = await controller.bounds;
 ```
 
-<b> 13) select/create new position </b>
+<b> 14) select/create new position </b>
 
 * we have 2 way to select location in map
 
-<b>13.1 Manual selection (deprecated) </b>
+<b>14.1 Manual selection (deprecated) </b>
 
 a) select without change default marker 
 ```dart
@@ -267,7 +277,15 @@ controller.listenerMapLongTapping.addListener(() {
       }
     });
 ```
-<b>13.2 Assisted selection </b> (for more details see example) 
+c.3) region change listener
+```dart
+controller.listenerRegionIsChanging.addListener(() {
+      if (controller.listenerRegionIsChanging.value != null) {
+        /// put you logic here
+      }
+    });
+```
+<b>14.2 Assisted selection </b> (for more details see example) 
 
 ```dart
  /// To Start assisted Selection
@@ -280,23 +298,26 @@ controller.listenerMapLongTapping.addListener(() {
  await controller.cancelAdvancedPositionPicker();
 ```
 
-<b>14) Create Marker Programmatically </b>
+<b>15) Create Marker Programmatically </b>
 > you can change marker icon by using attribute `markerIcon`
 ```dart
 await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
 ```
 
-<b> 14.1) Remove marker </b>
+<b> 15.1) Remove marker </b>
 
 ```dart
  await controller.removeMarker(geoPoint);
 ```
 * PS : static position cannot be removed by this method 
 
-<b>15) Draw road,recuperate distance in km and duration in sec </b>
+<b>16) Draw road,recuperate distance in km and duration in sec</b>
 
 > you can add an middle position to pass your route through them
->
+> change configuration of the road in runtime
+> zoom into the region of the road
+> change the type of the road that user want to use
+
 ```dart
  RoadInfo roadInfo = await controller.drawRoad( 
    GeoPoint(latitude: 47.35387, longitude: 8.43609),
@@ -306,14 +327,29 @@ await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
    roadOption: RoadOption(
        roadWidth: 10,
        roadColor: Colors.blue,
-       showMarkerOfPOI: false
+       showMarkerOfPOI: false,
+       zoomInto: true,
    ),
 );
  print("${roadInfo.distance}km");
  print("${roadInfo.duration}sec");
 ```
 
-<b> 15.b) draw road manually </b>
+
+### properties of `RoadOption` 
+
+
+| Properties               | Description                         |
+| ------------------------ | ----------------------------------- |
+| `roadColor`              | (Color?)  change the default color of the route in runtime    |
+| `roadWidth`              | (int?)    change the road width       |
+| `showMarkerOfPOI`        | (bool)    change the visibility of the markers of the POI (default:false)       |
+| `zoomInto`               | (bool)    change zoom level to make the all the road visible (default:true)    |
+
+
+
+
+<b> 16.b) draw road manually </b>
 ```dart
 await controller.drawRoadManually(
         waysPoint,
@@ -322,13 +358,13 @@ await controller.drawRoadManually(
       )
 ```
 
-<b>16) Delete last road </b>
+<b>17) Delete last road </b>
 
 ```dart
  await controller.removeLastRoad();
 ```
 
-<b>17) Change static GeoPoint position </b>
+<b>18) Change static GeoPoint position </b>
 
 > add new staticPoints with empty list of geoPoints (notice: if you add static point without marker,they will get default maker used by plugin)
 
@@ -340,7 +376,7 @@ await controller.drawRoadManually(
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
-<b>18) Change/Add Marker old/new static GeoPoint position </b>
+<b>19) Change/Add Marker old/new static GeoPoint position </b>
 
 > add marker of new static point
 
@@ -350,13 +386,13 @@ await controller.drawRoadManually(
  await controller.setMarkerOfStaticPoint(String id,MarkerIcon markerIcon );
 ```
 
-<b>19) change orientation of the map</b>
+<b>20) change orientation of the map</b>
 
 ```dart
  await controller.rotateMapCamera(degree);
 ```
 
-<b>20) Draw Shape in the map </b>
+<b>21) Draw Shape in the map </b>
 
 * Circle
 ```dart
@@ -461,6 +497,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `showDefaultInfoWindow`       | (bool) enable/disable default infoWindow of marker (default = false)         |
 | `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |
 | `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
+| `androidHotReloadSupport`     | (bool) enable to restart  osm map in android to support hotReload, default: false  |
 
 
 ### Custom Controller

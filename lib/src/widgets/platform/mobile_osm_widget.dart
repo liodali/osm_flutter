@@ -1,8 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../controller/map_controller.dart';
-import '../../widgets/mobile_osm_flutter.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+
+import '../../widgets/mobile_osm_flutter.dart';
 
 Widget getWidget({
   required BaseMapController controller,
@@ -16,7 +15,7 @@ Widget getWidget({
   required List<GlobalKey> globalKeys,
   required Map<String, GlobalKey> staticIconGlobalKeys,
   MarkerOption? markerOption,
-  Road? road,
+  RoadConfiguration? roadConfiguration,
   bool showZoomController = false,
   bool showDefaultInfoWindow = false,
   bool isPicker = false,
@@ -27,6 +26,7 @@ Widget getWidget({
   double maxZoomLevel = 18,
   UserLocationMaker? userLocationMarker,
   Function(bool)? onMapIsReady,
+  bool androidHotReloadSupport = false,
 }) =>
     MobileOsmFlutter(
       controller: controller,
@@ -42,7 +42,7 @@ Widget getWidget({
       showContributorBadgeForOSM: showContributorBadgeForOSM,
       markerOption: markerOption,
       isPicker: isPicker,
-      road: road,
+      roadConfig: roadConfiguration,
       staticPoints: staticPoints,
       globalKeys: globalKeys,
       onMapIsReady: onMapIsReady,
@@ -51,4 +51,5 @@ Widget getWidget({
       minZoomLevel: minZoomLevel,
       maxZoomLevel: maxZoomLevel,
       stepZoom: stepZoom,
+      androidHotReloadSupport: androidHotReloadSupport,
     );

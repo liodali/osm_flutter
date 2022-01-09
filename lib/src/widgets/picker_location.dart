@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
-import '../../flutter_osm_plugin.dart';
 import '../controller/map_controller.dart';
 import '../osm_flutter.dart';
 

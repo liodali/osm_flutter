@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'geo_point.dart';
 
-/// ShapeOSM : class that represent shape with be draw into map
+/// ShapeOSM
+/// this class that represent shape will be draw into  the map
 /// can be circle or rect
 /// [key] : (String) unique key should be given to each shape
 /// [centerPoint] : (GeoPoint) center point of shape
@@ -39,6 +40,20 @@ class RectOSM extends ShapeOSM {
           key: key,
           strokeWidth: strokeWidth,
         );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RectOSM &&
+          runtimeType == other.runtimeType &&
+          distance == other.distance &&
+          centerPoint == other.centerPoint &&
+          color.value == other.color.value &&
+          strokeWidth == other.strokeWidth;
+
+  @override
+  int get hashCode =>
+      distance.hashCode ^ strokeWidth.hashCode ^ color.hashCode ^ centerPoint.hashCode;
 }
 
 /// CircleOSM : class that represent circle with be draw into map
@@ -58,4 +73,18 @@ class CircleOSM extends ShapeOSM {
           key: key,
           strokeWidth: strokeWidth,
         );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CircleOSM &&
+          runtimeType == other.runtimeType &&
+          radius == other.radius &&
+          centerPoint == other.centerPoint &&
+          color.value == other.color.value &&
+          strokeWidth == other.strokeWidth;
+
+  @override
+  int get hashCode =>
+      radius.hashCode ^ strokeWidth.hashCode ^ color.hashCode ^ centerPoint.hashCode;
 }

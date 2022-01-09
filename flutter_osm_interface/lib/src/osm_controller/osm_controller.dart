@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_interface/src/types/road.dart';
 
 import '../types/types.dart';
 
@@ -61,6 +60,9 @@ abstract class IBaseOSMController {
   ///  [id] : String of that list of static geoPoint
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id);
 
+  /// getZoom
+  /// this method will return current zoom level of the map
+  /// the type of the value returned is double,this value should be between minZoomLevel and maxZoomLevel
   Future<double> getZoom();
 
   Future<void> setZoom({
@@ -86,6 +88,17 @@ abstract class IBaseOSMController {
     double maxZoom,
   );
 
+  /// zoomToBoundingBox
+  ///this method will change region and adjust the zoom level to the specific region
+  ///
+  /// [box] : (BoundingBox) the region that will change zoom level to be visible in the mapview
+  ///
+  ///  [paddinInPixel] : (int) the padding that will be added to region to adjust the zoomLevel
+  Future<void> zoomToBoundingBox(
+    BoundingBox box, {
+    int paddinInPixel = 0,
+  });
+
   Future<GeoPoint> getMapCenter();
 
   /// activate current location position
@@ -94,8 +107,10 @@ abstract class IBaseOSMController {
   /// recuperation of user current position
   Future<GeoPoint> myLocation();
 
-  /// go to specific position without create marker
-  ///
+  /// goToPosition
+  /// this method will to change current camera location
+  /// to another specific position without create marker
+  /// has attribute which is the desired location
   /// [p] : (GeoPoint) desired location
   Future<void> goToPosition(GeoPoint p);
 
@@ -111,12 +126,20 @@ abstract class IBaseOSMController {
     String imageURL = "",
   });
 
-  /// draw road
-  ///  [start] : started point of your Road
-  ///  [end] : last point of your road
-  ///  [interestPoints] : middle point that you want to be passed by your route
-  ///  [roadColor] : (color)  indicate the color that you want to be road colored
-  ///  [roadWidth] : (double) indicate the width  of your road
+  /// drawRoad
+  /// this method will call ORSM api to get list of geopoint and
+  /// that will be transformed into polyline to be drawn in the map
+  ///
+  ///  parameters :
+  ///  [start] : (GeoPoint) started point of your Road
+  ///
+  ///  [end] : (GeoPoint) destination point of your road
+  ///
+  ///  [interestPoints] : (List of GeoPoint) middle point that you want to be passed by your route
+  ///
+  ///  [roadType] : (RoadType)  indicate the type of the route  that you want to be road to be used (default :RoadType.car)
+  ///
+  ///  [roadOption] : (RoadOption) option of the road width, color,zoomInto,etc ...
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
@@ -175,6 +198,8 @@ abstract class IBaseOSMController {
   Future<void> cancelAdvancedPositionPicker();
 
   Future<void> mapOrientation(double degree);
+
+  Future<BoundingBox> getBounds();
 
   Future<void> limitArea(
     BoundingBox box,

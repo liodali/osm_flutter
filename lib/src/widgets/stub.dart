@@ -15,7 +15,7 @@ Widget getWidget({
   required List<GlobalKey> globalKeys,
   required Map<String, GlobalKey> staticIconGlobalKeys,
   MarkerOption? markerOption,
-  Road? road,
+  RoadConfiguration? roadConfiguration,
   bool showZoomController = false,
   double stepZoom = 1,
   double initZoom = 2,
@@ -24,5 +24,6 @@ Widget getWidget({
   bool showDefaultInfoWindow = false,
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
+  bool androidHotReloadSupport = false,
 }) =>
     throw UnsupportedError("");

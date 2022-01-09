@@ -9,14 +9,15 @@ class CustomController extends MapController {
     bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
     BoundingBox? areaLimit = const BoundingBox.world(),
-  })  : assert(
-          initMapWithUserPosition || initPosition != null,
-        ),
+  })
+      : assert(
+  initMapWithUserPosition || initPosition != null,
+  ),
         super(
-          initMapWithUserPosition: initMapWithUserPosition,
-          initPosition: initPosition,
-          areaLimit: areaLimit,
-        );
+        initMapWithUserPosition: initMapWithUserPosition,
+        initPosition: initPosition,
+        areaLimit: areaLimit,
+      );
 
   @override
   void init() {
@@ -42,6 +43,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   ValueNotifier<bool> showFab = ValueNotifier(true);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
   Timer? timer;
+  int x = 0;
 
   @override
   void initState() {
@@ -87,14 +89,24 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         await controller.addMarker(
           lastGeoPoint.value!,
           markerIcon: MarkerIcon(
-            icon: Icon(
-              Icons.person_pin,
-              color: Colors.red,
-              size: 32,
-            ),
+            // icon: Icon(
+            //   Icons.person_pin,
+            //   color: Colors.red,
+            //   size: 32,
+            // ),
+            image: AssetImage("asset/pin.png"),
+            // assetMarker: AssetMarker(
+            //   image: AssetImage("asset/pin.png"),
+            //   //scaleAssetImage: 2,
+            // ),
           ),
-          angle: -pi / 4,
+          //angle: -pi / 4,
         );
+      }
+    });
+    controller.listenerRegionIsChanging.addListener(() async {
+      if (controller.listenerRegionIsChanging.value != null) {
+        print(controller.listenerRegionIsChanging.value);
       }
     });
 
@@ -102,7 +114,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   }
 
   Future<void> mapIsInitialized() async {
-    await controller.setZoom(zoomLevel: 12);
+    //await controller.setZoom(zoomLevel: 12);
     // await controller.setMarkerOfStaticPoint(
     //   id: "line 1",
     //   markerIcon: MarkerIcon(
@@ -139,6 +151,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       ],
       "line 2",
     );
+    final bounds = await controller.bounds;
+    print(bounds.toString());
   }
 
   @override
@@ -195,8 +209,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           }),
           IconButton(
             onPressed: () async {
-              visibilityZoomNotifierActivation.value =
-                  !visibilityZoomNotifierActivation.value;
+              visibilityZoomNotifierActivation.value = !visibilityZoomNotifierActivation.value;
               zoomNotifierActivation.value = !zoomNotifierActivation.value;
             },
             icon: Icon(Icons.zoom_out_map),
@@ -223,15 +236,13 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           children: [
             OSMFlutter(
               controller: controller,
+              androidHotReloadSupport: true,
               mapIsLoading: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    Text("Map is Loading..")
-                  ],
+                  children: [CircularProgressIndicator(), Text("Map is Loading..")],
                 ),
               ),
               initZoom: 8,
@@ -266,8 +277,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                       "${geoPoint.toMap().toString()}",
                     ),
                     action: SnackBarAction(
-                      onPressed: () =>
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                      onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                       label: "hide",
                     ),
                   ),
@@ -303,7 +313,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                       ],
                     )*/
               ],
-              road: Road(
+              roadConfiguration: RoadConfiguration(
                 startIcon: MarkerIcon(
                   icon: Icon(
                     Icons.person,
@@ -351,8 +361,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   heroTag: "confirmAdvPicker",
                   onPressed: () async {
                     advPickerNotifierActivation.value = false;
-                    GeoPoint p =
-                        await controller.selectAdvancedPositionPicker();
+                    GeoPoint p = await controller.selectAdvancedPositionPicker();
                     print(p);
                   },
                 ),
@@ -443,103 +452,48 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       ///selection geoPoint
       GeoPoint point = await controller.selectPosition(
           icon: MarkerIcon(
-        icon: Icon(
-          Icons.person_pin_circle,
-          color: Colors.amber,
-          size: 100,
-        ),
-      ));
+            icon: Icon(
+              Icons.person_pin_circle,
+              color: Colors.amber,
+              size: 100,
+            ),
+          ));
       GeoPoint point2 = await controller.selectPosition();
       showFab.value = false;
       ValueNotifier<RoadType> notifierRoadType = ValueNotifier(RoadType.car);
-      final bottomPersistant = showBottomSheet(
-        context: ctx,
-        backgroundColor: Colors.transparent,
-        elevation: 0.0,
-        builder: (ctx) {
-          return Container(
-            height: 96,
-            child: WillPopScope(
-              onWillPop: () async => false,
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  height: 64,
-                  width: 196,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  alignment: Alignment.center,
-                  margin: const EdgeInsets.all(12.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          notifierRoadType.value = RoadType.car;
-                          Navigator.pop(ctx, RoadType.car);
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Icons.directions_car),
-                            Text("Car"),
-                          ],
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          notifierRoadType.value = RoadType.bike;
-                          Navigator.pop(ctx, RoadType.bike);
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Icons.directions_bike),
-                            Text("Bike"),
-                          ],
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          notifierRoadType.value = RoadType.foot;
-                          Navigator.pop(ctx, RoadType.foot);
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Icons.directions_walk),
-                            Text("Foot"),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+
+      final bottomPersistant = scaffoldKey.currentState!.showBottomSheet(
+            (ctx) {
+          return RoadTypeChoiceWidget(
+            setValueCallback: (roadType) {
+              notifierRoadType.value = roadType;
+            },
           );
         },
+        backgroundColor: Colors.transparent,
+        elevation: 0.0,
       );
-
-      await bottomPersistant.closed.whenComplete(() {
+      await bottomPersistant.closed.then((roadType) async {
         showFab.value = true;
-      }).then((roadType) async {
         RoadInfo roadInformation = await controller.drawRoad(
           point, point2,
           roadType: notifierRoadType.value,
           //interestPoints: [pointM1, pointM2],
           roadOption: RoadOption(
-            roadWidth: 10,
-            roadColor: Colors.blue,
-            showMarkerOfPOI: false,
+              roadWidth: 10,
+              roadColor: Colors.blue,
+              showMarkerOfPOI: false,
+              zoomInto: true
           ),
         );
-        print(
-            "duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
+        print("duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         print("distance:${roadInformation.distance}Km");
+        print(roadInformation.route.length);
+        // final box = await BoundingBox.fromGeoPointsAsync([point2, point]);
+        // controller.zoomToBoundingBox(
+        //   box,
+        //   paddinInPixel: 64,
+        // );
       });
     } on RoadException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -556,5 +510,81 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   Future<void> mapRestored() async {
     super.mapRestored();
     print("log map restored");
+  }
+}
+
+class RoadTypeChoiceWidget extends StatelessWidget {
+  final Function(RoadType road) setValueCallback;
+
+  RoadTypeChoiceWidget({
+    required this.setValueCallback,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 96,
+      child: WillPopScope(
+        onWillPop: () async => false,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            height: 64,
+            width: 196,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            alignment: Alignment.center,
+            margin: const EdgeInsets.all(12.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    setValueCallback(RoadType.car);
+                    Navigator.pop(context, RoadType.car);
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.directions_car),
+                      Text("Car"),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setValueCallback(RoadType.bike);
+                    Navigator.pop(context);
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.directions_bike),
+                      Text("Bike"),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setValueCallback(RoadType.foot);
+                    Navigator.pop(context);
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.directions_walk),
+                      Text("Foot"),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

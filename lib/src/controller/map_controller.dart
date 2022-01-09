@@ -91,8 +91,7 @@ class MapController extends BaseMapController {
     required String id,
     required MarkerIcon markerIcon,
   }) async {
-    await osmBaseController.setIconStaticPositions(id, markerIcon,
-        refresh: true);
+    await osmBaseController.setIconStaticPositions(id, markerIcon, refresh: true);
   }
 
   /// recuperate current zoom level
@@ -117,6 +116,22 @@ class MapController extends BaseMapController {
   /// negative value:zoomOut
   Future<void> zoomOut() async {
     await osmBaseController.zoomOut();
+  }
+  /// zoomToBoundingBox
+  /// this method used to change zoom level to show specific region,
+  /// get [box] and [paddinInPixel] as parameter
+  ///
+  /// [box] : (BoundingBox) the region that the map will move to and adjust the zoom level to be visible
+  ///
+  /// [paddinInPixel] : (int) padding that will be used to show specific region
+  Future<void> zoomToBoundingBox(
+    BoundingBox box, {
+    int paddinInPixel = 0,
+  }) async {
+    await osmBaseController.zoomToBoundingBox(
+      box,
+      paddinInPixel: paddinInPixel,
+    );
   }
 
   /// activate current location position
@@ -156,7 +171,13 @@ class MapController extends BaseMapController {
     return p;
   }
 
-  /// draw road
+  ///  draw road
+  ///
+  ///  this method show route from 2 point and pass throught interesect points in the map,
+  ///
+  ///  you can configure your road in runtime with [roadOption], and change the road type drawn by modify
+  ///  the [routeType].
+  ///
   ///  [start] : started point of your Road
   ///
   ///  [end] : last point of your road
@@ -164,7 +185,6 @@ class MapController extends BaseMapController {
   ///  [intersectPoint] : (List of GeoPoint) middle position that you want you road to pass through it
   ///
   ///  [roadOption] : (RoadOption) runtime configuration of the road
-
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
@@ -273,6 +293,7 @@ class MapController extends BaseMapController {
     await osmBaseController.addMarker(p, markerIcon: markerIcon, angle: angle);
   }
 
-  Future<GeoPoint> get centerMap async =>
-      await osmBaseController.getMapCenter();
+  Future<BoundingBox> get bounds async => await osmBaseController.getBounds();
+
+  Future<GeoPoint> get centerMap async => await osmBaseController.getMapCenter();
 }

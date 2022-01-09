@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
@@ -34,7 +32,7 @@ typedef OnLocationChanged = void Function(GeoPoint);
 ///
 /// [userLocationMarker] : change user marker or direction marker icon in tracking location
 ///
-/// [road] : set color and icons marker of road
+/// [roadConfiguration] : (RoadConfiguration) set color and icons marker of road
 ///
 /// [stepZoom] : set default step zoom value (default = 1)
 ///
@@ -58,7 +56,7 @@ class OSMFlutter extends StatefulWidget {
   final Function(bool)? onMapIsReady;
   final MarkerOption? markerOption;
   final UserLocationMaker? userLocationMarker;
-  final Road? road;
+  final RoadConfiguration? roadConfiguration;
   final double stepZoom;
   final double initZoom;
   final double minZoomLevel;
@@ -66,6 +64,7 @@ class OSMFlutter extends StatefulWidget {
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
+  final bool androidHotReloadSupport;
 
   OSMFlutter({
     Key? key,
@@ -79,7 +78,7 @@ class OSMFlutter extends StatefulWidget {
     this.onGeoPointClicked,
     this.onLocationChanged,
     this.onMapIsReady,
-    this.road,
+    this.roadConfiguration,
     this.stepZoom = 1,
     this.initZoom = 2,
     this.minZoomLevel = 2,
@@ -87,6 +86,7 @@ class OSMFlutter extends StatefulWidget {
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
+    this.androidHotReloadSupport = false,
   })  : assert(maxZoomLevel <= 19),
         assert(minZoomLevel >= 2),
         assert(initZoom >= 2 && initZoom <= 19),
@@ -183,7 +183,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                             trackMyPosition: widget.trackMyPosition,
                             mapIsReadyListener: mapIsReadyListener,
                             staticIconGlobalKeys: staticMarkersKeys,
-                            road: widget.road,
+                            roadConfiguration: widget.roadConfiguration,
                             showContributorBadgeForOSM:
                                 widget.showContributorBadgeForOSM,
                             isPicker: widget.isPicker,
@@ -207,6 +207,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                             maxZoomLevel: widget.maxZoomLevel,
                             userLocationMarker: widget.userLocationMarker,
                             onMapIsReady: widget.onMapIsReady,
+                              androidHotReloadSupport:widget.androidHotReloadSupport
                           ),
                         ),
                         Positioned.fill(
@@ -235,7 +236,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                       trackMyPosition: widget.trackMyPosition,
                       mapIsReadyListener: mapIsReadyListener,
                       staticIconGlobalKeys: staticMarkersKeys,
-                      road: widget.road,
+                      roadConfiguration: widget.roadConfiguration,
                       showContributorBadgeForOSM:
                           widget.showContributorBadgeForOSM,
                       isPicker: widget.isPicker,
@@ -314,22 +315,22 @@ class _OSMFlutterState extends State<OSMFlutter> {
               ),
             ]
           ],
-          if (widget.road?.endIcon != null) ...[
+          if (widget.roadConfiguration?.endIcon != null) ...[
             RepaintBoundary(
               key: endIconKey,
-              child: widget.road!.endIcon,
+              child: widget.roadConfiguration!.endIcon,
             ),
           ],
-          if (widget.road?.startIcon != null) ...[
+          if (widget.roadConfiguration?.startIcon != null) ...[
             RepaintBoundary(
               key: startIconKey,
-              child: widget.road!.startIcon,
+              child: widget.roadConfiguration!.startIcon,
             ),
           ],
-          if (widget.road?.middleIcon != null) ...[
+          if (widget.roadConfiguration?.middleIcon != null) ...[
             RepaintBoundary(
               key: middleIconKey,
-              child: widget.road!.middleIcon,
+              child: widget.roadConfiguration!.middleIcon,
             ),
           ],
           if (widget.userLocationMarker?.personMarker != null) ...[

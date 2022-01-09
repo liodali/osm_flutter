@@ -21,9 +21,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       initialRoute: "/home",
+
       routes: {
         "/home": (ctx) => MainExample(),
         //"/adv-home": (ctx) => AdvandedMainExample(),
+        // "/nav": (ctx) => MyHomeNavigationPage(
+        //       map: Container(),
+        //     ),
         "/second": (ctx) => Scaffold(
               body: Center(
                 child: ElevatedButton(
