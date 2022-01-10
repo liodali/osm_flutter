@@ -16,6 +16,11 @@ async function addPosition(point,showMarker,animate) {
    return  await iframe.contentWindow.changePosition(point,showMarker,animate);
 }
 
+async function addMarker(point,icon) {
+   var iframe = document.getElementById("frame_map");
+   return  await iframe.contentWindow.addMarker(point,icon);
+}
+
 async function initMapLocation(point) {
    var iframe = document.getElementById("frame_map");
    await iframe.contentWindow.initMapLocation(point);

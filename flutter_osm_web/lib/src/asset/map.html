@@ -144,6 +144,19 @@
        setHomeMarker(point,args);
        return 200;
   }
+  async function addMarker(point,iconMarker){
+    const position = [point.lat, point.lon];
+    var args = {
+      icon:L.icon(
+                  { 
+                    iconUrl : "data:image/png;base64,"+iconMarker,
+                    iconSize : [32,32]
+                  }
+        )
+    }
+    L.marker(position,args).addTo(mymap);
+    return 200;
+  }
   
   async function removeMarker(point){
     mymap.eachLayer(function(layer){

@@ -53,6 +53,8 @@ external dynamic setMinZoomLevel(double mminZoomLvl);
 
 @JS('setDefaultIcon')
 external dynamic setDefaultIcon(String base64);
+@JS('addMarker')
+external dynamic addMarker(GeoPointJs p,String icon);
 
 @JS('addPosition')
 external dynamic addPosition(GeoPointJs p, bool showMarker, bool animate);

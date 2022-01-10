@@ -151,14 +151,7 @@ mixin WebMixin {
     await interop.zoomOut();
   }
 
-  Future<void> addMarker(
-    GeoPoint p, {
-    MarkerIcon? markerIcon,
-    double? angle,
-  }) {
-    // TODO: implement addMarker
-    throw UnimplementedError();
-  }
+
 
   Future<double> getZoom() async {
     return await promiseToFuture(interop.getZoom());

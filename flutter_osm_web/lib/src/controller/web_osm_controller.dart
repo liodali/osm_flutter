@@ -4,12 +4,12 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_web/src/mixin_web.dart';
 
 import '../channel/method_channel_web.dart';
+import '../common/extensions.dart';
 import '../interop/osm_interop.dart' as interop;
+import '../mixin_web.dart';
 import '../osm_web.dart';
-
 
 class WebOsmController with WebMixin implements IBaseOSMController {
   late int _mapId;
@@ -23,8 +23,7 @@ class WebOsmController with WebMixin implements IBaseOSMController {
   late MethodChannel? channel;
   late OsmWebWidgetState _osmWebFlutterState;
 
-  FlutterOsmPluginWeb get webPlatform =>
-      OSMPlatform.instance as FlutterOsmPluginWeb;
+  FlutterOsmPluginWeb get webPlatform => OSMPlatform.instance as FlutterOsmPluginWeb;
 
   WebOsmController() {
     createHtml();
@@ -50,8 +49,8 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       ..src = 'packages/flutter_osm_web/src/asset/map.js'
       ..type = 'application/javascript');
 
-    ui.platformViewRegistry.registerViewFactory(
-        FlutterOsmPluginWeb.getViewType(mapId: 0), (int viewId) => _frame);
+    ui.platformViewRegistry
+        .registerViewFactory(FlutterOsmPluginWeb.getViewType(mapId: 0), (int viewId) => _frame);
 
     //print(_getViewType(_mapId));
   }
@@ -84,18 +83,15 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     assert(initPosition != null || initWithUserPosition == true);
 
     webPlatform.onLongPressMapClickListener(_mapId).listen((event) {
-      _osmWebFlutterState.widget.controller
-          .setValueListenerMapLongTapping(event.value);
+      _osmWebFlutterState.widget.controller.setValueListenerMapLongTapping(event.value);
     });
     webPlatform.onSinglePressMapClickListener(_mapId).listen((event) {
-      _osmWebFlutterState.widget.controller
-          .setValueListenerMapSingleTapping(event.value);
+      _osmWebFlutterState.widget.controller.setValueListenerMapSingleTapping(event.value);
       //event.value;
     });
     webPlatform.onMapIsReady(_mapId).listen((event) async {
       _osmWebFlutterState.widget.mapIsReadyListener.value = event.value;
-      _osmWebFlutterState.widget.controller
-          .setValueListenerMapIsReady(event.value);
+      _osmWebFlutterState.widget.controller.setValueListenerMapIsReady(event.value);
       if (_osmWebFlutterState.widget.onMapIsReady != null) {
         _osmWebFlutterState.widget.onMapIsReady!(event.value);
       }
@@ -150,25 +146,44 @@ class WebOsmController with WebMixin implements IBaseOSMController {
   }
 
   @override
-  Future<void> setIconStaticPositions(String id, MarkerIcon markerIcon,
-      {bool refresh = false}) async {
-    if (markerIcon.icon != null) {
-      _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value =
-          markerIcon.icon;
-    } else if (markerIcon.image != null) {
-      _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = Image(
-        image: markerIcon.image!,
-      );
-    }
+  Future<void> setIconStaticPositions(
+    String id,
+    MarkerIcon markerIcon, {
+    bool refresh = false,
+  }) async {
+    _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
+
     Future.delayed(Duration(milliseconds: 250), () async {
       final base64Icon =
-          (await capturePng(_osmWebFlutterState.dynamicMarkerKey!))
-              .convertToString();
+          (await capturePng(_osmWebFlutterState.dynamicMarkerKey!)).convertToString();
       await interop.setIconStaticGeoPoints(
         id,
         base64Icon,
       );
     });
+  }
+
+  @override
+  Future<void> addMarker(
+    GeoPoint p, {
+    MarkerIcon? markerIcon,
+    double? angle,
+  }) async {
+    if (markerIcon != null &&
+        (markerIcon.icon != null || markerIcon.image != null || markerIcon.assetMarker != null)) {
+      _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value =
+          ((angle == null) || (angle == 0.0))
+              ? markerIcon
+              : Transform.rotate(
+                  angle: angle,
+                  child: markerIcon,
+                );
+      int duration = markerIcon.icon != null || markerIcon.assetMarker != null ? 300 : 350;
+      Future.delayed(Duration(milliseconds: duration), () async {
+        final icon = await capturePng(_osmWebFlutterState.dynamicMarkerKey!);
+        await interop.addMarker(p.toGeoJS(), icon.convertToString());
+      });
+    }
   }
 
   Future<void> markerIconsStaticPositions(
@@ -181,8 +196,4 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       base64Icon,
     );
   }
-
-
-
-
 }
