@@ -65,7 +65,7 @@ class BoundingBox {
 
   @override
   String toString() {
-    return "noth:$north,east:$east,south:$south,west:$west";
+    return "north:$north,east:$east,south:$south,west:$west";
   }
 
   @override

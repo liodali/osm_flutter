@@ -65,6 +65,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
 
   @override
   Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap) {
+    print("we listen on $idMap");
     return _events(idMap).whereType<RegionIsChangingEvent>();
   }
 

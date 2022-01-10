@@ -10,6 +10,7 @@ import '../channel/method_channel_web.dart';
 import '../interop/osm_interop.dart' as interop;
 import '../osm_web.dart';
 
+
 class WebOsmController with WebMixin implements IBaseOSMController {
   late int _mapId;
 
@@ -98,6 +99,10 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       if (_osmWebFlutterState.widget.onMapIsReady != null) {
         _osmWebFlutterState.widget.onMapIsReady!(event.value);
       }
+    });
+    webPlatform.onRegionIsChangingListener(_mapId).listen((event) {
+      print(event.value);
+      _osmWebFlutterState.widget.controller.setValueListenerRegionIsChanging(event.value);
     });
 
     if (_osmWebFlutterState.widget.onGeoPointClicked != null) {
