@@ -212,7 +212,6 @@ class MobileOSMController extends IBaseOSMController {
     if (box != null && !box.isWorld()) {
       await limitAreaMap(box);
     }
-
     if (initPosition != null && !_osmFlutterState.setCache.value) {
       await osmPlatform.initMap(
         _idMap,
