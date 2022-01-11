@@ -4,5 +4,5 @@ mixin AndroidLifecycleMixin {
   @mustCallSuper
   void mapIsReady(bool isReady);
   @mustCallSuper
-  void configChanded();
+  void configChanged();
 }
