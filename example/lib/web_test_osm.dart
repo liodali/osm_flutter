@@ -53,9 +53,13 @@ class _WebTestOsmState extends State<WebTestOsm> {
     });
   }
 
-  void onMapSingleTap() {
+  void onMapSingleTap() async {
     if (controller.listenerMapSingleTapping.value != null) {
-      print(controller.listenerMapSingleTapping.value);
+      final GeoPoint geoPoint = controller.listenerMapSingleTapping.value!;
+      await controller.addMarker(geoPoint,
+          markerIcon: MarkerIcon(
+            icon: Icon(Icons.push_pin),
+          ));
     }
   }
 
