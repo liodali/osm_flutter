@@ -1,3 +1,6 @@
+## 0.28.1:
+* fix map not visible when build release apk
+* fix name of method in androidlifecyceleMixin
 ## 0.28.0+1:
 * fix version osm_interface
 ## 0.28.0:
