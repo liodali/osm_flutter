@@ -94,6 +94,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   late ValueNotifier<Orientation> orientation;
   late ValueNotifier<Size> sizeNotifier;
   ValueNotifier<bool> setCache = ValueNotifier(false);
+  ValueNotifier<bool> isFirstLaunched = ValueNotifier(false);
 
   @override
   void initState() {
@@ -125,13 +126,13 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
 
   void changeOrientationDetected() async {
     if (Platform.isAndroid) {
-      configChanded();
+      configChanged();
     }
   }
 
   void changeSizeDetected() async {
     if (Platform.isAndroid) {
-      configChanded();
+      configChanged();
     }
   }
 
@@ -145,15 +146,17 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
 
   @override
   void didChangeMetrics() {
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid && isFirstLaunched.value) {
       WidgetsBinding.instance?.addPostFrameCallback((timeStamp) async {
-        final nIndex = MediaQuery.of(context).orientation.index;
-        if (orientation.value != Orientation.values[nIndex]) {
-          setCache.value = true;
-          orientation.value = Orientation.values[nIndex];
-        } else {
-          if (sizeNotifier.value != MediaQuery.of(context).size) {
-            sizeNotifier.value = MediaQuery.of(context).size;
+        if (isFirstLaunched.value) {
+          final nIndex = MediaQuery.of(context).orientation.index;
+          if (orientation.value != Orientation.values[nIndex]) {
+            setCache.value = true;
+            orientation.value = Orientation.values[nIndex];
+          } else {
+            if (sizeNotifier.value != MediaQuery.of(context).size) {
+              sizeNotifier.value = MediaQuery.of(context).size;
+            }
           }
         }
       });
@@ -165,7 +168,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
 
   @override
   void didUpdateWidget(covariant MobileOsmFlutter oldWidget) {
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid && isFirstLaunched.value) {
       if (!setCache.value) {
         setCache.value = true;
         Future.microtask(() async => await _osmController?.saveCacheMap());
@@ -183,8 +186,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   }
 
   @override
-  void configChanded() async {
-    //await _osmController!.saveCacheMap();
+  void configChanged() async {
     setState(() {
       mobileKey = GlobalKey();
       androidKey = GlobalKey();
@@ -194,9 +196,6 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   @override
   void mapIsReady(bool isReady) async {
     if (!setCache.value) {
-      //   await _osmController!.setCacheMap();
-      //   setCache.value = false;
-      // } else {
       Future.delayed(Duration(milliseconds: 300), () async {
         await widget.controller.osMMixin?.mapIsReady(isReady);
       });
@@ -240,8 +239,10 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     this._osmController = await MobileOSMController.init(id, this);
     _osmController!.addObserver(this);
     widget.controller.setBaseOSMController(this._osmController!);
-
     widget.controller.init();
+    if (!isFirstLaunched.value) {
+      isFirstLaunched.value = true;
+    }
   }
 }
 

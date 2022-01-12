@@ -1,6 +1,6 @@
 name: flutter_osm_plugin
 description: openStreetMap plugin for flutter apps ( iOS available in alpha version,web is under-dev)
-version: 0.28.0+1
+version: 0.28.1
 
 
 homepage: https://github.com/liodali/osm_flutter

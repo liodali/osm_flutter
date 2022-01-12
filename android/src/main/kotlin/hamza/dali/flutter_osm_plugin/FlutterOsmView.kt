@@ -474,7 +474,7 @@ class FlutterOsmView(
             }
 
         } catch (e: Exception) {
-            Log.e(e.cause.toString(), e.stackTraceToString())
+            Log.e(e.cause.toString(), "error osm plugin ${e.stackTraceToString()}")
             result.error("404", e.message, e.stackTraceToString())
         }
     }
