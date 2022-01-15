@@ -9,15 +9,14 @@ class CustomController extends MapController {
     bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
     BoundingBox? areaLimit = const BoundingBox.world(),
-  })
-      : assert(
-  initMapWithUserPosition || initPosition != null,
-  ),
+  })  : assert(
+          initMapWithUserPosition || initPosition != null,
+        ),
         super(
-        initMapWithUserPosition: initMapWithUserPosition,
-        initPosition: initPosition,
-        areaLimit: areaLimit,
-      );
+          initMapWithUserPosition: initMapWithUserPosition,
+          initPosition: initPosition,
+          areaLimit: areaLimit,
+        );
 
   @override
   void init() {
@@ -49,18 +48,18 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   void initState() {
     super.initState();
     controller = CustomController(
-      initMapWithUserPosition: false,
-      initPosition: GeoPoint(
-        latitude: 47.4358055,
-        longitude: 8.4737324,
-      ),
-      // areaLimit: BoundingBox(
-      //   east: 10.4922941,
-      //   north: 47.8084648,
-      //   south: 45.817995,
-      //   west: 5.9559113,
-      // ),
-    );
+        initMapWithUserPosition: false,
+        initPosition: GeoPoint(
+          latitude: 47.4358055,
+          longitude: 8.4737324,
+        ),
+        // areaLimit: BoundingBox(
+        //   east: 10.4922941,
+        //   north: 47.8084648,
+        //   south: 45.817995,
+        //   west: 5.9559113,
+        // ),
+        );
     controller.addObserver(this);
     scaffoldKey = GlobalKey<ScaffoldState>();
     controller.listenerMapLongTapping.addListener(() async {
@@ -114,7 +113,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   }
 
   Future<void> mapIsInitialized() async {
-    //await controller.setZoom(zoomLevel: 12);
+    await controller.setZoom(zoomLevel: 12);
     // await controller.setMarkerOfStaticPoint(
     //   id: "line 1",
     //   markerIcon: MarkerIcon(
@@ -236,15 +235,24 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           children: [
             OSMFlutter(
               controller: controller,
+              trackMyPosition: false,
               androidHotReloadSupport: true,
               mapIsLoading: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [CircularProgressIndicator(), Text("Map is Loading..")],
+                  children: [
+                    CircularProgressIndicator(),
+                    Text("Map is Loading.."),
+                  ],
                 ),
               ),
+              onMapIsReady: (isReady) {
+                if (isReady) {
+                  print("map is ready");
+                }
+              },
               initZoom: 8,
               minZoomLevel: 8,
               maxZoomLevel: 14,
@@ -452,18 +460,18 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       ///selection geoPoint
       GeoPoint point = await controller.selectPosition(
           icon: MarkerIcon(
-            icon: Icon(
-              Icons.person_pin_circle,
-              color: Colors.amber,
-              size: 100,
-            ),
-          ));
+        icon: Icon(
+          Icons.person_pin_circle,
+          color: Colors.amber,
+          size: 100,
+        ),
+      ));
       GeoPoint point2 = await controller.selectPosition();
       showFab.value = false;
       ValueNotifier<RoadType> notifierRoadType = ValueNotifier(RoadType.car);
 
       final bottomPersistant = scaffoldKey.currentState!.showBottomSheet(
-            (ctx) {
+        (ctx) {
           return RoadTypeChoiceWidget(
             setValueCallback: (roadType) {
               notifierRoadType.value = roadType;
@@ -480,11 +488,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           roadType: notifierRoadType.value,
           //interestPoints: [pointM1, pointM2],
           roadOption: RoadOption(
-              roadWidth: 10,
-              roadColor: Colors.blue,
-              showMarkerOfPOI: false,
-              zoomInto: true
-          ),
+              roadWidth: 10, roadColor: Colors.blue, showMarkerOfPOI: false, zoomInto: true),
         );
         print("duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         print("distance:${roadInformation.distance}Km");
