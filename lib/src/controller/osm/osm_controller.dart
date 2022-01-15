@@ -206,6 +206,10 @@ class MobileOSMController extends IBaseOSMController {
 
     /// init location in map
     if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
+      bool granted = await _osmFlutterState.requestPermission();
+      if (!granted) {
+        throw Exception("we cannot continue showing the map without grant gps permission");
+      }
       initPosition = await myLocation();
       _checkBoundingBox(box, initPosition);
     }
@@ -223,6 +227,10 @@ class MobileOSMController extends IBaseOSMController {
         _idMap,
       );
       _osmFlutterState.setCache.value = false;
+    }
+    if (_osmFlutterState.widget.trackMyPosition) {
+      await currentLocation();
+      await enableTracking();
     }
 
     /// picker config
