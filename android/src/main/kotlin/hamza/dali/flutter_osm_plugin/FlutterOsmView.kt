@@ -468,6 +468,9 @@ class FlutterOsmView(
                 "add#Marker" -> {
                     addMarkerManually(call, result)
                 }
+                "update#Marker"->{
+                    updateMarker(call,result)
+                }
                 else -> {
                     result.notImplemented()
                 }
@@ -873,6 +876,41 @@ class FlutterOsmView(
         result.success(null)
 
     }
+
+    private fun updateMarker(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as HashMap<*, *>
+        val point = (args["point"] as HashMap<String, Double>).toGeoPoint()
+        var bitmap = customMarkerIcon
+        if (args.containsKey("icon")) {
+            bitmap = getBitmap(args["icon"] as ByteArray)
+            scope?.launch {
+                mapSnapShot().overlaySnapShotMarker(
+                    point = point,
+                    icon = args["icon"] as ByteArray
+                )
+            }
+        }
+        val marker: FlutterMarker? = folderMarkers.items.filterIsInstance<FlutterMarker>()
+            .firstOrNull { marker ->
+                marker.position == point
+            }
+        when (marker != null) {
+            true -> {
+                marker.icon = getDefaultIconDrawable(null, icon = bitmap)
+                val index = folderMarkers.items.indexOf(marker)
+                folderMarkers.items[index] = marker
+                map!!.invalidate()
+                result.success(200)
+            }
+            false -> result.error(
+                "404",
+                "GeoPoint not found",
+                "you trying to modify icon of marker not exist",
+            )
+        }
+
+    }
+
 
     private fun changeLocationMarkers(call: MethodCall, result: MethodChannel.Result) {
         val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
