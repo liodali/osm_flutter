@@ -650,6 +650,12 @@ class MobileOSMController extends IBaseOSMController {
       paddinInPixel: paddinInPixel,
     );
   }
+
+  @override
+  Future<void> setIconMarker(GeoPoint point, MarkerIcon markerIcon) {
+    // TODO: implement setIconMarker
+    throw UnimplementedError();
+  }
 }
 
 extension PrivateMethodOSMController on MobileOSMController {

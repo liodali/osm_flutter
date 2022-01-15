@@ -652,6 +652,22 @@ class MethodChannelOSM extends MobileOSMPlatform {
       args,
     );
   }
+
+  @override
+  Future<void> setIconMarker(
+    int idOSM,
+    GeoPoint point,
+    GlobalKey<State<StatefulWidget>> globalKeyIcon,
+  ) async {
+    Map<String, dynamic> args = {"point": point.toMap()};
+    var icon = await _capturePng(globalKeyIcon);
+    args["icon"] = Platform.isIOS ? icon.convertToString() : icon;
+    try {
+      await _channels[idOSM]?.invokeMethod("update#Marker", args);
+    } on PlatformException catch (e) {
+      throw Exception("marker not exist");
+    }
+  }
 }
 
 extension config on MethodChannelOSM {

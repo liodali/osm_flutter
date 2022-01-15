@@ -13,7 +13,9 @@ abstract class IBaseOSMController {
   /// [p] : (GeoPoint) position that will be added to map
   Future<void> changeLocation(GeoPoint p);
 
-  /// create marker int specific position without change map camera
+  /// addMarker
+  /// create marker int specific position without
+  /// change map camera
   ///
   /// [p] : (GeoPoint) desired location
   ///
@@ -24,9 +26,22 @@ abstract class IBaseOSMController {
     double? angle,
   });
 
-  ///remove marker from map of position
+  /// removeMarker
+  /// remove marker from map of position
+  ///
   /// [p] : geoPoint
   Future<void> removeMarker(GeoPoint p);
+
+
+  /// setIconMarker
+  /// this method change marker icon , marker should be already exist in the map
+  /// or it will throw exception that marker not exist
+  ///
+  /// [point]      : (geoPoint) geoPoint that want to change Icon
+  ///
+  /// [markerIcon] : (MarkerIcon) the new icon marker that will replace old icon
+  Future<void> setIconMarker(GeoPoint point,MarkerIcon markerIcon);
+
 
   ///change Icon Marker
   /// we need to global key to recuperate widget from tree element
