@@ -1,3 +1,6 @@
+## 0.28.2:
+* fix enable tracking when `trackMyPosition` is true
+* add check permision when `initWithUserLocation` in `MapController` is true
 ## 0.28.1:
 * fix map not visible when build release apk
 * fix name of method in androidlifecyceleMixin
