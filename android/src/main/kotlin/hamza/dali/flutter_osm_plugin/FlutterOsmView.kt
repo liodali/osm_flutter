@@ -509,8 +509,8 @@ class FlutterOsmView(
                 "add#Marker" -> {
                     addMarkerManually(call, result)
                 }
-                "update#Marker"->{
-                    updateMarker(call,result)
+                "update#Marker" -> {
+                    updateMarker(call, result)
                 }
                 else -> {
                     result.notImplemented()
@@ -942,7 +942,7 @@ class FlutterOsmView(
         }
         val marker: FlutterMarker? = folderMarkers.items.filterIsInstance<FlutterMarker>()
             .firstOrNull { marker ->
-                marker.position == point
+                marker.position.eq(point)
             }
         when (marker != null) {
             true -> {

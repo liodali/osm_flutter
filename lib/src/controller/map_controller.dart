@@ -61,11 +61,22 @@ class MapController extends BaseMapController {
     osmBaseController.removeMarker(p);
   }
 
-  ///change Icon Marker
-  /// we need to global key to recuperate widget from tree element
-  /// [key] : (GlobalKey) key of widget that represent the new marker
-  Future changeIconMarker(GlobalKey key) async {
-    await osmBaseController.changeDefaultIconMarker(key);
+  /// changeIconMarker
+  /// this method allow to change home Icon Marker
+  ///
+  /// [icon] : (MarkerIcon) widget that represent the new home marker
+  Future changeIconMarker(MarkerIcon icon) async {
+    await osmBaseController.changeDefaultIconMarker(icon);
+  }
+
+  /// setMarkerIcon
+  /// this method allow to change Icon Marker of specific GeoPoint
+  ///
+  /// [point] : (GeoPoint) geopoint that you want to change icon
+  ///
+  /// [icon] : (MarkerIcon) widget that represent the new home marker
+  Future setMarkerIcon(GeoPoint point, MarkerIcon icon) async {
+    await osmBaseController.setIconMarker(point, icon);
   }
 
   /*///change advanced picker Icon Marker
@@ -117,6 +128,7 @@ class MapController extends BaseMapController {
   Future<void> zoomOut() async {
     await osmBaseController.zoomOut();
   }
+
   /// zoomToBoundingBox
   /// this method used to change zoom level to show specific region,
   /// get [box] and [paddinInPixel] as parameter
