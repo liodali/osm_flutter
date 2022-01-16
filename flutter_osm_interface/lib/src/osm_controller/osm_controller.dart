@@ -43,10 +43,10 @@ abstract class IBaseOSMController {
   Future<void> setIconMarker(GeoPoint point,MarkerIcon markerIcon);
 
 
-  ///change Icon Marker
+  /// change Home Icon Marker
   /// we need to global key to recuperate widget from tree element
-  /// [key] : (GlobalKey) key of widget that represent the new marker
-  Future changeDefaultIconMarker(GlobalKey? key);
+  /// [homeMarker] : (MarkerIcon) key of widget that represent the new marker
+  Future changeDefaultIconMarker(MarkerIcon homeMarker);
 
   ///change  Marker of specific static points
   /// we need to global key to recuperate widget from tree element

@@ -131,7 +131,7 @@ class MobileOSMController extends IBaseOSMController {
     final defaultIcon = _osmFlutterState.widget.markerOption?.defaultMarker;
 
     if (defaultIcon != null) {
-      await changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
+      await _changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
     } else {
       if (Platform.isIOS) {
         _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Icon(
@@ -142,7 +142,7 @@ class MobileOSMController extends IBaseOSMController {
         await Future.delayed(Duration(milliseconds: 300), () async {
           _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
           if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
-            await changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
+            await _changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
           }
         });
       }
@@ -321,11 +321,21 @@ class MobileOSMController extends IBaseOSMController {
     await osmPlatform.removePosition(_idMap, p);
   }
 
-  ///change Icon Marker
+  /// inner method that will change home Icon Marker
   /// we need to global key to recuperate widget from tree element
   /// [key] : (GlobalKey) key of widget that represent the new marker
-  Future changeDefaultIconMarker(GlobalKey? key) async {
+  Future _changeDefaultIconMarker(GlobalKey? key) async {
     await osmPlatform.customMarker(_idMap, key);
+  }
+
+  /// change Icon Marker
+  /// this method allow to change home marker icon
+  /// [icon] : (MarkerIcon) marker icon that will change  home icon
+  Future changeDefaultIconMarker(MarkerIcon icon) async {
+    _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
+    await Future.delayed(Duration(milliseconds: 300), () async {
+      await osmPlatform.customMarker(_idMap, _osmFlutterState.dynamicMarkerKey);
+    });
   }
 
   ///change  Marker of specific static points
@@ -660,9 +670,15 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<void> setIconMarker(GeoPoint point, MarkerIcon markerIcon) {
-    // TODO: implement setIconMarker
-    throw UnimplementedError();
+  Future<void> setIconMarker(GeoPoint point, MarkerIcon markerIcon) async {
+    _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
+    await Future.delayed(Duration(milliseconds: 300), () async {
+      await osmPlatform.setIconMarker(
+        _idMap,
+        point,
+        _osmFlutterState.dynamicMarkerKey,
+      );
+    });
   }
 }
 
