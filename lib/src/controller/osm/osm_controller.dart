@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:location/location.dart';
 
 import '../../widgets/mobile_osm_flutter.dart';
 
@@ -241,12 +240,13 @@ class MobileOSMController extends IBaseOSMController {
         if (!granted) {
           throw Exception("you should open gps to get current position");
         }
-        await _osmFlutterState.checkService();
+        //await _osmFlutterState.checkService();
         try {
           p = await osmPlatform.myLocation(_idMap);
           await osmPlatform.initMap(_idMap, p);
         } catch (e) {
-          p = (await Location().getLocation()).toGeoPoint();
+          throw Exception("cannot get User location");
+          //p = (await Location().getLocation()).toGeoPoint();
         }
       }
       await osmPlatform.advancedPositionPicker(_idMap);
@@ -400,10 +400,10 @@ class MobileOSMController extends IBaseOSMController {
     if (!granted) {
       throw Exception("Location permission not granted");
     }
-    bool isEnabled = await _osmFlutterState.checkService();
-    if (!isEnabled) {
-      throw Exception("turn on GPS service");
-    }
+    // bool isEnabled = await _osmFlutterState.checkService();
+    // if (!isEnabled) {
+    //   throw Exception("turn on GPS service");
+    // }
     await osmPlatform.currentLocation(_idMap);
   }
 
@@ -546,17 +546,17 @@ class MobileOSMController extends IBaseOSMController {
     return await osmPlatform.removeLastRoad(_idMap);
   }
 
-  Future<bool> checkServiceLocation() async {
-    bool isEnabled = await (osmPlatform as MethodChannelOSM).locationService.serviceEnabled();
-    if (!isEnabled) {
-      await (osmPlatform as MethodChannelOSM).locationService.requestService();
-      return Future.delayed(Duration(milliseconds: 55), () async {
-        isEnabled = await (osmPlatform as MethodChannelOSM).locationService.serviceEnabled();
-        return isEnabled;
-      });
-    }
-    return true;
-  }
+  // Future<bool> checkServiceLocation() async {
+  //   bool isEnabled = await (osmPlatform as MethodChannelOSM).locationService.serviceEnabled();
+  //   if (!isEnabled) {
+  //     await (osmPlatform as MethodChannelOSM).locationService.requestService();
+  //     return Future.delayed(Duration(milliseconds: 55), () async {
+  //       isEnabled = await (osmPlatform as MethodChannelOSM).locationService.serviceEnabled();
+  //       return isEnabled;
+  //     });
+  //   }
+  //   return true;
+  // }
 
   /// draw circle shape in the map
   ///

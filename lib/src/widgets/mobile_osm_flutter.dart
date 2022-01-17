@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:location/location.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
 import '../controller/osm/osm_controller.dart';
@@ -111,15 +111,15 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       //check location permission
       if (((widget.controller).initMapWithUserPosition || widget.trackMyPosition)) {
         await requestPermission();
-        if (widget.controller.initMapWithUserPosition) {
-          bool isEnabled = await _osmController!.checkServiceLocation();
-          Future.delayed(Duration(seconds: 1), () async {
-            if (isEnabled) {
-              return;
-            }
-            //await _osmController!.currentLocation();
-          });
-        }
+        // if (widget.controller.initMapWithUserPosition) {
+        //   bool isEnabled = await _osmController!.checkServiceLocation();
+        //   Future.delayed(Duration(seconds: 1), () async {
+        //     if (isEnabled) {
+        //       return;
+        //     }
+        //     //await _osmController!.currentLocation();
+        //   });
+        // }
       }
     });
   }
@@ -214,26 +214,30 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
 
   /// requestPermission callback to request location in your phone
   Future<bool> requestPermission() async {
-    Location location = new Location();
-
-    _permission = await location.hasPermission();
-    if (_permission == PermissionStatus.denied) {
-      //request location permission
-      _permission = await location.requestPermission();
-      if (_permission == PermissionStatus.granted) {
-        return true;
-      }
-      return false;
-    } else if (_permission == PermissionStatus.granted) {
-      return true;
-      //  if (widget.currentLocation) await _checkServiceLocation();
-    }
+   final locationStatus = await Permission.location.request();
+   if(locationStatus.isGranted){
+     return true;
+   }else if (locationStatus.isDenied){
+     return false;
+   }
+    // _permission = await location.hasPermission();
+    // if (_permission == PermissionStatus.denied) {
+    //   //request location permission
+    //   _permission = await location.requestPermission();
+    //   if (_permission == PermissionStatus.granted) {
+    //     return true;
+    //   }
+    //   return false;
+    // } else if (_permission == PermissionStatus.granted) {
+    //   return true;
+    //   //  if (widget.currentLocation) await _checkServiceLocation();
+    // }
     return false;
   }
 
-  Future<bool> checkService() async {
-    return await _osmController!.checkServiceLocation();
-  }
+  // Future<bool> checkService() async {
+  //   return await _osmController!.checkServiceLocation();
+  // }
 
   void _onPlatformViewCreated(int id) async {
     this._osmController = await MobileOSMController.init(id, this);
