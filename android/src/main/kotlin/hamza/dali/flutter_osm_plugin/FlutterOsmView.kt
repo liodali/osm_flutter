@@ -103,6 +103,7 @@ class FlutterOsmView(
     MethodCallHandler,
     PluginRegistry.ActivityResultListener {
 
+
     internal var map: MapView? = null
     private var keyMapSnapshot: String = keyArgMapSnapShot
     private var locationNewOverlay: MyLocationNewOverlay? = null
@@ -198,6 +199,8 @@ class FlutterOsmView(
                 -85.0,
                 -180.0,
             )
+        internal  val getUserLocationReqCode = 200
+        internal  val currentUserLocationReqCode = 201
 
     }
 
@@ -318,6 +321,7 @@ class FlutterOsmView(
     }
 
 
+
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
@@ -371,7 +375,7 @@ class FlutterOsmView(
                     when (gpsServiceManager.isProviderEnabled(GPS_PROVIDER)) {
                         true -> enableUserLocation()
                         else -> {
-                            openSettingLocation(requestCode = 201)
+                            openSettingLocation(requestCode = currentUserLocationReqCode)
                         }
                     }
                     result.success(isEnabled)
@@ -411,7 +415,7 @@ class FlutterOsmView(
                         }
                         false -> {
                             resultFlutter = result
-                            openSettingLocation(requestCode = 200)
+                            openSettingLocation(requestCode = getUserLocationReqCode)
 
                         }
                     }
@@ -1910,7 +1914,7 @@ class FlutterOsmView(
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         when (requestCode) {
-            200 -> {
+            getUserLocationReqCode -> {
                 skipCheckLocation = true
                 if (gpsServiceManager.isProviderEnabled(GPS_PROVIDER)) {
                     if (resultFlutter != null) {
@@ -1922,7 +1926,7 @@ class FlutterOsmView(
 
                 }
             }
-            201 -> {
+            currentUserLocationReqCode -> {
                 skipCheckLocation = true
                 if (gpsServiceManager.isProviderEnabled(GPS_PROVIDER)) {
                     enableUserLocation()
