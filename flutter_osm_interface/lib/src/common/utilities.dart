@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../types/types.dart';
-import 'package:location/location.dart';
 import 'dart:ui' as ui;
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
@@ -19,12 +18,7 @@ extension ExtGeoPoint on GeoPoint {
   }
 }
 
-extension ExtLocationData on LocationData {
-  GeoPoint toGeoPoint() {
-    return GeoPoint(
-        longitude: this.longitude ?? 0.0, latitude: this.latitude ?? 0.0);
-  }
-}
+
 
 extension ColorMap on Color {
   Map<String, List<int>> toMap(String key) {

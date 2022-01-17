@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
-import 'package:location/location.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import '../common/geo_point_exception.dart';
@@ -30,11 +29,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Stream<EventOSM> _events(int mapId) =>
       _streamController.stream.where((event) => event.mapId == mapId) as Stream<EventOSM>;
 
-  late Location locationService;
 
   @override
   Future<void> init(int idOSMMap) async {
-    locationService = Location();
     if (!_channels.containsKey(idOSMMap)) {
       if (_streamController.isClosed) {
         _streamController = StreamController<EventOSM>.broadcast();

@@ -48,11 +48,11 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   void initState() {
     super.initState();
     controller = CustomController(
-        // initMapWithUserPosition: false,
-        // initPosition: GeoPoint(
-        //   latitude: 47.4358055,
-        //   longitude: 8.4737324,
-        // ),
+        initMapWithUserPosition: false,
+        initPosition: GeoPoint(
+          latitude: 47.4358055,
+          longitude: 8.4737324,
+        ),
         // areaLimit: BoundingBox(
         //   east: 10.4922941,
         //   north: 47.8084648,
@@ -113,7 +113,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   }
 
   Future<void> mapIsInitialized() async {
-    //await controller.setZoom(zoomLevel: 12);
+    await controller.setZoom(zoomLevel: 12);
     // await controller.setMarkerOfStaticPoint(
     //   id: "line 1",
     //   markerIcon: MarkerIcon(
@@ -235,7 +235,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           children: [
             OSMFlutter(
               controller: controller,
-              trackMyPosition: true,
+              trackMyPosition: false,
               androidHotReloadSupport: true,
               mapIsLoading: Center(
                 child: Column(
