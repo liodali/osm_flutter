@@ -19,6 +19,14 @@ extension GeoPointMap {
         marker?.visible = true
         return marker!
     }
+    public func changeIconMarker(on map:TGMapView) {
+      let indexToUpdate =  map.markers.firstIndex { m in
+            m.point == self.coordinate
+        }
+        if indexToUpdate != nil {
+            map.markers[indexToUpdate!].icon = markerIcon!
+        }
+    }
 
     public func toMap() -> GeoPoint {
         ["lat": self.coordinate.latitude, "lon": coordinate.longitude]

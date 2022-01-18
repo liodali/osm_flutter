@@ -94,8 +94,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             //mapView.loadSceneAsync(from:URL.init(string: "https://drive.google.com/uc?export=download&id=1F67AW3Yaj5N7MEmMSd0OgeEK1bD69_CM")!, with: nil)
             // mapView.requestRender()
 
-            let sceneUpdates = [TGSceneUpdate]() //[TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
-            // let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
+            let sceneUpdates = [TGSceneUpdate]()
+           // let sceneUpdates = [TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
+           // let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
             let sceneUrl = URL(string: "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
             mapView.loadSceneAsync(from: sceneUrl, with: sceneUpdates)
 
@@ -131,9 +132,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break;
         case "user#position":
-            retrieveLastUserLocation = true
-            resultFlutter = result
-            locationManager.requestLocation()
+            checkLocationPermission{ [self] in
+                retrieveLastUserLocation = true
+                resultFlutter = result
+            }
             break;
         case "goto#position":
             goToSpecificLocation(call: call, result: result)
@@ -255,6 +257,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             addMarkerManually(call: call)
             result(200)
             break;
+        case "update#Marker":
+            updateMarkerIcon(call: call)
+            result(200)
+            break;
         default:
             result(nil)
             break;
@@ -298,13 +304,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func initPosition(args: Any?, result: @escaping FlutterResult) {
         let pointInit = args as! Dictionary<String, Double>
-        print(pointInit)
+        //print(pointInit)
         let location = CLLocationCoordinate2D(latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
-
-        // mapView.cameraPosition = TGCameraPosition(center: location, zoom: CGFloat(11), bearing: 0, pitch: 0)
+        print("location : \(location)")
+        mapView.cameraPosition = TGCameraPosition(center: location, zoom: CGFloat(initZoom), bearing: 0, pitch: 0)
         channel.invokeMethod("map#init", arguments: true)
-        mapView.fly(to: TGCameraPosition(center: location, zoom: CGFloat(initZoom), bearing: 0, pitch: 0),
-                withDuration: 0.2)
+        //mapView.fly(to: TGCameraPosition(center: location, zoom: CGFloat(initZoom), bearing: 0, pitch: 0), withDuration: 1.5)
         /*{ finish in
             self.
             // let marker = self.mapView.markerAdd()
@@ -361,6 +366,15 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
         GeoPointMap(icon: icon, coordinate: coordinate).setupMarker(on: mapView)
     }
+    private func updateMarkerIcon(call: FlutterMethodCall){
+        let args = call.arguments as! [String:Any]
+        var icon = markerIcon
+        if (args.keys.contains("icon")) {
+            icon = convertImage(codeImage: args["icon"] as! String)
+        }
+        let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
+        GeoPointMap(icon: icon, coordinate: coordinate).changeIconMarker(on: mapView)
+    }
 
     private func removeMarkerFromMap(call: FlutterMethodCall) {
         let point = call.arguments as! GeoPoint
@@ -373,8 +387,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     private func currentUserLocation() {
-        locationManager.requestLocation()
-        canGetLastUserLocation = true
+        checkLocationPermission{ [self] in
+            canGetLastUserLocation = true
+        }
+
     }
 
     private func trackUserLocation() {
@@ -469,10 +485,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
         dictClusterAnnotation[id] = listGeos
 
-
-        // let clusterAnnotation = ClusterMarkerAnnotation(id: id,geos: listGeos)
-        //mapView.addAnnotations(listGeos)
-        // mapView.addAnnotation(clusterAnnotation)
 
     }
 
@@ -716,6 +728,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
     }
 
+    public func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        print(status)
+        if status == CLAuthorizationStatus.authorizedWhenInUse {
+            manager.requestLocation()
+        }
+    }
 
     public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print(error.localizedDescription)
@@ -727,13 +745,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         //print("marker picked")
         print("receive pick  x: \(position.x) y: \(position.y)")
         if let marker = markerPickResult?.marker {
-            let staticMarkers = dictClusterAnnotation.map { k, markers in
-                markers
+            let staticMarkers = mapView.markers.filter {  m in
+                m.stylingString.contains("points")
             }
-            let isExist = staticMarkers.contains { markers in
-                markers.contains { staticMarker in
-                    staticMarker.marker?.point == marker.point
-                }
+            let isExist = staticMarkers.contains { m in
+                    m.point == marker.point
             }
             if isExist {
                 channel.invokeMethod("receiveGeoPoint", arguments: marker.point.toGeoPoint())
@@ -786,7 +802,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             methodCall = nil
         } else {
             pickedLocationSingleTap = view.coordinate(fromViewPosition: location)
-            mapView.setPickRadius(48)
+            mapView.setPickRadius(56)
             print("pick  x: \(location.x) y: \(location.y)")
             mapView.pickMarker(at: location)
 
@@ -827,5 +843,25 @@ private extension MyMapView {
 
     func getZoom() -> Double {
         Double(mapView.zoom)
+    }
+    func checkLocationPermission( preCheck : ( () -> Void)? ){
+        if preCheck != nil {
+            preCheck!()
+        }
+        if #available(iOS 14.0, *) {
+            if locationManager.authorizationStatus == CLAuthorizationStatus.authorizedAlways ||
+                       locationManager.authorizationStatus == CLAuthorizationStatus.authorizedWhenInUse {
+                locationManager.requestLocation()
+            } else {
+                locationManager.requestWhenInUseAuthorization()
+            }
+        }else{
+            if CLLocationManager.authorizationStatus() == CLAuthorizationStatus.authorizedAlways ||
+                       CLLocationManager.authorizationStatus() == CLAuthorizationStatus.authorizedWhenInUse {
+                locationManager.requestLocation()
+            } else {
+                locationManager.requestWhenInUseAuthorization()
+            }
+        }
     }
 }
