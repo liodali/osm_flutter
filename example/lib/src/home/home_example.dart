@@ -155,7 +155,11 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     await controller.addMarker(
       GeoPoint(latitude: 47.442475, longitude: 8.4680389),
       markerIcon: MarkerIcon(
-        icon: Icon(Icons.car_repair,color: Colors.black45,size: 48,),
+        icon: Icon(
+          Icons.car_repair,
+          color: Colors.black45,
+          size: 48,
+        ),
       ),
     );
   }
@@ -260,7 +264,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 }
               },
               initZoom: 8,
-              minZoomLevel: 8,
+              minZoomLevel: 3,
               maxZoomLevel: 14,
               stepZoom: 1.0,
               userLocationMarker: UserLocationMaker(
