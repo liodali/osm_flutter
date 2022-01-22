@@ -32,7 +32,6 @@ open class OsmFactory(
             binaryMessenger,
             viewId,
             provider,
-            MapView(context),
             args as String
         )
         osmFlutterView.activity = this.activity
