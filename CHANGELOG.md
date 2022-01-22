@@ -1,3 +1,8 @@
+## 0.29.0:
+* create `changeIconMarker` to change icon of existing marker
+* remove location package and replaced with permission_handler
+* implement location permission for iOS manually
+* replace shw diolog ( use google service  ) to open gps in android by redirect to setting to set gps on
 ## 0.28.2:
 * fix enable tracking when `trackMyPosition` is true
 * add check permision when `initWithUserLocation` in `MapController` is true

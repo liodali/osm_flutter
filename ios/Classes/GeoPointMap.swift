@@ -22,13 +22,13 @@ class GeoPointMap {
     let styleMarker:String
     let markerIcon : UIImage?
     public var marker :TGMarker? = nil
-    var interactive : Bool = false
+    var interactive : Bool = true
     var size:Int = 32
     init(
             icon: UIImage? ,
             coordinate: CLLocationCoordinate2D,
             size:Int = 32,
-            interactive:Bool = false,
+            interactive:Bool = true,
             styleMarker:String? = nil,
             angle: Int = 0
     ) {
@@ -111,7 +111,7 @@ class StaticGeoPMarker: GeoPointMap {
 
        self.angle = angle
 
-        super.init(icon: icon, coordinate: coordinate,size: 48,interactive: true,angle: angle)
+        super.init(icon: icon, coordinate: coordinate,size: 32,interactive: true,angle: angle)
 
     }
 

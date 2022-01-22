@@ -48,18 +48,18 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   void initState() {
     super.initState();
     controller = CustomController(
-        // initMapWithUserPosition: false,
-        // initPosition: GeoPoint(
-        //   latitude: 47.4358055,
-        //   longitude: 8.4737324,
-        // ),
-        // areaLimit: BoundingBox(
-        //   east: 10.4922941,
-        //   north: 47.8084648,
-        //   south: 45.817995,
-        //   west: 5.9559113,
-        // ),
-        );
+      initMapWithUserPosition: false,
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      // areaLimit: BoundingBox(
+      //   east: 10.4922941,
+      //   north: 47.8084648,
+      //   south: 45.817995,
+      //   west: 5.9559113,
+      // ),
+    );
     controller.addObserver(this);
     scaffoldKey = GlobalKey<ScaffoldState>();
     controller.listenerMapLongTapping.addListener(() async {
@@ -113,7 +113,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   }
 
   Future<void> mapIsInitialized() async {
-    //await controller.setZoom(zoomLevel: 12);
+    await controller.setZoom(zoomLevel: 12);
     // await controller.setMarkerOfStaticPoint(
     //   id: "line 1",
     //   markerIcon: MarkerIcon(
@@ -152,6 +152,16 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     );
     final bounds = await controller.bounds;
     print(bounds.toString());
+    await controller.addMarker(
+      GeoPoint(latitude: 47.442475, longitude: 8.4680389),
+      markerIcon: MarkerIcon(
+        icon: Icon(
+          Icons.car_repair,
+          color: Colors.black45,
+          size: 48,
+        ),
+      ),
+    );
   }
 
   @override
@@ -235,7 +245,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           children: [
             OSMFlutter(
               controller: controller,
-              trackMyPosition: true,
+              trackMyPosition: false,
               androidHotReloadSupport: true,
               mapIsLoading: Center(
                 child: Column(
@@ -254,7 +264,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 }
               },
               initZoom: 8,
-              minZoomLevel: 8,
+              minZoomLevel: 3,
               maxZoomLevel: 14,
               stepZoom: 1.0,
               userLocationMarker: UserLocationMaker(
@@ -279,6 +289,17 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 print(myLocation);
               },
               onGeoPointClicked: (geoPoint) async {
+                if (geoPoint == GeoPoint(latitude: 47.442475, longitude: 8.4680389)) {
+                  await controller.setMarkerIcon(
+                      geoPoint,
+                      MarkerIcon(
+                        icon: Icon(
+                          Icons.bus_alert,
+                          color: Colors.blue,
+                          size: 24,
+                        ),
+                      ));
+                }
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
