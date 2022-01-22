@@ -212,14 +212,18 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     );
   }
 
-  /// requestPermission callback to request location in your phone
+  /// requestPermission
+  /// this callback has role to request location permission in your phone in android Side
+  /// for iOS it's done manually
   Future<bool> requestPermission() async {
-   final locationStatus = await Permission.location.request();
-   if(locationStatus.isGranted){
-     return true;
-   }else if (locationStatus.isDenied){
-     return false;
-   }
+    if (Platform.isAndroid) {
+      final locationStatus = await Permission.location.request();
+      if (locationStatus.isGranted) {
+        return true;
+      } else if (locationStatus.isDenied) {
+        return false;
+      }
+    }
     // _permission = await location.hasPermission();
     // if (_permission == PermissionStatus.denied) {
     //   //request location permission

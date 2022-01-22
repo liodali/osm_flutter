@@ -62,7 +62,7 @@ class MapController extends BaseMapController {
   }
 
   /// changeIconMarker
-  /// this method allow to change home Icon Marker
+  /// this method allow to change Home Icon Marker
   ///
   /// [icon] : (MarkerIcon) widget that represent the new home marker
   Future changeIconMarker(MarkerIcon icon) async {
@@ -71,6 +71,7 @@ class MapController extends BaseMapController {
 
   /// setMarkerIcon
   /// this method allow to change Icon Marker of specific GeoPoint
+  /// thr GeoPoint should be exist,or nothing will happen
   ///
   /// [point] : (GeoPoint) geopoint that you want to change icon
   ///
