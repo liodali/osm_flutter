@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+
 import '../controller/picker_map_controller.dart';
 import '../osm_flutter.dart';
 
@@ -17,7 +19,9 @@ class CustomPickerLocation extends StatefulWidget {
   final AppBar? appBarPicker;
   final Widget? topWidgetPicker;
   final Widget? bottomWidgetPicker;
+  final Widget? loadingWidget;
   final PickerMapController controller;
+  final MarkerIcon? advancedMarkerPicker;
 
   final double stepZoom;
   final double initZoom;
@@ -29,6 +33,8 @@ class CustomPickerLocation extends StatefulWidget {
     this.appBarPicker,
     this.bottomWidgetPicker,
     this.topWidgetPicker,
+    this.loadingWidget,
+    this.advancedMarkerPicker,
     this.stepZoom = 1,
     this.initZoom = 2,
     this.minZoomLevel = 2,
@@ -79,7 +85,13 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
               Positioned.fill(
                 child: OSMFlutter(
                   controller: widget.controller,
+                  markerOption: widget.advancedMarkerPicker != null
+                      ? MarkerOption(
+                          advancedPickerMarker: widget.advancedMarkerPicker,
+                        )
+                      : null,
                   isPicker: true,
+                  mapIsLoading: widget.loadingWidget,
                   stepZoom: widget.stepZoom,
                   initZoom: widget.initZoom,
                   minZoomLevel: widget.minZoomLevel,
