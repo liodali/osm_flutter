@@ -4,6 +4,25 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import '../controller/picker_map_controller.dart';
 import '../osm_flutter.dart';
 
+class CustomPickerLocationConfig {
+  final Widget? loadingWidget;
+  final MarkerIcon? advancedMarkerPicker;
+
+  final double stepZoom;
+  final double initZoom;
+  final double minZoomLevel;
+  final double maxZoomLevel;
+
+  const CustomPickerLocationConfig({
+    this.loadingWidget,
+    this.advancedMarkerPicker,
+    this.stepZoom = 1,
+    this.initZoom = 2,
+    this.minZoomLevel = 2,
+    this.maxZoomLevel = 18,
+  });
+}
+
 /// CustomPickerLocation
 ///
 /// used to create customizable search location widget using OSMFlutter : to pick location from address
@@ -15,30 +34,23 @@ import '../osm_flutter.dart';
 /// [topWidgetPicker] :  widget above of osm flutter widget to show list of address suggestion
 ///
 /// [bottomWidgetPicker] :  widget on bottom of screen and above the osm flutter widget to show another information or action widget for the picker
+///
+/// [bottomWidgetPicker] :  widget on bottom of screen and above the osm flutter widget to show another information or action widget for the picker
+///
+/// [pickerConfig]      : (CustomPickerLocationConfig) configure the inner OSMFlutter
 class CustomPickerLocation extends StatefulWidget {
+  final PickerMapController controller;
   final AppBar? appBarPicker;
   final Widget? topWidgetPicker;
   final Widget? bottomWidgetPicker;
-  final Widget? loadingWidget;
-  final PickerMapController controller;
-  final MarkerIcon? advancedMarkerPicker;
-
-  final double stepZoom;
-  final double initZoom;
-  final double minZoomLevel;
-  final double maxZoomLevel;
+  final CustomPickerLocationConfig pickerConfig;
 
   CustomPickerLocation({
     required this.controller,
     this.appBarPicker,
     this.bottomWidgetPicker,
     this.topWidgetPicker,
-    this.loadingWidget,
-    this.advancedMarkerPicker,
-    this.stepZoom = 1,
-    this.initZoom = 2,
-    this.minZoomLevel = 2,
-    this.maxZoomLevel = 18,
+    this.pickerConfig = const CustomPickerLocationConfig(),
     Key? key,
   }) : super(key: key);
 
@@ -85,17 +97,17 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
               Positioned.fill(
                 child: OSMFlutter(
                   controller: widget.controller,
-                  markerOption: widget.advancedMarkerPicker != null
+                  markerOption: widget.pickerConfig.advancedMarkerPicker != null
                       ? MarkerOption(
-                          advancedPickerMarker: widget.advancedMarkerPicker,
+                          advancedPickerMarker: widget.pickerConfig.advancedMarkerPicker,
                         )
                       : null,
                   isPicker: true,
-                  mapIsLoading: widget.loadingWidget,
-                  stepZoom: widget.stepZoom,
-                  initZoom: widget.initZoom,
-                  minZoomLevel: widget.minZoomLevel,
-                  maxZoomLevel: widget.maxZoomLevel,
+                  mapIsLoading: widget.pickerConfig.loadingWidget,
+                  stepZoom: widget.pickerConfig.stepZoom,
+                  initZoom: widget.pickerConfig.initZoom,
+                  minZoomLevel: widget.pickerConfig.minZoomLevel,
+                  maxZoomLevel: widget.pickerConfig.maxZoomLevel,
                 ),
               ),
               if (widget.topWidgetPicker != null) ...[
