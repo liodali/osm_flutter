@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.29.0-orange) 
+![pub](https://img.shields.io/badge/pub-v0.29.1-orange) 
 
 
 ## Platform Support
@@ -40,7 +40,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.29.0
+      flutter_osm_plugin: ^0.29.1
 
 
 ### Migration to `0.16.0` (Android Only)
@@ -81,7 +81,7 @@ Add the following to your `pubspec.yaml` file:
                 ),
             ),
         ),
-        road: Road(
+         roadConfiguration: RoadConfiguration(
                 startIcon: MarkerIcon(
                   icon: Icon(
                     Icons.person,
@@ -500,7 +500,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `initZoom`                    | set init zoom level in the map (default 10)       |
 | `maxZoomLevel`                | set maximum zoom level in the map  (2 <= x <= 19)       |
 | `minZoomLevel`                | set minimum zoom level in the map  (2 <= x <= 19 )       |
-| `road`                        | set color and start/end/middle markers in road |
+| `roadConfiguration`           | (RoadConfiguration) set color and start/end/middle markers in road |
 | `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
 | `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |

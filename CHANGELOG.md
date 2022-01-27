@@ -1,3 +1,6 @@
+## 0.29.1:
+* create `CustomPickerLocationConfig` to set osmflutter widget in pickerLocationWidget
+* fix readme
 ## 0.29.0:
 * create `changeIconMarker` to change icon of existing marker
 * remove location package and replaced with permission_handler
