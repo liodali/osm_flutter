@@ -1,3 +1,5 @@
+## 0.29.1+1:
+* fix for check permission in iOS
 ## 0.29.1:
 * create `CustomPickerLocationConfig` to set osmflutter widget in pickerLocationWidget
 * fix readme

@@ -205,9 +205,11 @@ class MobileOSMController extends IBaseOSMController {
 
     /// init location in map
     if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
-      bool granted = await _osmFlutterState.requestPermission();
-      if (!granted) {
-        throw Exception("we cannot continue showing the map without grant gps permission");
+      if (Platform.isAndroid) {
+        bool granted = await _osmFlutterState.requestPermission();
+        if (!granted) {
+          throw Exception("we cannot continue showing the map without grant gps permission");
+        }
       }
       initPosition = await myLocation();
       _checkBoundingBox(box, initPosition);
