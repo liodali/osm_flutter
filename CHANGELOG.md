@@ -1,3 +1,6 @@
+## 0.29.1+2:
+* fix for check permission in iOS for CustomPickerLocation
+* remove unnecessary check for isPicker in initialisation of the map
 ## 0.29.1+1:
 * fix for check permission in iOS
 ## 0.29.1:
