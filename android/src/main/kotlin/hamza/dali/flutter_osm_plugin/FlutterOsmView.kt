@@ -94,7 +94,6 @@ class FlutterOsmView(
     private val binaryMessenger: BinaryMessenger,
     private val id: Int,//viewId
     private val providerLifecycle: ProviderLifecycle,
-    private var mapView: MapView,
     private val keyArgMapSnapShot: String
 ) :
     LifecycleObserver,
@@ -199,8 +198,8 @@ class FlutterOsmView(
                 -85.0,
                 -180.0,
             )
-        internal  val getUserLocationReqCode = 200
-        internal  val currentUserLocationReqCode = 201
+        internal val getUserLocationReqCode = 200
+        internal val currentUserLocationReqCode = 201
 
     }
 
@@ -283,7 +282,7 @@ class FlutterOsmView(
     private fun initMap() {
 
 
-        map = mapView
+        map = MapView(context)
 
         map!!.layoutParams = MapView.LayoutParams(
             LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
@@ -319,7 +318,6 @@ class FlutterOsmView(
 
         mainLinearLayout.addView(map)
     }
-
 
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -523,7 +521,7 @@ class FlutterOsmView(
         }
     }
 
-    private fun getUserLocation(result: MethodChannel.Result,callback: VoidCallback? = null ) {
+    private fun getUserLocation(result: MethodChannel.Result, callback: VoidCallback? = null) {
         locationNewOverlay?.let {
             if (!it.isMyLocationEnabled) {
                 it.enableMyLocation()
@@ -1478,9 +1476,9 @@ class FlutterOsmView(
     }
 
     private fun staticPosition(call: MethodCall, result: MethodChannel.Result) {
-        val map = call.arguments as HashMap<String, Any>
-        val id = map["id"] as String?
-        val points = map["point"] as MutableList<HashMap<String, Double>>?
+        val args = call.arguments as HashMap<String, Any>
+        val id = args["id"] as String?
+        val points = args["point"] as MutableList<HashMap<String, Double>>?
         val geoPoints: MutableList<GeoPoint> = emptyList<GeoPoint>().toMutableList()
         val angleGeoPoints: MutableList<Double> = emptyList<Double>().toMutableList()
         for (hashMap in points!!) {
@@ -1957,7 +1955,7 @@ class FlutterOsmView(
                 if (gpsServiceManager.isProviderEnabled(GPS_PROVIDER)) {
                     if (resultFlutter != null) {
                         initLocationAndProvider()
-                        getUserLocation(resultFlutter!!){
+                        getUserLocation(resultFlutter!!) {
                             resultFlutter = null
                         }
                     }

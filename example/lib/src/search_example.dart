@@ -161,7 +161,9 @@ class _SearchPageState extends State<SearchPage> {
           child: Icon(Icons.arrow_forward),
         ),
       ),
-      initZoom: 8,
+      pickerConfig: CustomPickerLocationConfig(
+        initZoom: 8,
+      ),
     );
   }
 }

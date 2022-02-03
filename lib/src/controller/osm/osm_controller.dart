@@ -204,10 +204,12 @@ class MobileOSMController extends IBaseOSMController {
     }
 
     /// init location in map
-    if (initWithUserPosition && !_osmFlutterState.widget.isPicker) {
-      bool granted = await _osmFlutterState.requestPermission();
-      if (!granted) {
-        throw Exception("we cannot continue showing the map without grant gps permission");
+    if (initWithUserPosition) {
+      if (Platform.isAndroid) {
+        bool granted = await _osmFlutterState.requestPermission();
+        if (!granted) {
+          throw Exception("we cannot continue showing the map without grant gps permission");
+        }
       }
       initPosition = await myLocation();
       _checkBoundingBox(box, initPosition);
@@ -234,21 +236,6 @@ class MobileOSMController extends IBaseOSMController {
 
     /// picker config
     if (_osmFlutterState.widget.isPicker) {
-      GeoPoint? p = _osmFlutterState.widget.controller.initPosition;
-      if (p == null && initWithUserPosition) {
-        bool granted = await _osmFlutterState.requestPermission();
-        if (!granted) {
-          throw Exception("you should open gps to get current position");
-        }
-        //await _osmFlutterState.checkService();
-        try {
-          p = await osmPlatform.myLocation(_idMap);
-          await osmPlatform.initMap(_idMap, p);
-        } catch (e) {
-          throw Exception("cannot get User location");
-          //p = (await Location().getLocation()).toGeoPoint();
-        }
-      }
       await osmPlatform.advancedPositionPicker(_idMap);
     }
   }

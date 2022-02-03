@@ -1,3 +1,13 @@
+## 0.29.1+3:
+* fix docs
+## 0.29.1+2:
+* fix check permission in iOS for CustomPickerLocation
+* remove unnecessary check when isPicker is true  in initialisation of the map
+## 0.29.1+1:
+* fix check permission when initialize map in iOS
+## 0.29.1:
+* create `CustomPickerLocationConfig` to set osmflutter widget in pickerLocationWidget
+* fix readme
 ## 0.29.0:
 * create `changeIconMarker` to change icon of existing marker
 * remove location package and replaced with permission_handler
