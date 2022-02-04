@@ -1,7 +1,6 @@
 package hamza.dali.flutter_osm_plugin.network
 
-import hamza.dali.flutter_osm_plugin.Adresse
-import retrofit2.http.Field
+import hamza.dali.flutter_osm_plugin.models.Adresse
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Query

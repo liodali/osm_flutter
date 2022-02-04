@@ -1,4 +1,4 @@
-package hamza.dali.flutter_osm_plugin
+package hamza.dali.flutter_osm_plugin.models
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -11,6 +11,7 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
+import hamza.dali.flutter_osm_plugin.R
 import kotlinx.coroutines.CoroutineScope
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView

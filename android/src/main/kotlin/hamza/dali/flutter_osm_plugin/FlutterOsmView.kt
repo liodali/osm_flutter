@@ -31,6 +31,9 @@ import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.PAUSED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STARTED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STOPPED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.mapSnapShots
+import hamza.dali.flutter_osm_plugin.models.FlutterMarker
+import hamza.dali.flutter_osm_plugin.models.FlutterRoad
+import hamza.dali.flutter_osm_plugin.models.RoadConfig
 import hamza.dali.flutter_osm_plugin.utilities.*
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding.OnSaveInstanceStateListener
 import io.flutter.plugin.common.BinaryMessenger
@@ -440,6 +443,12 @@ class FlutterOsmView(
                 "road" -> {
                     drawRoad(call, result)
                 }
+                "draw#multi#road" -> {
+                    drawMultiRoad(call, result)
+                }
+                "clear#roads" -> {
+                    clearAllRoad(result)
+                }
                 "marker#icon" -> {
                     changeIcon(call, result)
                 }
@@ -606,7 +615,7 @@ class FlutterOsmView(
                 val polyLine = Polyline(map!!)
                 polyLine.setPoints(lastRoad.roadPoints)
                 //customRoadMarkerIcon.p
-                createRoad(
+                flutterRoad = createRoad(
                     polyLine = polyLine,
                     colorRoad = lastRoad.roadColor,
                     roadWidth = lastRoad.roadWith,
@@ -618,7 +627,24 @@ class FlutterOsmView(
             }
 
         }
-
+        mapSnapShot.cachedRoads().forEach { road ->
+            if (road.roadPoints.isNotEmpty()) {
+                if (!map!!.overlayManager.contains(folderRoad)) {
+                    map!!.overlayManager.add(folderRoad)
+                }
+                val polyLine = Polyline(map!!)
+                polyLine.setPoints(road.roadPoints)
+                //customRoadMarkerIcon.p
+                flutterRoad = createRoad(
+                    polyLine = polyLine,
+                    colorRoad = road.roadColor,
+                    roadWidth = road.roadWith,
+                    listInterestPoints = road.listInterestPoints,
+                    showPoiMarker = road.showIcons,
+                )
+            }
+        }
+        map!!.invalidate()
         resetAdvPickerOrTrackLocation(mapSnapShot)
         clearCacheMap()
         methodChannel.invokeMethod("map#restored", null)
@@ -1302,6 +1328,126 @@ class FlutterOsmView(
         result.success(null)
     }
 
+    private fun clearAllRoad(result: MethodChannel.Result) {
+        val cachedRoads = map!!.overlays.filterIsInstance<Polyline>()
+        if (cachedRoads.isNotEmpty()) {
+            map!!.overlays.removeAll(cachedRoads)
+        }
+        map!!.invalidate()
+        result.success(200)
+    }
+
+    private fun drawMultiRoad(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments!! as List<HashMap<String, Any>>
+        val listConfigRoad = emptyList<RoadConfig>().toMutableList()
+
+        for (arg in args) {
+            val waypoints = (arg["wayPoints"] as List<HashMap<String, Double>>).map { map ->
+                GeoPoint(map["lat"]!!, map["lon"]!!)
+            }.toList()
+            listConfigRoad.add(
+                RoadConfig(
+                    meanUrl = when (arg["roadType"] as String) {
+                        "car" -> OSRMRoadManager.MEAN_BY_CAR
+                        "bike" -> OSRMRoadManager.MEAN_BY_BIKE
+                        "foot" -> OSRMRoadManager.MEAN_BY_FOOT
+                        else -> OSRMRoadManager.MEAN_BY_CAR
+                    },
+                    colorRoad = when (arg.containsKey("roadColor")) {
+                        true -> {
+                            val colors = (arg["roadColor"] as List<Int>)
+                            Color.rgb(colors.first(), colors.last(), colors[1])
+                        }
+                        else -> roadColor
+                    },
+                    roadWidth = when (arg.containsKey("roadWidth")) {
+                        true -> (arg["roadWidth"] as Double).toFloat()
+                        else -> 5f
+                    },
+                    wayPoints = waypoints,
+                    interestPoints = when (arg.containsKey("middlePoints")) {
+                        true -> arg["middlePoints"] as List<HashMap<String, Double>>
+                        false -> emptyList()
+                    }.map { g ->
+                        GeoPoint(g["lat"]!!, g["lon"]!!)
+                    }.toList()
+                )
+            )
+        }
+
+
+        //val showPoiMarker = args["showMarker"] as Boolean
+
+        flutterRoad?.road?.let {
+            map!!.overlays.remove(it)
+        }
+        if (!map!!.overlays.contains(folderRoad)) {
+            map!!.overlays.add(folderRoad)
+        }
+        folderRoad.items.clear()
+        val cachedRoads = map!!.overlays.filterIsInstance<Polyline>()
+        if (cachedRoads.isNotEmpty()) {
+            map!!.overlays.removeAll(cachedRoads)
+        }
+        map!!.invalidate()
+
+        if (roadManager == null)
+            roadManager = OSRMRoadManager(context, "json/application")
+        val resultRoads = emptyList<HashMap<String, Any>>().toMutableList();
+        for (config in listConfigRoad) {
+            roadManager?.let { manager ->
+                manager.setMean(config.meanUrl)
+                var routePointsEncoded = ""
+                job = scope?.launch(Default) {
+                    withContext(Main) {
+                        folderMarkers.items.removeAll {
+                            (it is FlutterMarker && config.wayPoints.contains(it.position)) ||
+                                    (it is FlutterMarker && config.interestPoints.contains(it.position))
+                        }
+                        mapSnapShot().removeMarkersFromSnapShot(config.wayPoints)
+                    }
+                    val roadPoints = ArrayList(config.wayPoints)
+                    if (config.interestPoints.isNotEmpty()) {
+                        roadPoints.addAll(1, config.interestPoints)
+                    }
+                    val road = manager.getRoad(roadPoints)
+                    withContext(Main) {
+                        if (road.mRouteHigh.size > 2) {
+                            routePointsEncoded = PolylineEncoder.encode(road.mRouteHigh, 10)
+                            val polyLine = RoadManager.buildRoadOverlay(road)
+                            createRoad(
+                                polyLine = polyLine,
+                                colorRoad = config.colorRoad,
+                                roadWidth = config.roadWidth,
+                                showPoiMarker = false,
+                                listInterestPoints = config.interestPoints,
+                            )
+
+                            mapSnapShot().cacheListRoad(
+                                RoadSnapShot(
+                                    roadPoints = road.mRouteHigh,
+                                    roadColor = config.colorRoad,
+                                    roadWith = config.roadWidth,
+                                    listInterestPoints = config.interestPoints,
+                                    showIcons = false
+                                )
+                            )
+                            resultRoads.add(HashMap<String, Any>().apply {
+                                this["duration"] = road.mDuration
+                                this["distance"] = road.mLength
+                                this["routePoints"] = routePointsEncoded
+                            })
+                        }
+                    }
+
+                }
+            }
+        }
+        map!!.invalidate()
+        result.success(resultRoads)
+
+    }
+
     private fun drawRoad(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments!! as HashMap<String, Any>
 
@@ -1368,14 +1514,13 @@ class FlutterOsmView(
                     if (road.mRouteHigh.size > 2) {
                         routePointsEncoded = PolylineEncoder.encode(road.mRouteHigh, 10)
                         val polyLine = RoadManager.buildRoadOverlay(road)
-                        createRoad(
+                        flutterRoad = createRoad(
                             polyLine = polyLine,
                             colorRoad = colorRoad,
                             roadWidth = roadWidth,
                             showPoiMarker = showPoiMarker,
                             listInterestPoints = listInterestPoints,
                         )
-
                         mapSnapShot().cacheRoad(
                             RoadSnapShot(
                                 roadPoints = road.mRouteHigh,
@@ -1412,7 +1557,7 @@ class FlutterOsmView(
         showPoiMarker: Boolean,
         listInterestPoints: List<GeoPoint>,
         roadWidth: Float,
-    ) {
+    ): FlutterRoad {
         polyLine.setOnClickListener { _, _, eventPos ->
             methodChannel.invokeMethod("receiveSinglePress", eventPos?.toHashMap())
             true
@@ -1421,13 +1566,13 @@ class FlutterOsmView(
         polyLine.outlinePaint.color = colorRoad ?: Color.GREEN
 
 
-        flutterRoad = FlutterRoad(
+        val flutterRoad = FlutterRoad(
             context,
             map!!,
             interestPoint = if (showPoiMarker) listInterestPoints else emptyList()
         )
 
-        flutterRoad?.let { roadF ->
+        flutterRoad.let { roadF ->
             roadF.markersIcons = customRoadMarkerIcon
             polyLine.outlinePaint.strokeWidth = roadWidth
 
@@ -1446,6 +1591,8 @@ class FlutterOsmView(
 
             folderRoad.items.add(roadF.road!!)
         }
+
+        return flutterRoad
     }
 
     private fun staticPositionIconMaker(call: MethodCall, result: MethodChannel.Result) {
