@@ -946,7 +946,7 @@ class FlutterOsmView(
             animateTo = false
         )
 
-        //map!!.overlays.add(marker)
+
         result.success(null)
 
     }
@@ -1046,7 +1046,10 @@ class FlutterOsmView(
         val widthRoad = (args["roadWidth"] as Double)
 
         if (!map!!.overlays.contains(folderRoad)) {
-            map!!.overlays.add(folderRoad)
+            locationNewOverlay?.let { locationOverlay ->
+                val indexOf = map!!.overlays.indexOf(locationOverlay)
+                map!!.overlays.add(indexOf - 1, folderRoad)
+            } ?: map!!.overlays.add(folderRoad)
         } else {
             folderRoad.items.clear()
         }
@@ -1382,7 +1385,10 @@ class FlutterOsmView(
             map!!.overlays.remove(it)
         }
         if (!map!!.overlays.contains(folderRoad)) {
-            map!!.overlays.add(folderRoad)
+            locationNewOverlay?.let { locationOverlay ->
+                val indexOf = map!!.overlays.indexOf(locationOverlay)
+                map!!.overlays.add(indexOf - 1, folderRoad)
+            } ?: map!!.overlays.add(folderRoad)
         }
         folderRoad.items.clear()
         val cachedRoads = map!!.overlays.filterIsInstance<Polyline>()
@@ -1483,10 +1489,15 @@ class FlutterOsmView(
             map!!.overlays.remove(it)
         }
         if (!map!!.overlays.contains(folderRoad)) {
-            map!!.overlays.add(folderRoad)
+            locationNewOverlay?.let { locationOverlay ->
+                val indexOf = map!!.overlays.indexOf(locationOverlay)
+                map!!.overlays.add(indexOf - 1, folderRoad)
+            } ?: map!!.overlays.add(folderRoad)
+
         } else {
             folderRoad.items.clear()
         }
+
         map!!.invalidate()
 
         if (roadManager == null)

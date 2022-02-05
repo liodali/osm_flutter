@@ -265,7 +265,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               },
               initZoom: 8,
               minZoomLevel: 3,
-              maxZoomLevel: 14,
+              maxZoomLevel: 18,
               stepZoom: 1.0,
               userLocationMarker: UserLocationMaker(
                 personMarker: MarkerIcon(
