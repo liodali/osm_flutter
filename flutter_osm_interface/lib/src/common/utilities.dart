@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+
 import '../types/types.dart';
-import 'dart:ui' as ui;
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
@@ -17,8 +18,6 @@ extension ExtGeoPoint on GeoPoint {
     ];
   }
 }
-
-
 
 extension ColorMap on Color {
   Map<String, List<int>> toMap(String key) {
@@ -42,12 +41,34 @@ extension Uint8ListConvert on Uint8List {
   }
 }
 
+extension ListMultiRoadConf on List<MultiRoadConfiguration> {
+  List<Map<String, dynamic>> toListMap({
+    MultiRoadOption commonRoadOption = const MultiRoadOption(
+      roadColor: Colors.green,
+      roadType: RoadType.car,
+    ),
+  }) {
+    final List<Map<String, dynamic>> listMap = [];
+    for (MultiRoadConfiguration roadConf in this) {
+      final map = {};
+      map["wayPoints"] = [
+        roadConf.startPoint.toMap(),
+        roadConf.destinationPoint.toMap(),
+      ];
+      map["roadType"] = roadConf.roadOptionConfiguration?.roadType ?? generalOption.roadType;
+      map["roadColor"] = roadConf.roadOptionConfiguration?.roadColor ?? generalOption.roadColor;
+      map["roadWidth"] = roadConf.roadOptionConfiguration?.roadWidth ?? generalOption.roadWidth;
+      map["middlePoints"] = roadConf.intersectPoints.map((e) => e.toMap()).toList();
+    }
+    return listMap;
+  }
+}
+
 Future<Uint8List> capturePng(GlobalKey globalKey) async {
   RenderRepaintBoundary boundary =
       globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
   ui.Image image = await boundary.toImage();
-  ByteData byteData =
-      (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
+  ByteData byteData = (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
   Uint8List pngBytes = byteData.buffer.asUint8List();
   return pngBytes;
 }

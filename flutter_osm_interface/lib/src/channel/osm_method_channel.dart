@@ -29,7 +29,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Stream<EventOSM> _events(int mapId) =>
       _streamController.stream.where((event) => event.mapId == mapId) as Stream<EventOSM>;
 
-
   @override
   Future<void> init(int idOSMMap) async {
     if (!_channels.containsKey(idOSMMap)) {
@@ -664,6 +663,25 @@ class MethodChannelOSM extends MobileOSMPlatform {
     } on PlatformException catch (e) {
       throw Exception("marker not exist");
     }
+  }
+
+  @override
+  Future<void> clearAllRoads(
+    int idOSM,
+  ) async {
+    await _channels[idOSM]?.invokeMethod("clear#roads");
+  }
+
+  @override
+  Future<List<RoadInfo>> drawMultipleRoad(
+    int idOSM,
+    List<MultiRoadConfiguration> configs, {
+    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
+  }) async {
+    final args = configs.toListMap(commonRoadOption: commonRoadOption);
+    final List<Map<String, dynamic>> mapRoadInfo =
+        await _channels[idOSM]?.invokeMethod("draw#multi#road");
+    return mapRoadInfo.map((e) => RoadInfo.fromMap(e)).toList();
   }
 }
 

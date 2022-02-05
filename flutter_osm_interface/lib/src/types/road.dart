@@ -36,7 +36,7 @@ class RoadOption {
   final bool showMarkerOfPOI;
   final bool zoomInto;
 
-  RoadOption({
+  const RoadOption({
     this.roadColor,
     this.roadWidth,
     this.showMarkerOfPOI = false,
@@ -56,15 +56,22 @@ class RoadOption {
 /// that can be null or width [roadWidth] that also can be null for that specific road
 ///
 class MultiRoadOption extends RoadOption {
-  MultiRoadOption({
+  final RoadType roadType;
+
+  const MultiRoadOption({
     Color? roadColor,
     int? roadWidth,
+    this.roadType = RoadType.car,
   }) : super(
           roadColor: roadColor,
           roadWidth: roadWidth,
           zoomInto: false,
           showMarkerOfPOI: false,
         );
+
+  const MultiRoadOption.empty()
+      : this.roadType = RoadType.car,
+        super(roadColor: Colors.green, zoomInto: false, showMarkerOfPOI: false);
 }
 
 /// [MultiRoadConfiguration]
@@ -78,7 +85,7 @@ class MultiRoadConfiguration {
   final GeoPoint startPoint;
   final GeoPoint destinationPoint;
   final List<GeoPoint> intersectPoints;
-  final MultiRoadConfiguration? roadOptionConfiguration;
+  final MultiRoadOption? roadOptionConfiguration;
 
   MultiRoadConfiguration({
     required this.startPoint,

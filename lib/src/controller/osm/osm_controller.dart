@@ -667,6 +667,23 @@ class MobileOSMController extends IBaseOSMController {
       );
     });
   }
+
+  @override
+  Future<void> clearAllRoads() async {
+    await osmPlatform.clearAllRoads(_idMap);
+  }
+
+  @override
+  Future<List<RoadInfo>> drawMultipleRoad(
+    List<MultiRoadConfiguration> configs, {
+    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
+  }) async {
+    return await osmPlatform.drawMultipleRoad(
+      _idMap,
+      configs,
+      commonRoadOption: commonRoadOption,
+    );
+  }
 }
 
 extension PrivateMethodOSMController on MobileOSMController {
