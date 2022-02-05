@@ -13,7 +13,7 @@ import kotlinx.coroutines.withContext
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.infowindow.InfoWindow
-
+import hamza.dali.flutter_osm_plugin.utilities.*
 class FlutterInfoWindow(view: View, mapView: MapView?, private val point: GeoPoint) :
     InfoWindow(view, mapView) {
     private var infoView: InfowindowBinding = InfowindowBinding.bind(view)
