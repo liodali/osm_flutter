@@ -679,8 +679,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
   }) async {
     final args = configs.toListMap(commonRoadOption: commonRoadOption);
+    final List result = (await _channels[idOSM]?.invokeListMethod("draw#multi#road", args))!;
     final List<Map<String, dynamic>> mapRoadInfo =
-        await _channels[idOSM]?.invokeMethod("draw#multi#road");
+        List.castFrom(result as List<Map<String, dynamic>>);
     return mapRoadInfo.map((e) => RoadInfo.fromMap(e)).toList();
   }
 }

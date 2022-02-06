@@ -22,8 +22,20 @@ extension ExtGeoPoint on GeoPoint {
 extension ColorMap on Color {
   Map<String, List<int>> toMap(String key) {
     return {
-      "$key": [this.red, this.blue, this.green]
+      "$key": [
+        this.red,
+        this.blue,
+        this.green,
+      ]
     };
+  }
+
+  List<int> toList() {
+    return [
+      this.red,
+      this.blue,
+      this.green,
+    ];
   }
 
   Map<String, String> toHexMap(String key) {
@@ -50,15 +62,21 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
   }) {
     final List<Map<String, dynamic>> listMap = [];
     for (MultiRoadConfiguration roadConf in this) {
-      final map = {};
+      final map = <String, dynamic>{};
       map["wayPoints"] = [
         roadConf.startPoint.toMap(),
         roadConf.destinationPoint.toMap(),
       ];
-      map["roadType"] = roadConf.roadOptionConfiguration?.roadType ?? commonRoadOption.roadType;
-      map["roadColor"] = roadConf.roadOptionConfiguration?.roadColor ?? commonRoadOption.roadColor;
-      map["roadWidth"] = roadConf.roadOptionConfiguration?.roadWidth ?? commonRoadOption.roadWidth;
+      map["roadType"] = roadConf.roadOptionConfiguration?.roadType.toString() ??
+          commonRoadOption.roadType.toString();
+      final color = roadConf.roadOptionConfiguration?.roadColor ?? commonRoadOption.roadColor;
+      if (color != null) {
+        map.addAll(color.toMap("roadColor"));
+      }
+      map["roadWidth"] =
+          roadConf.roadOptionConfiguration?.roadWidth ?? commonRoadOption.roadWidth ?? 5.0;
       map["middlePoints"] = roadConf.intersectPoints.map((e) => e.toMap()).toList();
+      listMap.add(map);
     }
     return listMap;
   }

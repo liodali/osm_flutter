@@ -42,12 +42,10 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.PluginRegistry
 import io.flutter.plugin.platform.PlatformView
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.bonuspack.utils.PolylineEncoder
@@ -1397,60 +1395,66 @@ class FlutterOsmView(
         }
         map!!.invalidate()
 
-        if (roadManager == null)
-            roadManager = OSRMRoadManager(context, "json/application")
         val resultRoads = emptyList<HashMap<String, Any>>().toMutableList();
-        for (config in listConfigRoad) {
-            roadManager?.let { manager ->
-                manager.setMean(config.meanUrl)
-                var routePointsEncoded = ""
-                job = scope?.launch(Default) {
-                    withContext(Main) {
-                        folderMarkers.items.removeAll {
-                            (it is FlutterMarker && config.wayPoints.contains(it.position)) ||
-                                    (it is FlutterMarker && config.interestPoints.contains(it.position))
+        job = scope?.launch(Default) {
+            withContext(IO) {
+                for (config in listConfigRoad) {
+                    if (roadManager == null)
+                        roadManager = OSRMRoadManager(context, "json/application")
+                    roadManager?.let { manager ->
+                        manager.setMean(config.meanUrl)
+                        var routePointsEncoded = ""
+                        withContext(Main) {
+                            folderMarkers.items.removeAll {
+                                (it is FlutterMarker && config.wayPoints.contains(it.position)) ||
+                                        (it is FlutterMarker && config.interestPoints.contains(it.position))
+                            }
+                            mapSnapShot().removeMarkersFromSnapShot(config.wayPoints)
                         }
-                        mapSnapShot().removeMarkersFromSnapShot(config.wayPoints)
-                    }
-                    val roadPoints = ArrayList(config.wayPoints)
-                    if (config.interestPoints.isNotEmpty()) {
-                        roadPoints.addAll(1, config.interestPoints)
-                    }
-                    val road = manager.getRoad(roadPoints)
-                    withContext(Main) {
-                        if (road.mRouteHigh.size > 2) {
-                            routePointsEncoded = PolylineEncoder.encode(road.mRouteHigh, 10)
-                            val polyLine = RoadManager.buildRoadOverlay(road)
-                            createRoad(
-                                polyLine = polyLine,
-                                colorRoad = config.colorRoad,
-                                roadWidth = config.roadWidth,
-                                showPoiMarker = false,
-                                listInterestPoints = config.interestPoints,
-                            )
-
-                            mapSnapShot().cacheListRoad(
-                                RoadSnapShot(
-                                    roadPoints = road.mRouteHigh,
-                                    roadColor = config.colorRoad,
-                                    roadWith = config.roadWidth,
+                        val roadPoints = ArrayList(config.wayPoints)
+                        if (config.interestPoints.isNotEmpty()) {
+                            roadPoints.addAll(1, config.interestPoints)
+                        }
+                        val road = manager.getRoad(roadPoints)
+                        withContext(Main) {
+                            if (road.mRouteHigh.size > 2) {
+                                routePointsEncoded = PolylineEncoder.encode(road.mRouteHigh, 10)
+                                val polyLine = RoadManager.buildRoadOverlay(road)
+                                createRoad(
+                                    polyLine = polyLine,
+                                    colorRoad = config.colorRoad,
+                                    roadWidth = config.roadWidth,
+                                    showPoiMarker = false,
                                     listInterestPoints = config.interestPoints,
-                                    showIcons = false
                                 )
-                            )
-                            resultRoads.add(HashMap<String, Any>().apply {
-                                this["duration"] = road.mDuration
-                                this["distance"] = road.mLength
-                                this["routePoints"] = routePointsEncoded
-                            })
-                        }
-                    }
 
+                                mapSnapShot().cacheListRoad(
+                                    RoadSnapShot(
+                                        roadPoints = road.mRouteHigh,
+                                        roadColor = config.colorRoad,
+                                        roadWith = config.roadWidth,
+                                        listInterestPoints = config.interestPoints,
+                                        showIcons = false
+                                    )
+                                )
+                                resultRoads.add(HashMap<String, Any>().apply {
+                                    this["duration"] = road.mDuration
+                                    this["distance"] = road.mLength
+                                    this["routePoints"] = routePointsEncoded
+                                })
+                            }
+                        }
+                        delay(100)
+
+                    }
                 }
+
+            }
+            withContext(Main) {
+                map!!.invalidate()
+                result.success(resultRoads.toList())
             }
         }
-        map!!.invalidate()
-        result.success(resultRoads)
 
     }
 
