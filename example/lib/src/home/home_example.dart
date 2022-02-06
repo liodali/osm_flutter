@@ -93,7 +93,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             //   color: Colors.red,
             //   size: 32,
             // ),
-            image: AssetImage("asset/pin.png"),
+            assetMarker: AssetMarker(
+              image: AssetImage("asset/pin.png"),
+            ),
             // assetMarker: AssetMarker(
             //   image: AssetImage("asset/pin.png"),
             //   //scaleAssetImage: 2,
@@ -213,7 +215,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           Builder(builder: (ctx) {
             return GestureDetector(
               onLongPress: () => drawMultiRoads(),
-              onDoubleTap: () async{
+              onDoubleTap: () async {
                 await controller.clearAllRoads();
               },
               child: IconButton(
@@ -584,12 +586,13 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         ),
       ),
     ];
-    await controller.drawMultipleRoad(
+    final listRoadInfo = await controller.drawMultipleRoad(
       configs,
       commonRoadOption: MultiRoadOption(
         roadColor: Colors.red,
       ),
     );
+    print(listRoadInfo);
   }
 }
 

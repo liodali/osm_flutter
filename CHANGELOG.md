@@ -1,3 +1,8 @@
+## 0.30.0: add draw multi roads and fix bug 
+* create new method `drawMutliRoad` to draw multiple road in the same time
+* create new method `clearAllRoads` to clear all roads in the map
+* fix bug when user location marker hidden by polylines
+* remove deprecated attribute `image` from `MarkerIcon`, suppose to use `assetMarker`
 ## 0.29.1+3:
 * fix docs
 ## 0.29.1+2:

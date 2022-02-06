@@ -87,7 +87,7 @@ class MultiRoadConfiguration {
   final List<GeoPoint> intersectPoints;
   final MultiRoadOption? roadOptionConfiguration;
 
-  MultiRoadConfiguration({
+  const MultiRoadConfiguration({
     required this.startPoint,
     required this.destinationPoint,
     this.intersectPoints = const [],
@@ -137,4 +137,9 @@ class RoadInfo {
 
   @override
   int get hashCode => distance.hashCode ^ duration.hashCode ^ route.hashCode;
+
+  @override
+  String toString() {
+    return "distance:$distance,duration:$duration";
+  }
 }
