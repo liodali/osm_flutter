@@ -334,13 +334,7 @@ class MobileOSMController extends IBaseOSMController {
     MarkerIcon markerIcon, {
     bool refresh = false,
   }) async {
-    if (markerIcon.icon != null) {
-      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon.icon;
-    } else if (markerIcon.image != null) {
-      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Image(
-        image: markerIcon.image!,
-      );
-    }
+    _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
     await Future.delayed(Duration(milliseconds: 300), () async {
       await osmPlatform.customMarkerStaticPosition(
         _idMap,
@@ -416,8 +410,7 @@ class MobileOSMController extends IBaseOSMController {
     MarkerIcon? markerIcon,
     double? angle,
   }) async {
-    if (markerIcon != null &&
-        (markerIcon.icon != null || markerIcon.image != null || markerIcon.assetMarker != null)) {
+    if (markerIcon != null && (markerIcon.icon != null || markerIcon.assetMarker != null)) {
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
           ((angle == null) || (angle == 0.0))
               ? markerIcon
