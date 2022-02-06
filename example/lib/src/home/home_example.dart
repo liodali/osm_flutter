@@ -213,6 +213,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           Builder(builder: (ctx) {
             return GestureDetector(
               onLongPress: () => drawMultiRoads(),
+              onDoubleTap: () async{
+                await controller.clearAllRoads();
+              },
               child: IconButton(
                 onPressed: () => roadActionBt(ctx),
                 icon: Icon(Icons.map),

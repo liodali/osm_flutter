@@ -1330,10 +1330,12 @@ class FlutterOsmView(
     }
 
     private fun clearAllRoad(result: MethodChannel.Result) {
-        val cachedRoads = map!!.overlays.filterIsInstance<Polyline>()
-        if (cachedRoads.isNotEmpty()) {
-            map!!.overlays.removeAll(cachedRoads)
-        }
+        folderRoad.items.clear()
+
+//        val cachedRoads = map!!.overlays.filterIsInstance<Polyline>()
+//        if (cachedRoads.isNotEmpty()) {
+//            map!!.overlays.removeAll(cachedRoads)
+//        }
         map!!.invalidate()
         result.success(200)
     }
