@@ -214,12 +214,15 @@ class MapController extends BaseMapController {
     );
   }
   /// [drawMultipleRoad]
-  /// this method will call draw list of roads in sametime with making  api continually
-  /// to get list of GeoPoint for each configuration and you can define common configuration for all roads that share the same
+  ///
+  /// will draw list of roads in sametime with making api calls continually
+  /// to get list of GeoPoint for each configuration
+  /// and you can define common configuration for all roads that share the same
   /// color,width,roadType using [commonRoadOption]
   /// this method return list of [RoadInfo] with the same order for each config
   ///
   /// parameters :
+  ///
   ///  [configs]        : (List) list of road configuration
   ///
   /// [commonRoadOption]  : (MultiRoadOption) common road config that can apply to all roads that doesn't define any inner roadOption

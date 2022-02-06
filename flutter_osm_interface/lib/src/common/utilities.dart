@@ -55,9 +55,9 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
         roadConf.startPoint.toMap(),
         roadConf.destinationPoint.toMap(),
       ];
-      map["roadType"] = roadConf.roadOptionConfiguration?.roadType ?? generalOption.roadType;
-      map["roadColor"] = roadConf.roadOptionConfiguration?.roadColor ?? generalOption.roadColor;
-      map["roadWidth"] = roadConf.roadOptionConfiguration?.roadWidth ?? generalOption.roadWidth;
+      map["roadType"] = roadConf.roadOptionConfiguration?.roadType ?? commonRoadOption.roadType;
+      map["roadColor"] = roadConf.roadOptionConfiguration?.roadColor ?? commonRoadOption.roadColor;
+      map["roadWidth"] = roadConf.roadOptionConfiguration?.roadWidth ?? commonRoadOption.roadWidth;
       map["middlePoints"] = roadConf.intersectPoints.map((e) => e.toMap()).toList();
     }
     return listMap;
