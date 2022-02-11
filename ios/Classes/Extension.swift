@@ -220,7 +220,7 @@ extension UIColor {
 }
 
 extension TGMapView {
-    func getBounds(width: Double, height: Double) -> [String: Double] {
+    func getBounds(width: CGFloat, height: CGFloat) -> [String: Double] {
         let rect = self.bounds
         let size = CGPoint(x: width - (rect.minX - rect.maxX), y: height - (rect.minY - rect.maxY))
         if size == CGPoint(x: 0.0, y: 0.0) {
