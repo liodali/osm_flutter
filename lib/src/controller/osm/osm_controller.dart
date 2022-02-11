@@ -516,8 +516,15 @@ class MobileOSMController extends IBaseOSMController {
     Color roadColor,
     double width,
   ) async {
-    assert(path.first.latitude != path.last.latitude || path.first.longitude != path.last.longitude,
-        "you cannot make road with same geoPoint");
+
+    if (path.isEmpty) {
+      throw Exception("you cannot make road with empty list of  geoPoint");
+    }
+    if (path.first.latitude != path.last.latitude &&
+        path.first.longitude != path.last.longitude &&
+        path.length < 3) {
+      throw Exception("you cannot make line with same geoPoint");
+    }
     await osmPlatform.drawRoadManually(_idMap, path, roadColor, width);
   }
 
