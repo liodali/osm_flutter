@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 
 import '../types/types.dart';
 
@@ -16,6 +18,32 @@ extension ExtGeoPoint on GeoPoint {
       this.longitude,
       this.latitude,
     ];
+  }
+}
+
+extension ExtListGeoPoint on List<GeoPoint> {
+  Future<String> encodedToString() async {
+    final List<GeoPoint> listGeos = this;
+    return compute((List<GeoPoint> geoPoints) async {
+      final coordinates = geoPoints.map((e) => e.toListNum()).toList();
+      return encodePolyline(coordinates);
+    }, listGeos);
+  }
+}
+
+extension TransformEncodedPolyLineToListGeo on String {
+  Future<List<GeoPoint>> toListGeo() async {
+    final String polylineEncoded = this;
+    try {
+      return await compute((String encoded) {
+        final listPoints = decodePolyline(encoded);
+        return listPoints
+            .map((e) => GeoPoint(latitude: e.last.toDouble(), longitude: e.first.toDouble()))
+            .toList();
+      }, polylineEncoded);
+    } catch (e) {
+      return [];
+    }
   }
 }
 
