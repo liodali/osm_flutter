@@ -1,3 +1,7 @@
+## 0.30.1:
+* fix cast Double to CGFloat
+* add extension method to List of GeoPoint to convert to Encoded route String
+* add extension to convert Encoded route to List of GeoPoint
 ## 0.30.0: add draw multi roads and fix bug 
 * create new method `drawMutliRoad` to draw multiple road in the same time
 * create new method `clearAllRoads` to clear all roads in the map
