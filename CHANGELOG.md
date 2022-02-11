@@ -1,3 +1,5 @@
+## 0.30.1+1:
+* remove unnecessary assert in inner controller
 ## 0.30.1:
 * fix cast Double to CGFloat
 * add extension method to List of GeoPoint to convert to Encoded route String
