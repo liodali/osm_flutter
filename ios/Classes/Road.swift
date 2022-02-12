@@ -36,10 +36,6 @@ struct  RoadLeg {
     var distance:Double = 0
     /** in sec */
     public var  duration:Double = 0
-
-
-
-
 }
 struct RoadNode {
     var location:CLLocationCoordinate2D?
@@ -50,5 +46,10 @@ struct RoadNode {
     init(){
 
     }
-
+}
+struct RoadConfig {
+    var wayPoints : [GeoPoint]
+    var intersectPoints: [GeoPoint]?
+    var roadData:RoadData
+    var roadType:RoadType
 }

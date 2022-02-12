@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -89,6 +90,8 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
     ),
   }) {
     final List<Map<String, dynamic>> listMap = [];
+    final defaultWidth = 5.0;
+
     for (MultiRoadConfiguration roadConf in this) {
       final map = <String, dynamic>{};
       map["wayPoints"] = [
@@ -98,11 +101,21 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
       map["roadType"] = roadConf.roadOptionConfiguration?.roadType.toString() ??
           commonRoadOption.roadType.toString();
       final color = roadConf.roadOptionConfiguration?.roadColor ?? commonRoadOption.roadColor;
-      if (color != null) {
-        map.addAll(color.toMap("roadColor"));
+      if (Platform.isIOS) {
+        if (color != null) {
+          map.addAll(color.toHexMap("roadColor"));
+        }
+        map["roadWidth"] =
+            "${roadConf.roadOptionConfiguration?.roadWidth ?? commonRoadOption.roadWidth ?? defaultWidth}px";
+      } else {
+        if (color != null) {
+          map.addAll(color.toMap("roadColor"));
+        }
+        map["roadWidth"] = roadConf.roadOptionConfiguration?.roadWidth ??
+            commonRoadOption.roadWidth ??
+            defaultWidth;
       }
-      map["roadWidth"] =
-          roadConf.roadOptionConfiguration?.roadWidth ?? commonRoadOption.roadWidth ?? 5.0;
+
       map["middlePoints"] = roadConf.intersectPoints.map((e) => e.toMap()).toList();
       listMap.add(map);
     }

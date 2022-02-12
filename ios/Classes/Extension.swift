@@ -147,6 +147,15 @@ extension Array where Element == Int {
         UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
     }
 }
+extension  Array where Element == GeoPoint {
+    func parseToPath() -> [String] {
+
+        self.map { point -> String in
+            let wayP = String(format: "%F,%F", point["lon"]!, point["lat"]!)
+            return wayP
+        }
+    }
+}
 
 extension CLLocationCoordinate2D: Equatable {
     static public func ==(lhs: Self, rhs: Self) -> Bool {
@@ -183,7 +192,20 @@ extension UIImage {
         return newImage ?? self
     }
 }
-
+extension String {
+    var toRoadType: RoadType {
+        switch self {
+        case "car":
+            return RoadType.car
+        case "foot":
+            return RoadType.foot
+        case "bike":
+          return   RoadType.bike
+        default:
+           return  RoadType.car
+        }
+    }
+}
 extension CGFloat {
     var toRadians: CGFloat {
         self * .pi / 180
@@ -221,7 +243,7 @@ extension UIColor {
 
 extension TGMapView {
     func getBounds(width: CGFloat, height: CGFloat) -> [String: Double] {
-        let rect = self.bounds
+        let rect = bounds
         let size = CGPoint(x: width - (rect.minX - rect.maxX), y: height - (rect.minY - rect.maxY))
         if size == CGPoint(x: 0.0, y: 0.0) {
             return ["north": 0.0, "east": 0.0, "south": 0.0, "west": 0.0]
