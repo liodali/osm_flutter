@@ -550,9 +550,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
                 if (homeMarker != nil) {
                     homeMarker?.visible = false
-                    let index = cacheMarkers.firstIndex(of: homeMarker!)
-                    if (index != nil) {
-                        cacheMarkers.remove(at: index!)
+                    let isExist = mapView.markers.contains(homeMarker!)
+                    if (isExist ) {
+                        mapView.markerRemove(homeMarker!)
                     }
                     homeMarker = nil
                 }
