@@ -116,7 +116,7 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     }
 
     if (_osmWebFlutterState.widget.markerOption?.defaultMarker != null) {
-      await changeDefaultIconMarker(_osmWebFlutterState.defaultMarkerKey!);
+      await changeHomeIconMarker(_osmWebFlutterState.defaultMarkerKey!);
     }
     if (_osmWebFlutterState.widget.staticIconGlobalKeys.isNotEmpty) {
       _osmWebFlutterState.widget.staticIconGlobalKeys.forEach((id, key) {
@@ -170,7 +170,7 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     double? angle,
   }) async {
     if (markerIcon != null &&
-        (markerIcon.icon != null || markerIcon.image != null || markerIcon.assetMarker != null)) {
+        (markerIcon.icon != null  || markerIcon.assetMarker != null)) {
       _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value =
           ((angle == null) || (angle == 0.0))
               ? markerIcon
@@ -196,4 +196,6 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       base64Icon,
     );
   }
+
+
 }

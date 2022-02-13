@@ -27,7 +27,8 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future changeDefaultIconMarker(GlobalKey<State<StatefulWidget>>? key) async {
+  @protected
+  Future changeHomeIconMarker(GlobalKey<State<StatefulWidget>>? key) async {
     final base64 = (await capturePng(key!)).convertToString();
     await interop.setDefaultIcon(base64);
   }
@@ -196,6 +197,15 @@ mixin WebMixin {
     // TODO: implement drawRoad
     throw UnimplementedError();
   }
+  Future<void> clearAllRoads() {
+    // TODO: implement clearAllRoads
+    throw UnimplementedError();
+  }
+
+  Future<List<RoadInfo>> drawMultipleRoad(List<MultiRoadConfiguration> configs, {MultiRoadOption commonRoadOption = const MultiRoadOption.empty()}) {
+    // TODO: implement drawMultipleRoad
+    throw UnimplementedError();
+  }
 
   Future<void> configureZoomMap(
     double minZoomLevel,
@@ -257,4 +267,17 @@ mixin WebMixin {
       paddinInPixel,
     ));
   }
+
+
+
+  Future<void> setIconMarker(GeoPoint point, MarkerIcon markerIcon) {
+    // TODO: implement setIconMarker
+    throw UnimplementedError();
+  }
+
+  Future changeDefaultIconMarker(MarkerIcon homeMarker) {
+    // TODO: implement changeDefaultIconMarker
+    throw UnimplementedError();
+  }
+
 }

@@ -89,7 +89,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.0.0-alpha.0"
+    version: "0.50.0"
   flutter_osm_web:
     dependency: transitive
     description:
