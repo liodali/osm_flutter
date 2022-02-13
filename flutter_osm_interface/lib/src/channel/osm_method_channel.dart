@@ -10,13 +10,13 @@ import 'package:flutter/services.dart';
 import '../common/road_exception.dart';
 import '../types/geo_point.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
+import 'package:stream_transform/stream_transform.dart';
+
 import '../common/geo_point_exception.dart';
 import '../types/types.dart';
-import 'package:location/location.dart';
 import '../common/utilities.dart';
 import '../common/osm_event.dart';
 import '../osm_interface.dart';
-import 'package:stream_transform/stream_transform.dart';
 import 'dart:ui' as ui;
 
 class MethodChannelOSM extends MobileOSMPlatform {
@@ -29,11 +29,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Stream<EventOSM> _events(int mapId) =>
       _streamController.stream.where((event) => event.mapId == mapId) as Stream<EventOSM>;
 
-  late Location locationService;
-
   @override
   Future<void> init(int idOSMMap) async {
-    locationService = Location();
     if (!_channels.containsKey(idOSMMap)) {
       if (_streamController.isClosed) {
         _streamController = StreamController<EventOSM>.broadcast();
@@ -650,6 +647,41 @@ class MethodChannelOSM extends MobileOSMPlatform {
       "zoomToRegion",
       args,
     );
+  }
+
+  @override
+  Future<void> setIconMarker(
+    int idOSM,
+    GeoPoint point,
+    GlobalKey<State<StatefulWidget>> globalKeyIcon,
+  ) async {
+    Map<String, dynamic> args = {"point": point.toMap()};
+    var icon = await _capturePng(globalKeyIcon);
+    args["icon"] = Platform.isIOS ? icon.convertToString() : icon;
+    try {
+      await _channels[idOSM]?.invokeMethod("update#Marker", args);
+    } on PlatformException catch (e) {
+      throw Exception("marker not exist");
+    }
+  }
+
+  @override
+  Future<void> clearAllRoads(
+    int idOSM,
+  ) async {
+    await _channels[idOSM]?.invokeMethod("clear#roads");
+  }
+
+  @override
+  Future<List<RoadInfo>> drawMultipleRoad(
+    int idOSM,
+    List<MultiRoadConfiguration> configs, {
+    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
+  }) async {
+    final args = configs.toListMap(commonRoadOption: commonRoadOption);
+    final List result = (await _channels[idOSM]?.invokeListMethod("draw#multi#road", args))!;
+    final List<Map<String, dynamic>> mapRoadInfo = result.map((e) => Map<String, dynamic>.from(e)).toList();
+    return mapRoadInfo.map((e) => RoadInfo.fromMap(e)).toList();
   }
 }
 

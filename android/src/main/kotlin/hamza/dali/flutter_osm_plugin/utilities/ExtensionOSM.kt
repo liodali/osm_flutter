@@ -1,6 +1,8 @@
 package hamza.dali.flutter_osm_plugin.utilities
 
-import hamza.dali.flutter_osm_plugin.Constants
+import android.content.Intent
+import android.provider.Settings
+import hamza.dali.flutter_osm_plugin.FlutterOsmView
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 
@@ -43,4 +45,9 @@ fun BoundingBox.toHashMap(): HashMap<String, Double> {
         this["west"] = lonWest
     }
 
+}
+
+fun FlutterOsmView.openSettingLocation(requestCode:Int){
+    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+    activity?.startActivityForResult(intent, requestCode)
 }

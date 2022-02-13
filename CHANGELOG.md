@@ -1,3 +1,35 @@
+## 0.30.1+1:
+* remove unnecessary assert in inner controller
+## 0.30.1:
+* fix cast Double to CGFloat
+* add extension method to List of GeoPoint to convert to Encoded route String
+* add extension to convert Encoded route to List of GeoPoint
+## 0.30.0: add draw multi roads and fix bug 
+* create new method `drawMutliRoad` to draw multiple road in the same time
+* create new method `clearAllRoads` to clear all roads in the map
+* fix bug when user location marker hidden by polylines
+* remove deprecated attribute `image` from `MarkerIcon`, suppose to use `assetMarker`
+## 0.29.1+3:
+* fix docs
+## 0.29.1+2:
+* fix check permission in iOS for CustomPickerLocation
+* remove unnecessary check when isPicker is true  in initialisation of the map
+## 0.29.1+1:
+* fix check permission when initialize map in iOS
+## 0.29.1:
+* create `CustomPickerLocationConfig` to set osmflutter widget in pickerLocationWidget
+* fix readme
+## 0.29.0:
+* create `changeIconMarker` to change icon of existing marker
+* remove location package and replaced with permission_handler
+* implement location permission for iOS manually
+* replace shw diolog ( use google service  ) to open gps in android by redirect to setting to set gps on
+## 0.28.2:
+* fix enable tracking when `trackMyPosition` is true
+* add check permision when `initWithUserLocation` in `MapController` is true
+## 0.28.1:
+* fix map not visible when build release apk
+* fix name of method in androidlifecyceleMixin
 ## 0.28.0+1:
 * fix version osm_interface
 ## 0.28.0:

@@ -20,7 +20,9 @@ abstract class IBaseOSMController {
   /// [p] : (GeoPoint) position that will be added to map
   Future<void> changeLocation(GeoPoint p);
 
-  /// create marker int specific position without change map camera
+  /// addMarker
+  /// create marker int specific position without
+  /// change map camera
   ///
   /// [p] : (GeoPoint) desired location
   ///
@@ -31,14 +33,25 @@ abstract class IBaseOSMController {
     double? angle,
   });
 
-  ///remove marker from map of position
+  /// removeMarker
+  /// remove marker from map of position
+  ///
   /// [p] : geoPoint
   Future<void> removeMarker(GeoPoint p);
 
-  ///change Icon Marker
+  /// setIconMarker
+  /// this method change marker icon , marker should be already exist in the map
+  /// or it will throw exception that marker not exist
+  ///
+  /// [point]      : (geoPoint) geoPoint that want to change Icon
+  ///
+  /// [markerIcon] : (MarkerIcon) the new icon marker that will replace old icon
+  Future<void> setIconMarker(GeoPoint point, MarkerIcon markerIcon);
+
+  /// change Home Icon Marker
   /// we need to global key to recuperate widget from tree element
-  /// [key] : (GlobalKey) key of widget that represent the new marker
-  Future changeDefaultIconMarker(GlobalKey? key);
+  /// [homeMarker] : (MarkerIcon) key of widget that represent the new marker
+  Future changeDefaultIconMarker(MarkerIcon homeMarker);
 
   ///change  Marker of specific static points
   /// we need to global key to recuperate widget from tree element
@@ -126,7 +139,7 @@ abstract class IBaseOSMController {
     String imageURL = "",
   });
 
-  /// drawRoad
+  /// [drawRoad]
   /// this method will call ORSM api to get list of geopoint and
   /// that will be transformed into polyline to be drawn in the map
   ///
@@ -148,15 +161,42 @@ abstract class IBaseOSMController {
     RoadOption? roadOption,
   });
 
-  /// draw road
-  ///  [path] : (list) path of the road
+  /// [drawRoadManually]
+  /// this method allow to draw road manually without using any internal api
+  /// the path should be provided from any external api like your own OSRM server or google map api
+  /// and you can change color of the road and width also
+  ///  [path]  : (list) list of GeoPoint that represent the path of the road
+  ///
+  ///  [color] : (Color) color of the road
+  ///
+  ///  [width] : (int) width of the road
   Future<void> drawRoadManually(
     List<GeoPoint> path,
     Color roadColor,
     double width,
   );
 
-  ///delete last road draw in the map
+  /// [drawMultipleRoad]
+  /// this method will call draw list of roads in sametime with making  api continually
+  /// to get list of GeoPoint for each configuration and you can define common configuration for all roads that share the same
+  /// color,width,roadType using [commonRoadOption]
+  /// this method return list of [RoadInfo] with the same order for each config
+  ///
+  ///  parameters :
+  ///  [configs]        : (List) list of road configuration
+  ///
+  /// [commonRoadOption]  : (MultiRoadOption) common road config that can apply to all roads that doesn't define any inner roadOption
+  Future<List<RoadInfo>> drawMultipleRoad(
+    List<MultiRoadConfiguration> configs, {
+    MultiRoadOption commonRoadOption,
+  });
+
+  /// [clearAllRoads]
+  /// this method will delete all road drawn in the map
+  Future<void> clearAllRoads();
+
+  /// [removeLastRoad]
+  /// this method will delete last road draw in the map
   Future<void> removeLastRoad();
 
   /// draw circle shape in the map

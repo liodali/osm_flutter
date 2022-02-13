@@ -9,15 +9,14 @@ class CustomController extends MapController {
     bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
     BoundingBox? areaLimit = const BoundingBox.world(),
-  })
-      : assert(
-  initMapWithUserPosition || initPosition != null,
-  ),
+  })  : assert(
+          initMapWithUserPosition || initPosition != null,
+        ),
         super(
-        initMapWithUserPosition: initMapWithUserPosition,
-        initPosition: initPosition,
-        areaLimit: areaLimit,
-      );
+          initMapWithUserPosition: initMapWithUserPosition,
+          initPosition: initPosition,
+          areaLimit: areaLimit,
+        );
 
   @override
   void init() {
@@ -94,7 +93,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             //   color: Colors.red,
             //   size: 32,
             // ),
-            image: AssetImage("asset/pin.png"),
+            assetMarker: AssetMarker(
+              image: AssetImage("asset/pin.png"),
+            ),
             // assetMarker: AssetMarker(
             //   image: AssetImage("asset/pin.png"),
             //   //scaleAssetImage: 2,
@@ -114,7 +115,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   }
 
   Future<void> mapIsInitialized() async {
-    //await controller.setZoom(zoomLevel: 12);
+    await controller.setZoom(zoomLevel: 12);
     // await controller.setMarkerOfStaticPoint(
     //   id: "line 1",
     //   markerIcon: MarkerIcon(
@@ -153,6 +154,16 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     );
     final bounds = await controller.bounds;
     print(bounds.toString());
+    await controller.addMarker(
+      GeoPoint(latitude: 47.442475, longitude: 8.4680389),
+      markerIcon: MarkerIcon(
+        icon: Icon(
+          Icons.car_repair,
+          color: Colors.black45,
+          size: 48,
+        ),
+      ),
+    );
   }
 
   @override
@@ -202,9 +213,15 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             },
           ),
           Builder(builder: (ctx) {
-            return IconButton(
-              onPressed: () => roadActionBt(ctx),
-              icon: Icon(Icons.map),
+            return GestureDetector(
+              onLongPress: () => drawMultiRoads(),
+              onDoubleTap: () async {
+                await controller.clearAllRoads();
+              },
+              child: IconButton(
+                onPressed: () => roadActionBt(ctx),
+                icon: Icon(Icons.map),
+              ),
             );
           }),
           IconButton(
@@ -236,18 +253,27 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           children: [
             OSMFlutter(
               controller: controller,
+              trackMyPosition: false,
               androidHotReloadSupport: true,
               mapIsLoading: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [CircularProgressIndicator(), Text("Map is Loading..")],
+                  children: [
+                    CircularProgressIndicator(),
+                    Text("Map is Loading.."),
+                  ],
                 ),
               ),
+              onMapIsReady: (isReady) {
+                if (isReady) {
+                  print("map is ready");
+                }
+              },
               initZoom: 8,
-              minZoomLevel: 8,
-              maxZoomLevel: 14,
+              minZoomLevel: 3,
+              maxZoomLevel: 18,
               stepZoom: 1.0,
               userLocationMarker: UserLocationMaker(
                 personMarker: MarkerIcon(
@@ -271,6 +297,17 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 print(myLocation);
               },
               onGeoPointClicked: (geoPoint) async {
+                if (geoPoint == GeoPoint(latitude: 47.442475, longitude: 8.4680389)) {
+                  await controller.setMarkerIcon(
+                      geoPoint,
+                      MarkerIcon(
+                        icon: Icon(
+                          Icons.bus_alert,
+                          color: Colors.blue,
+                          size: 24,
+                        ),
+                      ));
+                }
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -452,18 +489,18 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       ///selection geoPoint
       GeoPoint point = await controller.selectPosition(
           icon: MarkerIcon(
-            icon: Icon(
-              Icons.person_pin_circle,
-              color: Colors.amber,
-              size: 100,
-            ),
-          ));
+        icon: Icon(
+          Icons.person_pin_circle,
+          color: Colors.amber,
+          size: 100,
+        ),
+      ));
       GeoPoint point2 = await controller.selectPosition();
       showFab.value = false;
       ValueNotifier<RoadType> notifierRoadType = ValueNotifier(RoadType.car);
 
       final bottomPersistant = scaffoldKey.currentState!.showBottomSheet(
-            (ctx) {
+        (ctx) {
           return RoadTypeChoiceWidget(
             setValueCallback: (roadType) {
               notifierRoadType.value = roadType;
@@ -480,11 +517,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           roadType: notifierRoadType.value,
           //interestPoints: [pointM1, pointM2],
           roadOption: RoadOption(
-              roadWidth: 10,
-              roadColor: Colors.blue,
-              showMarkerOfPOI: false,
-              zoomInto: true
-          ),
+              roadWidth: 10, roadColor: Colors.blue, showMarkerOfPOI: false, zoomInto: true),
         );
         print("duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         print("distance:${roadInformation.distance}Km");
@@ -510,6 +543,56 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   Future<void> mapRestored() async {
     super.mapRestored();
     print("log map restored");
+  }
+
+  void drawMultiRoads() async {
+    /*
+      8.4638911095,47.4834379430|8.5046595453,47.4046149269
+      8.5244329867,47.4814981476|8.4129691189,47.3982152237
+      8.4371175094,47.4519015578|8.5147623089,47.4321999727
+     */
+
+    final configs = [
+      MultiRoadConfiguration(
+        startPoint: GeoPoint(
+          latitude: 47.4834379430,
+          longitude: 8.4638911095,
+        ),
+        destinationPoint: GeoPoint(
+          latitude: 47.4046149269,
+          longitude: 8.5046595453,
+        ),
+      ),
+      MultiRoadConfiguration(
+          startPoint: GeoPoint(
+            latitude: 47.4814981476,
+            longitude: 8.5244329867,
+          ),
+          destinationPoint: GeoPoint(
+            latitude: 47.3982152237,
+            longitude: 8.4129691189,
+          ),
+          roadOptionConfiguration: MultiRoadOption(
+            roadColor: Colors.orange,
+          )),
+      MultiRoadConfiguration(
+        startPoint: GeoPoint(
+          latitude: 47.4519015578,
+          longitude: 8.4371175094,
+        ),
+        destinationPoint: GeoPoint(
+          latitude: 47.4321999727,
+          longitude: 8.5147623089,
+        ),
+      ),
+    ];
+    final listRoadInfo = await controller.drawMultipleRoad(
+      configs,
+      commonRoadOption: MultiRoadOption(
+        roadColor: Colors.red,
+      ),
+    );
+    print(listRoadInfo);
   }
 }
 

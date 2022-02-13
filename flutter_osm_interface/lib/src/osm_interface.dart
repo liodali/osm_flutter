@@ -107,6 +107,12 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     GlobalKey? globalKeyIcon,
   });
 
+  Future<void> setIconMarker(
+    int idOSM,
+    GeoPoint point,
+    GlobalKey globalKeyIcon,
+  );
+
   Future<void> removePosition(
     int idOSM,
     GeoPoint p,
@@ -124,6 +130,16 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     List<GeoPoint>? interestPoints,
     RoadOption roadOption,
   });
+
+  Future<List<RoadInfo>> drawMultipleRoad(
+    int idOSM,
+    List<MultiRoadConfiguration> configs, {
+    MultiRoadOption commonRoadOption,
+  });
+
+  Future<void> clearAllRoads(
+    int idOSM,
+  );
 
   Future<void> drawCircle(
     int idOSM,
@@ -196,8 +212,8 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   );
 
   Future<void> zoomToBoundingBox(
-      int idOSM,
-      BoundingBox box, {
+    int idOSM,
+    BoundingBox box, {
     int paddinInPixel = 0,
   });
 

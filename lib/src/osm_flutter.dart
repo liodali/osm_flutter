@@ -8,8 +8,8 @@ import 'controller/map_controller.dart';
 import 'interface_osm/base_osm_platform.dart';
 import 'widgets/copyright_osm_widget.dart';
 
-typedef OnGeoPointClicked = void Function(GeoPoint);
-typedef OnLocationChanged = void Function(GeoPoint);
+// typedef OnGeoPointClicked = void Function(GeoPoint);
+// typedef OnLocationChanged = void Function(GeoPoint);
 
 /// Principal widget to show OSMMap using osm api
 /// you can track you current location,show static points like position of your stores

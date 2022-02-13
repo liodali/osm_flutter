@@ -1,8 +1,8 @@
-package hamza.dali.flutter_osm_plugin
+package hamza.dali.flutter_osm_plugin.models
 
-import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
+import hamza.dali.flutter_osm_plugin.utilities.Constants
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Overlay

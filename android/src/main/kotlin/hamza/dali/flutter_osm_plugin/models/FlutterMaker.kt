@@ -1,6 +1,5 @@
-package hamza.dali.flutter_osm_plugin
+package hamza.dali.flutter_osm_plugin.models
 
-import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -12,6 +11,8 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
+import hamza.dali.flutter_osm_plugin.R
+import kotlinx.coroutines.CoroutineScope
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -19,9 +20,10 @@ import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
 
 typealias LongClickHandler = (marker: Marker) -> Boolean
 
-open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerClickListener,
-        (Marker) -> Boolean {
-    protected lateinit var context: Context
+open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope?) :
+    Marker(mapView),
+    Marker.OnMarkerClickListener {
+    private lateinit var context: Context
     private var canvas: Canvas? = null
     var longPress: LongClickHandler? = null
         set(longPress) {
@@ -32,47 +34,61 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
             if (listener != null) field = listener
         }
 
-    private lateinit var mapView: MapView
     private var infoWindow: View? = null
         set(infoWindow) {
             setInfoWindow(FlutterInfoWindow(mapView, infoWindow!!, this.mPosition))
             field = infoWindow
         }
 
-    constructor(context: Context, mapView: MapView) : this(mapView = mapView) {
+    constructor(
+        context: Context,
+        mapView: MapView,
+        scope: CoroutineScope? = null
+    ) : this(mapView = mapView, scope) {
         this.context = context
-        this.mapView = mapView
         this.setOnMarkerClickListener { marker, map ->
             onMarkerClick(marker, map)
         }
-
+        initInfoWindow()
     }
 
     constructor(
         context: Context,
         mapView: MapView,
-        point: GeoPoint
-    ) : this(mapView = mapView) {
+        point: GeoPoint,
+        scope: CoroutineScope? = null
+    ) : this(mapView = mapView, scope = scope) {
         this.context = context
-        this.mapView = mapView
         this.mPosition = point
         this.setOnMarkerClickListener { marker, map ->
             onMarkerClick(marker, map)
         }
+        initInfoWindow()
+
+    }
+
+    constructor(
+        mapView: MapView,
+        infoWindow: View,
+        scope: CoroutineScope? = null
+    ) : this(
+        mapView,
+        scope
+    ) {
+        this.context = mapView.context
+        this.infoWindow = infoWindow
+        initInfoWindow()
+    }
+
+    private fun initInfoWindow() {
         createWindowInfoView()
-        setInfoWindow(
-            FlutterInfoWindow(
-                infoView = infoWindow!!,
-                mapView = mapView,
-                point = mPosition
-            )
+        mInfoWindow = FlutterInfoWindow(
+            infoView = infoWindow!!,
+            mapView = mapView,
+            point = mPosition
         )
     }
 
-    constructor(mapView: MapView, infoWindow: View) : this(mapView) {
-        this.mapView = mapView
-        this.infoWindow = infoWindow
-    }
 
     override fun onMarkerClick(marker: Marker?, mapView: MapView?): Boolean {
         showInfoWindow()
@@ -85,8 +101,8 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
 //        return super.onLongPress(event, mapView)
 //    }
 
-    fun setIconMaker(color: Int?, bitmap: Bitmap?,angle: Double = 0.0) {
-        getDefaultIconDrawable(color, bitmap,angle).also {
+    fun setIconMaker(color: Int?, bitmap: Bitmap?, angle: Double = 0.0) {
+        getDefaultIconDrawable(color, bitmap, angle).also {
             icon = it
         }
     }
@@ -96,7 +112,8 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
         setInfoWindow(
             FlutterInfoWindow(
                 infoView = infoWindow
-                    ?: createWindowInfoView(), mapView = mapView, point = this.mPosition
+                    ?: createWindowInfoView(), mapView = mapView, point = this.mPosition,
+                scope = scope
             )
         )
     }
@@ -153,9 +170,5 @@ open class FlutterMarker(mapView: MapView) : Marker(mapView), Marker.OnMarkerCli
 
     override fun showInfoWindow() {
         super.showInfoWindow()
-    }
-
-    override fun invoke(p1: Marker): Boolean {
-        TODO("Not yet implemented")
     }
 }

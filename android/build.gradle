@@ -71,8 +71,8 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
     implementation 'org.osmdroid:osmdroid-android:6.1.11'
-    implementation 'com.github.MKergall:osmbonuspack:6.7.0'
+    implementation 'com.github.MKergall:osmbonuspack:6.8.0'
     implementation 'com.google.android.material:material:1.4.0'
-    implementation 'com.amitshekhar.android:android-networking:1.0.2'
+    implementation 'com.github.amitshekhariitbhu:Fast-Android-Networking:1.0.2'
 }
 

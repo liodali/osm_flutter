@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.28.0%2B1-orange) 
+![pub](https://img.shields.io/badge/pub-v0.30.1%2B1-orange) 
 
 
 ## Platform Support
@@ -21,6 +21,7 @@
 * zoom into regon (Android/iOS)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
 * draw Road manually (Android/iOS)
+* draw multiple Roads  (Android)
 * ClickListener on Marker (Android/iOS)
 * ClickListener on Map (Android/iOS)
 * calculate distance between 2 points 
@@ -40,7 +41,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.28.0+1
+      flutter_osm_plugin: ^0.30.1+1
 
 
 ### Migration to `0.16.0` (Android Only)
@@ -81,7 +82,7 @@ Add the following to your `pubspec.yaml` file:
                 ),
             ),
         ),
-        road: Road(
+         roadConfiguration: RoadConfiguration(
                 startIcon: MarkerIcon(
                   icon: Icon(
                     Icons.person,
@@ -299,12 +300,23 @@ controller.listenerRegionIsChanging.addListener(() {
 ```
 
 <b>15) Create Marker Programmatically </b>
+
 > you can change marker icon by using attribute `markerIcon`
+
 ```dart
 await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
 ```
+<b> 15.1) Change Icon Marker  </b>
 
-<b> 15.1) Remove marker </b>
+> You can change marker icon by using attribute `markerIcon` of existing Marker
+> The GeoPoint/Marker should be exist
+
+```dart
+await controller.setMarkerIcon(GeoPoint,MarkerIcon);
+```
+
+
+<b> 15.2) Remove marker </b>
 
 ```dart
  await controller.removeMarker(geoPoint);
@@ -364,7 +376,60 @@ await controller.drawRoadManually(
  await controller.removeLastRoad();
 ```
 
-<b>18) Change static GeoPoint position </b>
+<b>18) draw multiple roads </b>
+
+```dart
+final configs = [
+      MultiRoadConfiguration(
+        startPoint: GeoPoint(
+          latitude: 47.4834379430,
+          longitude: 8.4638911095,
+        ),
+        destinationPoint: GeoPoint(
+          latitude: 47.4046149269,
+          longitude: 8.5046595453,
+        ),
+      ),
+      MultiRoadConfiguration(
+          startPoint: GeoPoint(
+            latitude: 47.4814981476,
+            longitude: 8.5244329867,
+          ),
+          destinationPoint: GeoPoint(
+            latitude: 47.3982152237,
+            longitude: 8.4129691189,
+          ),
+          roadOptionConfiguration: MultiRoadOption(
+            roadColor: Colors.orange,
+          )),
+      MultiRoadConfiguration(
+        startPoint: GeoPoint(
+          latitude: 47.4519015578,
+          longitude: 8.4371175094,
+        ),
+        destinationPoint: GeoPoint(
+          latitude: 47.4321999727,
+          longitude: 8.5147623089,
+        ),
+      ),
+    ];
+    await controller.drawMultipleRoad(
+      configs,
+      commonRoadOption: MultiRoadOption(
+        roadColor: Colors.red,
+      ),
+    );
+
+```
+
+<b>19) delete all roads </b>
+
+```dart 
+ await controller.clearAllRoads();
+```
+
+
+<b>20) Change static GeoPoint position </b>
 
 > add new staticPoints with empty list of geoPoints (notice: if you add static point without marker,they will get default maker used by plugin)
 
@@ -376,7 +441,7 @@ await controller.drawRoadManually(
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
-<b>19) Change/Add Marker old/new static GeoPoint position </b>
+<b>21) Change/Add Marker old/new static GeoPoint position </b>
 
 > add marker of new static point
 
@@ -386,13 +451,13 @@ await controller.drawRoadManually(
  await controller.setMarkerOfStaticPoint(String id,MarkerIcon markerIcon );
 ```
 
-<b>20) change orientation of the map</b>
+<b>22) change orientation of the map</b>
 
 ```dart
  await controller.rotateMapCamera(degree);
 ```
 
-<b>21) Draw Shape in the map </b>
+<b>23) Draw Shape in the map </b>
 
 * Circle
 ```dart
@@ -489,7 +554,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `initZoom`                    | set init zoom level in the map (default 10)       |
 | `maxZoomLevel`                | set maximum zoom level in the map  (2 <= x <= 19)       |
 | `minZoomLevel`                | set minimum zoom level in the map  (2 <= x <= 19 )       |
-| `road`                        | set color and start/end/middle markers in road |
+| `roadConfiguration`           | (RoadConfiguration) set color and start/end/middle markers in road |
 | `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
 | `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |

@@ -64,11 +64,23 @@ class MapController extends BaseMapController {
     osmBaseController.removeMarker(p);
   }
 
-  ///change Icon Marker
-  /// we need to global key to recuperate widget from tree element
-  /// [key] : (GlobalKey) key of widget that represent the new marker
-  Future changeIconMarker(GlobalKey key) async {
-    await osmBaseController.changeDefaultIconMarker(key);
+  /// changeIconMarker
+  /// this method allow to change Home Icon Marker
+  ///
+  /// [icon] : (MarkerIcon) widget that represent the new home marker
+  Future changeIconMarker(MarkerIcon icon) async {
+    await osmBaseController.changeDefaultIconMarker(icon);
+  }
+
+  /// setMarkerIcon
+  /// this method allow to change Icon Marker of specific GeoPoint
+  /// thr GeoPoint should be exist,or nothing will happen
+  ///
+  /// [point] : (GeoPoint) geopoint that you want to change icon
+  ///
+  /// [icon] : (MarkerIcon) widget that represent the new home marker
+  Future setMarkerIcon(GeoPoint point, MarkerIcon icon) async {
+    await osmBaseController.setIconMarker(point, icon);
   }
 
   /*///change advanced picker Icon Marker
@@ -204,11 +216,41 @@ class MapController extends BaseMapController {
       roadOption: roadOption,
     );
   }
+  /// [drawMultipleRoad]
+  ///
+  /// will draw list of roads in sametime with making api calls continually
+  /// to get list of GeoPoint for each configuration
+  /// and you can define common configuration for all roads that share the same
+  /// color,width,roadType using [commonRoadOption]
+  /// this method return list of [RoadInfo] with the same order for each config
+  ///
+  /// parameters :
+  ///
+  ///  [configs]        : (List) list of road configuration
+  ///
+  /// [commonRoadOption]  : (MultiRoadOption) common road config that can apply to all roads that doesn't define any inner roadOption
+  Future<List<RoadInfo>> drawMultipleRoad(
+    List<MultiRoadConfiguration> configs, {
+    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
+  }) async {
+    return await osmBaseController.drawMultipleRoad(
+      configs,
+      commonRoadOption: commonRoadOption,
+    );
+  }
 
+  /// [removeLastRoad]
   ///delete last road draw in the map
   Future<void> removeLastRoad() async {
     await osmBaseController.removeLastRoad();
   }
+
+  /// [clearAllRoads]
+  ///this method will delete all roads drawn in the map
+  Future<void> clearAllRoads() async {
+    await osmBaseController.clearAllRoads();
+  }
+
 
   /// draw circle into map
   Future<void> drawCircle(CircleOSM circleOSM) async {

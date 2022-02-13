@@ -23,6 +23,7 @@ class RoadConfiguration {
     this.endIcon,
   });
 }
+
 /// [RoadOption]
 ///
 /// this class used to configure road in runtime by change default color
@@ -35,7 +36,7 @@ class RoadOption {
   final bool showMarkerOfPOI;
   final bool zoomInto;
 
-  RoadOption({
+  const RoadOption({
     this.roadColor,
     this.roadWidth,
     this.showMarkerOfPOI = false,
@@ -47,6 +48,51 @@ class RoadOption {
         this.roadColor = null,
         this.zoomInto = false,
         this.showMarkerOfPOI = false;
+}
+
+/// [MultiRoadOption]
+///
+/// this class used to configure road in Multiple Drawing Road by change default color [roadColor]
+/// that can be null or width [roadWidth] that also can be null for that specific road
+///
+class MultiRoadOption extends RoadOption {
+  final RoadType roadType;
+
+  const MultiRoadOption({
+    Color? roadColor,
+    int? roadWidth,
+    this.roadType = RoadType.car,
+  }) : super(
+          roadColor: roadColor,
+          roadWidth: roadWidth,
+          zoomInto: false,
+          showMarkerOfPOI: false,
+        );
+
+  const MultiRoadOption.empty()
+      : this.roadType = RoadType.car,
+        super(roadColor: Colors.green, zoomInto: false, showMarkerOfPOI: false);
+}
+
+/// [MultiRoadConfiguration]
+///
+/// this class used to set configuration to draw  multiple roads in the sametime
+/// it required to set [startPoint] and [destinationPoint]
+/// and setting [intersectPoints] is optional and the same for [roadOptionConfiguration]
+/// that responsible to configure color and width of the road
+///
+class MultiRoadConfiguration {
+  final GeoPoint startPoint;
+  final GeoPoint destinationPoint;
+  final List<GeoPoint> intersectPoints;
+  final MultiRoadOption? roadOptionConfiguration;
+
+  const MultiRoadConfiguration({
+    required this.startPoint,
+    required this.destinationPoint,
+    this.intersectPoints = const [],
+    this.roadOptionConfiguration,
+  });
 }
 
 /// RoadInfo
@@ -91,4 +137,9 @@ class RoadInfo {
 
   @override
   int get hashCode => distance.hashCode ^ duration.hashCode ^ route.hashCode;
+
+  @override
+  String toString() {
+    return "distance:$distance,duration:$duration";
+  }
 }
