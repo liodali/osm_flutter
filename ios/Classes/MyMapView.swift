@@ -520,8 +520,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     public func startAdvancedPicker(call: FlutterMethodCall, result: FlutterResult) {
         if (!isAdvancedPicker) {
             isAdvancedPicker = true
-            cacheMarkers += mapView.markers
-            mapView.markerRemoveAll()
+            // cacheMarkers.append(contentsOf: mapView.markers)
+            // mapView.markerRemoveAll()
+            for marker in mapView.markers {
+                marker.visible = false
+            }
             if (canTrackUserLocation) {
                 deactivateTrackMe()
             }
@@ -567,7 +570,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             /// remove picker from parent view
             pickerMarker?.removeFromSuperview()
             //pickerMarker = nil
-            cacheMarkers.forEach { marker in
+            for marker in mapView.markers {
+                marker.visible = true
+            }
+            /* cacheMarkers.forEach { marker in
                 let m = mapView.markerAdd()
                 m.stylingString = marker.stylingString
                 if (marker.stylingString.contains("points")) {
@@ -579,7 +585,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     m.polyline = marker.polyline
                 }
                 m.visible = marker.visible
-            }
+            } */
             mapView.gestureDelegate = self
             cacheMarkers = [TGMarker]()
             isAdvancedPicker = false
@@ -843,7 +849,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
-        if (!dictClusterAnnotation.isEmpty) {
+        if (!dictClusterAnnotation.isEmpty && !isAdvancedPicker) {
             for gStaticMarker in dictClusterAnnotation {
                 for (i, staticMarker) in gStaticMarker.value.enumerated() {
                     let m = staticMarker
