@@ -20,6 +20,10 @@ async function addMarker(point,icon) {
    var iframe = document.getElementById("frame_map");
    return  await iframe.contentWindow.addMarker(point,icon);
 }
+async function modifyMarker(point,icon) {
+   var iframe = document.getElementById("frame_map");
+   return  await iframe.contentWindow.modifyMarker(point,icon);
+}
 
 async function initMapLocation(point) {
    var iframe = document.getElementById("frame_map");

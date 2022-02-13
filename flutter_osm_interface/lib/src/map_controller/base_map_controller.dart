@@ -16,7 +16,6 @@ abstract class BaseMapController extends IBaseMapController {
 
   late Timer? _timer;
 
-  OSMMixinObserver? _mixinObserver;
 
   IBaseOSMController get osmBaseController => _osmBaseController;
 
@@ -55,9 +54,7 @@ abstract class BaseMapController extends IBaseMapController {
     });
   }
 
-  void addObserver(OSMMixinObserver osmMixinObserver) {
-    _mixinObserver = osmMixinObserver;
-  }
+
 }
 
 extension OSMControllerOfBaseMapController on BaseMapController {
@@ -66,10 +63,4 @@ extension OSMControllerOfBaseMapController on BaseMapController {
   }
 }
 
-extension PrivateBaseMapController on BaseMapController {
-  OSMMixinObserver? get osMMixin => _mixinObserver;
 
-  void removeObserver() {
-    _mixinObserver = null;
-  }
-}

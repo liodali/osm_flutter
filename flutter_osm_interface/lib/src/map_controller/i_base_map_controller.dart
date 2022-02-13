@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../mixin/osm_mixin.dart';
 import '../types/types.dart';
 import 'base_map_controller.dart';
 
@@ -13,6 +14,7 @@ abstract class IBaseMapController {
   final bool initMapWithUserPosition;
   final GeoPoint? initPosition;
   final BoundingBox? areaLimit;
+  OSMMixinObserver? _mixinObserver;
 
   late ValueNotifier<GeoPoint?> _listenerMapLongTapping = ValueNotifier(null);
   late ValueNotifier<GeoPoint?> _listenerMapSingleTapping = ValueNotifier(null);
@@ -45,6 +47,9 @@ abstract class IBaseMapController {
     // _listenerMapIsReady.dispose();
     // _listenerRegionIsChanging.dispose();
   }
+  void addObserver(OSMMixinObserver osmMixinObserver) {
+    _mixinObserver = osmMixinObserver;
+  }
 }
 
 extension setLiteners on IBaseMapController {
@@ -62,5 +67,13 @@ extension setLiteners on IBaseMapController {
 
   void setValueListenerRegionIsChanging(Region region) {
     _listenerRegionIsChanging.value = region;
+  }
+}
+
+extension PrivateBaseMapController on IBaseMapController {
+  OSMMixinObserver? get osMMixin => _mixinObserver;
+
+  void removeObserver() {
+    _mixinObserver = null;
   }
 }

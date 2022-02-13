@@ -268,16 +268,4 @@ mixin WebMixin {
     ));
   }
 
-
-
-  Future<void> setIconMarker(GeoPoint point, MarkerIcon markerIcon) {
-    // TODO: implement setIconMarker
-    throw UnimplementedError();
-  }
-
-  Future changeDefaultIconMarker(MarkerIcon homeMarker) {
-    // TODO: implement changeDefaultIconMarker
-    throw UnimplementedError();
-  }
-
 }

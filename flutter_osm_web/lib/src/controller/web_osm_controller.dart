@@ -22,6 +22,7 @@ class WebOsmController with WebMixin implements IBaseOSMController {
 
   late MethodChannel? channel;
   late OsmWebWidgetState _osmWebFlutterState;
+  AndroidLifecycleMixin? _androidOSMLifecycle;
 
   FlutterOsmPluginWeb get webPlatform => OSMPlatform.instance as FlutterOsmPluginWeb;
 
@@ -75,6 +76,12 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     webPlatform.mapsController.remove(this);
   }
 
+
+
+  void addObserver(AndroidLifecycleMixin androidOSMLifecycle) {
+    _androidOSMLifecycle = androidOSMLifecycle;
+  }
+
   @override
   Future<void> initPositionMap({
     GeoPoint? initPosition,
@@ -94,6 +101,9 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       _osmWebFlutterState.widget.controller.setValueListenerMapIsReady(event.value);
       if (_osmWebFlutterState.widget.onMapIsReady != null) {
         _osmWebFlutterState.widget.onMapIsReady!(event.value);
+      }
+      if (_androidOSMLifecycle != null) {
+        _androidOSMLifecycle!.mapIsReady(event.value);
       }
     });
     webPlatform.onRegionIsChangingListener(_mapId).listen((event) {
@@ -169,8 +179,7 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     MarkerIcon? markerIcon,
     double? angle,
   }) async {
-    if (markerIcon != null &&
-        (markerIcon.icon != null  || markerIcon.assetMarker != null)) {
+    if (markerIcon != null && (markerIcon.icon != null || markerIcon.assetMarker != null)) {
       _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value =
           ((angle == null) || (angle == 0.0))
               ? markerIcon
@@ -197,5 +206,22 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     );
   }
 
+  @override
+  Future<void> setIconMarker(GeoPoint point, MarkerIcon markerIcon) async {
+    _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
+    Future.delayed(Duration(milliseconds: 300), () async {
+      final icon = await capturePng(_osmWebFlutterState.dynamicMarkerKey!);
+      await interop.modifyMarker(point.toGeoJS(), icon.convertToString());
+    });
+  }
+
+  @override
+  Future changeDefaultIconMarker(MarkerIcon homeMarker) async {
+    _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = homeMarker;
+    Future.delayed(Duration(milliseconds: 300), () async {
+      final icon = await capturePng(_osmWebFlutterState.dynamicMarkerKey!);
+      await interop.setDefaultIcon(icon.convertToString());
+    });
+  }
 
 }

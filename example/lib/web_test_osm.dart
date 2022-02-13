@@ -19,7 +19,7 @@ class WebTestOsm extends StatefulWidget {
   State<StatefulWidget> createState() => _WebTestOsmState();
 }
 
-class _WebTestOsmState extends State<WebTestOsm> {
+class _WebTestOsmState extends State<WebTestOsm> with OSMMixinObserver {
   late final MapController controller = MapController(
     initMapWithUserPosition: false,
     initPosition: GeoPoint(
@@ -32,6 +32,7 @@ class _WebTestOsmState extends State<WebTestOsm> {
   @override
   void initState() {
     super.initState();
+    controller.addObserver(this);
     controller.listenerMapSingleTapping.addListener(onMapSingleTap);
     controller.listenerMapIsReady.addListener(() async {
       if (controller.listenerMapIsReady.value) {
@@ -88,7 +89,19 @@ class _WebTestOsmState extends State<WebTestOsm> {
             key: key,
             controller: controller,
             initZoom: 5,
-            onGeoPointClicked: (geoPoint) {
+            onGeoPointClicked: (geoPoint) async {
+              if (geoPoint == GeoPoint(latitude: 47.442475, longitude: 8.4680389)) {
+                await controller.setMarkerIcon(
+                  geoPoint,
+                  MarkerIcon(
+                    icon: Icon(
+                      Icons.bus_alert,
+                      color: Colors.blue,
+                      size: 24,
+                    ),
+                  ),
+                );
+              }
               ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
                 content: Text(
                   geoPoint.toString(),
@@ -133,5 +146,21 @@ class _WebTestOsmState extends State<WebTestOsm> {
         },
       ),
     );
+  }
+
+  @override
+  Future<void> mapIsReady(bool isReady) async {
+    if (isReady) {
+      await controller.addMarker(
+        GeoPoint(latitude: 47.442475, longitude: 8.4680389),
+        markerIcon: MarkerIcon(
+          icon: Icon(
+            Icons.car_repair,
+            color: Colors.black45,
+            size: 48,
+          ),
+        ),
+      );
+    }
   }
 }

@@ -83,7 +83,7 @@
        mymap.setView([point.lat, point.lon],zoom);
        isReady = true;
        isMapReady(isReady);
-  }
+  }iconMarker
 
    async function userLocation() {
       getMyLocation().then((user)=>{
@@ -154,8 +154,31 @@
                   }
         )
     }
-    L.marker(position,args).addTo(mymap);
+    L.marker(position,args)
+    .addTo(mymap)
+    .on("click", function(event){
+      const geoP = event.latlng;
+      onGeoPointClicked(geoP.lng,geoP.lat)
+    });
     return 200;
+  }
+
+  async function modifyMarker(point,icon){
+    const position = [point.lat, point.lon];
+    var latlng = L.latLng(position);
+    mymap.eachLayer(function(layer){
+      if(layer instanceof L.Marker){
+        var geoPoint = layer.getLatLng();
+        if(geoPoint.lat == latlng.lat 
+        && geoPoint.lng == latlng.lng){
+          var iconMarker = L.icon({ 
+            iconUrl : "data:image/png;base64,"+icon,
+            iconSize : [32,32]
+          });
+          layer.setIcon(iconMarker)
+        }
+      }
+    })
   }
   
   async function removeMarker(point){
