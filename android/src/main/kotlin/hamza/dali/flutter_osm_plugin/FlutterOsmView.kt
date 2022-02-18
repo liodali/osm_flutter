@@ -1043,14 +1043,10 @@ class FlutterOsmView(
         val color = Color.rgb(colorRoad.first(), colorRoad.last(), colorRoad[1])
         val widthRoad = (args["roadWidth"] as Double)
 
-        if (!map!!.overlays.contains(folderRoad)) {
-            locationNewOverlay?.let { locationOverlay ->
-                val indexOf = map!!.overlays.indexOf(locationOverlay)
-                map!!.overlays.add(indexOf - 1, folderRoad)
-            } ?: map!!.overlays.add(folderRoad)
-        } else {
-            folderRoad.items.clear()
-        }
+        checkRoadFolderAboveUserOverlay()
+
+        folderRoad.items.clear()
+
 
         val route = PolylineEncoder.decode(encodedWayPoints, 10, false)
         val polyLine = Polyline(map!!)
@@ -1380,14 +1376,9 @@ class FlutterOsmView(
         flutterRoad?.road?.let {
             map!!.overlays.remove(it)
         }
-        if (!map!!.overlays.contains(folderRoad)) {
-            locationNewOverlay?.let { locationOverlay ->
-                val indexOf = map!!.overlays.indexOf(locationOverlay)
-                map!!.overlays.add(indexOf - 1, folderRoad)
-            } ?: map!!.overlays.add(folderRoad)
-        }
+        checkRoadFolderAboveUserOverlay()
         folderRoad.items.clear()
-        val cachedRoads = map!!.overlays.filterIsInstance<Polyline>()
+        val cachedRoads = map!!.overlays.filterIsInstance<Polyline>().toSet()
         if (cachedRoads.isNotEmpty()) {
             map!!.overlays.removeAll(cachedRoads)
         }
@@ -1456,6 +1447,18 @@ class FlutterOsmView(
 
     }
 
+    private fun checkRoadFolderAboveUserOverlay() {
+        if (!map!!.overlays.contains(folderRoad)) {
+            locationNewOverlay?.let { locationOverlay ->
+                val indexOf = map!!.overlays.indexOf(locationOverlay)
+                when (indexOf != -1) {
+                    true -> map!!.overlays.add(indexOf - 1, folderRoad)
+                    false -> map!!.overlays.add(folderRoad)
+                }
+            } ?: map!!.overlays.add(folderRoad)
+        }
+    }
+
     private fun drawRoad(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments!! as HashMap<String, Any>
 
@@ -1490,15 +1493,10 @@ class FlutterOsmView(
         flutterRoad?.road?.let {
             map!!.overlays.remove(it)
         }
-        if (!map!!.overlays.contains(folderRoad)) {
-            locationNewOverlay?.let { locationOverlay ->
-                val indexOf = map!!.overlays.indexOf(locationOverlay)
-                map!!.overlays.add(indexOf - 1, folderRoad)
-            } ?: map!!.overlays.add(folderRoad)
 
-        } else {
-            folderRoad.items.clear()
-        }
+        checkRoadFolderAboveUserOverlay()
+        folderRoad.items.clear()
+
 
         map!!.invalidate()
 
