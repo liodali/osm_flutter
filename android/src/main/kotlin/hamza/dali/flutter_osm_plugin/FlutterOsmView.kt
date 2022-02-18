@@ -1042,7 +1042,7 @@ class FlutterOsmView(
         val colorRoad = (args["roadColor"] as List<Int>)
         val color = Color.rgb(colorRoad.first(), colorRoad.last(), colorRoad[1])
         val widthRoad = (args["roadWidth"] as Double)
-
+        val zoomToRegion = args["zoomInto"] as Boolean
         checkRoadFolderAboveUserOverlay()
 
         folderRoad.items.clear()
@@ -1064,7 +1064,13 @@ class FlutterOsmView(
                 showIcons = false,
             )
         )
-
+        if (zoomToRegion) {
+            map!!.zoomToBoundingBox(
+                BoundingBox.fromGeoPoints(polyLine.actualPoints),
+                true,
+                64,
+            )
+        }
         map!!.invalidate()
         result.success(null)
     }
