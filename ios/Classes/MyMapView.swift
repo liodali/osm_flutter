@@ -242,9 +242,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
                             }
                     roadManager.drawMultiRoadsOnMap(on: roads, for: mapView)
-                    let infos = roadInfos.filter { info in info != nil }.map {info -> [String:Any] in
+                    let infos = roadInfos.filter { info in
+                                info != nil
+                            }
+                            .map { info -> [String: Any] in
                                 info!.toMap()
-                    }
+                            }
                     result(infos)
                 }
 
@@ -551,7 +554,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 if (homeMarker != nil) {
                     homeMarker?.visible = false
                     let isExist = mapView.markers.contains(homeMarker!)
-                    if (isExist ) {
+                    if (isExist) {
                         mapView.markerRemove(homeMarker!)
                     }
                     homeMarker = nil
@@ -625,20 +628,20 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 group.leave()
             }
         }
-        group.notify(queue: .main ) {
+        group.notify(queue: .main) {
             var informations = [RoadInformation?]()
-            var roads = [(Road,RoadData)?]()
-            for (index , res) in results.enumerated() {
-                var roadInfo:RoadInformation? = nil
-                var routeToDraw:(Road,RoadData)? = nil
+            var roads = [(Road, RoadData)?]()
+            for (index, res) in results.enumerated() {
+                var roadInfo: RoadInformation? = nil
+                var routeToDraw: (Road, RoadData)? = nil
                 if let road = res {
-                     routeToDraw = (road,roadConfigs[index].roadData)
-                     roadInfo = RoadInformation(distance: road.distance, seconds: road.duration, encodedRoute: road.mRouteHigh)
+                    routeToDraw = (road, roadConfigs[index].roadData)
+                    roadInfo = RoadInformation(distance: road.distance, seconds: road.duration, encodedRoute: road.mRouteHigh)
                 }
                 informations.append(roadInfo)
                 roads.append(routeToDraw)
             }
-            completion(informations,roads,nil)
+            completion(informations, roads, nil)
         }
 
     }
@@ -747,6 +750,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         if (args.keys.contains("roadWidth")) {
             roadWidth = "\(args["roadWidth"] as! Double)px"
         }
+        let zoomInto = args["zoomInto"] as! Bool
         if (roadMarkerPolyline != nil) {
             mapView.markerRemove(roadMarkerPolyline!)
             roadMarkerPolyline = nil
@@ -754,9 +758,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         var road = Road()
         road.mRouteHigh = roadEncoded
         road.roadData = RoadData(roadColor: roadColor, roadWidth: roadWidth)
+        let route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
 
-        let markerRoad = roadManager.drawRoadOnMap(on: road, for: mapView)
+        let markerRoad = roadManager.drawRoadOnMap(on: road, for: mapView,polyLine: route)
         roadMarkerPolyline = markerRoad
+        if (zoomInto) {
+            let box = route.coordinates!.toBounds()
+            mapView.cameraPosition = mapView.cameraThatFitsBounds(box, withPadding: UIEdgeInsets.init(top: 0.0, left: 0.0, bottom: 0.0, right: 0.0))
+        }
+
+
         result(nil)
     }
 
