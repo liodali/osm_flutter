@@ -24,7 +24,7 @@ protocol PRoadManager {
 
      func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler)
 
-     func drawRoadOnMap (on road:Road,for map:TGMapView) -> TGMarker
+     func drawRoadOnMap (on road:Road,for map:TGMapView,polyLine:Polyline? ) -> TGMarker
 
 }
 
@@ -68,23 +68,51 @@ class RoadManager: PRoadManager {
 
     private var road: Road? = nil
     private var lastMarkerRoad : TGMarker? = nil
-
+    private var roads : [TGMarker] = [TGMarker]()
     init() {
 
     }
 
-    public  func drawRoadOnMap(on road: Road, for map: TGMapView) -> TGMarker {
+    public func clearRoads (for map:TGMapView) {
+        if(lastMarkerRoad != nil){
+            map.markerRemove(lastMarkerRoad!)
+            lastMarkerRoad = nil
+        }
+        if !roads.isEmpty {
+            roads.forEach{ r in
+                map.markerRemove(r)
+            }
+        }
+    }
+
+    public  func drawRoadOnMap(on road: Road, for map: TGMapView,polyLine:Polyline? = nil) -> TGMarker {
         if(lastMarkerRoad != nil){
             map.markerRemove(lastMarkerRoad!)
         }
         let marker = map.markerAdd()
-        marker.stylingString = "{ style: 'lines',interactive: false, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), order: 2000 }"
+        marker.stylingString = "{ style: 'lines',interactive: false, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), order: 1500 }"
 
-        let route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
-        let tgPolyline = TGGeoPolyline(coordinates: route.coordinates!,count: UInt(route.coordinates!.count))
+        var route = polyLine
+        if(route  == nil){
+           route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
+        }
+        let tgPolyline = TGGeoPolyline(coordinates: route!.coordinates!,count: UInt(route!.coordinates!.count))
         marker.polyline = tgPolyline
         lastMarkerRoad = marker
         return marker
+    }
+    public  func drawMultiRoadsOnMap(on roads: [Road], for map: TGMapView)  {
+        clearRoads(for: map)
+        for road in roads {
+            let marker = map.markerAdd()
+            marker.stylingString = "{ style: 'lines',interactive: false, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), order: 1500 }"
+            let route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
+            let tgPolyline = TGGeoPolyline(coordinates: route.coordinates!,count: UInt(route.coordinates!.count))
+            marker.polyline = tgPolyline
+            self.roads.append(marker)
+        }
+        /*
+        lastMarkerRoad = marker */
     }
 
       func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler) {

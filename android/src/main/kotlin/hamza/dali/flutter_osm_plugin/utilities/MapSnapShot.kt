@@ -12,11 +12,12 @@ class MapSnapShot {
     private var customRoadMarkerIcon = HashMap<String, ByteArray>()
     private var staticPointsIcons = HashMap<String, ByteArray>()
     private var staticPoints: HashMap<String, Pair<List<GeoPoint>, List<Double>>> =
-            HashMap()
+        HashMap()
     private var centerMap: GeoPoint? = null
     private var boundingWorldBox: BoundingBox = FlutterOsmView.boundingWorldBox
 
     private var lastRoadCache: RoadSnapShot? = null
+    private var roadsCache: MutableList<RoadSnapShot> = emptyList<RoadSnapShot>().toMutableList()
     private var zoom: Double? = null
     private var isAdvancedPicker: Boolean = false
     private var isTrackMe: Boolean = false
@@ -39,16 +40,22 @@ class MapSnapShot {
     fun addToIconsStaticGeoPoints(id: String, value: ByteArray) {
         staticPointsIcons[id] = value
     }
-    fun saveMapOrientation(orientation:Float) {
+
+    fun saveMapOrientation(orientation: Float) {
         mapOrientation = orientation
     }
 
     fun getEnableMyLocation() = enableLocation
     fun trackMyLocation() = isTrackMe
     fun lastCachedRoad() = lastRoadCache
+    fun cachedRoads() = roadsCache
     fun mapOrientation() = mapOrientation
     fun clearCachedRoad() {
         lastRoadCache = null
+    }
+
+    fun clearListCachedRoad() {
+        roadsCache.clear()
     }
 
     fun setBoundingWorld(box: BoundingBox) {
@@ -57,6 +64,10 @@ class MapSnapShot {
 
     fun cacheRoad(road: RoadSnapShot) {
         lastRoadCache = road
+    }
+
+    fun cacheListRoad(road: RoadSnapShot) {
+        roadsCache.add(road)
     }
 
 
@@ -69,16 +80,16 @@ class MapSnapShot {
     }
 
     fun cacheLocation(
-            geoPoint: GeoPoint,
-            zoom: Double,
+        geoPoint: GeoPoint,
+        zoom: Double,
     ) {
         centerMap = geoPoint
         this.zoom = zoom
     }
 
     fun setUserTrackMarker(
-            personMarker: ByteArray?,
-            arrowMarker: ByteArray?
+        personMarker: ByteArray?,
+        arrowMarker: ByteArray?
     ) {
         this.customPersonMarkerIcon = personMarker
         this.customArrowMarkerIcon = arrowMarker
@@ -89,10 +100,10 @@ class MapSnapShot {
 
 
     fun cache(
-            geoPoint: GeoPoint,
-            zoom: Double,
-            customRoadMarkerIcon: HashMap<String, ByteArray>,
-            customPickerMarkerIcon: ByteArray?,
+        geoPoint: GeoPoint,
+        zoom: Double,
+        customRoadMarkerIcon: HashMap<String, ByteArray>,
+        customPickerMarkerIcon: ByteArray?,
     ) {
         centerMap = geoPoint
         this.zoom = zoom
@@ -125,6 +136,7 @@ class MapSnapShot {
             isTrackMe = false
             enableLocation = false
             lastRoadCache = null
+            roadsCache.clear()
         }
         customRoadMarkerIcon.clear()
         customPersonMarkerIcon = null
@@ -135,9 +147,9 @@ class MapSnapShot {
 }
 
 data class RoadSnapShot(
-        val roadPoints: List<GeoPoint>,
-        val showIcons: Boolean,
-        val roadColor: Int?,
-        val roadWith: Float,
-        val listInterestPoints: List<GeoPoint> = emptyList(),
+    val roadPoints: List<GeoPoint>,
+    val showIcons: Boolean,
+    val roadColor: Int?,
+    val roadWith: Float,
+    val listInterestPoints: List<GeoPoint> = emptyList(),
 )

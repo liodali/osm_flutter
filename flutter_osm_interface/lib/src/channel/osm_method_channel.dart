@@ -29,7 +29,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Stream<EventOSM> _events(int mapId) =>
       _streamController.stream.where((event) => event.mapId == mapId) as Stream<EventOSM>;
 
-
   @override
   Future<void> init(int idOSMMap) async {
     if (!_channels.containsKey(idOSMMap)) {
@@ -497,8 +496,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     int idOSM,
     List<GeoPoint> road,
     Color roadColor,
-    double width,
-  ) async {
+    double width, {
+    bool zoomInto = false,
+  }) async {
     final coordinates = road.map((e) => e.toListNum()).toList();
     final encodedCoordinates = encodePolyline(coordinates);
     Map<String, dynamic> data = {
@@ -510,7 +510,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     } else {
       data.addAll(roadColor.toMap("roadColor"));
     }
-
+    data["zoomInto"] = zoomInto;
     await _channels[idOSM]?.invokeMethod(
       "drawRoad#manually",
       data,
@@ -664,6 +664,26 @@ class MethodChannelOSM extends MobileOSMPlatform {
     } on PlatformException catch (e) {
       throw Exception("marker not exist");
     }
+  }
+
+  @override
+  Future<void> clearAllRoads(
+    int idOSM,
+  ) async {
+    await _channels[idOSM]?.invokeMethod("clear#roads");
+  }
+
+  @override
+  Future<List<RoadInfo>> drawMultipleRoad(
+    int idOSM,
+    List<MultiRoadConfiguration> configs, {
+    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
+  }) async {
+    final args = configs.toListMap(commonRoadOption: commonRoadOption);
+    final List result = (await _channels[idOSM]?.invokeListMethod("draw#multi#road", args))!;
+    final List<Map<String, dynamic>> mapRoadInfo =
+        result.map((e) => Map<String, dynamic>.from(e)).toList();
+    return mapRoadInfo.map((e) => RoadInfo.fromMap(e)).toList();
   }
 }
 

@@ -93,7 +93,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             //   color: Colors.red,
             //   size: 32,
             // ),
-            image: AssetImage("asset/pin.png"),
+            assetMarker: AssetMarker(
+              image: AssetImage("asset/pin.png"),
+            ),
             // assetMarker: AssetMarker(
             //   image: AssetImage("asset/pin.png"),
             //   //scaleAssetImage: 2,
@@ -211,9 +213,15 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             },
           ),
           Builder(builder: (ctx) {
-            return IconButton(
-              onPressed: () => roadActionBt(ctx),
-              icon: Icon(Icons.map),
+            return GestureDetector(
+              onLongPress: () => drawMultiRoads(),
+              onDoubleTap: () async {
+                await controller.clearAllRoads();
+              },
+              child: IconButton(
+                onPressed: () => roadActionBt(ctx),
+                icon: Icon(Icons.map),
+              ),
             );
           }),
           IconButton(
@@ -265,7 +273,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               },
               initZoom: 8,
               minZoomLevel: 3,
-              maxZoomLevel: 14,
+              maxZoomLevel: 18,
               stepZoom: 1.0,
               userLocationMarker: UserLocationMaker(
                 personMarker: MarkerIcon(
@@ -535,6 +543,56 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   Future<void> mapRestored() async {
     super.mapRestored();
     print("log map restored");
+  }
+
+  void drawMultiRoads() async {
+    /*
+      8.4638911095,47.4834379430|8.5046595453,47.4046149269
+      8.5244329867,47.4814981476|8.4129691189,47.3982152237
+      8.4371175094,47.4519015578|8.5147623089,47.4321999727
+     */
+
+    final configs = [
+      MultiRoadConfiguration(
+        startPoint: GeoPoint(
+          latitude: 47.4834379430,
+          longitude: 8.4638911095,
+        ),
+        destinationPoint: GeoPoint(
+          latitude: 47.4046149269,
+          longitude: 8.5046595453,
+        ),
+      ),
+      MultiRoadConfiguration(
+          startPoint: GeoPoint(
+            latitude: 47.4814981476,
+            longitude: 8.5244329867,
+          ),
+          destinationPoint: GeoPoint(
+            latitude: 47.3982152237,
+            longitude: 8.4129691189,
+          ),
+          roadOptionConfiguration: MultiRoadOption(
+            roadColor: Colors.orange,
+          )),
+      MultiRoadConfiguration(
+        startPoint: GeoPoint(
+          latitude: 47.4519015578,
+          longitude: 8.4371175094,
+        ),
+        destinationPoint: GeoPoint(
+          latitude: 47.4321999727,
+          longitude: 8.5147623089,
+        ),
+      ),
+    ];
+    final listRoadInfo = await controller.drawMultipleRoad(
+      configs,
+      commonRoadOption: MultiRoadOption(
+        roadColor: Colors.red,
+      ),
+    );
+    print(listRoadInfo);
   }
 }
 

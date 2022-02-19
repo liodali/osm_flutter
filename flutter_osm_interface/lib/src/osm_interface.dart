@@ -139,6 +139,16 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     RoadOption roadOption,
   });
 
+  Future<List<RoadInfo>> drawMultipleRoad(
+    int idOSM,
+    List<MultiRoadConfiguration> configs, {
+    MultiRoadOption commonRoadOption,
+  });
+
+  Future<void> clearAllRoads(
+    int idOSM,
+  );
+
   Future<void> drawCircle(
     int idOSM,
     CircleOSM circleOSM,
@@ -244,8 +254,9 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idOSM,
     List<GeoPoint> road,
     Color roadColor,
-    double width,
-  );
+    double width, {
+    bool zoomInto = false,
+  });
 
   Future<void> mapRotation(
     int idOSM,

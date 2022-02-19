@@ -214,9 +214,39 @@ class MapController extends BaseMapController {
     );
   }
 
+  /// [drawMultipleRoad]
+  ///
+  /// will draw list of roads in sametime with making api calls continually
+  /// to get list of GeoPoint for each configuration
+  /// and you can define common configuration for all roads that share the same
+  /// color,width,roadType using [commonRoadOption]
+  /// this method return list of [RoadInfo] with the same order for each config
+  ///
+  /// parameters :
+  ///
+  ///  [configs]        : (List) list of road configuration
+  ///
+  /// [commonRoadOption]  : (MultiRoadOption) common road config that can apply to all roads that doesn't define any inner roadOption
+  Future<List<RoadInfo>> drawMultipleRoad(
+    List<MultiRoadConfiguration> configs, {
+    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
+  }) async {
+    return await osmBaseController.drawMultipleRoad(
+      configs,
+      commonRoadOption: commonRoadOption,
+    );
+  }
+
+  /// [removeLastRoad]
   ///delete last road draw in the map
   Future<void> removeLastRoad() async {
     await osmBaseController.removeLastRoad();
+  }
+
+  /// [clearAllRoads]
+  ///this method will delete all roads drawn in the map
+  Future<void> clearAllRoads() async {
+    await osmBaseController.clearAllRoads();
   }
 
   /// draw circle into map
@@ -285,13 +315,15 @@ class MapController extends BaseMapController {
   Future<void> drawRoadManually(
     List<GeoPoint> path,
     Color roadColor,
-    double roadWidth,
-  ) async {
+    double roadWidth, {
+    bool zoomInto = false,
+  }) async {
     assert(path.length > 3);
     await osmBaseController.drawRoadManually(
       path,
       roadColor,
       roadWidth,
+      zoomInto: zoomInto
     );
   }
 

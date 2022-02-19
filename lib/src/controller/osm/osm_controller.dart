@@ -334,13 +334,7 @@ class MobileOSMController extends IBaseOSMController {
     MarkerIcon markerIcon, {
     bool refresh = false,
   }) async {
-    if (markerIcon.icon != null) {
-      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon.icon;
-    } else if (markerIcon.image != null) {
-      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Image(
-        image: markerIcon.image!,
-      );
-    }
+    _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
     await Future.delayed(Duration(milliseconds: 300), () async {
       await osmPlatform.customMarkerStaticPosition(
         _idMap,
@@ -416,8 +410,7 @@ class MobileOSMController extends IBaseOSMController {
     MarkerIcon? markerIcon,
     double? angle,
   }) async {
-    if (markerIcon != null &&
-        (markerIcon.icon != null || markerIcon.image != null || markerIcon.assetMarker != null)) {
+    if (markerIcon != null && (markerIcon.icon != null || markerIcon.assetMarker != null)) {
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
           ((angle == null) || (angle == 0.0))
               ? markerIcon
@@ -521,11 +514,24 @@ class MobileOSMController extends IBaseOSMController {
   Future<void> drawRoadManually(
     List<GeoPoint> path,
     Color roadColor,
-    double width,
-  ) async {
-    assert(path.first.latitude != path.last.latitude || path.first.longitude != path.last.longitude,
-        "you cannot make road with same geoPoint");
-    await osmPlatform.drawRoadManually(_idMap, path, roadColor, width);
+    double width, {
+    bool zoomInto = false,
+  }) async {
+    if (path.isEmpty) {
+      throw Exception("you cannot make road with empty list of  geoPoint");
+    }
+    if (path.first.latitude != path.last.latitude &&
+        path.first.longitude != path.last.longitude &&
+        path.length < 3) {
+      throw Exception("you cannot make line with same geoPoint");
+    }
+    await osmPlatform.drawRoadManually(
+      _idMap,
+      path,
+      roadColor,
+      width,
+      zoomInto: zoomInto,
+    );
   }
 
   ///delete last road draw in the map
@@ -666,6 +672,23 @@ class MobileOSMController extends IBaseOSMController {
         _osmFlutterState.dynamicMarkerKey,
       );
     });
+  }
+
+  @override
+  Future<void> clearAllRoads() async {
+    await osmPlatform.clearAllRoads(_idMap);
+  }
+
+  @override
+  Future<List<RoadInfo>> drawMultipleRoad(
+    List<MultiRoadConfiguration> configs, {
+    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
+  }) async {
+    return await osmPlatform.drawMultipleRoad(
+      _idMap,
+      configs,
+      commonRoadOption: commonRoadOption,
+    );
   }
 }
 

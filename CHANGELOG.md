@@ -1,3 +1,20 @@
+## 0.31.0:
+* add drawMultiRoad in iOS side
+* fix request permission when map initialized on user location
+* add `zommInto` attribute in drawRoadManually method
+## 0.30.1+2:
+* hotfix for IndexOutOfBounds when put folder of road in overlay of the map before overlay of user location
+## 0.30.1+1:
+* remove unnecessary assert in inner controller
+## 0.30.1:
+* fix cast Double to CGFloat
+* add extension method to List of GeoPoint to convert to Encoded route String
+* add extension to convert Encoded route to List of GeoPoint
+## 0.30.0: add draw multi roads and fix bug 
+* create new method `drawMutliRoad` to draw multiple road in the same time
+* create new method `clearAllRoads` to clear all roads in the map
+* fix bug when user location marker hidden by polylines
+* remove deprecated attribute `image` from `MarkerIcon`, suppose to use `assetMarker`
 ## 0.29.1+3:
 * fix docs
 ## 0.29.1+2:
