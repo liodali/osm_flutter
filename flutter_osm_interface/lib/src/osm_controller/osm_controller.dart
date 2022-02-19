@@ -166,8 +166,9 @@ abstract class IBaseOSMController {
   Future<void> drawRoadManually(
     List<GeoPoint> path,
     Color roadColor,
-    double width,
-  );
+    double width, {
+    bool zoomInto = false,
+  });
 
   /// [drawMultipleRoad]
   /// this method will call draw list of roads in sametime with making  api continually

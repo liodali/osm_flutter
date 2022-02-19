@@ -254,8 +254,9 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idOSM,
     List<GeoPoint> road,
     Color roadColor,
-    double width,
-  );
+    double width, {
+    bool zoomInto = false,
+  });
 
   Future<void> mapRotation(
     int idOSM,
