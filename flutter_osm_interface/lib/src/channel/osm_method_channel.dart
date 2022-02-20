@@ -496,8 +496,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     int idOSM,
     List<GeoPoint> road,
     Color roadColor,
-    double width,
-  ) async {
+    double width, {
+    bool zoomInto = false,
+  }) async {
     final coordinates = road.map((e) => e.toListNum()).toList();
     final encodedCoordinates = encodePolyline(coordinates);
     Map<String, dynamic> data = {
@@ -509,7 +510,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     } else {
       data.addAll(roadColor.toMap("roadColor"));
     }
-
+    data["zoomInto"] = zoomInto;
     await _channels[idOSM]?.invokeMethod(
       "drawRoad#manually",
       data,
@@ -680,7 +681,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }) async {
     final args = configs.toListMap(commonRoadOption: commonRoadOption);
     final List result = (await _channels[idOSM]?.invokeListMethod("draw#multi#road", args))!;
-    final List<Map<String, dynamic>> mapRoadInfo = result.map((e) => Map<String, dynamic>.from(e)).toList();
+    final List<Map<String, dynamic>> mapRoadInfo =
+        result.map((e) => Map<String, dynamic>.from(e)).toList();
     return mapRoadInfo.map((e) => RoadInfo.fromMap(e)).toList();
   }
 }

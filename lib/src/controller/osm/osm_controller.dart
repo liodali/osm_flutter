@@ -517,9 +517,9 @@ class MobileOSMController extends IBaseOSMController {
   Future<void> drawRoadManually(
     List<GeoPoint> path,
     Color roadColor,
-    double width,
-  ) async {
-
+    double width, {
+    bool zoomInto = false,
+  }) async {
     if (path.isEmpty) {
       throw Exception("you cannot make road with empty list of  geoPoint");
     }
@@ -528,7 +528,13 @@ class MobileOSMController extends IBaseOSMController {
         path.length < 3) {
       throw Exception("you cannot make line with same geoPoint");
     }
-    await osmPlatform.drawRoadManually(_idMap, path, roadColor, width);
+    await osmPlatform.drawRoadManually(
+      _idMap,
+      path,
+      roadColor,
+      width,
+      zoomInto: zoomInto,
+    );
   }
 
   ///delete last road draw in the map

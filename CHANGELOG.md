@@ -1,3 +1,9 @@
+## 0.31.0:
+* add drawMultiRoad in iOS side
+* fix request permission when map initialized on user location
+* add `zommInto` attribute in drawRoadManually method
+## 0.30.1+2:
+* hotfix for IndexOutOfBounds when put folder of road in overlay of the map before overlay of user location
 ## 0.30.1+1:
 * remove unnecessary assert in inner controller
 ## 0.30.1:

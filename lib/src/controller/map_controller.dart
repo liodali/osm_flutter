@@ -216,6 +216,7 @@ class MapController extends BaseMapController {
       roadOption: roadOption,
     );
   }
+
   /// [drawMultipleRoad]
   ///
   /// will draw list of roads in sametime with making api calls continually
@@ -250,7 +251,6 @@ class MapController extends BaseMapController {
   Future<void> clearAllRoads() async {
     await osmBaseController.clearAllRoads();
   }
-
 
   /// draw circle into map
   Future<void> drawCircle(CircleOSM circleOSM) async {
@@ -318,13 +318,15 @@ class MapController extends BaseMapController {
   Future<void> drawRoadManually(
     List<GeoPoint> path,
     Color roadColor,
-    double roadWidth,
-  ) async {
+    double roadWidth, {
+    bool zoomInto = false,
+  }) async {
     assert(path.length > 3);
     await osmBaseController.drawRoadManually(
       path,
       roadColor,
       roadWidth,
+      zoomInto: zoomInto
     );
   }
 

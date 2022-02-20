@@ -107,20 +107,6 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
 
       sizeNotifier = ValueNotifier(MediaQuery.of(context).size);
       sizeNotifier.addListener(changeOrientationDetected);
-
-      //check location permission
-      if (((widget.controller).initMapWithUserPosition || widget.trackMyPosition)) {
-        await requestPermission();
-        // if (widget.controller.initMapWithUserPosition) {
-        //   bool isEnabled = await _osmController!.checkServiceLocation();
-        //   Future.delayed(Duration(seconds: 1), () async {
-        //     if (isEnabled) {
-        //       return;
-        //     }
-        //     //await _osmController!.currentLocation();
-        //   });
-        // }
-      }
     });
   }
 
@@ -235,6 +221,9 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     this._osmController = await MobileOSMController.init(id, this);
     _osmController!.addObserver(this);
     widget.controller.setBaseOSMController(this._osmController!);
+    if (((widget.controller).initMapWithUserPosition || widget.trackMyPosition)) {
+      await requestPermission();
+    }
     widget.controller.init();
     if (!isFirstLaunched.value) {
       isFirstLaunched.value = true;
