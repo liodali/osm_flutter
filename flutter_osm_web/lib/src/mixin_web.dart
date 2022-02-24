@@ -3,12 +3,15 @@ import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:js/js_util.dart';
+import 'package:routing_client_dart/routing_client_dart.dart' as routing;
 
 import 'common/extensions.dart';
 import 'interop/models/geo_point_js.dart';
 import 'interop/osm_interop.dart' as interop hide initMapFinish;
 
 mixin WebMixin {
+  final manager = routing.OSRMManager();
+
   Future<void> initLocationMap(GeoPoint p) async {
     await promiseToFuture(interop.initMapLocation(p.toGeoJS()));
   }
@@ -64,8 +67,9 @@ mixin WebMixin {
   Future<void> drawRoadManually(
     List<GeoPoint> path,
     Color roadColor,
-    double width,
-  ) {
+    double width, {
+    bool zoomInto = false,
+  }) {
     // TODO: implement drawRoadManually
     throw UnimplementedError();
   }
@@ -152,8 +156,6 @@ mixin WebMixin {
     await interop.zoomOut();
   }
 
-
-
   Future<double> getZoom() async {
     return await promiseToFuture(interop.getZoom());
   }
@@ -193,16 +195,37 @@ mixin WebMixin {
     RoadType roadType = RoadType.car,
     List<GeoPoint>? interestPoints,
     RoadOption? roadOption,
-  }) {
-    // TODO: implement drawRoad
-    throw UnimplementedError();
+  }) async {
+    final geoPoints = [start, end];
+    if (interestPoints != null && interestPoints.isNotEmpty) {
+      geoPoints.insertAll(1, interestPoints);
+    }
+    final waypoints = geoPoints.toLngLatList();
+    final road = await manager.getRoad(
+      waypoints: waypoints,
+      roadType: routing.RoadType.values[roadType.index],
+      alternative: false,
+    );
+    final route = await road.polylineEncoded.toListGeo();
+    await interop.drawRoad(
+      route.toListGeoPointJs(),
+      roadOption?.roadColor?.toHexColor() ?? Colors.green.toHexColor(),
+      roadOption?.roadWidth?.toDouble() ?? 5.0,
+      roadOption?.zoomInto ?? true,
+      roadOption != null && roadOption.showMarkerOfPOI
+          ? interestPoints?.toListGeoPointJs() ?? []
+          : [],
+    );
+    return RoadInfo(duration: road.duration, distance: road.distance, route: route);
   }
+
   Future<void> clearAllRoads() {
     // TODO: implement clearAllRoads
     throw UnimplementedError();
   }
 
-  Future<List<RoadInfo>> drawMultipleRoad(List<MultiRoadConfiguration> configs, {MultiRoadOption commonRoadOption = const MultiRoadOption.empty()}) {
+  Future<List<RoadInfo>> drawMultipleRoad(List<MultiRoadConfiguration> configs,
+      {MultiRoadOption commonRoadOption = const MultiRoadOption.empty()}) {
     // TODO: implement drawMultipleRoad
     throw UnimplementedError();
   }
@@ -241,8 +264,7 @@ mixin WebMixin {
     MarkerIcon? icon,
     String imageURL = "",
   }) {
-    // TODO: implement selectPosition
-    throw UnimplementedError();
+    throw Exception("stop use this method,use addMarker");
   }
 
   Future<GeoPoint> getMapCenter() async {
@@ -267,5 +289,4 @@ mixin WebMixin {
       paddinInPixel,
     ));
   }
-
 }

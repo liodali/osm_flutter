@@ -75,7 +75,7 @@ packages:
       path: flutter_osm_interface
       relative: true
     source: path
-    version: "0.1.17"
+    version: "0.1.18"
   flutter_osm_web:
     dependency: "direct main"
     description:

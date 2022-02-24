@@ -76,8 +76,6 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     webPlatform.mapsController.remove(this);
   }
 
-
-
   void addObserver(AndroidLifecycleMixin androidOSMLifecycle) {
     _androidOSMLifecycle = androidOSMLifecycle;
   }
@@ -133,6 +131,30 @@ class WebOsmController with WebMixin implements IBaseOSMController {
         markerIconsStaticPositions(id, key);
       });
     }
+    if (_osmWebFlutterState.widget.roadConfiguration != null) {
+      final defaultColor = _osmWebFlutterState.widget.roadConfiguration!.roadColor.toHexColor();
+      final keyStartMarker = _osmWebFlutterState.widget.roadConfiguration!.startIcon != null
+          ? _osmWebFlutterState.startIconKey != null
+              ? await capturePng(_osmWebFlutterState.startIconKey!)
+              : null
+          : null;
+      final keyMiddleMarker = _osmWebFlutterState.widget.roadConfiguration!.middleIcon != null
+          ? _osmWebFlutterState.middleIconKey != null
+              ? await capturePng(_osmWebFlutterState.middleIconKey!)
+              : null
+          : null;
+      final keyEndMarker = _osmWebFlutterState.widget.roadConfiguration!.endIcon != null
+          ? _osmWebFlutterState.endIconKey != null
+              ? await capturePng(_osmWebFlutterState.endIconKey!)
+              : null
+          : null;
+      await interop.configRoad(
+        defaultColor,
+        keyStartMarker?.convertToString() ?? "",
+        keyMiddleMarker?.convertToString() ?? "",
+        keyEndMarker?.convertToString() ?? "",
+      );
+    }
 
     await configureZoomMap(
       _osmWebFlutterState.widget.minZoomLevel,
@@ -179,20 +201,26 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     MarkerIcon? markerIcon,
     double? angle,
   }) async {
-    if (markerIcon != null && (markerIcon.icon != null || markerIcon.assetMarker != null)) {
-      _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value =
-          ((angle == null) || (angle == 0.0))
-              ? markerIcon
-              : Transform.rotate(
-                  angle: angle,
-                  child: markerIcon,
-                );
-      int duration = markerIcon.icon != null || markerIcon.assetMarker != null ? 300 : 350;
-      Future.delayed(Duration(milliseconds: duration), () async {
-        final icon = await capturePng(_osmWebFlutterState.dynamicMarkerKey!);
-        await interop.addMarker(p.toGeoJS(), icon.convertToString());
-      });
+    Widget? icon = markerIcon;
+    if (icon == null) {
+      icon = Icon(
+        Icons.location_on,
+        size: 32,
+        color: Colors.red,
+      );
     }
+    _osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value =
+        ((angle == null) || (angle == 0.0))
+            ? icon
+            : Transform.rotate(
+                angle: angle,
+                child: icon,
+              );
+    int duration = 350;
+    Future.delayed(Duration(milliseconds: duration), () async {
+      final icon = await capturePng(_osmWebFlutterState.dynamicMarkerKey!);
+      await interop.addMarker(p.toGeoJS(), icon.convertToString());
+    });
   }
 
   Future<void> markerIconsStaticPositions(
@@ -223,5 +251,4 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       await interop.setDefaultIcon(icon.convertToString());
     });
   }
-
 }

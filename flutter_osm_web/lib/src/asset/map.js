@@ -98,6 +98,16 @@ async function flyToBounds(box,padding){
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.flyToBoundingBox(box,padding);
 }
+async function configRoad(color,startIcon,middleIcon,endIcon){
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.configRoad(color,startIcon,middleIcon,endIcon);
+
+
+}
+async function drawRoad(road,color,roadWidth,zoomInto,interestPoints){
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.drawRoad(road,color,roadWidth,zoomInto,interestPoints);
+}
 
 /*
 * shared dart function that called from js

@@ -53,11 +53,12 @@ external dynamic setMinZoomLevel(double mminZoomLvl);
 
 @JS('setDefaultIcon')
 external dynamic setDefaultIcon(String base64);
+
 @JS('addMarker')
-external dynamic addMarker(GeoPointJs p,String icon);
+external dynamic addMarker(GeoPointJs p, String icon);
 
 @JS('modifyMarker')
-external dynamic modifyMarker(GeoPointJs p,String icon);
+external dynamic modifyMarker(GeoPointJs p, String icon);
 
 @JS('addPosition')
 external dynamic addPosition(GeoPointJs p, bool showMarker, bool animate);
@@ -80,6 +81,23 @@ external dynamic limitArea(BoundingBoxJs box);
 @JS('flyToBounds')
 external dynamic flyToBounds(BoundingBoxJs box, int padding);
 
+@JS('configRoad')
+external dynamic configRoad(
+  String color,
+  String startMarkerIcon,
+  String middleMarkerIcon,
+  String endMarkerIcon,
+);
+
+@JS('drawRoad')
+external dynamic drawRoad(
+  List<GeoPointJs> route,
+  String color,
+  double roadWidth,
+  bool zoomInto,
+  List<GeoPointJs> interestPoints,
+);
+
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')
 external set initMapFinish(void Function(bool) f);
@@ -94,4 +112,5 @@ external set onMapSingleTapListener(void Function(double, double) f);
 
 /// Allows assigning a function to be callable from `window.onRegionChangedListener(region)`
 @JS('onRegionChangedListener')
-external set onRegionChangedListener(void Function(double, double,double, double,double, double) f);
+external set onRegionChangedListener(
+    void Function(double, double, double, double, double, double) f);
