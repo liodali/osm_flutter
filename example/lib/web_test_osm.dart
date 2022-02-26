@@ -29,24 +29,17 @@ class _WebTestOsmState extends State<WebTestOsm> with OSMMixinObserver {
   );
   final Key key = GlobalKey();
 
+  bool activateDrawRoad = false;
+  bool activateCollectGetGeoPointsToDraw = false;
+
+  List<GeoPoint> roadPoints = [];
+
   @override
   void initState() {
     super.initState();
     controller.addObserver(this);
     controller.listenerMapSingleTapping.addListener(onMapSingleTap);
-    controller.listenerMapIsReady.addListener(() async {
-      if (controller.listenerMapIsReady.value) {
-        await controller.setZoom(zoomLevel: 8);
-        await controller.changeLocation(
-          GeoPoint(
-            latitude: 47.433358,
-            longitude: 8.4690184,
-          ),
-        );
-        double zoom = await controller.getZoom();
-        print("zoom:$zoom");
-      }
-    });
+
     controller.listenerRegionIsChanging.addListener(() {
       if (controller.listenerRegionIsChanging.value != null) {
         print("${controller.listenerRegionIsChanging.value}");
@@ -57,10 +50,17 @@ class _WebTestOsmState extends State<WebTestOsm> with OSMMixinObserver {
   void onMapSingleTap() async {
     if (controller.listenerMapSingleTapping.value != null) {
       final GeoPoint geoPoint = controller.listenerMapSingleTapping.value!;
-      await controller.addMarker(geoPoint,
-          markerIcon: MarkerIcon(
-            icon: Icon(Icons.push_pin),
-          ));
+      await controller.addMarker(
+        geoPoint,
+        markerIcon: MarkerIcon(
+          icon: Icon(Icons.push_pin),
+        ),
+      );
+      if (activateCollectGetGeoPointsToDraw) {
+        setState(() {
+          roadPoints.add(geoPoint);
+        });
+      }
     }
   }
 
@@ -80,6 +80,29 @@ class _WebTestOsmState extends State<WebTestOsm> with OSMMixinObserver {
               await controller.currentLocation();
             },
             icon: Icon(Icons.location_history),
+          ),
+          IconButton(
+            onPressed: () async {
+              if (!activateCollectGetGeoPointsToDraw && roadPoints.isEmpty) {
+                setState(() {
+                  activateCollectGetGeoPointsToDraw = true;
+                });
+              } else if (activateCollectGetGeoPointsToDraw && roadPoints.isNotEmpty) {
+                await controller.drawRoad(
+                  roadPoints.first,
+                  roadPoints.last,
+                  roadOption: RoadOption(
+                    zoomInto: true,
+                    roadColor: Colors.red,
+                  ),
+                );
+                setState(() {
+                  activateCollectGetGeoPointsToDraw = false;
+                  roadPoints.clear();
+                });
+              }
+            },
+            icon: Icon(Icons.map_outlined),
           ),
         ],
       ),
@@ -151,6 +174,16 @@ class _WebTestOsmState extends State<WebTestOsm> with OSMMixinObserver {
   @override
   Future<void> mapIsReady(bool isReady) async {
     if (isReady) {
+      await controller.changeLocation(
+        GeoPoint(
+          latitude: 47.433358,
+          longitude: 8.4690184,
+        ),
+      );
+      await controller.setZoom(zoomLevel: 12);
+
+      double zoom = await controller.getZoom();
+      print("zoom:$zoom");
       await controller.addMarker(
         GeoPoint(latitude: 47.442475, longitude: 8.4680389),
         markerIcon: MarkerIcon(

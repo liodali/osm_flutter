@@ -219,7 +219,7 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     int duration = 350;
     Future.delayed(Duration(milliseconds: duration), () async {
       final icon = await capturePng(_osmWebFlutterState.dynamicMarkerKey!);
-      await interop.addMarker(p.toGeoJS(), icon.convertToString());
+       interop.addMarker(p.toGeoJS(), icon.convertToString());
     });
   }
 

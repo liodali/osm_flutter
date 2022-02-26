@@ -1,4 +1,4 @@
-async function centerMap(){
+async function centerMap() {
    var iframe = document.getElementById("frame_map");
    var geoAsync = await iframe.contentWindow.centerMap();
    return geoAsync;
@@ -11,21 +11,22 @@ async function locateMe() {
    return geoAsync;
 }
 
-async function addPosition(point,showMarker,animate) {
+async function addPosition(point, showMarker, animate) {
    var iframe = document.getElementById("frame_map");
-   return  await iframe.contentWindow.changePosition(point,showMarker,animate);
+   return await iframe.contentWindow.changePosition(point, showMarker, animate);
 }
 
-async function addMarker(point,icon) {
+async function addMarker(point, icon) {
    var iframe = document.getElementById("frame_map");
-   return  await iframe.contentWindow.addMarker(point,icon);
+   return iframe.contentWindow.addMarker(point, icon);
 }
-async function modifyMarker(point,icon) {
+async function modifyMarker(point, icon) {
    var iframe = document.getElementById("frame_map");
-   return  await iframe.contentWindow.modifyMarker(point,icon);
+   return await iframe.contentWindow.modifyMarker(point, icon);
 }
 
 async function initMapLocation(point) {
+   console.log(point.lon+":"+point.lat)
    var iframe = document.getElementById("frame_map");
    await iframe.contentWindow.initMapLocation(point);
 }
@@ -34,13 +35,13 @@ async function setDefaultIcon(icon) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setDefaultIcon(icon);
 }
-async function setIconStaticGeoPoints(id,icon) {
+async function setIconStaticGeoPoints(id, icon) {
    var iframe = document.getElementById("frame_map");
-   return await iframe.contentWindow.setStaticGeoPointIcon(id,icon);
+   return await iframe.contentWindow.setStaticGeoPointIcon(id, icon);
 }
-async function setStaticGeoPoints(id,points) {
+async function setStaticGeoPoints(id, points) {
    var iframe = document.getElementById("frame_map");
-   return await iframe.contentWindow.setStaticGeoPoint(id,points);
+   return await iframe.contentWindow.setStaticGeoPoint(id, points);
 }
 async function setZoomStep(zoomStep) {
    var iframe = document.getElementById("frame_map");
@@ -62,51 +63,52 @@ async function setZoomWithStep(step) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setZoomWithStep(step);
 }
-async function getZoom(){
+async function getZoom() {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.getZoom();
 }
-async function configZoom(step,zoom,minZoomLevel,maxZoomLevel) {
+async function configZoom(step, zoom, minZoomLevel, maxZoomLevel) {
    var iframe = document.getElementById("frame_map");
-   return await iframe.contentWindow.configInitZoomMap(step,zoom,minZoomLevel,maxZoomLevel);
+   return await iframe.contentWindow.configInitZoomMap(step, zoom, minZoomLevel, maxZoomLevel);
 }
 async function currentUserLocation() {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.userLocation();
 }
-async function removeMarker(point){
+async function removeMarker(point) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.removeMarker(point);
 }
-async function setMaxZoomLevel(zoomLevel){
+async function setMaxZoomLevel(zoomLevel) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setMaxZoomLevel(point);
 }
-async function setMinZoomLevel(zoomLevel){
+async function setMinZoomLevel(zoomLevel) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setMinZoomLevel(point);
 }
-async function limitArea(box){
+async function limitArea(box) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.limitBoundingBox(box);
 }
-async function getBounds(){
+async function getBounds() {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.getBounds();
 }
-async function flyToBounds(box,padding){
+async function flyToBounds(box, padding) {
    var iframe = document.getElementById("frame_map");
-   return await iframe.contentWindow.flyToBoundingBox(box,padding);
+   return await iframe.contentWindow.flyToBoundingBox(box, padding);
 }
-async function configRoad(color,startIcon,middleIcon,endIcon){
+async function configRoad(color, startIcon, middleIcon, endIcon) {
    var iframe = document.getElementById("frame_map");
-   return await iframe.contentWindow.configRoad(color,startIcon,middleIcon,endIcon);
+   return await iframe.contentWindow.configRoad(color, startIcon, middleIcon, endIcon);
 
 
 }
-async function drawRoad(road,color,roadWidth,zoomInto,interestPoints){
+ function drawRoad(route, color, roadWidth, zoomInto, interestPoints) {
+   console.log(route);
    var iframe = document.getElementById("frame_map");
-   return await iframe.contentWindow.drawRoad(road,color,roadWidth,zoomInto,interestPoints);
+   return  iframe.contentWindow.drawRoad(route, color, roadWidth, zoomInto, interestPoints);
 }
 
 /*
@@ -115,14 +117,14 @@ async function drawRoad(road,color,roadWidth,zoomInto,interestPoints){
 function isMapReady(isReady) {
    initMapFinish(isReady);
 }
-function onGeoPointClicked(lon,lat) {
-   onStaticGeoPointClicked(lon,lat);
+function onGeoPointClicked(lon, lat) {
+   onStaticGeoPointClicked(lon, lat);
 }
-function onMapSingleTapClicked(lon,lat) {
-   onMapSingleTapListener(lon,lat);
+function onMapSingleTapClicked(lon, lat) {
+   onMapSingleTapListener(lon, lat);
 }
-function onRegionChanged(box,center) {
-   onRegionChangedListener(box.north,box.east,box.south,box.west,center.lon,center.lat);
+function onRegionChanged(box, center) {
+   onRegionChangedListener(box.north, box.east, box.south, box.west, center.lon, center.lat);
 }
 
 

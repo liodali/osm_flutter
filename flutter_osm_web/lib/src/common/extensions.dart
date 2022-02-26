@@ -34,6 +34,6 @@ extension  ExtListGeoPoints on List<GeoPoint>{
     return map((e) => e.toLngLat()).toList();
   }
   List<GeoPointJs> toListGeoPointJs(){
-    return map((e) => e.toGeoJS()).toList();
+    return this.map((e) => e.toGeoJS()).toList();
   }
 }

@@ -56,7 +56,7 @@
       tileSize: 256,
     });
     OpenStreetMap_Mapnik.addTo(mymap);
-    mymap.setView([0, 0], 2);
+    //mymap.setView([0, 0], 2);
 
     mymap.on('click', function (event) {
       const geoP = event.latlng;
@@ -83,10 +83,12 @@
 
     async function initMapLocation(point) {
       console.log("zoom init map :" + zoom);
+      console.log(point.lon + ":" + point.lat)
       mymap.setView([point.lat, point.lon], zoom);
       isReady = true;
       isMapReady(isReady);
-    } iconMarker
+      //L.polyline([{lat: 8.498037, lng: 47.489106},{lat: 8.537061, lng: 47.412961}],{color:'red'}).addTo(mymap)
+    }
 
     async function userLocation() {
       getMyLocation().then((user) => {
@@ -147,13 +149,13 @@
       setHomeMarker(point, args);
       return 200;
     }
-    async function addMarker(point, iconMarker) {
+    function addMarker(point, iconMarker) {
       const position = [point.lat, point.lon];
       var argsIcon = {
         iconSize: [32, 32],
       }
       if (iconMarker != "") {
-        argsIcon[iconUrl] = "data:image/png;base64," + iconMarker
+        argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
       var args = {
         icon: L.icon(
@@ -256,6 +258,7 @@
     async function setZoomLevel(zoom) {
       var nzoomlevel = zoom;
       if (nzoomlevel >= mymap.getMinZoom() && nzoomlevel <= mymap.getMaxZoom()) {
+        console.log(nzoomlevel)
         mymap.setZoom(nzoomlevel);
       }
       return 200;
@@ -315,17 +318,18 @@
       roadMarkerIcons["endIcon"] = startIcon
     }
 
-    async function drawRoad(route, colorRoute, routeWidth, zoomInto, interestGeoPts) {
+     function drawRoad(route, colorRoute, routeWidth, zoomInto, interestGeoPts) {
       if (lastRoad != undefined) {
         mymap.removeLayer(lastRoad)
+        routesLayer.pop()
         lastRoad = undefined;
       }
-      var routePolyline = route.map((elem) => [elem.lat, elem.lon])
-      lastRoad = L.polyline(routePolyline, { color: colorRoute })
-
-      lastRoad.addTo(mymap);
+      var routePolyline = route.map((elem) => L.latLng(elem.lon,elem.lat))//[elem.lon,elem.lat])
+      lastRoad = L.polyline(routePolyline, { color: colorRoute,weight:routeWidth }).addTo(mymap)
+      
+      routesLayer.push(lastRoad)
       if (zoomInto) {
-        mymap.fitBounds(lastRoad.getBounds());
+        mymap.flyToBounds(lastRoad.getBounds());
       }
       if (interestGeoPts.length > 0) {
         var len = route.length
@@ -337,10 +341,10 @@
           if (geoPoint.lat == route[len - 1].lat && geoPoint.lon == route[len - 1].lon) {
             icon = roadMarkerIcons["endIcon"]
           }
-          await addMarker(geoPoint, icon)
+          addMarker(geoPoint, icon)
         })
       }
-
+      return 200;
     }
 
 

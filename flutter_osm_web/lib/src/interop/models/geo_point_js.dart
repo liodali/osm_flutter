@@ -6,9 +6,9 @@ import 'package:js/js.dart';
 @JS()
 @anonymous
 class GeoPointJs {
-  external double get lon;
-  external double get lat;
+  external num get lon;
+  external num get lat;
 
   // Must have an unnamed factory constructor with named arguments.
-  external factory GeoPointJs({double lon, double lat});
+  external factory GeoPointJs({num lon, num lat});
 }

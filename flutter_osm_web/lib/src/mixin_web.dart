@@ -6,7 +6,6 @@ import 'package:js/js_util.dart';
 import 'package:routing_client_dart/routing_client_dart.dart' as routing;
 
 import 'common/extensions.dart';
-import 'interop/models/geo_point_js.dart';
 import 'interop/osm_interop.dart' as interop hide initMapFinish;
 
 mixin WebMixin {
@@ -205,11 +204,13 @@ mixin WebMixin {
       waypoints: waypoints,
       roadType: routing.RoadType.values[roadType.index],
       alternative: false,
+      geometrie: routing.Geometries.polyline6,
     );
     final route = await road.polylineEncoded.toListGeo();
-    await interop.drawRoad(
-      route.toListGeoPointJs(),
-      roadOption?.roadColor?.toHexColor() ?? Colors.green.toHexColor(),
+    final routeJs = route.toListGeoPointJs();
+    interop.drawRoad(
+      routeJs,
+      roadOption?.roadColor?.toHexColorWeb() ?? Colors.green.toHexColorWeb(),
       roadOption?.roadWidth?.toDouble() ?? 5.0,
       roadOption?.zoomInto ?? true,
       roadOption != null && roadOption.showMarkerOfPOI
@@ -251,10 +252,7 @@ mixin WebMixin {
   }) async {
     //await promiseToFuture();
     await interop.addPosition(
-      GeoPointJs(
-        lat: point.latitude,
-        lon: point.longitude,
-      ),
+      point.toGeoJS(),
       showMarker,
       animate,
     );

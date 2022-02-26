@@ -37,7 +37,7 @@ extension TransformEncodedPolyLineToListGeo on String {
     final String polylineEncoded = this;
     try {
       return await compute((String encoded) {
-        final listPoints = decodePolyline(encoded);
+        final listPoints = decodePolyline(encoded,accuracyExponent: 6);
         return listPoints
             .map((e) => GeoPoint(latitude: e.last.toDouble(), longitude: e.first.toDouble()))
             .toList();
@@ -73,6 +73,9 @@ extension ColorMap on Color {
 
   String toHexColor() {
     return "#${this.value.toRadixString(16)}";
+  }
+  String toHexColorWeb() {
+    return "#${this.value.toRadixString(16)}".replaceAll("ff", "");
   }
 }
 

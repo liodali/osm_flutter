@@ -18,7 +18,7 @@ external Map<String, double> getBounds();
 external Map<String, double> locateMe();
 
 @JS('initMapLocation')
-external dynamic initMapLocation(GeoPointJs p);
+external dynamic initMapLocation(GeoPointJs point);
 
 @JS('setZoomControl')
 external dynamic setZoomControl(bool showZoomControl);
@@ -49,7 +49,7 @@ external dynamic getZoom();
 external dynamic setMaxZoomLevel(double maxZoomLvl);
 
 @JS('setMinZoomLevel')
-external dynamic setMinZoomLevel(double mminZoomLvl);
+external dynamic setMinZoomLevel(double minZoomLvl);
 
 @JS('setDefaultIcon')
 external dynamic setDefaultIcon(String base64);
