@@ -65,16 +65,26 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     controller.listenerMapLongTapping.addListener(() async {
       if (controller.listenerMapLongTapping.value != null) {
         print(controller.listenerMapLongTapping.value);
+        final randNum = Random.secure().nextInt(100).toString();
+        print(randNum);
         await controller.addMarker(
           controller.listenerMapLongTapping.value!,
           markerIcon: MarkerIcon(
-            icon: Icon(
-              Icons.store,
-              color: Colors.brown,
-              size: 48,
+            iconWidget: SizedBox.fromSize(
+              size: Size.square(48),
+              child: Stack(
+                children: [
+                  Icon(
+                    Icons.store,
+                    color: Colors.brown,
+                    size: 48,
+                  ),
+                  Text(randNum,style: TextStyle(fontSize: 18),),
+                ],
+              ),
             ),
           ),
-          angle: pi / 3,
+          //angle: pi / 3,
         );
       }
     });

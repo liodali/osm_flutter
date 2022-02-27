@@ -15,8 +15,7 @@ class MarkerOption {
   }) {
     return MarkerOption(
         defaultMarker: defaultMarker ?? this.defaultMarker,
-        advancedPickerMarker:
-            advancedPickerMarker ?? this.advancedPickerMarker);
+        advancedPickerMarker: advancedPickerMarker ?? this.advancedPickerMarker);
   }
 }
 
@@ -45,12 +44,16 @@ class AssetMarker {
 class MarkerIcon extends StatelessWidget {
   final Icon? icon;
   final AssetMarker? assetMarker;
+  final Widget? iconWidget;
 
   const MarkerIcon({
     this.icon,
     this.assetMarker,
+    this.iconWidget,
     Key? key,
-  })  : assert(icon != null || (assetMarker != null)),
+  })  : assert((icon != null && assetMarker == null && iconWidget == null) ||
+            (iconWidget != null && assetMarker == null && icon == null) ||
+            (assetMarker != null && icon == null && iconWidget == null)),
         super(key: key);
 
   @override
@@ -64,6 +67,8 @@ class MarkerIcon extends StatelessWidget {
         scale: assetMarker!.scaleAssetImage,
         color: assetMarker!.color,
       );
+    } else if (iconWidget != null) {
+      return iconWidget!;
     }
 
     return child!;
