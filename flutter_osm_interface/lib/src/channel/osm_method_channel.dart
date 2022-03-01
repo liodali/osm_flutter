@@ -498,6 +498,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     Color roadColor,
     double width, {
     bool zoomInto = false,
+    bool deleteOldRoads = false,
+    GlobalKey? keyIconForInterestPoints,
+    List<GeoPoint> interestPoints = const [],
   }) async {
     final coordinates = road.map((e) => e.toListNum()).toList();
     final encodedCoordinates = encodePolyline(coordinates);
@@ -511,6 +514,19 @@ class MethodChannelOSM extends MobileOSMPlatform {
       data.addAll(roadColor.toMap("roadColor"));
     }
     data["zoomInto"] = zoomInto;
+    data["clearPreviousRoad"] = deleteOldRoads;
+    data["iconInterestPoints"] = null;
+    data["interestPoints"] = null;
+    if (interestPoints.isNotEmpty) {
+      data["interestPoints"] = await interestPoints.encodedToString();
+      if (keyIconForInterestPoints != null) {
+        try {
+          final Uint8List bytes = await _capturePng(keyIconForInterestPoints);
+          data["iconInterestPoints"] = Platform.isIOS ? bytes.convertToString() : bytes;
+        } catch (e) {}
+      }
+    }
+
     await _channels[idOSM]?.invokeMethod(
       "drawRoad#manually",
       data,

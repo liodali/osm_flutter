@@ -317,13 +317,19 @@ class MapController extends BaseMapController {
     Color roadColor,
     double roadWidth, {
     bool zoomInto = false,
+    bool deleteOldRoads = false,
+    MarkerIcon? interestPointIcon,
+    List<GeoPoint> interestPoints = const [],
   }) async {
     assert(path.length > 3);
     await osmBaseController.drawRoadManually(
       path,
       roadColor,
       roadWidth,
-      zoomInto: zoomInto
+      zoomInto: zoomInto,
+      deleteOldRoads: deleteOldRoads,
+      interestPoints: interestPoints,
+      interestPointIcon: interestPointIcon,
     );
   }
 

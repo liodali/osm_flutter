@@ -168,6 +168,9 @@ abstract class IBaseOSMController {
     Color roadColor,
     double width, {
     bool zoomInto = false,
+    bool deleteOldRoads = false,
+    MarkerIcon? interestPointIcon,
+    List<GeoPoint> interestPoints = const [],
   });
 
   /// [drawMultipleRoad]

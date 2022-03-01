@@ -256,6 +256,9 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     Color roadColor,
     double width, {
     bool zoomInto = false,
+    bool deleteOldRoads = false,
+    GlobalKey? keyIconForInterestPoints,
+    List<GeoPoint> interestPoints = const [],
   });
 
   Future<void> mapRotation(

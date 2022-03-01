@@ -79,7 +79,10 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     color: Colors.brown,
                     size: 48,
                   ),
-                  Text(randNum,style: TextStyle(fontSize: 18),),
+                  Text(
+                    randNum,
+                    style: TextStyle(fontSize: 18),
+                  ),
                 ],
               ),
             ),
@@ -368,6 +371,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     color: Colors.brown,
                   ),
                 ),
+                middleIcon: MarkerIcon(
+                  icon: Icon(Icons.location_history_sharp),
+                ),
                 roadColor: Colors.red,
               ),
               markerOption: MarkerOption(
@@ -527,7 +533,11 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           roadType: notifierRoadType.value,
           //interestPoints: [pointM1, pointM2],
           roadOption: RoadOption(
-              roadWidth: 10, roadColor: Colors.blue, showMarkerOfPOI: false, zoomInto: true),
+            roadWidth: 10,
+            roadColor: Colors.blue,
+            showMarkerOfPOI: true,
+            zoomInto: true,
+          ),
         );
         print("duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         print("distance:${roadInformation.distance}Km");
