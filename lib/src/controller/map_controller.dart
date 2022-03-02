@@ -313,19 +313,20 @@ class MapController extends BaseMapController {
   ///  [roadColor] : (Color) the color that uses to change the  default road color
   ///  [roadWidth] : (double) uses to change width of the  road
   Future<void> drawRoadManually(
-    List<GeoPoint> path,
-    Color roadColor,
-    double roadWidth, {
+    List<GeoPoint> path, {
+    Color roadColor = Colors.green,
+    double roadWidth = 5.0,
     bool zoomInto = false,
     bool deleteOldRoads = false,
     MarkerIcon? interestPointIcon,
     List<GeoPoint> interestPoints = const [],
   }) async {
     assert(path.length > 3);
+    assert(roadWidth > 0);
     await osmBaseController.drawRoadManually(
       path,
-      roadColor,
-      roadWidth,
+      roadColor: roadColor,
+      width: roadWidth,
       zoomInto: zoomInto,
       deleteOldRoads: deleteOldRoads,
       interestPoints: interestPoints,

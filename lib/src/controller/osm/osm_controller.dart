@@ -512,14 +512,15 @@ class MobileOSMController extends IBaseOSMController {
   /// draw road
   ///  [path] : (list) path of the road
   Future<void> drawRoadManually(
-    List<GeoPoint> path,
-    Color roadColor,
-    double width, {
+    List<GeoPoint> path, {
+    Color roadColor = Colors.green,
+    double width = 5.0,
     bool zoomInto = false,
     bool deleteOldRoads = false,
     MarkerIcon? interestPointIcon,
     List<GeoPoint> interestPoints = const [],
   }) async {
+    assert(width > 0.0);
     if (path.isEmpty) {
       throw Exception("you cannot make road with empty list of  geoPoint");
     }
@@ -535,8 +536,8 @@ class MobileOSMController extends IBaseOSMController {
     await osmPlatform.drawRoadManually(
       _idMap,
       path,
-      roadColor,
-      width,
+      roadColor: roadColor,
+      width: width,
       zoomInto: zoomInto,
       deleteOldRoads: deleteOldRoads,
       interestPoints: interestPoints,
