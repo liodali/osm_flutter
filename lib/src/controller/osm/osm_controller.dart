@@ -63,7 +63,16 @@ class MobileOSMController extends IBaseOSMController {
 
     /// load config map scene for iOS
     if (Platform.isIOS) {
-      await (osmPlatform as MethodChannelOSM).initIosMap(_idMap);
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = MarkerIcon(
+        icon: Icon(
+          Icons.location_on,
+          color: Colors.red,
+          size: 24,
+        ),
+      );
+      await Future.delayed(Duration(milliseconds: 300));
+      await (osmPlatform as MethodChannelOSM).initIosMap(_idMap, _osmFlutterState.dynamicMarkerKey);
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
     }
 
     _checkBoundingBox(box, initPosition);

@@ -721,8 +721,10 @@ extension config on MethodChannelOSM {
     await _channels[idOSM]?.invokeMethod('config#Zoom', args);
   }
 
-  Future<void> initIosMap(int idOSM) async {
+  Future<void> initIosMap(int idOSM,GlobalKey key) async {
     await _channels[idOSM]?.invokeMethod("init#ios#map");
+    final icon = (await _capturePng(key)).convertToString();
+    await _channels[idOSM]?.invokeMethod("setDefaultIOSIcon",icon);
   }
 }
 
