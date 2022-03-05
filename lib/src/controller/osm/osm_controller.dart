@@ -529,8 +529,18 @@ class MobileOSMController extends IBaseOSMController {
         path.length < 3) {
       throw Exception("you cannot make line with same geoPoint");
     }
-    if (interestPointIcon != null) {
-      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value;
+    var icon = interestPointIcon;
+    if (Platform.isIOS && icon == null && interestPoints.isNotEmpty) {
+      icon = MarkerIcon(
+        icon: Icon(
+          Icons.location_on,
+          color: Colors.red,
+          size: 32,
+        ),
+      );
+    }
+    if (icon != null && interestPoints.isNotEmpty) {
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
       await Future.delayed(Duration(milliseconds: 350));
     }
     await osmPlatform.drawRoadManually(
