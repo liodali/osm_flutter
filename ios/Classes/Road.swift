@@ -4,6 +4,8 @@
 
 import Foundation
 import MapKit
+import TangramMap
+
 
 struct RoadInformation {
     let distance:Double
@@ -52,4 +54,9 @@ struct RoadConfig {
     var intersectPoints: [GeoPoint]?
     var roadData:RoadData
     var roadType:RoadType
+}
+struct RoadFolder {
+    let id = UUID().uuidString
+    var tgRouteMarker:TGMarker
+    var interestPoints: [GeoPointMap]?
 }

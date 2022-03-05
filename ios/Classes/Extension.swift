@@ -54,6 +54,11 @@ extension TGMapView {
     func removeUserLocation(for marker: TGMarker) {
         self.markerRemove(marker)
     }
+    func removeMarkers(markers:[TGMarker]){
+        for marker in markers {
+            self.markerRemove(marker)
+        }
+    }
 }
 
 extension MyLocationMarker {
