@@ -63,7 +63,16 @@ class MobileOSMController extends IBaseOSMController {
 
     /// load config map scene for iOS
     if (Platform.isIOS) {
-      await (osmPlatform as MethodChannelOSM).initIosMap(_idMap);
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = MarkerIcon(
+        icon: Icon(
+          Icons.location_on,
+          color: Colors.red,
+          size: 24,
+        ),
+      );
+      await Future.delayed(Duration(milliseconds: 300));
+      await (osmPlatform as MethodChannelOSM).initIosMap(_idMap, _osmFlutterState.dynamicMarkerKey);
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
     }
 
     _checkBoundingBox(box, initPosition);
@@ -258,8 +267,8 @@ class MobileOSMController extends IBaseOSMController {
       _idMap,
       [
         _osmFlutterState.startIconKey,
-        _osmFlutterState.endIconKey,
         _osmFlutterState.middleIconKey,
+        _osmFlutterState.endIconKey,
       ],
     );
   }
@@ -410,7 +419,7 @@ class MobileOSMController extends IBaseOSMController {
     MarkerIcon? markerIcon,
     double? angle,
   }) async {
-    if (markerIcon != null && (markerIcon.icon != null || markerIcon.assetMarker != null)) {
+    if (markerIcon != null) {
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
           ((angle == null) || (angle == 0.0))
               ? markerIcon
@@ -418,7 +427,7 @@ class MobileOSMController extends IBaseOSMController {
                   angle: angle,
                   child: markerIcon,
                 );
-      int duration = markerIcon.icon != null || markerIcon.assetMarker != null ? 300 : 350;
+      int duration = 500;
       await Future.delayed(Duration(milliseconds: duration), () async {
         await osmPlatform.addMarker(
           _idMap,
@@ -512,11 +521,15 @@ class MobileOSMController extends IBaseOSMController {
   /// draw road
   ///  [path] : (list) path of the road
   Future<void> drawRoadManually(
-    List<GeoPoint> path,
-    Color roadColor,
-    double width, {
+    List<GeoPoint> path, {
+    Color roadColor = Colors.green,
+    double width = 5.0,
     bool zoomInto = false,
+    bool deleteOldRoads = false,
+    MarkerIcon? interestPointIcon,
+    List<GeoPoint> interestPoints = const [],
   }) async {
+    assert(width > 0.0);
     if (path.isEmpty) {
       throw Exception("you cannot make road with empty list of  geoPoint");
     }
@@ -525,12 +538,30 @@ class MobileOSMController extends IBaseOSMController {
         path.length < 3) {
       throw Exception("you cannot make line with same geoPoint");
     }
+    var icon = interestPointIcon;
+    if (Platform.isIOS && icon == null && interestPoints.isNotEmpty) {
+      icon = MarkerIcon(
+        icon: Icon(
+          Icons.location_on,
+          color: Colors.red,
+          size: 32,
+        ),
+      );
+    }
+    if (icon != null && interestPoints.isNotEmpty) {
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
+      await Future.delayed(Duration(milliseconds: 350));
+    }
     await osmPlatform.drawRoadManually(
       _idMap,
       path,
-      roadColor,
-      width,
+      roadColor: roadColor,
+      width: width,
       zoomInto: zoomInto,
+      deleteOldRoads: deleteOldRoads,
+      interestPoints: interestPoints,
+      keyIconForInterestPoints:
+          interestPointIcon != null ? _osmFlutterState.dynamicMarkerKey : null,
     );
   }
 

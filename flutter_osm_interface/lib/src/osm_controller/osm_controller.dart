@@ -164,10 +164,13 @@ abstract class IBaseOSMController {
   ///
   ///  [width] : (int) width of the road
   Future<void> drawRoadManually(
-    List<GeoPoint> path,
-    Color roadColor,
-    double width, {
+    List<GeoPoint> path, {
+    Color roadColor = Colors.green,
+    double width = 5.0,
     bool zoomInto = false,
+    bool deleteOldRoads = false,
+    MarkerIcon? interestPointIcon,
+    List<GeoPoint> interestPoints = const [],
   });
 
   /// [drawMultipleRoad]

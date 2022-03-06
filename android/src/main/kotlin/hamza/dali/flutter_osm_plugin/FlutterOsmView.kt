@@ -612,7 +612,6 @@ class FlutterOsmView(
                 }
                 val polyLine = Polyline(map!!)
                 polyLine.setPoints(lastRoad.roadPoints)
-                //customRoadMarkerIcon.p
                 flutterRoad = createRoad(
                     polyLine = polyLine,
                     colorRoad = lastRoad.roadColor,
@@ -1043,17 +1042,38 @@ class FlutterOsmView(
         val color = Color.rgb(colorRoad.first(), colorRoad.last(), colorRoad[1])
         val widthRoad = (args["roadWidth"] as Double)
         val zoomToRegion = args["zoomInto"] as Boolean
+        val clearPreviousRoad = args["clearPreviousRoad"] as Boolean
+        val interestPointsEncoded = args["interestPoints"] as String?
+        val iconInterestPoints = args["iconInterestPoints"] as ByteArray?
         checkRoadFolderAboveUserOverlay()
+        if (clearPreviousRoad) {
+            folderRoad.items.clear()
+        }
+        var bitmapIconInterestPoints :Bitmap? = null
+        if (iconInterestPoints != null){
+            bitmapIconInterestPoints = getBitmap(bytes = iconInterestPoints!!)
+        }
 
-        folderRoad.items.clear()
 
 
         val route = PolylineEncoder.decode(encodedWayPoints, 10, false)
+        val listInterestPoints = when (interestPointsEncoded != null) {
+            true -> PolylineEncoder.decode(interestPointsEncoded, 10, false)
+            false -> emptyList<GeoPoint>()
+        }
+
         val polyLine = Polyline(map!!)
         polyLine.setPoints(route)
         polyLine.outlinePaint.color = color
         polyLine.outlinePaint.strokeWidth = widthRoad.toFloat()
-
+        createRoad(
+            polyLine = polyLine,
+            colorRoad = color,
+            roadWidth = widthRoad.toFloat(),
+            showPoiMarker = listInterestPoints.isNotEmpty(),
+            listInterestPoints = listInterestPoints,
+            bitmapIcon = bitmapIconInterestPoints
+        )
         folderRoad.items.add(polyLine)
 
         mapSnapShot().cacheRoad(
@@ -1574,6 +1594,7 @@ class FlutterOsmView(
         showPoiMarker: Boolean,
         listInterestPoints: List<GeoPoint>,
         roadWidth: Float,
+        bitmapIcon: Bitmap? = null,
     ): FlutterRoad {
         polyLine.setOnClickListener { _, _, eventPos ->
             methodChannel.invokeMethod("receiveSinglePress", eventPos?.toHashMap())
@@ -1582,19 +1603,28 @@ class FlutterOsmView(
         /// set polyline color
         polyLine.outlinePaint.color = colorRoad ?: Color.GREEN
 
+        val iconsRoads = customRoadMarkerIcon
+        if (iconsRoads.isEmpty() && bitmapIcon != null) {
+            iconsRoads[Constants.STARTPOSITIONROAD] = bitmapIcon
+            iconsRoads[Constants.MIDDLEPOSITIONROAD] = bitmapIcon
+            iconsRoads[Constants.ENDPOSITIONROAD] = bitmapIcon
 
+        }
         val flutterRoad = FlutterRoad(
             context,
             map!!,
-            interestPoint = if (showPoiMarker) listInterestPoints else emptyList()
+            interestPoint = if (showPoiMarker) listInterestPoints else emptyList(),
+            showInterestPoints = showPoiMarker
         )
 
         flutterRoad.let { roadF ->
-            roadF.markersIcons = customRoadMarkerIcon
+            if (showPoiMarker) {
+                roadF.markersIcons = iconsRoads
+            }
             polyLine.outlinePaint.strokeWidth = roadWidth
 
             roadF.road = polyLine
-            if (showPoiMarker) {
+            /*if (showPoiMarker) {
                 // if (it.start != null)
                 folderRoad.items.add(roadF.start.apply {
                     this.visibilityInfoWindow(visibilityInfoWindow)
@@ -1604,9 +1634,9 @@ class FlutterOsmView(
                     this.visibilityInfoWindow(visibilityInfoWindow)
                 })
                 folderRoad.items.addAll(roadF.middlePoints)
-            }
+            }*/
 
-            folderRoad.items.add(roadF.road!!)
+            folderRoad.items.add(roadF)
         }
 
         return flutterRoad

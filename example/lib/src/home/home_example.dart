@@ -65,16 +65,29 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     controller.listenerMapLongTapping.addListener(() async {
       if (controller.listenerMapLongTapping.value != null) {
         print(controller.listenerMapLongTapping.value);
+        final randNum = Random.secure().nextInt(100).toString();
+        print(randNum);
         await controller.addMarker(
           controller.listenerMapLongTapping.value!,
           markerIcon: MarkerIcon(
-            icon: Icon(
-              Icons.store,
-              color: Colors.brown,
-              size: 48,
+            iconWidget: SizedBox.fromSize(
+              size: Size.square(48),
+              child: Stack(
+                children: [
+                  Icon(
+                    Icons.store,
+                    color: Colors.brown,
+                    size: 48,
+                  ),
+                  Text(
+                    randNum,
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ],
+              ),
             ),
           ),
-          angle: pi / 3,
+          //angle: pi / 3,
         );
       }
     });
@@ -358,6 +371,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     color: Colors.brown,
                   ),
                 ),
+                middleIcon: MarkerIcon(
+                  icon: Icon(Icons.location_history_sharp),
+                ),
                 roadColor: Colors.red,
               ),
               markerOption: MarkerOption(
@@ -485,16 +501,31 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   void roadActionBt(BuildContext ctx) async {
     try {
       await controller.removeLastRoad();
+      /*final encoded = "mfp_I__vpAqJ`@wUrCa\\dCgGig@{DwWq@cf@lG{m@bDiQrCkGqImHu@cY`CcP@sDb@e@hD_LjKkRt@InHpCD`F";
+      final list = await encoded.toListGeo();
+      await controller.drawRoadManually(
+        list,
+        interestPointIcon: MarkerIcon(
+          icon: Icon(
+            Icons.location_history,
+            color: Colors.black,
+          ),
+        ),
+        interestPoints: [list[3],list[6]],
+        zoomInto: true
+      );*/
+
 
       ///selection geoPoint
       GeoPoint point = await controller.selectPosition(
-          icon: MarkerIcon(
-        icon: Icon(
-          Icons.person_pin_circle,
-          color: Colors.amber,
-          size: 100,
+        icon: MarkerIcon(
+          icon: Icon(
+            Icons.person_pin_circle,
+            color: Colors.amber,
+            size: 100,
+          ),
         ),
-      ));
+      );
       GeoPoint point2 = await controller.selectPosition();
       showFab.value = false;
       ValueNotifier<RoadType> notifierRoadType = ValueNotifier(RoadType.car);
@@ -517,7 +548,11 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           roadType: notifierRoadType.value,
           //interestPoints: [pointM1, pointM2],
           roadOption: RoadOption(
-              roadWidth: 10, roadColor: Colors.blue, showMarkerOfPOI: false, zoomInto: true),
+            roadWidth: 10,
+            roadColor: Colors.blue,
+            showMarkerOfPOI: true,
+            zoomInto: true,
+          ),
         );
         print("duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         print("distance:${roadInformation.distance}Km");

@@ -5,23 +5,33 @@ import android.graphics.Bitmap
 import hamza.dali.flutter_osm_plugin.utilities.Constants
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Overlay
+import org.osmdroid.views.overlay.FolderOverlay
 import org.osmdroid.views.overlay.Polyline
 
 open class FlutterRoad(
-    val context: Context,
+    private val context: Context,
     private val mapView: MapView,
     private val interestPoint: List<GeoPoint> = emptyList(),
-) : Overlay() {
+    private val showInterestPoints: Boolean = false,
+) : FolderOverlay() {
 
     lateinit var start: FlutterRoadMarker//? = null
     lateinit var end: FlutterRoadMarker//? = null
-    var middlePoints: MutableList<FlutterRoadMarker> = emptyList<FlutterRoadMarker>().toMutableList()
+    var middlePoints: MutableList<FlutterRoadMarker> =
+        emptyList<FlutterRoadMarker>().toMutableList()
     var road: Polyline? = null
         set(value) {
             if (value != null) {
-                initStartEndPoints(value.actualPoints.first(), value.actualPoints.last(), interestPoint)
                 field = value
+                items.add(value)
+                if (showInterestPoints) {
+                    initStartEndPoints(
+                        value.actualPoints.first(),
+                        value.actualPoints.last(),
+                        interestPoint
+                    )
+                }
+
             }
         }
     var markersIcons: HashMap<String, Bitmap> = HashMap()
@@ -30,10 +40,11 @@ open class FlutterRoad(
         }
 
     private fun initStartEndPoints(
-            startRoad: GeoPoint,
-            destinationRoad: GeoPoint,
-            interestPoint: List<GeoPoint> = emptyList()
+        startRoad: GeoPoint,
+        destinationRoad: GeoPoint,
+        interestPoint: List<GeoPoint> = emptyList()
     ) {
+        val listInterest = interestPoint.toMutableList()
         start = FlutterRoadMarker(context, mapView, startRoad).apply {
             this.mapIconsBitmaps = markersIcons
             this.iconPosition(Constants.PositionMarker.START)
@@ -43,16 +54,29 @@ open class FlutterRoad(
             this.mapIconsBitmaps = markersIcons
             this.iconPosition(Constants.PositionMarker.END)
         }
-        interestPoint.forEach { geoPoint ->
-            middlePoints.add(
+
+        items.add(start)
+        items.add(end)
+        if(interestPoint.isNotEmpty()){
+            if (interestPoint.first() == startRoad) {
+                listInterest.removeFirst()
+            }
+
+            if (interestPoint.last() == destinationRoad) {
+                listInterest.removeLast()
+            }
+            listInterest.forEach { geoPoint ->
+                middlePoints.add(
                     FlutterRoadMarker(context, mapView, geoPoint).apply {
                         this.mapIconsBitmaps = markersIcons
                         this.iconPosition(Constants.PositionMarker.MIDDLE)
                         this.visibilityInfoWindow(false)
                     }
-            )
-        }
+                )
+            }
+            items.addAll(middlePoints.toList())
 
+        }
 
     }
 

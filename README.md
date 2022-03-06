@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.31.0-orange) 
+![pub](https://img.shields.io/badge/pub-v0.32.0-orange) 
 
 
 ## Platform Support
@@ -41,7 +41,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.31.0
+      flutter_osm_plugin: ^0.32.0
 
 
 ### Migration to `0.16.0` (Android Only)
@@ -365,9 +365,15 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 ```dart
 await controller.drawRoadManually(
         waysPoint,
-        Colors.purpleAccent,
-        6.0,
-      )
+        interestPointIcon: MarkerIcon(
+          icon: Icon(
+            Icons.location_history,
+            color: Colors.black,
+          ),
+        ),
+        interestPoints: [waysPoint[3],waysPoint[6]],
+        zoomInto: true
+)
 ```
 
 <b>17) Delete last road </b>

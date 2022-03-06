@@ -24,7 +24,7 @@ protocol PRoadManager {
 
      func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler)
 
-     func drawRoadOnMap (on road:Road,for map:TGMapView,polyLine:Polyline? ) -> TGMarker
+     func drawRoadOnMap (on road:Road,for map:TGMapView,polyLine:Polyline?, interestPoints : [GeoPointMap]?) -> TGMarker
 
 }
 
@@ -67,27 +67,49 @@ class RoadManager: PRoadManager {
     ];
 
     private var road: Road? = nil
-    private var lastMarkerRoad : TGMarker? = nil
-    private var roads : [TGMarker] = [TGMarker]()
+    private var lastMarkerRoad : RoadFolder? = nil
+    private(set) var roads : [RoadFolder] = [RoadFolder]()
     init() {
 
     }
 
+
+
     public func clearRoads (for map:TGMapView) {
         if(lastMarkerRoad != nil){
-            map.markerRemove(lastMarkerRoad!)
+            map.markerRemove(lastMarkerRoad!.tgRouteMarker)
             lastMarkerRoad = nil
         }
         if !roads.isEmpty {
-            roads.forEach{ r in
-                map.markerRemove(r)
+            roads.forEach { folder in
+                map.markerRemove(folder.tgRouteMarker)
+                if folder.interestPoints != nil && !folder.interestPoints!.isEmpty {
+                   let mPoints = folder.interestPoints!.filter { p  in
+                        p.marker != nil
+                    }.map { p in
+                               p.marker!
+                    }
+                    map.removeMarkers(markers: mPoints)
+                }
             }
+
+        }
+    }
+    func removeRoadFolder(folder:RoadFolder,for map:TGMapView){
+        map.markerRemove(folder.tgRouteMarker)
+        if folder.interestPoints != nil && !folder.interestPoints!.isEmpty {
+            let mPoints = folder.interestPoints!.filter { p  in
+                        p.marker != nil
+                    }.map { p in
+                        p.marker!
+                    }
+            map.removeMarkers(markers: mPoints)
         }
     }
 
-    public  func drawRoadOnMap(on road: Road, for map: TGMapView,polyLine:Polyline? = nil) -> TGMarker {
+    public  func drawRoadOnMap(on road: Road, for map: TGMapView,polyLine:Polyline? = nil,interestPoints : [GeoPointMap]? = nil) -> TGMarker {
         if(lastMarkerRoad != nil){
-            map.markerRemove(lastMarkerRoad!)
+           removeRoadFolder(folder: lastMarkerRoad!, for: map)
         }
         let marker = map.markerAdd()
         marker.stylingString = "{ style: 'lines',interactive: false, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), order: 1500 }"
@@ -98,7 +120,7 @@ class RoadManager: PRoadManager {
         }
         let tgPolyline = TGGeoPolyline(coordinates: route!.coordinates!,count: UInt(route!.coordinates!.count))
         marker.polyline = tgPolyline
-        lastMarkerRoad = marker
+        lastMarkerRoad = RoadFolder(tgRouteMarker: marker, interestPoints: interestPoints)
         return marker
     }
     public  func drawMultiRoadsOnMap(on roads: [Road], for map: TGMapView)  {
@@ -109,7 +131,7 @@ class RoadManager: PRoadManager {
             let route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
             let tgPolyline = TGGeoPolyline(coordinates: route.coordinates!,count: UInt(route.coordinates!.count))
             marker.polyline = tgPolyline
-            self.roads.append(marker)
+            self.roads.append(RoadFolder(tgRouteMarker: marker, interestPoints: nil))
         }
         /*
         lastMarkerRoad = marker */

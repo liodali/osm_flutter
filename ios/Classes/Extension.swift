@@ -54,6 +54,11 @@ extension TGMapView {
     func removeUserLocation(for marker: TGMarker) {
         self.markerRemove(marker)
     }
+    func removeMarkers(markers:[TGMarker]){
+        for marker in markers {
+            self.markerRemove(marker)
+        }
+    }
 }
 
 extension MyLocationMarker {
@@ -282,14 +287,15 @@ extension Array where Element == CLLocationCoordinate2D {
         var maxLon = -180.0
         var minLat = 85.0
         var minLon = 180.0
-
-        for location in self {
+        let locations = self
+        for location in locations {
             let lat = location.latitude
             let lon = location.longitude
-            maxLat = Swift.max(maxLat, lat)
-            maxLon = Swift.max(maxLon, lon)
+
             minLat = Swift.min(minLat, lat)
             minLon = Swift.min(minLon, lon)
+            maxLat = Swift.max(maxLat, lat)
+            maxLon = Swift.max(maxLon, lon)
         }
        return  TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat, longitude: minLon),
                 ne: CLLocationCoordinate2D(latitude: maxLat, longitude: maxLon))
