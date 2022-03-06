@@ -501,16 +501,31 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   void roadActionBt(BuildContext ctx) async {
     try {
       await controller.removeLastRoad();
+      /*final encoded = "mfp_I__vpAqJ`@wUrCa\\dCgGig@{DwWq@cf@lG{m@bDiQrCkGqImHu@cY`CcP@sDb@e@hD_LjKkRt@InHpCD`F";
+      final list = await encoded.toListGeo();
+      await controller.drawRoadManually(
+        list,
+        interestPointIcon: MarkerIcon(
+          icon: Icon(
+            Icons.location_history,
+            color: Colors.black,
+          ),
+        ),
+        interestPoints: [list[3],list[6]],
+        zoomInto: true
+      );*/
+
 
       ///selection geoPoint
       GeoPoint point = await controller.selectPosition(
-          icon: MarkerIcon(
-        icon: Icon(
-          Icons.person_pin_circle,
-          color: Colors.amber,
-          size: 100,
+        icon: MarkerIcon(
+          icon: Icon(
+            Icons.person_pin_circle,
+            color: Colors.amber,
+            size: 100,
+          ),
         ),
-      ));
+      );
       GeoPoint point2 = await controller.selectPosition();
       showFab.value = false;
       ValueNotifier<RoadType> notifierRoadType = ValueNotifier(RoadType.car);

@@ -308,10 +308,27 @@ class MapController extends BaseMapController {
     return await osmBaseController.mapOrientation(degree);
   }
 
-  /// draw road manually
+  ///   draw road manually
+  ///
+  ///   if you have you own routing api you can use this method to draw your route
+  ///   manually and you can customize the color,width of the route
+  ///   zoom into the boundingbox and show POIs of the route
+  ///
+  ///   paramteres :
+  ///
   ///  [path] : (list of GeoPoint) path of the road
+  ///
   ///  [roadColor] : (Color) the color that uses to change the  default road color
+  ///
   ///  [roadWidth] : (double) uses to change width of the  road
+  ///
+  ///  [zoomInto] : (bool) uses to zoom out to the boundingbox of the route
+  ///
+  ///  [deleteOldRoads] : (bool) uses to delete the last road drawn in the map
+  ///
+  ///  [interestPointIcon] : (MarkerIcon) uses to change marker icon of interestPoints
+  ///
+  ///  [interestPoints] : (List of GeoPoint) list of interest point that you want to show marker for them
   Future<void> drawRoadManually(
     List<GeoPoint> path, {
     Color roadColor = Colors.green,
