@@ -1624,7 +1624,6 @@ class FlutterOsmView(
             polyLine.outlinePaint.strokeWidth = roadWidth
 
             roadF.road = polyLine
-            roadF.items.add(polyLine)
             /*if (showPoiMarker) {
                 // if (it.start != null)
                 folderRoad.items.add(roadF.start.apply {

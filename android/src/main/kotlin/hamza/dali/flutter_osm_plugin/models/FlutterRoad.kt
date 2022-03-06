@@ -23,6 +23,7 @@ open class FlutterRoad(
         set(value) {
             if (value != null) {
                 field = value
+                items.add(value)
                 if (showInterestPoints) {
                     initStartEndPoints(
                         value.actualPoints.first(),
