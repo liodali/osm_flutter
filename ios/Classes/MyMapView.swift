@@ -222,7 +222,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     newRoad?.roadData = roadData!
                     roadManager.drawRoadOnMap(on: newRoad!, for: mapView,polyLine: nil,interestPoints: interestPoints)
                     if let bounding = box {
-                        mapView.cameraPosition = mapView.cameraThatFitsBounds(bounding, withPadding: UIEdgeInsets.init(top: 0.0, left: 0.0, bottom: 0.0, right: 0.0))
+                        mapView.cameraPosition = mapView.cameraThatFitsBounds(bounding, withPadding: UIEdgeInsets.init(top: 25.0, left: 25.0, bottom: 25.0, right: 25.0))
                     }
                     result(roadInfo!.toMap())
                 }
@@ -779,33 +779,38 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         var interestGeoPoints:[GeoPointMap]? = nil
 
         if let encodedPoints = args["interestPoints"] as? String {
-            let interestPoints  = Polyline(encodedPolyline: encodedPoints, precision: 1e5).coordinates!
+            var interestPoints  = Polyline(encodedPolyline: encodedPoints, precision: 1e5).coordinates!
             if (!interestPoints.isEmpty) {
                 interestGeoPoints = [GeoPointMap]()
-                if( route.coordinates?.first! == interestPoints.first ){
-                    var start = self.markersIconsRoadPoint["start"] ?? self.defaultIcon
+                    var start = markersIconsRoadPoint["start"] ?? defaultIcon
 
-                    if start != nil {
-                        start = convertImage(codeImage: iconMarker!)
-                    }
-                    let geoStartM = GeoPointMap(icon: start, coordinate: interestPoints.first!)
-                    geoStartM.marker = geoStartM.setupMarker(on: self.mapView)
+
+                    let geoStartM = GeoPointMap(icon: start, coordinate: route.coordinates!.first!)
+                    geoStartM.marker = geoStartM.setupMarker(on: mapView)
                     interestGeoPoints!.append(geoStartM)
-                }
 
+                if interestPoints.first == route.coordinates!.first! {
+                    interestPoints.removeFirst()
+                }
+                if interestPoints.last == route.coordinates!.last! {
+                    interestPoints.removeLast()
+                }
                 interestPoints.forEach{ p in
-                    let icon = self.markersIconsRoadPoint["middle"]
+                    var icon = markersIconsRoadPoint["middle"] ?? defaultIcon
+                    if iconMarker != nil {
+                        icon = convertImage(codeImage: iconMarker!)
+                    }
                     let geoMiddle = GeoPointMap(icon: icon, coordinate: p)
-                    geoMiddle.marker = geoMiddle.setupMarker(on: self.mapView)
+                    geoMiddle.marker = geoMiddle.setupMarker(on: mapView)
                     interestGeoPoints!.append(geoMiddle)
                 }
 
-                var end = self.markersIconsRoadPoint["end"] ?? self.defaultIcon
-                if end != nil {
+                var end = markersIconsRoadPoint["end"] ?? defaultIcon
+                if end == nil {
                     end = convertImage(codeImage: iconMarker!)
                 }
-                let geoEndM = GeoPointMap(icon: end, coordinate: interestPoints.last!)
-                geoEndM.marker = geoEndM.setupMarker(on: self.mapView)
+                let geoEndM = GeoPointMap(icon: end, coordinate: route.coordinates!.last!)
+                geoEndM.marker = geoEndM.setupMarker(on: mapView)
                 interestGeoPoints!.append(geoEndM)
             }
 
@@ -814,7 +819,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         roadMarkerPolyline = markerRoad
         if (zoomInto) {
             let box = route.coordinates!.toBounds()
-            mapView.cameraPosition = mapView.cameraThatFitsBounds(box, withPadding: UIEdgeInsets.init(top: 0.0, left: 0.0, bottom: 0.0, right: 0.0))
+            mapView.cameraPosition = mapView.cameraThatFitsBounds(box, withPadding: UIEdgeInsets.init(top: 25.0, left: 25.0, bottom: 25.0, right: 25.0))
         }
 
 
@@ -826,11 +831,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         if let startPointIconRoad = iconsBase64["START"] {
             markersIconsRoadPoint["start"] = convertImage(codeImage: startPointIconRoad)
         }
-        if let startPointIconRoad = iconsBase64["MIDDLE"] {
-            markersIconsRoadPoint["middle"] = convertImage(codeImage: startPointIconRoad)
+        if let middlePointIcon = iconsBase64["MIDDLE"] {
+            markersIconsRoadPoint["middle"] = convertImage(codeImage: middlePointIcon)
         }
-        if let startPointIconRoad = iconsBase64["END"] {
-            markersIconsRoadPoint["end"] = convertImage(codeImage: startPointIconRoad)
+        if let endPointIcon = iconsBase64["END"] {
+            markersIconsRoadPoint["end"] = convertImage(codeImage: endPointIcon)
         }
         result(200)
     }
