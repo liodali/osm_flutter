@@ -1049,11 +1049,10 @@ class FlutterOsmView(
         if (clearPreviousRoad) {
             folderRoad.items.clear()
         }
-        var bitmapIconInterestPoints :Bitmap? = null
-        if (iconInterestPoints != null){
+        var bitmapIconInterestPoints: Bitmap? = null
+        if (iconInterestPoints != null) {
             bitmapIconInterestPoints = getBitmap(bytes = iconInterestPoints!!)
         }
-
 
 
         val route = PolylineEncoder.decode(encodedWayPoints, 10, false)
@@ -1604,11 +1603,21 @@ class FlutterOsmView(
         polyLine.outlinePaint.color = colorRoad ?: Color.GREEN
 
         val iconsRoads = customRoadMarkerIcon
-        if (iconsRoads.isEmpty() && bitmapIcon != null) {
-            iconsRoads[Constants.STARTPOSITIONROAD] = bitmapIcon
-            iconsRoads[Constants.MIDDLEPOSITIONROAD] = bitmapIcon
-            iconsRoads[Constants.ENDPOSITIONROAD] = bitmapIcon
-
+        when {
+            (iconsRoads.isEmpty() && bitmapIcon != null) -> {
+                iconsRoads[Constants.STARTPOSITIONROAD] = bitmapIcon
+                iconsRoads[Constants.MIDDLEPOSITIONROAD] = bitmapIcon
+                iconsRoads[Constants.ENDPOSITIONROAD] = bitmapIcon
+            }
+            iconsRoads.isNotEmpty() && bitmapIcon != null -> {
+                iconsRoads[Constants.MIDDLEPOSITIONROAD] = bitmapIcon
+                if (!iconsRoads.containsKey(Constants.STARTPOSITIONROAD)) {
+                    iconsRoads[Constants.STARTPOSITIONROAD] = bitmapIcon
+                }
+                if (!iconsRoads.containsKey(Constants.ENDPOSITIONROAD)) {
+                    iconsRoads[Constants.ENDPOSITIONROAD] = bitmapIcon
+                }
+            }
         }
         val flutterRoad = FlutterRoad(
             context,
