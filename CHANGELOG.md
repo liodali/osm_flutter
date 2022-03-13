@@ -1,3 +1,6 @@
+## 0.32.1: fix bugs 
+* fix order of drawing marker and polyline in drawRoadManually
+* fix show the right custom icon marker
 ## 0.32.0:
 * add `iconWidget` in `MarkerIcon` to show dynamic widget
 * support show interestPoint for drawing road manually
