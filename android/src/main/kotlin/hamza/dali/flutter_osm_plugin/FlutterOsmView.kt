@@ -1034,66 +1034,6 @@ class FlutterOsmView(
     }
 
 
-    private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
-        val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
-
-        val encodedWayPoints = (args["road"] as String)
-        val colorRoad = (args["roadColor"] as List<Int>)
-        val color = Color.rgb(colorRoad.first(), colorRoad.last(), colorRoad[1])
-        val widthRoad = (args["roadWidth"] as Double)
-        val zoomToRegion = args["zoomInto"] as Boolean
-        val clearPreviousRoad = args["clearPreviousRoad"] as Boolean
-        val interestPointsEncoded = args["interestPoints"] as String?
-        val iconInterestPoints = args["iconInterestPoints"] as ByteArray?
-        checkRoadFolderAboveUserOverlay()
-        if (clearPreviousRoad) {
-            folderRoad.items.clear()
-        }
-        var bitmapIconInterestPoints :Bitmap? = null
-        if (iconInterestPoints != null){
-            bitmapIconInterestPoints = getBitmap(bytes = iconInterestPoints!!)
-        }
-
-
-
-        val route = PolylineEncoder.decode(encodedWayPoints, 10, false)
-        val listInterestPoints = when (interestPointsEncoded != null) {
-            true -> PolylineEncoder.decode(interestPointsEncoded, 10, false)
-            false -> emptyList<GeoPoint>()
-        }
-
-        val polyLine = Polyline(map!!)
-        polyLine.setPoints(route)
-        polyLine.outlinePaint.color = color
-        polyLine.outlinePaint.strokeWidth = widthRoad.toFloat()
-        createRoad(
-            polyLine = polyLine,
-            colorRoad = color,
-            roadWidth = widthRoad.toFloat(),
-            showPoiMarker = listInterestPoints.isNotEmpty(),
-            listInterestPoints = listInterestPoints,
-            bitmapIcon = bitmapIconInterestPoints
-        )
-        folderRoad.items.add(polyLine)
-
-        mapSnapShot().cacheRoad(
-            RoadSnapShot(
-                roadPoints = route,
-                roadColor = color,
-                roadWith = widthRoad.toFloat(),
-                showIcons = false,
-            )
-        )
-        if (zoomToRegion) {
-            map!!.zoomToBoundingBox(
-                BoundingBox.fromGeoPoints(polyLine.actualPoints),
-                true,
-                64,
-            )
-        }
-        map!!.invalidate()
-        result.success(null)
-    }
 
     private fun trackUserLocation(result: MethodChannel.Result) {
         try {
@@ -1588,6 +1528,65 @@ class FlutterOsmView(
         }
     }
 
+    private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
+        val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
+
+        val encodedWayPoints = (args["road"] as String)
+        val colorRoad = (args["roadColor"] as List<Int>)
+        val color = Color.rgb(colorRoad.first(), colorRoad.last(), colorRoad[1])
+        val widthRoad = (args["roadWidth"] as Double)
+        val zoomToRegion = args["zoomInto"] as Boolean
+        val clearPreviousRoad = args["clearPreviousRoad"] as Boolean
+        val interestPointsEncoded = args["interestPoints"] as String?
+        val iconInterestPoints = args["iconInterestPoints"] as ByteArray?
+        checkRoadFolderAboveUserOverlay()
+        if (clearPreviousRoad) {
+            folderRoad.items.clear()
+        }
+        var bitmapIconInterestPoints: Bitmap? = null
+        if (iconInterestPoints != null) {
+            bitmapIconInterestPoints = getBitmap(bytes = iconInterestPoints!!)
+        }
+
+
+        val route = PolylineEncoder.decode(encodedWayPoints, 10, false)
+        val listInterestPoints = when (interestPointsEncoded != null) {
+            true -> PolylineEncoder.decode(interestPointsEncoded, 10, false)
+            false -> emptyList<GeoPoint>()
+        }
+
+        val polyLine = Polyline(map!!)
+        polyLine.setPoints(route)
+        polyLine.outlinePaint.color = color
+        polyLine.outlinePaint.strokeWidth = widthRoad.toFloat()
+        createRoad(
+            polyLine = polyLine,
+            colorRoad = color,
+            roadWidth = widthRoad.toFloat(),
+            showPoiMarker = listInterestPoints.isNotEmpty(),
+            listInterestPoints = listInterestPoints,
+            bitmapIcon = bitmapIconInterestPoints
+        )
+
+        mapSnapShot().cacheRoad(
+            RoadSnapShot(
+                roadPoints = route,
+                roadColor = color,
+                roadWith = widthRoad.toFloat(),
+                showIcons = false,
+            )
+        )
+        if (zoomToRegion) {
+            map!!.zoomToBoundingBox(
+                BoundingBox.fromGeoPoints(polyLine.actualPoints),
+                true,
+                64,
+            )
+        }
+        map!!.invalidate()
+        result.success(null)
+    }
+
     private fun createRoad(
         polyLine: Polyline,
         colorRoad: Int?,
@@ -1604,11 +1603,21 @@ class FlutterOsmView(
         polyLine.outlinePaint.color = colorRoad ?: Color.GREEN
 
         val iconsRoads = customRoadMarkerIcon
-        if (iconsRoads.isEmpty() && bitmapIcon != null) {
-            iconsRoads[Constants.STARTPOSITIONROAD] = bitmapIcon
-            iconsRoads[Constants.MIDDLEPOSITIONROAD] = bitmapIcon
-            iconsRoads[Constants.ENDPOSITIONROAD] = bitmapIcon
-
+        when {
+            (iconsRoads.isEmpty() && bitmapIcon != null) -> {
+                iconsRoads[Constants.STARTPOSITIONROAD] = bitmapIcon
+                iconsRoads[Constants.MIDDLEPOSITIONROAD] = bitmapIcon
+                iconsRoads[Constants.ENDPOSITIONROAD] = bitmapIcon
+            }
+            iconsRoads.isNotEmpty() && bitmapIcon != null -> {
+                iconsRoads[Constants.MIDDLEPOSITIONROAD] = bitmapIcon
+                if (!iconsRoads.containsKey(Constants.STARTPOSITIONROAD)) {
+                    iconsRoads[Constants.STARTPOSITIONROAD] = bitmapIcon
+                }
+                if (!iconsRoads.containsKey(Constants.ENDPOSITIONROAD)) {
+                    iconsRoads[Constants.ENDPOSITIONROAD] = bitmapIcon
+                }
+            }
         }
         val flutterRoad = FlutterRoad(
             context,

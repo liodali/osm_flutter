@@ -24,6 +24,7 @@ open class FlutterRoad(
             if (value != null) {
                 field = value
                 items.add(value)
+
                 if (showInterestPoints) {
                     initStartEndPoints(
                         value.actualPoints.first(),
@@ -31,7 +32,6 @@ open class FlutterRoad(
                         interestPoint
                     )
                 }
-
             }
         }
     var markersIcons: HashMap<String, Bitmap> = HashMap()
@@ -54,9 +54,6 @@ open class FlutterRoad(
             this.mapIconsBitmaps = markersIcons
             this.iconPosition(Constants.PositionMarker.END)
         }
-
-        items.add(start)
-        items.add(end)
         if(interestPoint.isNotEmpty()){
             if (interestPoint.first() == startRoad) {
                 listInterest.removeFirst()
@@ -77,7 +74,8 @@ open class FlutterRoad(
             items.addAll(middlePoints.toList())
 
         }
-
+        items.add(start)
+        items.add(end)
     }
 
 
