@@ -41,18 +41,28 @@ class CustomPickerLocationConfig {
 class CustomPickerLocation extends StatefulWidget {
   final PickerMapController controller;
   final AppBar? appBarPicker;
+  final Widget? customPicker;
   final Widget? topWidgetPicker;
   final Widget? bottomWidgetPicker;
   final CustomPickerLocationConfig pickerConfig;
+  final  Function(bool)? onMapReady;
 
   CustomPickerLocation({
     required this.controller,
     this.appBarPicker,
+    this.customPicker,
     this.bottomWidgetPicker,
     this.topWidgetPicker,
     this.pickerConfig = const CustomPickerLocationConfig(),
+    this.onMapReady,
     Key? key,
-  }) : super(key: key);
+  }) : assert(appBarPicker != null || customPicker != null,
+         ' one of these parameters should not be null; appBarPicker, customPicker'
+       ),
+        assert(appBarPicker == null || customPicker == null,
+         'You should not provide both a appBarPicker and customPicker parameters at the same time'
+    
+       ), super(key: key);
 
   static PickerMapController of<T>(
     BuildContext context, {
@@ -108,16 +118,30 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
                   initZoom: widget.pickerConfig.initZoom,
                   minZoomLevel: widget.pickerConfig.minZoomLevel,
                   maxZoomLevel: widget.pickerConfig.maxZoomLevel,
+                  onMapIsReady:widget.onMapReady
                 ),
               ),
-              if (widget.topWidgetPicker != null) ...[
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: widget.topWidgetPicker!,
-                ),
-              ],
+               if(widget.customPicker != null)
+              Positioned(
+                top:50,
+                left:10,
+                right:10,
+                child:Column(children:[
+                       widget.customPicker!,
+                      if (widget.topWidgetPicker != null)
+                         widget.topWidgetPicker!
+                ]))
+                else if (widget.topWidgetPicker != null) ...[
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: widget.topWidgetPicker!,
+                    ),
+                  ],
+
+              
+
               if (widget.bottomWidgetPicker != null) ...[
                 widget.bottomWidgetPicker!,
               ],
