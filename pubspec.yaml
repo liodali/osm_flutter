@@ -16,11 +16,15 @@ dependencies:
   url_launcher: ^6.0.10
   dio: ^4.0.0
   uuid: ^3.0.5
-  flutter_osm_interface:
-    path: ./flutter_osm_interface
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
+    
+  flutter_osm_interface:
+    git:
+      url: https://github.com/xyzbilal/osm_flutter.git
+      path: flutter_osm_interface
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
