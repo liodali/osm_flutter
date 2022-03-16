@@ -19,6 +19,10 @@ dependencies:
   flutter_osm_interface:
     path: ./flutter_osm_interface
 dev_dependencies:
+ flutter_osm_interface:
+    git:
+      url: https://github.com/xyzbilal/osm_flutter.git
+      path: flutter_osm_interface
   flutter_test:
     sdk: flutter
 
