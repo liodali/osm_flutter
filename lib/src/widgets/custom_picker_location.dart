@@ -54,7 +54,7 @@ class CustomPickerLocation extends StatefulWidget {
     this.pickerConfig = const CustomPickerLocationConfig(),
     this.onMapReady,
     Key? key,
-  })  : super(key: key);
+  }) : super(key: key);
 
   static PickerMapController of<T>(
     BuildContext context, {
@@ -98,19 +98,20 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
             children: [
               Positioned.fill(
                 child: OSMFlutter(
-                    controller: widget.controller,
-                    markerOption: widget.pickerConfig.advancedMarkerPicker != null
-                        ? MarkerOption(
-                            advancedPickerMarker: widget.pickerConfig.advancedMarkerPicker,
-                          )
-                        : null,
-                    isPicker: true,
-                    mapIsLoading: widget.pickerConfig.loadingWidget,
-                    stepZoom: widget.pickerConfig.stepZoom,
-                    initZoom: widget.pickerConfig.initZoom,
-                    minZoomLevel: widget.pickerConfig.minZoomLevel,
-                    maxZoomLevel: widget.pickerConfig.maxZoomLevel,
-                    onMapIsReady: widget.onMapReady),
+                  controller: widget.controller,
+                  markerOption: widget.pickerConfig.advancedMarkerPicker != null
+                      ? MarkerOption(
+                          advancedPickerMarker: widget.pickerConfig.advancedMarkerPicker,
+                        )
+                      : null,
+                  isPicker: true,
+                  mapIsLoading: widget.pickerConfig.loadingWidget,
+                  stepZoom: widget.pickerConfig.stepZoom,
+                  initZoom: widget.pickerConfig.initZoom,
+                  minZoomLevel: widget.pickerConfig.minZoomLevel,
+                  maxZoomLevel: widget.pickerConfig.maxZoomLevel,
+                  onMapIsReady: widget.onMapReady,
+                ),
               ),
               if (widget.topWidgetPicker != null) ...[
                 Positioned(
