@@ -44,6 +44,7 @@ class CustomPickerLocation extends StatefulWidget {
   final Widget? topWidgetPicker;
   final Widget? bottomWidgetPicker;
   final CustomPickerLocationConfig pickerConfig;
+  final Function(bool)? onMapReady;
 
   CustomPickerLocation({
     required this.controller,
@@ -51,6 +52,7 @@ class CustomPickerLocation extends StatefulWidget {
     this.bottomWidgetPicker,
     this.topWidgetPicker,
     this.pickerConfig = const CustomPickerLocationConfig(),
+    this.onMapReady,
     Key? key,
   }) : super(key: key);
 
@@ -108,6 +110,7 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
                   initZoom: widget.pickerConfig.initZoom,
                   minZoomLevel: widget.pickerConfig.minZoomLevel,
                   maxZoomLevel: widget.pickerConfig.maxZoomLevel,
+                  onMapIsReady: widget.onMapReady,
                 ),
               ),
               if (widget.topWidgetPicker != null) ...[

@@ -168,7 +168,7 @@ class OSMFlutterState extends State<OSMFlutter> {
                         Container(
                           color: Colors.white,
                           child: buildWidget(
-                              controller: widget.controller as MapController,
+                              controller: widget.controller,
                               onGeoPointClicked: widget.onGeoPointClicked,
                               onLocationChanged: widget.onLocationChanged,
                               dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,

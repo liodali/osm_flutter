@@ -1,6 +1,6 @@
 name: flutter_osm_plugin
 description: OpenStreetMap Plugin Native for flutter apps (Andoird/iOS supported,web is under-dev)
-version: 0.32.1
+version: 0.32.2
 
 
 homepage: https://github.com/liodali/osm_flutter
@@ -21,6 +21,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+    
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

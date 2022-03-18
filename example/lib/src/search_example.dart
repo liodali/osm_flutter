@@ -54,8 +54,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                       textConfirmPicker: "pick",
                       initCurrentUserPosition: false,
                       initZoom: 8,
-                      initPosition:
-                          GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+                      initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
                       radius: 8.0,
                     );
                     if (p != null) {
@@ -104,52 +103,77 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     return CustomPickerLocation(
       controller: controller,
-      appBarPicker: AppBar(
-        title: TextField(
-          controller: textEditingController,
-          onEditingComplete: () async {
-            FocusScope.of(context).requestFocus(new FocusNode());
-          },
-          decoration: InputDecoration(
-            prefixIcon: Icon(
-              Icons.search,
-              color: Colors.black,
-            ),
-            suffix: ValueListenableBuilder<TextEditingValue>(
-              valueListenable: textEditingController,
-              builder: (ctx, text, child) {
-                if (text.text.isNotEmpty) {
-                  return child!;
-                }
-                return SizedBox.shrink();
-              },
-              child: InkWell(
-                focusNode: FocusNode(),
-                onTap: () {
-                  textEditingController.clear();
-                  controller.setSearchableText("");
-                  FocusScope.of(context).requestFocus(new FocusNode());
-                },
-                child: Icon(
-                  Icons.close,
-                  size: 16,
-                  color: Colors.black,
+      topWidgetPicker: Padding(
+        padding: const EdgeInsets.only(
+          top: 56,
+          left: 8,
+          right: 8,
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                TextButton(
+                  style: TextButton.styleFrom(),
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Icon(
+                    Icons.arrow_back_ios,
+                  ),
                 ),
-              ),
+                Expanded(
+                  child: TextField(
+                    controller: textEditingController,
+                    onEditingComplete: () async {
+                      FocusScope.of(context).requestFocus(new FocusNode());
+                    },
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Colors.black,
+                      ),
+                      suffix: ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: textEditingController,
+                        builder: (ctx, text, child) {
+                          if (text.text.isNotEmpty) {
+                            return child!;
+                          }
+                          return SizedBox.shrink();
+                        },
+                        child: InkWell(
+                          focusNode: FocusNode(),
+                          onTap: () {
+                            textEditingController.clear();
+                            controller.setSearchableText("");
+                            FocusScope.of(context).requestFocus(new FocusNode());
+                          },
+                          child: Icon(
+                            Icons.close,
+                            size: 16,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      focusColor: Colors.black,
+                      filled: true,
+                      hintText: "search",
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      fillColor: Colors.grey[300],
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.red),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            focusColor: Colors.black,
-            filled: true,
-            hintText: "search",
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            fillColor: Colors.grey[300],
-            errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.red),
+            SizedBox(
+              height: 8,
             ),
-          ),
+            TopSearchWidget()
+          ],
         ),
       ),
-      topWidgetPicker: TopSearchWidget(),
       bottomWidgetPicker: Positioned(
         bottom: 12,
         right: 8,
@@ -195,12 +219,10 @@ class _TopSearchWidgetState extends State<TopSearchWidget> {
     final v = controller.searchableText.value;
     if (v.length > 3 && oldText != v) {
       oldText = v;
-      if (_timerToStartSuggestionReq != null &&
-          _timerToStartSuggestionReq!.isActive) {
+      if (_timerToStartSuggestionReq != null && _timerToStartSuggestionReq!.isActive) {
         _timerToStartSuggestionReq!.cancel();
       }
-      _timerToStartSuggestionReq =
-          Timer.periodic(Duration(seconds: 3), (timer) async {
+      _timerToStartSuggestionReq = Timer.periodic(Duration(seconds: 3), (timer) async {
         await suggestionProcessing(v);
         timer.cancel();
       });

@@ -41,7 +41,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.32.0
+      flutter_osm_plugin: ^0.32.2
 
 
 ### Migration to `0.16.0` (Android Only)

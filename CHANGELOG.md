@@ -1,3 +1,5 @@
+## 0.32.2: 
+* add onMapReady in custom_picker_location
 ## 0.32.1: fix bugs 
 * fix order of drawing marker and polyline in drawRoadManually
 * fix show the right custom icon marker
