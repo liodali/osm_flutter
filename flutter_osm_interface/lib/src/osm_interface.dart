@@ -283,4 +283,8 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   Future<BoundingBox> getBounds(
     int idOSM,
   );
+
+  Future<List<GeoPoint>> getGeoPointMarkers(
+    int idOSM,
+  );
 }
