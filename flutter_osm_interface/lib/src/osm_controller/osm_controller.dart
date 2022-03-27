@@ -241,6 +241,17 @@ abstract class IBaseOSMController {
   Future<void> limitArea(
     BoundingBox box,
   );
-
+  /// removeLimitArea
+  ///
+  /// this method will remove the region limitation for camera movement
+  /// and the user can move freely
   Future<void> removeLimitArea();
+
+  /// geoPoints
+  ///
+  /// this method will get location of existing marker in the mapview
+  /// this method will not get static markers.
+  ///
+  /// return list of geopoint that represent location of the markers
+  Future<List<GeoPoint>> geoPoints();
 }

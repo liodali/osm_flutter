@@ -721,6 +721,11 @@ class MobileOSMController extends IBaseOSMController {
       commonRoadOption: commonRoadOption,
     );
   }
+
+  @override
+  Future<List<GeoPoint>> geoPoints() async{
+    return await osmPlatform.getGeoPointMarkers(_idMap);
+  }
 }
 
 extension PrivateMethodOSMController on MobileOSMController {
