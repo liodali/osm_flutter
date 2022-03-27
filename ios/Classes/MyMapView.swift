@@ -30,7 +30,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var retrieveLastUserLocation = false
     var isAdvancedPicker = false
     var userLocation: MyLocationMarker? = nil
-    var dictClusterAnnotation = [String: [StaticGeoPMarker]]()
+    var dictClusterAnnotation : [String: [StaticGeoPMarker]] = [String: [StaticGeoPMarker]]()
     var dictIconClusterAnnotation = [String: StaticMarkerData]()
     var roadMarkerPolyline: TGMarker? = nil
     lazy var markersIconsRoadPoint: [String: UIImage] = [String: UIImage]()
@@ -296,12 +296,44 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             updateMarkerIcon(call: call)
             result(200)
             break;
+        case "get#geopoints":
+            getGeoPoints(result)
+            break;
         default:
             result(nil)
             break;
         }
     }
 
+
+
+
+    public func view() -> UIView {
+        if #available(iOS 11.0, *) {
+            /*  mapView.register(
+                      MarkerView.self,
+                      forAnnotationViewWithReuseIdentifier:
+                      MKMapViewDefaultAnnotationViewReuseIdentifier)*/
+
+        }
+        //let view = UIStackView(arrangedSubviews: [mapView])
+
+        return mainView
+    }
+
+    private func getGeoPoints(_ result: FlutterResult) {
+        let list :[TGMarker] = mapView.markers.filter { marker in
+            marker.stylingString.contains("points")  && dictClusterAnnotation.values.filter { (v: [StaticGeoPMarker]) in
+                        v.map { (staticMarker: StaticGeoPMarker) -> CLLocationCoordinate2D in
+                                    staticMarker.coordinate
+                                }.contains(marker.point)
+                    }.isEmpty
+        }
+        let points =  list.map { marker in
+            marker.point.toGeoPoint()
+        }
+        result(points)
+    }
 
     private func setCameraAreaLimit(call: FlutterMethodCall) {
         let bbox = call.arguments as! [Double]
@@ -322,19 +354,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         //mapView.bounds
         //mapView.bounds = bounds
 
-    }
-
-    public func view() -> UIView {
-        if #available(iOS 11.0, *) {
-            /*  mapView.register(
-                      MarkerView.self,
-                      forAnnotationViewWithReuseIdentifier:
-                      MKMapViewDefaultAnnotationViewReuseIdentifier)*/
-
-        }
-        //let view = UIStackView(arrangedSubviews: [mapView])
-
-        return mainView
     }
 
     private func initPosition(args: Any?, result: @escaping FlutterResult) {
