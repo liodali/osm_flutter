@@ -386,9 +386,11 @@ class MobileOSMController extends IBaseOSMController {
 
   /// activate current location position
   Future<void> currentLocation() async {
-    bool granted = await _osmFlutterState.requestPermission();
-    if (!granted) {
-      throw Exception("Location permission not granted");
+    if(Platform.isAndroid){
+      bool granted = await _osmFlutterState.requestPermission();
+      if (!granted) {
+        throw Exception("Location permission not granted");
+      }
     }
     // bool isEnabled = await _osmFlutterState.checkService();
     // if (!isEnabled) {

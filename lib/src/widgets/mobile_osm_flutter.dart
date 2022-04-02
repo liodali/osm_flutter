@@ -207,19 +207,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
         return false;
       }
     }
-    // _permission = await location.hasPermission();
-    // if (_permission == PermissionStatus.denied) {
-    //   //request location permission
-    //   _permission = await location.requestPermission();
-    //   if (_permission == PermissionStatus.granted) {
-    //     return true;
-    //   }
-    //   return false;
-    // } else if (_permission == PermissionStatus.granted) {
-    //   return true;
-    //   //  if (widget.currentLocation) await _checkServiceLocation();
-    // }
-    return false;
+    return true;
   }
 
   // Future<bool> checkService() async {
