@@ -705,7 +705,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @override
   Future<List<GeoPoint>> getGeoPointMarkers(int idOSM) async {
     final list = await _channels[idOSM]!.invokeListMethod("get#geopoints");
-    return (list as List<Map>).map((e) => GeoPoint.fromMap(e)).toList();
+    return (list as List).map((e) => GeoPoint.fromMap(e)).toList();
   }
 }
 
