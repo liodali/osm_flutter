@@ -701,6 +701,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
         result.map((e) => Map<String, dynamic>.from(e)).toList();
     return mapRoadInfo.map((e) => RoadInfo.fromMap(e)).toList();
   }
+
+  @override
+  Future<List<GeoPoint>> getGeoPointMarkers(int idOSM) async {
+    final list = await _channels[idOSM]!.invokeListMethod("get#geopoints");
+    return (list as List).map((e) => GeoPoint.fromMap(e)).toList();
+  }
 }
 
 extension config on MethodChannelOSM {
@@ -721,10 +727,10 @@ extension config on MethodChannelOSM {
     await _channels[idOSM]?.invokeMethod('config#Zoom', args);
   }
 
-  Future<void> initIosMap(int idOSM,GlobalKey key) async {
+  Future<void> initIosMap(int idOSM, GlobalKey key) async {
     await _channels[idOSM]?.invokeMethod("init#ios#map");
     final icon = (await _capturePng(key)).convertToString();
-    await _channels[idOSM]?.invokeMethod("setDefaultIOSIcon",icon);
+    await _channels[idOSM]?.invokeMethod("setDefaultIOSIcon", icon);
   }
 }
 

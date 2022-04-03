@@ -177,6 +177,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         ),
       ),
     );
+    final gps = await controller.geopoints;
+    print(gps);
   }
 
   @override

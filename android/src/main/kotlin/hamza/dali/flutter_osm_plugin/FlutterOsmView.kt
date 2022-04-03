@@ -517,6 +517,9 @@ class FlutterOsmView(
                 "update#Marker" -> {
                     updateMarker(call, result)
                 }
+                "get#geopoints" -> {
+                    getGeoPoints(result)
+                }
                 else -> {
                     result.notImplemented()
                 }
@@ -526,6 +529,18 @@ class FlutterOsmView(
             Log.e(e.cause.toString(), "error osm plugin ${e.stackTraceToString()}")
             result.error("404", e.message, e.stackTraceToString())
         }
+    }
+
+    private fun getGeoPoints(result: MethodChannel.Result) {
+       val list = folderMarkers.items.filterIsInstance(Marker::class.java)
+        val geoPoints  = emptyList<HashMap<String,Double>>().toMutableList()
+        geoPoints.addAll(
+            list.map {
+                it.position.toHashMap()
+            }.toList()
+        )
+        result.success(geoPoints.toList())
+
     }
 
     private fun getUserLocation(result: MethodChannel.Result, callback: VoidCallback? = null) {
