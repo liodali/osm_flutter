@@ -1,3 +1,6 @@
+## 0.33.0:
+* fix permission request in ios
+* add `geoPoints` method in controller to get list of geo point of existing marker except static points
 ## 0.32.2: 
 * add onMapReady in custom_picker_location
 ## 0.32.1: fix bugs 

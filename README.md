@@ -225,6 +225,13 @@ await controller.removeLimitAreaMap();
 ```dart
 GeoPoint centerMap = await controller.centerMap;
 ```
+<b> 12.1) get geoPoint in the map </b>b>
+
+* recuperate geoPoint of marker add it by user except static points
+
+```dart
+List<GeoPoint> geoPoints = await controller.geopoints;
+```
 <b> 13) get bounding box  map </b>b>
 
 ```dart
