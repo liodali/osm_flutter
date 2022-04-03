@@ -1,6 +1,6 @@
 name: flutter_osm_interface
 description: osm flutter controller and utilities.
-version: 0.1.19
+version: 0.1.20
 homepage: https://github.com/liodali/osm_flutter
 
 environment:

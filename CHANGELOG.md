@@ -1,3 +1,5 @@
+## 0.33.0+1:
+* fix osm_interface verions
 ## 0.33.0:
 * fix permission request in ios
 * add `geoPoints` method in controller to get list of geo point of existing marker except static points
