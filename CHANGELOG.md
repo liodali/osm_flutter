@@ -1,3 +1,5 @@
+## 0.33.0+2:
+* disable show windowinfo for marker in android
 ## 0.33.0+1:
 * fix osm_interface verions
 ## 0.33.0:
