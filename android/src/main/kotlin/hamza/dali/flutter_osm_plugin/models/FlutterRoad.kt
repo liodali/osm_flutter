@@ -48,12 +48,17 @@ open class FlutterRoad(
         start = FlutterRoadMarker(context, mapView, startRoad).apply {
             this.mapIconsBitmaps = markersIcons
             this.iconPosition(Constants.PositionMarker.START)
+            this.visibilityInfoWindow(false)
+
         }
 
         end = FlutterRoadMarker(context, mapView, destinationRoad).apply {
             this.mapIconsBitmaps = markersIcons
             this.iconPosition(Constants.PositionMarker.END)
+            this.visibilityInfoWindow(false)
         }
+
+
         if(interestPoint.isNotEmpty()){
             if (interestPoint.first() == startRoad) {
                 listInterest.removeFirst()
