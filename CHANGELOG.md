@@ -1,3 +1,19 @@
+## 0.33.0+2:
+* disable show windowinfo for marker in android
+## 0.33.0+1:
+* fix osm_interface verions
+## 0.33.0:
+* fix permission request in ios
+* add `geoPoints` method in controller to get list of geo point of existing marker except static points
+## 0.32.2: 
+* add onMapReady in custom_picker_location
+## 0.32.1: fix bugs 
+* fix order of drawing marker and polyline in drawRoadManually
+* fix show the right custom icon marker
+## 0.32.0:
+* add `iconWidget` in `MarkerIcon` to show dynamic widget
+* support show interestPoint for drawing road manually
+* add deleteOldRoad in drawRoadManually to prevent delete last road if it not needed
 ## 0.31.0:
 * add drawMultiRoad in iOS side
 * fix request permission when map initialized on user location

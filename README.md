@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.31.0-orange) 
+![pub](https://img.shields.io/badge/pub-v0.33.0%2B2-orange) 
 
 
 ## Platform Support
@@ -41,7 +41,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.31.0
+      flutter_osm_plugin: ^0.33.0+2
 
 
 ### Migration to `0.16.0` (Android Only)
@@ -225,6 +225,13 @@ await controller.removeLimitAreaMap();
 ```dart
 GeoPoint centerMap = await controller.centerMap;
 ```
+<b> 12.1) get geoPoint in the map </b>b>
+
+* recuperate geoPoint of marker add it by user except static points
+
+```dart
+List<GeoPoint> geoPoints = await controller.geopoints;
+```
 <b> 13) get bounding box  map </b>b>
 
 ```dart
@@ -365,9 +372,15 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 ```dart
 await controller.drawRoadManually(
         waysPoint,
-        Colors.purpleAccent,
-        6.0,
-      )
+        interestPointIcon: MarkerIcon(
+          icon: Icon(
+            Icons.location_history,
+            color: Colors.black,
+          ),
+        ),
+        interestPoints: [waysPoint[3],waysPoint[6]],
+        zoomInto: true
+)
 ```
 
 <b>17) Delete last road </b>

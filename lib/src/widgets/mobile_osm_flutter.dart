@@ -71,9 +71,6 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   var mobileKey = GlobalKey();
   GlobalKey androidKey = GlobalKey();
 
-//permission status
-  PermissionStatus? _permission;
-
   GlobalKey get defaultMarkerKey => widget.globalKeys[0];
 
   GlobalKey get advancedPickerMarker => widget.globalKeys[1];
@@ -210,7 +207,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
         return false;
       }
     }
-    return false;
+    return true;
   }
 
   // Future<bool> checkService() async {

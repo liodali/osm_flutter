@@ -244,10 +244,13 @@ abstract class MobileOSMPlatform extends OSMPlatform {
 
   Future<void> drawRoadManually(
     int idOSM,
-    List<GeoPoint> road,
-    Color roadColor,
-    double width, {
+    List<GeoPoint> road, {
+    Color roadColor = Colors.green,
+    double width = 5.0,
     bool zoomInto = false,
+    bool deleteOldRoads = false,
+    GlobalKey? keyIconForInterestPoints,
+    List<GeoPoint> interestPoints = const [],
   });
 
   Future<void> mapRotation(
@@ -270,6 +273,10 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   );
 
   Future<BoundingBox> getBounds(
+    int idOSM,
+  );
+
+  Future<List<GeoPoint>> getGeoPointMarkers(
     int idOSM,
   );
 }

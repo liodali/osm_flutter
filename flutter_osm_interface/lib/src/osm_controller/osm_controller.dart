@@ -171,10 +171,13 @@ abstract class IBaseOSMController {
   ///
   ///  [width] : (int) width of the road
   Future<void> drawRoadManually(
-    List<GeoPoint> path,
-    Color roadColor,
-    double width, {
+    List<GeoPoint> path, {
+    Color roadColor = Colors.green,
+    double width = 5.0,
     bool zoomInto = false,
+    bool deleteOldRoads = false,
+    MarkerIcon? interestPointIcon,
+    List<GeoPoint> interestPoints = const [],
   });
 
   /// [drawMultipleRoad]
@@ -245,6 +248,17 @@ abstract class IBaseOSMController {
   Future<void> limitArea(
     BoundingBox box,
   );
-
+  /// removeLimitArea
+  ///
+  /// this method will remove the region limitation for camera movement
+  /// and the user can move freely
   Future<void> removeLimitArea();
+
+  /// geoPoints
+  ///
+  /// this method will get location of existing marker in the mapview
+  /// this method will not get static markers.
+  ///
+  /// return list of geopoint that represent location of the markers
+  Future<List<GeoPoint>> geoPoints();
 }
