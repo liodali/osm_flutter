@@ -12,9 +12,9 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
+  routing_client_dart: ^0.3.1
   flutter_osm_interface:
     path: ../flutter_osm_interface
-  routing_client_dart: ^0.3.0+1
 dev_dependencies:
   flutter_test:
     sdk: flutter

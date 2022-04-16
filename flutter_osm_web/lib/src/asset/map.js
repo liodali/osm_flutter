@@ -105,11 +105,12 @@ async function configRoad(color, startIcon, middleIcon, endIcon) {
 
 
 }
- function drawRoad(route, color, roadWidth, zoomInto, interestPoints) {
+function drawRoad(route, color, roadWidth, zoomInto, interestPoints,iconInteretPoint) {
    console.log(route);
    var iframe = document.getElementById("frame_map");
-   return  iframe.contentWindow.drawRoad(route, color, roadWidth, zoomInto, interestPoints);
+   return  iframe.contentWindow.drawRoad(route, color, roadWidth, zoomInto, interestPoints,iconInteretPoint);
 }
+
 
 /*
 * shared dart function that called from js

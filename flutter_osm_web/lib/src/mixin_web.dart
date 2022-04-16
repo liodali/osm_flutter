@@ -7,9 +7,12 @@ import 'package:routing_client_dart/routing_client_dart.dart' as routing;
 
 import 'common/extensions.dart';
 import 'interop/osm_interop.dart' as interop hide initMapFinish;
+import 'osm_web.dart';
 
 mixin WebMixin {
   final manager = routing.OSRMManager();
+
+  late OsmWebWidgetState _osmWebFlutterState;
 
   Future<void> initLocationMap(GeoPoint p) async {
     await promiseToFuture(interop.initMapLocation(p.toGeoJS()));
@@ -60,16 +63,6 @@ mixin WebMixin {
 
   Future<void> drawRect(RectOSM rectOSM) {
     // TODO: implement drawRect
-    throw UnimplementedError();
-  }
-
-  Future<void> drawRoadManually(
-    List<GeoPoint> path,
-    Color roadColor,
-    double width, {
-    bool zoomInto = false,
-  }) {
-    // TODO: implement drawRoadManually
     throw UnimplementedError();
   }
 
@@ -204,10 +197,13 @@ mixin WebMixin {
       waypoints: waypoints,
       roadType: routing.RoadType.values[roadType.index],
       alternative: false,
-      geometrie: routing.Geometries.polyline6,
+      geometrie: routing.Geometries.geojson,
     );
-    final route = await road.polylineEncoded.toListGeo();
-    final routeJs = route.toListGeoPointJs();
+    final routeJs = road.polyline!.mapToListGeoJS();
+    if (roadOption != null && !roadOption.showMarkerOfPOI) {
+      interop.removeMarker(start.toGeoJS());
+      interop.removeMarker(end.toGeoJS());
+    }
     interop.drawRoad(
       routeJs,
       roadOption?.roadColor?.toHexColorWeb() ?? Colors.green.toHexColorWeb(),
@@ -216,8 +212,44 @@ mixin WebMixin {
       roadOption != null && roadOption.showMarkerOfPOI
           ? interestPoints?.toListGeoPointJs() ?? []
           : [],
+      null,
     );
-    return RoadInfo(duration: road.duration, distance: road.distance, route: route);
+    return RoadInfo(
+      duration: road.duration,
+      distance: road.distance,
+      route: road.polyline!.mapToListGeoPoints(),
+    );
+  }
+
+  Future<void> drawRoadManually(
+    List<GeoPoint> path, {
+    Color roadColor = Colors.green,
+    double width = 5.0,
+    bool zoomInto = true,
+    bool deleteOldRoads = false,
+    MarkerIcon? interestPointIcon,
+    List<GeoPoint> interestPoints = const [],
+  }) async {
+    final routeJs = path.toListGeoPointJs();
+    var waitDelay = 0;
+    if (interestPointIcon != null) {
+      osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = interestPointIcon;
+      waitDelay = 300;
+    }
+    await Future.delayed(Duration(milliseconds: waitDelay), () async {
+      var icon = null;
+      if (interestPointIcon != null) {
+        icon = (await capturePng(osmWebFlutterState.dynamicMarkerKey!)).convertToString();
+      }
+      interop.drawRoad(
+        routeJs,
+        roadColor.toHexColorWeb(),
+        width,
+        zoomInto,
+        interestPoints.toListGeoPointJs(),
+        icon,
+      );
+    });
   }
 
   Future<void> clearAllRoads() {
@@ -286,5 +318,18 @@ mixin WebMixin {
       box.toBoundsJS(),
       paddinInPixel,
     ));
+  }
+
+  Future<List<GeoPoint>> geoPoints() {
+    // TODO: implement geoPoints
+    throw UnimplementedError();
+  }
+}
+
+extension PrivateAccessMixinWeb on WebMixin {
+  OsmWebWidgetState get osmWebFlutterState => _osmWebFlutterState;
+
+  void setWidgetState(OsmWebWidgetState osmWebFlutterState) {
+    _osmWebFlutterState = osmWebFlutterState;
   }
 }

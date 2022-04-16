@@ -11,11 +11,38 @@ extension ExtGeoPoint on GeoPoint {
       lat: latitude,
     );
   }
+
   LngLat toLngLat() {
     return LngLat(
       lng: longitude,
       lat: latitude,
     );
+  }
+}
+
+extension ExtLngLat on LngLat {
+  GeoPointJs toGeoJS() {
+    return GeoPointJs(
+      lon: lng,
+      lat: lat,
+    );
+  }
+
+  GeoPoint toGeoPoint() {
+    return GeoPoint(
+      longitude: lng,
+      latitude: lat,
+    );
+  }
+}
+
+extension ExtListLngLat on List<LngLat> {
+  List<GeoPointJs> mapToListGeoJS() {
+    return this.map((e) => e.toGeoJS()).toList();
+  }
+
+  List<GeoPoint> mapToListGeoPoints() {
+    return this.map((e) => e.toGeoPoint()).toList();
   }
 }
 
@@ -29,11 +56,13 @@ extension ExtBoundingBox on BoundingBox {
     );
   }
 }
-extension  ExtListGeoPoints on List<GeoPoint>{
-  List<LngLat> toLngLatList(){
+
+extension ExtListGeoPoints on List<GeoPoint> {
+  List<LngLat> toLngLatList() {
     return map((e) => e.toLngLat()).toList();
   }
-  List<GeoPointJs> toListGeoPointJs(){
+
+  List<GeoPointJs> toListGeoPointJs() {
     return this.map((e) => e.toGeoJS()).toList();
   }
 }

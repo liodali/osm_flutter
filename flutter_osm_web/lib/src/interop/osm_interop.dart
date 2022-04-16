@@ -96,6 +96,7 @@ external dynamic drawRoad(
   double roadWidth,
   bool zoomInto,
   List<GeoPointJs> interestPoints,
+  String? iconInterestPoints,
 );
 
 /// Allows assigning a function to be callable from `window.initMapFinish()`

@@ -36,12 +36,15 @@ extension TransformEncodedPolyLineToListGeo on String {
   Future<List<GeoPoint>> toListGeo() async {
     final String polylineEncoded = this;
     try {
-      return await compute((String encoded) {
-        final listPoints = decodePolyline(encoded,accuracyExponent: 6);
-        return listPoints
-            .map((e) => GeoPoint(latitude: e.last.toDouble(), longitude: e.first.toDouble()))
-            .toList();
-      }, polylineEncoded);
+      return await compute(
+        (String encoded) {
+          final listPoints = decodePolyline(encoded, accuracyExponent: 5);
+          return listPoints
+              .map((e) => GeoPoint(latitude: e.first.toDouble(), longitude: e.last.toDouble()))
+              .toList();
+        },
+        polylineEncoded,
+      );
     } catch (e) {
       return [];
     }
@@ -74,6 +77,7 @@ extension ColorMap on Color {
   String toHexColor() {
     return "#${this.value.toRadixString(16)}";
   }
+
   String toHexColorWeb() {
     return "#${this.value.toRadixString(16)}".replaceAll("ff", "");
   }

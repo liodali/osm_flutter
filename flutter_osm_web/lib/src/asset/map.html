@@ -318,15 +318,15 @@
       roadMarkerIcons["endIcon"] = startIcon
     }
 
-     function drawRoad(route, colorRoute, routeWidth, zoomInto, interestGeoPts) {
+    function drawRoad(route, colorRoute, routeWidth, zoomInto, interestGeoPts, iconInterestPoint) {
       if (lastRoad != undefined) {
         mymap.removeLayer(lastRoad)
         routesLayer.pop()
         lastRoad = undefined;
       }
-      var routePolyline = route.map((elem) => L.latLng(elem.lon,elem.lat))//[elem.lon,elem.lat])
-      lastRoad = L.polyline(routePolyline, { color: colorRoute,weight:routeWidth }).addTo(mymap)
-      
+      var routePolyline = route.map((elem) => L.latLng(elem.lat, elem.lon))//[elem.lon,elem.lat])
+      lastRoad = L.polyline(routePolyline, { color: colorRoute, weight: routeWidth }).addTo(mymap)
+
       routesLayer.push(lastRoad)
       if (zoomInto) {
         mymap.flyToBounds(lastRoad.getBounds());
@@ -337,11 +337,15 @@
           var icon = roadMarkerIcons["middleIcon"]
           if (geoPoint.lat == route[0].lat && geoPoint.lon == route[0].lon) {
             icon = roadMarkerIcons["startIcon"]
-          }
-          if (geoPoint.lat == route[len - 1].lat && geoPoint.lon == route[len - 1].lon) {
+          } else if (geoPoint.lat == route[len - 1].lat && geoPoint.lon == route[len - 1].lon) {
             icon = roadMarkerIcons["endIcon"]
+          } else {
+            if (iconInterestPoint) {
+              icon = iconInterestPoint
+            }
           }
-          addMarker(geoPoint, icon)
+          if (icon)
+            addMarker(geoPoint, icon)
         })
       }
       return 200;

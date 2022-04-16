@@ -68,7 +68,7 @@ packages:
       path: "../flutter_osm_interface"
       relative: true
     source: path
-    version: "0.1.18"
+    version: "0.1.20"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -155,7 +155,7 @@ packages:
       name: routing_client_dart
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.3.0+1"
+    version: "0.3.1"
   sky_engine:
     dependency: transitive
     description: flutter
