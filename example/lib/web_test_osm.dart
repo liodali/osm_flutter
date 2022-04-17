@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 
@@ -63,6 +65,8 @@ class _WebTestOsmState extends State<WebTestOsm> with OSMMixinObserver {
       }
     }
   }
+
+
 
   @override
   void dispose() {
@@ -213,6 +217,32 @@ class _WebTestOsmState extends State<WebTestOsm> with OSMMixinObserver {
             size: 48,
           ),
         ),
+      );
+      await controller.setMarkerOfStaticPoint(
+        id: "line 2",
+        markerIcon: MarkerIcon(
+          icon: Icon(
+            Icons.train,
+            color: Colors.orange,
+            size: 48,
+          ),
+        ),
+      );
+
+      await controller.setStaticPosition(
+        [
+          GeoPointWithOrientation(
+            latitude: 47.4433594,
+            longitude: 8.4680184,
+            angle: pi / 4,
+          ),
+          GeoPointWithOrientation(
+            latitude: 47.4517782,
+            longitude: 8.4716146,
+            angle: pi / 2,
+          ),
+        ],
+        "line 2",
       );
     }
   }

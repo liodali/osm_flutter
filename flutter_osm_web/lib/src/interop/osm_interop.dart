@@ -72,6 +72,10 @@ external dynamic currentUserLocation();
 @JS('setStaticGeoPoints')
 external dynamic setStaticGeoPoints(String id, List<GeoPointJs> points);
 
+
+@JS('setStaticGeoPointsWithOrientation')
+external dynamic setStaticGeoPointsWithOrientation(String id, List<GeoPointWithOrientationJs> points);
+
 @JS('setIconStaticGeoPoints')
 external dynamic setIconStaticGeoPoints(String id, String icons);
 

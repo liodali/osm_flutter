@@ -184,9 +184,8 @@ class WebOsmController with WebMixin implements IBaseOSMController {
   }) async {
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
 
-    Future.delayed(Duration(milliseconds: 250), () async {
-      final base64Icon =
-          (await capturePng(osmWebFlutterState.dynamicMarkerKey!)).convertToString();
+    await Future.delayed(Duration(milliseconds: 250), () async {
+      final base64Icon = (await capturePng(osmWebFlutterState.dynamicMarkerKey!)).convertToString();
       await interop.setIconStaticGeoPoints(
         id,
         base64Icon,
@@ -216,7 +215,7 @@ class WebOsmController with WebMixin implements IBaseOSMController {
                 child: icon,
               );
     int duration = 350;
-    Future.delayed(Duration(milliseconds: duration), () async {
+    await Future.delayed(Duration(milliseconds: duration), () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
       interop.addMarker(p.toGeoJS(), icon.convertToString());
     });
@@ -236,19 +235,19 @@ class WebOsmController with WebMixin implements IBaseOSMController {
   @override
   Future<void> setIconMarker(GeoPoint point, MarkerIcon markerIcon) async {
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
-    Future.delayed(Duration(milliseconds: 300), () async {
+    await Future.delayed(Duration(milliseconds: 300), () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
-      await interop.modifyMarker(point.toGeoJS(), icon.convertToString());
+      final jsP = point.toGeoJS();
+      await interop.modifyMarker(jsP, icon.convertToString());
     });
   }
 
   @override
   Future changeDefaultIconMarker(MarkerIcon homeMarker) async {
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = homeMarker;
-    Future.delayed(Duration(milliseconds: 300), () async {
+    await Future.delayed(Duration(milliseconds: 300), () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
       await interop.setDefaultIcon(icon.convertToString());
     });
   }
-
 }

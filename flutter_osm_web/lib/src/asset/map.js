@@ -43,6 +43,10 @@ async function setStaticGeoPoints(id, points) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setStaticGeoPoint(id, points);
 }
+async function setStaticGeoPointsWithOrientation(id, points) {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.setStaticGeoPointsWithOrientation(id, points);
+}
 async function setZoomStep(zoomStep) {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.setZoomStep(zoomStep);

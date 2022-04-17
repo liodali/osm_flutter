@@ -9,7 +9,12 @@
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
     integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
     crossorigin></script>
-  <style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.min.js"></script>
+
+  <!-- 
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-plugins/3.4.0/layer/Marker.Rotate.min.js" integrity="sha512-Ffr5ejFKbhg2ZAR8TaHe2v28uyY74DYthE0kdl0eFRHHH/D5Aa9eSM88TP6OEif5M008v5B6ICUDuis/3ZsX6w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> 
+ -->
+ <style>
     html,
     body {
       height: 100%;
@@ -234,7 +239,43 @@
 
       return 200;
     }
+    async function setStaticGeoPointsWithOrientation(id, points) {
+      var markers = [];
+      if (staticGeoPoint.has(id) && staticGeoPoint[id] != undefined) {
+        staticGeoPoint[id].clearLayers();
+      }
+      var icon = L.icon(
+        {
+          iconUrl: "data:image/png;base64," + staticIcons.get(id),
+          iconSize: [32, 32]
+        }
+      )
+      points.forEach(function (ele) {
 
+        //icon.style[L.DomUtil.TRANSFORM+'Origin'] = 'center bottom';
+        //icon.style[L.DomUtil.TRANSFORM] += "rotate("+ele.angle+"deg)"
+        console.log(ele.angle);
+        removeMarker(ele);
+        var marker = L.marker([ele.lat, ele.lon], { 
+          icon: icon ,
+          //iconAngle: ele.angle
+          rotationAngle: ele.angle,
+          rotationOrigin : "center"
+        })
+        .addTo(mymap)
+        .on("click", function (event) {
+            const geoP = event.latlng;
+            onGeoPointClicked(geoP.lng, geoP.lat)
+          });
+        //marker.setRotationAngle(ele.angle);
+        markers.push(marker);
+
+      })
+      const groupLayer = L.layerGroup(markers).addTo(mymap);
+      staticGeoPoint.set(id, groupLayer);
+
+      return 200;
+    }
     async function configInitZoomMap(step, initZoom, minZoomLevel, maxZoomLevel) {
       mymap.setMinZoom(minZoomLevel);
       mymap.setMaxZoom(maxZoomLevel);

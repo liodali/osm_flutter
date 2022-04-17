@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:routing_client_dart/routing_client_dart.dart';
 
@@ -16,6 +18,16 @@ extension ExtGeoPoint on GeoPoint {
     return LngLat(
       lng: longitude,
       lat: latitude,
+    );
+  }
+}
+
+extension ExtGeoPointWithOrientation on GeoPointWithOrientation {
+  GeoPointWithOrientationJs toGeoJS() {
+    return GeoPointWithOrientationJs(
+      lon: longitude,
+      lat: latitude,
+      angle: angle * 180 / pi,
     );
   }
 }

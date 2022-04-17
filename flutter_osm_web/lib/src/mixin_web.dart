@@ -134,10 +134,25 @@ mixin WebMixin {
   }
 
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
-    await interop.setStaticGeoPoints(
-      id,
-      geoPoints.map((e) => e.toGeoJS()).toList(),
-    );
+    var listWithoutOrientation = geoPoints.skipWhile((p) => p is GeoPointWithOrientation).toList();
+    if (listWithoutOrientation.isNotEmpty) {
+      await interop.setStaticGeoPoints(
+        id,
+        listWithoutOrientation.map((point) => point.toGeoJS()).toList(),
+      );
+    }
+    if (listWithoutOrientation.length != geoPoints.length) {
+      List<GeoPointWithOrientation> listOrientation = geoPoints
+          .where((p) => p is GeoPointWithOrientation)
+          .map((e) => e as GeoPointWithOrientation)
+          .toList();
+      if (listOrientation.isNotEmpty) {
+        await interop.setStaticGeoPointsWithOrientation(
+          id,
+          listOrientation.map((point) => point.toGeoJS()).toList(),
+        );
+      }
+    }
   }
 
   Future<void> zoomIn() async {
