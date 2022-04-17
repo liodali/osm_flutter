@@ -118,9 +118,8 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<void> removeMarker(GeoPoint p) {
-    // TODO: implement removeMarker
-    throw UnimplementedError();
+  Future<void> removeMarker(GeoPoint p) async{
+    interop.removeMarker(p.toGeoJS());
   }
 
   Future<void> removeRect(String key) {
