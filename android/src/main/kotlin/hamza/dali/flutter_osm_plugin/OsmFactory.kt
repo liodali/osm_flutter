@@ -24,7 +24,7 @@ open class OsmFactory(
         args: Any?,
     ): PlatformView {
         Configuration.getInstance().load(
-            context,
+            requireNotNull(context),
             PreferenceManager.getDefaultSharedPreferences(context)
         )
         osmFlutterView = FlutterOsmView(

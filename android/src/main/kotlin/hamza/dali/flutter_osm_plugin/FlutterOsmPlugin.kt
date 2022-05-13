@@ -73,7 +73,7 @@ class FlutterOsmPlugin :
         )
         binding.platformViewRegistry.registerViewFactory(
             VIEW_TYPE,
-            factory,
+            factory!!,
         )
     }
 
