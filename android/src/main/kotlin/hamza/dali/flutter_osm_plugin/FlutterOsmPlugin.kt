@@ -42,8 +42,8 @@ class FlutterOsmPlugin :
 
         @JvmStatic
         fun registerWith(register: PluginRegistry.Registrar) {
-
-            if (register.activity() == null) {
+            var registerActivity = register.activity()
+            if (registerActivity == null) {
                 return
             }
             this.register = register
@@ -56,7 +56,7 @@ class FlutterOsmPlugin :
                     register.messenger(),
                     object : ProviderLifecycle {
                         override fun getLifecyle(): Lifecycle =
-                            ProxyLifecycleProvider(activity = register.activity()).lifecycle
+                            ProxyLifecycleProvider(activity = registerActivity).lifecycle
                     },
                 ),
             )
@@ -73,7 +73,7 @@ class FlutterOsmPlugin :
         )
         binding.platformViewRegistry.registerViewFactory(
             VIEW_TYPE,
-            factory,
+            factory!!,
         )
     }
 

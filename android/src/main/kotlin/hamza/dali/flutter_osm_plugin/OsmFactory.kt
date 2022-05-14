@@ -19,16 +19,16 @@ open class OsmFactory(
     private var activity: Activity? = null
     private var binding: ActivityPluginBinding? = null
     override fun create(
-        context: Context,
+        context: Context?,
         viewId: Int,
         args: Any?,
     ): PlatformView {
         Configuration.getInstance().load(
-            context,
+            requireNotNull(context),
             PreferenceManager.getDefaultSharedPreferences(context)
         )
         osmFlutterView = FlutterOsmView(
-            context,
+            requireNotNull(context),
             binaryMessenger,
             viewId,
             provider,

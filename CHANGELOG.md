@@ -1,3 +1,7 @@
+## 0.34.0: update plugin to support the new changing in Flutter 3.0
+* fix override from `PlatformViewFactory`
+* fix nullable activity context in osm_plugin
+* fix dart nullable error in mobile_osm_flutter 
 ## 0.33.0+2:
 * disable show windowinfo for marker in android
 ## 0.33.0+1:
