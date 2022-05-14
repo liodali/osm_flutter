@@ -44,4 +44,4 @@ jobs:
       - name: fomarting files
         run : dart format .
       - name: Publish package
-        run: pub publish -f
+        run:  dart pub publish -f
