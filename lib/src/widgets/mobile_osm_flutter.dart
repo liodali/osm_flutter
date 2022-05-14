@@ -97,7 +97,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   void initState() {
     super.initState();
     keyUUID = Uuid().v4();
-    WidgetsBinding.instance?.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     Future.delayed(Duration.zero, () async {
       orientation = ValueNotifier(Orientation.values[MediaQuery.of(context).orientation.index]);
       orientation.addListener(changeOrientationDetected);
@@ -123,14 +123,14 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   void dispose() {
     Future.microtask(() async => await _osmController?.removeCacheMap());
     orientation.removeListener(changeOrientationDetected);
-    WidgetsBinding.instance?.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   void didChangeMetrics() {
     if (Platform.isAndroid && isFirstLaunched.value) {
-      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) async {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
         if (isFirstLaunched.value) {
           final nIndex = MediaQuery.of(context).orientation.index;
           if (orientation.value != Orientation.values[nIndex]) {
