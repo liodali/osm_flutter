@@ -115,6 +115,13 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     GlobalKey? globalKeyIcon,
   });
 
+  Future<void> changeMarker(
+    int idOSM,
+    GeoPoint oldLocation,
+    GeoPoint newLocation, {
+    GlobalKey? globalKeyIcon,
+  });
+
   Future<void> setIconMarker(
     int idOSM,
     GeoPoint point,

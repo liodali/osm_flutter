@@ -26,6 +26,12 @@ abstract class IBaseOSMController {
     double? angle,
   });
 
+  Future<void> changeMarker({
+    required GeoPoint oldLocation,
+    required GeoPoint newLocation,
+    GlobalKey? globalKeyIcon,
+  });
+
   /// removeMarker
   /// remove marker from map of position
   ///
@@ -241,6 +247,7 @@ abstract class IBaseOSMController {
   Future<void> limitArea(
     BoundingBox box,
   );
+
   /// removeLimitArea
   ///
   /// this method will remove the region limitation for camera movement
