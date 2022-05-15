@@ -1,3 +1,4 @@
+## 0.34.0+1 : fix build error for android
 ## 0.34.0: update plugin to support the new changing in Flutter 3.0
 * fix override from `PlatformViewFactory`
 * fix nullable activity context in osm_plugin
