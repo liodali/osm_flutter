@@ -707,6 +707,17 @@ class MethodChannelOSM extends MobileOSMPlatform {
     final list = await _channels[idOSM]!.invokeListMethod("get#geopoints");
     return (list as List).map((e) => GeoPoint.fromMap(e)).toList();
   }
+
+  @override
+  Future<void> changeMarker(
+    int idOSM,
+    GeoPoint oldLocation,
+    GeoPoint newLocation, {
+    GlobalKey? globalKeyIcon,
+  }) {
+    // TODO: implement changeMarker
+    throw UnimplementedError();
+  }
 }
 
 extension config on MethodChannelOSM {
