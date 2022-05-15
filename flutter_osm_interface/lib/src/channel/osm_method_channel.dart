@@ -714,9 +714,16 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GeoPoint oldLocation,
     GeoPoint newLocation, {
     GlobalKey? globalKeyIcon,
-  }) {
-    // TODO: implement changeMarker
-    throw UnimplementedError();
+  }) async {
+    Map<String, dynamic> args = {
+      "new_location": newLocation.toMap(),
+      "old_location": oldLocation.toMap(),
+    };
+    if (globalKeyIcon != null) {
+      var icon = await _capturePng(globalKeyIcon);
+      args["new_icon"] = Platform.isIOS ? icon.convertToString() : icon;
+    }
+    await _channels[idOSM]!.invokeMethod("change#geopoint", args);
   }
 }
 
