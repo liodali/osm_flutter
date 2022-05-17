@@ -386,7 +386,7 @@ class MobileOSMController extends IBaseOSMController {
 
   /// activate current location position
   Future<void> currentLocation() async {
-    if(Platform.isAndroid){
+    if (Platform.isAndroid) {
       bool granted = await _osmFlutterState.requestPermission();
       if (!granted) {
         throw Exception("Location permission not granted");
@@ -725,8 +725,29 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<List<GeoPoint>> geoPoints() async{
+  Future<List<GeoPoint>> geoPoints() async {
     return await osmPlatform.getGeoPointMarkers(_idMap);
+  }
+
+  @override
+  Future<void> changeMarker({
+    required GeoPoint oldLocation,
+    required GeoPoint newLocation,
+    MarkerIcon? newMarkerIcon,
+  }) async {
+    var duration = 0;
+    if (newMarkerIcon != null) {
+      duration = 300;
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = newMarkerIcon;
+    }
+    await Future.delayed(Duration(milliseconds: duration), () async {
+      await osmPlatform.changeMarker(
+        _idMap,
+        oldLocation,
+        newLocation,
+        globalKeyIcon: newMarkerIcon != null ? _osmFlutterState.dynamicMarkerKey : null,
+      );
+    });
   }
 }
 
