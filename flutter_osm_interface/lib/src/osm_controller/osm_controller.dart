@@ -29,7 +29,7 @@ abstract class IBaseOSMController {
   Future<void> changeMarker({
     required GeoPoint oldLocation,
     required GeoPoint newLocation,
-    GlobalKey? globalKeyIcon,
+    MarkerIcon? newMarkerIcon,
   });
 
   /// removeMarker
