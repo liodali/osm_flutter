@@ -517,6 +517,9 @@ class FlutterOsmView(
                 "update#Marker" -> {
                     updateMarker(call, result)
                 }
+                "change#Marker"->{
+                    changePositionMarker(call,result)
+                }
                 "get#geopoints" -> {
                     getGeoPoints(result)
                 }
@@ -529,6 +532,10 @@ class FlutterOsmView(
             Log.e(e.cause.toString(), "error osm plugin ${e.stackTraceToString()}")
             result.error("404", e.message, e.stackTraceToString())
         }
+    }
+
+    private fun changePositionMarker(call: MethodCall, result: MethodChannel.Result) {
+
     }
 
     private fun getGeoPoints(result: MethodChannel.Result) {
