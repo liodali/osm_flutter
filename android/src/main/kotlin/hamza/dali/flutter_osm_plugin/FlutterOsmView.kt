@@ -535,7 +535,25 @@ class FlutterOsmView(
     }
 
     private fun changePositionMarker(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as HashMap<*, *>
+        val oldLocation = (args["old_location"] as HashMap<String, Double>).toGeoPoint()
+        val newLocation = (args["new_location"] as HashMap<String, Double>).toGeoPoint()
 
+        val marker: FlutterMarker? = folderMarkers.items.filterIsInstance<FlutterMarker>()
+            .firstOrNull { marker ->
+                marker.position.eq(oldLocation)
+            }
+        marker?.position = newLocation
+        if (args.containsKey("new_icon")) {
+            val bitmap = getBitmap(args["new_icon"] as ByteArray)
+            scope?.launch {
+                mapSnapShot().overlaySnapShotMarker(
+                    point = newLocation,
+                    icon = args["icon"] as ByteArray
+                )
+            }
+            marker?.icon = getDefaultIconDrawable(null, icon = bitmap)
+        }
     }
 
     private fun getGeoPoints(result: MethodChannel.Result) {
