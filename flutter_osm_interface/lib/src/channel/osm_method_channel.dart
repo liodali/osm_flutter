@@ -723,7 +723,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       var icon = await _capturePng(globalKeyIcon);
       args["new_icon"] = Platform.isIOS ? icon.convertToString() : icon;
     }
-    await _channels[idOSM]!.invokeMethod("change#geopoint", args);
+    await _channels[idOSM]!.invokeMethod("change#Marker", args);
   }
 }
 
