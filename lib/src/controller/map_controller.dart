@@ -362,6 +362,18 @@ class MapController extends BaseMapController {
     await osmBaseController.addMarker(p, markerIcon: markerIcon, angle: angle);
   }
 
+  Future<void> changeLocationMarker({
+    required GeoPoint oldLocation,
+    required GeoPoint newLocation,
+    MarkerIcon? markerIcon,
+  }) async {
+    await osmBaseController.changeMarker(
+      oldLocation: oldLocation,
+      newLocation: newLocation,
+      newMarkerIcon: markerIcon,
+    );
+  }
+
   Future<BoundingBox> get bounds async => await osmBaseController.getBounds();
 
   Future<GeoPoint> get centerMap async => await osmBaseController.getMapCenter();
