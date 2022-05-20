@@ -554,6 +554,7 @@ class FlutterOsmView(
             }
             marker?.icon = getDefaultIconDrawable(null, icon = bitmap)
         }
+        map?.invalidate()
     }
 
     private fun getGeoPoints(result: MethodChannel.Result) {
