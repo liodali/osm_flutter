@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_interface/src/common/utilities.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 
 import 'geo_point.dart';
@@ -60,6 +63,30 @@ class RoadOption {
         this.zoomInto = false,
         this.showMarkerOfPOI = false,
         this.keepInitialGeoPoints = true;
+
+  Map toMap() {
+    Map args = {};
+
+    /// disable/show markers in start,middle,end points
+    args.putIfAbsent(
+      "showMarker",
+      () => showMarkerOfPOI,
+    );
+
+    args.putIfAbsent(
+      "zoomIntoRegion",
+      () => zoomInto,
+    );
+    if (roadColor != null) {
+      args.addAll(roadColor!.toMapPlatform("roadColor"));
+    }
+    if (roadWidth != null) {
+      args.putIfAbsent(
+          "roadWidth", () => Platform.isIOS ? "${roadWidth}px" : roadWidth!.toDouble());
+    }
+    args.putIfAbsent("keepInitialGeoPoint", () => keepInitialGeoPoints);
+    return args;
+  }
 }
 
 /// [MultiRoadOption]
