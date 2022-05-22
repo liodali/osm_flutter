@@ -30,24 +30,36 @@ class RoadConfiguration {
 /// or width and show interest poi markers
 /// and zoom to region of the road.
 ///
+/// [roadColor]            : (Color) change the default color of the road
+///
+/// [roadWidth]            : (double) change width of the road
+///
+/// [showMarkerOfPOI]      : (bool) if true, and [intersectPoint] in [drawRoad] not empty , will show marker for intermediate point of the road (default false)
+///
+/// [zoomInto]             : (bool) to zoomIn/Out that will make all the road visible in the map (default false)
+///
+/// [keepInitialGeoPoints] : (bool)  to keep the point desired to draw the road
 class RoadOption {
   final Color? roadColor;
   final int? roadWidth;
   final bool showMarkerOfPOI;
   final bool zoomInto;
+  final bool keepInitialGeoPoints;
 
   const RoadOption({
     this.roadColor,
     this.roadWidth,
     this.showMarkerOfPOI = false,
     this.zoomInto = true,
+    this.keepInitialGeoPoints = true,
   });
 
   const RoadOption.empty()
       : this.roadWidth = null,
         this.roadColor = null,
         this.zoomInto = false,
-        this.showMarkerOfPOI = false;
+        this.showMarkerOfPOI = false,
+        this.keepInitialGeoPoints = true;
 }
 
 /// [MultiRoadOption]
