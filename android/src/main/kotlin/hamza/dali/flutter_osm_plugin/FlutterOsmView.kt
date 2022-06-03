@@ -1469,7 +1469,11 @@ class FlutterOsmView(
     private fun drawRoad(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments!! as HashMap<String, Any>
 
-        val showPoiMarker = args["showMarker"] as Boolean
+        var showPoiMarker = args["showMarker"] as Boolean
+        val keepGeoPoints = args["keepInitialGeoPoint"] as Boolean
+        if(keepGeoPoints) {
+            showPoiMarker = false
+        }
         val meanUrl = when (args["roadType"] as String) {
             "car" -> OSRMRoadManager.MEAN_BY_CAR
             "bike" -> OSRMRoadManager.MEAN_BY_BIKE
@@ -1516,13 +1520,16 @@ class FlutterOsmView(
                 val wayPoints = listPointsArgs.map {
                     GeoPoint(it["lat"]!!, it["lon"]!!)
                 }.toList()
-                withContext(Main) {
-                    folderMarkers.items.removeAll {
-                        (it is FlutterMarker && wayPoints.contains(it.position)) ||
-                                (it is FlutterMarker && listInterestPoints.contains(it.position))
+                if(!keepGeoPoints){
+                    withContext(Main) {
+                        folderMarkers.items.removeAll {
+                            (it is FlutterMarker && wayPoints.contains(it.position)) ||
+                                    (it is FlutterMarker && listInterestPoints.contains(it.position))
+                        }
+                        mapSnapShot().removeMarkersFromSnapShot(wayPoints)
                     }
-                    mapSnapShot().removeMarkersFromSnapShot(wayPoints)
                 }
+
                 val roadPoints = ArrayList(wayPoints)
                 if (listInterestPoints.isNotEmpty()) {
                     roadPoints.addAll(1, listInterestPoints)
@@ -1536,7 +1543,7 @@ class FlutterOsmView(
                             polyLine = polyLine,
                             colorRoad = colorRoad,
                             roadWidth = roadWidth,
-                            showPoiMarker = showPoiMarker,
+                            showPoiMarker =   showPoiMarker,
                             listInterestPoints = listInterestPoints,
                         )
                         mapSnapShot().cacheRoad(
