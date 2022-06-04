@@ -120,7 +120,6 @@ class FlutterOsmPlugin :
 
     override fun onDetachedFromActivity() {
         //lifecycle?.removeObserver(this)
-        Configuration.getInstance().osmdroidTileCache.delete()
         lifecycle = null
         pluginBinding = null
 
