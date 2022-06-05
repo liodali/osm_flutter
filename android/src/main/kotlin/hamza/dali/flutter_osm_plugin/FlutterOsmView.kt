@@ -97,11 +97,10 @@ class FlutterOsmView(
     private val providerLifecycle: ProviderLifecycle,
     private val keyArgMapSnapShot: String
 ) :
-    LifecycleObserver,
     OnSaveInstanceStateListener,
     PlatformView,
     MethodCallHandler,
-    PluginRegistry.ActivityResultListener {
+    PluginRegistry.ActivityResultListener,DefaultLifecycleObserver {
 
 
     internal var map: MapView? = null
@@ -304,11 +303,11 @@ class FlutterOsmView(
         map!!.minZoomLevel = 2.0
         when (mapSnapShots.containsKey(keyMapSnapshot)) {
             true -> {
-                map!!.controller.setCenter(mapSnapShot().centerGeoPoint())
+                map!!.setExpectedCenter(mapSnapShot().centerGeoPoint())
                 map!!.controller.setZoom(mapSnapShot().zoomLevel(2.0))
             }
             else -> {
-                map!!.controller.setCenter(GeoPoint(0.0, 0.0))
+                map!!.setExpectedCenter(GeoPoint(0.0, 0.0))
                 map!!.controller.setZoom(2.0)
             }
         }
@@ -1560,7 +1559,7 @@ class FlutterOsmView(
         }
         var bitmapIconInterestPoints: Bitmap? = null
         if (iconInterestPoints != null) {
-            bitmapIconInterestPoints = getBitmap(bytes = iconInterestPoints!!)
+            bitmapIconInterestPoints = getBitmap(bytes = iconInterestPoints)
         }
 
 
@@ -1976,7 +1975,7 @@ class FlutterOsmView(
 
 
     override fun onFlutterViewDetached() {
-        map!!.onDetach()
+        //map!!.onDetach()
         staticMarkerIcon.clear()
         staticPoints.clear()
         customMarkerIcon = null
@@ -1996,8 +1995,8 @@ class FlutterOsmView(
         Log.d("osm data", bundle?.getString("center") ?: "")
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    fun onCreate(owner: LifecycleOwner) {
+    override fun onCreate(owner: LifecycleOwner) {
+        super.onCreate(owner)
         FlutterOsmPlugin.state.set(CREATED)
         methodChannel = MethodChannel(binaryMessenger, "plugins.dali.hamza/osmview_${id}")
         methodChannel.setMethodCallHandler(this)
@@ -2019,8 +2018,8 @@ class FlutterOsmView(
     }
 
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun onStart(owner: LifecycleOwner) {
+    override fun onStart(owner: LifecycleOwner) {
+        super.onStart(owner)
         FlutterOsmPlugin.state.set(STARTED)
         Log.e("osm", "osm flutter plugin start")
         context.applicationContext.registerReceiver(
@@ -2031,8 +2030,8 @@ class FlutterOsmView(
     }
 
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onResume(owner: LifecycleOwner) {
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
         FlutterOsmPlugin.state.set(FlutterOsmPlugin.RESUMED)
         Log.e("osm", "osm flutter plugin resume")
         if (map == null) {
@@ -2046,8 +2045,8 @@ class FlutterOsmView(
 
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun onPause(owner: LifecycleOwner) {
+    override fun onPause(owner: LifecycleOwner) {
+        super.onPause(owner)
         FlutterOsmPlugin.state.set(PAUSED)
         locationNewOverlay?.onPause()
         map?.onPause()
@@ -2056,8 +2055,8 @@ class FlutterOsmView(
 
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onStop(owner: LifecycleOwner) {
+    override fun onStop(owner: LifecycleOwner) {
+        super.onStop(owner)
         FlutterOsmPlugin.state.set(STOPPED)
         Log.e("osm", "osm flutter plugin stopped")
         context.applicationContext.unregisterReceiver(checkGPSServiceBroadcast)
@@ -2072,8 +2071,8 @@ class FlutterOsmView(
         job = null
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun onDestroy(owner: LifecycleOwner) {
+    override fun onDestroy(owner: LifecycleOwner) {
+        super.onDestroy(owner)
         mainLinearLayout.removeAllViews()
 
         removeCurrentCache()
