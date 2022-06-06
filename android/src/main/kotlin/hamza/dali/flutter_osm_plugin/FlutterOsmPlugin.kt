@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import androidx.preference.PreferenceManager
 import hamza.dali.flutter_osm_plugin.utilities.MapSnapShot
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
@@ -64,6 +65,10 @@ class FlutterOsmPlugin :
     }
 
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
+        Configuration.getInstance().load(
+            requireNotNull(binding.applicationContext),
+            PreferenceManager.getDefaultSharedPreferences(binding.applicationContext)
+        )
         factory = OsmFactory(
             binding.binaryMessenger,
             object : ProviderLifecycle {
@@ -120,7 +125,6 @@ class FlutterOsmPlugin :
 
     override fun onDetachedFromActivity() {
         //lifecycle?.removeObserver(this)
-        Configuration.getInstance().osmdroidTileCache.delete()
         lifecycle = null
         pluginBinding = null
 

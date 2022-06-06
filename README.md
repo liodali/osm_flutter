@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.34.0%2B1-orange) 
+![pub](https://img.shields.io/badge/pub-v0.34.1-orange) 
 
 
 ## Platform Support
@@ -41,7 +41,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.34.0+1
+      flutter_osm_plugin: ^0.34.1
 
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3

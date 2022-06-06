@@ -117,6 +117,9 @@ class MobileOSMController extends IBaseOSMController {
 
     osmPlatform.onMapRestored(_idMap).listen((event) {
       Future.delayed(Duration(milliseconds: 300), () {
+        if(!_osmFlutterState.widget.mapIsReadyListener.value){
+          _osmFlutterState.widget.mapIsReadyListener.value = true;
+        }
         _osmFlutterState.widget.controller.osMMixin?.mapRestored();
       });
     });
