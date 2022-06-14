@@ -1,3 +1,4 @@
+## 0.34.1+1 : fix build bugs in android
 ## 0.34.1 : fix major bugs
 * remove delete cache of osmdroid when widget disposed
 * remove detach map when widget disposed

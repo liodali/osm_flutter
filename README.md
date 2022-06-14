@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.34.1-orange) 
+![pub](https://img.shields.io/badge/pub-v0.34.1%2B1-orange) 
 
 
 ## Platform Support
@@ -41,7 +41,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.34.1
+      flutter_osm_plugin: ^0.34.1+1
 
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
@@ -660,7 +660,7 @@ GeoPoint p = await showSimplePickerLocation(
 
 
 ## NOTICE:
-> `For now the map working only for android,iOS will be available soon `
+> `For now the map working for android,iOS , web will be available soon `
 
 > ` If you get ssl certfiction exception,use can use http by following instruction below `
 
