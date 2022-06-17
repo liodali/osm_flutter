@@ -20,7 +20,9 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.graphics.drawable.toBitmap
-import androidx.lifecycle.*
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.coroutineScope
 import androidx.preference.PreferenceManager
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
@@ -100,7 +102,7 @@ class FlutterOsmView(
     OnSaveInstanceStateListener,
     PlatformView,
     MethodCallHandler,
-    PluginRegistry.ActivityResultListener,DefaultLifecycleObserver {
+    PluginRegistry.ActivityResultListener, DefaultLifecycleObserver {
 
 
     internal var map: MapView? = null
@@ -531,8 +533,8 @@ class FlutterOsmView(
     }
 
     private fun getGeoPoints(result: MethodChannel.Result) {
-       val list = folderMarkers.items.filterIsInstance(Marker::class.java)
-        val geoPoints  = emptyList<HashMap<String,Double>>().toMutableList()
+        val list = folderMarkers.items.filterIsInstance(Marker::class.java)
+        val geoPoints = emptyList<HashMap<String, Double>>().toMutableList()
         geoPoints.addAll(
             list.map {
                 it.position.toHashMap()
@@ -895,24 +897,21 @@ class FlutterOsmView(
     }
 
     private fun setMarkerTracking() {
-        when (customPersonMarkerIcon != null) {
-            true -> {
-                when (customArrowMarkerIcon != null) {
-                    true -> {
-                        locationNewOverlay!!.setDirectionArrow(
-                            customPersonMarkerIcon,
-                            customArrowMarkerIcon
-                        )
-                        val mScale = map!!.context.resources.displayMetrics.density
+        if (customPersonMarkerIcon != null) {
+            when (customArrowMarkerIcon != null) {
+                true -> {
+                    locationNewOverlay!!.setDirectionArrow(
+                        customPersonMarkerIcon,
+                        customArrowMarkerIcon
+                    )
+                    val mScale = map!!.context.resources.displayMetrics.density
 
-                        locationNewOverlay!!.setPersonHotspot(
-                            mScale * (customPersonMarkerIcon!!.width / 4f) + 0.5f,
-                            mScale * (customPersonMarkerIcon!!.width / 3f) + 0.5f,
-                        )
-                    }
-                    false -> locationNewOverlay!!.setPersonIcon(customPersonMarkerIcon)
+                    locationNewOverlay!!.setPersonHotspot(
+                        mScale * (customPersonMarkerIcon!!.width / 4f) + 0.5f,
+                        mScale * (customPersonMarkerIcon!!.width / 3f) + 0.5f,
+                    )
                 }
-
+                false -> locationNewOverlay!!.setPersonIcon(customPersonMarkerIcon)
             }
         }
     }
@@ -1046,7 +1045,6 @@ class FlutterOsmView(
         map!!.invalidate()
         result.success(null)
     }
-
 
 
     private fun trackUserLocation(result: MethodChannel.Result) {
@@ -2117,30 +2115,30 @@ class FlutterOsmView(
             false -> {
                 isTracking = mapSnapShot.trackMyLocation()
                 isEnabled = mapSnapShot.getEnableMyLocation()
-                when (isEnabled || isTracking) {
-                    true -> {
-                        mapSnapShot.getPersonUserTrackMarker()?.let { bytes ->
-                            customPersonMarkerIcon = getBitmap(bytes)
+                if (isEnabled || isTracking) {
 
-                        }
-                        mapSnapShot.getArrowDirectionTrackMarker()?.let { bytes ->
-                            customArrowMarkerIcon = getBitmap(bytes)
+                    mapSnapShot.getPersonUserTrackMarker()?.let { bytes ->
+                        customPersonMarkerIcon = getBitmap(bytes)
 
-                        }
-                        if (isEnabled) {
-                            enableUserLocation()
-                        }
-                        if (isTracking) {
-                            locationNewOverlay?.let { locationOverlay ->
-                                when {
-                                    !locationOverlay.isFollowLocationEnabled -> {
-                                        locationOverlay.enableFollowLocation()
-                                        onChangedLocation()
-                                    }
+                    }
+                    mapSnapShot.getArrowDirectionTrackMarker()?.let { bytes ->
+                        customArrowMarkerIcon = getBitmap(bytes)
+
+                    }
+                    if (isEnabled) {
+                        enableUserLocation()
+                    }
+                    if (isTracking) {
+                        locationNewOverlay?.let { locationOverlay ->
+                            when {
+                                !locationOverlay.isFollowLocationEnabled -> {
+                                    locationOverlay.enableFollowLocation()
+                                    onChangedLocation()
                                 }
                             }
                         }
                     }
+
                 }
             }
         }

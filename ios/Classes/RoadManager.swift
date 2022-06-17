@@ -182,7 +182,7 @@ class RoadManager: PRoadManager {
 
     private  func parserRoad(json: [String: Any?]) -> Road {
         var road: Road = Road()
-        json.forEach { key, value in
+        if  json.keys.contains("routes") {
             let routes = json["routes"] as! [[String: Any?]]
             routes.forEach { route in
                 road.distance = (route["distance"] as! Double) / 1000
@@ -232,8 +232,8 @@ class RoadManager: PRoadManager {
                             node.maneuver = MANEUVERS[direction]!
                         }
                         var name  = ""
-                         if step["name"] as? String? != nil {
-                           name =  step["name"] as! String
+                        if step["name"] as? String? != nil {
+                            name =  step["name"] as! String
                         }
 
                         if lastNode != nil && node.maneuver != 2 && lastName == name {
@@ -251,6 +251,11 @@ class RoadManager: PRoadManager {
                 }
             }
         }
+        /*json.forEach { key, value in
+            if key == "routes" {
+
+            }
+        }*/
         return road
 
     }
