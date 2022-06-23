@@ -1,3 +1,9 @@
+## 0.34.1+2 : fix build bugs in parsing road in iOS
+## 0.34.1+1 : fix build bugs in android
+## 0.34.1 : fix major bugs
+* remove delete cache of osmdroid when widget disposed
+* remove detach map when widget disposed
+* refactor some code in android side
 ## 0.34.0+1 : fix build error for android
 ## 0.34.0: update plugin to support the new changing in Flutter 3.0
 * fix override from `PlatformViewFactory`

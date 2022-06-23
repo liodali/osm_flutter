@@ -20,7 +20,9 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.graphics.drawable.toBitmap
-import androidx.lifecycle.*
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.coroutineScope
 import androidx.preference.PreferenceManager
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
@@ -97,11 +99,10 @@ class FlutterOsmView(
     private val providerLifecycle: ProviderLifecycle,
     private val keyArgMapSnapShot: String
 ) :
-    LifecycleObserver,
     OnSaveInstanceStateListener,
     PlatformView,
     MethodCallHandler,
-    PluginRegistry.ActivityResultListener {
+    PluginRegistry.ActivityResultListener, DefaultLifecycleObserver {
 
 
     internal var map: MapView? = null
@@ -304,11 +305,11 @@ class FlutterOsmView(
         map!!.minZoomLevel = 2.0
         when (mapSnapShots.containsKey(keyMapSnapshot)) {
             true -> {
-                map!!.controller.setCenter(mapSnapShot().centerGeoPoint())
+                map!!.setExpectedCenter(mapSnapShot().centerGeoPoint())
                 map!!.controller.setZoom(mapSnapShot().zoomLevel(2.0))
             }
             else -> {
-                map!!.controller.setCenter(GeoPoint(0.0, 0.0))
+                map!!.setExpectedCenter(GeoPoint(0.0, 0.0))
                 map!!.controller.setZoom(2.0)
             }
         }
@@ -558,8 +559,8 @@ class FlutterOsmView(
     }
 
     private fun getGeoPoints(result: MethodChannel.Result) {
-       val list = folderMarkers.items.filterIsInstance(Marker::class.java)
-        val geoPoints  = emptyList<HashMap<String,Double>>().toMutableList()
+        val list = folderMarkers.items.filterIsInstance(Marker::class.java)
+        val geoPoints = emptyList<HashMap<String, Double>>().toMutableList()
         geoPoints.addAll(
             list.map {
                 it.position.toHashMap()
@@ -922,24 +923,21 @@ class FlutterOsmView(
     }
 
     private fun setMarkerTracking() {
-        when (customPersonMarkerIcon != null) {
-            true -> {
-                when (customArrowMarkerIcon != null) {
-                    true -> {
-                        locationNewOverlay!!.setDirectionArrow(
-                            customPersonMarkerIcon,
-                            customArrowMarkerIcon
-                        )
-                        val mScale = map!!.context.resources.displayMetrics.density
+        if (customPersonMarkerIcon != null) {
+            when (customArrowMarkerIcon != null) {
+                true -> {
+                    locationNewOverlay!!.setDirectionArrow(
+                        customPersonMarkerIcon,
+                        customArrowMarkerIcon
+                    )
+                    val mScale = map!!.context.resources.displayMetrics.density
 
-                        locationNewOverlay!!.setPersonHotspot(
-                            mScale * (customPersonMarkerIcon!!.width / 4f) + 0.5f,
-                            mScale * (customPersonMarkerIcon!!.width / 3f) + 0.5f,
-                        )
-                    }
-                    false -> locationNewOverlay!!.setPersonIcon(customPersonMarkerIcon)
+                    locationNewOverlay!!.setPersonHotspot(
+                        mScale * (customPersonMarkerIcon!!.width / 4f) + 0.5f,
+                        mScale * (customPersonMarkerIcon!!.width / 3f) + 0.5f,
+                    )
                 }
-
+                false -> locationNewOverlay!!.setPersonIcon(customPersonMarkerIcon)
             }
         }
     }
@@ -1073,7 +1071,6 @@ class FlutterOsmView(
         map!!.invalidate()
         result.success(null)
     }
-
 
 
     private fun trackUserLocation(result: MethodChannel.Result) {
@@ -1593,7 +1590,7 @@ class FlutterOsmView(
         }
         var bitmapIconInterestPoints: Bitmap? = null
         if (iconInterestPoints != null) {
-            bitmapIconInterestPoints = getBitmap(bytes = iconInterestPoints!!)
+            bitmapIconInterestPoints = getBitmap(bytes = iconInterestPoints)
         }
 
 
@@ -2009,7 +2006,7 @@ class FlutterOsmView(
 
 
     override fun onFlutterViewDetached() {
-        map!!.onDetach()
+        //map!!.onDetach()
         staticMarkerIcon.clear()
         staticPoints.clear()
         customMarkerIcon = null
@@ -2029,8 +2026,8 @@ class FlutterOsmView(
         Log.d("osm data", bundle?.getString("center") ?: "")
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    fun onCreate(owner: LifecycleOwner) {
+    override fun onCreate(owner: LifecycleOwner) {
+        super.onCreate(owner)
         FlutterOsmPlugin.state.set(CREATED)
         methodChannel = MethodChannel(binaryMessenger, "plugins.dali.hamza/osmview_${id}")
         methodChannel.setMethodCallHandler(this)
@@ -2052,8 +2049,8 @@ class FlutterOsmView(
     }
 
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun onStart(owner: LifecycleOwner) {
+    override fun onStart(owner: LifecycleOwner) {
+        super.onStart(owner)
         FlutterOsmPlugin.state.set(STARTED)
         Log.e("osm", "osm flutter plugin start")
         context.applicationContext.registerReceiver(
@@ -2064,8 +2061,8 @@ class FlutterOsmView(
     }
 
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onResume(owner: LifecycleOwner) {
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
         FlutterOsmPlugin.state.set(FlutterOsmPlugin.RESUMED)
         Log.e("osm", "osm flutter plugin resume")
         if (map == null) {
@@ -2079,8 +2076,8 @@ class FlutterOsmView(
 
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun onPause(owner: LifecycleOwner) {
+    override fun onPause(owner: LifecycleOwner) {
+        super.onPause(owner)
         FlutterOsmPlugin.state.set(PAUSED)
         locationNewOverlay?.onPause()
         map?.onPause()
@@ -2089,8 +2086,8 @@ class FlutterOsmView(
 
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onStop(owner: LifecycleOwner) {
+    override fun onStop(owner: LifecycleOwner) {
+        super.onStop(owner)
         FlutterOsmPlugin.state.set(STOPPED)
         Log.e("osm", "osm flutter plugin stopped")
         context.applicationContext.unregisterReceiver(checkGPSServiceBroadcast)
@@ -2105,8 +2102,8 @@ class FlutterOsmView(
         job = null
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun onDestroy(owner: LifecycleOwner) {
+    override fun onDestroy(owner: LifecycleOwner) {
+        super.onDestroy(owner)
         mainLinearLayout.removeAllViews()
 
         removeCurrentCache()
@@ -2151,30 +2148,30 @@ class FlutterOsmView(
             false -> {
                 isTracking = mapSnapShot.trackMyLocation()
                 isEnabled = mapSnapShot.getEnableMyLocation()
-                when (isEnabled || isTracking) {
-                    true -> {
-                        mapSnapShot.getPersonUserTrackMarker()?.let { bytes ->
-                            customPersonMarkerIcon = getBitmap(bytes)
+                if (isEnabled || isTracking) {
 
-                        }
-                        mapSnapShot.getArrowDirectionTrackMarker()?.let { bytes ->
-                            customArrowMarkerIcon = getBitmap(bytes)
+                    mapSnapShot.getPersonUserTrackMarker()?.let { bytes ->
+                        customPersonMarkerIcon = getBitmap(bytes)
 
-                        }
-                        if (isEnabled) {
-                            enableUserLocation()
-                        }
-                        if (isTracking) {
-                            locationNewOverlay?.let { locationOverlay ->
-                                when {
-                                    !locationOverlay.isFollowLocationEnabled -> {
-                                        locationOverlay.enableFollowLocation()
-                                        onChangedLocation()
-                                    }
+                    }
+                    mapSnapShot.getArrowDirectionTrackMarker()?.let { bytes ->
+                        customArrowMarkerIcon = getBitmap(bytes)
+
+                    }
+                    if (isEnabled) {
+                        enableUserLocation()
+                    }
+                    if (isTracking) {
+                        locationNewOverlay?.let { locationOverlay ->
+                            when {
+                                !locationOverlay.isFollowLocationEnabled -> {
+                                    locationOverlay.enableFollowLocation()
+                                    onChangedLocation()
                                 }
                             }
                         }
                     }
+
                 }
             }
         }

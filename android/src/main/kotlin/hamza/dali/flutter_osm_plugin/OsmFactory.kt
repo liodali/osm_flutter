@@ -23,10 +23,7 @@ open class OsmFactory(
         viewId: Int,
         args: Any?,
     ): PlatformView {
-        Configuration.getInstance().load(
-            requireNotNull(context),
-            PreferenceManager.getDefaultSharedPreferences(context)
-        )
+
         osmFlutterView = FlutterOsmView(
             requireNotNull(context),
             binaryMessenger,
@@ -34,17 +31,19 @@ open class OsmFactory(
             provider,
             args as String
         )
-        osmFlutterView.activity = this.activity
-        binding!!.addActivityResultListener(osmFlutterView)
         return osmFlutterView
     }
 
     fun setActRefInView(activity: Activity) {
         this.activity = activity
+        osmFlutterView.activity = this.activity
+
     }
 
     fun setBindingActivity(binding: ActivityPluginBinding) {
         this.binding = binding
+        this.binding!!.addActivityResultListener(osmFlutterView)
+
     }
 
 }

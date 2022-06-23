@@ -91,12 +91,13 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   late ValueNotifier<Orientation> orientation;
   late ValueNotifier<Size> sizeNotifier;
   ValueNotifier<bool> setCache = ValueNotifier(false);
-  ValueNotifier<bool> isFirstLaunched = ValueNotifier(false);
+  late ValueNotifier<bool> isFirstLaunched;
 
   @override
   void initState() {
     super.initState();
     keyUUID = Uuid().v4();
+    isFirstLaunched = ValueNotifier(false);
     WidgetsBinding.instance.addObserver(this);
     Future.delayed(Duration.zero, () async {
       orientation = ValueNotifier(Orientation.values[MediaQuery.of(context).orientation.index]);
@@ -138,6 +139,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
             orientation.value = Orientation.values[nIndex];
           } else {
             if (sizeNotifier.value != MediaQuery.of(context).size) {
+              setCache.value = true;
               sizeNotifier.value = MediaQuery.of(context).size;
             }
           }
@@ -149,13 +151,20 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   @override
   bool get mounted => super.mounted;
 
-  @override
-  void didUpdateWidget(covariant MobileOsmFlutter oldWidget) {
+  void saveCache() {
     if (Platform.isAndroid && isFirstLaunched.value) {
-      if (!setCache.value) {
+      if (setCache.value == false) {
         setCache.value = true;
         Future.microtask(() async => await _osmController?.saveCacheMap());
       }
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MobileOsmFlutter oldWidget) {
+    // saveCache();
+    if (widget.mapIsReadyListener.value) {
+      saveCache();
     }
     super.didUpdateWidget(oldWidget);
     if (this.widget != oldWidget &&
@@ -243,7 +252,15 @@ class PlatformView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget widgetMap = AndroidView(
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return UiKitView(
+        //  key: mobileKey,
+        viewType: 'plugins.dali.hamza/osmview',
+        onPlatformViewCreated: onPlatformCreatedView,
+        //creationParamsCodec:  StandardMessageCodec(),
+      );
+    }
+    return AndroidView(
       key: androidKey,
       viewType: 'plugins.dali.hamza/osmview',
       onPlatformViewCreated: onPlatformCreatedView,
@@ -251,14 +268,5 @@ class PlatformView extends StatelessWidget {
       //creationParamsCodec: null,
       creationParamsCodec: StandardMethodCodec().messageCodec,
     );
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      widgetMap = UiKitView(
-        //  key: mobileKey,
-        viewType: 'plugins.dali.hamza/osmview',
-        onPlatformViewCreated: onPlatformCreatedView,
-        //creationParamsCodec:  StandardMessageCodec(),
-      );
-    }
-    return widgetMap;
   }
 }
