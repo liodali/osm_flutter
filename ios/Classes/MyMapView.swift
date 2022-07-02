@@ -784,7 +784,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
         let zoomInto = args["zoomInto"] as! Bool
         let removeLastRoad = args["clearPreviousRoad"] as! Bool
-        let iconMarker = args["iconInterestPoints"] as! String?
+        let iconMarker:String? = args["iconInterestPoints"] as? String
         if (removeLastRoad && roadMarkerPolyline != nil) {
             mapView.markerRemove(roadMarkerPolyline!)
             roadMarkerPolyline = nil
