@@ -1,6 +1,6 @@
 name: flutter_osm_interface
 description: osm flutter controller and utilities.
-version: 0.1.21
+version: 0.1.22
 homepage: https://github.com/liodali/osm_flutter
 
 environment:
@@ -12,9 +12,9 @@ dependencies:
     sdk: flutter
   plugin_platform_interface: ^2.1.2
   stream_transform: ^2.0.0
-  permission_handler: ^8.3.0
+  permission_handler: ^10.0.0
   google_polyline_algorithm: ^3.1.0
-  dio: ^4.0.4
+  dio: ^4.0.6
 dev_dependencies:
   flutter_test:
     sdk: flutter
