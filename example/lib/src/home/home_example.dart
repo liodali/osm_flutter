@@ -104,14 +104,14 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           await controller.addMarker(
             controller.listenerMapSingleTapping.value!,
             markerIcon: MarkerIcon(
-              // icon: Icon(
-              //   Icons.person_pin,
-              //   color: Colors.red,
-              //   size: 32,
-              // ),
-              assetMarker: AssetMarker(
-                image: AssetImage("asset/pin.png"),
+              icon: Icon(
+                Icons.person_pin,
+                color: Colors.red,
+                size: 96,
               ),
+              // assetMarker: AssetMarker(
+              //   image: AssetImage("asset/pin.png"),
+              // ),
               // assetMarker: AssetMarker(
               //   image: AssetImage("asset/pin.png"),
               //   //scaleAssetImage: 2,
@@ -297,17 +297,23 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               stepZoom: 1.0,
               userLocationMarker: UserLocationMaker(
                 personMarker: MarkerIcon(
-                  icon: Icon(
-                    Icons.location_history_rounded,
-                    color: Colors.red,
-                    size: 48,
-                  ),
+                  // icon: Icon(
+                  //   Icons.car_crash_sharp,
+                  //   color: Colors.red,
+                  //   size: 48,
+                  // ),
+                  assetMarker: AssetMarker(
+                      image: AssetImage(
+                        "asset/taxi.png",
+                      ),
+                      scaleAssetImage: 0.3),
                 ),
                 directionArrowMarker: MarkerIcon(
-                  icon: Icon(
-                    Icons.double_arrow,
-                    size: 48,
-                  ),
+                  assetMarker: AssetMarker(
+                      image: AssetImage(
+                        "asset/taxi.png",
+                      ),
+                      scaleAssetImage: 0.45),
                 ),
               ),
               showContributorBadgeForOSM: true,
@@ -524,6 +530,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           zoomInto: true);
 
 */
+
 
       ///selection geoPoint
       GeoPoint point = await controller.selectPosition(
