@@ -1,5 +1,6 @@
 package hamza.dali.flutter_osm_plugin.utilities
 
+import android.app.Activity
 import android.content.Intent
 import android.provider.Settings
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
@@ -47,7 +48,7 @@ fun BoundingBox.toHashMap(): HashMap<String, Double> {
 
 }
 
-fun FlutterOsmView.openSettingLocation(requestCode:Int){
+fun FlutterOsmView.openSettingLocation(requestCode:Int,activity: Activity?){
     val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
     activity?.startActivityForResult(intent, requestCode)
 }
