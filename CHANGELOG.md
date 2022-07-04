@@ -1,3 +1,6 @@
+## 0.34.1+3 : fix build bugs
+* fix cast to String? in ios in drawRoadManually
+* update dependencies in pubspec
 ## 0.34.1+2 : fix build bugs in parsing road in iOS
 ## 0.34.1+1 : fix build bugs in android
 ## 0.34.1 : fix major bugs

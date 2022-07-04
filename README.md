@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.34.1%2B2-orange) 
+![pub](https://img.shields.io/badge/pub-v0.34.1%2B3-orange) 
 
 
 ## Platform Support
@@ -41,7 +41,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.34.1+2
+      flutter_osm_plugin: ^0.34.1+3
 
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
@@ -168,8 +168,16 @@ Add the following to your `pubspec.yaml` file:
 ```dart
  await controller.setZoom(zoomLevel: 8);
 ```
+<b> 5.3) zoom to specific bounding box </b>
 
-<b> 6) get current zoom level </b>b>
+```dart
+await controller.zoomToBoundingBox(BoundingBox(),paddingInPixel:0)
+```
+
+> Note : 
+* for box ,if you don't have bounding box, use list of geopoint use `BoundingBox.fromGeoPoints`
+
+* <b> 6) get current zoom level </b>b>
 
 ```dart
 await controller.getZoom();
