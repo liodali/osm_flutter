@@ -174,8 +174,11 @@ Add the following to your `pubspec.yaml` file:
 await controller.zoomToBoundingBox(BoundingBox(),paddingInPixel:0)
 ```
 
+
 > Note : 
-for box ,if you don't have bounding box, use list of geopoint use `BoundingBox.fromGeoPoints`
+
+* For the box attribute ,If you don't have bounding box,you can use list of geopoint like this `BoundingBox.fromGeoPoints`
+
 
 <b> 6) get current zoom level </b>b>
 
