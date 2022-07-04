@@ -139,11 +139,11 @@ class MapController extends BaseMapController {
   /// [paddinInPixel] : (int) padding that will be used to show specific region
   Future<void> zoomToBoundingBox(
     BoundingBox box, {
-    int paddinInPixel = 0,
+    int paddingInPixel = 0,
   }) async {
     await osmBaseController.zoomToBoundingBox(
       box,
-      paddinInPixel: paddinInPixel,
+      paddinInPixel: paddingInPixel,
     );
   }
 
