@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.34.1%4-orange) 
+![pub](https://img.shields.io/badge/pub-v0.34.1%B4-orange) 
 
 
 ## Platform Support
