@@ -175,9 +175,9 @@ await controller.zoomToBoundingBox(BoundingBox(),paddingInPixel:0)
 ```
 
 > Note : 
-* for box ,if you don't have bounding box, use list of geopoint use `BoundingBox.fromGeoPoints`
+for box ,if you don't have bounding box, use list of geopoint use `BoundingBox.fromGeoPoints`
 
-* <b> 6) get current zoom level </b>b>
+<b> 6) get current zoom level </b>b>
 
 ```dart
 await controller.getZoom();
