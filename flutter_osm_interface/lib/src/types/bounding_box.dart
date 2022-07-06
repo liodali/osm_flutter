@@ -18,7 +18,7 @@ class BoundingBox {
   })  : assert(north <= 86.0),
         assert(east <= 180.0),
         assert(south >= -86.0),
-        assert(west > -180.0);
+        assert(west >= -180.0);
 
   const BoundingBox.world()
       : this.north = 85.0,
@@ -93,7 +93,7 @@ class BoundingBox {
 
 extension ExtBoundingBox on BoundingBox {
   bool isWorld() {
-    return north - 85.0 < 0.1 && east == 180.0 && south - -85.0 > -0.1 && west == -180.0;
+    return north >= 85.0 && east == 180.0 && south <= -85.0 && west == -180.0;
   }
 
   bool inBoundingBox(GeoPoint point) {
