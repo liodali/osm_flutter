@@ -1,3 +1,9 @@
+## 0.34.1+5 : fix dependencies
+## 0.34.1+4 : fix dependencies
+## 0.34.1+3 : fix  bugs 
+* fix cast String? in drawRoadManually (ios)
+* update dependencies
+* update docs
 ## 0.34.1+2 : fix build bugs in parsing road in iOS
 ## 0.34.1+1 : fix build bugs in android
 ## 0.34.1 : fix major bugs
