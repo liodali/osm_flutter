@@ -75,7 +75,7 @@ packages:
       path: flutter_osm_interface
       relative: true
     source: path
-    version: "0.1.22"
+    version: "0.1.23"
   flutter_plugin_android_lifecycle:
     dependency: "direct main"
     description:

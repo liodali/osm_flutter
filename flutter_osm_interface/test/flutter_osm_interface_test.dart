@@ -21,4 +21,10 @@ void main() {
     final p2 = GeoPoint(latitude: 15.0312, longitude: 44.12073);
     expect(p1.toString() == p2.toString(), false);
   });
+  test("test bounding box is world", () {
+    final box = BoundingBox(north: 85.05, east: 180, south: -85.06, west: -180);
+    expect(box.isWorld(), true);
+    final box2 = BoundingBox(north: 84.05, east: 170, south: -85.06, west: -180);
+    expect(box2.isWorld(), false);
+  });
 }
