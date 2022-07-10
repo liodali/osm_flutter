@@ -287,7 +287,8 @@ class FlutterOsmView(
                     maxZoomLvl = customTile.maxZoomLevel,
                     tileSize = customTile.tileSize,
                     tileExtensionFile = customTile.tileFileExtension,
-                    baseURLs = customTile.urls.toTypedArray()
+                    baseURLs = customTile.urls.toTypedArray(),
+                    api = null,
                 )
             }
             else -> map!!.setTileSource(MAPNIK)

@@ -7,6 +7,7 @@ data class CustomTile(
     val tileSize: Int,
     val minZoomLevel: Int,
     val maxZoomLevel: Int,
+    val api: Pair<String, String>?
 )
 
 fun fromMapToCustomTile(map: HashMap<String, Any>): CustomTile = CustomTile(
@@ -16,4 +17,11 @@ fun fromMapToCustomTile(map: HashMap<String, Any>): CustomTile = CustomTile(
     tileSize = map["tileSize"] as Int,
     minZoomLevel = map["minZoomLevel"] as Int,
     maxZoomLevel = map["maxZoomLevel"] as Int,
+    api = when {
+        map.contains("api") -> Pair(
+            (map["api"] as HashMap<*, *>).entries.first().key as String,
+            (map["api"] as HashMap<*, *>).entries.first().value as String
+        )
+        else -> null
+    }
 )

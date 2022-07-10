@@ -64,16 +64,23 @@ fun MapView.setCustomTile(
     maxZoomLvl: Int = 19,
     tileSize: Int = 256,
     tileExtensionFile: String = ".png",
-    baseURLs: Array<String>
+    baseURLs: Array<String>,
+    api:Pair<String,String>?
 ) {
+    var imageEndingTile = tileExtensionFile;
+    if(api != null){
+        imageEndingTile = "$imageEndingTile?${api.first}=${api.second}"
+    }
     val tileSource: ITileSource = XYTileSource(
         name,
         minZoomLvl,
         maxZoomLvl,
         tileSize,
-        tileExtensionFile,
+        imageEndingTile,
         baseURLs
     )
+
+
 
     this.setTileSource(tileSource)
 }
