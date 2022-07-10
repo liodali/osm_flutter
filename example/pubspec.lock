@@ -76,6 +76,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_dotenv:
+    dependency: "direct main"
+    description:
+      name: flutter_dotenv
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "5.0.2"
   flutter_osm_interface:
     dependency: transitive
     description:
@@ -89,7 +96,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.34.1+4"
+    version: "0.34.1+5"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:

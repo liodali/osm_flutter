@@ -2,27 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-
-class CustomController extends MapController {
-  CustomController({
-    bool initMapWithUserPosition = true,
-    GeoPoint? initPosition,
-    BoundingBox? areaLimit = const BoundingBox.world(),
-  })  : assert(
-          initMapWithUserPosition || initPosition != null,
-        ),
-        super(
-          initMapWithUserPosition: initMapWithUserPosition,
-          initPosition: initPosition,
-          areaLimit: areaLimit,
-        );
-
-  @override
-  void init() {
-    super.init();
-  }
-}
 
 class MainExample extends StatefulWidget {
   MainExample({Key? key}) : super(key: key);
@@ -32,7 +13,7 @@ class MainExample extends StatefulWidget {
 }
 
 class _MainExampleState extends State<MainExample> with OSMMixinObserver {
-  late CustomController controller;
+  late MapController controller;
   late GlobalKey<ScaffoldState> scaffoldKey;
   Key mapGlobalkey = UniqueKey();
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
@@ -47,7 +28,33 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   @override
   void initState() {
     super.initState();
-    controller = CustomController(
+    /*controller = MapController(
+      initMapWithUserPosition: false,
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      // areaLimit: BoundingBox(
+      //   east: 10.4922941,
+      //   north: 47.8084648,
+      //   south: 45.817995,
+      //   west: 5.9559113,
+      // ),
+    );*/
+    /*controller = MapController.cyclOSMLayer(
+      initMapWithUserPosition: false,
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      // areaLimit: BoundingBox(
+      //   east: 10.4922941,
+      //   north: 47.8084648,
+      //   south: 45.817995,
+      //   west: 5.9559113,
+      // ),
+    );*/
+    controller = MapController.publicTransportationLayer(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
         latitude: 47.4358055,
@@ -60,6 +67,42 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       //   west: 5.9559113,
       // ),
     );
+    /*controller = MapController.customLayer(
+        initMapWithUserPosition: false,
+        initPosition: GeoPoint(
+          latitude: 47.4358055,
+          longitude: 8.4737324,
+        ),
+        customTile: CustomTile(
+            sourceName: "outdoors",
+            tileExtension: ".png",
+            minZoomLevel: 2,
+            maxZoomLevel: 19,
+            urlsServers: [
+              "https://tile.thunderforest.com/outdoors/",
+            ],
+            tileSize: 256,
+            keyApi: MapEntry("apikey", dotenv.env['api']!,),)
+        );*/
+   /* controller = MapController.customLayer(
+      initMapWithUserPosition: false,
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      customTile: CustomTile(
+        sourceName: "opentopomap",
+        tileExtension: ".png",
+        minZoomLevel: 2,
+        maxZoomLevel: 19,
+        urlsServers: [
+          "https://a.tile.opentopomap.org/",
+          "https://b.tile.opentopomap.org/",
+          "https://c.tile.opentopomap.org/",
+        ],
+        tileSize: 256,
+      ),
+    );*/
     controller.addObserver(this);
     scaffoldKey = GlobalKey<ScaffoldState>();
     controller.listenerMapLongTapping.addListener(() async {
@@ -246,7 +289,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           }),
           IconButton(
             onPressed: () async {
-              visibilityZoomNotifierActivation.value = !visibilityZoomNotifierActivation.value;
+              visibilityZoomNotifierActivation.value =
+                  !visibilityZoomNotifierActivation.value;
               zoomNotifierActivation.value = !zoomNotifierActivation.value;
             },
             icon: Icon(Icons.zoom_out_map),
@@ -323,7 +367,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 print(myLocation);
               },
               onGeoPointClicked: (geoPoint) async {
-                if (geoPoint == GeoPoint(latitude: 47.442475, longitude: 8.4680389)) {
+                if (geoPoint ==
+                    GeoPoint(latitude: 47.442475, longitude: 8.4680389)) {
                   await controller.setMarkerIcon(
                       geoPoint,
                       MarkerIcon(
@@ -340,7 +385,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                       "${geoPoint.toMap().toString()}",
                     ),
                     action: SnackBarAction(
-                      onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                      onPressed: () =>
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                       label: "hide",
                     ),
                   ),
@@ -427,7 +473,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   heroTag: "confirmAdvPicker",
                   onPressed: () async {
                     advPickerNotifierActivation.value = false;
-                    GeoPoint p = await controller.selectAdvancedPositionPicker();
+                    GeoPoint p =
+                        await controller.selectAdvancedPositionPicker();
                     print(p);
                   },
                 ),
@@ -531,7 +578,6 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
 
 */
 
-
       ///selection geoPoint
       GeoPoint point = await controller.selectPosition(
         icon: MarkerIcon(
@@ -570,7 +616,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             zoomInto: true,
           ),
         );
-        print("duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
+        print(
+            "duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         print("distance:${roadInformation.distance}Km");
         print(roadInformation.route.length);
         // final box = await BoundingBox.fromGeoPointsAsync([point2, point]);
