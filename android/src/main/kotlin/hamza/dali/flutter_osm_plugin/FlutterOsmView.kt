@@ -36,6 +36,7 @@ import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.PAUSED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STARTED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STOPPED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.mapSnapShots
+import hamza.dali.flutter_osm_plugin.models.CustomTile
 import hamza.dali.flutter_osm_plugin.models.FlutterMarker
 import hamza.dali.flutter_osm_plugin.models.FlutterRoad
 import hamza.dali.flutter_osm_plugin.models.RoadConfig
@@ -100,6 +101,7 @@ class FlutterOsmView(
     private val id: Int,//viewId
     private val providerLifecycle: ProviderLifecycle,
     private val keyArgMapSnapShot: String,
+    private val customTile: CustomTile?
 ) :
     OnSaveInstanceStateListener,
     PlatformView,
@@ -277,7 +279,20 @@ class FlutterOsmView(
         )
         map!!.isTilesScaledToDpi = true
         map!!.setMultiTouchControls(true)
-        map!!.setTileSource(MAPNIK)
+        when {
+            customTile != null -> {
+                map!!.setCustomTile(
+                    name = customTile.sourceName,
+                    minZoomLvl = customTile.minZoomLevel,
+                    maxZoomLvl = customTile.maxZoomLevel,
+                    tileSize = customTile.tileSize,
+                    tileExtensionFile = customTile.tileFileExtension,
+                    baseURLs = customTile.urls.toTypedArray()
+                )
+            }
+            else -> map!!.setTileSource(MAPNIK)
+        }
+
         map!!.isVerticalMapRepetitionEnabled = false
         map!!.isHorizontalMapRepetitionEnabled = false
         map!!.setScrollableAreaLimitDouble(mapSnapShot().boundingWorld())
