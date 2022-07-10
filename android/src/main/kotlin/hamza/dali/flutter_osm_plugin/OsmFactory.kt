@@ -2,6 +2,8 @@ package hamza.dali.flutter_osm_plugin
 
 import android.app.Activity
 import android.content.Context
+import hamza.dali.flutter_osm_plugin.models.CustomTile
+import hamza.dali.flutter_osm_plugin.models.fromMapToCustomTile
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.StandardMessageCodec
@@ -14,19 +16,25 @@ open class OsmFactory(
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     private lateinit var osmFlutterView: FlutterOsmView
 
-     private var activity: Activity? = null
-     private var binding: ActivityPluginBinding? = null
+    private var activity: Activity? = null
+    private var binding: ActivityPluginBinding? = null
     override fun create(
         context: Context?,
         viewId: Int,
         args: Any?,
     ): PlatformView {
-        osmFlutterView= FlutterOsmView(
+        val keyUUID = (args as HashMap<*, *>)["uuid"] as String
+        var customTile: CustomTile? = null
+        if ((args).containsKey("customTile")) {
+            customTile = fromMapToCustomTile(args["customTile"] as HashMap<String, Any>)
+        }
+        osmFlutterView = FlutterOsmView(
             requireNotNull(context),
             binaryMessenger,
             viewId,
             provider,
-            args as String,
+            keyUUID,
+            customTile = customTile
         )
         return osmFlutterView
     }
@@ -36,7 +44,7 @@ open class OsmFactory(
     }
 
     fun setBindingActivity(binding: ActivityPluginBinding) {
-       this.binding!!.addActivityResultListener(osmFlutterView)
+        this.binding!!.addActivityResultListener(osmFlutterView)
 
     }
 
