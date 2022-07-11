@@ -13,7 +13,7 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 abstract class BaseMapController extends IBaseMapController {
   late IBaseOSMController _osmBaseController;
   final BoundingBox? areaLimit;
-
+  final CustomTile? customTile;
   late Timer? _timer;
 
   OSMMixinObserver? _mixinObserver;
@@ -24,6 +24,7 @@ abstract class BaseMapController extends IBaseMapController {
     initMapWithUserPosition = true,
     GeoPoint? initPosition,
     this.areaLimit = const BoundingBox.world(),
+    this.customTile,
   })  : assert(initMapWithUserPosition || initPosition != null),
         super(
           initMapWithUserPosition: initMapWithUserPosition,

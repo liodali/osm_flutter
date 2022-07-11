@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_interface/src/common/utilities.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 
 import 'geo_point.dart';
@@ -30,24 +33,60 @@ class RoadConfiguration {
 /// or width and show interest poi markers
 /// and zoom to region of the road.
 ///
+/// [roadColor]            : (Color) change the default color of the road
+///
+/// [roadWidth]            : (double) change width of the road
+///
+/// [showMarkerOfPOI]      : (bool) if true, and [intersectPoint] in [drawRoad] not empty , will show marker for intermediate point of the road (default false)
+///
+/// [zoomInto]             : (bool) to zoomIn/Out that will make all the road visible in the map (default false)
+///
+/// [keepInitialGeoPoints] : (bool)  to keep the point desired to draw the road
 class RoadOption {
   final Color? roadColor;
   final int? roadWidth;
   final bool showMarkerOfPOI;
   final bool zoomInto;
+  final bool keepInitialGeoPoints;
 
   const RoadOption({
     this.roadColor,
     this.roadWidth,
     this.showMarkerOfPOI = false,
     this.zoomInto = true,
+    this.keepInitialGeoPoints = true,
   });
 
   const RoadOption.empty()
       : this.roadWidth = null,
         this.roadColor = null,
         this.zoomInto = false,
-        this.showMarkerOfPOI = false;
+        this.showMarkerOfPOI = false,
+        this.keepInitialGeoPoints = true;
+
+  Map toMap() {
+    Map args = {};
+
+    /// disable/show markers in start,middle,end points
+    args.putIfAbsent(
+      "showMarker",
+      () => showMarkerOfPOI,
+    );
+
+    args.putIfAbsent(
+      "zoomIntoRegion",
+      () => zoomInto,
+    );
+    if (roadColor != null) {
+      args.addAll(roadColor!.toMapPlatform("roadColor"));
+    }
+    if (roadWidth != null) {
+      args.putIfAbsent(
+          "roadWidth", () => Platform.isIOS ? "${roadWidth}px" : roadWidth!.toDouble());
+    }
+    args.putIfAbsent("keepInitialGeoPoint", () => keepInitialGeoPoints);
+    return args;
+  }
 }
 
 /// [MultiRoadOption]

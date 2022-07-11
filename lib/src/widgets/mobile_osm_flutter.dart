@@ -100,7 +100,8 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     isFirstLaunched = ValueNotifier(false);
     WidgetsBinding.instance.addObserver(this);
     Future.delayed(Duration.zero, () async {
-      orientation = ValueNotifier(Orientation.values[MediaQuery.of(context).orientation.index]);
+      orientation = ValueNotifier(
+          Orientation.values[MediaQuery.of(context).orientation.index]);
       orientation.addListener(changeOrientationDetected);
 
       sizeNotifier = ValueNotifier(MediaQuery.of(context).size);
@@ -201,6 +202,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       androidKey: androidKey,
       onPlatformCreatedView: _onPlatformViewCreated,
       uuidMapCache: keyUUID,
+      customTile: widget.controller.customTile,
     );
   }
 
@@ -227,7 +229,8 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     this._osmController = await MobileOSMController.init(id, this);
     _osmController!.addObserver(this);
     widget.controller.setBaseOSMController(this._osmController!);
-    if (((widget.controller).initMapWithUserPosition || widget.trackMyPosition)) {
+    if (((widget.controller).initMapWithUserPosition ||
+        widget.trackMyPosition)) {
       await requestPermission();
     }
     widget.controller.init();
@@ -242,12 +245,14 @@ class PlatformView extends StatelessWidget {
   final Key? mobileKey;
   final Key? androidKey;
   final String uuidMapCache;
+  final CustomTile? customTile;
 
   const PlatformView({
     this.mobileKey,
     this.androidKey,
     required this.onPlatformCreatedView,
     required this.uuidMapCache,
+    this.customTile,
   }) : super(key: mobileKey);
 
   @override
@@ -264,9 +269,14 @@ class PlatformView extends StatelessWidget {
       key: androidKey,
       viewType: 'plugins.dali.hamza/osmview',
       onPlatformViewCreated: onPlatformCreatedView,
-      creationParams: uuidMapCache,
+      creationParams: customTile == null ? getParams() : getParams()
+        ..putIfAbsent("customTile", () => customTile?.toMap()),
       //creationParamsCodec: null,
       creationParamsCodec: StandardMethodCodec().messageCodec,
     );
   }
+
+  Map getParams() => {
+        "uuid": uuidMapCache,
+      };
 }

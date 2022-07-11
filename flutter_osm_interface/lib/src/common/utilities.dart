@@ -49,6 +49,13 @@ extension TransformEncodedPolyLineToListGeo on String {
 }
 
 extension ColorMap on Color {
+  Map<String, dynamic> toMapPlatform(String key) {
+    if (Platform.isIOS) {
+      return toHexMap(key);
+    }
+    return toMap(key);
+  }
+
   Map<String, List<int>> toMap(String key) {
     return {
       "$key": [

@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.34.1%2B6-orange) 
+![pub](https://img.shields.io/badge/pub-v0.37.0-orange) 
 
 
 ## Platform Support
@@ -29,6 +29,7 @@
 * draw shapes (Only Android)
 * simple dialog location picker (Android/iOS)
 * listen to region change (Android/iOS)
+* set custom tiles (Android Only,iOS will be add it soon) 
 
 
 ## Getting Started
@@ -41,7 +42,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.34.1+6
+      flutter_osm_plugin: ^0.37.0
 
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
@@ -138,6 +139,42 @@ Add the following to your `pubspec.yaml` file:
 | `initMapWithUserPosition`    | (bool) initialize map with user position (default:true                  |
 | `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
 | `areaLimit`                  | (Bounding) set area limit of the map (default BoundingBox.world())   |
+| `customLayer`                | (CustomTile) set customer layer  using different osm server , this attribute used only with named constructor `customLayer`  |
+
+
+<b> 3.1) Custom Layers with  `MapController` </b>
+
+* To change the tile source in OSMFlutter, you should used our named constructor `customLayer`, see the example below
+
+```dart
+
+controller = MapController.customLayer(
+      initMapWithUserPosition: false,
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      customTile: CustomTile(
+        sourceName: "opentopomap",
+        tileExtension: ".png",
+        minZoomLevel: 2,
+        maxZoomLevel: 19,
+        urlsServers: [
+          "https://a.tile.opentopomap.org/",
+          "https://b.tile.opentopomap.org/",
+          "https://c.tile.opentopomap.org/",
+        ],
+        tileSize: 256,
+      ),
+    )
+
+```
+* also,you can use our predefined custom tiles like 
+  * `cyclOSMLayer` constructor for cycling tiles
+  * `publicTransportationLayer` constructor for transport tiles ,it's public osm server
+
+for more example see our example in `home_example.dart`
+
 
 <b>4) Set map on user current position </b>
 

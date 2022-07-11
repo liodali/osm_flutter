@@ -29,7 +29,7 @@ class FlutterOsmPlugin :
 
 
         var state = AtomicInteger(0)
-        var pluginBinding: FlutterPluginBinding? = null
+        var pluginBinding: ActivityPluginBinding? = null
         var lifecycle: Lifecycle? = null
         var factory: OsmFactory? = null
         var register: PluginRegistry.Registrar? = null
@@ -43,14 +43,11 @@ class FlutterOsmPlugin :
 
         @JvmStatic
         fun registerWith(register: PluginRegistry.Registrar) {
-            var registerActivity = register.activity()
-            if (registerActivity == null) {
-                return
-            }
+            val registerActivity: Activity = register.activity() ?: return
             this.register = register
 
             val flutterOsmView = FlutterOsmPlugin()
-            //register.activity().application.registerActivityLifecycleCallbacks(flutterOsmView)
+            //register.activity()?.application?.registerActivityLifecycleCallbacks(flutterOsmView.)
             register.platformViewRegistry().registerViewFactory(
                 VIEW_TYPE,
                 OsmFactory(
@@ -73,26 +70,25 @@ class FlutterOsmPlugin :
             binding.binaryMessenger,
             object : ProviderLifecycle {
                 override fun getLifecyle(): Lifecycle? = lifecycle
-
             },
         )
         binding.platformViewRegistry.registerViewFactory(
             VIEW_TYPE,
-            factory!!,
+            factory!!
         )
-    }
-
-    override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
-        // lifecycle?.removeObserver(this)
-        factory = null
     }
 
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding)
-        factory!!.setActRefInView(binding.activity)
-        factory!!.setBindingActivity(binding)
 
+        pluginBinding = binding
+
+    }
+
+    override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
+        // lifecycle?.removeObserver(this)
+        factory = null
     }
 
     override fun onDetachedFromActivityForConfigChanges() {

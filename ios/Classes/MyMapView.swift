@@ -30,11 +30,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var retrieveLastUserLocation = false
     var isAdvancedPicker = false
     var userLocation: MyLocationMarker? = nil
-    var dictClusterAnnotation : [String: [StaticGeoPMarker]] = [String: [StaticGeoPMarker]]()
+    var dictClusterAnnotation: [String: [StaticGeoPMarker]] = [String: [StaticGeoPMarker]]()
     var dictIconClusterAnnotation = [String: StaticMarkerData]()
     var roadMarkerPolyline: TGMarker? = nil
     lazy var markersIconsRoadPoint: [String: UIImage] = [String: UIImage]()
-    var defaultIcon : UIImage?
+    var defaultIcon: UIImage?
     var pickedLocationSingleTap: CLLocationCoordinate2D? = nil
     var colorRoad: String = "#ff0000"
     var homeMarker: TGMarker? = nil
@@ -214,13 +214,13 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break;
         case "road":
-            drawRoad(call: call) { [unowned self] roadInfo, road, roadData, box,interestPoints, error in
+            drawRoad(call: call) { [unowned self] roadInfo, road, roadData, box, interestPoints, error in
                 if (error != nil) {
                     result(FlutterError(code: "400", message: "error to draw road", details: nil))
                 } else {
                     var newRoad = road
                     newRoad?.roadData = roadData!
-                    roadManager.drawRoadOnMap(on: newRoad!, for: mapView,polyLine: nil,interestPoints: interestPoints)
+                    roadManager.drawRoadOnMap(on: newRoad!, for: mapView, polyLine: nil, interestPoints: interestPoints)
                     if let bounding = box {
                         mapView.cameraPosition = mapView.cameraThatFitsBounds(bounding, withPadding: UIEdgeInsets.init(top: 25.0, left: 25.0, bottom: 25.0, right: 25.0))
                     }
@@ -296,6 +296,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             updateMarkerIcon(call: call)
             result(200)
             break;
+        case "change#Marker":
+            changePositionMarker(call: call)
+            break;
         case "get#geopoints":
             getGeoPoints(result)
             break;
@@ -304,8 +307,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             break;
         }
     }
-
-
 
 
     public func view() -> UIView {
@@ -322,14 +323,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     private func getGeoPoints(_ result: FlutterResult) {
-        let list :[TGMarker] = mapView.markers.filter { marker in
-            marker.stylingString.contains("points")  && dictClusterAnnotation.values.filter { (v: [StaticGeoPMarker]) in
+        let list: [TGMarker] = mapView.markers.filter { marker in
+            marker.stylingString.contains("points") && dictClusterAnnotation.values.filter { (v: [StaticGeoPMarker]) in
                         v.map { (staticMarker: StaticGeoPMarker) -> CLLocationCoordinate2D in
                                     staticMarker.coordinate
-                                }.contains(marker.point)
-                    }.isEmpty
+                                }
+                                .contains(marker.point)
+                    }
+                    .isEmpty
         }
-        let points =  list.map { marker in
+        let points = list.map { marker in
             marker.point.toGeoPoint()
         }
         result(points)
@@ -419,6 +422,13 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
         GeoPointMap(icon: icon, coordinate: coordinate).setupMarker(on: mapView)
+    }
+    private func changePositionMarker(call:FlutterMethodCall){
+        let args = call.arguments as! [String: Any]
+
+        let coordinate_old = (args["old_location"] as! GeoPoint).toLocationCoordinate()
+        let coordinate_new = (args["new_location"] as! GeoPoint).toLocationCoordinate()
+        GeoPointMap(icon: nil,coordinate: coordinate_old).changePositionMarker(on: mapView, mPosition: coordinate_new)
     }
 
     private func updateMarkerIcon(call: FlutterMethodCall) {
@@ -669,7 +679,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     }
 
-    private func drawRoad(call: FlutterMethodCall, completion: @escaping (_ roadInfo: RoadInformation?, _ road: Road?, _ roadData: RoadData?, _ boundingBox: TGCoordinateBounds?,_ interestPoinst:[GeoPointMap]?, _ error: Error?) -> ()) {
+    private func drawRoad(call: FlutterMethodCall, completion: @escaping (_ roadInfo: RoadInformation?, _ road: Road?, _ roadData: RoadData?, _ boundingBox: TGCoordinateBounds?, _ interestPoinst: [GeoPointMap]?, _ error: Error?) -> ()) {
         let args = call.arguments as! [String: Any]
         var points = args["wayPoints"] as! [GeoPoint]
         var roadType = RoadType.car
@@ -729,7 +739,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             var error: Error? = nil
             if road == nil {
                 error = NSError()
-                completion(nil, nil, nil, nil,nil, error)
+                completion(nil, nil, nil, nil, nil, error)
 
             }
             let roadInfo = RoadInformation(distance: road!.distance, seconds: road!.duration, encodedRoute: road!.mRouteHigh)
@@ -739,7 +749,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 let route: Polyline = Polyline(encodedPolyline: road!.mRouteHigh, precision: 1e5)
                 box = route.coordinates?.toBounds()
             }
-            var interestGeoPoints:[GeoPointMap]? = nil
+            var interestGeoPoints: [GeoPointMap]? = nil
             if let showMarkerInPOI = args["showMarker"] as? Bool {
                 if (showMarkerInPOI) {
                     interestGeoPoints = [GeoPointMap]()
@@ -748,8 +758,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     geoStartM.marker = geoStartM.setupMarker(on: self.mapView)
                     interestGeoPoints!.append(geoStartM)
 
-                    if(points.count > 2 ){
-                       let interestPs = points[1..<points.endIndex-1]
+                    if (points.count > 2) {
+                        let interestPs = points[1..<points.endIndex - 1]
                         interestPs.forEach { p in
                             let icon = self.markersIconsRoadPoint["middle"]
                             let geoStartM = GeoPointMap(icon: icon, coordinate: p.toLocationCoordinate())
@@ -758,13 +768,13 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                         }
                     }
                     let end = self.markersIconsRoadPoint["end"] ?? self.defaultIcon
-                    let geoEndM = GeoPointMap(icon: end, coordinate:points.last!.toLocationCoordinate())
+                    let geoEndM = GeoPointMap(icon: end, coordinate: points.last!.toLocationCoordinate())
                     geoEndM.marker = geoEndM.setupMarker(on: self.mapView)
                     interestGeoPoints!.append(geoEndM)
                 }
 
             }
-            completion(roadInfo, road, RoadData(roadColor: roadColor, roadWidth: roadWidth), box,interestGeoPoints, nil)
+            completion(roadInfo, road, RoadData(roadColor: roadColor, roadWidth: roadWidth), box, interestGeoPoints, nil)
 
         }
 
@@ -792,21 +802,21 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         var road = Road()
         road.mRouteHigh = roadEncoded
         road.roadData = RoadData(roadColor: roadColor, roadWidth: roadWidth)
-        let route : Polyline = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
+        let route: Polyline = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
 
 
-        var interestGeoPoints:[GeoPointMap]? = nil
+        var interestGeoPoints: [GeoPointMap]? = nil
 
         if let encodedPoints = args["interestPoints"] as? String {
-            var interestPoints  = Polyline(encodedPolyline: encodedPoints, precision: 1e5).coordinates!
+            var interestPoints = Polyline(encodedPolyline: encodedPoints, precision: 1e5).coordinates!
             if (!interestPoints.isEmpty) {
                 interestGeoPoints = [GeoPointMap]()
-                    var start = markersIconsRoadPoint["start"] ?? defaultIcon
+                var start = markersIconsRoadPoint["start"] ?? defaultIcon
 
 
-                    let geoStartM = GeoPointMap(icon: start, coordinate: route.coordinates!.first!)
-                    geoStartM.marker = geoStartM.setupMarker(on: mapView)
-                    interestGeoPoints!.append(geoStartM)
+                let geoStartM = GeoPointMap(icon: start, coordinate: route.coordinates!.first!)
+                geoStartM.marker = geoStartM.setupMarker(on: mapView)
+                interestGeoPoints!.append(geoStartM)
 
                 if interestPoints.first == route.coordinates!.first! {
                     interestPoints.removeFirst()
@@ -814,7 +824,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 if interestPoints.last == route.coordinates!.last! {
                     interestPoints.removeLast()
                 }
-                interestPoints.forEach{ p in
+                interestPoints.forEach { p in
                     var icon = markersIconsRoadPoint["middle"] ?? defaultIcon
                     if iconMarker != nil {
                         icon = convertImage(codeImage: iconMarker!)
@@ -834,7 +844,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             }
 
         }
-        let markerRoad = roadManager.drawRoadOnMap(on: road, for: mapView,polyLine: route,interestPoints: interestGeoPoints)
+        let markerRoad = roadManager.drawRoadOnMap(on: road, for: mapView, polyLine: route, interestPoints: interestGeoPoints)
         roadMarkerPolyline = markerRoad
         if (zoomInto) {
             let box = route.coordinates!.toBounds()
