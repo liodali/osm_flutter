@@ -1,3 +1,7 @@
+## 0.37.0 : custom tiles for android , re-implement custom location manager
+* add set custom tile for osm map for now available only for android
+* create LocationManager in android side
+* add the support of change location marker in ios side
 ## 0.34.1+6 : fix bug in boundingbox
 ## 0.34.1+5 : fix dependencies
 ## 0.34.1+4 : fix dependencies

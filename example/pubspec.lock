@@ -89,14 +89,14 @@ packages:
       path: "../flutter_osm_interface"
       relative: true
     source: path
-    version: "0.1.22"
+    version: "0.1.24"
   flutter_osm_plugin:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "0.34.1+5"
+    version: "0.34.1+6"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
