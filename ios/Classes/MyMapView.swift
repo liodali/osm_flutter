@@ -944,7 +944,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
-        if (!dictClusterAnnotation.isEmpty && !isAdvancedPicker) {
+        /*if (!dictClusterAnnotation.isEmpty && !isAdvancedPicker) {
             for gStaticMarker in dictClusterAnnotation {
                 for (i, staticMarker) in gStaticMarker.value.enumerated() {
                     let m = staticMarker
@@ -956,7 +956,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     dictClusterAnnotation[gStaticMarker.key]![i] = m
                 }
             }
-        }
+        }*/
         if !canTrackUserLocation {
             let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
             let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.width)

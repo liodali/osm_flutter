@@ -243,15 +243,15 @@ class FlutterOsmView(
             }
 
             override fun onZoom(event: ZoomEvent?): Boolean {
-                if (event!!.zoomLevel < Constants.zoomStaticPosition) {
+                /*if (event!!.zoomLevel < Constants.zoomStaticPosition) {
                     val rect = Rect()
                     map?.getDrawingRect(rect)
-                    map?.overlays?.remove(folderStaticPosition)
+                    //map?.overlays?.remove(folderStaticPosition)
                 } else if (markerSelectionPicker == null) {
                     if (map != null && !map!!.overlays.contains(folderStaticPosition)) {
                         map!!.overlays.add(folderStaticPosition)
                     }
-                }
+                }*/
                 return true
             }
         }
