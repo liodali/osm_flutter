@@ -1,3 +1,4 @@
+## 0.37.1 : remove hide static marker
 ## 0.37.0 : custom tiles for android , re-implement custom location manager
 * add set custom tile for osm map for now available only for android
 * create LocationManager in android side
