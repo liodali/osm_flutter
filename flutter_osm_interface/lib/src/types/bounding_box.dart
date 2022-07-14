@@ -15,10 +15,10 @@ class BoundingBox {
     required this.east,
     required this.south,
     required this.west,
-  })  : assert(north <= 85.0),
+  })  : assert(north <= 86.0),
         assert(east <= 180.0),
-        assert(south >= -85.0),
-        assert(west > -180.0);
+        assert(south >= -86.0),
+        assert(west >= -180.0);
 
   const BoundingBox.world()
       : this.north = 85.0,
@@ -30,9 +30,9 @@ class BoundingBox {
     if (geoPoints.isEmpty) {
       throw Exception("list of geopint shouldn't be empty");
     }
-    double maxLat = -85.0;
+    double maxLat = -86.0;
     double maxLon = -180.0;
-    double minLat = 85.0;
+    double minLat = 86.0;
     double minLon = 180.0;
     for (final gp in geoPoints) {
       final lat = gp.latitude;
@@ -93,7 +93,7 @@ class BoundingBox {
 
 extension ExtBoundingBox on BoundingBox {
   bool isWorld() {
-    return north == 85.0 && east == 180.0 && south == -85.0 && west == -180.0;
+    return north >= 85.0 && east == 180.0 && south <= -85.0 && west == -180.0;
   }
 
   bool inBoundingBox(GeoPoint point) {

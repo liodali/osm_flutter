@@ -226,18 +226,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
       ]
     };
 
-    /// disable/show markers in start,middle,end points
-    args.addAll({
-      "showMarker": roadOption.showMarkerOfPOI,
-    });
-
     /// add road type that will change api call to get route
     args.addAll({
       "roadType": roadType.toString().split(".").last,
-    });
-
-    args.addAll({
-      "zoomIntoRegion": roadOption.zoomInto,
     });
 
     /// add middle point that will pass through it
@@ -245,22 +236,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       args.addAll({"middlePoints": interestPoints.map((e) => e.toMap()).toList()});
     }
 
-    /// road configuration
-    if (Platform.isIOS) {
-      if (roadOption.roadColor != null) {
-        args.addAll(roadOption.roadColor!.toHexMap("roadColor"));
-      }
-      if (roadOption.roadWidth != null) {
-        args.addAll({"roadWidth": "${roadOption.roadWidth}px"});
-      }
-    } else {
-      if (roadOption.roadColor != null) {
-        args.addAll(roadOption.roadColor!.toMap("roadColor"));
-      }
-      if (roadOption.roadWidth != null) {
-        args.addAll({"roadWidth": roadOption.roadWidth!.toDouble()});
-      }
-    }
+    args.addAll(roadOption.toMap());
 
     try {
       Map map = (await (_channels[idOSM]?.invokeMethod(
@@ -706,6 +682,24 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<List<GeoPoint>> getGeoPointMarkers(int idOSM) async {
     final list = await _channels[idOSM]!.invokeListMethod("get#geopoints");
     return (list as List).map((e) => GeoPoint.fromMap(e)).toList();
+  }
+
+  @override
+  Future<void> changeMarker(
+    int idOSM,
+    GeoPoint oldLocation,
+    GeoPoint newLocation, {
+    GlobalKey? globalKeyIcon,
+  }) async {
+    Map<String, dynamic> args = {
+      "new_location": newLocation.toMap(),
+      "old_location": oldLocation.toMap(),
+    };
+    if (globalKeyIcon != null) {
+      var icon = await _capturePng(globalKeyIcon);
+      args["new_icon"] = Platform.isIOS ? icon.convertToString() : icon;
+    }
+    await _channels[idOSM]!.invokeMethod("change#Marker", args);
   }
 }
 

@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import androidx.preference.PreferenceManager
 import hamza.dali.flutter_osm_plugin.utilities.MapSnapShot
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
@@ -28,7 +29,7 @@ class FlutterOsmPlugin :
 
 
         var state = AtomicInteger(0)
-        var pluginBinding: FlutterPluginBinding? = null
+        var pluginBinding: ActivityPluginBinding? = null
         var lifecycle: Lifecycle? = null
         var factory: OsmFactory? = null
         var register: PluginRegistry.Registrar? = null
@@ -42,21 +43,18 @@ class FlutterOsmPlugin :
 
         @JvmStatic
         fun registerWith(register: PluginRegistry.Registrar) {
-
-            if (register.activity() == null) {
-                return
-            }
+            val registerActivity: Activity = register.activity() ?: return
             this.register = register
 
             val flutterOsmView = FlutterOsmPlugin()
-            //register.activity().application.registerActivityLifecycleCallbacks(flutterOsmView)
+            //register.activity()?.application?.registerActivityLifecycleCallbacks(flutterOsmView.)
             register.platformViewRegistry().registerViewFactory(
                 VIEW_TYPE,
                 OsmFactory(
                     register.messenger(),
                     object : ProviderLifecycle {
                         override fun getLifecyle(): Lifecycle =
-                            ProxyLifecycleProvider(activity = register.activity()).lifecycle
+                            ProxyLifecycleProvider(activity = registerActivity).lifecycle
                     },
                 ),
             )
@@ -64,30 +62,33 @@ class FlutterOsmPlugin :
     }
 
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
+        Configuration.getInstance().load(
+            requireNotNull(binding.applicationContext),
+            PreferenceManager.getDefaultSharedPreferences(binding.applicationContext)
+        )
         factory = OsmFactory(
             binding.binaryMessenger,
             object : ProviderLifecycle {
                 override fun getLifecyle(): Lifecycle? = lifecycle
-
             },
         )
         binding.platformViewRegistry.registerViewFactory(
             VIEW_TYPE,
-            factory,
+            factory!!
         )
-    }
-
-    override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
-        // lifecycle?.removeObserver(this)
-        factory = null
     }
 
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding)
-        factory!!.setActRefInView(binding.activity)
-        factory!!.setBindingActivity(binding)
 
+        pluginBinding = binding
+
+    }
+
+    override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
+        // lifecycle?.removeObserver(this)
+        factory = null
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
@@ -120,7 +121,6 @@ class FlutterOsmPlugin :
 
     override fun onDetachedFromActivity() {
         //lifecycle?.removeObserver(this)
-        Configuration.getInstance().osmdroidTileCache.delete()
         lifecycle = null
         pluginBinding = null
 

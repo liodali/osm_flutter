@@ -91,15 +91,17 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   late ValueNotifier<Orientation> orientation;
   late ValueNotifier<Size> sizeNotifier;
   ValueNotifier<bool> setCache = ValueNotifier(false);
-  ValueNotifier<bool> isFirstLaunched = ValueNotifier(false);
+  late ValueNotifier<bool> isFirstLaunched;
 
   @override
   void initState() {
     super.initState();
     keyUUID = Uuid().v4();
-    WidgetsBinding.instance?.addObserver(this);
+    isFirstLaunched = ValueNotifier(false);
+    WidgetsBinding.instance.addObserver(this);
     Future.delayed(Duration.zero, () async {
-      orientation = ValueNotifier(Orientation.values[MediaQuery.of(context).orientation.index]);
+      orientation = ValueNotifier(
+          Orientation.values[MediaQuery.of(context).orientation.index]);
       orientation.addListener(changeOrientationDetected);
 
       sizeNotifier = ValueNotifier(MediaQuery.of(context).size);
@@ -123,14 +125,14 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   void dispose() {
     Future.microtask(() async => await _osmController?.removeCacheMap());
     orientation.removeListener(changeOrientationDetected);
-    WidgetsBinding.instance?.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   void didChangeMetrics() {
     if (Platform.isAndroid && isFirstLaunched.value) {
-      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) async {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
         if (isFirstLaunched.value) {
           final nIndex = MediaQuery.of(context).orientation.index;
           if (orientation.value != Orientation.values[nIndex]) {
@@ -138,6 +140,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
             orientation.value = Orientation.values[nIndex];
           } else {
             if (sizeNotifier.value != MediaQuery.of(context).size) {
+              setCache.value = true;
               sizeNotifier.value = MediaQuery.of(context).size;
             }
           }
@@ -149,13 +152,20 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   @override
   bool get mounted => super.mounted;
 
-  @override
-  void didUpdateWidget(covariant MobileOsmFlutter oldWidget) {
+  void saveCache() {
     if (Platform.isAndroid && isFirstLaunched.value) {
-      if (!setCache.value) {
+      if (setCache.value == false) {
         setCache.value = true;
         Future.microtask(() async => await _osmController?.saveCacheMap());
       }
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MobileOsmFlutter oldWidget) {
+    // saveCache();
+    if (widget.mapIsReadyListener.value) {
+      saveCache();
     }
     super.didUpdateWidget(oldWidget);
     if (this.widget != oldWidget &&
@@ -192,6 +202,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       androidKey: androidKey,
       onPlatformCreatedView: _onPlatformViewCreated,
       uuidMapCache: keyUUID,
+      customTile: widget.controller.customTile,
     );
   }
 
@@ -218,7 +229,8 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     this._osmController = await MobileOSMController.init(id, this);
     _osmController!.addObserver(this);
     widget.controller.setBaseOSMController(this._osmController!);
-    if (((widget.controller).initMapWithUserPosition || widget.trackMyPosition)) {
+    if (((widget.controller).initMapWithUserPosition ||
+        widget.trackMyPosition)) {
       await requestPermission();
     }
     widget.controller.init();
@@ -233,32 +245,38 @@ class PlatformView extends StatelessWidget {
   final Key? mobileKey;
   final Key? androidKey;
   final String uuidMapCache;
+  final CustomTile? customTile;
 
   const PlatformView({
     this.mobileKey,
     this.androidKey,
     required this.onPlatformCreatedView,
     required this.uuidMapCache,
+    this.customTile,
   }) : super(key: mobileKey);
 
   @override
   Widget build(BuildContext context) {
-    Widget widgetMap = AndroidView(
-      key: androidKey,
-      viewType: 'plugins.dali.hamza/osmview',
-      onPlatformViewCreated: onPlatformCreatedView,
-      creationParams: uuidMapCache,
-      //creationParamsCodec: null,
-      creationParamsCodec: StandardMethodCodec().messageCodec,
-    );
     if (defaultTargetPlatform == TargetPlatform.iOS) {
-      widgetMap = UiKitView(
+      return UiKitView(
         //  key: mobileKey,
         viewType: 'plugins.dali.hamza/osmview',
         onPlatformViewCreated: onPlatformCreatedView,
         //creationParamsCodec:  StandardMessageCodec(),
       );
     }
-    return widgetMap;
+    return AndroidView(
+      key: androidKey,
+      viewType: 'plugins.dali.hamza/osmview',
+      onPlatformViewCreated: onPlatformCreatedView,
+      creationParams: customTile == null ? getParams() : getParams()
+        ..putIfAbsent("customTile", () => customTile?.toMap()),
+      //creationParamsCodec: null,
+      creationParamsCodec: StandardMethodCodec().messageCodec,
+    );
   }
+
+  Map getParams() => {
+        "uuid": uuidMapCache,
+      };
 }

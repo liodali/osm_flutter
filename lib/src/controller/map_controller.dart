@@ -23,8 +23,64 @@ class MapController extends BaseMapController {
           initMapWithUserPosition: initMapWithUserPosition,
           initPosition: initPosition,
           areaLimit: areaLimit,
+          customTile: null,
         );
 
+  MapController.customLayer({
+    bool initMapWithUserPosition = true,
+    GeoPoint? initPosition,
+    BoundingBox? areaLimit = const BoundingBox.world(),
+    required CustomTile customTile,
+  })  : assert(
+          initMapWithUserPosition || initPosition != null,
+        ),
+        super(
+          initMapWithUserPosition: initMapWithUserPosition,
+          initPosition: initPosition,
+          areaLimit: areaLimit,
+          customTile: customTile,
+        );
+
+  MapController.cyclOSMLayer({
+    bool initMapWithUserPosition = true,
+    GeoPoint? initPosition,
+    BoundingBox? areaLimit = const BoundingBox.world(),
+  })  : assert(
+          initMapWithUserPosition || initPosition != null,
+        ),
+        super(
+            initMapWithUserPosition: initMapWithUserPosition,
+            initPosition: initPosition,
+            areaLimit: areaLimit,
+            customTile: CustomTile(
+              urlsServers: [
+                "https://a.tile-cyclosm.openstreetmap.fr/cyclosm/",
+                "https://b.tile-cyclosm.openstreetmap.fr/cyclosm/",
+                "https://c.tile-cyclosm.openstreetmap.fr/cyclosm/",
+              ],
+              tileExtension: ".png",
+              sourceName: "cycleMapnik",
+              tileSize: 256,
+            ));
+  MapController.publicTransportationLayer({
+    bool initMapWithUserPosition = true,
+    GeoPoint? initPosition,
+    BoundingBox? areaLimit = const BoundingBox.world(),
+  })  : assert(
+          initMapWithUserPosition || initPosition != null,
+        ),
+        super(
+            initMapWithUserPosition: initMapWithUserPosition,
+            initPosition: initPosition,
+            areaLimit: areaLimit,
+            customTile: CustomTile(
+              urlsServers: [
+               "https://tile.memomaps.de/tilegen/",
+              ],
+              tileExtension: ".png",
+              sourceName: "memomapsMapnik",
+              tileSize: 256,
+            ));
   void dispose() {
     if (!kIsWeb) {
       (osmBaseController as MobileOSMController).dispose();
@@ -106,7 +162,8 @@ class MapController extends BaseMapController {
     required String id,
     required MarkerIcon markerIcon,
   }) async {
-    await osmBaseController.setIconStaticPositions(id, markerIcon, refresh: true);
+    await osmBaseController.setIconStaticPositions(id, markerIcon,
+        refresh: true);
   }
 
   /// recuperate current zoom level
@@ -365,9 +422,23 @@ class MapController extends BaseMapController {
     await osmBaseController.addMarker(p, markerIcon: markerIcon, angle: angle);
   }
 
+  Future<void> changeLocationMarker({
+    required GeoPoint oldLocation,
+    required GeoPoint newLocation,
+    MarkerIcon? markerIcon,
+  }) async {
+    await osmBaseController.changeMarker(
+      oldLocation: oldLocation,
+      newLocation: newLocation,
+      newMarkerIcon: markerIcon,
+    );
+  }
+
   Future<BoundingBox> get bounds async => await osmBaseController.getBounds();
 
-  Future<GeoPoint> get centerMap async => await osmBaseController.getMapCenter();
+  Future<GeoPoint> get centerMap async =>
+      await osmBaseController.getMapCenter();
 
-  Future<List<GeoPoint>> get geopoints async => await osmBaseController.geoPoints();
+  Future<List<GeoPoint>> get geopoints async =>
+      await osmBaseController.geoPoints();
 }

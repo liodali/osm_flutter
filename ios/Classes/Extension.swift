@@ -27,6 +27,14 @@ extension GeoPointMap {
             map.markers[indexToUpdate!].icon = markerIcon!
         }
     }
+    public func changePositionMarker(on map:TGMapView,mPosition:CLLocationCoordinate2D) {
+        let indexToUpdate =  map.markers.firstIndex { m in
+            m.point == self.coordinate
+        }
+        if indexToUpdate != nil {
+            map.markers[indexToUpdate!].point = mPosition
+        }
+    }
 
     public func toMap() -> GeoPoint {
         ["lat": self.coordinate.latitude, "lon": coordinate.longitude]

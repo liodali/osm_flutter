@@ -1,10 +1,15 @@
 package hamza.dali.flutter_osm_plugin.utilities
 
+import android.app.Activity
 import android.content.Intent
 import android.provider.Settings
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
+import org.osmdroid.tileprovider.tilesource.ITileSource
+import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+
 
 fun GeoPoint.toHashMap(): HashMap<String, Double> {
     return HashMap<String, Double>().apply {
@@ -37,6 +42,7 @@ fun BoundingBox.isWorld(): Boolean {
             && this.lonEast == 180.0
             && this.lonWest == -180.0
 }
+
 fun BoundingBox.toHashMap(): HashMap<String, Double> {
     return HashMap<String, Double>().apply {
         this["north"] = latNorth
@@ -47,7 +53,34 @@ fun BoundingBox.toHashMap(): HashMap<String, Double> {
 
 }
 
-fun FlutterOsmView.openSettingLocation(requestCode:Int){
+fun FlutterOsmView.openSettingLocation(requestCode: Int, activity: Activity?) {
     val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
     activity?.startActivityForResult(intent, requestCode)
+}
+
+fun MapView.setCustomTile(
+    name: String,
+    minZoomLvl: Int = 1,
+    maxZoomLvl: Int = 19,
+    tileSize: Int = 256,
+    tileExtensionFile: String = ".png",
+    baseURLs: Array<String>,
+    api:Pair<String,String>?
+) {
+    var imageEndingTile = tileExtensionFile;
+    if(api != null){
+        imageEndingTile = "$imageEndingTile?${api.first}=${api.second}"
+    }
+    val tileSource: ITileSource = XYTileSource(
+        name,
+        minZoomLvl,
+        maxZoomLvl,
+        tileSize,
+        imageEndingTile,
+        baseURLs
+    )
+
+
+
+    this.setTileSource(tileSource)
 }

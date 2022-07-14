@@ -2,49 +2,50 @@ package hamza.dali.flutter_osm_plugin
 
 import android.app.Activity
 import android.content.Context
-import androidx.preference.PreferenceManager
+import hamza.dali.flutter_osm_plugin.models.CustomTile
+import hamza.dali.flutter_osm_plugin.models.fromMapToCustomTile
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.StandardMessageCodec
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
-import org.osmdroid.config.Configuration
-import org.osmdroid.views.MapView
 
 open class OsmFactory(
     private val binaryMessenger: BinaryMessenger,
     private val provider: ProviderLifecycle,
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     private lateinit var osmFlutterView: FlutterOsmView
+
     private var activity: Activity? = null
     private var binding: ActivityPluginBinding? = null
     override fun create(
-        context: Context,
+        context: Context?,
         viewId: Int,
         args: Any?,
     ): PlatformView {
-        Configuration.getInstance().load(
-            context,
-            PreferenceManager.getDefaultSharedPreferences(context)
-        )
+        val keyUUID = (args as HashMap<*, *>)["uuid"] as String
+        var customTile: CustomTile? = null
+        if ((args).containsKey("customTile")) {
+            customTile = fromMapToCustomTile(args["customTile"] as HashMap<String, Any>)
+        }
         osmFlutterView = FlutterOsmView(
-            context,
+            requireNotNull(context),
             binaryMessenger,
             viewId,
             provider,
-            args as String
+            keyUUID,
+            customTile = customTile
         )
-        osmFlutterView.activity = this.activity
-        binding!!.addActivityResultListener(osmFlutterView)
         return osmFlutterView
     }
 
     fun setActRefInView(activity: Activity) {
-        this.activity = activity
+        osmFlutterView.setActivity(activity)
     }
 
     fun setBindingActivity(binding: ActivityPluginBinding) {
-        this.binding = binding
+        this.binding!!.addActivityResultListener(osmFlutterView)
+
     }
 
 }

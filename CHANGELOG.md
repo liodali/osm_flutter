@@ -1,3 +1,26 @@
+## 0.37.1 : remove hide static marker
+## 0.37.0 : custom tiles for android , re-implement custom location manager
+* add set custom tile for osm map for now available only for android
+* create LocationManager in android side
+* add the support of change location marker in ios side
+## 0.34.1+6 : fix bug in boundingbox
+## 0.34.1+5 : fix dependencies
+## 0.34.1+4 : fix dependencies
+## 0.34.1+3 : fix  bugs 
+* fix cast String? in drawRoadManually (ios)
+* update dependencies
+* update docs
+## 0.34.1+2 : fix build bugs in parsing road in iOS
+## 0.34.1+1 : fix build bugs in android
+## 0.34.1 : fix major bugs
+* remove delete cache of osmdroid when widget disposed
+* remove detach map when widget disposed
+* refactor some code in android side
+## 0.34.0+1 : fix build error for android
+## 0.34.0: update plugin to support the new changing in Flutter 3.0
+* fix override from `PlatformViewFactory`
+* fix nullable activity context in osm_plugin
+* fix dart nullable error in mobile_osm_flutter 
 ## 0.33.0+2:
 * disable show windowinfo for marker in android
 ## 0.33.0+1:

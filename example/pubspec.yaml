@@ -8,6 +8,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_dotenv: ^5.0.2
   flutter_osm_plugin: #^0.28.2
     path: ../
   # The following adds the Cupertino Icons font to your application.
@@ -34,6 +35,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
      - asset/
+     - .env
   #  - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
