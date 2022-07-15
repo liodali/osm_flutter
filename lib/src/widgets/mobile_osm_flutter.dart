@@ -101,10 +101,15 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     WidgetsBinding.instance.addObserver(this);
     Future.delayed(Duration.zero, () async {
       orientation = ValueNotifier(
-          Orientation.values[MediaQuery.of(context).orientation.index]);
+          Orientation.values[MediaQuery
+              .of(context)
+              .orientation
+              .index]);
       orientation.addListener(changeOrientationDetected);
 
-      sizeNotifier = ValueNotifier(MediaQuery.of(context).size);
+      sizeNotifier = ValueNotifier(MediaQuery
+          .of(context)
+          .size);
       sizeNotifier.addListener(changeOrientationDetected);
     });
   }
@@ -134,14 +139,21 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     if (Platform.isAndroid && isFirstLaunched.value) {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
         if (isFirstLaunched.value) {
-          final nIndex = MediaQuery.of(context).orientation.index;
+          final nIndex = MediaQuery
+              .of(context)
+              .orientation
+              .index;
           if (orientation.value != Orientation.values[nIndex]) {
             setCache.value = true;
             orientation.value = Orientation.values[nIndex];
           } else {
-            if (sizeNotifier.value != MediaQuery.of(context).size) {
+            if (sizeNotifier.value != MediaQuery
+                .of(context)
+                .size) {
               setCache.value = true;
-              sizeNotifier.value = MediaQuery.of(context).size;
+              sizeNotifier.value = MediaQuery
+                  .of(context)
+                  .size;
             }
           }
         }
@@ -269,14 +281,19 @@ class PlatformView extends StatelessWidget {
       key: androidKey,
       viewType: 'plugins.dali.hamza/osmview',
       onPlatformViewCreated: onPlatformCreatedView,
-      creationParams: customTile == null ? getParams() : getParams()
-        ..putIfAbsent("customTile", () => customTile?.toMap()),
+      creationParams: getParams(customTile),
       //creationParamsCodec: null,
       creationParamsCodec: StandardMethodCodec().messageCodec,
     );
   }
 
-  Map getParams() => {
-        "uuid": uuidMapCache,
-      };
+  Map getParams(CustomTile? customTile) {
+    final Map<String,dynamic> params = {
+      "uuid": uuidMapCache,
+    };
+    if (customTile != null) {
+      params.putIfAbsent("customTile", () => customTile.toMap());
+    }
+    return params;
+  }
 }

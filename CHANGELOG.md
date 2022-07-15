@@ -1,3 +1,5 @@
+## 0.37.2 : fix map not showing (#293)
+* fix bug send customTile null to android side
 ## 0.37.1 : remove hide static marker
 ## 0.37.0 : custom tiles for android , re-implement custom location manager
 * add set custom tile for osm map for now available only for android
