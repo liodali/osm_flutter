@@ -57,6 +57,9 @@ external dynamic setDefaultIcon(String base64);
 @JS('addMarker')
 external dynamic addMarker(GeoPointJs p, String icon);
 
+@JS('changeMarker')
+external dynamic changeMarker(GeoPointJs oldP,GeoPointJs newP, String icon);
+
 @JS('modifyMarker')
 external dynamic modifyMarker(GeoPointJs p, String icon);
 

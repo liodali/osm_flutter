@@ -250,4 +250,10 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       await interop.setDefaultIcon(icon.convertToString());
     });
   }
+
+  @override
+  Future<void> changeMarker({required GeoPoint oldLocation, required GeoPoint newLocation, MarkerIcon? newMarkerIcon}) {
+    // TODO: implement changeMarker
+    throw UnimplementedError();
+  }
 }
