@@ -28,33 +28,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   @override
   void initState() {
     super.initState();
-    /*controller = MapController(
-      initMapWithUserPosition: false,
-      initPosition: GeoPoint(
-        latitude: 47.4358055,
-        longitude: 8.4737324,
-      ),
-      // areaLimit: BoundingBox(
-      //   east: 10.4922941,
-      //   north: 47.8084648,
-      //   south: 45.817995,
-      //   west: 5.9559113,
-      // ),
-    );*/
-    /*controller = MapController.cyclOSMLayer(
-      initMapWithUserPosition: false,
-      initPosition: GeoPoint(
-        latitude: 47.4358055,
-        longitude: 8.4737324,
-      ),
-      // areaLimit: BoundingBox(
-      //   east: 10.4922941,
-      //   north: 47.8084648,
-      //   south: 45.817995,
-      //   west: 5.9559113,
-      // ),
-    );*/
-    controller = MapController.publicTransportationLayer(
+    controller = MapController(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
         latitude: 47.4358055,
@@ -67,6 +41,27 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       //   west: 5.9559113,
       // ),
     );
+   /* controller = MapController.cyclOSMLayer(
+      initMapWithUserPosition: false,
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      // areaLimit: BoundingBox(
+      //   east: 10.4922941,
+      //   north: 47.8084648,
+      //   south: 45.817995,
+      //   west: 5.9559113,
+      // ),
+    );*/
+    /*controller = MapController.publicTransportationLayer(
+      initMapWithUserPosition: false,
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+    );*/
+
     /*controller = MapController.customLayer(
         initMapWithUserPosition: false,
         initPosition: GeoPoint(
