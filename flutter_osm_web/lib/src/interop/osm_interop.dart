@@ -58,7 +58,7 @@ external dynamic setDefaultIcon(String base64);
 external dynamic addMarker(GeoPointJs p, String icon);
 
 @JS('changeMarker')
-external dynamic changeMarker(GeoPointJs oldP,GeoPointJs newP, String icon);
+external dynamic changeMarker(GeoPointJs oldP, GeoPointJs newP, String icon);
 
 @JS('modifyMarker')
 external dynamic modifyMarker(GeoPointJs p, String icon);
@@ -75,9 +75,9 @@ external dynamic currentUserLocation();
 @JS('setStaticGeoPoints')
 external dynamic setStaticGeoPoints(String id, List<GeoPointJs> points);
 
-
 @JS('setStaticGeoPointsWithOrientation')
-external dynamic setStaticGeoPointsWithOrientation(String id, List<GeoPointWithOrientationJs> points);
+external dynamic setStaticGeoPointsWithOrientation(
+    String id, List<GeoPointWithOrientationJs> points);
 
 @JS('setIconStaticGeoPoints')
 external dynamic setIconStaticGeoPoints(String id, String icons);
@@ -105,6 +105,9 @@ external dynamic drawRoad(
   List<GeoPointJs> interestPoints,
   String? iconInterestPoints,
 );
+
+@JS("getGeoPoints")
+external List<Map<String,double>> getGeoPoints();
 
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')

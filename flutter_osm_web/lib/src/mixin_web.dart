@@ -86,7 +86,8 @@ mixin WebMixin {
   }
 
   Future<GeoPoint> myLocation() async {
-    Map<String, dynamic>? value = await html.promiseToFutureAsMap(interop.locateMe());
+    Map<String, dynamic>? value =
+        await html.promiseToFutureAsMap(interop.locateMe());
     if (value!.containsKey("error")) {
       throw Exception(value["message"]);
     }
@@ -118,7 +119,7 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<void> removeMarker(GeoPoint p) async{
+  Future<void> removeMarker(GeoPoint p) async {
     interop.removeMarker(p.toGeoJS());
   }
 
@@ -133,7 +134,8 @@ mixin WebMixin {
   }
 
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
-    var listWithoutOrientation = geoPoints.skipWhile((p) => p is GeoPointWithOrientation).toList();
+    var listWithoutOrientation =
+        geoPoints.skipWhile((p) => p is GeoPointWithOrientation).toList();
     if (listWithoutOrientation.isNotEmpty) {
       await interop.setStaticGeoPoints(
         id,
@@ -247,13 +249,15 @@ mixin WebMixin {
     final routeJs = path.toListGeoPointJs();
     var waitDelay = 0;
     if (interestPointIcon != null) {
-      osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = interestPointIcon;
+      osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value =
+          interestPointIcon;
       waitDelay = 300;
     }
     await Future.delayed(Duration(milliseconds: waitDelay), () async {
       var icon = null;
       if (interestPointIcon != null) {
-        icon = (await capturePng(osmWebFlutterState.dynamicMarkerKey!)).convertToString();
+        icon = (await capturePng(osmWebFlutterState.dynamicMarkerKey!))
+            .convertToString();
       }
       interop.drawRoad(
         routeJs,
@@ -327,16 +331,25 @@ mixin WebMixin {
     return BoundingBox.fromMap(Map<String, double>.from(boundingBoxMap));
   }
 
-  Future<void> zoomToBoundingBox(BoundingBox box, {int paddinInPixel = 0}) async {
+  Future<void> zoomToBoundingBox(BoundingBox box,
+      {int paddinInPixel = 0}) async {
     await promiseToFuture(interop.flyToBounds(
       box.toBoundsJS(),
       paddinInPixel,
     ));
   }
 
-  Future<List<GeoPoint>> geoPoints() {
-    // TODO: implement geoPoints
-    throw UnimplementedError();
+  Future<List<GeoPoint>> geoPoints() async {
+    final mapGeoPoints = await html.promiseToFutureAsMap(() async {
+      final list = interop.getGeoPoints();
+      return {"list": list};
+    });
+    if (mapGeoPoints == null || mapGeoPoints["list"] == null) {
+      return [];
+    }
+    return (mapGeoPoints["list"] as List<Map<String, double>>)
+        .map((mapGeoPoint) => GeoPoint.fromMap(mapGeoPoint))
+        .toList();
   }
 }
 

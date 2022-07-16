@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../common/road_exception.dart';
-import '../types/geo_point.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:stream_transform/stream_transform.dart';
 
@@ -653,7 +652,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     args["icon"] = Platform.isIOS ? icon.convertToString() : icon;
     try {
       await _channels[idOSM]?.invokeMethod("update#Marker", args);
-    } on PlatformException catch (e) {
+    } on PlatformException {
       throw Exception("marker not exist");
     }
   }
