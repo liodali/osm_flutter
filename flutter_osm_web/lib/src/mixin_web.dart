@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:html' as html;
+import 'dart:js';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
@@ -38,9 +40,13 @@ mixin WebMixin {
     await interop.setDefaultIcon(base64);
   }
 
-  Future changeIconAdvPickerMarker(GlobalKey<State<StatefulWidget>> key) {
-    // TODO: implement changeIconAdvPickerMarker
-    throw UnimplementedError();
+  Future changeIconAdvPickerMarker(GlobalKey<State<StatefulWidget>> key) async {
+    var base64 = "";
+    try {
+      base64 = (await capturePng(key)).convertToString();
+    } finally {
+      await interop.changeIconAdvPickerMarker(base64);
+    }
   }
 
   Future<void> changeLocation(GeoPoint p) async {
@@ -51,9 +57,8 @@ mixin WebMixin {
     );
   }
 
-  Future<void> disabledTracking() {
-    // TODO: implement disabledTracking
-    throw UnimplementedError();
+  Future<void> disabledTracking() async {
+    await interop.disableTracking();
   }
 
   Future<void> drawCircle(CircleOSM circleOSM) {
@@ -216,7 +221,9 @@ mixin WebMixin {
       geometrie: routing.Geometries.geojson,
     );
     final routeJs = road.polyline!.mapToListGeoJS();
-    if (roadOption != null && !roadOption.showMarkerOfPOI) {
+    if (roadOption != null &&
+        !roadOption.showMarkerOfPOI &&
+        !roadOption.keepInitialGeoPoints) {
       interop.removeMarker(start.toGeoJS());
       interop.removeMarker(end.toGeoJS());
     }
@@ -225,6 +232,7 @@ mixin WebMixin {
       roadOption?.roadColor?.toHexColorWeb() ?? Colors.green.toHexColorWeb(),
       roadOption?.roadWidth?.toDouble() ?? 5.0,
       roadOption?.zoomInto ?? true,
+      roadOption?.keepInitialGeoPoints ?? false,
       roadOption != null && roadOption.showMarkerOfPOI
           ? interestPoints?.toListGeoPointJs() ?? []
           : [],
@@ -264,6 +272,7 @@ mixin WebMixin {
         roadColor.toHexColorWeb(),
         width,
         zoomInto,
+        false,
         interestPoints.toListGeoPointJs(),
         icon,
       );
@@ -340,15 +349,14 @@ mixin WebMixin {
   }
 
   Future<List<GeoPoint>> geoPoints() async {
-    final mapGeoPoints = await html.promiseToFutureAsMap(() async {
-      final list = interop.getGeoPoints();
-      return {"list": list};
-    });
-    if (mapGeoPoints == null || mapGeoPoints["list"] == null) {
+    var map = await html.promiseToFutureAsMap(interop.getGeoPoints());
+    if (map == null || map["list"] == null) {
       return [];
     }
-    return (mapGeoPoints["list"] as List<Map<String, double>>)
-        .map((mapGeoPoint) => GeoPoint.fromMap(mapGeoPoint))
+    map = Map.from(map);
+    final mapGeoPoints = json.decode(map["list"]);
+    return (List.castFrom(mapGeoPoints))
+        .map((elem) => GeoPoint.fromMap(Map<String, double>.from(elem)))
         .toList();
   }
 }

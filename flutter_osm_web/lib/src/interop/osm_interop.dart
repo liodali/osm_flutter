@@ -58,7 +58,7 @@ external dynamic setDefaultIcon(String base64);
 external dynamic addMarker(GeoPointJs p, String icon);
 
 @JS('changeMarker')
-external dynamic changeMarker(GeoPointJs oldP, GeoPointJs newP, String icon);
+external dynamic changeMarker(GeoPointJs oldP, GeoPointJs newP, String? icon);
 
 @JS('modifyMarker')
 external dynamic modifyMarker(GeoPointJs p, String icon);
@@ -102,12 +102,19 @@ external dynamic drawRoad(
   String color,
   double roadWidth,
   bool zoomInto,
+  bool keepInitialGeoPoints,
   List<GeoPointJs> interestPoints,
   String? iconInterestPoints,
 );
 
 @JS("getGeoPoints")
-external List<Map<String,double>> getGeoPoints();
+external Map<String,String> getGeoPoints();
+
+@JS("disableTracking")
+external dynamic disableTracking();
+
+@JS("changeIconAdvPickerMarker")
+external dynamic changeIconAdvPickerMarker(String? icon);
 
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')

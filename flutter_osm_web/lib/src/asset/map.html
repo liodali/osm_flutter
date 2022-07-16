@@ -44,11 +44,16 @@
     var staticGeoPoint = new Map();
 
     var dynamicIcon = "";
+    var advSearchIcon = "";
     var homeMarker;
     var isReady = false;
     var lastRoad;
     var colorRoad;
     var routesLayer = [];
+    var idTracking;
+    var startAdvSearchLocation = false;
+    var cacheLayers = L.layerGroup([]);
+
 
     var mymap = L.map('mapid', {
       renderer: L.canvas(),
@@ -131,6 +136,19 @@
         lon: longitude
       };
     }
+    async function getGeoPoints() {
+      var listGeoPoint = [];
+      mymap.eachLayer(function (layer) {
+        if (layer instanceof L.Marker) {
+          var geoPoint = layer.getLatLng();
+          listGeoPoint.push({
+            lat: geoPoint.lat,
+            lon: geoPoint.lng
+          })
+        }
+      });
+      return { list: JSON.stringify(listGeoPoint) };
+    }
 
     async function changePosition(point, showMarker, animate) {
       const position = [point.lat, point.lon];
@@ -176,15 +194,15 @@
       return 200;
     }
     async function changeMarker(oldPoint, point, icon) {
-      
+
       var latlng = L.latLng([point.lat, point.lon]);
       var oldLatlng = L.latLng([oldPoint.lat, oldPoint.lon]);
-      mymap.eachLayer(function(layer){
+      mymap.eachLayer(function (layer) {
         if (layer instanceof L.Marker) {
           var geoPoint = layer.getLatLng();
           if (geoPoint.lat == oldLatlng.lat && geoPoint.lng == oldLatlng.lng) {
-            layer.setLatLng(latlng) 
-            if(icon != undefined){
+            layer.setLatLng(latlng)
+            if (icon != undefined) {
               var iconMarker = L.icon({
                 iconUrl: "data:image/png;base64," + icon,
                 iconSize: [32, 32]
@@ -378,7 +396,7 @@
       roadMarkerIcons["endIcon"] = startIcon
     }
 
-    function drawRoad(route, colorRoute, routeWidth, zoomInto, interestGeoPts, iconInterestPoint) {
+    function drawRoad(route, colorRoute, routeWidth, zoomInto, keepInitialGeoPoints, interestGeoPts, iconInterestPoint) {
       if (lastRoad != undefined) {
         mymap.removeLayer(lastRoad)
         routesLayer.pop()
@@ -394,22 +412,61 @@
       if (interestGeoPts.length > 0) {
         var len = route.length
         interestGeoPts.forEach(function (geoPoint) {
-          var icon = roadMarkerIcons["middleIcon"]
-          if (geoPoint.lat == route[0].lat && geoPoint.lon == route[0].lon) {
+          var icon = undefined;
+          if (geoPoint.lat == route[0].lat && geoPoint.lon == route[0].lon && !keepInitialGeoPoints) {
             icon = roadMarkerIcons["startIcon"]
-          } else if (geoPoint.lat == route[len - 1].lat && geoPoint.lon == route[len - 1].lon) {
+          } else if (geoPoint.lat == route[len - 1].lat && geoPoint.lon == route[len - 1].lon && !keepInitialGeoPoints) {
             icon = roadMarkerIcons["endIcon"]
           } else {
             if (iconInterestPoint) {
               icon = iconInterestPoint
+            } else {
+              icon = roadMarkerIcons["middleIcon"]
             }
           }
-          if (icon)
+          if (icon) {
             addMarker(geoPoint, icon)
+          }
+
         })
       }
       return 200;
     }
+
+    function disableTracking() {
+      navigator.geolocation.clearWatch(idTracking);
+    }
+
+    async function advSearchLocation() {
+      startAdvSearchLocation = true
+      mymap.eachLayer(function (layer) {
+        var cahcedLayer = layer;
+        cacheLayers.addLayer(cahcedLayer);
+        mymap.removeLayer(layer);
+      });
+      /*
+          display: block;
+    position: absolute;
+    z-index: 1000;
+    overflow: hidden;
+    top: 47%;
+    left: 47%;
+      */
+      document.getElementById("render-icon").style.display = "block";
+      document.getElementById("render-icon").style.position = "absolute";
+      document.getElementById("render-icon").style.zIndex = "1000";
+      document.getElementById("render-icon").style.top = "47%";
+      document.getElementById("render-icon").style.left = "47%";
+    }
+
+    async function changeIconAdvPickerMarker(icon) {
+      advSearchIcon = icon;
+      const nodeImg = document.createElement("img");
+      nodeImg.setAttribute('src', 'data:image/png;base64,' + icon);
+      document.getElementById("render-icon").appendChild(nodeImg);
+    }
+
+
 
 
     function setHomeMarker(point, args) {

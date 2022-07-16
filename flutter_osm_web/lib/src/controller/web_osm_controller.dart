@@ -164,6 +164,23 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       );
     }
 
+    if (osmWebFlutterState.widget.markerOption?.advancedPickerMarker != null) {
+      if (osmWebFlutterState.advancedPickerMarker?.currentContext != null) {
+        await changeIconAdvPickerMarker(
+            osmWebFlutterState.advancedPickerMarker!);
+      }
+    }
+    if (osmWebFlutterState.widget.markerOption?.advancedPickerMarker == null) {
+      osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = Icon(
+        Icons.location_on,
+        color: Colors.red,
+        size: 32,
+      );
+      Future.delayed(const Duration(milliseconds: 300), () async {
+        await changeIconAdvPickerMarker(osmWebFlutterState.dynamicMarkerKey!);
+      });
+    }
+
     await configureZoomMap(
       osmWebFlutterState.widget.minZoomLevel,
       osmWebFlutterState.widget.maxZoomLevel,

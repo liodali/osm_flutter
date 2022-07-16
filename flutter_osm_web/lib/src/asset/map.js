@@ -21,10 +21,11 @@ async function addMarker(point, icon) {
    return iframe.contentWindow.addMarker(point, icon);
 }
 async function changeMarker(oldPoint,point, icon) {
+   console.log("change : "+oldPoint)
+   console.log("to :"+point)
    var iframe = document.getElementById("frame_map");
    return iframe.contentWindow.changeMarker(oldPoint,point, icon);
 }
-
 
 async function modifyMarker(point, icon) {
    var iframe = document.getElementById("frame_map");
@@ -115,12 +116,25 @@ async function configRoad(color, startIcon, middleIcon, endIcon) {
 
 
 }
-function drawRoad(route, color, roadWidth, zoomInto, interestPoints,iconInteretPoint) {
+function drawRoad(route, color, roadWidth, zoomInto,keepInitialGeoPoints, interestPoints,iconInteretPoint) {
    console.log(route);
    var iframe = document.getElementById("frame_map");
-   return  iframe.contentWindow.drawRoad(route, color, roadWidth, zoomInto, interestPoints,iconInteretPoint);
+   return  iframe.contentWindow.drawRoad(route, color, roadWidth, zoomInto,keepInitialGeoPoints, interestPoints,iconInteretPoint);
 }
 
+async function getGeoPoints(){
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.getGeoPoints();
+
+}
+async function disableTracking(){
+   var iframe = document.getElementById("frame_map");
+   return  iframe.contentWindow.disableTracking();
+}
+async function changeIconAdvPickerMarker(icon){
+   var iframe = document.getElementById("frame_map");
+   return  await iframe.contentWindow.changeIconAdvPickerMarker(icon);
+}
 
 /*
 * shared dart function that called from js
