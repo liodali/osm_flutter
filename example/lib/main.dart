@@ -11,11 +11,12 @@ import 'web_test_osm.dart';
 void main() async {
   await dotenv.load(fileName: ".env");
   WidgetsFlutterBinding.ensureInitialized();
-  if (kIsWeb) {
+  /*if (kIsWeb) {
     runApp(WebApp());
   } else {
-    runApp(MyApp());
-  }
+    
+  }*/
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

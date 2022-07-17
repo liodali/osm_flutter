@@ -41,7 +41,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       //   west: 5.9559113,
       // ),
     );
-   /* controller = MapController.cyclOSMLayer(
+    /* controller = MapController.cyclOSMLayer(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
         latitude: 47.4358055,
@@ -79,7 +79,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             tileSize: 256,
             keyApi: MapEntry("apikey", dotenv.env['api']!,),)
         );*/
-   /* controller = MapController.customLayer(
+    /* controller = MapController.customLayer(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
         latitude: 47.4358055,
@@ -200,11 +200,11 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           longitude: 8.4680184,
           angle: pi / 4,
         ),
-        GeoPointWithOrientation(
+        /*GeoPointWithOrientation(
           latitude: 47.4517782,
           longitude: 8.4716146,
           angle: pi / 2,
-        ),
+        ),*/
       ],
       "line 2",
     );
@@ -364,15 +364,21 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               onGeoPointClicked: (geoPoint) async {
                 if (geoPoint ==
                     GeoPoint(latitude: 47.442475, longitude: 8.4680389)) {
-                  await controller.setMarkerIcon(
-                      geoPoint,
-                      MarkerIcon(
-                        icon: Icon(
-                          Icons.bus_alert,
-                          color: Colors.blue,
-                          size: 24,
-                        ),
-                      ));
+                  final newGeoPoint = GeoPoint(
+                    latitude: 47.4517782,
+                    longitude: 8.4716146,
+                  );
+                  await controller.changeLocationMarker(
+                    oldLocation: geoPoint,
+                    newLocation: newGeoPoint,
+                    markerIcon: MarkerIcon(
+                      icon: Icon(
+                        Icons.bus_alert,
+                        color: Colors.blue,
+                        size: 24,
+                      ),
+                    ),
+                  );
                 }
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -398,8 +404,14 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     ),
                   ),
                   [
-                    GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
-                    GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
+                    GeoPoint(
+                      latitude: 47.4333594,
+                      longitude: 8.4680184,
+                    ),
+                    GeoPoint(
+                      latitude: 47.4317782,
+                      longitude: 8.4716146,
+                    ),
                   ],
                 ),
                 /*StaticPositionGeoPoint(
@@ -505,6 +517,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                         onPressed: () async {
                           controller.zoomIn();
                         },
+                      ),
+                      SizedBox(
+                        height: 16,
                       ),
                       ElevatedButton(
                         child: Icon(Icons.remove),
