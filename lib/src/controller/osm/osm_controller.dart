@@ -484,7 +484,7 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
-    if (zoomLevel != null && (zoomLevel >= maxZoomLevel || zoomLevel <= minZoomLevel)) {
+    if (zoomLevel != null && (zoomLevel < minZoomLevel || zoomLevel > maxZoomLevel)) {
       throw Exception("zoom level should be between $minZoomLevel and $maxZoomLevel");
     }
     await osmPlatform.setZoom(
