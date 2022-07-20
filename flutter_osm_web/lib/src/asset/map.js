@@ -20,11 +20,11 @@ async function addMarker(point, icon) {
    var iframe = document.getElementById("frame_map");
    return iframe.contentWindow.addMarker(point, icon);
 }
-async function changeMarker(oldPoint,point, icon) {
-   console.log("change : "+oldPoint)
-   console.log("to :"+point)
+async function changeMarker(oldPoint, point, icon) {
+   console.log("change : " + oldPoint)
+   console.log("to :" + point)
    var iframe = document.getElementById("frame_map");
-   return iframe.contentWindow.changeMarker(oldPoint,point, icon);
+   return iframe.contentWindow.changeMarker(oldPoint, point, icon);
 }
 
 async function modifyMarker(point, icon) {
@@ -33,7 +33,7 @@ async function modifyMarker(point, icon) {
 }
 
 async function initMapLocation(point) {
-   console.log(point.lon+":"+point.lat)
+   console.log(point.lon + ":" + point.lat)
    var iframe = document.getElementById("frame_map");
    await iframe.contentWindow.initMapLocation(point);
 }
@@ -116,24 +116,32 @@ async function configRoad(color, startIcon, middleIcon, endIcon) {
 
 
 }
-function drawRoad(route, color, roadWidth, zoomInto,keepInitialGeoPoints, interestPoints,iconInteretPoint) {
+function drawRoad(route, color, roadWidth, zoomInto, keepInitialGeoPoints, interestPoints, iconInteretPoint) {
    console.log(route);
    var iframe = document.getElementById("frame_map");
-   return  iframe.contentWindow.drawRoad(route, color, roadWidth, zoomInto,keepInitialGeoPoints, interestPoints,iconInteretPoint);
+   return iframe.contentWindow.drawRoad(route, color, roadWidth, zoomInto, keepInitialGeoPoints, interestPoints, iconInteretPoint);
 }
 
-async function getGeoPoints(){
+async function getGeoPoints() {
    var iframe = document.getElementById("frame_map");
    return await iframe.contentWindow.getGeoPoints();
 
 }
-async function disableTracking(){
+async function disableTracking() {
    var iframe = document.getElementById("frame_map");
-   return  iframe.contentWindow.disableTracking();
+   return iframe.contentWindow.disableTracking();
 }
-async function changeIconAdvPickerMarker(icon){
+async function changeIconAdvPickerMarker(icon) {
    var iframe = document.getElementById("frame_map");
-   return  await iframe.contentWindow.changeIconAdvPickerMarker(icon);
+   return await iframe.contentWindow.changeIconAdvPickerMarker(icon);
+}
+async function advSearchLocation() {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.advSearchLocation();
+}
+async function cancelAdvSearchLocation() {
+   var iframe = document.getElementById("frame_map");
+   return await iframe.contentWindow.cancelAdvSearchLocation();
 }
 
 /*

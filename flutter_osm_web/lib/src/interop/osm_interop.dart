@@ -108,13 +108,17 @@ external dynamic drawRoad(
 );
 
 @JS("getGeoPoints")
-external Map<String,String> getGeoPoints();
+external Map<String, String> getGeoPoints();
 
 @JS("disableTracking")
 external dynamic disableTracking();
 
 @JS("changeIconAdvPickerMarker")
 external dynamic changeIconAdvPickerMarker(String? icon);
+@JS("advSearchLocation")
+external dynamic advSearchLocation();
+@JS("cancelAdvSearchLocation")
+external dynamic cancelAdvSearchLocation();
 
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')

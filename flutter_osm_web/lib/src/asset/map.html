@@ -52,7 +52,7 @@
     var routesLayer = [];
     var idTracking;
     var startAdvSearchLocation = false;
-    var cacheLayers = L.layerGroup([]);
+    var cachedLayers = L.layerGroup([]);
 
 
     var mymap = L.map('mapid', {
@@ -440,9 +440,11 @@
     async function advSearchLocation() {
       startAdvSearchLocation = true
       mymap.eachLayer(function (layer) {
-        var cahcedLayer = layer;
-        cacheLayers.addLayer(cahcedLayer);
-        mymap.removeLayer(layer);
+        if (!(layer instanceof L.TileLayer)) {
+          var cachedLayer = layer;
+          cachedLayers.addLayer(cachedLayer);
+          mymap.removeLayer(layer);
+        }
       });
       /*
           display: block;
@@ -455,15 +457,24 @@
       document.getElementById("render-icon").style.display = "block";
       document.getElementById("render-icon").style.position = "absolute";
       document.getElementById("render-icon").style.zIndex = "1000";
-      document.getElementById("render-icon").style.top = "47%";
-      document.getElementById("render-icon").style.left = "47%";
+      document.getElementById("render-icon").style.top = "45%";
+      document.getElementById("render-icon").style.left = "45%";
     }
+    async function cancelAdvSearchLocation() {
+      document.getElementById("render-icon").style.display = "none";
+      cachedLayers.eachLayer(function (layer) {
+        mymap.addLayer(layer);
+      });
+      cachedLayers.clearLayers();
 
+    }
     async function changeIconAdvPickerMarker(icon) {
       advSearchIcon = icon;
       const nodeImg = document.createElement("img");
       nodeImg.setAttribute('src', 'data:image/png;base64,' + icon);
       document.getElementById("render-icon").appendChild(nodeImg);
+      nodeImg.style.height = "32px";
+      nodeImg.style.width = "32px";
     }
 
 

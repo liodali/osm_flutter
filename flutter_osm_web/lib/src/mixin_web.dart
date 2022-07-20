@@ -24,14 +24,12 @@ mixin WebMixin {
     await interop.currentUserLocation();
   }
 
-  Future<void> advancedPositionPicker() {
-    // TODO: implement advancedPositionPicker
-    throw UnimplementedError();
+  Future<void> advancedPositionPicker() async {
+    await interop.advSearchLocation();
   }
 
-  Future<void> cancelAdvancedPositionPicker() {
-    // TODO: implement cancelAdvancedPositionPicker
-    throw UnimplementedError();
+  Future<void> cancelAdvancedPositionPicker() async {
+    await interop.cancelAdvSearchLocation();
   }
 
   @protected
