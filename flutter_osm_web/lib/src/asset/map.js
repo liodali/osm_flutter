@@ -127,6 +127,15 @@ async function getGeoPoints() {
    return await iframe.contentWindow.getGeoPoints();
 
 }
+async function setUserLocationIconMarker(icon){
+   var iframe = document.getElementById("frame_map");
+   return iframe.contentWindow.setUserLocationIconMarker(icon);
+}
+
+async function enableTracking(){
+   var iframe = document.getElementById("frame_map");
+   return iframe.contentWindow.enableTracking();
+}
 async function disableTracking() {
    var iframe = document.getElementById("frame_map");
    return iframe.contentWindow.disableTracking();

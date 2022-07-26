@@ -69,14 +69,12 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<void> enableTracking() {
-    // TODO: implement enableTracking
-    throw UnimplementedError();
+  Future<void> enableTracking() async {
+    await interop.enableTracking();
   }
 
-  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() {
-    // TODO: implement getCurrentPositionAdvancedPositionPicker
-    throw UnimplementedError();
+  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async{
+   return await getMapCenter();
   }
 
   Future<void> goToPosition(GeoPoint p) async {

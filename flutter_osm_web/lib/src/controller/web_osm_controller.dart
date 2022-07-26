@@ -131,7 +131,13 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       await changeHomeIconMarker(osmWebFlutterState.defaultMarkerKey!);
     }
     if (osmWebFlutterState.widget.staticIconGlobalKeys.isNotEmpty) {
-      osmWebFlutterState.widget.staticIconGlobalKeys.forEach((id, key) {
+      var keys = osmWebFlutterState.widget.staticIconGlobalKeys;
+      keys.removeWhere((key, value) =>
+          osmWebFlutterState.widget.staticPoints
+              .firstWhere((element) => element.id == key)
+              .markerIcon ==
+          null);
+      keys.forEach((id, key) {
         markerIconsStaticPositions(id, key);
       });
     }
@@ -179,6 +185,13 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       Future.delayed(const Duration(milliseconds: 300), () async {
         await changeIconAdvPickerMarker(osmWebFlutterState.dynamicMarkerKey!);
       });
+    }
+
+    /// change user person Icon and arrow Icon
+    if (osmWebFlutterState.widget.userLocationMarker != null) {
+      await customUserLocationMarker(
+        osmWebFlutterState.personIconMarkerKey,
+      );
     }
 
     await configureZoomMap(
@@ -303,5 +316,13 @@ class WebOsmController with WebMixin implements IBaseOSMController {
         icon,
       );
     });
+  }
+
+  Future customUserLocationMarker(
+      GlobalKey<State<StatefulWidget>> personIconMarkerKey) async {
+    if (personIconMarkerKey.currentContext != null) {
+      final iconPNG = (await capturePng(personIconMarkerKey)).convertToString();
+      interop.setUserLocationIconMarker(iconPNG);
+    }
   }
 }

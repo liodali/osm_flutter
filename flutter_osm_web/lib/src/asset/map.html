@@ -42,10 +42,11 @@
     var roadMarkerIcons = new Map();
     var staticIcons = new Map();
     var staticGeoPoint = new Map();
-
+    var userLocationMarkerIcon = "";
     var dynamicIcon = "";
     var advSearchIcon = "";
     var homeMarker;
+    var userPosition;
     var isReady = false;
     var lastRoad;
     var colorRoad;
@@ -259,15 +260,22 @@
       if (staticGeoPoint.has(id) && staticGeoPoint[id] != undefined) {
         staticGeoPoint[id].clearLayers();
       }
-      var icon = L.icon(
-        {
-          iconUrl: "data:image/png;base64," + staticIcons.get(id),
-          iconSize: [32, 32]
+      var args = {}
+      if (staticIcons.has(id)) {
+
+        args = {
+          icon: L.icon(
+            {
+              iconUrl: "data:image/png;base64," + staticIcons.get(id),
+              iconSize: [32, 32]
+            }
+          )
         }
-      )
+      }
+
       points.forEach(function (ele) {
         removeMarker(ele);
-        markers.push(L.marker([ele.lat, ele.lon], { icon: icon })
+        markers.push(L.marker([ele.lat, ele.lon], args)
           .addTo(mymap)
           .on("click", function (event) {
             const geoP = event.latlng;
@@ -431,6 +439,31 @@
         })
       }
       return 200;
+    }
+    function setUserLocationIconMarker(icon) {
+      if (icon != undefined && icon != "")
+        userLocationMarkerIcon = icon;
+    }
+    async function enableTracking() {
+      idTracking = navigator.geolocation.watchPosition(function (position) {
+        var userPos = [position.coords.latitude, position.coords.longitude]
+
+        mymap.flyTo(userPos, mymap.getZoom());
+        var args = {}
+        if (userLocationMarkerIcon != undefined) {
+          args = {
+            icon: L.icon({
+              iconUrl: "data:image/png;base64," + userLocationMarkerIcon,
+              iconSize: [32, 32]
+            })
+          }
+        }
+        if (userPosition == undefined) {
+          userPosition = L.marker(userPos, args).addTo(mymap);
+        } else if (userPosition != undefined) {
+          userPosition.setLatLng(userPos);
+        }
+      })
     }
 
     function disableTracking() {

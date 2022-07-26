@@ -110,8 +110,16 @@ external dynamic drawRoad(
 @JS("getGeoPoints")
 external Map<String, String> getGeoPoints();
 
+@JS("setUserLocationIconMarker")
+external dynamic setUserLocationIconMarker(String icon);
+
+
+@JS("enableTracking")
+external dynamic enableTracking();
+
 @JS("disableTracking")
 external dynamic disableTracking();
+
 
 @JS("changeIconAdvPickerMarker")
 external dynamic changeIconAdvPickerMarker(String? icon);
