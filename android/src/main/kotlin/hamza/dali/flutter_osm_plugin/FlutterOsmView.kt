@@ -1922,16 +1922,11 @@ class FlutterOsmView(
             overlay.add(marker)
         }
         folderStaticPosition.add(overlay)
-        if (map!!.zoomLevelDouble > 10.0 && !mapSnapShot().advancedPicker()) {
-            if (map!!.overlays.contains(folderStaticPosition)) {
-                map!!.overlays.remove(folderStaticPosition)
-            }
-            if (!map!!.overlays.contains(folderStaticPosition)) {
-                map!!.overlays.add(folderStaticPosition)
-
-            }
-            map!!.invalidate()
+        if (!mapSnapShot().advancedPicker()) {
+            map!!.overlays.remove(folderStaticPosition)
+            map!!.overlays.add(folderStaticPosition)
         }
+        map!!.invalidate()
 
     }
 
