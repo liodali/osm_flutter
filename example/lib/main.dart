@@ -6,7 +6,7 @@ import 'package:flutter_osm_plugin_example/src/search_example.dart';
 import 'src/home/home_example.dart';
 
 void main() async {
-  await dotenv.load(fileName: ".env");
+  //await dotenv.load(fileName: ".env");
   runApp(MyApp());
 }
 
