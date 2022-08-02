@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_osm_plugin_example/src/search_example.dart';
 
 //import 'src/adv_home/home_example.dart';
