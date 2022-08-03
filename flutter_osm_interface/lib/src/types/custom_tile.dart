@@ -21,7 +21,7 @@ class CustomTile {
   final String tileExtension;
   final String sourceName;
   final int tileSize, minZoomLevel, maxZoomLevel;
-  final MapEntry<String,String>? keyApi;
+  final MapEntry<String, String>? keyApi;
 
   CustomTile({
     required this.urlsServers,
@@ -39,7 +39,10 @@ class CustomTile {
         assert(minZoomLevel < maxZoomLevel),
         assert(minZoomLevel >= 2 && minZoomLevel < maxZoomLevel),
         assert(maxZoomLevel > minZoomLevel && maxZoomLevel > 0),
-        assert(keyApi == null || (keyApi.key.isNotEmpty && keyApi.value.isNotEmpty),"if your own server use key access,you provide the right key name,and api");
+        assert(
+            keyApi == null ||
+                (keyApi.key.isNotEmpty && keyApi.value.isNotEmpty),
+            "if your own server use key access,you provide the right key name,and api");
 
   Map toMap() {
     final map = {
@@ -55,4 +58,19 @@ class CustomTile {
     }
     return map;
   }
+}
+/// TileURLs
+/// 
+/// this class used to set url and subdomain for custoöm tile layer
+/// url represent base server url tile , if you have multiple url that contain
+/// subdomains use [subdomains] to specify them 
+/// and replace them in url with {s} to configure correctly the map
+class TileURLs {
+  final String url;
+  final List<String> subdomains;
+
+  TileURLs({
+    required this.url,
+    this.subdomains = const [],
+  });
 }
