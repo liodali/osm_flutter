@@ -1,3 +1,5 @@
+import 'dart:io';
+
 /// [CustomTile]
 ///
 /// this class used to set custom tile for osm mapview (android,ios,web)
@@ -17,7 +19,7 @@
 ///
 /// [keyApi]         : (MapEntry) should contain key name and api key value for tile server that need api key access
 class CustomTile {
-  final List<String> urlsServers;
+  final List<TileURLs> urlsServers;
   final String tileExtension;
   final String sourceName;
   final int tileSize, minZoomLevel, maxZoomLevel;
@@ -33,7 +35,7 @@ class CustomTile {
     this.keyApi,
   })  : assert(urlsServers.isNotEmpty),
         assert(
-          urlsServers.where((element) => element.isEmpty).isEmpty,
+          urlsServers.where((element) => element.url.isEmpty).isEmpty,
         ),
         assert([128, 256, 512, 1024].contains(tileSize)),
         assert(minZoomLevel < maxZoomLevel),
@@ -47,7 +49,7 @@ class CustomTile {
   Map toMap() {
     final map = {
       "name": sourceName,
-      "urls": urlsServers,
+      "urls": urlsServers.map((e) => e.toMapAndroid()).toList(),
       "tileSize": tileSize,
       "tileExtension": tileExtension,
       "maxZoomLevel": maxZoomLevel,
@@ -59,11 +61,12 @@ class CustomTile {
     return map;
   }
 }
+
 /// TileURLs
-/// 
+///
 /// this class used to set url and subdomain for custoöm tile layer
 /// url represent base server url tile , if you have multiple url that contain
-/// subdomains use [subdomains] to specify them 
+/// subdomains use [subdomains] to specify them
 /// and replace them in url with {s} to configure correctly the map
 class TileURLs {
   final String url;
@@ -73,4 +76,24 @@ class TileURLs {
     required this.url,
     this.subdomains = const [],
   });
+
+  List<String> toMapAndroid() {
+    if (subdomains.isEmpty) {
+      return [
+        url,
+      ];
+    }
+    return List.generate(
+        subdomains.length, (i) => url.replaceAll("{s}", subdomains[i]));
+  }
+
+  Map<String, dynamic> toMapiOS() {
+    final Map<String, dynamic> map = {
+      "url": url,
+    };
+    if (subdomains.isEmpty) {
+      map.putIfAbsent("subdomains", () => subdomains);
+    }
+    return map;
+  }
 }
