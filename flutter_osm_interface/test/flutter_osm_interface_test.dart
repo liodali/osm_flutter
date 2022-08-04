@@ -29,7 +29,7 @@ void main() {
     expect(box2.isWorld(), false);
   });
 
-  test('convert urls for ios', () {
+  test('convert urls for android', () {
     final tileUrls =
         TileURLs(url: "https://{s}.tile.opentopomap.org/", subdomains: [
       "a",
@@ -43,5 +43,25 @@ void main() {
       "https://c.tile.opentopomap.org/",
     ];
     expect(urlsAndroid, result);
+  });
+  test('convert urls for ios', () {
+    final tileUrls = TileURLs(
+      url: "https://{s}.tile.opentopomap.org/",
+      subdomains: [
+        "a",
+        "b",
+        "c",
+      ],
+    );
+    final urlsIOS = tileUrls.toMapiOS();
+    final result = {
+      "url": "https://{s}.tile.opentopomap.org/",
+      "subdomains": [
+        "a",
+        "b",
+        "c",
+      ],
+    };
+    expect(urlsIOS, result);
   });
 }

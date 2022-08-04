@@ -89,7 +89,7 @@ class TileURLs {
     final Map<String, dynamic> map = {
       "url": url,
     };
-    if (subdomains.isEmpty) {
+    if (subdomains.isNotEmpty) {
       map.putIfAbsent("subdomains", () => subdomains);
     }
     return map;
