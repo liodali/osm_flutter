@@ -97,7 +97,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             let sceneUpdates = [TGSceneUpdate]()
             // let sceneUpdates = [TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
             // let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
-            let sceneUrl = URL(string: "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
+            let sceneUrl = URL(string: "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4")! // "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
             mapView.loadSceneAsync(from: sceneUrl, with: sceneUpdates)
 
             //channel.invokeMethod("map#init", arguments: true)
