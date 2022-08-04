@@ -1,5 +1,3 @@
-import 'dart:io';
-
 /// [CustomTile]
 ///
 /// this class used to set custom tile for osm mapview (android,ios,web)
