@@ -5,9 +5,11 @@ import android.content.Intent
 import android.provider.Settings
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
 import org.osmdroid.tileprovider.tilesource.ITileSource
+import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.util.MapTileIndex
 import org.osmdroid.views.MapView
 
 
@@ -65,12 +67,10 @@ fun MapView.setCustomTile(
     tileSize: Int = 256,
     tileExtensionFile: String = ".png",
     baseURLs: Array<String>,
-    api:Pair<String,String>?
+    api: Pair<String, String>?
 ) {
     var imageEndingTile = tileExtensionFile;
-    if(api != null){
-        imageEndingTile = "$imageEndingTile?${api.first}=${api.second}"
-    }
+
     val tileSource: ITileSource = XYTileSource(
         name,
         minZoomLvl,
@@ -81,6 +81,24 @@ fun MapView.setCustomTile(
     )
 
 
+    this.setTileSource(object : OnlineTileSourceBase(
+        name,
+        minZoomLvl,
+        maxZoomLvl,
+        tileSize,
+        imageEndingTile,
+        baseURLs
+    ) {
+        override fun getTileURLString(pMapTileIndex: Long): String {
+            val url = baseUrl + MapTileIndex.getZoom(pMapTileIndex) + "/" + MapTileIndex.getX(
+                pMapTileIndex
+            ) + "/" + MapTileIndex.getY(pMapTileIndex) + mImageFilenameEnding
+            val key = when {
+                api != null -> "?${api.first}=${api.second}"
+                else -> ""
+            }
+            return url + key
+        }
 
-    this.setTileSource(tileSource)
+    })
 }
