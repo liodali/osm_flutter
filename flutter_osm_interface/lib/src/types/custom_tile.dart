@@ -1,3 +1,5 @@
+import 'package:flutter_osm_interface/src/common/utilities.dart';
+
 /// [CustomTile]
 ///
 /// this class used to set custom tile for osm mapview (android,ios,web)
@@ -47,7 +49,7 @@ class CustomTile {
   Map toMap() {
     final map = {
       "name": sourceName,
-      "urls": urlsServers.map((e) => e.toMapAndroid()).toList(),
+      "urls": urlsServers.map((e) => e.toMapPlatform()).toList(),
       "tileSize": tileSize,
       "tileExtension": tileExtension,
       "maxZoomLevel": maxZoomLevel,
