@@ -51,6 +51,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     var stepZoom = 1.0
     var initZoom = 10.0
+    var customTiles:[String:Any]? = nil
 
     init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?) {
         self.frame = frame
@@ -60,6 +61,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         mapView = TGMapView()
         mapView.frame = frame
         mainView = UIStackView(arrangedSubviews: [mapView])
+        if let  tiles = args {
+            customTiles = (tiles as! [String:Any])["customTile"] as! [String:Any]
+        }
         //mapview.mapType = MKMapType.standard
         //mapview.isZoomEnabled = true
         //mapview.isScrollEnabled = true
@@ -93,11 +97,28 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         case "init#ios#map":
             //mapView.loadSceneAsync(from:URL.init(string: "https://drive.google.com/uc?export=download&id=1F67AW3Yaj5N7MEmMSd0OgeEK1bD69_CM")!, with: nil)
             // mapView.requestRender()
+            var sceneUpdates = [TGSceneUpdate]()
+            var urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4"
+            if(customTiles != nil){
+                urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles.zip?alt=media&token=131575f3-3054-49c6-8b34-f06f9a8ecf6e"
+                let urlMap = (customTiles!["urls"] as! [[String:Any]]).first!
+                let urlTile = (urlMap["url"] as! String)+"{z}/{x}/{y}"+(customTiles!["tileExtension"] as! String)
+                let subDomains = urlMap["subdomains"] as? [String]
+                var apikey = ""
+                if let keys = customTiles?.keys {
+                        if keys.contains("api") {
+                             let mapApi = (customTiles!["api"] as! [String:String])
+                            apikey = "?\(mapApi.keys.first!)=\(mapApi.values.first ?? "")"
+                        }
+                }
+                sceneUpdates.append(TGSceneUpdate(path: "global.url", value: urlTile+apikey))
+                sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: subDomains?.description ?? ""))
+                sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
+            }
 
-            let sceneUpdates = [TGSceneUpdate]()
             // let sceneUpdates = [TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
             // let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
-            let sceneUrl = URL(string: "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4")! // "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
+            let sceneUrl = URL(string: urlStyle)! // "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
             mapView.loadSceneAsync(from: sceneUrl, with: sceneUpdates)
 
             //channel.invokeMethod("map#init", arguments: true)

@@ -28,4 +28,8 @@ public class MapviewFactory : NSObject, FlutterPlatformViewFactory {
         )
         return MyMapView(frame, viewId: viewId, channel: channel, args: args)
     }
+
+    public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+        return FlutterStandardMessageCodec.sharedInstance()
+    }
 }
