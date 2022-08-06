@@ -62,7 +62,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         mapView.frame = frame
         mainView = UIStackView(arrangedSubviews: [mapView])
         if let  tiles = args {
-            customTiles = (tiles as! [String:Any])["customTile"] as! [String:Any]
+            customTiles = (tiles as! [String:Any])["customTile"] as? [String:Any]
         }
         //mapview.mapType = MKMapType.standard
         //mapview.isZoomEnabled = true
@@ -100,7 +100,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             var sceneUpdates = [TGSceneUpdate]()
             var urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4"
             if(customTiles != nil){
-                urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles.zip?alt=media&token=131575f3-3054-49c6-8b34-f06f9a8ecf6e"
+                urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles.zip?alt=media&token=071f53d3-ec96-49f3-ac87-18498abc3f76"
                 let urlMap = (customTiles!["urls"] as! [[String:Any]]).first!
                 let urlTile = (urlMap["url"] as! String)+"{z}/{x}/{y}"+(customTiles!["tileExtension"] as! String)
                 let subDomains = urlMap["subdomains"] as? [String]
@@ -113,6 +113,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 }
                 sceneUpdates.append(TGSceneUpdate(path: "global.url", value: urlTile+apikey))
                 sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: subDomains?.description ?? ""))
+                sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: (customTiles?["tileSize"] as? Int )?.description ?? "256"))
+                sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: (customTiles?["maxZoomLevel"] as? String ) ?? "19"))
                 sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
             }
 
