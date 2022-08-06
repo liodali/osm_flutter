@@ -108,9 +108,9 @@ class RoadManager: PRoadManager {
     }
 
     public  func drawRoadOnMap(on road: Road, for map: TGMapView,polyLine:Polyline? = nil,interestPoints : [GeoPointMap]? = nil) -> TGMarker {
-        if(lastMarkerRoad != nil){
+        /*if(lastMarkerRoad != nil){
            removeRoadFolder(folder: lastMarkerRoad!, for: map)
-        }
+        }*/
         let marker = map.markerAdd()
         marker.stylingString = "{ style: 'lines',interactive: false, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), order: 1500 }"
 
