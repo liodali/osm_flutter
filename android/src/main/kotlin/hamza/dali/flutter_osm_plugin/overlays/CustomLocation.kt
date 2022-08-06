@@ -20,7 +20,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
     private var provider: GpsMyLocationProvider? = GpsMyLocationProvider(mapView.context)
 
     init {
-        setEnableAutoStop(false)
+        setEnableAutoStop(true)
         mMyLocationProvider = provider
     }
 

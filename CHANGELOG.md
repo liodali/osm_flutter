@@ -1,3 +1,7 @@
+### 0.37.2+5 : fix bugs
+* set api attribute of CustomTile in android side
+* fix visibility of static marker in ios
+* setEnableAutoStop to true in android
 ### 0.37.2+2 : fix bug in setStaticMarker
 ### 0.37.2+1 : fix bug in setZoom
 ### 0.37.2 : fix map not showing (#293)
