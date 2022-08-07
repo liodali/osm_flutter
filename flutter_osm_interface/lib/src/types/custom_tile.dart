@@ -9,11 +9,11 @@ import 'package:flutter_osm_interface/src/common/utilities.dart';
 ///
 /// [tileExtension]  : extension of tile that we will get from server(s)
 ///
-/// [sourceName]     : unique name will be used in android for caching purpose
+/// [sourceName]     : unique name will be used in android for caching purpose , this values will be take in in ios side
 ///
 /// [tileSize]       : (int)  size tile will get from server tile
 ///
-/// [minZoomLevel]   :  (int) minimum zoom level for custom tile source
+/// [minZoomLevel]   :  (int) minimum zoom level for custom tile source, this values will be take in in ios side
 ///
 /// [maxZoomLevel]   :  (int) maximum zoom level for custom tile source
 ///
