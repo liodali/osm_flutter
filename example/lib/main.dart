@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_osm_plugin_example/src/search_example.dart';
 
 //import 'src/adv_home/home_example.dart';
@@ -8,11 +9,12 @@ import 'src/search_example.dart';
 import 'web_test_osm.dart';
 
 void main() async {
-  await dotenv.load(fileName: ".env");
+  
   WidgetsFlutterBinding.ensureInitialized();
   if (kIsWeb) {
     runApp(WebApp());
   } else {
+    await dotenv.load(fileName: ".env");
      runApp(MyApp());
   }
  
