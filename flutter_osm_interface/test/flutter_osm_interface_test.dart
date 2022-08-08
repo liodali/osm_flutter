@@ -24,7 +24,44 @@ void main() {
   test("test bounding box is world", () {
     final box = BoundingBox(north: 85.05, east: 180, south: -85.06, west: -180);
     expect(box.isWorld(), true);
-    final box2 = BoundingBox(north: 84.05, east: 170, south: -85.06, west: -180);
+    final box2 =
+        BoundingBox(north: 84.05, east: 170, south: -85.06, west: -180);
     expect(box2.isWorld(), false);
+  });
+
+  test('convert urls for android', () {
+    final tileUrls =
+        TileURLs(url: "https://{s}.tile.opentopomap.org/", subdomains: [
+      "a",
+      "b",
+      "c",
+    ]);
+    final urlsAndroid = tileUrls.toMapAndroid();
+    final result = [
+      "https://a.tile.opentopomap.org/",
+      "https://b.tile.opentopomap.org/",
+      "https://c.tile.opentopomap.org/",
+    ];
+    expect(urlsAndroid, result);
+  });
+  test('convert urls for ios', () {
+    final tileUrls = TileURLs(
+      url: "https://{s}.tile.opentopomap.org/",
+      subdomains: [
+        "a",
+        "b",
+        "c",
+      ],
+    );
+    final urlsIOS = tileUrls.toMapiOS();
+    final result = {
+      "url": "https://{s}.tile.opentopomap.org/",
+      "subdomains": [
+        "a",
+        "b",
+        "c",
+      ],
+    };
+    expect(urlsIOS, result);
   });
 }

@@ -1,3 +1,13 @@
+### 0.38.0 : support custom layer for ios
+* create TileURLs to manage osm server urls
+* change type of urls to TileURLs in customTile
+* impl change styles yml in ios side
+* put convert Uint8List to string for ios markers in _capturePng
+### 0.37.2+5 : fix bugs
+* set api attribute of CustomTile in android side
+* fix visibility of static marker in ios
+* setEnableAutoStop to true in android
+### 0.37.2+2 : fix bug in setStaticMarker
 ### 0.37.2+1 : fix bug in setZoom
 ### 0.37.2 : fix map not showing (#293)
 * fix bug send customTile null to android side

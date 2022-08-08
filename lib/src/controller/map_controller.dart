@@ -54,9 +54,14 @@ class MapController extends BaseMapController {
             areaLimit: areaLimit,
             customTile: CustomTile(
               urlsServers: [
-                "https://a.tile-cyclosm.openstreetmap.fr/cyclosm/",
-                "https://b.tile-cyclosm.openstreetmap.fr/cyclosm/",
-                "https://c.tile-cyclosm.openstreetmap.fr/cyclosm/",
+                TileURLs(
+                  url: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/",
+                  subdomains: [
+                    "a",
+                    "b",
+                    "c",
+                  ],
+                ),
               ],
               tileExtension: ".png",
               sourceName: "cycleMapnik",
@@ -75,7 +80,7 @@ class MapController extends BaseMapController {
             areaLimit: areaLimit,
             customTile: CustomTile(
               urlsServers: [
-               "https://tile.memomaps.de/tilegen/",
+                TileURLs(url: "https://tile.memomaps.de/tilegen/"),
               ],
               tileExtension: ".png",
               sourceName: "memomapsMapnik",
