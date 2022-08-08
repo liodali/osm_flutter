@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.37.2%2B5-orange) 
+![pub](https://img.shields.io/badge/pub-v0.38.0-orange) 
 
 
 ## Platform Support
@@ -29,7 +29,7 @@
 * draw shapes (Only Android)
 * simple dialog location picker (Android/iOS)
 * listen to region change (Android/iOS)
-* set custom tiles (Android Only,iOS will be add it soon) 
+* set custom tiles (Android,iOS) 
 
 
 ## Getting Started
@@ -42,7 +42,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.37.2+5
+      flutter_osm_plugin: ^0.38.0
 
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
@@ -160,9 +160,10 @@ controller = MapController.customLayer(
         minZoomLevel: 2,
         maxZoomLevel: 19,
         urlsServers: [
-          "https://a.tile.opentopomap.org/",
-          "https://b.tile.opentopomap.org/",
-          "https://c.tile.opentopomap.org/",
+         TileURLs(
+            url: "https://tile.opentopomap.org/",
+            subdomains: [],
+          )
         ],
         tileSize: 256,
       ),

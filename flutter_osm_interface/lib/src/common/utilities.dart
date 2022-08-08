@@ -138,3 +138,14 @@ Future<Uint8List> capturePng(GlobalKey globalKey) async {
   Uint8List pngBytes = byteData.buffer.asUint8List();
   return pngBytes;
 }
+extension ExtTileUrls on TileURLs {
+  dynamic toMapPlatform() {
+    if (Platform.isAndroid) {
+      return toMapAndroid();
+    }
+    if (Platform.isIOS) {
+      return toMapiOS();
+    }
+    throw UnsupportedError("platform not supported yet");
+  }
+}
