@@ -13,6 +13,8 @@ import '../types/types.dart';
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
 
+const iosSizeIcon = [48.0, 48.0];
+
 extension ExtGeoPoint on GeoPoint {
   List<num> toListNum() {
     return [
@@ -39,7 +41,8 @@ extension TransformEncodedPolyLineToListGeo on String {
       return await compute((String encoded) {
         final listPoints = decodePolyline(encoded);
         return listPoints
-            .map((e) => GeoPoint(latitude: e.last.toDouble(), longitude: e.first.toDouble()))
+            .map((e) => GeoPoint(
+                latitude: e.last.toDouble(), longitude: e.first.toDouble()))
             .toList();
       }, polylineEncoded);
     } catch (e) {
@@ -107,7 +110,8 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
       ];
       map["roadType"] = roadConf.roadOptionConfiguration?.roadType.toString() ??
           commonRoadOption.roadType.toString();
-      final color = roadConf.roadOptionConfiguration?.roadColor ?? commonRoadOption.roadColor;
+      final color = roadConf.roadOptionConfiguration?.roadColor ??
+          commonRoadOption.roadColor;
       if (Platform.isIOS) {
         if (color != null) {
           map.addAll(color.toHexMap("roadColor"));
@@ -123,7 +127,8 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
             defaultWidth;
       }
 
-      map["middlePoints"] = roadConf.intersectPoints.map((e) => e.toMap()).toList();
+      map["middlePoints"] =
+          roadConf.intersectPoints.map((e) => e.toMap()).toList();
       listMap.add(map);
     }
     return listMap;
@@ -134,10 +139,12 @@ Future<Uint8List> capturePng(GlobalKey globalKey) async {
   RenderRepaintBoundary boundary =
       globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
   ui.Image image = await boundary.toImage();
-  ByteData byteData = (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
+  ByteData byteData =
+      (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
   Uint8List pngBytes = byteData.buffer.asUint8List();
   return pngBytes;
 }
+
 extension ExtTileUrls on TileURLs {
   dynamic toMapPlatform() {
     if (Platform.isAndroid) {
