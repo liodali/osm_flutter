@@ -21,9 +21,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     let channel: FlutterMethodChannel
     let mapView: TGMapView
     let locationManager: CLLocationManager = CLLocationManager()
-    var markerIcon: UIImage? = nil
-    var personMarkerIcon: UIImage? = nil
-    var arrowDirectionIcon: UIImage? = nil
+    var markerIcon: MarkerIconData? = nil
+    var personMarkerIcon: MarkerIconData? = nil
+    var arrowDirectionIcon: MarkerIconData? = nil
     var isFollowUserLocation: Bool = false
     var canGetLastUserLocation = false
     var canTrackUserLocation = false
@@ -31,10 +31,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var isAdvancedPicker = false
     var userLocation: MyLocationMarker? = nil
     var dictClusterAnnotation: [String: [StaticGeoPMarker]] = [String: [StaticGeoPMarker]]()
-    var dictIconClusterAnnotation = [String: StaticMarkerData]()
+    var dictIconClusterAnnotation = [String: MarkerIconData]()
     var roadMarkerPolyline: TGMarker? = nil
-    lazy var markersIconsRoadPoint: [String: UIImage] = [String: UIImage]()
-    var defaultIcon: UIImage?
+    lazy var markersIconsRoadPoint: [String: MarkerIconData] = [String: MarkerIconData]()
+    var defaultIcon: MarkerIconData?
     var pickedLocationSingleTap: CLLocationCoordinate2D? = nil
     var colorRoad: String = "#ff0000"
     var homeMarker: TGMarker? = nil
@@ -51,7 +51,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     var stepZoom = 1.0
     var initZoom = 10.0
-    var customTiles:[String:Any]? = nil
+    var customTiles: [String: Any]? = nil
 
     init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?) {
         self.frame = frame
@@ -61,8 +61,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         mapView = TGMapView()
         mapView.frame = frame
         mainView = UIStackView(arrangedSubviews: [mapView])
-        if let  tiles = args {
-            customTiles = (tiles as! [String:Any])["customTile"] as? [String:Any]
+        if let tiles = args {
+            customTiles = (tiles as! [String: Any])["customTile"] as? [String: Any]
         }
         //mapview.mapType = MKMapType.standard
         //mapview.isZoomEnabled = true
@@ -92,6 +92,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     private func onListenMethodChannel(call: FlutterMethodCall, result: @escaping FlutterResult) {
+        print("markers before : \(mapView.markers.count)")
         print(call.method)
         switch call.method {
         case "init#ios#map":
@@ -99,35 +100,37 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             // mapView.requestRender()
             var sceneUpdates = [TGSceneUpdate]()
             var urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4"
-            if(customTiles != nil){
+            if (customTiles != nil) {
                 urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles.zip?alt=media&token=071f53d3-ec96-49f3-ac87-18498abc3f76"
-                let urlMap = (customTiles!["urls"] as! [[String:Any]]).first!
-                let urlTile = (urlMap["url"] as! String)+"{z}/{x}/{y}"+(customTiles!["tileExtension"] as! String)
+                let urlMap = (customTiles!["urls"] as! [[String: Any]]).first!
+                let urlTile = (urlMap["url"] as! String) + "{z}/{x}/{y}" + (customTiles!["tileExtension"] as! String)
                 let subDomains = urlMap["subdomains"] as? [String]
                 var apikey = ""
                 if let keys = customTiles?.keys {
-                        if keys.contains("api") {
-                             let mapApi = (customTiles!["api"] as! [String:String])
-                            apikey = "?\(mapApi.keys.first!)=\(mapApi.values.first ?? "")"
-                        }
+                    if keys.contains("api") {
+                        let mapApi = (customTiles!["api"] as! [String: String])
+                        apikey = "?\(mapApi.keys.first!)=\(mapApi.values.first ?? "")"
+                    }
                 }
-                sceneUpdates.append(TGSceneUpdate(path: "global.url", value: urlTile+apikey))
+                sceneUpdates.append(TGSceneUpdate(path: "global.url", value: urlTile + apikey))
                 sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: subDomains?.description ?? ""))
-                sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: (customTiles?["tileSize"] as? Int )?.description ?? "256"))
-                sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: (customTiles?["maxZoomLevel"] as? String ) ?? "19"))
+                sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: (customTiles?["tileSize"] as? Int)?.description ?? "256"))
+                sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: (customTiles?["maxZoomLevel"] as? String) ?? "19"))
                 sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
             }
 
             // let sceneUpdates = [TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
             // let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
             let sceneUrl = URL(string: urlStyle)! // "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
-            mapView.loadSceneAsync(from: sceneUrl, with: sceneUpdates)
+            mapView.loadScene(from: sceneUrl, with: sceneUpdates)
 
             //channel.invokeMethod("map#init", arguments: true)
             result(200)
             break
         case "setDefaultIOSIcon":
-            defaultIcon = convertImage(codeImage: call.arguments as! String)
+            let args = call.arguments as! [String: Any]
+            let iconString = args["icon"] as! String
+            defaultIcon = MarkerIconData(image: convertImage(codeImage: iconString), size: args["size"] as! [Double])
             result(200)
             break;
         case "initMap":
@@ -218,7 +221,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break;
         case "marker#icon":
-            markerIcon = convertImage(codeImage: call.arguments as! String)!
+            let args = call.arguments as! [String: Any]
+            let image = convertImage(codeImage: args["icon"] as! String)
+            markerIcon = MarkerIconData(image: image, size: args["size"] as! [Double])
             result(200)
             break;
         case "staticPosition#IconMarker":
@@ -329,6 +334,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(nil)
             break;
         }
+        print("markers after : \(mapView.markers.count)")
     }
 
 
@@ -439,29 +445,32 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func addMarkerManually(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
-        var icon = markerIcon
+        var icon = markerIcon!
         if (args.keys.contains("icon")) {
-            icon = convertImage(codeImage: args["icon"] as! String)
+            let iconArg = args["icon"] as! [String: Any]
+            icon = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as! [Double])
         }
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
         GeoPointMap(icon: icon, coordinate: coordinate).setupMarker(on: mapView)
     }
-    private func changePositionMarker(call:FlutterMethodCall){
+
+    private func changePositionMarker(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
 
         let coordinate_old = (args["old_location"] as! GeoPoint).toLocationCoordinate()
         let coordinate_new = (args["new_location"] as! GeoPoint).toLocationCoordinate()
-        GeoPointMap(icon: nil,coordinate: coordinate_old).changePositionMarker(on: mapView, mPosition: coordinate_new)
+        GeoPointMap(icon: MarkerIconData(image: nil), coordinate: coordinate_old).changePositionMarker(on: mapView, mPosition: coordinate_new)
     }
 
     private func updateMarkerIcon(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
         var icon = markerIcon
         if (args.keys.contains("icon")) {
-            icon = convertImage(codeImage: args["icon"] as! String)
+            let iconArg = args["icon"] as! [String: Any]
+            icon = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as! [Double])
         }
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
-        GeoPointMap(icon: icon, coordinate: coordinate).changeIconMarker(on: mapView)
+        GeoPointMap(icon: icon!, coordinate: coordinate).changeIconMarker(on: mapView)
     }
 
     private func removeMarkerFromMap(call: FlutterMethodCall) {
@@ -508,9 +517,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     }
 
-    private func setupTileRenderer() {
-    }
-
     private func deactivateTrackMe() {
         canTrackUserLocation = false
         locationManager.stopUpdatingLocation()
@@ -523,18 +529,25 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     private func setCustomIconMarker(call: FlutterMethodCall, result: FlutterResult) {
-        let image = convertImage(codeImage: call.arguments as! String)
+        let args = call.arguments as! [String:Any]
+        let iconSize = args["size"] as! [Double]
+        let image = convertImage(codeImage: args["icon"] as! String)
         pickerMarker = UIImageView(image: image)
+        pickerMarker?.sizeThatFits(CGSize(width: iconSize.first!, height: iconSize.last!))
         result(200)
     }
 
     private func setUserLocationMarker(call: FlutterMethodCall) {
-        let args = call.arguments as! [String: String]
+        let args = call.arguments as! [String: Any]
         if let personIconString = args["personIcon"] {
-            personMarkerIcon = convertImage(codeImage: personIconString)
+            let iconArg = personIconString as! [String: Any]
+            let icon = convertImage(codeImage: iconArg["icon"] as! String)
+            personMarkerIcon = MarkerIconData(image: icon, size: iconArg["size"] as! [Double])
         }
         if let arrowDirectionIconString = args["arrowDirectionIcon"] {
-            arrowDirectionIcon = convertImage(codeImage: arrowDirectionIconString)
+            let iconArg = arrowDirectionIconString as! [String: Any]
+            let icon = convertImage(codeImage: iconArg["icon"] as! String)
+            arrowDirectionIcon = MarkerIconData(image: icon, size: iconArg["size"] as! [Double])
         }
     }
 
@@ -542,8 +555,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
         let id = args["id"] as! String
-        let icon = convertImage(codeImage: args["bitmap"] as! String)
-        dictIconClusterAnnotation[id] = StaticMarkerData(image: icon!)
+        let bitmapArg = args["bitmap"] as! [String:Any]
+        let icon = convertImage(codeImage: bitmapArg["icon"] as! String)
+        dictIconClusterAnnotation[id] = MarkerIconData(image: icon!,size: bitmapArg["size"] as! [Double])
     }
 
 
@@ -563,9 +577,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let listGeos: [StaticGeoPMarker] = (args["point"] as! [GeoPoint]).map { point -> StaticGeoPMarker in
             var angle = 0
             if (point.keys.contains("angle")) {
-                angle = Int(CGFloat(point["angle"] as! Double).toDegrees)
+                angle = Int(CGFloat(point["angle"]! as Double).toDegrees)
             }
-            let geo = StaticGeoPMarker(icon: dictIconClusterAnnotation[id]!.image,
+            let geo = StaticGeoPMarker(icon: dictIconClusterAnnotation[id]!,
                     coordinate: point.toLocationCoordinate(), angle: angle)
 
             return geo.addStaticGeosToMapView(for: geo, on: mapView)
@@ -777,7 +791,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 if (showMarkerInPOI) {
                     interestGeoPoints = [GeoPointMap]()
                     let start = self.markersIconsRoadPoint["start"] ?? self.defaultIcon
-                    let geoStartM = GeoPointMap(icon: start, coordinate: points.first!.toLocationCoordinate())
+                    let geoStartM = GeoPointMap(icon: start!, coordinate: points.first!.toLocationCoordinate())
                     geoStartM.marker = geoStartM.setupMarker(on: self.mapView)
                     interestGeoPoints!.append(geoStartM)
 
@@ -785,13 +799,13 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                         let interestPs = points[1..<points.endIndex - 1]
                         interestPs.forEach { p in
                             let icon = self.markersIconsRoadPoint["middle"]
-                            let geoStartM = GeoPointMap(icon: icon, coordinate: p.toLocationCoordinate())
+                            let geoStartM = GeoPointMap(icon: icon!, coordinate: p.toLocationCoordinate())
                             geoStartM.marker = geoStartM.setupMarker(on: self.mapView)
                             interestGeoPoints!.append(geoStartM)
                         }
                     }
                     let end = self.markersIconsRoadPoint["end"] ?? self.defaultIcon
-                    let geoEndM = GeoPointMap(icon: end, coordinate: points.last!.toLocationCoordinate())
+                    let geoEndM = GeoPointMap(icon: end!, coordinate: points.last!.toLocationCoordinate())
                     geoEndM.marker = geoEndM.setupMarker(on: self.mapView)
                     interestGeoPoints!.append(geoEndM)
                 }
@@ -837,7 +851,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 var start = markersIconsRoadPoint["start"] ?? defaultIcon
 
 
-                let geoStartM = GeoPointMap(icon: start, coordinate: route.coordinates!.first!)
+                let geoStartM = GeoPointMap(icon: start!, coordinate: route.coordinates!.first!)
                 geoStartM.marker = geoStartM.setupMarker(on: mapView)
                 interestGeoPoints!.append(geoStartM)
 
@@ -850,18 +864,20 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 interestPoints.forEach { p in
                     var icon = markersIconsRoadPoint["middle"] ?? defaultIcon
                     if iconMarker != nil {
-                        icon = convertImage(codeImage: iconMarker!)
+                        let iconArg = args["icon"] as! [String: Any]
+                        icon = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as! [Double])
                     }
-                    let geoMiddle = GeoPointMap(icon: icon, coordinate: p)
+                    let geoMiddle = GeoPointMap(icon: icon!, coordinate: p)
                     geoMiddle.marker = geoMiddle.setupMarker(on: mapView)
                     interestGeoPoints!.append(geoMiddle)
                 }
 
                 var end = markersIconsRoadPoint["end"] ?? defaultIcon
                 if end == nil {
-                    end = convertImage(codeImage: iconMarker!)
+                    let iconArg = args["icon"] as! [String: Any]
+                    end = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as! [Double])
                 }
-                let geoEndM = GeoPointMap(icon: end, coordinate: route.coordinates!.last!)
+                let geoEndM = GeoPointMap(icon: end!, coordinate: route.coordinates!.last!)
                 geoEndM.marker = geoEndM.setupMarker(on: mapView)
                 interestGeoPoints!.append(geoEndM)
             }
@@ -879,20 +895,24 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     private func setRoadMarkersIcon(call: FlutterMethodCall, result: FlutterResult) {
-        let iconsBase64 = call.arguments as! [String: String]
+        let iconsBase64 = call.arguments as! [String: Any]
         if let startPointIconRoad = iconsBase64["START"] {
-            markersIconsRoadPoint["start"] = convertImage(codeImage: startPointIconRoad)
+            let startIcon = convertImage(codeImage: (startPointIconRoad as! [String: Any])["icon"] as! String)
+            markersIconsRoadPoint["start"] = MarkerIconData(image: startIcon, size: (startPointIconRoad as! [String: Any])["size"] as! [Double])
         }
         if let middlePointIcon = iconsBase64["MIDDLE"] {
-            markersIconsRoadPoint["middle"] = convertImage(codeImage: middlePointIcon)
+            let startIcon = convertImage(codeImage: (middlePointIcon as! [String: Any])["icon"] as! String)
+            markersIconsRoadPoint["middle"] = MarkerIconData(image: startIcon, size: (middlePointIcon as! [String: Any])["size"] as! [Double])
         }
         if let endPointIcon = iconsBase64["END"] {
-            markersIconsRoadPoint["end"] = convertImage(codeImage: endPointIcon)
+            let startIcon = convertImage(codeImage: (endPointIcon as! [String: Any])["icon"] as! String)
+            markersIconsRoadPoint["end"] = MarkerIconData(image: startIcon, size: (endPointIcon as! [String: Any])["size"] as! [Double])
         }
         result(200)
     }
 
     // ------- delegation func ----
+
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if (canGetLastUserLocation || canTrackUserLocation) {
             if let location = locations.last?.coordinate {
@@ -996,7 +1016,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             var iconM = markerIcon
             let dict: [String: Any] = methodCall?.arguments as! [String: Any]
             if let icon = dict["icon"] {
-                iconM = convertImage(codeImage: icon as! String)
+                let iconArg = (icon as! [String: Any])["icon"] as! String
+                iconM = MarkerIconData(image: convertImage(codeImage: iconArg), size: (icon as! [String:Any])["size"] as! [Double])
             }
             let coordinate = view.coordinate(fromViewPosition: location)
             let geoP = GeoPointMap(icon: iconM!, coordinate: coordinate)

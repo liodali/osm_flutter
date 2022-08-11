@@ -10,8 +10,9 @@ import TangramMap
 
 
 typealias GeoPoint = [String: Double]
+
 protocol GenericGeoPoint {
-    var coordinate:CLLocationCoordinate2D { get set }
+    var coordinate: CLLocationCoordinate2D { get set }
 
 }
 
@@ -19,58 +20,60 @@ class GeoPointMap {
 
 
     let coordinate: CLLocationCoordinate2D
-    let styleMarker:String
-    let markerIcon : UIImage?
-    public var marker :TGMarker? = nil
-    var interactive : Bool = true
-    var size:Int = 32
+    let styleMarker: String
+    let markerIcon: MarkerIconData
+    public var marker: TGMarker? = nil
+    var interactive: Bool = true
+
     init(
-            icon: UIImage? ,
+            icon: MarkerIconData,
             coordinate: CLLocationCoordinate2D,
-            size:Int = 32,
-            interactive:Bool = true,
-            styleMarker:String? = nil,
+            interactive: Bool = true,
+            styleMarker: String? = nil,
             angle: Int = 0
     ) {
         self.interactive = interactive
-        self.size = size
+
         self.coordinate = coordinate
 
         self.markerIcon = icon
 
-        self.styleMarker = styleMarker ?? " { style: 'points', interactive: \(interactive),color: 'white',size: \(size)px, order: 1000, collide: false , angle : \(angle) } "
+        self.styleMarker = styleMarker ?? " { style: 'points', interactive: \(interactive), color: 'white',size: [\(icon.size.first ?? 48)px,\(icon.size.last ?? 32)px], order: 1000, collide: false , angle : \(angle) } "
     }
 
     var location: CLLocation {
         return CLLocation(latitude: self.coordinate.latitude, longitude: self.coordinate.longitude)
     }
 }
+
 enum UserLocationMarkerType {
     case person, arrow
 }
-class MyLocationMarker:GeoPointMap {
 
-    var personIcon:UIImage? = nil
-    var arrowDirectionIcon:UIImage? = nil
+class MyLocationMarker: GeoPointMap {
 
-    static let personStyle =  "style: 'ux-location-gem-overlay',sprite: ux-current-location, interactive: false,color: 'white',size: 56px ,order: 2000, collide: false  "
-    static let arrowStyle =  "style: 'ux-location-gem-overlay',sprite: ux-route-arrow, interactive: false,color: 'white',size: 56px ,order: 2000, collide: false  "
+    var personIcon: MarkerIconData? = nil
+    var arrowDirectionIcon: MarkerIconData? = nil
 
-    var userLocationMarkerType : UserLocationMarkerType = UserLocationMarkerType.person
-    var angle : Int = 0
+    static let personStyle = "style: 'ux-location-gem-overlay',sprite: ux-current-location, interactive: false,color: 'white',size: [48px,32px] ,order: 2000, collide: false  "
+    static let arrowStyle = "style: 'ux-location-gem-overlay',sprite: ux-route-arrow, interactive: false,color: 'white',size: [48px,32px] ,order: 2000, collide: false  "
+
+    var userLocationMarkerType: UserLocationMarkerType = UserLocationMarkerType.person
+    var angle: Int = 0
+
     init(
             coordinate: CLLocationCoordinate2D,
-            personIcon:UIImage? = nil,
-            arrowDirectionIcon:UIImage? = nil,
-            userLocationMarkerType:UserLocationMarkerType = UserLocationMarkerType.person,
-            angle : Int = 0
+            personIcon: MarkerIconData? = nil,
+            arrowDirectionIcon: MarkerIconData? = nil,
+            userLocationMarkerType: UserLocationMarkerType = UserLocationMarkerType.person,
+            angle: Int = 0
     ) {
         self.angle = angle
-        var style:String? = nil
-        var iconM :UIImage? = nil
+        var style: String? = nil
+        var iconM: MarkerIconData = MarkerIconData(image: nil)
         self.userLocationMarkerType = userLocationMarkerType
-        if(arrowDirectionIcon == nil && personIcon == nil ){
-            switch (userLocationMarkerType){
+        if (arrowDirectionIcon == nil && personIcon == nil) {
+            switch (userLocationMarkerType) {
             case .person:
                 style = "{ \(MyLocationMarker.personStyle) , angle: \(angle) } "
                 break;
@@ -78,23 +81,25 @@ class MyLocationMarker:GeoPointMap {
                 style = "{ \(MyLocationMarker.arrowStyle) , angle: \(angle)  } "
                 break;
             }
-        }else{
-            if( arrowDirectionIcon != nil && personIcon == nil ) {
-                iconM = arrowDirectionIcon
-            } else if( arrowDirectionIcon == nil && personIcon != nil ) {
-                iconM = personIcon
-            }else{
-                switch (userLocationMarkerType){
+        } else {
+            if (arrowDirectionIcon != nil && personIcon == nil) {
+                iconM = arrowDirectionIcon ?? MarkerIconData(image: nil)
+            } else if (arrowDirectionIcon == nil && personIcon != nil) {
+                iconM = personIcon ?? MarkerIconData(image: nil)
+            } else {
+                switch (userLocationMarkerType) {
                 case .person:
-                    iconM = personIcon
+                    iconM = personIcon ?? MarkerIconData(image: nil)
+                    self.personIcon = personIcon
                     break;
                 case .arrow:
-                    iconM = arrowDirectionIcon
+                    iconM = arrowDirectionIcon ?? MarkerIconData(image: nil)
+                    self.arrowDirectionIcon = arrowDirectionIcon
                     break;
                 }
             }
         }
-        super.init(icon: iconM, coordinate: coordinate,styleMarker:style,angle: angle)
+        super.init(icon: iconM, coordinate: coordinate, styleMarker: style, angle: angle)
 
     }
 }
@@ -102,16 +107,16 @@ class MyLocationMarker:GeoPointMap {
 class StaticGeoPMarker: GeoPointMap {
 
     var color: UIColor? = UIColor.white
-    var angle:Int = 0
+    var angle: Int = 0
+
     init(
-            icon: UIImage,
+            icon: MarkerIconData,
             coordinate: CLLocationCoordinate2D,
-            angle:Int = 0
+            angle: Int = 0
     ) {
 
-       self.angle = angle
-
-        super.init(icon: icon, coordinate: coordinate,size: 32,interactive: true,angle: angle)
+        self.angle = angle
+        super.init(icon: icon, coordinate: coordinate, interactive: true, angle: angle)
 
     }
 
