@@ -12,7 +12,7 @@ extension GeoPointMap {
     ) -> TGMarker {
 
         marker = map.markerAdd()
-        marker?.icon = markerIcon!
+        marker?.icon = markerIcon.image!
         marker?.stylingString = styleMarker
         marker?.point = coordinate
 
@@ -24,7 +24,7 @@ extension GeoPointMap {
             m.point == self.coordinate
         }
         if indexToUpdate != nil {
-            map.markers[indexToUpdate!].icon = markerIcon!
+            map.markers[indexToUpdate!].icon = markerIcon.image!
         }
     }
     public func changePositionMarker(on map:TGMapView,mPosition:CLLocationCoordinate2D) {
@@ -70,10 +70,11 @@ extension TGMapView {
 }
 
 extension MyLocationMarker {
-    func setDirectionArrow(personIcon: UIImage?, arrowDirection: UIImage?) {
+    func setDirectionArrow(personIcon: MarkerIconData?, arrowDirection: MarkerIconData?) {
         self.personIcon = personIcon
         arrowDirectionIcon = arrowDirection
-        var iconM: UIImage? = nil
+        var iconM: MarkerIconData? = nil
+        var size = [48.0,48.0]
         if (arrowDirectionIcon == nil && personIcon == nil) {
             switch (self.userLocationMarkerType) {
             case .person:
@@ -98,8 +99,8 @@ extension MyLocationMarker {
                     break;
                 }
             }
-            marker?.icon = iconM!
-            marker?.stylingString = " { style: 'points', interactive: \(interactive),color: 'white',size: \(size)px, order: 1000, collide: false , angle : \(angle) } "
+            marker?.icon = iconM!.image!
+            marker?.stylingString = " { style: 'points', interactive: \(interactive),color: 'white',size: [\(iconM!.size.first ?? 48)px,\(iconM!.size.last ?? 32)px], order: 1000, collide: false , angle : \(angle) } "
         }
     }
 
@@ -116,7 +117,7 @@ extension MyLocationMarker {
                 break;
             }
         } else {
-            self.marker?.stylingString = "{ style: 'points', interactive: \(interactive),color: 'white',size: \(size)px, order: 1000, collide: false , angle: \(angle)  } "
+            self.marker?.stylingString = "{ style: 'points', interactive: \(interactive),color: 'white',size: [48px,32px], order: 1000, collide: false , angle: \(angle)  } "
         }
     }
 }
@@ -127,8 +128,8 @@ extension StaticGeoPMarker {
             for annotation: StaticGeoPMarker, on map: TGMapView
     ) -> StaticGeoPMarker {
         annotation.marker = map.markerAdd()
-        if (annotation.markerIcon != nil) {
-            annotation.marker?.icon = annotation.markerIcon!
+        if (annotation.markerIcon.image != nil) {
+            annotation.marker?.icon = annotation.markerIcon.image!
         }
         annotation.marker?.stylingString = annotation.styleMarker
         annotation.marker?.point = annotation.coordinate

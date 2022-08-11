@@ -23,14 +23,15 @@ class MarkerView: MKMarkerAnnotationView {
 
             // 2
             if (point.marker != nil) {
-             //   image = point.marker
+                //   image = point.marker
             }
 
         }
     }
 }
 
-struct StaticMarkerData {
-    let image: UIImage
+struct MarkerIconData {
+    let image: UIImage?
+    var size: [Double] = [48.0,48.0]
 }
 

@@ -1,3 +1,7 @@
+### 0.39.0 : fix ios markers size
+* create MarkerIconData to store icon and size
+* set default size as 48px
+* change set icons in ios side
 ### 0.38.0 : support custom layer for ios
 * create TileURLs to manage osm server urls
 * change type of urls to TileURLs in customTile

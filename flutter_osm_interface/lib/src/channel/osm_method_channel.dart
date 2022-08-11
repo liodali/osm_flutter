@@ -174,7 +174,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @override
   Future<void> customMarker(int idOSM, GlobalKey? globalKey) async {
     final icon = await _capturePng(globalKey!);
-   
 
     await _channels[idOSM]?.invokeMethod("marker#icon", icon);
   }
@@ -260,11 +259,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GlobalKey? key,
     String imageURL = "",
   }) async {
-    Uint8List? bitmap;
     Map args = {};
     if (key != null) {
-      bitmap = await _capturePng(key);
-      args.addAll({"icon": bitmap});
+      args.addAll({"icon": await _capturePng(key)});
     }
     if (imageURL.isNotEmpty) {
       args.addAll({"imageURL": imageURL});
@@ -363,7 +360,15 @@ class MethodChannelOSM extends MobileOSMPlatform {
         (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
     Uint8List pngBytes = byteData.buffer.asUint8List();
     if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return pngBytes.convertToString();
+      return {
+        "icon": pngBytes.convertToString(),
+        "size": globalKey.currentContext != null
+            ? [
+                globalKey.currentContext!.size!.width,
+                globalKey.currentContext!.size!.height
+              ]
+            : iosSizeIcon
+      };
     }
     return pngBytes;
   }
@@ -559,6 +564,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     final iconPerson = await _capturePng(personGlobalKey);
     final iconArrowDirection = await _capturePng(directionArrowGlobalKey);
     HashMap<String, dynamic> args = HashMap();
+
     args["personIcon"] = iconPerson;
     args["arrowDirectionIcon"] = iconArrowDirection;
 
@@ -574,6 +580,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     Map<String, dynamic> args = {"point": p.toMap()};
     if (globalKeyIcon != null) {
       var icon = await _capturePng(globalKeyIcon);
+
       args["icon"] = icon;
     }
 
@@ -643,7 +650,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GlobalKey<State<StatefulWidget>> globalKeyIcon,
   ) async {
     Map<String, dynamic> args = {"point": point.toMap()};
+
     args["icon"] = await _capturePng(globalKeyIcon);
+
     try {
       await _channels[idOSM]?.invokeMethod("update#Marker", args);
     } on PlatformException {
@@ -690,7 +699,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
       "old_location": oldLocation.toMap(),
     };
     if (globalKeyIcon != null) {
-      args["new_icon"] = await _capturePng(globalKeyIcon);
+      final icon = await _capturePng(globalKeyIcon);
+      args["new_icon"] = icon;
     }
     await _channels[idOSM]!.invokeMethod("change#Marker", args);
   }
@@ -716,7 +726,9 @@ extension config on MethodChannelOSM {
 
   Future<void> initIosMap(int idOSM, GlobalKey key) async {
     await _channels[idOSM]?.invokeMethod("init#ios#map");
+
     final icon = await _capturePng(key);
+
     await _channels[idOSM]?.invokeMethod("setDefaultIOSIcon", icon);
   }
 }
