@@ -109,13 +109,13 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           controller.listenerMapLongTapping.value!,
           markerIcon: MarkerIcon(
             iconWidget: SizedBox.fromSize(
-              size: Size.square(48),
+              size: Size.square(32),
               child: Stack(
                 children: [
                   Icon(
                     Icons.store,
                     color: Colors.brown,
-                    size: 48,
+                    size: 32,
                   ),
                   Text(
                     randNum,
@@ -145,7 +145,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               icon: Icon(
                 Icons.person_pin,
                 color: Colors.red,
-                size: 96,
+                size: 32,
               ),
               // assetMarker: AssetMarker(
               //   image: AssetImage("asset/pin.png"),
@@ -188,7 +188,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         icon: Icon(
           Icons.train,
           color: Colors.orange,
-          size: 48,
+          size: 36,
         ),
       ),
     );
@@ -216,7 +216,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         icon: Icon(
           Icons.car_repair,
           color: Colors.black45,
-          size: 48,
+          size: 32,
         ),
       ),
     );
@@ -342,17 +342,19 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   //   size: 48,
                   // ),
                   assetMarker: AssetMarker(
-                      image: AssetImage(
-                        "asset/taxi.png",
-                      ),
-                      scaleAssetImage: 0.3),
+                    image: AssetImage(
+                      "asset/taxi.png",
+                    ),
+                    scaleAssetImage: 0.6,
+                  ),
                 ),
                 directionArrowMarker: MarkerIcon(
                   assetMarker: AssetMarker(
-                      image: AssetImage(
-                        "asset/taxi.png",
-                      ),
-                      scaleAssetImage: 0.45),
+                    image: AssetImage(
+                      "asset/taxi.png",
+                    ),
+                    scaleAssetImage: 0.25,
+                  ),
                 ),
               ),
               showContributorBadgeForOSM: true,
@@ -400,7 +402,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     icon: Icon(
                       Icons.train,
                       color: Colors.green,
-                      size: 48,
+                      size: 32,
                     ),
                   ),
                   [
@@ -433,7 +435,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 startIcon: MarkerIcon(
                   icon: Icon(
                     Icons.person,
-                    size: 64,
+                    size: 32,
                     color: Colors.brown,
                   ),
                 ),
@@ -447,14 +449,14 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   icon: Icon(
                     Icons.home,
                     color: Colors.orange,
-                    size: 64,
+                    size: 24,
                   ),
                 ),
                 advancedPickerMarker: MarkerIcon(
                   icon: Icon(
                     Icons.location_searching,
                     color: Colors.green,
-                    size: 64,
+                    size: 56,
                   ),
                 ),
               ),
