@@ -32,6 +32,6 @@ class MarkerView: MKMarkerAnnotationView {
 
 struct MarkerIconData {
     let image: UIImage?
-    var size: [Double] = [48.0,48.0]
+    var size: [Int] = [48,48]
 }
 

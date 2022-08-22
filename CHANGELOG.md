@@ -1,3 +1,6 @@
+### 0.39.1 : fix ios markers size (ios)
+* change icon size types from double to int
+* fix set userLocationMarker in iOS
 ### 0.39.0 : fix ios markers size
 * create MarkerIconData to store icon and size
 * set default size as 48px

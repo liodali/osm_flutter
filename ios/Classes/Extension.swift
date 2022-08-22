@@ -19,16 +19,18 @@ extension GeoPointMap {
         marker?.visible = true
         return marker!
     }
-    public func changeIconMarker(on map:TGMapView) {
-      let indexToUpdate =  map.markers.firstIndex { m in
+
+    public func changeIconMarker(on map: TGMapView) {
+        let indexToUpdate = map.markers.firstIndex { m in
             m.point == self.coordinate
         }
         if indexToUpdate != nil {
             map.markers[indexToUpdate!].icon = markerIcon.image!
         }
     }
-    public func changePositionMarker(on map:TGMapView,mPosition:CLLocationCoordinate2D) {
-        let indexToUpdate =  map.markers.firstIndex { m in
+
+    public func changePositionMarker(on map: TGMapView, mPosition: CLLocationCoordinate2D) {
+        let indexToUpdate = map.markers.firstIndex { m in
             m.point == self.coordinate
         }
         if indexToUpdate != nil {
@@ -43,12 +45,15 @@ extension GeoPointMap {
 
 extension TGMapView {
     func addUserLocation(for userLocation: CLLocationCoordinate2D, on map: TGMapView,
+                         personIcon: MarkerIconData?, arrowDirection: MarkerIconData?,
                          userLocationMarkerType: UserLocationMarkerType = UserLocationMarkerType.person) -> MyLocationMarker {
         let userLocationMarker = MyLocationMarker(coordinate: userLocation,
+                personIcon: personIcon, arrowDirectionIcon: arrowDirection,
                 userLocationMarkerType: userLocationMarkerType)
 
         userLocationMarker.marker = map.markerAdd()
         userLocationMarker.marker!.point = userLocationMarker.coordinate
+        userLocationMarker.setDirectionArrow(personIcon: personIcon, arrowDirection: arrowDirection)
         userLocationMarker.marker!.stylingString = userLocationMarker.styleMarker
         userLocationMarker.marker!.visible = true
         return userLocationMarker
@@ -62,7 +67,8 @@ extension TGMapView {
     func removeUserLocation(for marker: TGMarker) {
         self.markerRemove(marker)
     }
-    func removeMarkers(markers:[TGMarker]){
+
+    func removeMarkers(markers: [TGMarker]) {
         for marker in markers {
             self.markerRemove(marker)
         }
@@ -74,14 +80,14 @@ extension MyLocationMarker {
         self.personIcon = personIcon
         arrowDirectionIcon = arrowDirection
         var iconM: MarkerIconData? = nil
-        var size = [48.0,48.0]
+        var size = [48.0, 48.0]
         if (arrowDirectionIcon == nil && personIcon == nil) {
             switch (self.userLocationMarkerType) {
             case .person:
-                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , angle: \(self.angle) } "
+                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) ,size: [48px,48px] , angle: \(self.angle) } "
                 break;
             case .arrow:
-                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , angle: \(angle)  } "
+                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) ,size: [48px,48px] , angle: \(angle)  } "
                 break;
             }
         } else {
@@ -100,7 +106,7 @@ extension MyLocationMarker {
                 }
             }
             marker?.icon = iconM!.image!
-            marker?.stylingString = " { style: 'points', interactive: \(interactive),color: 'white',size: [\(iconM!.size.first ?? 48)px,\(iconM!.size.last ?? 32)px], order: 1000, collide: false , angle : \(angle) } "
+            marker?.stylingString = " { style: 'points', interactive: \(interactive),color: 'white',size: [\(iconM!.size.first ?? 48)px,\(iconM!.size.last ?? 48)px], order: 1000, collide: false , angle : \(angle) } "
         }
     }
 
@@ -117,7 +123,7 @@ extension MyLocationMarker {
                 break;
             }
         } else {
-            self.marker?.stylingString = "{ style: 'points', interactive: \(interactive),color: 'white',size: [48px,32px], order: 1000, collide: false , angle: \(angle)  } "
+            self.marker?.stylingString = "{ style: 'points', interactive: \(interactive),color: 'white',size: [\(markerIcon.size.first ?? 48)px,\(markerIcon.size.last ?? 48)px], order: 1000, collide: false , angle: \(angle)  } "
         }
     }
 }
@@ -157,7 +163,8 @@ extension Array where Element == Int {
         UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
     }
 }
-extension  Array where Element == GeoPoint {
+
+extension Array where Element == GeoPoint {
     func parseToPath() -> [String] {
 
         self.map { point -> String in
@@ -202,6 +209,7 @@ extension UIImage {
         return newImage ?? self
     }
 }
+
 extension String {
     var toRoadType: RoadType {
         switch self {
@@ -210,12 +218,13 @@ extension String {
         case "foot":
             return RoadType.foot
         case "bike":
-          return   RoadType.bike
+            return RoadType.bike
         default:
-           return  RoadType.car
+            return RoadType.car
         }
     }
 }
+
 extension CGFloat {
     var toRadians: CGFloat {
         self * .pi / 180
@@ -302,7 +311,7 @@ extension Array where Element == CLLocationCoordinate2D {
             maxLat = Swift.max(maxLat, lat)
             maxLon = Swift.max(maxLon, lon)
         }
-       return  TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat, longitude: minLon),
+        return TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat, longitude: minLon),
                 ne: CLLocationCoordinate2D(latitude: maxLat, longitude: maxLon))
     }
 }

@@ -38,7 +38,7 @@ class GeoPointMap {
 
         self.markerIcon = icon
 
-        self.styleMarker = styleMarker ?? " { style: 'points', interactive: \(interactive), color: 'white',size: [\(icon.size.first ?? 48)px,\(icon.size.last ?? 32)px], order: 1000, collide: false , angle : \(angle) } "
+        self.styleMarker = styleMarker ?? " { style: 'points', interactive: \(interactive), color: 'white',size: [\(icon.size.first ?? 48)px,\(icon.size.last ?? 48)px], order: 1000, collide: false , angle : \(angle) } "
     }
 
     var location: CLLocation {
@@ -55,8 +55,8 @@ class MyLocationMarker: GeoPointMap {
     var personIcon: MarkerIconData? = nil
     var arrowDirectionIcon: MarkerIconData? = nil
 
-    static let personStyle = "style: 'ux-location-gem-overlay',sprite: ux-current-location, interactive: false,color: 'white',size: [48px,32px] ,order: 2000, collide: false  "
-    static let arrowStyle = "style: 'ux-location-gem-overlay',sprite: ux-route-arrow, interactive: false,color: 'white',size: [48px,32px] ,order: 2000, collide: false  "
+    static let personStyle = "style: 'ux-location-gem-overlay',sprite: ux-current-location, interactive: false,color: 'white',order: 2000, collide: false  "
+    static let arrowStyle = "style: 'ux-location-gem-overlay',sprite: ux-route-arrow, interactive: false,color: 'white',order: 2000, collide: false  "
 
     var userLocationMarkerType: UserLocationMarkerType = UserLocationMarkerType.person
     var angle: Int = 0
