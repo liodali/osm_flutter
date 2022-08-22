@@ -365,8 +365,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
         "icon": pngBytes.convertToString(),
         "size": globalKey.currentContext != null
             ? [
-                globalKey.currentContext!.size!.width,
-                globalKey.currentContext!.size!.height
+                globalKey.currentContext!.size!.width.toInt(),
+                globalKey.currentContext!.size!.height.toInt()
               ]
             : iosSizeIcon
       };
