@@ -40,7 +40,9 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         disableFollowAndLocation()
         mMyLocationProvider.stopLocationProvider()
     }
-
+   fun onDestroy(){
+       mMyLocationProvider.destroy()
+   }
     override fun draw(c: Canvas?, pProjection: Projection?) {
         mDrawAccuracyEnabled = false
         super.draw(c, pProjection)

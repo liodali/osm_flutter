@@ -111,9 +111,7 @@ class FlutterOsmView(
 
     internal var map: MapView? = null
     private var keyMapSnapshot: String = keyArgMapSnapShot
-    private val locationNewOverlay: CustomLocationManager by lazy {
-        CustomLocationManager(map!!)
-    }
+    private lateinit var  locationNewOverlay: CustomLocationManager
     private var customMarkerIcon: Bitmap? = null
     private var customPersonMarkerIcon: Bitmap? = null
     private var customArrowMarkerIcon: Bitmap? = null
@@ -321,6 +319,9 @@ class FlutterOsmView(
         map!!.overlayManager.add(folderMarkers)
 
         mainLinearLayout.addView(map)
+        /// init LocationManager
+        locationNewOverlay = CustomLocationManager(map!!)
+
     }
 
 
@@ -2039,14 +2040,14 @@ class FlutterOsmView(
             initMap()
         }
         map?.onResume()
-
-
+        locationNewOverlay.onResume()
     }
 
     override fun onPause(owner: LifecycleOwner) {
         super.onPause(owner)
         FlutterOsmPlugin.state.set(PAUSED)
-        locationNewOverlay?.onPause()
+        locationNewOverlay.disableFollowLocation()
+        locationNewOverlay.onPause()
         map?.onPause()
         skipCheckLocation = false
         Log.e("osm", "osm flutter plugin pause")
@@ -2058,7 +2059,6 @@ class FlutterOsmView(
         FlutterOsmPlugin.state.set(STOPPED)
         Log.e("osm", "osm flutter plugin stopped")
         //context.applicationContext.unregisterReceiver(checkGPSServiceBroadcast)
-        locationNewOverlay.onStopLocation()
         job?.let {
             if (it.isActive) {
                 it.cancel()
@@ -2107,7 +2107,7 @@ class FlutterOsmView(
                         enableUserLocation()
                     }
                     if (isTracking) {
-                        locationNewOverlay?.let { locationOverlay ->
+                        locationNewOverlay.let { locationOverlay ->
                             when {
                                 !locationOverlay.isFollowLocationEnabled -> {
                                     locationOverlay.enableFollowLocation()
