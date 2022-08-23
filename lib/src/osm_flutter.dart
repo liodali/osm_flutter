@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
-import 'controller/map_controller.dart';
 import 'interface_osm/base_osm_platform.dart';
 import 'widgets/copyright_osm_widget.dart';
 
@@ -159,7 +158,22 @@ class OSMFlutterState extends State<OSMFlutter> {
         return Stack(
           clipBehavior: Clip.none,
           children: <Widget>[
-            widgetConfigMap(),
+            MapConfiguration(
+              userLocationMarker: widget.userLocationMarker,
+              roadConfiguration: widget.roadConfiguration,
+              markerOption: widget.markerOption,
+              staticPoints: widget.staticPoints,
+              dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
+              defaultMarkerKey: defaultMarkerKey,
+              advancedPickerMarker: advancedPickerMarker,
+              startIconKey: startIconKey,
+              endIconKey: endIconKey,
+              middleIconKey: middleIconKey,
+              dynamicMarkerKey: dynamicMarkerKey,
+              personIconMarkerKey: personIconMarkerKey,
+              arrowDirectionMarkerKey: arrowDirectionMarkerKey,
+              staticMarkersKeys: staticMarkersKeys,
+            ),
             Container(
               color: Colors.white,
               child: widget.mapIsLoading != null
@@ -171,16 +185,19 @@ class OSMFlutterState extends State<OSMFlutter> {
                               controller: widget.controller,
                               onGeoPointClicked: widget.onGeoPointClicked,
                               onLocationChanged: widget.onLocationChanged,
-                              dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
+                              dynamicMarkerWidgetNotifier:
+                                  dynamicMarkerWidgetNotifier,
                               mapIsLoading: widget.mapIsLoading,
                               trackMyPosition: widget.trackMyPosition,
                               mapIsReadyListener: mapIsReadyListener,
                               staticIconGlobalKeys: staticMarkersKeys,
                               roadConfiguration: widget.roadConfiguration,
-                              showContributorBadgeForOSM: widget.showContributorBadgeForOSM,
+                              showContributorBadgeForOSM:
+                                  widget.showContributorBadgeForOSM,
                               isPicker: widget.isPicker,
                               markerOption: widget.markerOption,
-                              showDefaultInfoWindow: widget.showDefaultInfoWindow,
+                              showDefaultInfoWindow:
+                                  widget.showDefaultInfoWindow,
                               showZoomController: widget.showZoomController,
                               staticPoints: widget.staticPoints,
                               globalKeys: [
@@ -199,7 +216,8 @@ class OSMFlutterState extends State<OSMFlutter> {
                               maxZoomLevel: widget.maxZoomLevel,
                               userLocationMarker: widget.userLocationMarker,
                               onMapIsReady: widget.onMapIsReady,
-                              androidHotReloadSupport: widget.androidHotReloadSupport),
+                              androidHotReloadSupport:
+                                  widget.androidHotReloadSupport),
                         ),
                         Positioned.fill(
                           child: ValueListenableBuilder<bool>(
@@ -229,7 +247,8 @@ class OSMFlutterState extends State<OSMFlutter> {
                       staticIconGlobalKeys: staticMarkersKeys,
                       roadConfiguration: widget.roadConfiguration,
                       androidHotReloadSupport: widget.androidHotReloadSupport,
-                      showContributorBadgeForOSM: widget.showContributorBadgeForOSM,
+                      showContributorBadgeForOSM:
+                          widget.showContributorBadgeForOSM,
                       isPicker: widget.isPicker,
                       markerOption: widget.markerOption,
                       showDefaultInfoWindow: widget.showDefaultInfoWindow,
@@ -280,60 +299,208 @@ class OSMFlutterState extends State<OSMFlutter> {
               if (widget == null) {
                 return SizedBox.fromSize();
               }
-              return RepaintBoundary(
-                key: dynamicMarkerKey,
-                child: widget,
+              return Offstage(
+                child: RepaintBoundary(
+                  key: dynamicMarkerKey,
+                  child: widget,
+                ),
               );
             },
           ),
           if ((widget.markerOption?.defaultMarker != null)) ...[
-            RepaintBoundary(
-              key: defaultMarkerKey,
-              child: widget.markerOption!.defaultMarker!,
+            Offstage(
+              child: RepaintBoundary(
+                key: defaultMarkerKey,
+                child: widget.markerOption!.defaultMarker!,
+              ),
             ),
           ],
           if (widget.markerOption?.advancedPickerMarker != null) ...[
-            RepaintBoundary(
-              key: advancedPickerMarker,
-              child: widget.markerOption?.advancedPickerMarker,
+            Offstage(
+              child: RepaintBoundary(
+                key: advancedPickerMarker,
+                child: widget.markerOption?.advancedPickerMarker,
+              ),
             ),
           ],
           if (widget.staticPoints.isNotEmpty) ...[
             for (int i = 0; i < widget.staticPoints.length; i++) ...[
-              RepaintBoundary(
-                key: staticMarkersKeys[widget.staticPoints[i].id],
-                child: widget.staticPoints[i].markerIcon,
+              Offstage(
+                child: RepaintBoundary(
+                  key: staticMarkersKeys[widget.staticPoints[i].id],
+                  child: widget.staticPoints[i].markerIcon,
+                ),
               ),
             ]
           ],
           if (widget.roadConfiguration?.endIcon != null) ...[
-            RepaintBoundary(
-              key: endIconKey,
-              child: widget.roadConfiguration!.endIcon,
+            Offstage(
+              child: RepaintBoundary(
+                key: endIconKey,
+                child: widget.roadConfiguration!.endIcon,
+              ),
             ),
           ],
           if (widget.roadConfiguration?.startIcon != null) ...[
-            RepaintBoundary(
-              key: startIconKey,
-              child: widget.roadConfiguration!.startIcon,
+            Offstage(
+              child: RepaintBoundary(
+                key: startIconKey,
+                child: widget.roadConfiguration!.startIcon,
+              ),
             ),
           ],
           if (widget.roadConfiguration?.middleIcon != null) ...[
-            RepaintBoundary(
-              key: middleIconKey,
-              child: widget.roadConfiguration!.middleIcon,
+            Offstage(
+              child: RepaintBoundary(
+                key: middleIconKey,
+                child: widget.roadConfiguration!.middleIcon,
+              ),
             ),
           ],
           if (widget.userLocationMarker?.personMarker != null) ...[
-            RepaintBoundary(
-              key: personIconMarkerKey,
-              child: widget.userLocationMarker?.personMarker,
+            Offstage(
+              child: RepaintBoundary(
+                key: personIconMarkerKey,
+                child: widget.userLocationMarker?.personMarker,
+              ),
             ),
           ],
           if (widget.userLocationMarker?.directionArrowMarker != null) ...[
-            RepaintBoundary(
-              key: arrowDirectionMarkerKey,
-              child: widget.userLocationMarker?.directionArrowMarker,
+            Offstage(
+              child: RepaintBoundary(
+                key: arrowDirectionMarkerKey,
+                child: widget.userLocationMarker?.directionArrowMarker,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class MapConfiguration extends StatelessWidget {
+  final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
+
+  final MarkerOption? markerOption;
+  final GlobalKey defaultMarkerKey,
+      advancedPickerMarker,
+      startIconKey,
+      endIconKey,
+      middleIconKey,
+      dynamicMarkerKey,
+      personIconMarkerKey,
+      arrowDirectionMarkerKey;
+  final Map<String, GlobalKey> staticMarkersKeys;
+  final RoadConfiguration? roadConfiguration;
+  final List<StaticPositionGeoPoint> staticPoints;
+  final UserLocationMaker? userLocationMarker;
+
+  const MapConfiguration({
+    Key? key,
+    required this.dynamicMarkerWidgetNotifier,
+    this.markerOption,
+    this.roadConfiguration,
+    this.userLocationMarker,
+    required this.staticPoints,
+    required this.dynamicMarkerKey,
+    required this.defaultMarkerKey,
+    required this.advancedPickerMarker,
+    required this.startIconKey,
+    required this.endIconKey,
+    required this.middleIconKey,
+    required this.personIconMarkerKey,
+    required this.arrowDirectionMarkerKey,
+    required this.staticMarkersKeys,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Stack(
+        children: <Widget>[
+          ValueListenableBuilder<Widget?>(
+            valueListenable: dynamicMarkerWidgetNotifier,
+            builder: (ctx, widget, child) {
+              if (widget == null) {
+                return SizedBox.fromSize();
+              }
+              return Offstage(
+                child: RepaintBoundary(
+                  key: dynamicMarkerKey,
+                  child: widget,
+                ),
+              );
+            },
+          ),
+          if ((markerOption?.defaultMarker != null)) ...[
+            Offstage(
+              child: RepaintBoundary(
+                key: defaultMarkerKey,
+                child: markerOption!.defaultMarker!,
+              ),
+            ),
+          ],
+          if (markerOption?.advancedPickerMarker != null) ...[
+            Offstage(
+              child: RepaintBoundary(
+                key: advancedPickerMarker,
+                child: markerOption?.advancedPickerMarker,
+              ),
+            ),
+          ],
+          if (staticPoints.isNotEmpty) ...[
+            for (int i = 0; i < staticPoints.length; i++) ...[
+              Offstage(
+                child: RepaintBoundary(
+                  key: staticMarkersKeys[staticPoints[i].id],
+                  child: staticPoints[i].markerIcon,
+                ),
+              ),
+            ]
+          ],
+          if (roadConfiguration?.endIcon != null) ...[
+            Offstage(
+              child: RepaintBoundary(
+                key: endIconKey,
+                child: roadConfiguration!.endIcon,
+              ),
+            ),
+          ],
+          if (roadConfiguration?.startIcon != null) ...[
+            Offstage(
+              child: RepaintBoundary(
+                key: startIconKey,
+                child: roadConfiguration!.startIcon,
+              ),
+            ),
+          ],
+          if (roadConfiguration?.middleIcon != null) ...[
+            Offstage(
+              child: RepaintBoundary(
+                key: middleIconKey,
+                child: roadConfiguration!.middleIcon,
+              ),
+            ),
+          ],
+          if (userLocationMarker?.personMarker != null) ...[
+            Offstage(
+              child: RepaintBoundary(
+                key: personIconMarkerKey,
+                child: userLocationMarker?.personMarker,
+              ),
+            ),
+          ],
+          if (userLocationMarker?.directionArrowMarker != null) ...[
+            Offstage(
+              child: RepaintBoundary(
+                key: arrowDirectionMarkerKey,
+                child: userLocationMarker?.directionArrowMarker,
+              ),
             ),
           ],
         ],
