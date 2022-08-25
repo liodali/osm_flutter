@@ -285,7 +285,7 @@ class OSMFlutterState extends State<OSMFlutter> {
     );
   }
 
-  Widget widgetConfigMap() {
+  /*Widget widgetConfigMap() {
     return Positioned(
       top: 0,
       bottom: 0,
@@ -376,7 +376,7 @@ class OSMFlutterState extends State<OSMFlutter> {
         ],
       ),
     );
-  }
+  }*/
 }
 
 class MapConfiguration extends StatelessWidget {
@@ -429,78 +429,60 @@ class MapConfiguration extends StatelessWidget {
               if (widget == null) {
                 return SizedBox.fromSize();
               }
-              return Offstage(
-                child: RepaintBoundary(
-                  key: dynamicMarkerKey,
-                  child: widget,
-                ),
+              return RepaintBoundary(
+                key: dynamicMarkerKey,
+                child: widget,
               );
             },
           ),
           if ((markerOption?.defaultMarker != null)) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: defaultMarkerKey,
-                child: markerOption!.defaultMarker!,
-              ),
+            RepaintBoundary(
+              key: defaultMarkerKey,
+              child: markerOption!.defaultMarker!,
             ),
           ],
           if (markerOption?.advancedPickerMarker != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: advancedPickerMarker,
-                child: markerOption?.advancedPickerMarker,
-              ),
+            RepaintBoundary(
+              key: advancedPickerMarker,
+              child: markerOption?.advancedPickerMarker,
             ),
           ],
           if (staticPoints.isNotEmpty) ...[
             for (int i = 0; i < staticPoints.length; i++) ...[
-              Offstage(
-                child: RepaintBoundary(
-                  key: staticMarkersKeys[staticPoints[i].id],
-                  child: staticPoints[i].markerIcon,
-                ),
+              RepaintBoundary(
+                key: staticMarkersKeys[staticPoints[i].id],
+                child: staticPoints[i].markerIcon,
               ),
             ]
           ],
           if (roadConfiguration?.endIcon != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: endIconKey,
-                child: roadConfiguration!.endIcon,
-              ),
+            RepaintBoundary(
+              key: endIconKey,
+              child: roadConfiguration!.endIcon,
             ),
           ],
           if (roadConfiguration?.startIcon != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: startIconKey,
-                child: roadConfiguration!.startIcon,
-              ),
+            RepaintBoundary(
+              key: startIconKey,
+              child: roadConfiguration!.startIcon,
             ),
           ],
           if (roadConfiguration?.middleIcon != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: middleIconKey,
-                child: roadConfiguration!.middleIcon,
-              ),
+            RepaintBoundary(
+              key: middleIconKey,
+              child: roadConfiguration!.middleIcon,
             ),
           ],
           if (userLocationMarker?.personMarker != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: personIconMarkerKey,
-                child: userLocationMarker?.personMarker,
-              ),
+            RepaintBoundary(
+              key: personIconMarkerKey,
+              child: userLocationMarker?.personMarker,
             ),
           ],
           if (userLocationMarker?.directionArrowMarker != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: arrowDirectionMarkerKey,
-                child: userLocationMarker?.directionArrowMarker,
-              ),
+            RepaintBoundary(
+              key: arrowDirectionMarkerKey,
+              child: userLocationMarker?.directionArrowMarker,
             ),
           ],
         ],
