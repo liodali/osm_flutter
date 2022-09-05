@@ -180,7 +180,7 @@ for more example see our example in `home_example.dart`
 <b>4) Set map on user current position </b>
 
 ```dart
- await controller.currentPosition();
+ await controller.currentLocation();
 
 ```
 <b> 5) Zoom IN </b>
