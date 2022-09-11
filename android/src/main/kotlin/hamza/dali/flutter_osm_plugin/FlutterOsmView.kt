@@ -1853,30 +1853,6 @@ class FlutterOsmView(
 
     }
 
-    private fun currentUserPosition(
-        result: MethodChannel.Result,
-        afterGetLocation: VoidCallback? = null
-    ) {
-        locationNewOverlay?.let { locationOverlay ->
-            locationOverlay.runOnFirstFix {
-                scope!!.launch(Main) {
-                    locationOverlay.lastFix?.let { location ->
-                        val point = GeoPoint(
-                            location.latitude,
-                            location.longitude,
-                        )
-                        locationOverlay.disableMyLocation()
-                        result.success(point.toHashMap())
-                        if (afterGetLocation != null) {
-                            afterGetLocation()
-                        }
-                    } ?: result.error("400", "we cannot get the current position!", "")
-                }
-            }
-
-        } ?: result.error("400", "we cannot get the current position!", "")
-    }
-
     private fun showStaticPosition(idStaticPosition: String, angles: List<Double> = emptyList()) {
 
         var overlay: FolderOverlay? = folderStaticPosition.items.firstOrNull {
@@ -2070,6 +2046,7 @@ class FlutterOsmView(
 
     override fun onDestroy(owner: LifecycleOwner) {
         super.onDestroy(owner)
+        locationNewOverlay.onDestroy()
         FlutterOsmPlugin.pluginBinding!!.removeActivityResultListener(this)
         mainLinearLayout.removeAllViews()
 
