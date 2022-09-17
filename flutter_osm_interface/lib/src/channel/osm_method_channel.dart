@@ -537,7 +537,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GlobalKey key,
   ) async {
     final icon = await _capturePng(key);
-
     await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", icon);
   }
 
