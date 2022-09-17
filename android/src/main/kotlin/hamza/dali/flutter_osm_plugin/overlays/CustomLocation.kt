@@ -51,7 +51,8 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
      fun currentUserPosition(
         result: MethodChannel.Result,
         afterGetLocation: VoidCallback? = null,
-        scope: CoroutineScope
+        scope: CoroutineScope,
+
     ) {
         if (!isMyLocationEnabled) {
             enableMyLocation()
@@ -63,7 +64,9 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
                         location.latitude,
                         location.longitude,
                     )
-                    disableMyLocation()
+                    if (!isFollowLocationEnabled){
+                        disableMyLocation()
+                    }
 
                     result.success(point.toHashMap())
                     if (afterGetLocation != null) {
