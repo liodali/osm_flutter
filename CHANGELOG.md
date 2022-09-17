@@ -1,3 +1,4 @@
+### 0.40.1 : fix bugs
 ### 0.40.0 : fix bugs
 * disable user location when widget is disposed
 * improve get user location in android side
