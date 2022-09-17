@@ -40,7 +40,9 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         disableFollowAndLocation()
         mMyLocationProvider.stopLocationProvider()
     }
-
+   fun onDestroy(){
+       mMyLocationProvider.destroy()
+   }
     override fun draw(c: Canvas?, pProjection: Projection?) {
         mDrawAccuracyEnabled = false
         super.draw(c, pProjection)
@@ -62,6 +64,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
                         location.longitude,
                     )
                     disableMyLocation()
+
                     result.success(point.toHashMap())
                     if (afterGetLocation != null) {
                         afterGetLocation()
@@ -76,6 +79,15 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
     override fun onLocationChanged(location: Location?, source: IMyLocationProvider?) {
         super.onLocationChanged(location, source)
 
+    }
+
+     fun followLocation(onChangedLocation : (gp:GeoPoint )-> Unit) {
+        this.enableFollowLocation()
+        runOnFirstFix {
+            val location = this.lastFix
+            val geoPMap = GeoPoint(location)
+            onChangedLocation(geoPMap)
+        }
     }
 
     fun setMarkerIcon(personIcon: Bitmap?, directionIcon: Bitmap?) {
