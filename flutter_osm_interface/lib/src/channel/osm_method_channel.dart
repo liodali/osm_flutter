@@ -364,8 +364,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
         "icon": pngBytes.convertToString(),
         "size": globalKey.currentContext != null
             ? [
-                globalKey.currentContext!.size!.width,
-                globalKey.currentContext!.size!.height
+                globalKey.currentContext!.size!.width.toInt(),
+                globalKey.currentContext!.size!.height.toInt()
               ]
             : iosSizeIcon
       };
@@ -536,7 +536,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GlobalKey key,
   ) async {
     final icon = await _capturePng(key);
-
     await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", icon);
   }
 

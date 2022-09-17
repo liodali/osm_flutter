@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.39.0-orange) 
+![pub](https://img.shields.io/badge/pub-v0.40.2-orange) 
 
 
 ## Platform Support
@@ -42,7 +42,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.39.0
+      flutter_osm_plugin: ^0.40.2
 
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
@@ -177,10 +177,10 @@ controller = MapController.customLayer(
 for more example see our example in `home_example.dart`
 
 
-<b>4) Set map on user current position </b>
+<b>4) Set map on user current location </b>
 
 ```dart
- await controller.currentPosition();
+ await controller.currentLocation();
 
 ```
 <b> 5) Zoom IN </b>
@@ -245,7 +245,8 @@ await controller.removeLimitAreaMap();
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>any text you want</string>
 ``` 
-
+> from version 0.40.0 we can call only `enableTracking` will animate to user location 
+without need to call `currentLocation`
 
 ```dart
  await controller.enableTracking();

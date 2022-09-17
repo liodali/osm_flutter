@@ -1,3 +1,13 @@
+### 0.40.2 : fix bugs
+* fix disable follow user location when calling myLocation
+### 0.40.1 : fix bugs
+### 0.40.0 : fix bugs
+* disable user location when widget is disposed
+* improve get user location in android side
+* enableTracking now will enableUserLocation no need to call currentLocation before calling enableTracking
+### 0.39.1 : fix ios markers size (ios)
+* change icon size types from double to int
+* fix set userLocationMarker in iOS
 ### 0.39.0 : fix ios markers size
 * create MarkerIconData to store icon and size
 * set default size as 48px
