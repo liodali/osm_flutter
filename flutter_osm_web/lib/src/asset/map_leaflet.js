@@ -475,7 +475,7 @@ if (isReady) {
    advSearchIcon = icon;
    const nodeImg = document.createElement("img");
    nodeImg.setAttribute('src', 'data:image/png;base64,' + icon);
-   document.getElementById("render-icon").appendChild(nodeImg);
+   document.getElementById("render-icon").replaceChildren(nodeImg);
    nodeImg.style.height = "32px";
    nodeImg.style.width = "32px";
  }

@@ -27,7 +27,13 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       OSMPlatform.instance as FlutterOsmPluginWeb;
 
   WebOsmController() {
-    createHtml();
+    //createHtml(id: id);
+    _div = html.DivElement()
+      ..id = 'osm_map'
+      ..style.width = '100%'
+      ..style.height = '100%';
+    ui.platformViewRegistry.registerViewFactory(
+        FlutterOsmPluginWeb.getViewType(), (int viewId) => _div);
   }
 
   //WebOsmController._(OsmWebWidgetState _osmWebFlutterState) {}
@@ -43,17 +49,17 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     final body = html.window.document.querySelector('body')!;
     final head = html.window.document.querySelector('head')!;
 
-    _frame = html.IFrameElement()
-      ..id = "frame_map"
-      ..src = "packages/flutter_osm_web/src/asset/map.html";
+    // _frame = html.IFrameElement()
+    //   ..id = "frame_map"
+    //   ..src = "packages/flutter_osm_web/src/asset/map.html";
 
     final div = html.DivElement()
-      ..id = 'osm_map_0'
+      ..id = 'osm_map_$_mapId'
       ..style.width = '100%'
       ..style.height = '100%';
-    body.append(div);
-    body.append(html.DivElement()
-      ..id = 'render-icon'
+    _div.append(div);
+    _div.append(html.DivElement()
+      ..id = 'render-icon-$_mapId'
       ..style.display = 'none');
 
     /*head.append(html.LinkElement()
@@ -82,19 +88,16 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       }
     });*/
     body.append(html.ScriptElement()
-          ..src = 'packages/flutter_osm_web/src/asset/map_leaflet.js'
-          ..type = 'application/javascript');
+      ..src = 'packages/flutter_osm_web/src/asset/map_leaflet.js'
+      ..type = 'application/javascript');
     //jsScript.addEventListener('load', (event) {});
-
-    ui.platformViewRegistry.registerViewFactory(
-        FlutterOsmPluginWeb.getViewType(mapId: 0), (int viewId) => div);
 
     //print(_getViewType(_mapId));
   }
 
   // The Flutter widget that contains the rendered Map.
   //HtmlElementView? _widget;
-  late html.IFrameElement _frame;
+  late html.DivElement _div;
 
   /// The Flutter widget that will contain the rendered Map. Used for caching.
   // Widget? get widget {

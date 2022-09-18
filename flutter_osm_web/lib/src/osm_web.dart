@@ -91,13 +91,14 @@ class OsmWebWidgetState extends State<OsmWebWidget> with AndroidLifecycleMixin {
   Widget build(BuildContext context) {
     return HtmlElementView(
       key: keyWidget,
-      viewType: FlutterOsmPluginWeb.getViewType(mapId: 0),
+      viewType: FlutterOsmPluginWeb.getViewType(),
       onPlatformViewCreated: onPlatformViewCreated,
     );
   }
 
   Future<void> onPlatformViewCreated(int id) async {
     controller.init(this, id);
+    controller.createHtml();
     controller.addObserver(this);
     (OSMPlatform.instance as FlutterOsmPluginWeb).setWebMapController(
       id,
