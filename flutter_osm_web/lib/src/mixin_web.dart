@@ -24,28 +24,15 @@ mixin WebMixin {
     await interop.currentUserLocation();
   }
 
-  Future<void> advancedPositionPicker() async {
-    await interop.advSearchLocation();
-  }
-
-  Future<void> cancelAdvancedPositionPicker() async {
-    await interop.cancelAdvSearchLocation();
-  }
-
+  
+ 
   @protected
   Future changeHomeIconMarker(GlobalKey<State<StatefulWidget>>? key) async {
     final base64 = (await capturePng(key!)).convertToString();
     await interop.setDefaultIcon(base64);
   }
 
-  Future changeIconAdvPickerMarker(GlobalKey<State<StatefulWidget>> key) async {
-    var base64 = "";
-    try {
-      base64 = (await capturePng(key)).convertToString();
-    } finally {
-      await interop.changeIconAdvPickerMarker(base64);
-    }
-  }
+  
 
   Future<void> changeLocation(GeoPoint p) async {
     await _addPosition(
@@ -129,10 +116,7 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<GeoPoint> selectAdvancedPositionPicker() {
-    // TODO: implement selectAdvancedPositionPicker
-    throw UnimplementedError();
-  }
+  
 
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
     var listWithoutOrientation =

@@ -304,7 +304,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 await controller.advancedPositionPicker();
               }
             },
-          )
+          ),
         ],
       ),
       body: Container(

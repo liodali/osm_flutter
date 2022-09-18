@@ -440,7 +440,7 @@ if (isReady) {
    navigator.geolocation.clearWatch(idTracking);
  }
 
- async function advSearchLocation() {
+ async function advSearchLocation(mapId) {
    startAdvSearchLocation = true
    mymap.eachLayer(function (layer) {
      if (!(layer instanceof L.TileLayer)) {
@@ -457,25 +457,25 @@ if (isReady) {
  top: 47%;
  left: 47%;
    */
-   document.getElementById("render-icon").style.display = "block";
-   document.getElementById("render-icon").style.position = "absolute";
-   document.getElementById("render-icon").style.zIndex = "1000";
-   document.getElementById("render-icon").style.top = "45%";
-   document.getElementById("render-icon").style.left = "45%";
+   document.getElementById("render-icon-"+mapId).style.display = "block";
+   document.getElementById("render-icon-"+mapId).style.position = "absolute";
+   document.getElementById("render-icon-"+mapId).style.zIndex = "1000";
+   document.getElementById("render-icon-"+mapId).style.top = "45%";
+   document.getElementById("render-icon-"+mapId).style.left = "45%";
  }
- async function cancelAdvSearchLocation() {
-   document.getElementById("render-icon").style.display = "none";
+ async function cancelAdvSearchLocation(mapId) {
+   document.getElementById("render-icon-"+mapId).style.display = "none";
    cachedLayers.eachLayer(function (layer) {
      mymap.addLayer(layer);
    });
    cachedLayers.clearLayers();
 
  }
- async function changeIconAdvPickerMarker(icon) {
+ async function changeIconAdvPickerMarker(icon,id) {
    advSearchIcon = icon;
    const nodeImg = document.createElement("img");
    nodeImg.setAttribute('src', 'data:image/png;base64,' + icon);
-   document.getElementById("render-icon").replaceChildren(nodeImg);
+   document.getElementById("render-icon-"+id).replaceChildren(nodeImg);
    nodeImg.style.height = "32px";
    nodeImg.style.width = "32px";
  }

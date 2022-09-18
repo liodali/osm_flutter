@@ -42,5 +42,4 @@ leafletScript.onload = function(){
       leafletRotateScript.type = "text/javascript";
       leafletRotateScript.src = "https://cdn.jsdelivr.net/npm/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.min.js";
       document.getElementsByTagName('head')[0].appendChild(leafletRotateScript);
-    
 } 

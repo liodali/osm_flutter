@@ -122,11 +122,11 @@ external dynamic disableTracking();
 
 
 @JS("changeIconAdvPickerMarker")
-external dynamic changeIconAdvPickerMarker(String? icon);
+external dynamic changeIconAdvPickerMarker(String? icon,int id);
 @JS("advSearchLocation")
-external dynamic advSearchLocation();
+external dynamic advSearchLocation(int mapId);
 @JS("cancelAdvSearchLocation")
-external dynamic cancelAdvSearchLocation();
+external dynamic cancelAdvSearchLocation(int mapId);
 
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')

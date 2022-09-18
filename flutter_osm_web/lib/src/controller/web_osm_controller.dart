@@ -11,10 +11,11 @@ import '../interop/osm_interop.dart' as interop;
 import '../mixin_web.dart';
 import '../osm_web.dart';
 
+
 class WebOsmController with WebMixin implements IBaseOSMController {
   late int _mapId;
 
-  int get mapId => mapId;
+  int get mapId => _mapId;
 
   void set mapId(int mapId) {
     _mapId = mapId;
@@ -355,6 +356,39 @@ class WebOsmController with WebMixin implements IBaseOSMController {
         icon,
       );
     });
+  }
+
+  @override
+  Future changeIconAdvPickerMarker(GlobalKey<State<StatefulWidget>> key) async {
+    var base64 = "";
+    try {
+      base64 = (await capturePng(key)).convertToString();
+    } finally {
+      await interop.changeIconAdvPickerMarker(base64, _mapId);
+    }
+  }
+
+  @override
+  Future<void> advancedPositionPicker() async {
+    await interop.advSearchLocation(_mapId);
+  }
+
+  @override
+  Future<void> cancelAdvancedPositionPicker() async {
+    await interop.cancelAdvSearchLocation(_mapId);
+  }
+
+  Future<GeoPoint> selectAdvancedPositionPicker() async {
+    Map<String, dynamic>? value =
+        await html.promiseToFutureAsMap(interop.centerMap());
+    if (value!.containsKey("error")) {
+      throw Exception(value["message"]);
+    }
+    final gp = GeoPoint.fromMap(Map<String, double>.from(value));
+
+    await cancelAdvancedPositionPicker();
+    changeLocation(gp);
+    return gp;
   }
 
   Future customUserLocationMarker(
