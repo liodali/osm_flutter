@@ -1,9 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
-
-import 'controller/web_osm_controller.dart';
 
 class OsmWebWidget extends StatefulWidget {
   final IBaseMapController controller;

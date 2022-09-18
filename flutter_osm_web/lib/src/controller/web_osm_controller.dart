@@ -41,17 +41,53 @@ class WebOsmController with WebMixin implements IBaseOSMController {
 
   void createHtml() {
     final body = html.window.document.querySelector('body')!;
+    final head = html.window.document.querySelector('head')!;
 
     _frame = html.IFrameElement()
       ..id = "frame_map"
       ..src = "packages/flutter_osm_web/src/asset/map.html";
 
+    final div = html.DivElement()
+      ..id = 'osm_map_0'
+      ..style.width = '100%'
+      ..style.height = '100%';
+    body.append(div);
+    body.append(html.DivElement()
+      ..id = 'render-icon'
+      ..style.display = 'none');
+
+    /*head.append(html.LinkElement()
+          ..href = 'packages/flutter_osm_web/src/asset/leaflet.css'
+        // ..integrity =
+        //     'sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="'
+        // ..crossOrigin = ''
+        );
+    final jsScript = html.ScriptElement()
+      ..id = 'leaflet_osm'
+      ..src = 'packages/flutter_osm_web/src/asset/leaflet.js'
+      // ..integrity =
+      //     'sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=='
+      // ..crossOrigin = ''
+      ..type = 'application/javascript';
+    body.append(jsScript);
+    jsScript.onLoad.listen((event) {
+      if (event.type == "load") {
+        debugPrint('script loaded');
+        body.append(html.ScriptElement()
+          ..src =
+              'https://cdn.jsdelivr.net/npm/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.min.js');
+        body.append(html.ScriptElement()
+          ..src = 'packages/flutter_osm_web/src/asset/map_js_ctrl.js'
+          ..type = 'application/javascript');
+      }
+    });*/
     body.append(html.ScriptElement()
-      ..src = 'packages/flutter_osm_web/src/asset/map.js'
-      ..type = 'application/javascript');
+          ..src = 'packages/flutter_osm_web/src/asset/map_leaflet.js'
+          ..type = 'application/javascript');
+    //jsScript.addEventListener('load', (event) {});
 
     ui.platformViewRegistry.registerViewFactory(
-        FlutterOsmPluginWeb.getViewType(mapId: 0), (int viewId) => _frame);
+        FlutterOsmPluginWeb.getViewType(mapId: 0), (int viewId) => div);
 
     //print(_getViewType(_mapId));
   }
