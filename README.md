@@ -5,7 +5,7 @@
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | under-development |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | 0.50.0-alpha |
 
 
 <b>osm plugin for flutter apps </b>
@@ -42,7 +42,22 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.40.2
+      flutter_osm_plugin: ^0.50.0-alpha
+
+
+
+### Web integration
+
+add this line  below in index.html in web folder 
+
+```javascript
+<script src="packages/flutter_osm_web/src/asset/map_init.js"></script>
+```
+
+
+
+> ** note ** 
+> We have limitation in handling user interaction in the map  inside our plugin, if you put button on the top of the map and you listen to click on the map both will be fired
 
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
