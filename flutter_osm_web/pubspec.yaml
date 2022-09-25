@@ -1,6 +1,6 @@
 name: flutter_osm_web
-description: A new flutter plugin project.
-version: 0.1.0
+description: flutter web interface for flutter osm contain web channel and web api
+version: 0.1.1
 homepage:
 
 environment:

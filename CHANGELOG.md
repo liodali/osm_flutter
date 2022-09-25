@@ -1,3 +1,4 @@
+### 0.50.0-alpha.3 :  fix issue in publish
 ### 0.50.0-alpha.2 :  fix issue in publish
 ### 0.50.0-alpha.1 :  fix issue in pubspec
 ### 0.50.0-alpha : add web support

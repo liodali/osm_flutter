@@ -1,12 +1,12 @@
 # flutter_osm_plugin 
 ![pub](https://img.shields.io/badge/pub-v0.40.2-orange)   
-![pub](https://img.shields.io/badge/pub-v0.50.0--alpha.2-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.50.0--alpha.3-yellow) 
 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | 0.50.0-alpha |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | 0.50.0-alpha.3 |
 
 
 <b>osm plugin for flutter apps </b>
@@ -43,7 +43,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.50.0-alpha.2
+      flutter_osm_plugin: ^0.50.0-alpha.3
 
 
 
