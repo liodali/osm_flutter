@@ -55,10 +55,12 @@ add this line  below in index.html in web folder
 ```
 
 
+<p style="font-size:22px">
 
 > **Note** 
 > We have limitation in handling user interaction in the map  inside our plugin, if you put button on the top of the map and you listen to click on the map both will be fired
 
+</p>
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
 
