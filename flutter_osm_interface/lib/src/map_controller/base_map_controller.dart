@@ -16,7 +16,6 @@ abstract class BaseMapController extends IBaseMapController {
   final CustomTile? customTile;
   late Timer? _timer;
 
-
   IBaseOSMController get osmBaseController => _osmBaseController;
 
   BaseMapController({
@@ -54,8 +53,6 @@ abstract class BaseMapController extends IBaseMapController {
       _timer?.cancel();
     });
   }
-
-
 }
 
 extension OSMControllerOfBaseMapController on BaseMapController {
@@ -63,5 +60,3 @@ extension OSMControllerOfBaseMapController on BaseMapController {
     _osmBaseController = controller;
   }
 }
-
-

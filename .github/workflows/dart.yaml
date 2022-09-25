@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
       - name: setup dart
-        uses: dart-lang/setup-dart@v1
+        uses: dart-lang/setup-dart@v1.3
       - name: Setup credentials
         run: |
           mkdir -p ~/.pub-cache

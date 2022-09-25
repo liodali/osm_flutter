@@ -42,7 +42,8 @@ extension TransformEncodedPolyLineToListGeo on String {
         (String encoded) {
           final listPoints = decodePolyline(encoded, accuracyExponent: 5);
           return listPoints
-              .map((e) => GeoPoint(latitude: e.first.toDouble(), longitude: e.last.toDouble()))
+              .map((e) => GeoPoint(
+                  latitude: e.first.toDouble(), longitude: e.last.toDouble()))
               .toList();
         },
         polylineEncoded,

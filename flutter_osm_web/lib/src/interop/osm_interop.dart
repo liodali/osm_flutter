@@ -113,16 +113,14 @@ external Map<String, String> getGeoPoints();
 @JS("setUserLocationIconMarker")
 external dynamic setUserLocationIconMarker(String icon);
 
-
 @JS("enableTracking")
 external dynamic enableTracking();
 
 @JS("disableTracking")
 external dynamic disableTracking();
 
-
 @JS("changeIconAdvPickerMarker")
-external dynamic changeIconAdvPickerMarker(String? icon,int id);
+external dynamic changeIconAdvPickerMarker(String? icon, int id);
 @JS("advSearchLocation")
 external dynamic advSearchLocation(int mapId);
 @JS("cancelAdvSearchLocation")

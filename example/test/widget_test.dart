@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 void main() {
-  test("test color",(){
+  test("test color", () {
     Color color = Colors.red;
     expect(color.toHexColor(), "#fff44336");
     expect(color.toHexColorWeb(), "#f44336");

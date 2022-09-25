@@ -139,7 +139,7 @@ def update_plugin_osm_web(version_interface):
     msg = "exist" if isExist else "doesn't exist"
     print(f"the flutter_osm_web with version :{version} {msg}\n")
     # set version of osm interface in osm web plugin 
-    change_dependencies_version(FILE_PUBSEPEC_OSM_INTERFACE,
+    change_dependencies_version(FILE_PUBSEPEC_OSM_WEB,
         "flutter_osm_interface:", version_interface, isLocal=True)
     if isExist == False:
         print(f"publishing flutter_osm_web : {version} ...\n")
@@ -149,7 +149,5 @@ if __name__ == "__main__":
 
     version_interface = update_plugin_osm_interface()
     version_web = update_plugin_osm_web(version_interface)
-    change_dependencies_version(FILE_PUBSEPEC_OSM,
-        "flutter_osm_interface:", version_interface, isLocal=True)
-    change_dependencies_version(FILE_PUBSEPEC_OSM,
-        "flutter_osm_web:", version_web, isLocal=True)
+    change_dependencies_version(FILE_PUBSEPEC_OSM,"flutter_osm_interface:", version_interface, isLocal=True)
+    change_dependencies_version(FILE_PUBSEPEC_OSM,"flutter_osm_web:", version_web, isLocal=True)

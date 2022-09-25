@@ -50,7 +50,8 @@ class BoundingBox {
     );
   }
 
-  static Future<BoundingBox> fromGeoPointsAsync(List<GeoPoint> geoPoints) async {
+  static Future<BoundingBox> fromGeoPointsAsync(
+      List<GeoPoint> geoPoints) async {
     return await compute(
       (List<GeoPoint> list) async => BoundingBox.fromGeoPoints(list),
       geoPoints,
@@ -79,7 +80,8 @@ class BoundingBox {
           west == other.west;
 
   @override
-  int get hashCode => north.hashCode ^ east.hashCode ^ south.hashCode ^ west.hashCode;
+  int get hashCode =>
+      north.hashCode ^ east.hashCode ^ south.hashCode ^ west.hashCode;
 
   Map<String, double> toMap() {
     return {

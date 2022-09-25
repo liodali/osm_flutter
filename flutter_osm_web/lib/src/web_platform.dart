@@ -54,16 +54,8 @@ void onRegionChangedListener(
   double lat,
 ) {
   final region = {
-    "bounding":{
-      "south":south,
-      "east":east,
-      "north":north,
-      "west":west
-    },
-    "center":{
-      "lon":lon,
-      "lat":lat
-    }
+    "bounding": {"south": south, "east": east, "north": north, "west": west},
+    "center": {"lon": lon, "lat": lat}
   };
   final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
   controller.channel!.invokeMethod("receiveRegionIsChanging", region);

@@ -11,7 +11,6 @@ import '../interop/osm_interop.dart' as interop;
 import '../mixin_web.dart';
 import '../osm_web.dart';
 
-
 class WebOsmController with WebMixin implements IBaseOSMController {
   late int _mapId;
 

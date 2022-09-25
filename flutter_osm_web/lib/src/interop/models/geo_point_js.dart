@@ -16,7 +16,7 @@ class GeoPointJs {
 
 @JS()
 @anonymous
-class GeoPointWithOrientationJs{
+class GeoPointWithOrientationJs {
   external num get lon;
 
   external num get lat;

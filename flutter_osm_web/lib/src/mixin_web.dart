@@ -24,15 +24,11 @@ mixin WebMixin {
     await interop.currentUserLocation();
   }
 
-  
- 
   @protected
   Future changeHomeIconMarker(GlobalKey<State<StatefulWidget>>? key) async {
     final base64 = (await capturePng(key!)).convertToString();
     await interop.setDefaultIcon(base64);
   }
-
-  
 
   Future<void> changeLocation(GeoPoint p) async {
     await _addPosition(
@@ -60,8 +56,8 @@ mixin WebMixin {
     await interop.enableTracking();
   }
 
-  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async{
-   return await getMapCenter();
+  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
+    return await getMapCenter();
   }
 
   Future<void> goToPosition(GeoPoint p) async {
@@ -115,8 +111,6 @@ mixin WebMixin {
     // TODO: implement removeRect
     throw UnimplementedError();
   }
-
-  
 
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
     var listWithoutOrientation =

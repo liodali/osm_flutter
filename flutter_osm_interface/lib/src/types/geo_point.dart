@@ -75,5 +75,6 @@ class GeoPointWithOrientation extends GeoPoint {
           longitude == other.longitude;
 
   @override
-  int get hashCode => super.hashCode ^ angle.hashCode ^ longitude.hashCode ^ latitude.hashCode;
+  int get hashCode =>
+      super.hashCode ^ angle.hashCode ^ longitude.hashCode ^ latitude.hashCode;
 }
