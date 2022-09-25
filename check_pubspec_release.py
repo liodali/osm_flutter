@@ -5,14 +5,16 @@ import requests
 
 
 FILE_PUBSEPEC_OSM_INTERFACE = "./flutter_osm_interface/pubspec.yaml"
+FILE_PUBSEPEC_OSM_WEB = "./flutter_osm_web/pubspec.yaml"
 FILE_PUBSEPEC_OSM = "./pubspec.yaml"
 LINE_VERSION = 2
 
-URL_VER_PACKAGE = "https://pub.dartlang.org/api/packages/flutter_osm_interface/versions/"
+URL_VER_PACKAGE_OSM_INTERFACE = "https://pub.dartlang.org/api/packages/flutter_osm_interface/versions/"
+URL_VER_PACKAGE_WEB = "https://pub.dartlang.org/api/packages/flutter_osm_web/versions/"
 
 
-def check_version_exist(version):
-    url = f"{URL_VER_PACKAGE}{version}"
+def check_version_exist(url_package,version):
+    url = f"{url_package}{version}"
     data = requests.get(url.strip())
     if data.status_code == 200:
         return True
@@ -22,6 +24,12 @@ def check_version_exist(version):
 
 def publish_osm_interface():
     stream = os.popen("cd flutter_osm_interface && dart pub publish -f && cd ..")
+    lines = stream.readlines()
+    for line in lines:
+        print(line)
+
+def publish_osm_web():
+    stream = os.popen("cd flutter_osm_web && dart pub publish -f && cd ..")
     lines = stream.readlines()
     for line in lines:
         print(line)
@@ -36,9 +44,26 @@ def change_pubspec_osm_interface(version):
         pub.writelines(lines)
         pub.truncate()
 
+def change_pubspec_osm_web(version):
+    with open(FILE_PUBSEPEC_OSM_WEB, "r") as pub:
+        pub.seek(0, 0)
+        lines = pub.readlines()
+        lines[LINE_VERSION] = f"version: {version}"
+        pub.seek(0, 0)
+        pub.writelines(lines)
+        pub.truncate()
+
 
 def get_version_osm_interface():
     with open(FILE_PUBSEPEC_OSM_INTERFACE, "r") as pub:
+        lines = pub.readlines()
+        version_line = lines[LINE_VERSION]
+        version = version_line.split(":")[-1]
+        version = version.replace(" ", "")
+        version = version.replace("\n", "")
+        return version
+def get_version_package(package):
+    with open(package, "r") as pub:
         lines = pub.readlines()
         version_line = lines[LINE_VERSION]
         version = version_line.split(":")[-1]
@@ -70,9 +95,9 @@ def get_max_version(version):
     return max_version
 
 
-def change_dependencies_version(name, version, isLocal=False):
+def change_dependencies_version(package,name, version, isLocal=False):
     mVersion = get_max_version(version=version)
-    with open(FILE_PUBSEPEC_OSM, "r+") as pub:
+    with open(package, "r+") as pub:
         pub.seek(0, 0)
         lines = []
         removeNext = False
@@ -94,19 +119,37 @@ def change_dependencies_version(name, version, isLocal=False):
         pub.truncate()
 
 
-def change_version_osm(version):
-    pass
 
 
-if __name__ == "__main__":
-
-    version = get_version_osm_interface()
+def update_plugin_osm_interface():
+    version = get_version_package(FILE_PUBSEPEC_OSM_INTERFACE)
     print(f'version : {version}\n')
-    isExist = check_version_exist(f"{version}")
+    isExist = check_version_exist(URL_VER_PACKAGE_OSM_INTERFACE,f"{version}")
     msg = "exist" if isExist else "doesn't exist"
     print(f"the flutter_osm_interface with version :{version} {msg}\n")
     if isExist == False:
         print(f"publishing flutter_osm_interface : {version} ...\n")
         publish_osm_interface()
-    change_dependencies_version(
-        "flutter_osm_interface:", version, isLocal=True)
+    return version
+
+def update_plugin_osm_web(version_interface):
+    version = get_version_package(FILE_PUBSEPEC_OSM_WEB)
+    print(f'version : {version}\n')
+    isExist = check_version_exist(URL_VER_PACKAGE_WEB,f"{version}")
+    msg = "exist" if isExist else "doesn't exist"
+    print(f"the flutter_osm_web with version :{version} {msg}\n")
+    # set version of osm interface in osm web plugin 
+    change_dependencies_version(FILE_PUBSEPEC_OSM_WEB,
+        "flutter_osm_interface:", version_interface, isLocal=True)
+    if isExist == False:
+        print(f"publishing flutter_osm_web : {version} ...\n")
+        publish_osm_web()
+    return version
+if __name__ == "__main__":
+
+    version_interface = update_plugin_osm_interface()
+    version_web = update_plugin_osm_web(version_interface)
+    change_dependencies_version(FILE_PUBSEPEC_OSM,
+        "flutter_osm_interface:", version_interface, isLocal=True)
+    change_dependencies_version(FILE_PUBSEPEC_OSM,
+        "flutter_osm_web:", version_web, isLocal=True)
