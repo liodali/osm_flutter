@@ -11,20 +11,20 @@
 
 <b>osm plugin for flutter apps </b>
 
-* current position (Android/iOS)
-* change position (Android/iOS) 
-* create Marker manually (Android/iOS)
-* tracking user location (Android/iOS)
-* customize Icon Marker (Android/iOS)
-* customize user Marker (Android/iOS)
+* current position (Android/iOS/web)
+* change position (Android/iOS/web) 
+* create Marker manually (Android/iOS/web)
+* tracking user location (Android/iOS/web)
+* customize Icon Marker (Android/iOS/web)
+* customize user Marker (Android/iOS/web)
 * assisted selection position (Android/iOS)
 * set BoundingBox (Android)
 * zoom into regon (Android/iOS)
-* draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
-* draw Road manually (Android/iOS)
+* draw Road,recuperate information (duration/distance) of the current road (Android/iOS/web)
+* draw Road manually (Android/iOS/web)
 * draw multiple Roads  (Android)
-* ClickListener on Marker (Android/iOS)
-* ClickListener on Map (Android/iOS)
+* ClickListener on Marker (Android/iOS/web)
+* ClickListener on Map (Android/iOS/web)
 * calculate distance between 2 points 
 * address suggestion
 * draw shapes (Only Android)
@@ -49,7 +49,7 @@ Add the following to your `pubspec.yaml` file:
 
 ### Web integration
 
-add this line  below in index.html in web folder 
+Add this line below :point_down:  in index.html in web folder 
 
 ```javascript
 <script src="packages/flutter_osm_web/src/asset/map_init.js"></script>

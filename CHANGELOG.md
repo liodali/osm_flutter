@@ -1,3 +1,6 @@
+### 0.50.0-alpha : add web support
+* add osm_web_interface plugin
+* add create osm widget for web
 ### 0.40.2 : fix bugs
 * fix disable follow user location when calling myLocation
 ### 0.40.1 : fix bugs
