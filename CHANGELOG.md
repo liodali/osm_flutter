@@ -1,3 +1,5 @@
+### 0.40.3 : fix bugs (#335)
+* fix set custom tiles in android 
 ### 0.40.2 : fix bugs
 * fix disable follow user location when calling myLocation
 ### 0.40.1 : fix bugs
