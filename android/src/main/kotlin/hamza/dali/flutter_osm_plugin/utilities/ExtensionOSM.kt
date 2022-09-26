@@ -69,29 +69,19 @@ fun MapView.setCustomTile(
     baseURLs: Array<String>,
     api: Pair<String, String>?
 ) {
-    var imageEndingTile = tileExtensionFile;
+    //val imageEndingTile = tileExtensionFile
 
-    val tileSource: ITileSource = XYTileSource(
-        name,
-        minZoomLvl,
-        maxZoomLvl,
-        tileSize,
-        imageEndingTile,
-        baseURLs
-    )
-
-
-    this.setTileSource(object : OnlineTileSourceBase(
-        name,
-        minZoomLvl,
-        maxZoomLvl,
-        tileSize,
-        imageEndingTile,
-        baseURLs
+    val tileSource: ITileSource = object : OnlineTileSourceBase(
+            name,
+            minZoomLvl,
+            maxZoomLvl,
+            tileSize,
+            tileExtensionFile,
+            baseURLs
     ) {
         override fun getTileURLString(pMapTileIndex: Long): String {
             val url = baseUrl + MapTileIndex.getZoom(pMapTileIndex) + "/" + MapTileIndex.getX(
-                pMapTileIndex
+                    pMapTileIndex
             ) + "/" + MapTileIndex.getY(pMapTileIndex) + mImageFilenameEnding
             val key = when {
                 api != null -> "?${api.first}=${api.second}"
@@ -100,5 +90,7 @@ fun MapView.setCustomTile(
             return url + key
         }
 
-    })
+    }
+
+    this.setTileSource(tileSource)
 }

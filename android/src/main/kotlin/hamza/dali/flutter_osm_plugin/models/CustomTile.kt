@@ -11,7 +11,7 @@ data class CustomTile(
 )
 
 fun fromMapToCustomTile(map: HashMap<String, Any>): CustomTile = CustomTile(
-    urls = map["urls"] as List<String>,
+    urls = (map["urls"] as List<Any>).first() as List<String>,
     sourceName = map["name"] as String,
     tileFileExtension = map["tileExtension"] as String,
     tileSize = map["tileSize"] as Int,
