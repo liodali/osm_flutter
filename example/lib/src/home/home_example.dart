@@ -41,7 +41,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       //   west: 5.9559113,
       // ),
     );
-   /* controller = MapController.cyclOSMLayer(
+    /* controller = MapController.cyclOSMLayer(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
         latitude: 47.4358055,
@@ -53,33 +53,40 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       //   south: 45.817995,
       //   west: 5.9559113,
       // ),
-    );*/
-    /*controller = MapController.publicTransportationLayer(
+    ); */
+    /* controller = MapController.publicTransportationLayer(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
       ),
-    );*/
+    ); */
 
-    /*controller = MapController.customLayer(
-        initMapWithUserPosition: false,
-        initPosition: GeoPoint(
-          latitude: 47.4358055,
-          longitude: 8.4737324,
+   /*  controller = MapController.customLayer(
+      initMapWithUserPosition: false,
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      customTile: CustomTile(
+        sourceName: "outdoors",
+        tileExtension: ".png",
+        minZoomLevel: 2,
+        maxZoomLevel: 19,
+        urlsServers: [
+          TileURLs(
+            url: "https://tile.thunderforest.com/outdoors/",
+          )
+        ],
+        tileSize: 256,
+        keyApi: MapEntry(
+          "apikey",
+          dotenv.env['api']!,
         ),
-        customTile: CustomTile(
-            sourceName: "outdoors",
-            tileExtension: ".png",
-            minZoomLevel: 2,
-            maxZoomLevel: 19,
-            urlsServers: [
-              "https://tile.thunderforest.com/outdoors/",
-            ],
-            tileSize: 256,
-            keyApi: MapEntry("apikey", dotenv.env['api']!,),)
-        );*/
-   /* controller = MapController.customLayer(
+      ),
+    ); */
+
+    /* controller = MapController.customLayer(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
         latitude: 47.4358055,
@@ -145,7 +152,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               icon: Icon(
                 Icons.person_pin,
                 color: Colors.red,
-                size: 96,
+                size: 32,
               ),
               // assetMarker: AssetMarker(
               //   image: AssetImage("asset/pin.png"),
@@ -188,7 +195,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         icon: Icon(
           Icons.train,
           color: Colors.orange,
-          size: 48,
+          size: 24,
         ),
       ),
     );
@@ -216,7 +223,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         icon: Icon(
           Icons.car_repair,
           color: Colors.black45,
-          size: 48,
+          size: 24,
         ),
       ),
     );
@@ -341,11 +348,18 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   //   color: Colors.red,
                   //   size: 48,
                   // ),
-                  assetMarker: AssetMarker(
-                      image: AssetImage(
-                        "asset/taxi.png",
-                      ),
-                      scaleAssetImage: 0.3),
+                  iconWidget: SizedBox.square(
+                    dimension: 32,
+                    child: Image.asset(
+                      "asset/taxi.png",
+                    ),
+                  ),
+                  /* assetMarker: AssetMarker(
+                    image: AssetImage(
+                      "asset/taxi.png",
+                    ),
+                    scaleAssetImage: 0.3,
+                  ), */
                 ),
                 directionArrowMarker: MarkerIcon(
                   assetMarker: AssetMarker(
@@ -394,7 +408,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     icon: Icon(
                       Icons.train,
                       color: Colors.green,
-                      size: 48,
+                      size: 24,
                     ),
                   ),
                   [
@@ -421,7 +435,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 startIcon: MarkerIcon(
                   icon: Icon(
                     Icons.person,
-                    size: 64,
+                    size: 24,
                     color: Colors.brown,
                   ),
                 ),
@@ -435,14 +449,14 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   icon: Icon(
                     Icons.home,
                     color: Colors.orange,
-                    size: 64,
+                    size: 24,
                   ),
                 ),
                 advancedPickerMarker: MarkerIcon(
                   icon: Icon(
                     Icons.location_searching,
                     color: Colors.green,
-                    size: 64,
+                    size: 24,
                   ),
                 ),
               ),
