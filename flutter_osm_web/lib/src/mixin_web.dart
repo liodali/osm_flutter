@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:html' as html;
-import 'dart:js';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
@@ -259,9 +258,19 @@ mixin WebMixin {
   }
 
   Future<List<RoadInfo>> drawMultipleRoad(List<MultiRoadConfiguration> configs,
-      {MultiRoadOption commonRoadOption = const MultiRoadOption.empty()}) {
-    // TODO: implement drawMultipleRoad
-    throw UnimplementedError();
+      {MultiRoadOption commonRoadOption =
+          const MultiRoadOption.empty()}) async {
+    List<Future<RoadInfo>> futureRoads = [];
+    configs.forEach((config) {
+      futureRoads.add(drawRoad(
+        config.startPoint,
+        config.destinationPoint,
+        interestPoints: config.intersectPoints,
+        roadOption: commonRoadOption,
+      ));
+    });
+    final infos = await Future.wait(futureRoads);
+    return infos;
   }
 
   Future<void> configureZoomMap(
