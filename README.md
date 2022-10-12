@@ -399,7 +399,7 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
    GeoPoint(latitude: 47.35387, longitude: 8.43609),
    GeoPoint(latitude: 47.4371, longitude: 8.6136),
    roadType: RoadType.car,
-   intersectPoint : [ GeoPoint(latitude: 47.4361, longitude: 8.6156), GeoPoint(latitude: 47.4481, longitude: 8.6266)]
+   intersectPoint : [ GeoPoint(latitude: 47.4361, longitude: 8.6156), GeoPoint(latitude: 47.4481, longitude: 8.6266)],
    roadOption: RoadOption(
        roadWidth: 10,
        roadColor: Colors.blue,
