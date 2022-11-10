@@ -52,6 +52,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var stepZoom = 1.0
     var initZoom = 10.0
     var customTiles: [String: Any]? = nil
+    var bounds: [Double]? = nil
 
     init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?) {
         self.frame = frame
@@ -63,6 +64,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         mainView = UIStackView(arrangedSubviews: [mapView])
         if let tiles = args {
             customTiles = (tiles as! [String: Any])["customTile"] as? [String: Any]
+        }
+        if let arg = args {
+            bounds = (arg as! [String:Any])["bounds"] as? [Double]
         }
         //mapview.mapType = MKMapType.standard
         //mapview.isZoomEnabled = true
@@ -96,11 +100,13 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         switch call.method {
         case "init#ios#map":
             //mapView.loadSceneAsync(from:URL.init(string: "https://drive.google.com/uc?export=download&id=1F67AW3Yaj5N7MEmMSd0OgeEK1bD69_CM")!, with: nil)
+            // "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4"
             // mapView.requestRender()
             var sceneUpdates = [TGSceneUpdate]()
-            var urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4"
+            var urlStyle = "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0"
             if (customTiles != nil) {
-                urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles.zip?alt=media&token=071f53d3-ec96-49f3-ac87-18498abc3f76"
+                urlStyle = "https://dl.dropboxusercontent.com/s/1gctumh0a4i4t21/AAAgwNlh7g4oGaw3hYxKpRJfa?dl=0"
+                //"https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles.zip?alt=media&token=071f53d3-ec96-49f3-ac87-18498abc3f76"
                 let urlMap = (customTiles!["urls"] as! [[String: Any]]).first!
                 let urlTile = (urlMap["url"] as! String) + "{z}/{x}/{y}" + (customTiles!["tileExtension"] as! String)
                 let subDomains = urlMap["subdomains"] as? [String]
@@ -117,6 +123,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: (customTiles?["maxZoomLevel"] as? String) ?? "19"))
                 sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
             }
+            /*if(bounds != nil && bounds != [-180.0, 85, 180, -85]){
+                //urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles2.zip?alt=media&token=73f812ac-129f-477f-8a5b-942a5d9f325a"
+                urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles2.zip?alt=media&token=e54cd48e-537a-4586-a801-26cf6ce6af96"
+                //let sBounds = "["+bounds!.map {"\($0)"}.reduce(",") { $0 + $1 }+"]"
+                //sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: "[5.9559113, 45.817995, 10.4922941, 47.8084648]"))//bounds!.description))
+            }*/
 
             // let sceneUpdates = [TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
             // let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
@@ -982,6 +994,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             pickedLocationSingleTap = nil
 
         }
+    }
+
+    public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!, shouldRecognizePanGesture displacement: CGPoint) -> Bool {
+
+        let location = view.coordinate(fromViewPosition: displacement)
+        if let bound = bounds {
+            
+        }
+
+        return true
     }
 
     public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
