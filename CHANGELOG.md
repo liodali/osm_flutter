@@ -1,3 +1,5 @@
+### 0.40.3+2 : fix bugs
+* replace firebase url used in ios for map styles
 ### 0.40.3+1 : fix bugs
 * replace firebase url used in ios for map styles
 ### 0.40.3 : fix bugs (#335)
