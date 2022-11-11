@@ -103,9 +103,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             // "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4"
             // mapView.requestRender()
             var sceneUpdates = [TGSceneUpdate]()
-            var urlStyle = "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0"
+            var urlStyle = "https://github.com/liodali/osm_flutter/raw/0.40.0/assets/osm-style.zip"
             if (customTiles != nil) {
-                urlStyle = "https://dl.dropboxusercontent.com/s/1gctumh0a4i4t21/AAAgwNlh7g4oGaw3hYxKpRJfa?dl=0"
+                urlStyle = "https://github.com/liodali/osm_flutter/raw/0.40.0/assets/dynamic-styles.zip"
                 //"https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles.zip?alt=media&token=071f53d3-ec96-49f3-ac87-18498abc3f76"
                 let urlMap = (customTiles!["urls"] as! [[String: Any]]).first!
                 let urlTile = (urlMap["url"] as! String) + "{z}/{x}/{y}" + (customTiles!["tileExtension"] as! String)
