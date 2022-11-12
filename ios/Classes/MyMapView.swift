@@ -66,7 +66,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             customTiles = (tiles as! [String: Any])["customTile"] as? [String: Any]
         }
         if let arg = args {
-            bounds = (arg as! [String:Any])["bounds"] as? [Double]
+            bounds = (arg as! [String: Any])["bounds"] as? [Double]
         }
         //mapview.mapType = MKMapType.standard
         //mapview.isZoomEnabled = true
@@ -156,6 +156,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break;
         case "remove#limitArea":
+            bounds = nil
             result(200)
             break;
         case "changePosition":
@@ -379,6 +380,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func setCameraAreaLimit(call: FlutterMethodCall) {
         let bbox = call.arguments as! [Double]
+        bounds = bbox
         let bounds = TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: bbox[2], longitude: bbox[3]),
                 ne: CLLocationCoordinate2D(latitude: bbox[0], longitude: bbox[1]))
         mapView.cameraThatFitsBounds(bounds, withPadding: UIEdgeInsets.init(top: 3.0, left: 3.0, bottom: 3.0, right: 3.0))
@@ -539,7 +541,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     private func setCustomIconMarker(call: FlutterMethodCall, result: FlutterResult) {
-        let args = call.arguments as! [String:Any]
+        let args = call.arguments as! [String: Any]
         let iconSize = args["size"] as! [Double]
         let image = convertImage(codeImage: args["icon"] as! String)
         pickerMarker = UIImageView(image: image)
@@ -565,9 +567,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
         let id = args["id"] as! String
-        let bitmapArg = args["bitmap"] as! [String:Any]
+        let bitmapArg = args["bitmap"] as! [String: Any]
         let icon = convertImage(codeImage: bitmapArg["icon"] as! String)
-        dictIconClusterAnnotation[id] = MarkerIconData(image: icon!,size: bitmapArg["size"] as! [Int])
+        dictIconClusterAnnotation[id] = MarkerIconData(image: icon!, size: bitmapArg["size"] as! [Int])
     }
 
 
@@ -929,7 +931,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 //mapView.setRegion(region, animated: true)
                 if (canTrackUserLocation) {
                     if (userLocation == nil) {
-                        userLocation = mapView.addUserLocation(for: location, on: mapView,personIcon: personMarkerIcon,arrowDirection: arrowDirectionIcon)
+                        userLocation = mapView.addUserLocation(for: location, on: mapView, personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
                         //userLocation?.setDirectionArrow(personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
                     }
                     let angle = CGFloat(manager.heading?.trueHeading ?? 0.0).toDegrees
@@ -996,15 +998,20 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
     }
 
-    public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!, shouldRecognizePanGesture displacement: CGPoint) -> Bool {
+    /*public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!, shouldRecognizePanGesture displacement: CGPoint) -> Bool {
 
         let location = view.coordinate(fromViewPosition: displacement)
         if let bound = bounds {
-            
+            let contain = bound.toBounds().contains(location: location)
+            if !contain {
+                view.notifyGestureDidEnd()
+            }
+            return contain
         }
-
         return true
-    }
+    }*/
+
+
 
     public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
         /*if (!dictClusterAnnotation.isEmpty && !isAdvancedPicker) {
@@ -1037,7 +1044,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             let dict: [String: Any] = methodCall?.arguments as! [String: Any]
             if let icon = dict["icon"] {
                 let iconArg = (icon as! [String: Any])["icon"] as! String
-                iconM = MarkerIconData(image: convertImage(codeImage: iconArg), size: (icon as! [String:Any])["size"] as! [Int])
+                iconM = MarkerIconData(image: convertImage(codeImage: iconArg), size: (icon as! [String: Any])["size"] as! [Int])
             }
             let coordinate = view.coordinate(fromViewPosition: location)
             let geoP = GeoPointMap(icon: iconM!, coordinate: coordinate)
@@ -1067,12 +1074,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         view.fly(to: TGCameraPosition(center: locationMap, zoom: view.zoom + CGFloat(stepZoom), bearing: view.bearing, pitch: view.pitch), withDuration: 0.2)
         return true
     }
-
-    public func mapView(_ view: TGMapView, recognizer: UIGestureRecognizer,
-                        shouldRecognizeShoveGesture displacement: CGPoint) -> Bool {
-        true
-    }
-
 
 }
 

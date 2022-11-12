@@ -265,7 +265,7 @@ extension TGMapView {
         let rect = bounds
         let size = CGPoint(x: width - (rect.minX - rect.maxX), y: height - (rect.minY - rect.maxY))
         if size == CGPoint(x: 0.0, y: 0.0) {
-            return ["north": 0.0, "east": 0.0, "south": 0.0, "west": 0.0]
+            return ["north": 85.0, "east": 180.0, "south": -85.0, "west": 180.0]
         }
         var positions = [CLLocationCoordinate2D]()
         positions.append(self.coordinate(fromViewPosition: CGPoint(x: rect.minX, y: rect.minY)))
@@ -293,6 +293,12 @@ extension TGMapView {
 
         return ["north": latMin ?? 0.0, "east": lonMin ?? 0.0, "south": latMax ?? 0.0, "west": lonMax ?? 0.0]
     }
+
+    func toBounds() -> TGCoordinateBounds {
+        let locations: [String: Double] = getBounds(width: bounds.width, height: bounds.height)
+        return TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: locations["south"]!, longitude: locations["west"]!),
+                ne: CLLocationCoordinate2D(latitude: locations["north"]!, longitude: locations["east"]!))
+    }
 }
 
 extension Array where Element == CLLocationCoordinate2D {
@@ -314,4 +320,139 @@ extension Array where Element == CLLocationCoordinate2D {
         return TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat, longitude: minLon),
                 ne: CLLocationCoordinate2D(latitude: maxLat, longitude: maxLon))
     }
+}
+
+extension Array where Element == Double {
+    func toBounds() -> TGCoordinateBounds {
+        var maxLat = -85.0
+        var maxLon = -180.0
+        var minLat = 85.0
+        var minLon = 180.0
+        let locations = self
+        minLat = Swift.min(minLat, locations.first!)
+        minLon = Swift.min(minLon, locations[1])
+        maxLat = Swift.max(maxLat, locations[2])
+        maxLon = Swift.max(maxLon, locations.last!)
+        print("bounds " + locations.description)
+        return TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat, longitude: minLon),
+                ne: CLLocationCoordinate2D(latitude: maxLat, longitude: maxLon))
+    }
+}
+
+
+extension TGCoordinateBounds {
+    func contains(location: CLLocationCoordinate2D) -> Bool {
+        var latMatch = false;
+        var lonMatch = false;
+        print(sw)
+        print(ne)
+        //FIXME there's still issues when there's multiple wrap arounds
+        if (ne.latitude < sw.latitude) {
+            //either more than one world/wrapping or the bounding box is wrongish
+            latMatch = true;
+        } else {
+            //normal case
+            latMatch = ((location.latitude < ne.latitude) && (location.latitude > sw.latitude));
+        }
+
+
+        if (ne.longitude < sw.latitude) {
+            //check longitude bounds with consideration for date line with wrapping
+            lonMatch = location.longitude <= ne.longitude && location.longitude >= sw.longitude;
+            //lonMatch = (aLongitude >= mLonEast || aLongitude <= mLonWest);
+
+        } else {
+            lonMatch = ((location.longitude < ne.longitude) && (location.longitude > sw.longitude));
+        }
+
+        return latMatch && lonMatch;
+    }
+
+    func getBoundingBoxZoom(final pScreenWidth: Int, pScreenHeight: Int) -> Double {
+        let longitudeZoom = getLongitudeZoom(pEast: ne.longitude, pWest: sw.longitude, pScreenWidth: pScreenWidth);
+        let latitudeZoom = getLatitudeZoom(pNorth: ne.latitude, pSouth: sw.latitude, pScreenHeight: pScreenHeight);
+        if (longitudeZoom == Double.leastNonzeroMagnitude) {
+            return latitudeZoom;
+        }
+        if (latitudeZoom == Double.leastNonzeroMagnitude) {
+            return longitudeZoom;
+        }
+        return min(latitudeZoom, longitudeZoom);
+    }
+}
+
+func getMaxLatitude() -> Double {
+    85.0
+}
+
+func getMinLatitude() -> Double {
+    -85.0
+}
+
+func getMaxLongitude() -> Double {
+    180.0
+}
+
+func getMinLongitude() -> Double {
+    -180.0
+}
+
+
+func getLongitudeZoom(pEast: Double, pWest: Double, pScreenWidth: Int) -> Double {
+    let x01West = getX01FromLongitude(longitude: pWest, true);
+    let x01East = getX01FromLongitude(longitude: pEast, true);
+    var span = x01East - x01West;
+    if (span < 0) {
+        span += 1;
+    }
+    if (span == 0) {
+        return Double.leastNonzeroMagnitude;
+    }
+    return log(Double(pScreenWidth) / span / 256.0) / log(2);
+}
+
+func getLatitudeZoom(pNorth: Double, pSouth: Double, pScreenHeight: Int) -> Double {
+    let y01North = getY01FromLatitude(latitude: pNorth, true);
+    let y01South = getY01FromLatitude(latitude: pSouth, true);
+    let span = y01South - y01North;
+    if (span <= 0) {
+        return Double.leastNonzeroMagnitude;
+    }
+    return log(Double(pScreenHeight) / span / 256) / log(2);
+}
+
+/**
+     * Converts a longitude to its "X01" value,
+     * id est a double between 0 and 1 for the whole longitude range
+     *
+     * @since 6.0.0
+     */
+func getX01FromLongitude(longitude: Double, _ wrapEnabled: Bool) -> Double {
+    let _longitude = wrapEnabled ? Clip(n: longitude, minValue: getMinLongitude(), maxValue: getMaxLongitude()) : longitude;
+    let result = getX01FromLongitude(pLongitude: _longitude);
+    return wrapEnabled ? Clip(n: result, minValue: 0, maxValue: 1) : result;
+}
+
+/**
+     * Converts a latitude to its "Y01" value,
+     * id est a double between 0 and 1 for the whole latitude range
+     *
+     * @since 6.0.0
+     */
+func getY01FromLatitude(latitude: Double, _  wrapEnabled: Bool) -> Double {
+    let _latitude = wrapEnabled ? Clip(n: latitude, minValue: getMinLatitude(), maxValue: getMaxLatitude()) : latitude;
+    let result = getY01FromLatitude(pX01: _latitude);
+    return wrapEnabled ? Clip(n: result, minValue: 0, maxValue: 1) : result;
+}
+
+func getX01FromLongitude(pLongitude: Double) -> Double {
+    (pLongitude - getMinLongitude()) / (getMaxLongitude() - getMinLongitude())
+}
+
+func getY01FromLatitude(pX01: Double) -> Double {
+    getMinLongitude() + (getMaxLongitude() - getMinLongitude()) * pX01
+}
+
+func Clip(n: Double, minValue: Double, maxValue: Double) -> Double {
+    min(max(n, minValue), maxValue);
 }
