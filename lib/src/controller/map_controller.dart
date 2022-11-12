@@ -171,13 +171,26 @@ class MapController extends BaseMapController {
   /// recuperate current zoom level
   Future<double> getZoom() async => await osmBaseController.getZoom();
 
-  /// change zoom level of the map
+  /// [setZoom]
+  /// 
+  /// this method change the zoom level of the map by setting direcly the [zoomLevel] or  [stepZoom]
+  /// 
+  /// if [stepZoom] specified [zoomLevel] will be ignored 
+  /// if [zoomLevel] negative,the map will zoomOut
+  /// 
+  /// return Future
+  /// 
+  /// Will throw exception if [zoomLevel] > of [maxZoomLevel] or [zoomLevel] < [minZoomLevel]
   ///
+  /// 
   /// [zoomLevel] : (double) should be between minZoomLevel and maxZoomLevel
   ///
   /// [stepZoom] : (double) step zoom that will be added to current zoom
   Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
-    await osmBaseController.setZoom(zoomLevel: zoomLevel, stepZoom: stepZoom);
+    await osmBaseController.setZoom(
+      zoomLevel: zoomLevel,
+      stepZoom: stepZoom,
+    );
   }
 
   /// zoomIn use defaultZoom
