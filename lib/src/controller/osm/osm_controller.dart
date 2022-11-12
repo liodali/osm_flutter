@@ -246,7 +246,7 @@ class MobileOSMController extends IBaseOSMController {
       initPosition = await myLocation();
       _checkBoundingBox(box, initPosition);
     }
-    if (box != null && !box.isWorld()) {
+    if (box != null && !box.isWorld() && Platform.isAndroid) {
       await limitAreaMap(box);
     }
     if (initPosition != null && !_osmFlutterState.setCache.value) {
