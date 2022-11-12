@@ -62,7 +62,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       ),
     ); */
 
-   /*  controller = MapController.customLayer(
+    /*  controller = MapController.customLayer(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
         latitude: 47.4358055,
@@ -178,7 +178,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   }
 
   Future<void> mapIsInitialized() async {
-    await controller.setZoom(zoomLevel: 12);
+    await controller.setZoom(zoomLevel: 19);
     // await controller.setMarkerOfStaticPoint(
     //   id: "line 1",
     //   markerIcon: MarkerIcon(
@@ -339,7 +339,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               },
               initZoom: 8,
               minZoomLevel: 3,
-              maxZoomLevel: 18,
+              maxZoomLevel: 19,
               stepZoom: 1.0,
               userLocationMarker: UserLocationMaker(
                 personMarker: MarkerIcon(

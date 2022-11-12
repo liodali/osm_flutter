@@ -203,6 +203,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       onPlatformCreatedView: _onPlatformViewCreated,
       uuidMapCache: keyUUID,
       customTile: widget.controller.customTile,
+      bounds: widget.controller.areaLimit?.toIOSList() ?? null,
     );
   }
 
@@ -246,13 +247,14 @@ class PlatformView extends StatelessWidget {
   final Key? androidKey;
   final String uuidMapCache;
   final CustomTile? customTile;
-
+  final List<double>? bounds;
   const PlatformView({
     this.mobileKey,
     this.androidKey,
     required this.onPlatformCreatedView,
     required this.uuidMapCache,
     this.customTile,
+    this.bounds,
   }) : super(key: mobileKey);
 
   @override
@@ -262,7 +264,10 @@ class PlatformView extends StatelessWidget {
         //  key: mobileKey,
         viewType: 'plugins.dali.hamza/osmview',
         onPlatformViewCreated: onPlatformCreatedView,
-        creationParams: getParams(customTile),
+        creationParams: getParams(
+          customTile,
+          bounds: bounds,
+        ),
         creationParamsCodec: StandardMethodCodec().messageCodec,
       );
     }
@@ -276,12 +281,19 @@ class PlatformView extends StatelessWidget {
     );
   }
 
-  Map getParams(CustomTile? customTile) {
+  Map getParams(
+    CustomTile? customTile, {
+    List<double>? bounds,
+  }) {
     final Map<String, dynamic> params = {
       "uuid": uuidMapCache,
     };
     if (customTile != null) {
       params.putIfAbsent("customTile", () => customTile.toMap());
+    }
+
+    if (bounds != null) {
+      params.putIfAbsent("bounds", () => bounds);
     }
     return params;
   }

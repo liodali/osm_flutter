@@ -81,8 +81,8 @@ class RoadOption {
       args.addAll(roadColor!.toMapPlatform("roadColor"));
     }
     if (roadWidth != null) {
-      args.putIfAbsent(
-          "roadWidth", () => Platform.isIOS ? "${roadWidth}px" : roadWidth!.toDouble());
+      args.putIfAbsent("roadWidth",
+          () => Platform.isIOS ? "${roadWidth}px" : roadWidth!.toDouble());
     }
     args.putIfAbsent("keepInitialGeoPoint", () => keepInitialGeoPoints);
     return args;

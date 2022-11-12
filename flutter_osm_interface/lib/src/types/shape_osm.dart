@@ -53,7 +53,10 @@ class RectOSM extends ShapeOSM {
 
   @override
   int get hashCode =>
-      distance.hashCode ^ strokeWidth.hashCode ^ color.hashCode ^ centerPoint.hashCode;
+      distance.hashCode ^
+      strokeWidth.hashCode ^
+      color.hashCode ^
+      centerPoint.hashCode;
 }
 
 /// CircleOSM : class that represent circle with be draw into map
@@ -86,5 +89,8 @@ class CircleOSM extends ShapeOSM {
 
   @override
   int get hashCode =>
-      radius.hashCode ^ strokeWidth.hashCode ^ color.hashCode ^ centerPoint.hashCode;
+      radius.hashCode ^
+      strokeWidth.hashCode ^
+      color.hashCode ^
+      centerPoint.hashCode;
 }
