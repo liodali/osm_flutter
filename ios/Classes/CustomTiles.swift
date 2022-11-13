@@ -13,7 +13,7 @@ class CustomTiles {
     init(_ mapTile: [String: Any]) {
         let tiles = (mapTile["urls"] as! [[String: Any]]).first
         tileURL = (tiles!["url"] as! String) + "{z}/{x}/{y}" + (mapTile["tileExtension"] as! String)
-        subDomains = (mapTile["subdomains"] as? [String])?.description ?? ""
+        subDomains = (tiles!["subdomains"] as? [String])?.description ?? ""
         tileSize = (mapTile["tileSize"] as? Int)?.description ?? "256"
 
         if mapTile.keys.contains("api") {
