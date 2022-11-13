@@ -53,6 +53,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var initZoom = 10.0
     var customTiles: [String: Any]? = nil
     var bounds: [Double]? = nil
+    let urlStyle = "https://github.com/liodali/osm_flutter/raw/dc7424dacd77f4eced626abf64486d70fd03240d/assets/dynamic-styles.zip"
 
     init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?) {
         self.frame = frame
@@ -103,24 +104,14 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             // "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4"
             // mapView.requestRender()
             var sceneUpdates = [TGSceneUpdate]()
-            var urlStyle = "https://github.com/liodali/osm_flutter/raw/0.40.0/assets/osm-style.zip"
+            //var urlStyle = "https://github.com/liodali/osm_flutter/raw/0.40.0/assets/osm-style.zip"
+
             if (customTiles != nil) {
-                urlStyle = "https://github.com/liodali/osm_flutter/raw/0.40.0/assets/dynamic-styles.zip"
-                //"https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles.zip?alt=media&token=071f53d3-ec96-49f3-ac87-18498abc3f76"
-                let urlMap = (customTiles!["urls"] as! [[String: Any]]).first!
-                let urlTile = (urlMap["url"] as! String) + "{z}/{x}/{y}" + (customTiles!["tileExtension"] as! String)
-                let subDomains = urlMap["subdomains"] as? [String]
-                var apikey = ""
-                if let keys = customTiles?.keys {
-                    if keys.contains("api") {
-                        let mapApi = (customTiles!["api"] as! [String: String])
-                        apikey = "?\(mapApi.keys.first!)=\(mapApi.values.first ?? "")"
-                    }
-                }
-                sceneUpdates.append(TGSceneUpdate(path: "global.url", value: urlTile + apikey))
-                sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: subDomains?.description ?? ""))
-                sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: (customTiles?["tileSize"] as? Int)?.description ?? "256"))
-                sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: (customTiles?["maxZoomLevel"] as? String) ?? "19"))
+                let tile = CustomTiles(customTiles!)
+                sceneUpdates.append(TGSceneUpdate(path: "global.url", value: tile.tileURL))
+                sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: tile.subDomains))
+                sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: tile.tileSize))
+                sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: tile.maxZoom))
                 sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
             }
             /*if(bounds != nil && bounds != [-180.0, 85, 180, -85]){
@@ -138,6 +129,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             //channel.invokeMethod("map#init", arguments: true)
             result(200)
             break
+        case "change#tile":
+            let args = call.arguments as! [String:Any]
+            let tile = CustomTiles(args)
+           mapView.updateScene(tile,urlStyle: urlStyle)
+            result(200)
+            break;
         case "setDefaultIOSIcon":
             let args = call.arguments as! [String: Any]
             let iconString = args["icon"] as! String
@@ -980,10 +977,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         //print("marker picked")
         //print("receive pick  x: \(position.x) y: \(position.y)")
         if let marker = markerPickResult?.marker {
-            let staticMarkers = mapView.markers.filter { m in
+            let points = mapView.markers.filter { m in
                 m.stylingString.contains("points")
             }
-            let isExist = staticMarkers.contains { m in
+            let isExist = points.contains { m in
                 m.point == marker.point
             }
             if isExist {
@@ -1014,19 +1011,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
 
     public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
-        /*if (!dictClusterAnnotation.isEmpty && !isAdvancedPicker) {
-            for gStaticMarker in dictClusterAnnotation {
-                for (i, staticMarker) in gStaticMarker.value.enumerated() {
-                    let m = staticMarker
-                    if (mapView.zoom > 12) {
-                        m.marker?.visible = true
-                    } else {
-                        m.marker?.visible = false
-                    }
-                    dictClusterAnnotation[gStaticMarker.key]![i] = m
-                }
-            }
-        }*/
+
         if !canTrackUserLocation {
             let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
             let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.width)
@@ -1110,5 +1095,33 @@ private extension MyMapView {
             }
         }
     }
+}
+extension TGMapView {
+    func updateScene(_ customTile:CustomTiles,urlStyle:String){
+        var sceneUpdates = [TGSceneUpdate]()
+        sceneUpdates.append(TGSceneUpdate(path: "global.url", value: customTile.tileURL))
+        sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: customTile.subDomains))
+        sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: customTile.tileSize))
+        sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: customTile.maxZoom))
+        sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
+        //mapView.queueSceneUpdates(sceneUpdates: sceneUpdates)
+        //mapView.applySceneUpdates()
+        let sceneUrl = URL(string: urlStyle)! // "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
+        let markers = markers
+        let zoomLevel = zoom
+        loadScene(from: sceneUrl, with: sceneUpdates)
+        for oldMarker in markers {
+            let marker =  markerAdd()
+            marker.stylingString = oldMarker.stylingString
 
+            marker.point = oldMarker.point
+            marker.icon = oldMarker.icon
+            if(marker.stylingString.contains("lines")){
+                marker.polyline = oldMarker.polyline
+            }
+            print(oldMarker.point)
+            print(marker.point)
+        }
+        zoom = zoomLevel
+    }
 }
