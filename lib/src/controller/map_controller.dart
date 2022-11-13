@@ -85,30 +85,39 @@ class MapController extends BaseMapController {
               sourceName: "memomapsMapnik",
               tileSize: 256,
             ));
+
+  /// [dispose]          
   void dispose() {
     (osmBaseController as MobileOSMController).dispose();
     super.dispose();
   }
 
+  /// [limitAreaMap]
+  /// 
   /// set area camera limit of the map
   /// [box] : (BoundingBox) bounding that map cannot exceed from it
   Future<void> limitAreaMap(BoundingBox box) async {
     await osmBaseController.limitArea(box);
   }
 
-  /// remove area camera limit from the map
+  /// [removeLimitAreaMap]
+  /// 
+  /// remove area camera limit from the map, this support only in android 
   Future<void> removeLimitAreaMap() async {
     await osmBaseController.removeLimitArea();
   }
 
+  /// [changeLocation]
+  /// 
   /// initialise or change of position with creating marker in that specific position
   ///
   /// [p] : geoPoint
-  ///
   Future<void> changeLocation(GeoPoint p) async {
     await osmBaseController.changeLocation(p);
   }
 
+  /// [goToLocation]
+  ///
   ///animate  to specific position with out add marker into the map
   ///
   /// [p] : (GeoPoint) position that will be go to map
@@ -116,13 +125,16 @@ class MapController extends BaseMapController {
     await osmBaseController.goToPosition(p);
   }
 
+  /// [removeMarker]
+  ///
   ///remove marker from map of position
   /// [p] : geoPoint
   Future<void> removeMarker(GeoPoint p) async {
     osmBaseController.removeMarker(p);
   }
 
-  /// changeIconMarker
+  /// [changeIconMarker]
+  /// 
   /// this method allow to change Home Icon Marker
   ///
   /// [icon] : (MarkerIcon) widget that represent the new home marker
@@ -131,6 +143,7 @@ class MapController extends BaseMapController {
   }
 
   /// setMarkerIcon
+  /// 
   /// this method allow to change Icon Marker of specific GeoPoint
   /// thr GeoPoint should be exist,or nothing will happen
   ///
@@ -193,19 +206,24 @@ class MapController extends BaseMapController {
     );
   }
 
-  /// zoomIn use defaultZoom
+  /// [zoomIn]
+  /// 
+  /// will change the zoom of the map by zoom in using default stepZoom
   /// positive value:zoomIN
   Future<void> zoomIn() async {
     await osmBaseController.zoomIn();
   }
 
-  /// zoomOut use defaultZoom
+  /// zoomOut
+  /// 
+  ///  will change the zoom of the map by zoom out using default stepZoom
   /// negative value:zoomOut
   Future<void> zoomOut() async {
     await osmBaseController.zoomOut();
   }
 
-  /// zoomToBoundingBox
+  /// [zoomToBoundingBox]
+  /// 
   /// this method used to change zoom level to show specific region,
   /// get [box] and [paddinInPixel] as parameter
   ///
