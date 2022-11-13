@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -703,6 +701,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
       args["new_icon"] = icon;
     }
     await _channels[idOSM]!.invokeMethod("change#Marker", args);
+  }
+
+  @override
+  Future<void> changeTileLayer(int idOSM, CustomTile tile) async {
+    await _channels[idOSM]!.invokeMethod("change#tile", tile.toMap());
   }
 }
 
