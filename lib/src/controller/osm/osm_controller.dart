@@ -311,6 +311,13 @@ class MobileOSMController extends IBaseOSMController {
     );
   }
 
+
+  @override
+  Future<void> changeTileLayer({required CustomTile tileLayer}) {
+    // TODO: implement changeTileLayer
+    throw UnimplementedError();
+  }
+
   /// set area camera limit of the map
   /// [box] : (BoundingBox) bounding that map cannot exceed from it
   Future<void> limitAreaMap(BoundingBox box) async {
@@ -776,6 +783,8 @@ class MobileOSMController extends IBaseOSMController {
       );
     });
   }
+  
+  
 }
 
 extension PrivateMethodOSMController on MobileOSMController {

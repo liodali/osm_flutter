@@ -48,24 +48,25 @@ class MapController extends BaseMapController {
           initMapWithUserPosition || initPosition != null,
         ),
         super(
-            initMapWithUserPosition: initMapWithUserPosition,
-            initPosition: initPosition,
-            areaLimit: areaLimit,
-            customTile: CustomTile(
-              urlsServers: [
-                TileURLs(
-                  url: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/",
-                  subdomains: [
-                    "a",
-                    "b",
-                    "c",
-                  ],
-                ),
-              ],
-              tileExtension: ".png",
-              sourceName: "cycleMapnik",
-              tileSize: 256,
-            ));
+          initMapWithUserPosition: initMapWithUserPosition,
+          initPosition: initPosition,
+          areaLimit: areaLimit,
+          customTile: CustomTile(
+            urlsServers: [
+              TileURLs(
+                url: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/",
+                subdomains: [
+                  "a",
+                  "b",
+                  "c",
+                ],
+              ),
+            ],
+            tileExtension: ".png",
+            sourceName: "cycleMapnik",
+            tileSize: 256,
+          ),
+        );
   MapController.publicTransportationLayer({
     bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
@@ -74,26 +75,34 @@ class MapController extends BaseMapController {
           initMapWithUserPosition || initPosition != null,
         ),
         super(
-            initMapWithUserPosition: initMapWithUserPosition,
-            initPosition: initPosition,
-            areaLimit: areaLimit,
-            customTile: CustomTile(
-              urlsServers: [
-                TileURLs(url: "https://tile.memomaps.de/tilegen/"),
-              ],
-              tileExtension: ".png",
-              sourceName: "memomapsMapnik",
-              tileSize: 256,
-            ));
+          initMapWithUserPosition: initMapWithUserPosition,
+          initPosition: initPosition,
+          areaLimit: areaLimit,
+          customTile: CustomTile(
+            urlsServers: [
+              TileURLs(url: "https://tile.memomaps.de/tilegen/"),
+            ],
+            tileExtension: ".png",
+            sourceName: "memomapsMapnik",
+            tileSize: 256,
+          ),
+        );
 
-  /// [dispose]          
+  /// [dispose]
   void dispose() {
     (osmBaseController as MobileOSMController).dispose();
     super.dispose();
   }
 
+  /// [changeTileLayer]
+  ///
+  ///
+  Future<void> changeTileLayer({
+    required CustomTile tileLayer,
+  }) async {}
+
   /// [limitAreaMap]
-  /// 
+  ///
   /// set area camera limit of the map
   /// [box] : (BoundingBox) bounding that map cannot exceed from it
   Future<void> limitAreaMap(BoundingBox box) async {
@@ -101,14 +110,14 @@ class MapController extends BaseMapController {
   }
 
   /// [removeLimitAreaMap]
-  /// 
-  /// remove area camera limit from the map, this support only in android 
+  ///
+  /// remove area camera limit from the map, this support only in android
   Future<void> removeLimitAreaMap() async {
     await osmBaseController.removeLimitArea();
   }
 
   /// [changeLocation]
-  /// 
+  ///
   /// initialise or change of position with creating marker in that specific position
   ///
   /// [p] : geoPoint
@@ -134,7 +143,7 @@ class MapController extends BaseMapController {
   }
 
   /// [changeIconMarker]
-  /// 
+  ///
   /// this method allow to change Home Icon Marker
   ///
   /// [icon] : (MarkerIcon) widget that represent the new home marker
@@ -143,7 +152,7 @@ class MapController extends BaseMapController {
   }
 
   /// setMarkerIcon
-  /// 
+  ///
   /// this method allow to change Icon Marker of specific GeoPoint
   /// thr GeoPoint should be exist,or nothing will happen
   ///
@@ -185,17 +194,17 @@ class MapController extends BaseMapController {
   Future<double> getZoom() async => await osmBaseController.getZoom();
 
   /// [setZoom]
-  /// 
+  ///
   /// this method change the zoom level of the map by setting direcly the [zoomLevel] or  [stepZoom]
-  /// 
-  /// if [stepZoom] specified [zoomLevel] will be ignored 
+  ///
+  /// if [stepZoom] specified [zoomLevel] will be ignored
   /// if [zoomLevel] negative,the map will zoomOut
-  /// 
+  ///
   /// return Future
-  /// 
+  ///
   /// Will throw exception if [zoomLevel] > of [maxZoomLevel] or [zoomLevel] < [minZoomLevel]
   ///
-  /// 
+  ///
   /// [zoomLevel] : (double) should be between minZoomLevel and maxZoomLevel
   ///
   /// [stepZoom] : (double) step zoom that will be added to current zoom
@@ -207,7 +216,7 @@ class MapController extends BaseMapController {
   }
 
   /// [zoomIn]
-  /// 
+  ///
   /// will change the zoom of the map by zoom in using default stepZoom
   /// positive value:zoomIN
   Future<void> zoomIn() async {
@@ -215,7 +224,7 @@ class MapController extends BaseMapController {
   }
 
   /// zoomOut
-  /// 
+  ///
   ///  will change the zoom of the map by zoom out using default stepZoom
   /// negative value:zoomOut
   Future<void> zoomOut() async {
@@ -223,7 +232,7 @@ class MapController extends BaseMapController {
   }
 
   /// [zoomToBoundingBox]
-  /// 
+  ///
   /// this method used to change zoom level to show specific region,
   /// get [box] and [paddinInPixel] as parameter
   ///
