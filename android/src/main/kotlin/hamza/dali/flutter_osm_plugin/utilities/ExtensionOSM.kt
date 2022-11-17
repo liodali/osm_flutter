@@ -4,9 +4,10 @@ import android.app.Activity
 import android.content.Intent
 import android.provider.Settings
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
+import org.osmdroid.tileprovider.MapTileProviderBasic
 import org.osmdroid.tileprovider.tilesource.ITileSource
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
-import org.osmdroid.tileprovider.tilesource.XYTileSource
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.util.MapTileIndex
@@ -93,4 +94,9 @@ fun MapView.setCustomTile(
     }
 
     this.setTileSource(tileSource)
+}
+fun MapView.resetTileSource() {
+    //val imageEndingTile = tileExtensionFile
+
+    this.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
 }

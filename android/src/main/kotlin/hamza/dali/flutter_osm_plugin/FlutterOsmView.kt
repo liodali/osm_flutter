@@ -329,8 +329,12 @@ class FlutterOsmView(
         try {
             when (call.method) {
                 "change#tile" -> {
-                    val args = call.arguments as HashMap<String, Any>
-                    changeLayerTile(tile = CustomTile.fromMap(args))
+                    val args = call.arguments as HashMap<String, Any>?
+                    when (args != null && args.isNotEmpty()) {
+                        true ->
+                            changeLayerTile(tile = CustomTile.fromMap(args))
+                        false -> map!!.resetTileSource()
+                    }
                 }
                 "map#setCache" -> {
                     setCacheMap()
