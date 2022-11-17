@@ -41,26 +41,26 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       //   west: 5.9559113,
       // ),
     );
-    /* controller = MapController.cyclOSMLayer(
-      initMapWithUserPosition: false,
-      initPosition: GeoPoint(
-        latitude: 47.4358055,
-        longitude: 8.4737324,
-      ),
-      // areaLimit: BoundingBox(
-      //   east: 10.4922941,
-      //   north: 47.8084648,
-      //   south: 45.817995,
-      //   west: 5.9559113,
-      // ),
-    ); */
-    /* controller = MapController.publicTransportationLayer(
-      initMapWithUserPosition: false,
-      initPosition: GeoPoint(
-        latitude: 47.4358055,
-        longitude: 8.4737324,
-      ),
-    ); */
+    //  controller = MapController.cyclOSMLayer(
+    //   initMapWithUserPosition: false,
+    //   initPosition: GeoPoint(
+    //     latitude: 47.4358055,
+    //     longitude: 8.4737324,
+    //   ),
+    //   // areaLimit: BoundingBox(
+    //   //   east: 10.4922941,
+    //   //   north: 47.8084648,
+    //   //   south: 45.817995,
+    //   //   west: 5.9559113,
+    //   // ),
+    // );
+    //  controller = MapController.publicTransportationLayer(
+    //   initMapWithUserPosition: false,
+    //   initPosition: GeoPoint(
+    //     latitude: 47.4358055,
+    //     longitude: 8.4737324,
+    //   ),
+    // );
 
     /*  controller = MapController.customLayer(
       initMapWithUserPosition: false,
@@ -178,7 +178,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   }
 
   Future<void> mapIsInitialized() async {
-    await controller.setZoom(zoomLevel: 19);
+    await controller.setZoom(zoomLevel: 12);
     // await controller.setMarkerOfStaticPoint(
     //   id: "line 1",
     //   markerIcon: MarkerIcon(
@@ -217,25 +217,17 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     );
     final bounds = await controller.bounds;
     print(bounds.toString());
-    await controller.addMarker(
-      GeoPoint(latitude: 47.442475, longitude: 8.4680389),
-      markerIcon: MarkerIcon(
-        icon: Icon(
-          Icons.car_repair,
-          color: Colors.black45,
-          size: 24,
-        ),
-      ),
-    );
-    final gps = await controller.geopoints;
-    print(gps);
+    Future.delayed(Duration(seconds: 5), () {
+      //controller.changeTileLayer(tileLayer: CustomTile.cycleOSM());
+    });
   }
 
   @override
   Future<void> mapIsReady(bool isReady) async {
-    if (isReady) {
-      await mapIsInitialized();
+    if (!isReady) {
+      return;
     }
+    await mapIsInitialized();
   }
 
   @override
