@@ -26,7 +26,7 @@ open class OsmFactory(
         val keyUUID = (args as HashMap<*, *>)["uuid"] as String
         var customTile: CustomTile? = null
         if ((args).containsKey("customTile")) {
-            customTile = fromMapToCustomTile(args["customTile"] as HashMap<String, Any>)
+            customTile = CustomTile.fromMap(args["customTile"] as HashMap<String, Any>)
         }
         osmFlutterView = FlutterOsmView(
             requireNotNull(context),
