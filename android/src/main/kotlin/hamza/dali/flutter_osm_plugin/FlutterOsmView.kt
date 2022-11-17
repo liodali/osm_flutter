@@ -333,7 +333,11 @@ class FlutterOsmView(
                     when (args != null && args.isNotEmpty()) {
                         true ->
                             changeLayerTile(tile = CustomTile.fromMap(args))
-                        false -> map!!.resetTileSource()
+                        false -> {
+                            if (map!!.tileProvider != MAPNIK) {
+                                map!!.resetTileSource()
+                            }
+                        }
                     }
                 }
                 "map#setCache" -> {
