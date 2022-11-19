@@ -100,7 +100,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         //print(call.method)
         switch call.method {
         case "init#ios#map":
-            //mapView.loadSceneAsync(from:URL.init(string: "https://drive.google.com/uc?export=download&id=1F67AW3Yaj5N7MEmMSd0OgeEK1bD69_CM")!, with: nil)
+            // mapView.loadSceneAsync(from:URL.init(string: "https://drive.google.com/uc?export=download&id=1F67AW3Yaj5N7MEmMSd0OgeEK1bD69_CM")!, with: nil)
             // "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4"
             // mapView.requestRender()
             var sceneUpdates = [TGSceneUpdate]()
@@ -130,9 +130,15 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break
         case "change#tile":
-            let args = call.arguments as! [String:Any]
-            let tile = CustomTiles(args)
-           mapView.updateScene(tile,urlStyle: urlStyle)
+            let args: [String: Any]? = call.arguments as! [String: Any]?
+            if args == nil  {
+                mapView.updateOrResetScene(customTile: nil, urlStyle: urlStyle)
+            }
+            if let customTileArgs = args {
+                let tile = CustomTiles(customTileArgs)
+                mapView.updateOrResetScene(customTile: tile, urlStyle: urlStyle)
+            }
+
             result(200)
             break;
         case "setDefaultIOSIcon":
@@ -1009,7 +1015,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }*/
 
 
-
     public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
 
         if !canTrackUserLocation {
@@ -1096,31 +1101,29 @@ private extension MyMapView {
         }
     }
 }
+
 extension TGMapView {
-    func updateScene(_ customTile:CustomTiles,urlStyle:String){
+    func updateOrResetScene(customTile: CustomTiles?, urlStyle: String) {
         var sceneUpdates = [TGSceneUpdate]()
-        sceneUpdates.append(TGSceneUpdate(path: "global.url", value: customTile.tileURL))
-        sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: customTile.subDomains))
-        sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: customTile.tileSize))
-        sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: customTile.maxZoom))
-        sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
-        //mapView.queueSceneUpdates(sceneUpdates: sceneUpdates)
-        //mapView.applySceneUpdates()
-        let sceneUrl = URL(string: urlStyle)! // "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
+        if customTile != nil {
+            sceneUpdates.append(TGSceneUpdate(path: "global.url", value: customTile!.tileURL))
+            sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: customTile!.subDomains))
+            sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: customTile!.tileSize))
+            sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: customTile!.maxZoom))
+            sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
+        }
+        let sceneUrl = URL(string: urlStyle)!
         let markers = markers
         let zoomLevel = zoom
         loadScene(from: sceneUrl, with: sceneUpdates)
         for oldMarker in markers {
-            let marker =  markerAdd()
+            let marker = markerAdd()
             marker.stylingString = oldMarker.stylingString
-
             marker.point = oldMarker.point
             marker.icon = oldMarker.icon
-            if(marker.stylingString.contains("lines")){
+            if (marker.stylingString.contains("lines")) {
                 marker.polyline = oldMarker.polyline
             }
-            print(oldMarker.point)
-            print(marker.point)
         }
         zoom = zoomLevel
     }
