@@ -312,7 +312,7 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<void> changeTileLayer({required CustomTile tileLayer}) =>
+  Future<void> changeTileLayer({ CustomTile? tileLayer}) =>
       osmPlatform.changeTileLayer(_idMap, tileLayer,);
 
   /// set area camera limit of the map

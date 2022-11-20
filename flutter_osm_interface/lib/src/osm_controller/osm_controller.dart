@@ -12,7 +12,7 @@ abstract class IBaseOSMController {
   ///
   /// change tile layer of the map en runtime using [tileLayer]
   Future<void> changeTileLayer({
-    required CustomTile tileLayer,
+    CustomTile? tileLayer,
   });
 
   ///initialise or change of position

@@ -58,7 +58,7 @@ abstract class MobileOSMPlatform extends OSMPlatform {
 
   Future<void> changeTileLayer(
     int idOSM,
-    CustomTile tile,
+    CustomTile? tile,
   );
 
   Future<void> currentLocation(

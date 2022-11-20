@@ -704,8 +704,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
-  Future<void> changeTileLayer(int idOSM, CustomTile tile) async {
-    await _channels[idOSM]!.invokeMethod("change#tile", tile.toMap());
+  Future<void> changeTileLayer(int idOSM, CustomTile? tile) async {
+    await _channels[idOSM]!.invokeMethod("change#tile", tile?.toMap() ?? null);
   }
 }
 

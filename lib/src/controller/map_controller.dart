@@ -98,7 +98,7 @@ class MapController extends BaseMapController {
   ///
   ///
   Future<void> changeTileLayer({
-    required CustomTile tileLayer,
+     CustomTile? tileLayer,
   }) async {
     await osmBaseController.changeTileLayer(tileLayer: tileLayer);
   }
