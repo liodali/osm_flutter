@@ -177,6 +177,7 @@ controller = MapController.customLayer(
   * `publicTransportationLayer` constructor for transport tiles ,it's public osm server
 
 for more example see our example in `home_example.dart`
+<br>
 <b> 3.2) Change Layers in runtime </b>
 
 ```dart
