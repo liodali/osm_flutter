@@ -62,13 +62,13 @@ fun FlutterOsmView.openSettingLocation(requestCode: Int, activity: Activity?) {
 }
 
 fun MapView.setCustomTile(
-    name: String,
-    minZoomLvl: Int = 1,
-    maxZoomLvl: Int = 19,
-    tileSize: Int = 256,
-    tileExtensionFile: String = ".png",
-    baseURLs: Array<String>,
-    api: Pair<String, String>?
+        name: String,
+        minZoomLvl: Int = 1,
+        maxZoomLvl: Int = 19,
+        tileSize: Int = 256,
+        tileExtensionFile: String = ".png",
+        baseURLs: Array<String>,
+        api: Pair<String, String>?
 ) {
     //val imageEndingTile = tileExtensionFile
 
@@ -95,8 +95,10 @@ fun MapView.setCustomTile(
 
     this.setTileSource(tileSource)
 }
+
 fun MapView.resetTileSource() {
     //val imageEndingTile = tileExtensionFile
-
-    this.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
+    if (tileProvider.tileSource != TileSourceFactory.DEFAULT_TILE_SOURCE){
+        this.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
+    }
 }

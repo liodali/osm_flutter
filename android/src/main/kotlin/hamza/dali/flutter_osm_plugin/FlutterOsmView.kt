@@ -61,6 +61,7 @@ import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
+import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory.MAPNIK
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -331,8 +332,13 @@ class FlutterOsmView(
                 "change#tile" -> {
                     val args = call.arguments as HashMap<String, Any>?
                     when (args != null && args.isNotEmpty()) {
-                        true ->
-                            changeLayerTile(tile = CustomTile.fromMap(args))
+                        true ->{
+                            val tile = CustomTile.fromMap(args)
+                            if(!tile.urls.contains((map!!.tileProvider.tileSource as OnlineTileSourceBase).baseUrl)){
+                                changeLayerTile(tile = tile)
+                            }
+                        }
+
                         false -> {
                             if (map!!.tileProvider != MAPNIK) {
                                 map!!.resetTileSource()
