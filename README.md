@@ -178,6 +178,7 @@ controller = MapController.customLayer(
 
 for more example see our example in `home_example.dart`
 <br>
+<br>
 <b> 3.2) Change Layers in runtime </b>
 
 ```dart
