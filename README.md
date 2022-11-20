@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.40.3%2B2-orange) 
+![pub](https://img.shields.io/badge/pub-v0.41.0orange) 
 
 
 ## Platform Support
@@ -35,6 +35,8 @@
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
 <br>
+<img src="https://github.com/liodali/osm_flutter/blob/0.41.0/tileLayerRuntime.gif?raw=true" alt="openStreetMap flutter examples"><br>
+<br>
 <img src="https://github.com/liodali/osm_flutter/blob/master/dialogSimplePickerLocation.gif?raw=true" alt="openStreetMap flutter examples"><br>
 
 ## Installing
@@ -42,7 +44,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.40.3+2
+      flutter_osm_plugin: ^0.41.0
 
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
@@ -175,8 +177,11 @@ controller = MapController.customLayer(
   * `publicTransportationLayer` constructor for transport tiles ,it's public osm server
 
 for more example see our example in `home_example.dart`
+<b> 3.2) Change Layers in runtime </b>
 
-
+```dart
+ await controller.changeTileLayer(tileLayer: CustomTile(...));
+```
 <b>4) Set map on user current location </b>
 
 ```dart

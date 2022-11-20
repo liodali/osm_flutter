@@ -19,6 +19,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> visibilityZoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
+  ValueNotifier<bool> visibilityOSMLayers = ValueNotifier(false);
+  ValueNotifier<double> positionOSMLayers = ValueNotifier(-200);
+  ValueNotifier<GeoPoint?> centerMap = ValueNotifier(null);
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
   ValueNotifier<bool> showFab = ValueNotifier(true);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
@@ -171,6 +174,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     controller.listenerRegionIsChanging.addListener(() async {
       if (controller.listenerRegionIsChanging.value != null) {
         print(controller.listenerRegionIsChanging.value);
+        centerMap.value = controller.listenerRegionIsChanging.value!.center;
       }
     });
 
@@ -218,7 +222,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     final bounds = await controller.bounds;
     print(bounds.toString());
     Future.delayed(Duration(seconds: 5), () {
-      //controller.changeTileLayer(tileLayer: CustomTile.cycleOSM());
+      controller.changeTileLayer(tileLayer: CustomTile.cycleOSM());
     });
   }
 
@@ -264,9 +268,17 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         ),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.info),
+            icon: Icon(Icons.layers),
             onPressed: () async {
-              await Navigator.popAndPushNamed(context, "/second");
+              if (visibilityOSMLayers.value) {
+                positionOSMLayers.value = -200;
+                await Future.delayed(Duration(milliseconds: 700));
+              }
+              visibilityOSMLayers.value = !visibilityOSMLayers.value;
+              showFab.value = !visibilityOSMLayers.value;
+              Future.delayed(Duration(milliseconds: 500), () {
+                positionOSMLayers.value = visibilityOSMLayers.value ? 32 : -200;
+              });
             },
           ),
           Builder(builder: (ctx) {
@@ -277,7 +289,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               },
               child: IconButton(
                 onPressed: () => roadActionBt(ctx),
-                icon: Icon(Icons.map),
+                icon: Icon(Icons.route),
               ),
             );
           }),
@@ -523,6 +535,32 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 ),
               ),
             ),
+            ValueListenableBuilder<bool>(
+              valueListenable: visibilityOSMLayers,
+              builder: (ctx, isVisible, child) {
+                if (!isVisible) {
+                  return SizedBox.shrink();
+                }
+                return child!;
+              },
+              child: ValueListenableBuilder<double>(
+                valueListenable: positionOSMLayers,
+                builder: (ctx, position, child) {
+                  return AnimatedPositioned(
+                    bottom: position,
+                    left: 24,
+                    right: 24,
+                    duration: Duration(milliseconds: 500),
+                    child: OSMLayersChoiceWidget(
+                      centerPoint: centerMap.value!,
+                      setLayerCallback: (tile) async {
+                        await controller.changeTileLayer(tileLayer: tile);
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -764,6 +802,113 @@ class RoadTypeChoiceWidget extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class OSMLayersChoiceWidget extends StatelessWidget {
+  final Function(CustomTile? layer) setLayerCallback;
+  final GeoPoint centerPoint;
+  OSMLayersChoiceWidget({
+    required this.setLayerCallback,
+    required this.centerPoint,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          height: 102,
+          width: 342,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          alignment: Alignment.center,
+          margin: const EdgeInsets.only(top: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () {
+                  setLayerCallback(CustomTile.publicTransportationOSM());
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox.square(
+                      dimension: 64,
+                      child: IgnorePointer(
+                        child: OSMFlutter(
+                          controller: MapController.publicTransportationLayer(
+                            initPosition: centerPoint,
+                            initMapWithUserPosition: false,
+                          ),
+                          initZoom: 12,
+                          maxZoomLevel: 12,
+                        ),
+                      ),
+                    ),
+                    Text("Transportation"),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  setLayerCallback(CustomTile.cycleOSM());
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox.square(
+                      dimension: 64,
+                      child: IgnorePointer(
+                        child: OSMFlutter(
+                          controller: MapController.cyclOSMLayer(
+                            initPosition: centerPoint,
+                            initMapWithUserPosition: false,
+                          ),
+                          initZoom: 12,
+                          maxZoomLevel: 12,
+                        ),
+                      ),
+                    ),
+                    Text("CycleOSM"),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  setLayerCallback(null);
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox.square(
+                      dimension: 64,
+                      child: IgnorePointer(
+                        child: OSMFlutter(
+                          controller: MapController(
+                            initPosition: centerPoint,
+                            initMapWithUserPosition: false,
+                          ),
+                          initZoom: 10,
+                          maxZoomLevel: 10,
+                        ),
+                      ),
+                    ),
+                    Text("OSM"),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
