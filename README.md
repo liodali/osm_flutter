@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.41.0orange) 
+![pub](https://img.shields.io/badge/pub-v0.41.0-orange) 
 
 
 ## Platform Support
@@ -35,7 +35,7 @@
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
 <br>
-<img src="https://github.com/liodali/osm_flutter/blob/0.41.0/tileLayerRuntime.gif?raw=true" alt="openStreetMap flutter examples"><br>
+<img src="https://github.com/liodali/osm_flutter/blob/0.41.0/tileLayerRuntime.gif?raw=true" alt="openStreetMap flutter examples" width=260><br>
 <br>
 <img src="https://github.com/liodali/osm_flutter/blob/master/dialogSimplePickerLocation.gif?raw=true" alt="openStreetMap flutter examples"><br>
 
