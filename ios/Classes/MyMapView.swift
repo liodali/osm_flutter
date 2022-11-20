@@ -52,6 +52,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var stepZoom = 1.0
     var initZoom = 10.0
     var customTiles: [String: Any]? = nil
+    var oldCustomTile: CustomTiles? = nil
     var bounds: [Double]? = nil
     let urlStyle = "https://github.com/liodali/osm_flutter/raw/dc7424dacd77f4eced626abf64486d70fd03240d/assets/dynamic-styles.zip"
 
@@ -108,6 +109,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
             if (customTiles != nil) {
                 let tile = CustomTiles(customTiles!)
+                if oldCustomTile == nil {
+                    oldCustomTile = tile
+                }
                 sceneUpdates.append(TGSceneUpdate(path: "global.url", value: tile.tileURL))
                 sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: tile.subDomains))
                 sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: tile.tileSize))
@@ -131,12 +135,17 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             break
         case "change#tile":
             let args: [String: Any]? = call.arguments as! [String: Any]?
-            if args == nil  {
+            if args == nil && oldCustomTile != nil {
                 mapView.updateOrResetScene(customTile: nil, urlStyle: urlStyle)
+                oldCustomTile = nil
             }
             if let customTileArgs = args {
                 let tile = CustomTiles(customTileArgs)
-                mapView.updateOrResetScene(customTile: tile, urlStyle: urlStyle)
+                if oldCustomTile == nil || (oldCustomTile != nil && oldCustomTile?.tileURL != tile.tileURL) {
+                    mapView.updateOrResetScene(customTile: tile, urlStyle: urlStyle)
+                    oldCustomTile = tile
+                }
+
             }
 
             result(200)
