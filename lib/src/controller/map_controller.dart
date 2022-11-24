@@ -16,11 +16,30 @@ class MapController extends BaseMapController {
     GeoPoint? initPosition,
     BoundingBox? areaLimit = const BoundingBox.world(),
   })  : assert(
-          initMapWithUserPosition || initPosition != null,
+          initMapWithUserPosition ^ (initPosition != null),
         ),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
           initPosition: initPosition,
+          areaLimit: areaLimit,
+          customTile: null,
+        );
+
+  MapController.withPosition({
+    required GeoPoint initPosition,
+    BoundingBox? areaLimit = const BoundingBox.world(),
+  }) : super(
+          initMapWithUserPosition: false,
+          initPosition: initPosition,
+          areaLimit: areaLimit,
+          customTile: null,
+        );
+
+  MapController.withUserPosition({
+    BoundingBox? areaLimit = const BoundingBox.world(),
+  }) : super(
+          initMapWithUserPosition: true,
+          initPosition: null,
           areaLimit: areaLimit,
           customTile: null,
         );
@@ -98,7 +117,7 @@ class MapController extends BaseMapController {
   ///
   ///
   Future<void> changeTileLayer({
-     CustomTile? tileLayer,
+    CustomTile? tileLayer,
   }) async {
     await osmBaseController.changeTileLayer(tileLayer: tileLayer);
   }

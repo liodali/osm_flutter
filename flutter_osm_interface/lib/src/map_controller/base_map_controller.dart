@@ -21,11 +21,11 @@ abstract class BaseMapController extends IBaseMapController {
   IBaseOSMController get osmBaseController => _osmBaseController;
 
   BaseMapController({
-    initMapWithUserPosition = true,
+    bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
     this.areaLimit = const BoundingBox.world(),
     this.customTile,
-  })  : assert(initMapWithUserPosition || initPosition != null),
+  })  : assert(initMapWithUserPosition ^ (initPosition != null)),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
           initPosition: initPosition,
