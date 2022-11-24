@@ -31,8 +31,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   @override
   void initState() {
     super.initState();
-    controller = MapController(
-      initMapWithUserPosition: false,
+    controller = MapController.withPosition(
       initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
