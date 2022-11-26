@@ -52,6 +52,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var stepZoom = 1.0
     var initZoom = 10.0
     var customTiles: [String: Any]? = nil
+    var oldCustomTile: CustomTiles? = nil
+    var bounds: [Double]? = nil
+    let urlStyle = "https://github.com/liodali/osm_flutter/raw/dc7424dacd77f4eced626abf64486d70fd03240d/assets/dynamic-styles.zip"
 
     init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?) {
         self.frame = frame
@@ -63,6 +66,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         mainView = UIStackView(arrangedSubviews: [mapView])
         if let tiles = args {
             customTiles = (tiles as! [String: Any])["customTile"] as? [String: Any]
+        }
+        if let arg = args {
+            bounds = (arg as! [String: Any])["bounds"] as? [Double]
         }
         //mapview.mapType = MKMapType.standard
         //mapview.isZoomEnabled = true
@@ -95,28 +101,29 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         //print(call.method)
         switch call.method {
         case "init#ios#map":
-            //mapView.loadSceneAsync(from:URL.init(string: "https://drive.google.com/uc?export=download&id=1F67AW3Yaj5N7MEmMSd0OgeEK1bD69_CM")!, with: nil)
+            // mapView.loadSceneAsync(from:URL.init(string: "https://drive.google.com/uc?export=download&id=1F67AW3Yaj5N7MEmMSd0OgeEK1bD69_CM")!, with: nil)
+            // "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4"
             // mapView.requestRender()
             var sceneUpdates = [TGSceneUpdate]()
-            var urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/osm-style.zip?alt=media&token=30e0c9fe-af0b-4994-8a73-2d31057014d4"
+            //var urlStyle = "https://github.com/liodali/osm_flutter/raw/0.40.0/assets/osm-style.zip"
+
             if (customTiles != nil) {
-                urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles.zip?alt=media&token=071f53d3-ec96-49f3-ac87-18498abc3f76"
-                let urlMap = (customTiles!["urls"] as! [[String: Any]]).first!
-                let urlTile = (urlMap["url"] as! String) + "{z}/{x}/{y}" + (customTiles!["tileExtension"] as! String)
-                let subDomains = urlMap["subdomains"] as? [String]
-                var apikey = ""
-                if let keys = customTiles?.keys {
-                    if keys.contains("api") {
-                        let mapApi = (customTiles!["api"] as! [String: String])
-                        apikey = "?\(mapApi.keys.first!)=\(mapApi.values.first ?? "")"
-                    }
+                let tile = CustomTiles(customTiles!)
+                if oldCustomTile == nil {
+                    oldCustomTile = tile
                 }
-                sceneUpdates.append(TGSceneUpdate(path: "global.url", value: urlTile + apikey))
-                sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: subDomains?.description ?? ""))
-                sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: (customTiles?["tileSize"] as? Int)?.description ?? "256"))
-                sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: (customTiles?["maxZoomLevel"] as? String) ?? "19"))
+                sceneUpdates.append(TGSceneUpdate(path: "global.url", value: tile.tileURL))
+                sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: tile.subDomains))
+                sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: tile.tileSize))
+                sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: tile.maxZoom))
                 sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
             }
+            /*if(bounds != nil && bounds != [-180.0, 85, 180, -85]){
+                //urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles2.zip?alt=media&token=73f812ac-129f-477f-8a5b-942a5d9f325a"
+                urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles2.zip?alt=media&token=e54cd48e-537a-4586-a801-26cf6ce6af96"
+                //let sBounds = "["+bounds!.map {"\($0)"}.reduce(",") { $0 + $1 }+"]"
+                //sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: "[5.9559113, 45.817995, 10.4922941, 47.8084648]"))//bounds!.description))
+            }*/
 
             // let sceneUpdates = [TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
             // let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
@@ -126,6 +133,23 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             //channel.invokeMethod("map#init", arguments: true)
             result(200)
             break
+        case "change#tile":
+            let args: [String: Any]? = call.arguments as! [String: Any]?
+            if args == nil && oldCustomTile != nil {
+                mapView.updateOrResetScene(customTile: nil, urlStyle: urlStyle)
+                oldCustomTile = nil
+            }
+            if let customTileArgs = args {
+                let tile = CustomTiles(customTileArgs)
+                if oldCustomTile == nil || (oldCustomTile != nil && oldCustomTile?.tileURL != tile.tileURL) {
+                    mapView.updateOrResetScene(customTile: tile, urlStyle: urlStyle)
+                    oldCustomTile = tile
+                }
+
+            }
+
+            result(200)
+            break;
         case "setDefaultIOSIcon":
             let args = call.arguments as! [String: Any]
             let iconString = args["icon"] as! String
@@ -144,6 +168,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break;
         case "remove#limitArea":
+            bounds = nil
             result(200)
             break;
         case "changePosition":
@@ -367,6 +392,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func setCameraAreaLimit(call: FlutterMethodCall) {
         let bbox = call.arguments as! [Double]
+        bounds = bbox
         let bounds = TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: bbox[2], longitude: bbox[3]),
                 ne: CLLocationCoordinate2D(latitude: bbox[0], longitude: bbox[1]))
         mapView.cameraThatFitsBounds(bounds, withPadding: UIEdgeInsets.init(top: 3.0, left: 3.0, bottom: 3.0, right: 3.0))
@@ -527,7 +553,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     }
 
     private func setCustomIconMarker(call: FlutterMethodCall, result: FlutterResult) {
-        let args = call.arguments as! [String:Any]
+        let args = call.arguments as! [String: Any]
         let iconSize = args["size"] as! [Double]
         let image = convertImage(codeImage: args["icon"] as! String)
         pickerMarker = UIImageView(image: image)
@@ -553,9 +579,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
         let id = args["id"] as! String
-        let bitmapArg = args["bitmap"] as! [String:Any]
+        let bitmapArg = args["bitmap"] as! [String: Any]
         let icon = convertImage(codeImage: bitmapArg["icon"] as! String)
-        dictIconClusterAnnotation[id] = MarkerIconData(image: icon!,size: bitmapArg["size"] as! [Int])
+        dictIconClusterAnnotation[id] = MarkerIconData(image: icon!, size: bitmapArg["size"] as! [Int])
     }
 
 
@@ -917,7 +943,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 //mapView.setRegion(region, animated: true)
                 if (canTrackUserLocation) {
                     if (userLocation == nil) {
-                        userLocation = mapView.addUserLocation(for: location, on: mapView,personIcon: personMarkerIcon,arrowDirection: arrowDirectionIcon)
+                        userLocation = mapView.addUserLocation(for: location, on: mapView, personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
                         //userLocation?.setDirectionArrow(personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
                     }
                     let angle = CGFloat(manager.heading?.trueHeading ?? 0.0).toDegrees
@@ -966,10 +992,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         //print("marker picked")
         //print("receive pick  x: \(position.x) y: \(position.y)")
         if let marker = markerPickResult?.marker {
-            let staticMarkers = mapView.markers.filter { m in
+            let points = mapView.markers.filter { m in
                 m.stylingString.contains("points")
             }
-            let isExist = staticMarkers.contains { m in
+            let isExist = points.contains { m in
                 m.point == marker.point
             }
             if isExist {
@@ -984,20 +1010,22 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
     }
 
-    public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
-        /*if (!dictClusterAnnotation.isEmpty && !isAdvancedPicker) {
-            for gStaticMarker in dictClusterAnnotation {
-                for (i, staticMarker) in gStaticMarker.value.enumerated() {
-                    let m = staticMarker
-                    if (mapView.zoom > 12) {
-                        m.marker?.visible = true
-                    } else {
-                        m.marker?.visible = false
-                    }
-                    dictClusterAnnotation[gStaticMarker.key]![i] = m
-                }
+    /*public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!, shouldRecognizePanGesture displacement: CGPoint) -> Bool {
+
+        let location = view.coordinate(fromViewPosition: displacement)
+        if let bound = bounds {
+            let contain = bound.toBounds().contains(location: location)
+            if !contain {
+                view.notifyGestureDidEnd()
             }
-        }*/
+            return contain
+        }
+        return true
+    }*/
+
+
+    public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
+
         if !canTrackUserLocation {
             let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
             let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.width)
@@ -1015,7 +1043,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             let dict: [String: Any] = methodCall?.arguments as! [String: Any]
             if let icon = dict["icon"] {
                 let iconArg = (icon as! [String: Any])["icon"] as! String
-                iconM = MarkerIconData(image: convertImage(codeImage: iconArg), size: (icon as! [String:Any])["size"] as! [Int])
+                iconM = MarkerIconData(image: convertImage(codeImage: iconArg), size: (icon as! [String: Any])["size"] as! [Int])
             }
             let coordinate = view.coordinate(fromViewPosition: location)
             let geoP = GeoPointMap(icon: iconM!, coordinate: coordinate)
@@ -1045,12 +1073,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         view.fly(to: TGCameraPosition(center: locationMap, zoom: view.zoom + CGFloat(stepZoom), bearing: view.bearing, pitch: view.pitch), withDuration: 0.2)
         return true
     }
-
-    public func mapView(_ view: TGMapView, recognizer: UIGestureRecognizer,
-                        shouldRecognizeShoveGesture displacement: CGPoint) -> Bool {
-        true
-    }
-
 
 }
 
@@ -1087,5 +1109,31 @@ private extension MyMapView {
             }
         }
     }
+}
 
+extension TGMapView {
+    func updateOrResetScene(customTile: CustomTiles?, urlStyle: String) {
+        var sceneUpdates = [TGSceneUpdate]()
+        if customTile != nil {
+            sceneUpdates.append(TGSceneUpdate(path: "global.url", value: customTile!.tileURL))
+            sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: customTile!.subDomains))
+            sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: customTile!.tileSize))
+            sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: customTile!.maxZoom))
+            sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
+        }
+        let sceneUrl = URL(string: urlStyle)!
+        let markers = markers
+        let zoomLevel = zoom
+        loadScene(from: sceneUrl, with: sceneUpdates)
+        for oldMarker in markers {
+            let marker = markerAdd()
+            marker.stylingString = oldMarker.stylingString
+            marker.point = oldMarker.point
+            marker.icon = oldMarker.icon
+            if (marker.stylingString.contains("lines")) {
+                marker.polyline = oldMarker.polyline
+            }
+        }
+        zoom = zoomLevel
+    }
 }

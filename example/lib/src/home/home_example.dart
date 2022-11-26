@@ -19,6 +19,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> visibilityZoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
+  ValueNotifier<bool> visibilityOSMLayers = ValueNotifier(false);
+  ValueNotifier<double> positionOSMLayers = ValueNotifier(-200);
+  ValueNotifier<GeoPoint?> centerMap = ValueNotifier(null);
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
   ValueNotifier<bool> showFab = ValueNotifier(true);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
@@ -28,8 +31,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   @override
   void initState() {
     super.initState();
-    controller = MapController(
-      initMapWithUserPosition: false,
+    controller = MapController.withPosition(
       initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
@@ -41,45 +43,52 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       //   west: 5.9559113,
       // ),
     );
-   /* controller = MapController.cyclOSMLayer(
-      initMapWithUserPosition: false,
-      initPosition: GeoPoint(
-        latitude: 47.4358055,
-        longitude: 8.4737324,
-      ),
-      // areaLimit: BoundingBox(
-      //   east: 10.4922941,
-      //   north: 47.8084648,
-      //   south: 45.817995,
-      //   west: 5.9559113,
-      // ),
-    );*/
-    /*controller = MapController.publicTransportationLayer(
-      initMapWithUserPosition: false,
-      initPosition: GeoPoint(
-        latitude: 47.4358055,
-        longitude: 8.4737324,
-      ),
-    );*/
+    //  controller = MapController.cyclOSMLayer(
+    //   initMapWithUserPosition: false,
+    //   initPosition: GeoPoint(
+    //     latitude: 47.4358055,
+    //     longitude: 8.4737324,
+    //   ),
+    //   // areaLimit: BoundingBox(
+    //   //   east: 10.4922941,
+    //   //   north: 47.8084648,
+    //   //   south: 45.817995,
+    //   //   west: 5.9559113,
+    //   // ),
+    // );
+    //  controller = MapController.publicTransportationLayer(
+    //   initMapWithUserPosition: false,
+    //   initPosition: GeoPoint(
+    //     latitude: 47.4358055,
+    //     longitude: 8.4737324,
+    //   ),
+    // );
 
-    /*controller = MapController.customLayer(
-        initMapWithUserPosition: false,
-        initPosition: GeoPoint(
-          latitude: 47.4358055,
-          longitude: 8.4737324,
+    /*  controller = MapController.customLayer(
+      initMapWithUserPosition: false,
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      customTile: CustomTile(
+        sourceName: "outdoors",
+        tileExtension: ".png",
+        minZoomLevel: 2,
+        maxZoomLevel: 19,
+        urlsServers: [
+          TileURLs(
+            url: "https://tile.thunderforest.com/outdoors/",
+          )
+        ],
+        tileSize: 256,
+        keyApi: MapEntry(
+          "apikey",
+          dotenv.env['api']!,
         ),
-        customTile: CustomTile(
-            sourceName: "outdoors",
-            tileExtension: ".png",
-            minZoomLevel: 2,
-            maxZoomLevel: 19,
-            urlsServers: [
-              "https://tile.thunderforest.com/outdoors/",
-            ],
-            tileSize: 256,
-            keyApi: MapEntry("apikey", dotenv.env['api']!,),)
-        );*/
-   /* controller = MapController.customLayer(
+      ),
+    ); */
+
+    /* controller = MapController.customLayer(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
         latitude: 47.4358055,
@@ -145,7 +154,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               icon: Icon(
                 Icons.person_pin,
                 color: Colors.red,
-                size: 96,
+                size: 32,
               ),
               // assetMarker: AssetMarker(
               //   image: AssetImage("asset/pin.png"),
@@ -164,6 +173,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     controller.listenerRegionIsChanging.addListener(() async {
       if (controller.listenerRegionIsChanging.value != null) {
         print(controller.listenerRegionIsChanging.value);
+        centerMap.value = controller.listenerRegionIsChanging.value!.center;
       }
     });
 
@@ -188,7 +198,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         icon: Icon(
           Icons.train,
           color: Colors.orange,
-          size: 48,
+          size: 24,
         ),
       ),
     );
@@ -210,25 +220,17 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     );
     final bounds = await controller.bounds;
     print(bounds.toString());
-    await controller.addMarker(
-      GeoPoint(latitude: 47.442475, longitude: 8.4680389),
-      markerIcon: MarkerIcon(
-        icon: Icon(
-          Icons.car_repair,
-          color: Colors.black45,
-          size: 48,
-        ),
-      ),
-    );
-    final gps = await controller.geopoints;
-    print(gps);
+    Future.delayed(Duration(seconds: 5), () {
+      controller.changeTileLayer(tileLayer: CustomTile.cycleOSM());
+    });
   }
 
   @override
   Future<void> mapIsReady(bool isReady) async {
-    if (isReady) {
-      await mapIsInitialized();
+    if (!isReady) {
+      return;
     }
+    await mapIsInitialized();
   }
 
   @override
@@ -265,9 +267,17 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
         ),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.info),
+            icon: Icon(Icons.layers),
             onPressed: () async {
-              await Navigator.popAndPushNamed(context, "/second");
+              if (visibilityOSMLayers.value) {
+                positionOSMLayers.value = -200;
+                await Future.delayed(Duration(milliseconds: 700));
+              }
+              visibilityOSMLayers.value = !visibilityOSMLayers.value;
+              showFab.value = !visibilityOSMLayers.value;
+              Future.delayed(Duration(milliseconds: 500), () {
+                positionOSMLayers.value = visibilityOSMLayers.value ? 32 : -200;
+              });
             },
           ),
           Builder(builder: (ctx) {
@@ -278,7 +288,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               },
               child: IconButton(
                 onPressed: () => roadActionBt(ctx),
-                icon: Icon(Icons.map),
+                icon: Icon(Icons.route),
               ),
             );
           }),
@@ -332,7 +342,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               },
               initZoom: 8,
               minZoomLevel: 3,
-              maxZoomLevel: 18,
+              maxZoomLevel: 19,
               stepZoom: 1.0,
               userLocationMarker: UserLocationMaker(
                 personMarker: MarkerIcon(
@@ -341,11 +351,18 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   //   color: Colors.red,
                   //   size: 48,
                   // ),
-                  assetMarker: AssetMarker(
-                      image: AssetImage(
-                        "asset/taxi.png",
-                      ),
-                      scaleAssetImage: 0.3),
+                  iconWidget: SizedBox.square(
+                    dimension: 32,
+                    child: Image.asset(
+                      "asset/taxi.png",
+                    ),
+                  ),
+                  /* assetMarker: AssetMarker(
+                    image: AssetImage(
+                      "asset/taxi.png",
+                    ),
+                    scaleAssetImage: 0.3,
+                  ), */
                 ),
                 directionArrowMarker: MarkerIcon(
                   assetMarker: AssetMarker(
@@ -394,7 +411,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     icon: Icon(
                       Icons.train,
                       color: Colors.green,
-                      size: 48,
+                      size: 24,
                     ),
                   ),
                   [
@@ -421,7 +438,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 startIcon: MarkerIcon(
                   icon: Icon(
                     Icons.person,
-                    size: 64,
+                    size: 24,
                     color: Colors.brown,
                   ),
                 ),
@@ -435,14 +452,14 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   icon: Icon(
                     Icons.home,
                     color: Colors.orange,
-                    size: 64,
+                    size: 24,
                   ),
                 ),
                 advancedPickerMarker: MarkerIcon(
                   icon: Icon(
                     Icons.location_searching,
                     color: Colors.green,
-                    size: 64,
+                    size: 24,
                   ),
                 ),
               ),
@@ -515,6 +532,32 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     ],
                   ),
                 ),
+              ),
+            ),
+            ValueListenableBuilder<bool>(
+              valueListenable: visibilityOSMLayers,
+              builder: (ctx, isVisible, child) {
+                if (!isVisible) {
+                  return SizedBox.shrink();
+                }
+                return child!;
+              },
+              child: ValueListenableBuilder<double>(
+                valueListenable: positionOSMLayers,
+                builder: (ctx, position, child) {
+                  return AnimatedPositioned(
+                    bottom: position,
+                    left: 24,
+                    right: 24,
+                    duration: Duration(milliseconds: 500),
+                    child: OSMLayersChoiceWidget(
+                      centerPoint: centerMap.value!,
+                      setLayerCallback: (tile) async {
+                        await controller.changeTileLayer(tileLayer: tile);
+                      },
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -758,6 +801,113 @@ class RoadTypeChoiceWidget extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class OSMLayersChoiceWidget extends StatelessWidget {
+  final Function(CustomTile? layer) setLayerCallback;
+  final GeoPoint centerPoint;
+  OSMLayersChoiceWidget({
+    required this.setLayerCallback,
+    required this.centerPoint,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          height: 102,
+          width: 342,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          alignment: Alignment.center,
+          margin: const EdgeInsets.only(top: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () {
+                  setLayerCallback(CustomTile.publicTransportationOSM());
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox.square(
+                      dimension: 64,
+                      child: IgnorePointer(
+                        child: OSMFlutter(
+                          controller: MapController.publicTransportationLayer(
+                            initPosition: centerPoint,
+                            initMapWithUserPosition: false,
+                          ),
+                          initZoom: 12,
+                          maxZoomLevel: 12,
+                        ),
+                      ),
+                    ),
+                    Text("Transportation"),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  setLayerCallback(CustomTile.cycleOSM());
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox.square(
+                      dimension: 64,
+                      child: IgnorePointer(
+                        child: OSMFlutter(
+                          controller: MapController.cyclOSMLayer(
+                            initPosition: centerPoint,
+                            initMapWithUserPosition: false,
+                          ),
+                          initZoom: 12,
+                          maxZoomLevel: 12,
+                        ),
+                      ),
+                    ),
+                    Text("CycleOSM"),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  setLayerCallback(null);
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox.square(
+                      dimension: 64,
+                      child: IgnorePointer(
+                        child: OSMFlutter(
+                          controller: MapController(
+                            initPosition: centerPoint,
+                            initMapWithUserPosition: false,
+                          ),
+                          initZoom: 10,
+                          maxZoomLevel: 10,
+                        ),
+                      ),
+                    ),
+                    Text("OSM"),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

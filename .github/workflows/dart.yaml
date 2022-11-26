@@ -39,6 +39,7 @@ jobs:
       - name: clear before release
         run: |
           rm -f *.gif
+          rm -rf assets
           rm -rf flutter_osm_interface
           rm -f check_pubspec_release.py
       - name: fomarting files

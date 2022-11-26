@@ -8,6 +8,13 @@ abstract class IBaseOSMController {
     bool initWithUserPosition = false,
   });
 
+  /// [changeTileLayer]
+  ///
+  /// change tile layer of the map en runtime using [tileLayer]
+  Future<void> changeTileLayer({
+    CustomTile? tileLayer,
+  });
+
   ///initialise or change of position
   ///
   /// [p] : (GeoPoint) position that will be added to map

@@ -54,7 +54,10 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                       textConfirmPicker: "pick",
                       initCurrentUserPosition: false,
                       initZoom: 8,
-                      initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+                      initPosition: GeoPoint(
+                        latitude: 47.4358055,
+                        longitude: 8.4737324,
+                      ),
                       radius: 8.0,
                     );
                     if (p != null) {
@@ -144,7 +147,8 @@ class _SearchPageState extends State<SearchPage> {
                           onTap: () {
                             textEditingController.clear();
                             controller.setSearchableText("");
-                            FocusScope.of(context).requestFocus(new FocusNode());
+                            FocusScope.of(context)
+                                .requestFocus(new FocusNode());
                           },
                           child: Icon(
                             Icons.close,
@@ -219,10 +223,12 @@ class _TopSearchWidgetState extends State<TopSearchWidget> {
     final v = controller.searchableText.value;
     if (v.length > 3 && oldText != v) {
       oldText = v;
-      if (_timerToStartSuggestionReq != null && _timerToStartSuggestionReq!.isActive) {
+      if (_timerToStartSuggestionReq != null &&
+          _timerToStartSuggestionReq!.isActive) {
         _timerToStartSuggestionReq!.cancel();
       }
-      _timerToStartSuggestionReq = Timer.periodic(Duration(seconds: 3), (timer) async {
+      _timerToStartSuggestionReq =
+          Timer.periodic(Duration(seconds: 3), (timer) async {
         await suggestionProcessing(v);
         timer.cancel();
       });

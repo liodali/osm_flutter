@@ -101,7 +101,8 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
                   controller: widget.controller,
                   markerOption: widget.pickerConfig.advancedMarkerPicker != null
                       ? MarkerOption(
-                          advancedPickerMarker: widget.pickerConfig.advancedMarkerPicker,
+                          advancedPickerMarker:
+                              widget.pickerConfig.advancedMarkerPicker,
                         )
                       : null,
                   isPicker: true,

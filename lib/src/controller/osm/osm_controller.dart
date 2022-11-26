@@ -246,7 +246,7 @@ class MobileOSMController extends IBaseOSMController {
       initPosition = await myLocation();
       _checkBoundingBox(box, initPosition);
     }
-    if (box != null && !box.isWorld()) {
+    if (box != null && !box.isWorld() && Platform.isAndroid) {
       await limitAreaMap(box);
     }
     if (initPosition != null && !_osmFlutterState.setCache.value) {
@@ -310,6 +310,10 @@ class MobileOSMController extends IBaseOSMController {
       stepZoom,
     );
   }
+
+  @override
+  Future<void> changeTileLayer({ CustomTile? tileLayer}) =>
+      osmPlatform.changeTileLayer(_idMap, tileLayer,);
 
   /// set area camera limit of the map
   /// [box] : (BoundingBox) bounding that map cannot exceed from it

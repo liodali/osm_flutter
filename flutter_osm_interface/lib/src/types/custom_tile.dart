@@ -42,9 +42,37 @@ class CustomTile {
         assert(minZoomLevel >= 2 && minZoomLevel < maxZoomLevel),
         assert(maxZoomLevel > minZoomLevel && maxZoomLevel > 0),
         assert(
-            keyApi == null ||
-                (keyApi.key.isNotEmpty && keyApi.value.isNotEmpty),
-            "if your own server use key access,you provide the right key name,and api");
+          keyApi == null || (keyApi.key.isNotEmpty && keyApi.value.isNotEmpty),
+          "if your own server use key access,you should provide the right key name and key api",
+        );
+
+  CustomTile.cycleOSM({
+    this.maxZoomLevel = 19,
+    this.minZoomLevel = 2,
+  })  : urlsServers = [
+          TileURLs(
+            url: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/",
+            subdomains: [
+              "a",
+              "b",
+              "c",
+            ],
+          ),
+        ],
+        tileExtension = ".png",
+        sourceName = "cycleMapnik",
+        tileSize = 256,
+        keyApi = null;
+  CustomTile.publicTransportationOSM({
+    this.maxZoomLevel = 19,
+    this.minZoomLevel = 2,
+  })  : urlsServers = [
+          TileURLs(url: "https://tile.memomaps.de/tilegen/"),
+        ],
+        tileExtension = ".png",
+        sourceName = "memomapsMapnik",
+        tileSize = 256,
+        keyApi = null;
 
   Map toMap() {
     final map = {

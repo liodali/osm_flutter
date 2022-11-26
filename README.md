@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.40.3-orange) 
+![pub](https://img.shields.io/badge/pub-v0.41.1-orange) 
 
 
 ## Platform Support
@@ -35,6 +35,8 @@
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
 <br>
+<img src="https://github.com/liodali/osm_flutter/blob/0.41.0/tileLayerRuntime.gif?raw=true" alt="openStreetMap flutter examples" width=260><br>
+<br>
 <img src="https://github.com/liodali/osm_flutter/blob/master/dialogSimplePickerLocation.gif?raw=true" alt="openStreetMap flutter examples"><br>
 
 ## Installing
@@ -42,7 +44,13 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.40.3
+      flutter_osm_plugin: ^0.41.1
+
+## Integration with Hooks
+
+> To use our map library with `Flutter_Hooks` library use our new extension library 
+https://pub.dev/packages/osm_flutter_hooks 
+many thanks for @ben-xD
 
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
@@ -121,13 +129,40 @@ Add the following to your `pubspec.yaml` file:
  
 <b>1) Initialisation </b>
 
+> **Note**
+> using the default constructor, you should use `initMapWithUserPosition` or `initPosition`
+> if you want the map to initialize using static position use the named constructor `withPosition`
+> or if you want to initialize the map with user position use `withUserPosition`
+
 ```dart
  MapController controller = MapController(
                             initMapWithUserPosition: false,
                             initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
-                            areaLimit: BoundingBox( east: 10.4922941, north: 47.8084648, south: 45.817995, west: 5.9559113,),
-                       );
+                            areaLimit: BoundingBox( 
+                                east: 10.4922941, 
+                                north: 47.8084648, 
+                                south: 45.817995, 
+                                west:  5.9559113,
+                            ),
+            );
+// or 
+
+ MapController controller = MapController.withPosition(
+                            initPosition: GeoPoint(
+                              latitude: 47.4358055,
+                               longitude: 8.4737324
+                            ,),
+                            areaLimit: BoundingBox( 
+                                east: 10.4922941, 
+                                north: 47.8084648, 
+                                south: 45.817995, 
+                                west:  5.9559113,
+                            ),
+            );
 ```
+
+
+
 <b>2) Dispose </b>
 ```dart
      controller.dispose();
@@ -175,8 +210,13 @@ controller = MapController.customLayer(
   * `publicTransportationLayer` constructor for transport tiles ,it's public osm server
 
 for more example see our example in `home_example.dart`
+<br>
+<br>
+<b> 3.2) Change Layers in runtime </b>
 
-
+```dart
+ await controller.changeTileLayer(tileLayer: CustomTile(...));
+```
 <b>4) Set map on user current location </b>
 
 ```dart
