@@ -1,3 +1,4 @@
+### 0.41.1 : add `withPosition` and `withUserPosition` as new named constructor for `MapController`
 ### 0.41.0 : change tile in runtime
 * add `changeTileLayer` in map_controller
 ### 0.40.3+2 : fix bugs

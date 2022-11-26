@@ -46,6 +46,12 @@ Add the following to your `pubspec.yaml` file:
     dependencies:
       flutter_osm_plugin: ^0.41.0
 
+## Integration with Hooks
+
+> To use our map library with `Flutter_Hooks` library use our new extension library 
+https://pub.dev/packages/osm_flutter_hooks 
+many thanks for @ben-xD
+
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
 
@@ -123,13 +129,40 @@ Add the following to your `pubspec.yaml` file:
  
 <b>1) Initialisation </b>
 
+> **Note**
+> using the default constructor, you should use `initMapWithUserPosition` or `initPosition`
+> if you want the map to initialize using static position use the named constructor `withPosition`
+> or if you want to initialize the map with user position use `withUserPosition`
+
 ```dart
  MapController controller = MapController(
                             initMapWithUserPosition: false,
                             initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
-                            areaLimit: BoundingBox( east: 10.4922941, north: 47.8084648, south: 45.817995, west: 5.9559113,),
-                       );
+                            areaLimit: BoundingBox( 
+                                east: 10.4922941, 
+                                north: 47.8084648, 
+                                south: 45.817995, 
+                                west:  5.9559113,
+                            ),
+            );
+// or 
+
+ MapController controller = MapController.withPosition(
+                            initPosition: GeoPoint(
+                              latitude: 47.4358055,
+                               longitude: 8.4737324
+                            ,),
+                            areaLimit: BoundingBox( 
+                                east: 10.4922941, 
+                                north: 47.8084648, 
+                                south: 45.817995, 
+                                west:  5.9559113,
+                            ),
+            );
 ```
+
+
+
 <b>2) Dispose </b>
 ```dart
      controller.dispose();
