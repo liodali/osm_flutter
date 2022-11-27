@@ -1091,6 +1091,7 @@ class FlutterOsmView(
             when {
                 !locationNewOverlay.isFollowLocationEnabled -> {
                     isTracking = true
+
                     locationNewOverlay.followLocation { userLocation ->
                         scope?.launch {
                             withContext(Main) {

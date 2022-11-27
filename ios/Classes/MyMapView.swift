@@ -54,6 +54,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var customTiles: [String: Any]? = nil
     var oldCustomTile: CustomTiles? = nil
     var bounds: [Double]? = nil
+    var enableStopFollowInDrag:Bool = false
+    var skipFollow:Bool = false
     let urlStyle = "https://github.com/liodali/osm_flutter/raw/dc7424dacd77f4eced626abf64486d70fd03240d/assets/dynamic-styles.zip"
 
     init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?) {
@@ -182,6 +184,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(mapView.position.toGeoPoint())
             break;
         case "trackMe":
+            enableStopFollowInDrag = call.arguments as? Bool ?? false
             trackUserLocation()
             result(200)
             break;
@@ -960,7 +963,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 if (canGetLastUserLocation) {
                     canGetLastUserLocation = false
                 }
-                mapView.flyToUserLocation(for: location)
+                if skipFollow {
+                    mapView.flyToUserLocation(for: location)
+                }
+
 
             }
         } else if (retrieveLastUserLocation) {
@@ -1031,6 +1037,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.width)
             let data: [String: Any] = ["center": point, "bounding": bounding]
             channel.invokeMethod("receiveRegionIsChanging", arguments: data)
+        }
+        if canTrackUserLocation && enableStopFollowInDrag{
+            skipFollow = true
         }
 
     }
