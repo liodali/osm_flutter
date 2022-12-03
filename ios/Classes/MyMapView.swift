@@ -747,6 +747,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let args = call.arguments as! [String: Any]
         var points = args["wayPoints"] as! [GeoPoint]
         var roadType = RoadType.car
+        let keepInitial = args["keepInitialGeoPoint"] as! Bool
         switch args["roadType"] as! String {
         case "car":
             roadType = RoadType.car
@@ -761,12 +762,14 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             roadType = RoadType.car
             break
         }
-        points.forEach { p in
-            let markers = mapView.markers.filter { m in
-                m.point == p.toLocationCoordinate()
-            }
-            markers.forEach { m in
-                mapView.markerRemove(m)
+        if keepInitial {
+            points.forEach { p in
+                let markers = mapView.markers.filter { m in
+                    m.point == p.toLocationCoordinate()
+                }
+                markers.forEach { m in
+                    mapView.markerRemove(m)
+                }
             }
         }
         if (!roadManager.roads.isEmpty) {
@@ -814,8 +817,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 box = route.coordinates?.toBounds()
             }
             var interestGeoPoints: [GeoPointMap]? = nil
+
             if let showMarkerInPOI = args["showMarker"] as? Bool {
-                if (showMarkerInPOI) {
+                if (showMarkerInPOI && !keepInitial) {
                     interestGeoPoints = [GeoPointMap]()
                     let start = self.markersIconsRoadPoint["start"] ?? self.defaultIcon
                     let geoStartM = GeoPointMap(icon: start!, coordinate: points.first!.toLocationCoordinate())
