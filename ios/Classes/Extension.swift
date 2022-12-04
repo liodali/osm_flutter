@@ -59,9 +59,9 @@ extension TGMapView {
         return userLocationMarker
     }
 
-    func flyToUserLocation(for location: CLLocationCoordinate2D) {
+    func flyToUserLocation(for location: CLLocationCoordinate2D,flyEnd: ((Bool) -> Void)? = nil) {
         let cameraOption = TGCameraPosition(center: location, zoom: self.zoom, bearing: self.bearing, pitch: self.pitch)
-        self.fly(to: cameraOption!, withSpeed: 50)
+        self.fly(to: cameraOption!, withSpeed: 50,callback: flyEnd)
     }
 
     func removeUserLocation(for marker: TGMarker) {
