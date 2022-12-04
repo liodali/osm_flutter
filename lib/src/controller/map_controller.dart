@@ -280,9 +280,11 @@ class MapController extends BaseMapController {
     return await osmBaseController.myLocation();
   }
 
+  /// [enableTracking]
+  /// 
   /// enabled tracking user location
-  Future<void> enableTracking() async {
-    await osmBaseController.enableTracking();
+  Future<void> enableTracking({bool enableStopFollow = false}) async {
+    await osmBaseController.enableTracking(enableStopFollow: enableStopFollow);
   }
 
   /// disabled tracking user location

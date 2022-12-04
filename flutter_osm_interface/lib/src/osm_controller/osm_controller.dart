@@ -134,7 +134,7 @@ abstract class IBaseOSMController {
   Future<void> goToPosition(GeoPoint p);
 
   /// enabled tracking user location
-  Future<void> enableTracking();
+  Future<void> enableTracking({bool enableStopFollow=false});
 
   /// disabled tracking user location
   Future<void> disabledTracking();
