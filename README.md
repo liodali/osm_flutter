@@ -1,5 +1,5 @@
 # flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.41.2-orange) 
+![pub](https://img.shields.io/badge/pub-v0.42.0-orange) 
 
 
 ## Platform Support
@@ -44,7 +44,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.41.2
+      flutter_osm_plugin: ^0.42.0
 
 ## Integration with Hooks
 
@@ -297,8 +297,10 @@ await controller.removeLimitAreaMap();
 > from version 0.40.0 we can call only `enableTracking` will animate to user location 
 without need to call `currentLocation`
 
+> when `enableStopFollow` is true,map will not be centered if the user location changed
+
 ```dart
- await controller.enableTracking();
+ await controller.enableTracking(enableStopFollow:false);
 ```
 
 <b> 9) Disable tracking user position </b>
