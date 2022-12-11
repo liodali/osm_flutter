@@ -54,8 +54,10 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                       textConfirmPicker: "pick",
                       initCurrentUserPosition: false,
                       initZoom: 8,
-                      initPosition:
-                          GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+                      initPosition: GeoPoint(
+                        latitude: 47.4358055,
+                        longitude: 8.4737324,
+                      ),
                       radius: 8.0,
                     );
                     if (p != null) {

@@ -8,10 +8,16 @@ data class CustomTile(
     val minZoomLevel: Int,
     val maxZoomLevel: Int,
     val api: Pair<String, String>?
-)
+) {
+    companion object {
+        fun fromMap(map: HashMap<String, Any>):CustomTile{
+            return  fromMapToCustomTile(map)
+        }
+    }
+}
 
 fun fromMapToCustomTile(map: HashMap<String, Any>): CustomTile = CustomTile(
-    urls = map["urls"] as List<String>,
+    urls = (map["urls"] as List<Any>).first() as List<String>,
     sourceName = map["name"] as String,
     tileFileExtension = map["tileExtension"] as String,
     tileSize = map["tileSize"] as Int,

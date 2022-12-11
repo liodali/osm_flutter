@@ -5,6 +5,20 @@
 ### 0.50.0-alpha : add web support
 * add osm_web_interface plugin
 * add create osm widget for web
+### 0.42.0 : add api to enableTracking
+* add parameter `enableStopFollow` in `enableTracking`
+* disable follow track user location when user start drag
+* fix drawRoad : add keepInitialGeo in ios side
+### 0.41.2 : fix dependencies for android sdk 33
+### 0.41.1 : add `withPosition` and `withUserPosition` as new named constructor for `MapController`
+### 0.41.0 : change tile in runtime
+* add `changeTileLayer` in map_controller
+### 0.40.3+2 : fix bugs
+* replace firebase url used in ios for map styles
+### 0.40.3+1 : fix bugs
+* replace firebase url used in ios for map styles
+### 0.40.3 : fix bugs (#335)
+* fix set custom tiles in android 
 ### 0.40.2 : fix bugs
 * fix disable follow user location when calling myLocation
 ### 0.40.1 : fix bugs

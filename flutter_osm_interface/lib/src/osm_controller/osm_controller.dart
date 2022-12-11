@@ -8,6 +8,13 @@ abstract class IBaseOSMController {
     bool initWithUserPosition = false,
   });
 
+  /// [changeTileLayer]
+  ///
+  /// change tile layer of the map en runtime using [tileLayer]
+  Future<void> changeTileLayer({
+    CustomTile? tileLayer,
+  });
+
   Future<void> configureZoomMap(
     double minZoomLevel,
     double maxZoomLevel,
@@ -134,7 +141,7 @@ abstract class IBaseOSMController {
   Future<void> goToPosition(GeoPoint p);
 
   /// enabled tracking user location
-  Future<void> enableTracking();
+  Future<void> enableTracking({bool enableStopFollow = false});
 
   /// disabled tracking user location
   Future<void> disabledTracking();

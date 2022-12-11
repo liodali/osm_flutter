@@ -36,6 +36,8 @@
 ## Getting Started
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
 <br>
+<img src="https://github.com/liodali/osm_flutter/blob/0.41.0/tileLayerRuntime.gif?raw=true" alt="openStreetMap flutter examples" width=260><br>
+<br>
 <img src="https://github.com/liodali/osm_flutter/blob/master/dialogSimplePickerLocation.gif?raw=true" alt="openStreetMap flutter examples"><br>
 
 ## Installing
@@ -59,6 +61,20 @@ Add this line below :point_down:  in index.html in web folder
 > **Note** 
 > We have limitation in handling user interaction in the map  inside our plugin, if you put button on the top of the map and you listen to click on the map both will be fired
 
+## Integration with Hooks
+
+> To use our map library with `Flutter_Hooks` library use our new extension library
+https://pub.dev/packages/osm_flutter_hooks
+many thanks for @ben-xD
+
+### Migration to `0.41.2` (Android Only)
+
+> open file build.gradle inside android file
+
+    * change kotlin version from `1.5.21` to `1.7.20`
+    * change gradle version from `7.0.4` to `7.1.3`
+    * change compileSdkVersion to 33
+
 
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
@@ -70,6 +86,7 @@ Add this line below :point_down:  in index.html in web folder
     * change kotlin version from `1.5.21` to `1.6.21`
     * change gradle version from `7.0.2` to `7.1.3` or `7.0.4`
     * change compileSdkVersion to 32
+    
 ### Migration to `0.16.0` (Android Only)
 > if you are using this plugin before Flutter 2 
 
@@ -137,13 +154,40 @@ Add this line below :point_down:  in index.html in web folder
  
 <b>1) Initialisation </b>
 
+> **Note**
+> using the default constructor, you should use `initMapWithUserPosition` or `initPosition`
+> if you want the map to initialize using static position use the named constructor `withPosition`
+> or if you want to initialize the map with user position use `withUserPosition`
+
 ```dart
  MapController controller = MapController(
                             initMapWithUserPosition: false,
                             initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
-                            areaLimit: BoundingBox( east: 10.4922941, north: 47.8084648, south: 45.817995, west: 5.9559113,),
-                       );
+                            areaLimit: BoundingBox( 
+                                east: 10.4922941, 
+                                north: 47.8084648, 
+                                south: 45.817995, 
+                                west:  5.9559113,
+                            ),
+            );
+// or 
+
+ MapController controller = MapController.withPosition(
+                            initPosition: GeoPoint(
+                              latitude: 47.4358055,
+                               longitude: 8.4737324
+                            ,),
+                            areaLimit: BoundingBox( 
+                                east: 10.4922941, 
+                                north: 47.8084648, 
+                                south: 45.817995, 
+                                west:  5.9559113,
+                            ),
+            );
 ```
+
+
+
 <b>2) Dispose </b>
 ```dart
      controller.dispose();
@@ -191,8 +235,13 @@ controller = MapController.customLayer(
   * `publicTransportationLayer` constructor for transport tiles ,it's public osm server
 
 for more example see our example in `home_example.dart`
+<br>
+<br>
+<b> 3.2) Change Layers in runtime </b>
 
-
+```dart
+ await controller.changeTileLayer(tileLayer: CustomTile(...));
+```
 <b>4) Set map on user current location </b>
 
 ```dart
@@ -264,8 +313,10 @@ await controller.removeLimitAreaMap();
 > from version 0.40.0 we can call only `enableTracking` will animate to user location 
 without need to call `currentLocation`
 
+> when `enableStopFollow` is true,map will not be centered if the user location changed
+
 ```dart
- await controller.enableTracking();
+ await controller.enableTracking(enableStopFollow:false);
 ```
 
 <b> 9) Disable tracking user position </b>

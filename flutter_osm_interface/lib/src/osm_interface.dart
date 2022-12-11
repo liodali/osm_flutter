@@ -48,6 +48,11 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     GeoPoint point,
   );
 
+  Future<void> changeTileLayer(
+    int idOSM,
+    CustomTile? tile,
+  );
+
   Future<void> currentLocation(
     int idOSM,
   );
@@ -88,8 +93,9 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   );
 
   Future<void> enableTracking(
-    int idOSM,
-  );
+    int idOSM, {
+    bool stopFollowInDrag = false,
+  });
 
   Future<void> addPosition(
     int idOSM,

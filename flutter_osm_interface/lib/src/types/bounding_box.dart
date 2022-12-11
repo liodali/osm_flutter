@@ -114,4 +114,8 @@ extension ExtBoundingBox on BoundingBox {
 
     return lonMatch && latMatch;
   }
+
+  List<double> toIOSList() {
+    return [south, west, north, east];
+  }
 }

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:io';
+
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -248,8 +248,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
-  Future<void> enableTracking(int idOSM) async {
-    await _channels[idOSM]?.invokeMethod('trackMe', null);
+  Future<void> enableTracking(
+    int idOSM, {
+    bool stopFollowInDrag = false,
+  }) async {
+    await _channels[idOSM]?.invokeMethod('trackMe', stopFollowInDrag);
   }
 
   /// select position and show marker on it
@@ -702,6 +705,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
       args["new_icon"] = icon;
     }
     await _channels[idOSM]!.invokeMethod("change#Marker", args);
+  }
+
+  @override
+  Future<void> changeTileLayer(int idOSM, CustomTile? tile) async {
+    await _channels[idOSM]!.invokeMethod("change#tile", tile?.toMap() ?? null);
   }
 }
 

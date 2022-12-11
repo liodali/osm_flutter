@@ -17,11 +17,30 @@ class MapController extends BaseMapController {
     GeoPoint? initPosition,
     BoundingBox? areaLimit = const BoundingBox.world(),
   })  : assert(
-          initMapWithUserPosition || initPosition != null,
+          initMapWithUserPosition ^ (initPosition != null),
         ),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
           initPosition: initPosition,
+          areaLimit: areaLimit,
+          customTile: null,
+        );
+
+  MapController.withPosition({
+    required GeoPoint initPosition,
+    BoundingBox? areaLimit = const BoundingBox.world(),
+  }) : super(
+          initMapWithUserPosition: false,
+          initPosition: initPosition,
+          areaLimit: areaLimit,
+          customTile: null,
+        );
+
+  MapController.withUserPosition({
+    BoundingBox? areaLimit = const BoundingBox.world(),
+  }) : super(
+          initMapWithUserPosition: true,
+          initPosition: null,
           areaLimit: areaLimit,
           customTile: null,
         );
@@ -49,24 +68,25 @@ class MapController extends BaseMapController {
           initMapWithUserPosition || initPosition != null,
         ),
         super(
-            initMapWithUserPosition: initMapWithUserPosition,
-            initPosition: initPosition,
-            areaLimit: areaLimit,
-            customTile: CustomTile(
-              urlsServers: [
-                TileURLs(
-                  url: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/",
-                  subdomains: [
-                    "a",
-                    "b",
-                    "c",
-                  ],
-                ),
-              ],
-              tileExtension: ".png",
-              sourceName: "cycleMapnik",
-              tileSize: 256,
-            ));
+          initMapWithUserPosition: initMapWithUserPosition,
+          initPosition: initPosition,
+          areaLimit: areaLimit,
+          customTile: CustomTile(
+            urlsServers: [
+              TileURLs(
+                url: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/",
+                subdomains: [
+                  "a",
+                  "b",
+                  "c",
+                ],
+              ),
+            ],
+            tileExtension: ".png",
+            sourceName: "cycleMapnik",
+            tileSize: 256,
+          ),
+        );
   MapController.publicTransportationLayer({
     bool initMapWithUserPosition = true,
     GeoPoint? initPosition,
@@ -75,17 +95,20 @@ class MapController extends BaseMapController {
           initMapWithUserPosition || initPosition != null,
         ),
         super(
-            initMapWithUserPosition: initMapWithUserPosition,
-            initPosition: initPosition,
-            areaLimit: areaLimit,
-            customTile: CustomTile(
-              urlsServers: [
-                TileURLs(url: "https://tile.memomaps.de/tilegen/"),
-              ],
-              tileExtension: ".png",
-              sourceName: "memomapsMapnik",
-              tileSize: 256,
-            ));
+          initMapWithUserPosition: initMapWithUserPosition,
+          initPosition: initPosition,
+          areaLimit: areaLimit,
+          customTile: CustomTile(
+            urlsServers: [
+              TileURLs(url: "https://tile.memomaps.de/tilegen/"),
+            ],
+            tileExtension: ".png",
+            sourceName: "memomapsMapnik",
+            tileSize: 256,
+          ),
+        );
+
+  /// [dispose]
   void dispose() {
     if (!kIsWeb) {
       (osmBaseController as MobileOSMController).dispose();
@@ -93,25 +116,41 @@ class MapController extends BaseMapController {
     super.dispose();
   }
 
+  /// [changeTileLayer]
+  ///
+  ///
+  Future<void> changeTileLayer({
+    CustomTile? tileLayer,
+  }) async {
+    await osmBaseController.changeTileLayer(tileLayer: tileLayer);
+  }
+
+  /// [limitAreaMap]
+  ///
   /// set area camera limit of the map
   /// [box] : (BoundingBox) bounding that map cannot exceed from it
   Future<void> limitAreaMap(BoundingBox box) async {
     await osmBaseController.limitArea(box);
   }
 
-  /// remove area camera limit from the map
+  /// [removeLimitAreaMap]
+  ///
+  /// remove area camera limit from the map, this support only in android
   Future<void> removeLimitAreaMap() async {
     await osmBaseController.removeLimitArea();
   }
 
+  /// [changeLocation]
+  ///
   /// initialise or change of position with creating marker in that specific position
   ///
   /// [p] : geoPoint
-  ///
   Future<void> changeLocation(GeoPoint p) async {
     await osmBaseController.changeLocation(p);
   }
 
+  /// [goToLocation]
+  ///
   ///animate  to specific position with out add marker into the map
   ///
   /// [p] : (GeoPoint) position that will be go to map
@@ -119,13 +158,16 @@ class MapController extends BaseMapController {
     await osmBaseController.goToPosition(p);
   }
 
+  /// [removeMarker]
+  ///
   ///remove marker from map of position
   /// [p] : geoPoint
   Future<void> removeMarker(GeoPoint p) async {
     osmBaseController.removeMarker(p);
   }
 
-  /// changeIconMarker
+  /// [changeIconMarker]
+  ///
   /// this method allow to change Home Icon Marker
   ///
   /// [icon] : (MarkerIcon) widget that represent the new home marker
@@ -134,6 +176,7 @@ class MapController extends BaseMapController {
   }
 
   /// setMarkerIcon
+  ///
   /// this method allow to change Icon Marker of specific GeoPoint
   /// thr GeoPoint should be exist,or nothing will happen
   ///
@@ -174,28 +217,46 @@ class MapController extends BaseMapController {
   /// recuperate current zoom level
   Future<double> getZoom() async => await osmBaseController.getZoom();
 
-  /// change zoom level of the map
+  /// [setZoom]
+  ///
+  /// this method change the zoom level of the map by setting direcly the [zoomLevel] or  [stepZoom]
+  ///
+  /// if [stepZoom] specified [zoomLevel] will be ignored
+  /// if [zoomLevel] negative,the map will zoomOut
+  ///
+  /// return Future
+  ///
+  /// Will throw exception if [zoomLevel] > of [maxZoomLevel] or [zoomLevel] < [minZoomLevel]
+  ///
   ///
   /// [zoomLevel] : (double) should be between minZoomLevel and maxZoomLevel
   ///
   /// [stepZoom] : (double) step zoom that will be added to current zoom
   Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
-    await osmBaseController.setZoom(zoomLevel: zoomLevel, stepZoom: stepZoom);
+    await osmBaseController.setZoom(
+      zoomLevel: zoomLevel,
+      stepZoom: stepZoom,
+    );
   }
 
-  /// zoomIn use defaultZoom
+  /// [zoomIn]
+  ///
+  /// will change the zoom of the map by zoom in using default stepZoom
   /// positive value:zoomIN
   Future<void> zoomIn() async {
     await osmBaseController.zoomIn();
   }
 
-  /// zoomOut use defaultZoom
+  /// zoomOut
+  ///
+  ///  will change the zoom of the map by zoom out using default stepZoom
   /// negative value:zoomOut
   Future<void> zoomOut() async {
     await osmBaseController.zoomOut();
   }
 
-  /// zoomToBoundingBox
+  /// [zoomToBoundingBox]
+  ///
   /// this method used to change zoom level to show specific region,
   /// get [box] and [paddinInPixel] as parameter
   ///
@@ -222,9 +283,12 @@ class MapController extends BaseMapController {
     return await osmBaseController.myLocation();
   }
 
-  /// enabled tracking user location
-  Future<void> enableTracking() async {
-    await osmBaseController.enableTracking();
+  /// [enableTracking]
+  ///
+  /// this method will enabled tracking user location,[enableStopFollow] is true ,
+  /// the map will follow the user location when it change
+  Future<void> enableTracking({bool enableStopFollow = false}) async {
+    await osmBaseController.enableTracking(enableStopFollow: enableStopFollow);
   }
 
   /// disabled tracking user location
