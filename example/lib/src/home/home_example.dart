@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 
 class MainExample extends StatefulWidget {

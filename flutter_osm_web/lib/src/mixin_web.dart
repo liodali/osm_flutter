@@ -19,6 +19,11 @@ mixin WebMixin {
     await promiseToFuture(interop.initMapLocation(p.toGeoJS()));
   }
 
+  Future<void> changeTileLayer({CustomTile? tileLayer}) {
+    // TODO: implement changeTileLayer
+    throw UnimplementedError();
+  }
+
   Future<void> currentLocation() async {
     await interop.currentUserLocation();
   }
@@ -51,7 +56,7 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<void> enableTracking() async {
+  Future<void> enableTracking({bool enableStopFollow = false}) async {
     await interop.enableTracking();
   }
 
