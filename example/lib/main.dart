@@ -1,14 +1,11 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/search_example.dart';
 import 'package:flutter_osm_plugin_example/src/simple_example_hook.dart';
 
 //import 'src/adv_home/home_example.dart';
 import 'src/home/home_example.dart';
 import 'src/search_example.dart';
-import 'web_test_osm.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
