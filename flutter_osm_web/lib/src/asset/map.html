@@ -3,12 +3,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-    crossorigin />
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-    crossorigin></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.min.js"></script>
 
   <!-- 
@@ -54,7 +50,7 @@
     var idTracking;
     var startAdvSearchLocation = false;
     var cachedLayers = L.layerGroup([]);
-
+    var customTile;
 
     var mymap = L.map('mapid', {
       renderer: L.canvas(),
@@ -99,6 +95,30 @@
       isReady = true;
       isMapReady(isReady);
       //L.polyline([{lat: 8.498037, lng: 47.489106},{lat: 8.537061, lng: 47.412961}],{color:'red'}).addTo(mymap)
+    }
+
+    async function changeTileLayer(tile) {
+      console.log("tile map :" + tile.url);
+      if(tile.url.includes('tile.openstreetmap.org') && customTile != undefined){
+        customTile.remove();
+        customTile = undefined;
+        OpenStreetMap_Mapnik.addTo(mymap);
+      }else {
+          if(customTile != undefined){
+            customTile.remove();
+          }
+          customTile = L.tileLayer(tile.url+'{z}/{x}/{y}'+tile.tileExtension+tile.apiKey,//'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
+          {
+            subdomains:tile.subDomains,
+            //attribution: 'Leaflet | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: tile.maxZoom,
+            minZoom: tile.minZoom,
+            tileSize: tile.tileSize,
+         });
+        customTile.addTo(mymap);
+        OpenStreetMap_Mapnik.remove();
+      }
+    
     }
 
     async function userLocation() {

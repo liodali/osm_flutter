@@ -160,6 +160,9 @@ extension ExtTileUrls on TileURLs {
     if (Platform.isIOS) {
       return toMapiOS();
     }
+    if (kIsWeb) {
+      return toWeb();
+    }
     throw UnsupportedError("platform not supported yet");
   }
 }

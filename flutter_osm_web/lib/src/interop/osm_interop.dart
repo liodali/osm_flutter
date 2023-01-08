@@ -3,93 +3,151 @@
 @JS()
 library osm_interop;
 
+import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
 import 'package:js/js.dart';
 
 import 'models/bounding_box_js.dart';
 import 'models/geo_point_js.dart';
 
 @JS('centerMap')
-external Map<String, double> centerMap();
+external Map<String, double> centerMap(
+  int mapId,
+);
 
 @JS('getBounds')
-external Map<String, double> getBounds();
+external Map<String, double> getBounds(
+  int mapId,
+);
 
 @JS('locateMe')
-external Map<String, double> locateMe();
+external Map<String, double> locateMe(
+  int mapId,
+);
 
 @JS('initMapLocation')
-external dynamic initMapLocation(GeoPointJs point);
+external dynamic initMapLocation(int mapId, GeoPointJs point);
 
 @JS('setZoomControl')
-external dynamic setZoomControl(bool showZoomControl);
+external dynamic setZoomControl(int mapId, bool showZoomControl);
 
 @JS('configZoom')
 external dynamic configZoom(
-    double stepZoom, double initZoom, double minZoomLevel, double maxZoomLevel);
+  int mapId,
+  double stepZoom,
+  double initZoom,
+  double minZoomLevel,
+  double maxZoomLevel,
+);
 
 @JS('setZoomStep')
-external dynamic setZoomStep(double stepZoom);
+external dynamic setZoomStep(
+  int mapId,
+  double stepZoom,
+);
 
 @JS('zoomIn')
-external dynamic zoomIn();
+external dynamic zoomIn(
+  int mapId,
+);
 
 @JS('zoomOut')
-external dynamic zoomOut();
+external dynamic zoomOut(
+  int mapId,
+);
 
 @JS('setZoom')
-external dynamic setZoom(double zoom);
+external dynamic setZoom(
+  int mapId,
+  double zoom,
+);
 
 @JS('setZoomStep')
-external dynamic setZoomWithStep(double stepZoom);
+external dynamic setZoomWithStep(
+  int mapId,
+  double stepZoom,
+);
 
 @JS('getZoom')
 external dynamic getZoom();
 
 @JS('setMaxZoomLevel')
-external dynamic setMaxZoomLevel(double maxZoomLvl);
+external dynamic setMaxZoomLevel(
+  int mapId,
+  double maxZoomLvl,
+);
 
 @JS('setMinZoomLevel')
-external dynamic setMinZoomLevel(double minZoomLvl);
+external dynamic setMinZoomLevel(
+  int mapId,
+  double minZoomLvl,
+);
 
 @JS('setDefaultIcon')
-external dynamic setDefaultIcon(String base64);
+external dynamic setDefaultIcon(
+  int mapId,
+  String base64,
+);
 
 @JS('addMarker')
-external dynamic addMarker(GeoPointJs p, String icon);
+external dynamic addMarker(
+  int mapId,
+  GeoPointJs p,
+  String icon,
+);
 
 @JS('changeMarker')
-external dynamic changeMarker(GeoPointJs oldP, GeoPointJs newP, String? icon);
+external dynamic changeMarker(
+  int mapId,
+  GeoPointJs oldP,
+  GeoPointJs newP,
+  String? icon,
+);
 
 @JS('modifyMarker')
-external dynamic modifyMarker(GeoPointJs p, String icon);
+external dynamic modifyMarker(
+  int mapId,
+  GeoPointJs p,
+  String icon,
+);
 
 @JS('addPosition')
-external dynamic addPosition(GeoPointJs p, bool showMarker, bool animate);
+external dynamic addPosition(
+    int mapId, GeoPointJs p, bool showMarker, bool animate);
 
 @JS('removeMarker')
-external dynamic removeMarker(GeoPointJs p);
+external dynamic removeMarker(int mapId, GeoPointJs p);
 
 @JS('currentUserLocation')
-external dynamic currentUserLocation();
+external dynamic currentUserLocation(
+  int mapId,
+);
 
 @JS('setStaticGeoPoints')
-external dynamic setStaticGeoPoints(String id, List<GeoPointJs> points);
+external dynamic setStaticGeoPoints(
+  int mapId,
+  String id,
+  List<GeoPointJs> points,
+);
 
 @JS('setStaticGeoPointsWithOrientation')
 external dynamic setStaticGeoPointsWithOrientation(
-    String id, List<GeoPointWithOrientationJs> points);
+  int mapId,
+  String id,
+  List<GeoPointWithOrientationJs> points,
+);
 
 @JS('setIconStaticGeoPoints')
-external dynamic setIconStaticGeoPoints(String id, String icons);
+external dynamic setIconStaticGeoPoints(int mapId, String id, String icons);
 
 @JS('limitArea')
-external dynamic limitArea(BoundingBoxJs box);
+external dynamic limitArea(int mapId, BoundingBoxJs box);
 
 @JS('flyToBounds')
-external dynamic flyToBounds(BoundingBoxJs box, int padding);
+external dynamic flyToBounds(int mapId, BoundingBoxJs box, int padding);
 
 @JS('configRoad')
 external dynamic configRoad(
+  int mapId,
   String color,
   String startMarkerIcon,
   String middleMarkerIcon,
@@ -98,6 +156,7 @@ external dynamic configRoad(
 
 @JS('drawRoad')
 external dynamic drawRoad(
+  int mapId,
   List<GeoPointJs> route,
   String color,
   double roadWidth,
@@ -108,23 +167,35 @@ external dynamic drawRoad(
 );
 
 @JS("getGeoPoints")
-external Map<String, String> getGeoPoints();
+external Map<String, String> getGeoPoints(
+  int mapId,
+);
 
 @JS("setUserLocationIconMarker")
-external dynamic setUserLocationIconMarker(String icon);
+external dynamic setUserLocationIconMarker(int mapId, String icon);
 
 @JS("enableTracking")
-external dynamic enableTracking();
+external dynamic enableTracking(
+  int mapId,
+);
 
 @JS("disableTracking")
-external dynamic disableTracking();
+external dynamic disableTracking(
+  int mapId,
+);
 
 @JS("changeIconAdvPickerMarker")
-external dynamic changeIconAdvPickerMarker(String? icon, int id);
+external dynamic changeIconAdvPickerMarker(int mapId, String? icon, int id);
 @JS("advSearchLocation")
 external dynamic advSearchLocation(int mapId);
 @JS("cancelAdvSearchLocation")
 external dynamic cancelAdvSearchLocation(int mapId);
+
+@JS('changeTileLayer')
+external dynamic changeTileLayer(int mapId, CustomTileJs tile);
+
+@JS('setUpMap')
+external dynamic setUpMap(int mapId);
 
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')

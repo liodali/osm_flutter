@@ -124,4 +124,13 @@ class TileURLs {
     }
     return map;
   }
+
+  List<String> toWeb() {
+    return [
+      url,
+      subdomains.isNotEmpty
+          ? subdomains.reduce((value, element) => '$value$element')
+          : ''
+    ];
+  }
 }

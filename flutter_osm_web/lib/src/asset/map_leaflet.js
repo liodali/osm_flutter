@@ -17,7 +17,7 @@ var idTracking;
 var startAdvSearchLocation = false;
 var cachedLayers;
 var mymap;
-
+var customTile;
 
 
 
@@ -59,9 +59,6 @@ if (isReady) {
 });
 
  
-
-
-
  async function initMapLocation(point) {
    console.log("zoom init map :" + zoom);
    console.log(point.lon + ":" + point.lat)
@@ -70,6 +67,27 @@ if (isReady) {
    isMapReady(isReady);
    //L.polyline([{lat: 8.498037, lng: 47.489106},{lat: 8.537061, lng: 47.412961}],{color:'red'}).addTo(mymap)
  }
+
+ async function changeTileLayer(tile) {
+  console.log("tile map :" + tile);
+  if(tile.url.includes('tile.openstreetmap.org') && customTile != undefined){
+    customTile.remove();
+    customTile = undefined;
+    OpenStreetMap_Mapnik.addTo(mymap);
+  }else {
+      customTile = L.tileLayer(tile.url+'{z}/{x}/{y}'+tile.tileExtension+tile.apiKey,//'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
+      {
+        subdomains:tile.subDomains,
+        //attribution: 'Leaflet | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: tile.maxZoom,
+        minZoom: tile.minZoom,
+        tileSize: tile.tileSize,
+     });
+    customTile.addTo(mymap);
+    OpenStreetMap_Mapnik.remove();
+  }
+
+}
 
  async function currentUserLocation() {
   locateMe().then((user) => {

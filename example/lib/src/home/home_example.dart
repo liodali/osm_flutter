@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 class MainExample extends StatefulWidget {
   MainExample({Key? key}) : super(key: key);
@@ -586,25 +587,27 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           }
           return child!;
         },
-        child: FloatingActionButton(
-          onPressed: () async {
-            if (!trackingNotifier.value) {
-              await controller.currentLocation();
-              await controller.enableTracking(enableStopFollow: false);
-              //await controller.zoom(5.0);
-            } else {
-              await controller.disabledTracking();
-            }
-            trackingNotifier.value = !trackingNotifier.value;
-          },
-          child: ValueListenableBuilder<bool>(
-            valueListenable: trackingNotifier,
-            builder: (ctx, isTracking, _) {
-              if (isTracking) {
-                return Icon(Icons.gps_off_sharp);
+        child: PointerInterceptor(
+          child: FloatingActionButton(
+            onPressed: () async {
+              if (!trackingNotifier.value) {
+                await controller.currentLocation();
+                await controller.enableTracking(enableStopFollow: false);
+                //await controller.zoom(5.0);
+              } else {
+                await controller.disabledTracking();
               }
-              return Icon(Icons.my_location);
+              trackingNotifier.value = !trackingNotifier.value;
             },
+            child: ValueListenableBuilder<bool>(
+              valueListenable: trackingNotifier,
+              builder: (ctx, isTracking, _) {
+                if (isTracking) {
+                  return Icon(Icons.gps_off_sharp);
+                }
+                return Icon(Icons.my_location);
+              },
+            ),
           ),
         ),
       ),
@@ -846,83 +849,67 @@ class OSMLayersChoiceWidget extends StatelessWidget {
           ),
           alignment: Alignment.center,
           margin: const EdgeInsets.only(top: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () {
-                  setLayerCallback(CustomTile.publicTransportationOSM());
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox.square(
-                      dimension: 64,
-                      child: IgnorePointer(
-                        child: OSMFlutter(
-                          controller: MapController.publicTransportationLayer(
-                            initPosition: centerPoint,
-                            initMapWithUserPosition: false,
-                          ),
-                          initZoom: 12,
-                          maxZoomLevel: 12,
+          child: PointerInterceptor(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    setLayerCallback(CustomTile.publicTransportationOSM());
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox.square(
+                        dimension: 64,
+                        child: Image.asset(
+                          'asset/transport.png',
+                          fit: BoxFit.fill,
                         ),
                       ),
-                    ),
-                    Text("Transportation"),
-                  ],
+                      Text("Transportation"),
+                    ],
+                  ),
                 ),
-              ),
-              TextButton(
-                onPressed: () {
-                  setLayerCallback(CustomTile.cycleOSM());
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox.square(
-                      dimension: 64,
-                      child: IgnorePointer(
-                        child: OSMFlutter(
-                          controller: MapController.cyclOSMLayer(
-                            initPosition: centerPoint,
-                            initMapWithUserPosition: false,
-                          ),
-                          initZoom: 12,
-                          maxZoomLevel: 12,
+                TextButton(
+                  onPressed: () {
+                    setLayerCallback(CustomTile.cycleOSM());
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox.square(
+                        dimension: 64,
+                        child: Image.asset(
+                          'asset/cycling.png',
+                          fit: BoxFit.fill,
                         ),
                       ),
-                    ),
-                    Text("CycleOSM"),
-                  ],
+                      Text("CycleOSM"),
+                    ],
+                  ),
                 ),
-              ),
-              TextButton(
-                onPressed: () {
-                  setLayerCallback(null);
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox.square(
-                      dimension: 64,
-                      child: IgnorePointer(
-                        child: OSMFlutter(
-                          controller: MapController(
-                            initPosition: centerPoint,
-                            initMapWithUserPosition: false,
-                          ),
-                          initZoom: 10,
-                          maxZoomLevel: 10,
+                TextButton(
+                  onPressed: () {
+                    setLayerCallback(null);
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox.square(
+                        dimension: 64,
+                        child: Image.asset(
+                          'asset/earth.png',
+                          fit: BoxFit.fill,
                         ),
                       ),
-                    ),
-                    Text("OSM"),
-                  ],
+                      Text("OSM"),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -1,7 +1,6 @@
 import 'dart:js';
 
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
 import 'package:js/js.dart';
 
 import 'channel/method_channel_web.dart';

@@ -22,7 +22,7 @@ var mymap;
   var leafletScript = document.createElement("script");
 leafletScript.id = "leafletScript"
 leafletScript.type = "text/javascript";
-leafletScript.src = "https://unpkg.com/leaflet@1.9.0/dist/leaflet.js";
+leafletScript.src = "https://unpkg.com/leaflet@1.9.3/dist/leaflet.js";
 document.getElementsByTagName('head')[0].appendChild(leafletScript);
 
 
@@ -31,7 +31,7 @@ leafletCSS.id = "leafletCSS"
 leafletCSS.setAttribute('rel', 'stylesheet');
 leafletCSS.setAttribute('type', 'text/css');
 leafletCSS.setAttribute('href', 
-                        'https://unpkg.com/leaflet@1.9.0/dist/leaflet.css');
+                        'https://unpkg.com/leaflet@1.9.3/dist/leaflet.css');
 document.getElementsByTagName('head')[0].appendChild(leafletCSS);
 
 leafletScript.onload = function(){

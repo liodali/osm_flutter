@@ -18,8 +18,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
 
   final Map<int, MethodChannel> _channels = {};
 
-  static String getViewType({int? mapId}) =>
-      mapId != null ? "${viewType}_$mapId" : viewType;
+  static String getViewType() => viewType; // "${viewType}_$mapId";
 
   Map<int, WebOsmController> mapsController = <int, WebOsmController>{};
 
@@ -77,7 +76,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
     }
     if (!_channels.containsKey(idOSM)) {
       _channels[idOSM] = MethodChannel(
-        '${getViewType(mapId: idOSM)}',
+        '${getViewType()}_$idOSM',
         const StandardMethodCodec(),
         messenger,
       );
