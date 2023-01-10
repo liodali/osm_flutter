@@ -25,6 +25,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
   ValueNotifier<bool> showFab = ValueNotifier(true);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
+  ValueNotifier<bool> beginDrawRoad = ValueNotifier(false);
+  List<GeoPoint> pointsRoad = [];
   Timer? timer;
   int x = 0;
 
@@ -141,8 +143,22 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     controller.listenerMapSingleTapping.addListener(() async {
       if (controller.listenerMapSingleTapping.value != null) {
         print(controller.listenerMapSingleTapping.value);
-
-        if (lastGeoPoint.value != null) {
+        if (beginDrawRoad.value) {
+          pointsRoad.add(controller.listenerMapSingleTapping.value!);
+          await controller.addMarker(
+            controller.listenerMapSingleTapping.value!,
+            markerIcon: MarkerIcon(
+              icon: Icon(
+                Icons.person_pin_circle,
+                color: Colors.amber,
+                size: 48,
+              ),
+            ),
+          );
+          if (pointsRoad.length >= 2 && showFab.value) {
+            roadActionBt(context);
+          }
+        } else if (lastGeoPoint.value != null) {
           controller.changeLocationMarker(
             oldLocation: lastGeoPoint.value!,
             newLocation: controller.listenerMapSingleTapping.value!,
@@ -287,7 +303,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 await controller.clearAllRoads();
               },
               child: IconButton(
-                onPressed: () => roadActionBt(ctx),
+                onPressed: () {
+                  beginDrawRoad.value = true;
+                },
                 icon: Icon(Icons.route),
               ),
             );
@@ -635,25 +653,18 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
 */
 
       ///selection geoPoint
-      GeoPoint point = await controller.selectPosition(
-        icon: MarkerIcon(
-          icon: Icon(
-            Icons.person_pin_circle,
-            color: Colors.amber,
-            size: 100,
-          ),
-        ),
-      );
-      GeoPoint point2 = await controller.selectPosition();
+
       showFab.value = false;
       ValueNotifier<RoadType> notifierRoadType = ValueNotifier(RoadType.car);
 
       final bottomPersistant = scaffoldKey.currentState!.showBottomSheet(
         (ctx) {
-          return RoadTypeChoiceWidget(
-            setValueCallback: (roadType) {
-              notifierRoadType.value = roadType;
-            },
+          return PointerInterceptor(
+            child: RoadTypeChoiceWidget(
+              setValueCallback: (roadType) {
+                notifierRoadType.value = roadType;
+              },
+            ),
           );
         },
         backgroundColor: Colors.transparent,
@@ -661,8 +672,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       );
       await bottomPersistant.closed.then((roadType) async {
         showFab.value = true;
+        beginDrawRoad.value = false;
         RoadInfo roadInformation = await controller.drawRoad(
-          point, point2,
+          pointsRoad.first, pointsRoad.last,
           roadType: notifierRoadType.value,
           //interestPoints: [pointM1, pointM2],
           roadOption: RoadOption(
@@ -672,6 +684,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             zoomInto: true,
           ),
         );
+        pointsRoad.clear();
         print(
             "duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         print("distance:${roadInformation.distance}Km");
