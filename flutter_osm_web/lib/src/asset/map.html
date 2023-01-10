@@ -460,6 +460,13 @@
       }
       return 200;
     }
+    function removeLastRoad(){
+      if (lastRoad != undefined) {
+        mymap.removeLayer(lastRoad)
+        routesLayer.pop()
+        lastRoad = undefined;
+      }
+    }
     function setUserLocationIconMarker(icon) {
       if (icon != undefined && icon != "")
         userLocationMarkerIcon = icon;

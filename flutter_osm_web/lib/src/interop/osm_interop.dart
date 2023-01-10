@@ -166,6 +166,9 @@ external dynamic drawRoad(
   String? iconInterestPoints,
 );
 
+@JS('removeLastRoad')
+external dynamic removeLastRoad(int mapId,);
+
 @JS("getGeoPoints")
 external Map<String, String> getGeoPoints(
   int mapId,

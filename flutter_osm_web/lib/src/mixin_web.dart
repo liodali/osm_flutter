@@ -3,7 +3,6 @@ import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_web/flutter_osm_web.dart';
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
 import 'package:js/js_util.dart';
 import 'package:routing_client_dart/routing_client_dart.dart' as routing;
@@ -128,9 +127,8 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<void> removeLastRoad() {
-    // TODO: implement removeLastRoad
-    throw UnimplementedError();
+  Future<void> removeLastRoad() async {
+    await promiseToFuture(interop.removeLastRoad(mapIdMixin));
   }
 
   Future<void> removeMarker(GeoPoint p) async {

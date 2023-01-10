@@ -124,7 +124,14 @@ function drawRoad(mapId,route, color, roadWidth, zoomInto, keepInitialGeoPoints,
    var iframe = document.getElementById("frame_map_"+mapId);
    return iframe.contentWindow.drawRoad(route, color, roadWidth, zoomInto, keepInitialGeoPoints, interestPoints, iconInteretPoint);
 }
-
+async function removeLastRoad(mapId){
+   var iframe = document.getElementById("frame_map_"+mapId);
+   return iframe.contentWindow.removeLastRoad(mapId);
+}
+async function removeRoad(mapId,roadId){
+   var iframe = document.getElementById("frame_map_"+mapId);
+   return iframe.contentWindow.removeRoad(mapId,roadId);
+}
 async function getGeoPoints(mapId) {
    var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.getGeoPoints();
