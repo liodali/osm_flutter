@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -14,6 +14,9 @@ typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
 
 const iosSizeIcon = [48.0, 48.0];
+const earthRadiusMeters = 6378137;
+const deg2rad = pi / 180.0;
+const rad2deg = 180.0 / pi;
 
 extension ExtGeoPoint on GeoPoint {
   List<num> toListNum() {
@@ -165,4 +168,32 @@ extension ExtTileUrls on TileURLs {
     }
     throw UnsupportedError("platform not supported yet");
   }
+}
+/// [geoPointAsRect]
+/// 
+/// this method will calculate the bounds from [center] using [lengthInMeters] and [widthInMeters]
+/// this method usefull to get Rect or bounds
+/// 
+/// return List of [GeoPoint]
+List<GeoPoint> geoPointAsRect({
+  required GeoPoint center,
+  required double lengthInMeters,
+  required double widthInMeters,
+}) {
+  final List<GeoPoint> bounds = []..length = 4;
+  GeoPoint east = center.destinationPoint(
+    distanceInMeters: lengthInMeters * 0.5,
+    bearingInDegrees: 90,
+  );
+  GeoPoint south = center.destinationPoint(
+    distanceInMeters: widthInMeters * 0.5,
+    bearingInDegrees: 180,
+  );
+  double westLon = center.longitude * 2 - east.longitude;
+  double northLat = center.latitude * 2 - south.latitude;
+  bounds.add(GeoPoint(latitude: south.latitude, longitude: east.longitude));
+  bounds.add(GeoPoint(latitude: south.latitude, longitude: westLon));
+  bounds.add(GeoPoint(latitude: northLat, longitude: westLon));
+  bounds.add(GeoPoint(latitude: northLat, longitude: east.longitude));
+  return bounds;
 }
