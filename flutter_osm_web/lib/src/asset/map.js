@@ -52,6 +52,7 @@ async function setIconStaticGeoPoints(mapId,id, icon) {
    return await iframe.contentWindow.setStaticGeoPointIcon(id, icon);
 }
 async function setStaticGeoPoints(mapId,id, points) {
+   console.log(points)
    var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.setStaticGeoPoint(id, points);
 }
@@ -162,9 +163,14 @@ async function cancelAdvSearchLocation(mapId) {
    var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.cancelAdvSearchLocation();
 }
-async function drawRect(mapId,rect){
+async function drawRect(mapId,config,bounds,color,strokeWidth){
+   console.log(mapId);
+   console.log('draw rect '+config.key);
+   console.log('draw rect '+bounds);
+   console.log('draw rect '+config.color);
+   console.log('draw rect '+config.strokeWidth);
    var iframe = document.getElementById("frame_map_"+mapId);
-   return await iframe.contentWindow.drawRect(rect);
+   return await iframe.contentWindow.drawRect(config.key,bounds,config.color,config.strokeWidth);
 }
 async function removeRect(mapId,key){
    var iframe = document.getElementById("frame_map_"+mapId);

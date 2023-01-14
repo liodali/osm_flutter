@@ -88,6 +88,9 @@ extension ColorMap on Color {
   }
 
   String toHexColor() {
+    if (kIsWeb) {
+      return toHexColorWeb();
+    }
     return "#${this.value.toRadixString(16)}";
   }
 
@@ -169,18 +172,19 @@ extension ExtTileUrls on TileURLs {
     throw UnsupportedError("platform not supported yet");
   }
 }
+
 /// [geoPointAsRect]
-/// 
+///
 /// this method will calculate the bounds from [center] using [lengthInMeters] and [widthInMeters]
 /// this method usefull to get Rect or bounds
-/// 
+///
 /// return List of [GeoPoint]
 List<GeoPoint> geoPointAsRect({
   required GeoPoint center,
   required double lengthInMeters,
   required double widthInMeters,
 }) {
-  final List<GeoPoint> bounds = []..length = 4;
+  final List<GeoPoint> bounds = <GeoPoint>[];
   GeoPoint east = center.destinationPoint(
     distanceInMeters: lengthInMeters * 0.5,
     bearingInDegrees: 90,

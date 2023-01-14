@@ -78,14 +78,16 @@ mixin WebMixin {
       center: rectOSM.centerPoint,
       lengthInMeters: rectOSM.distance,
       widthInMeters: rectOSM.distance,
-    ).map((e) => e.toGeoJS()).toList();
-    final rectJS = RectShapeJS(
-      key: rectOSM.key,
-      rect: rect,
-      color: rectOSM.color.toHexColor(),
-      strokeWidth: rectOSM.strokeWidth,
     );
-    await promiseToFuture(interop.drawRect(mapIdMixin, rectJS));
+    await promiseToFuture(interop.drawRect(
+      mapIdMixin,
+      RectShapeJS(
+        key: rectOSM.key,
+        color: rectOSM.color.toHexColor(),
+        strokeWidth: rectOSM.strokeWidth,
+      ),
+      rect.map((e) => e.toGeoJS()).toList(),
+    ));
   }
 
   Future<void> enableTracking({bool enableStopFollow = false}) async {

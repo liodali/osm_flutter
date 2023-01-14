@@ -113,7 +113,11 @@ external dynamic modifyMarker(
 
 @JS('addPosition')
 external dynamic addPosition(
-    int mapId, GeoPointJs p, bool showMarker, bool animate);
+  int mapId,
+  GeoPointJs p,
+  bool showMarker,
+  bool animate,
+);
 
 @JS('removeMarker')
 external dynamic removeMarker(int mapId, GeoPointJs p);
@@ -138,13 +142,24 @@ external dynamic setStaticGeoPointsWithOrientation(
 );
 
 @JS('setIconStaticGeoPoints')
-external dynamic setIconStaticGeoPoints(int mapId, String id, String icons);
+external dynamic setIconStaticGeoPoints(
+  int mapId,
+  String id,
+  String icons,
+);
 
 @JS('limitArea')
-external dynamic limitArea(int mapId, BoundingBoxJs box);
+external dynamic limitArea(
+  int mapId,
+  BoundingBoxJs box,
+);
 
 @JS('flyToBounds')
-external dynamic flyToBounds(int mapId, BoundingBoxJs box, int padding);
+external dynamic flyToBounds(
+  int mapId,
+  BoundingBoxJs box,
+  int padding,
+);
 
 @JS('configRoad')
 external dynamic configRoad(
@@ -168,7 +183,9 @@ external dynamic drawRoad(
 );
 
 @JS('removeLastRoad')
-external dynamic removeLastRoad(int mapId,);
+external dynamic removeLastRoad(
+  int mapId,
+);
 
 @JS("getGeoPoints")
 external Map<String, String> getGeoPoints(
@@ -198,13 +215,15 @@ external dynamic cancelAdvSearchLocation(int mapId);
 @JS('changeTileLayer')
 external dynamic changeTileLayer(int mapId, CustomTileJs tile);
 
-
 @JS('drawRect')
-external dynamic drawRect(int mapId,RectShapeJS rect);
+external dynamic drawRect(
+  int mapId,
+  RectShapeJS rectShapeJS,
+  List<GeoPointJs> bounds,
+);
 
 @JS('removeRect')
-external dynamic removeRect(int mapId,String rectKey);
-
+external dynamic removeRect(int mapId, String rectKey);
 
 @JS('setUpMap')
 external dynamic setUpMap(int mapId);
