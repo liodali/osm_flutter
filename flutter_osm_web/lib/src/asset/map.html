@@ -551,13 +551,18 @@
               fill:true,
               fillOpacity:0.5
             }
-      ).addTo(mymap);
-      shapesLayers[key]=polygon;
+      )
+      polygon.addTo(mymap);
+      shapesLayers.set(key,polygon);
     }
 
     async function removeRect(key){
-      if(shapesLayers.has(key)){
-        shapesLayers[key].remove();
+      console.log(shapesLayers)
+      console.log(shapesLayers.has(key))
+      if(shapesLayers.has(key)){  
+        mymap.removeLayer(shapesLayers.get(key))
+        console.log(key)
+        shapesLayers.delete(key)
       }
      
     }
