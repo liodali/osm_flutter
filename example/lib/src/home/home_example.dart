@@ -159,10 +159,12 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             roadActionBt(context);
           }
         } else if (lastGeoPoint.value != null) {
+       
           controller.changeLocationMarker(
             oldLocation: lastGeoPoint.value!,
             newLocation: controller.listenerMapSingleTapping.value!,
           );
+         
         } else {
           await controller.addMarker(
             controller.listenerMapSingleTapping.value!,
