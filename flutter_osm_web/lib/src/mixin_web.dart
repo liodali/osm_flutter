@@ -4,6 +4,7 @@ import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
+import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
 import 'package:js/js_util.dart';
 import 'package:routing_client_dart/routing_client_dart.dart' as routing;
 
@@ -72,9 +73,19 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<void> drawRect(RectOSM rectOSM) {
-    // TODO: implement drawRect
-    throw UnimplementedError();
+  Future<void> drawRect(RectOSM rectOSM) async {
+    final rect = geoPointAsRect(
+      center: rectOSM.centerPoint,
+      lengthInMeters: rectOSM.distance,
+      widthInMeters: rectOSM.distance,
+    ).map((e) => e.toGeoJS()).toList();
+    final rectJS = RectShapeJS(
+      key: rectOSM.key,
+      rect: rect,
+      color: rectOSM.color.toHexColor(),
+      strokeWidth: rectOSM.strokeWidth,
+    );
+    await promiseToFuture(interop.drawRect(mapIdMixin, rectJS));
   }
 
   Future<void> enableTracking({bool enableStopFollow = false}) async {
@@ -135,9 +146,8 @@ mixin WebMixin {
     interop.removeMarker(mapIdMixin, p.toGeoJS());
   }
 
-  Future<void> removeRect(String key) {
-    // TODO: implement removeRect
-    throw UnimplementedError();
+  Future<void> removeRect(String key) async {
+    await promiseToFuture(interop.removeRect(mapIdMixin, key));
   }
 
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {

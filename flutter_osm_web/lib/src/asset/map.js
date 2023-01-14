@@ -162,6 +162,16 @@ async function cancelAdvSearchLocation(mapId) {
    var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.cancelAdvSearchLocation();
 }
+async function drawRect(mapId,rect){
+   var iframe = document.getElementById("frame_map_"+mapId);
+   return await iframe.contentWindow.drawRect(rect);
+}
+async function removeRect(mapId,key){
+   var iframe = document.getElementById("frame_map_"+mapId);
+   return await iframe.contentWindow.removeRect(key);
+}
+
+
 async function setUpMap(mapId){
    var innerWindow = document.getElementById('frame_map_'+mapId).contentWindow;
    innerWindow.isMapReady = isMapReady;

@@ -38,6 +38,7 @@
     var roadMarkerIcons = new Map();
     var staticIcons = new Map();
     var staticGeoPoint = new Map();
+    var shapesLayers = new Map();
     var userLocationMarkerIcon = "";
     var dynamicIcon = "";
     var advSearchIcon = "";
@@ -537,9 +538,21 @@
       nodeImg.style.width = "32px";
     }
 
+    async function drawRect(rectOSM){
+      var rectPoints = rectOSM.rect.map(p => [p.lat,p.lon])
+      var polygon = L.polygon([
+      rectPoints,{color: color, weight: rectOSM.strokeWidth,fill:true,fillOpacity:0.5}
+        ]);
+        shapesLayers[rectOSM.key]=polygon;
+        polygon.addTo(mymap);
+    }
 
-
-
+    async function removeRect(key){
+      if(shapesLayers.has(key)){
+        shapesLayers[key].remove();
+      }
+     
+    }
     function setHomeMarker(point, args) {
       if (homeMarker == undefined) {
         homeMarker = L.marker([point.lat, point.lon], args).addTo(mymap);

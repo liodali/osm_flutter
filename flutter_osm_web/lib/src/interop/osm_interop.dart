@@ -4,6 +4,7 @@
 library osm_interop;
 
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
+import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
 import 'package:js/js.dart';
 
 import 'models/bounding_box_js.dart';
@@ -196,6 +197,14 @@ external dynamic cancelAdvSearchLocation(int mapId);
 
 @JS('changeTileLayer')
 external dynamic changeTileLayer(int mapId, CustomTileJs tile);
+
+
+@JS('drawRect')
+external dynamic drawRect(int mapId,RectShapeJS rect);
+
+@JS('removeRect')
+external dynamic removeRect(int mapId,String rectKey);
+
 
 @JS('setUpMap')
 external dynamic setUpMap(int mapId);
