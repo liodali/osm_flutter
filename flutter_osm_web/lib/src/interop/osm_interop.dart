@@ -213,7 +213,7 @@ external dynamic advSearchLocation(int mapId);
 external dynamic cancelAdvSearchLocation(int mapId);
 
 @JS('changeTileLayer')
-external dynamic changeTileLayer(int mapId, CustomTileJs tile);
+external dynamic changeTileLayer(int mapId, CustomTileJs? tile);
 
 @JS('drawRect')
 external dynamic drawRect(

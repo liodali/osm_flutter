@@ -23,21 +23,23 @@ mixin WebMixin {
   }
 
   Future<void> changeTileLayer({CustomTile? tileLayer}) async {
-    final urls = tileLayer!.urlsServers.first.toWeb();
+    final urls = tileLayer?.urlsServers.first.toWeb();
     await promiseToFuture(
       interop.changeTileLayer(
         mapIdMixin,
-        CustomTileJs(
-          url: urls.first,
-          subDomains: urls.last,
-          apiKey: tileLayer.keyApi != null
-              ? '?${tileLayer.keyApi!.key}=${tileLayer.keyApi!.value}'
-              : '',
-          maxZoom: tileLayer.maxZoomLevel,
-          minZoom: tileLayer.minZoomLevel,
-          tileExtension: tileLayer.tileExtension,
-          tileSize: tileLayer.tileSize,
-        ),
+        tileLayer != null && urls != null && urls.isNotEmpty
+            ? CustomTileJs(
+                url: urls.first,
+                subDomains: urls.last,
+                apiKey: tileLayer.keyApi != null
+                    ? '?${tileLayer.keyApi!.key}=${tileLayer.keyApi!.value}'
+                    : '',
+                maxZoom: tileLayer.maxZoomLevel,
+                minZoom: tileLayer.minZoomLevel,
+                tileExtension: tileLayer.tileExtension,
+                tileSize: tileLayer.tileSize,
+              )
+            : null,
       ),
     );
   }

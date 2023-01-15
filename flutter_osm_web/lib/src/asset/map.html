@@ -99,8 +99,7 @@
     }
 
     async function changeTileLayer(tile) {
-      console.log("tile map :" + tile.url);
-      if(tile.url.includes('tile.openstreetmap.org') && customTile != undefined){
+      if(tile == undefined && customTile != undefined){
         customTile.remove();
         customTile = undefined;
         OpenStreetMap_Mapnik.addTo(mymap);
