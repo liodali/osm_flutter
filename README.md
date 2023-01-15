@@ -1,12 +1,12 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.40.2-orange)   
-![pub](https://img.shields.io/badge/pub-v0.50.0--alpha.4-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.42.0-orange)   
+![pub](https://img.shields.io/badge/pub-v0.50.0--alpha.5-yellow) 
 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | 0.50.0-alpha.4 |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | 0.50.0-alpha.5 |
 
 
 <b>osm plugin for flutter apps </b>
@@ -18,8 +18,8 @@
 * customize Icon Marker (Android/iOS/web)
 * customize user Marker (Android/iOS/web)
 * assisted selection position (Android/iOS)
-* set BoundingBox (Android)
-* zoom into regon (Android/iOS)
+* set BoundingBox (Android/Web)
+* zoom into region (Android/iOS)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS/web)
 * draw Road manually (Android/iOS/web)
 * draw multiple Roads  (Android)
@@ -29,8 +29,8 @@
 * address suggestion
 * draw shapes (Only Android)
 * simple dialog location picker (Android/iOS)
-* listen to region change (Android/iOS)
-* set custom tiles (Android,iOS) 
+* listen to region change (Android/iOS/Web)
+* set custom tiles (Android/iOS/Web) 
 
 
 ## Getting Started
@@ -45,7 +45,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.50.0-alpha.4
+      flutter_osm_plugin: ^0.50.0-alpha.5
 
 
 

@@ -1,3 +1,4 @@
+### 0.50.0-alpha.5 :  add drawRect,removeRect,changeCustomTile
 ### 0.50.0-alpha.4 :  fix issue in publish
 ### 0.50.0-alpha.3 :  fix issue in publish
 ### 0.50.0-alpha.2 :  fix issue in publish
