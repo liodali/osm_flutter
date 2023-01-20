@@ -3,6 +3,8 @@
 @JS()
 library osm_interop;
 
+import 'dart:html';
+
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
 import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
 import 'package:js/js.dart';
@@ -222,8 +224,11 @@ external dynamic drawRect(
   List<GeoPointJs> bounds,
 );
 
-@JS('removeRect')
-external dynamic removeRect(int mapId, String rectKey);
+@JS('drawCircle')
+external dynamic drawCircle(int mapId, CircleShapeJS circle);
+
+@JS('removePath')
+external dynamic removePath(int mapId, String rectKey);
 
 @JS('setUpMap')
 external dynamic setUpMap(int mapId);

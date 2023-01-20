@@ -70,9 +70,19 @@ mixin WebMixin {
     );
   }
 
-  Future<void> drawCircle(CircleOSM circleOSM) {
-    // TODO: implement drawCircle
-    throw UnimplementedError();
+  Future<void> drawCircle(CircleOSM circleOSM) async {
+    await promiseToFuture(
+      interop.drawCircle(
+        mapIdMixin,
+        CircleShapeJS(
+          key: circleOSM.key,
+          center: circleOSM.centerPoint.toGeoJS(),
+          radius: circleOSM.radius,
+          color: circleOSM.color.toHexColor(),
+          strokeWidth: circleOSM.strokeWidth,
+        ),
+      ),
+    );
   }
 
   Future<void> drawRect(RectOSM rectOSM) async {
@@ -137,9 +147,8 @@ mixin WebMixin {
     throw UnimplementedError();
   }
 
-  Future<void> removeCircle(String key) {
-    // TODO: implement removeCircle
-    throw UnimplementedError();
+  Future<void> removeCircle(String key) async {
+    await promiseToFuture(interop.removePath(mapIdMixin, key));
   }
 
   Future<void> removeLastRoad() async {
@@ -151,7 +160,7 @@ mixin WebMixin {
   }
 
   Future<void> removeRect(String key) async {
-    await promiseToFuture(interop.removeRect(mapIdMixin, key));
+    await promiseToFuture(interop.removePath(mapIdMixin, key));
   }
 
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {

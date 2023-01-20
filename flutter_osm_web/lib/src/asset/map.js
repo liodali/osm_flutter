@@ -163,18 +163,16 @@ async function cancelAdvSearchLocation(mapId) {
    var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.cancelAdvSearchLocation();
 }
-async function drawRect(mapId,config,bounds,color,strokeWidth){
-   console.log(mapId);
-   console.log('draw rect '+config.key);
-   console.log('draw rect '+bounds);
-   console.log('draw rect '+config.color);
-   console.log('draw rect '+config.strokeWidth);
-   var iframe = document.getElementById("frame_map_"+mapId);
+async function drawRect(mapId,config,bounds){
    return await iframe.contentWindow.drawRect(config.key,bounds,config.color,config.strokeWidth);
 }
-async function removeRect(mapId,key){
+async function drawCircle(mapId,config){
    var iframe = document.getElementById("frame_map_"+mapId);
-   return await iframe.contentWindow.removeRect(key);
+   return await iframe.contentWindow.drawCircle(config);
+}
+async function removePath(mapId,key){
+   var iframe = document.getElementById("frame_map_"+mapId);
+   return await iframe.contentWindow.removePath(key);
 }
 
 

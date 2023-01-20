@@ -538,10 +538,7 @@
     }
 
     async function drawRect(key,bounds,color,strokeWidth){
-      console.log(key)
-      console.log(bounds);
       var rectPoints = bounds.map(p => [p.lat,p.lon]);
-      console.log(rectPoints)
       var polygon = L.polygon(
             rectPoints,
             {
@@ -554,8 +551,23 @@
       polygon.addTo(mymap);
       shapesLayers.set(key,polygon);
     }
+    async function drawCircle(configuration){
+      
+      var circle = L.circle(
+        [configuration.center.lat,configuration.center.lon],
+            {
+              color: configuration.color, 
+              radius:configuration.radius,
+              weight: configuration.strokeWidth,
+              fill:true,
+              fillOpacity:0.5
+            }
+      )
+      circle.addTo(mymap);
+      shapesLayers.set(key,circle);
+    }
 
-    async function removeRect(key){
+    async function removePath(key){
       console.log(shapesLayers)
       console.log(shapesLayers.has(key))
       if(shapesLayers.has(key)){  
@@ -563,7 +575,6 @@
         console.log(key)
         shapesLayers.delete(key)
       }
-     
     }
     function setHomeMarker(point, args) {
       if (homeMarker == undefined) {
