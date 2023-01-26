@@ -472,7 +472,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func addMarkerManually(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
-        var icon = markerIcon ?? defaultIcon
+        var icon = (markerIcon ?? defaultIcon)!
         if (args.keys.contains("icon")) {
             let iconArg = args["icon"] as! [String: Any]
             icon = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as! [Int])
