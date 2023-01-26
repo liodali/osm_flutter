@@ -472,13 +472,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func addMarkerManually(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
-        var icon = markerIcon != nil ? markerIcon : defaultIcon!
         if (args.keys.contains("icon")) {
             let iconArg = args["icon"] as! [String: Any]
-            icon = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as! [Int])
+            let icon = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as! [Int])
+            let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
+            GeoPointMap(icon: icon, coordinate: coordinate).setupMarker(on: mapView)
         }
-        let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
-        GeoPointMap(icon: icon, coordinate: coordinate).setupMarker(on: mapView)
     }
 
     private func changePositionMarker(call: FlutterMethodCall) {
