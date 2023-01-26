@@ -312,8 +312,11 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<void> changeTileLayer({ CustomTile? tileLayer}) =>
-      osmPlatform.changeTileLayer(_idMap, tileLayer,);
+  Future<void> changeTileLayer({CustomTile? tileLayer}) =>
+      osmPlatform.changeTileLayer(
+        _idMap,
+        tileLayer,
+      );
 
   /// set area camera limit of the map
   /// [box] : (BoundingBox) bounding that map cannot exceed from it
@@ -470,10 +473,13 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   /// enabled tracking user location
-  Future<void> enableTracking() async {
+  Future<void> enableTracking({bool enableStopFollow = false}) async {
     /// make in native when is enabled ,nothing is happen
     await _osmFlutterState.requestPermission();
-    await osmPlatform.enableTracking(_idMap);
+    await osmPlatform.enableTracking(
+      _idMap,
+      stopFollowInDrag: enableStopFollow,
+    );
   }
 
   /// disabled tracking user location

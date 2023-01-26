@@ -332,9 +332,9 @@ class FlutterOsmView(
                 "change#tile" -> {
                     val args = call.arguments as HashMap<String, Any>?
                     when (args != null && args.isNotEmpty()) {
-                        true ->{
+                        true -> {
                             val tile = CustomTile.fromMap(args)
-                            if(!tile.urls.contains((map!!.tileProvider.tileSource as OnlineTileSourceBase).baseUrl)){
+                            if (!tile.urls.contains((map!!.tileProvider.tileSource as OnlineTileSourceBase).baseUrl)) {
                                 changeLayerTile(tile = tile)
                             }
                         }
@@ -418,7 +418,8 @@ class FlutterOsmView(
                     changePosition(call, result)
                 }
                 "trackMe" -> {
-                    trackUserLocation(result)
+                    val enableStopFollow = call.arguments as Boolean? ?: false
+                    trackUserLocation(enableStopFollow, result)
                 }
                 "deactivateTrackMe" -> {
                     deactivateTrackMe(result)
@@ -1077,7 +1078,7 @@ class FlutterOsmView(
     }
 
 
-    private fun trackUserLocation(result: MethodChannel.Result) {
+    private fun trackUserLocation(enableStopFollow: Boolean, result: MethodChannel.Result) {
         try {
             if (homeMarker != null) {
                 folderMarkers.items.remove(homeMarker)
@@ -1085,12 +1086,14 @@ class FlutterOsmView(
             }
             if (!locationNewOverlay.isMyLocationEnabled) {
                 isEnabled = true
+                locationNewOverlay.enableAutoStop = enableStopFollow
                 locationNewOverlay.enableMyLocation()
                 mapSnapShot().setEnableMyLocation(isEnabled)
             }
             when {
                 !locationNewOverlay.isFollowLocationEnabled -> {
                     isTracking = true
+
                     locationNewOverlay.followLocation { userLocation ->
                         scope?.launch {
                             withContext(Main) {

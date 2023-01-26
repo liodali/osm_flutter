@@ -575,7 +575,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           onPressed: () async {
             if (!trackingNotifier.value) {
               await controller.currentLocation();
-              await controller.enableTracking();
+              await controller.enableTracking(enableStopFollow: false);
               //await controller.zoom(5.0);
             } else {
               await controller.disabledTracking();

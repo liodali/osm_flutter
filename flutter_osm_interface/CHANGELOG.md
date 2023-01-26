@@ -1,3 +1,5 @@
+## 0.1.29 : add enableStopFollow to enableTracking
+## 0.1.30 : 
 ## 0.1.29 : add changeTileLayer in osm_channel,osm_controller
 ## 0.1.28 :
 ## 0.1.27 :
