@@ -175,11 +175,13 @@ external dynamic configRoad(
 @JS('drawRoad')
 external dynamic drawRoad(
   int mapId,
+  String key,
   List<GeoPointJs> route,
   String color,
   double roadWidth,
   bool zoomInto,
   bool keepInitialGeoPoints,
+  bool showMarkerOfPOI,
   List<GeoPointJs> interestPoints,
   String? iconInterestPoints,
 );
@@ -229,6 +231,12 @@ external dynamic drawCircle(int mapId, CircleShapeJS circle);
 
 @JS('removePath')
 external dynamic removePath(int mapId, String rectKey);
+
+@JS('clearAllRoads')
+external dynamic clearAllRoads(int mapId);
+
+@JS('removeRoad')
+external dynamic removeRoad(int mapId,String roadKey);
 
 @JS('setUpMap')
 external dynamic setUpMap(int mapId);

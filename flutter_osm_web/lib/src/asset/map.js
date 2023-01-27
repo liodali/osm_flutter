@@ -120,10 +120,10 @@ async function configRoad(mapId,color, startIcon, middleIcon, endIcon) {
    var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.configRoad(color, startIcon, middleIcon, endIcon);
 }
-function drawRoad(mapId,route, color, roadWidth, zoomInto, keepInitialGeoPoints, interestPoints, iconInteretPoint) {
+function drawRoad(mapId,key,route, color, roadWidth, zoomInto, keepInitialGeoPoints, interestPoints, iconInteretPoint) {
    console.log(route);
    var iframe = document.getElementById("frame_map_"+mapId);
-   return iframe.contentWindow.drawRoad(route, color, roadWidth, zoomInto, keepInitialGeoPoints, interestPoints, iconInteretPoint);
+   return iframe.contentWindow.drawRoad(key,route, color, roadWidth, zoomInto, keepInitialGeoPoints, interestPoints, iconInteretPoint);
 }
 async function removeLastRoad(mapId){
    var iframe = document.getElementById("frame_map_"+mapId);
@@ -174,7 +174,15 @@ async function removePath(mapId,key){
    var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.removePath(key);
 }
+async function clearAllRoads(mapId){
+   var iframe = document.getElementById("frame_map_"+mapId);
+   return await iframe.contentWindow.clearAllRoads();
+}
 
+async function removeRoad(mapId,roadKey){
+   var iframe = document.getElementById("frame_map_"+mapId);
+   return await iframe.contentWindow.removeRoad(roadKey);
+}
 
 async function setUpMap(mapId){
    var innerWindow = document.getElementById('frame_map_'+mapId).contentWindow;

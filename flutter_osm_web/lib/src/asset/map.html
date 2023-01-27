@@ -47,7 +47,7 @@
     var isReady = false;
     var lastRoad;
     var colorRoad;
-    var routesLayer = [];
+    var routesLayer = new Map();
     var idTracking;
     var startAdvSearchLocation = false;
     var cachedLayers = L.layerGroup([]);
@@ -424,16 +424,19 @@
       roadMarkerIcons["endIcon"] = startIcon
     }
 
-    function drawRoad(route, colorRoute, routeWidth, zoomInto, keepInitialGeoPoints, interestGeoPts, iconInterestPoint) {
-      if (lastRoad != undefined) {
+    function drawRoad(key,route, colorRoute, routeWidth, zoomInto, keepInitialGeoPoints, interestGeoPts, iconInterestPoint) {
+      /*if (lastRoad != undefined ) {
         mymap.removeLayer(lastRoad)
         routesLayer.pop()
         lastRoad = undefined;
+      }*/
+      if(key == undefined){
+        return 400;
       }
       var routePolyline = route.map((elem) => L.latLng(elem.lat, elem.lon))//[elem.lon,elem.lat])
       lastRoad = L.polyline(routePolyline, { color: colorRoute, weight: routeWidth }).addTo(mymap)
 
-      routesLayer.push(lastRoad)
+      routesLayer.set(key,lastRoad)
       if (zoomInto) {
         mymap.flyToBounds(lastRoad.getBounds());
       }
@@ -463,9 +466,33 @@
     function removeLastRoad(){
       if (lastRoad != undefined) {
         mymap.removeLayer(lastRoad)
-        routesLayer.pop()
+        var k;
+        routesLayer.forEach((value,key)=>{
+          if(value==lastRoad){
+              k=key;
+          }
+        })
+        routesLayer.delete(k);
         lastRoad = undefined;
       }
+    }
+    function clearAllRoads(){
+      routesLayer.forEach((road)=>{
+        road.remove();
+      });
+      routesLayer = [];
+      return 200;
+    }
+
+    function removeRoad(key){
+      if(routesLayer.has(key)){
+          if(routesLayer[key]==lastRoad){
+            lastRoad==undefined;
+          }
+          routesLayer[key].remove();
+          routesLayer.delete(key);
+      }
+      return 200;
     }
     function setUserLocationIconMarker(icon) {
       if (icon != undefined && icon != "")

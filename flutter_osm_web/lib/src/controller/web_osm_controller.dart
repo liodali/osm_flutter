@@ -418,4 +418,5 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       interop.setUserLocationIconMarker(_mapId, iconPNG);
     }
   }
+  
 }

@@ -136,6 +136,7 @@ class MultiRoadConfiguration {
 
 /// RoadInfo
 /// this class is represent road information for specific road
+/// has unique key to remove road
 /// contain 3 object distance,duration and list of route
 /// [distance] : (double) distance of  the road in km, can be null
 ///
@@ -146,30 +147,51 @@ class RoadInfo {
   final double? distance;
   final double? duration;
   final List<GeoPoint> route;
-
+  late String _key;
   RoadInfo({
     this.distance,
     this.duration,
     this.route = const [],
-  });
+  }) : _key = UniqueKey().toString();
 
   RoadInfo.fromMap(Map map)
-      : this.duration = map["duration"],
+      : _key = UniqueKey().toString(),
+        this.duration = map["duration"],
         this.distance = map["distance"],
-        this.route = decodePolyline(
-          map["routePoints"],
-        )
-            .map((e) => GeoPoint(
-                  latitude: e.first.toDouble(),
-                  longitude: e.last.toDouble(),
-                ))
-            .toList();
+        this.route = map.containsKey(map)
+            ? (map["routePoints"] as String).stringToGeoPoints()
+            : [];
+  RoadInfo copyWith({
+    double? distance,
+    double? duration,
+    List<GeoPoint>? route = const [],
+  }) {
+    return RoadInfo(
+      distance: distance ?? this.distance,
+      duration: duration ?? this.duration,
+      route: route ?? this.route,
+    )..setKey(this._key);
+  }
 
+  RoadInfo copyFromMap({
+    required Map map,
+  }) {
+    return RoadInfo(
+      distance: map["duration"] ?? this.distance,
+      duration: map["distance"] ?? this.duration,
+      route: map.containsKey(map)
+          ? (map["routePoints"] as String).stringToGeoPoints()
+          : this.route,
+    )..setKey(this._key);
+  }
+
+  String get key => _key;
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is RoadInfo &&
           runtimeType == other.runtimeType &&
+          _key == other._key &&
           distance == other.distance &&
           duration == other.duration &&
           route == other.route;
@@ -180,5 +202,11 @@ class RoadInfo {
   @override
   String toString() {
     return "distance:$distance,duration:$duration";
+  }
+}
+
+extension PExtRoadInfo on RoadInfo {
+  void setKey(String key) {
+    _key = key;
   }
 }

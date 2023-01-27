@@ -258,31 +258,34 @@ mixin WebMixin {
       interop.removeMarker(mapIdMixin, start.toGeoJS());
       interop.removeMarker(mapIdMixin, end.toGeoJS());
     }
+    final roadInfo = RoadInfo();
     interop.drawRoad(
       mapIdMixin,
+      roadInfo.key,
       routeJs,
       roadOption?.roadColor?.toHexColorWeb() ?? Colors.green.toHexColorWeb(),
       roadOption?.roadWidth?.toDouble() ?? 5.0,
       roadOption?.zoomInto ?? true,
       roadOption?.keepInitialGeoPoints ?? false,
+      roadOption?.showMarkerOfPOI ?? false,
       roadOption != null && roadOption.showMarkerOfPOI
           ? interestPoints?.toListGeoPointJs() ?? []
           : [],
       null,
     );
-    return RoadInfo(
+    return roadInfo.copyWith(
       duration: road.duration,
       distance: road.distance,
       route: road.polyline!.mapToListGeoPoints(),
     );
   }
 
-  Future<void> drawRoadManually(
+  Future<String> drawRoadManually(
+    String roadKey,
     List<GeoPoint> path, {
     Color roadColor = Colors.green,
     double width = 5.0,
     bool zoomInto = true,
-    bool deleteOldRoads = false,
     MarkerIcon? interestPointIcon,
     List<GeoPoint> interestPoints = const [],
   }) async {
@@ -301,33 +304,42 @@ mixin WebMixin {
       }
       interop.drawRoad(
         mapIdMixin,
+        roadKey,
         routeJs,
         roadColor.toHexColorWeb(),
         width,
         zoomInto,
         false,
+        false,
         interestPoints.toListGeoPointJs(),
         icon,
       );
     });
+    return roadKey;
   }
 
-  Future<void> clearAllRoads() {
-    // TODO: implement clearAllRoads
-    throw UnimplementedError();
+  Future<void> clearAllRoads() async {
+    await promiseToFuture(interop.clearAllRoads(mapIdMixin));
   }
 
-  Future<List<RoadInfo>> drawMultipleRoad(List<MultiRoadConfiguration> configs,
-      {MultiRoadOption commonRoadOption =
-          const MultiRoadOption.empty()}) async {
+  Future<void> removeRoad({required String roadKey}) async {
+    await promiseToFuture(interop.removeRoad(mapIdMixin, roadKey));
+  }
+
+  Future<List<RoadInfo>> drawMultipleRoad(
+    List<MultiRoadConfiguration> configs, {
+    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
+  }) async {
     List<Future<RoadInfo>> futureRoads = [];
     configs.forEach((config) {
-      futureRoads.add(drawRoad(
-        config.startPoint,
-        config.destinationPoint,
-        interestPoints: config.intersectPoints,
-        roadOption: commonRoadOption,
-      ));
+      futureRoads.add(
+        drawRoad(
+          config.startPoint,
+          config.destinationPoint,
+          interestPoints: config.intersectPoints,
+          roadOption: commonRoadOption,
+        ),
+      );
     });
     final infos = await Future.wait(futureRoads);
     return infos;
