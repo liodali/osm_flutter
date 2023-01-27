@@ -9,4 +9,5 @@ data class RoadConfig(
   val meanUrl :String = OSRMRoadManager.MEAN_BY_CAR,
   val colorRoad :Int? = null,
   val roadWidth :Float = 5f,
+  val roadID:String,
 )

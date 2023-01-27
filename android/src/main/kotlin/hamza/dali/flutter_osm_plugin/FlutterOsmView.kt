@@ -696,6 +696,7 @@ class FlutterOsmView(
                 val polyLine = Polyline(map!!)
                 polyLine.setPoints(lastRoad.roadPoints)
                 flutterRoad = createRoad(
+                        roadID = lastRoad.roadID,
                         polyLine = polyLine,
                         colorRoad = lastRoad.roadColor,
                         roadWidth = lastRoad.roadWith,
@@ -721,6 +722,7 @@ class FlutterOsmView(
                         roadWidth = road.roadWith,
                         listInterestPoints = road.listInterestPoints,
                         showPoiMarker = road.showIcons,
+                        roadID = road.roadID,
                 )
             }
         }
@@ -1380,7 +1382,8 @@ class FlutterOsmView(
                                 false -> emptyList()
                             }.map { g ->
                                 GeoPoint(g["lat"]!!, g["lon"]!!)
-                            }.toList()
+                            }.toList(),
+                            roadID = arg["key"] as String
                     )
             )
         }
@@ -1430,6 +1433,7 @@ class FlutterOsmView(
                                         roadWidth = config.roadWidth,
                                         showPoiMarker = false,
                                         listInterestPoints = config.interestPoints,
+                                        roadID = config.roadID
                                 )
 
                                 mapSnapShot().cacheListRoad(
@@ -1438,7 +1442,8 @@ class FlutterOsmView(
                                                 roadColor = config.colorRoad,
                                                 roadWith = config.roadWidth,
                                                 listInterestPoints = config.interestPoints,
-                                                showIcons = false
+                                                showIcons = false,
+                                                roadID = config.roadID
                                         )
                                 )
                                 resultRoads.add(HashMap<String, Any>().apply {
@@ -1474,7 +1479,7 @@ class FlutterOsmView(
 
     private fun drawRoad(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments!! as HashMap<String, Any>
-
+        val roadID = args["key"] as String
         var showPoiMarker = args["showMarker"] as Boolean
         val keepGeoPoints = args["keepInitialGeoPoint"] as Boolean
         if (keepGeoPoints) {
@@ -1507,15 +1512,13 @@ class FlutterOsmView(
             true -> (args["roadWidth"] as Double).toFloat()
             else -> 5f
         }
-        flutterRoad?.road?.let {
-            map!!.overlays.remove(it)
-        }
+//        flutterRoad?.road?.let {
+//            map!!.overlays.remove(it)
+//        }
 
         checkRoadFolderAboveUserOverlay()
-        folderRoad.items.clear()
-
-
-        map!!.invalidate()
+//        folderRoad.items.clear()
+//        map!!.invalidate()
 
         if (roadManager == null)
             roadManager = OSRMRoadManager(context, "json/application")
@@ -1545,12 +1548,14 @@ class FlutterOsmView(
                     if (road.mRouteHigh.size > 2) {
                         routePointsEncoded = PolylineEncoder.encode(road.mRouteHigh, 10)
                         val polyLine = RoadManager.buildRoadOverlay(road)
+                        polyLine.outlinePaint.strokeCap = Paint.Cap.ROUND
                         flutterRoad = createRoad(
                                 polyLine = polyLine,
                                 colorRoad = colorRoad,
                                 roadWidth = roadWidth,
                                 showPoiMarker = showPoiMarker,
                                 listInterestPoints = listInterestPoints,
+                                roadID = roadID
                         )
                         mapSnapShot().cacheRoad(
                                 RoadSnapShot(
@@ -1558,7 +1563,8 @@ class FlutterOsmView(
                                         roadColor = colorRoad,
                                         roadWith = roadWidth,
                                         listInterestPoints = listInterestPoints,
-                                        showIcons = showPoiMarker
+                                        showIcons = showPoiMarker,
+                                        roadID = roadID
                                 )
                         )
                         if (zoomToRegion) {
@@ -1584,19 +1590,17 @@ class FlutterOsmView(
 
     private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
         val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
-
+        val roadId = args["key"] as String
         val encodedWayPoints = (args["road"] as String)
         val colorRoad = (args["roadColor"] as List<Int>)
         val color = Color.rgb(colorRoad.first(), colorRoad.last(), colorRoad[1])
         val widthRoad = (args["roadWidth"] as Double)
         val zoomToRegion = args["zoomInto"] as Boolean
-        val clearPreviousRoad = args["clearPreviousRoad"] as Boolean
         val interestPointsEncoded = args["interestPoints"] as String?
         val iconInterestPoints = args["iconInterestPoints"] as ByteArray?
+
         checkRoadFolderAboveUserOverlay()
-        if (clearPreviousRoad) {
-            folderRoad.items.clear()
-        }
+
         var bitmapIconInterestPoints: Bitmap? = null
         if (iconInterestPoints != null) {
             bitmapIconInterestPoints = getBitmap(bytes = iconInterestPoints)
@@ -1613,7 +1617,9 @@ class FlutterOsmView(
         polyLine.setPoints(route)
         polyLine.outlinePaint.color = color
         polyLine.outlinePaint.strokeWidth = widthRoad.toFloat()
+
         createRoad(
+                roadID = roadId,
                 polyLine = polyLine,
                 colorRoad = color,
                 roadWidth = widthRoad.toFloat(),
@@ -1624,6 +1630,7 @@ class FlutterOsmView(
 
         mapSnapShot().cacheRoad(
                 RoadSnapShot(
+                        roadID = roadId,
                         roadPoints = route,
                         roadColor = color,
                         roadWith = widthRoad.toFloat(),
@@ -1642,6 +1649,7 @@ class FlutterOsmView(
     }
 
     private fun createRoad(
+            roadID: String,
             polyLine: Polyline,
             colorRoad: Int?,
             showPoiMarker: Boolean,
@@ -1677,9 +1685,9 @@ class FlutterOsmView(
                 context,
                 map!!,
                 interestPoint = if (showPoiMarker) listInterestPoints else emptyList(),
-                showInterestPoints = showPoiMarker
+                showInterestPoints = showPoiMarker,
+                roadID
         )
-
         flutterRoad.let { roadF ->
             if (showPoiMarker) {
                 roadF.markersIcons = iconsRoads
@@ -1687,18 +1695,6 @@ class FlutterOsmView(
             polyLine.outlinePaint.strokeWidth = roadWidth
 
             roadF.road = polyLine
-            /*if (showPoiMarker) {
-                // if (it.start != null)
-                folderRoad.items.add(roadF.start.apply {
-                    this.visibilityInfoWindow(visibilityInfoWindow)
-                })
-                //  if (it.end != null)
-                folderRoad.items.add(roadF.end.apply {
-                    this.visibilityInfoWindow(visibilityInfoWindow)
-                })
-                folderRoad.items.addAll(roadF.middlePoints)
-            }*/
-
             folderRoad.items.add(roadF)
         }
 

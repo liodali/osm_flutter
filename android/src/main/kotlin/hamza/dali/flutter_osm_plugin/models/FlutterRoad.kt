@@ -13,8 +13,8 @@ open class FlutterRoad(
     private val mapView: MapView,
     private val interestPoint: List<GeoPoint> = emptyList(),
     private val showInterestPoints: Boolean = false,
+    val idRoad:String
 ) : FolderOverlay() {
-
     lateinit var start: FlutterRoadMarker//? = null
     lateinit var end: FlutterRoadMarker//? = null
     var middlePoints: MutableList<FlutterRoadMarker> =
