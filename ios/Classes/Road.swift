@@ -56,7 +56,7 @@ struct RoadConfig {
     var roadType:RoadType
 }
 struct RoadFolder {
-    let id = UUID().uuidString
+    let id :String
     var tgRouteMarker:TGMarker
     var interestPoints: [GeoPointMap]?
 }

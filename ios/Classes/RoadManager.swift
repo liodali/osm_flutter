@@ -24,7 +24,7 @@ protocol PRoadManager {
 
      func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler)
 
-     func drawRoadOnMap (on road:Road,for map:TGMapView,polyLine:Polyline?, interestPoints : [GeoPointMap]?) -> TGMarker
+     func drawRoadOnMap (on road:Road,for map:TGMapView,roadKey:String,polyLine:Polyline?, interestPoints : [GeoPointMap]?) -> TGMarker
 
 }
 
@@ -107,7 +107,7 @@ class RoadManager: PRoadManager {
         }
     }
 
-    public  func drawRoadOnMap(on road: Road, for map: TGMapView,polyLine:Polyline? = nil,interestPoints : [GeoPointMap]? = nil) -> TGMarker {
+    public  func drawRoadOnMap(on road: Road, for map: TGMapView,roadKey:String,polyLine:Polyline? = nil,interestPoints : [GeoPointMap]? = nil) -> TGMarker {
         /*if(lastMarkerRoad != nil){
            removeRoadFolder(folder: lastMarkerRoad!, for: map)
         }*/
@@ -120,21 +120,21 @@ class RoadManager: PRoadManager {
         }
         let tgPolyline = TGGeoPolyline(coordinates: route!.coordinates!,count: UInt(route!.coordinates!.count))
         marker.polyline = tgPolyline
-        let folder = RoadFolder(tgRouteMarker: marker, interestPoints: interestPoints)
+        let folder = RoadFolder(id: roadKey,tgRouteMarker: marker, interestPoints: interestPoints)
         self.roads.append(folder)
         lastMarkerRoad = folder
         return marker
     }
 
-    public  func drawMultiRoadsOnMap(on roads: [Road], for map: TGMapView)  {
+    public  func drawMultiRoadsOnMap(on roads: [(String,Road)], for map: TGMapView)  {
         clearRoads(for: map)
-        for road in roads {
+        for (key,road) in roads {
             let marker = map.markerAdd()
-            marker.stylingString = "{ style: 'lines',interactive: false, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), order: 1500 }"
+            marker.stylingString = "{ style: 'lines',interactive: true, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), order: 1500 }"
             let route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
             let tgPolyline = TGGeoPolyline(coordinates: route.coordinates!,count: UInt(route.coordinates!.count))
             marker.polyline = tgPolyline
-            self.roads.append(RoadFolder(tgRouteMarker: marker, interestPoints: nil))
+            self.roads.append(RoadFolder(id: key,tgRouteMarker: marker, interestPoints: nil))
         }
         /*
         lastMarkerRoad = marker */
