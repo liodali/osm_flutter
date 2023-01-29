@@ -155,7 +155,7 @@ class RoadInfo {
   }) : _key = UniqueKey().toString();
 
   RoadInfo.fromMap(Map map)
-      : _key = UniqueKey().toString(),
+      : _key = map["key"] ?? UniqueKey().toString(),
         this.duration = map["duration"],
         this.distance = map["distance"],
         this.route = map.containsKey(map)
@@ -201,7 +201,7 @@ class RoadInfo {
 
   @override
   String toString() {
-    return "distance:$distance,duration:$duration";
+    return "key:$key,distance:$distance,duration:$duration";
   }
 }
 

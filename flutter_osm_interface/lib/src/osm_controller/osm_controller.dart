@@ -183,12 +183,12 @@ abstract class IBaseOSMController {
   ///  [color] : (Color) color of the road
   ///
   ///  [width] : (int) width of the road
-  Future<void> drawRoadManually(
+  Future<String> drawRoadManually(
+    String Key,
     List<GeoPoint> path, {
     Color roadColor = Colors.green,
     double width = 5.0,
     bool zoomInto = false,
-    bool deleteOldRoads = false,
     MarkerIcon? interestPointIcon,
     List<GeoPoint> interestPoints = const [],
   });
@@ -213,8 +213,15 @@ abstract class IBaseOSMController {
   Future<void> clearAllRoads();
 
   /// [removeLastRoad]
+  /// 
   /// this method will delete last road draw in the map
   Future<void> removeLastRoad();
+
+  /// [removeRoad]
+  /// 
+  /// this method will delete  road using [roadKey] in the map
+  /// it the [roadKey] not exist nothing will happen
+  Future<void> removeRoad({required String roadKey});
 
   /// draw circle shape in the map
   ///
