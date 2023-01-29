@@ -275,7 +275,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 } else {
                     var newRoad = road
                     newRoad?.roadData = roadData!
-                    roadManager.drawRoadOnMap(on: newRoad!, for: mapView, polyLine: nil, interestPoints: interestPoints)
+                    let roadKey = (call.arguments as! [String: Any])["key"] as! String
+                    roadManager.drawRoadOnMap(roadKey: roadKey,on: newRoad!, for: mapView,roadInfo: roadInfo, polyLine: nil, interestPoints: interestPoints)
                     if let bounding = box {
                         mapView.cameraPosition = mapView.cameraThatFitsBounds(bounding, withPadding: UIEdgeInsets.init(top: 25.0, left: 25.0, bottom: 25.0, right: 25.0))
                     }
@@ -293,12 +294,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     let roads = roadsAndRoadData.filter { road in
                                 road != nil
                             }
-                            .map { roadAndRoadData -> Road in
+                            .map { roadAndRoadData -> (String, Road) in
 
-                                var road = roadAndRoadData!.0
-                                road.roadData = roadAndRoadData!.1
-                                return road
-
+                                var road = roadAndRoadData!.1
+                                road.roadData = roadAndRoadData!.2
+                                return (roadAndRoadData!.0, road)
                             }
                     roadManager.drawMultiRoadsOnMap(on: roads, for: mapView)
                     let infos = roadInfos.filter { info in
@@ -692,9 +692,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
     }
 
-    private func drawMultiRoad(call: FlutterMethodCall, completion: @escaping (_ roadsInfo: [RoadInformation?], _ roads: [(Road, RoadData)?], Any?) -> ()) {
+    private func drawMultiRoad(call: FlutterMethodCall, completion: @escaping (_ roadsInfo: [RoadInformation?], _ roads: [(String, Road, RoadData)?], Any?) -> ()) {
         let args = call.arguments as! [[String: Any]]
-        var roadConfigs = [RoadConfig]()
+        var roadConfigs = [(String, RoadConfig)]()
 
         for item in args {
             var roadColor = colorRoad
@@ -709,36 +709,36 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     intersectPoints: item["middlePoints"] as! [GeoPoint]?,
                     roadData: RoadData(roadColor: roadColor, roadWidth: roadWidth),
                     roadType: (item["roadType"] as! String).toRoadType)
-            roadConfigs.append(conf)
+            roadConfigs.append((item["key"] as! String, conf))
         }
 
         let group = DispatchGroup()
-        var results = [Road?]()
-        for config in roadConfigs {
+        var results = [(String, Road?)]()
+        for (key, config) in roadConfigs {
             var wayPoints = config.wayPoints
             if config.intersectPoints != nil && !config.intersectPoints!.isEmpty {
                 wayPoints.insert(contentsOf: config.intersectPoints!, at: 1)
             }
             group.enter()
             roadManager.getRoad(wayPoints: wayPoints.parseToPath(), typeRoad: config.roadType) { road in
-                results.append(road)
+                results.append((key, road))
                 group.leave()
             }
         }
         group.notify(queue: .main) {
-            var informations = [RoadInformation?]()
-            var roads = [(Road, RoadData)?]()
+            var information = [RoadInformation?]()
+            var roads = [(String, Road, RoadData)?]()
             for (index, res) in results.enumerated() {
                 var roadInfo: RoadInformation? = nil
-                var routeToDraw: (Road, RoadData)? = nil
-                if let road = res {
-                    routeToDraw = (road, roadConfigs[index].roadData)
+                var routeToDraw: (String, Road, RoadData)? = nil
+                if let road = res.1 {
+                    routeToDraw = (res.0, road, roadConfigs[index].1.roadData)
                     roadInfo = RoadInformation(distance: road.distance, seconds: road.duration, encodedRoute: road.mRouteHigh)
                 }
-                informations.append(roadInfo)
+                information.append(roadInfo)
                 roads.append(routeToDraw)
             }
-            completion(informations, roads, nil)
+            completion(information, roads, nil)
         }
 
     }
@@ -762,7 +762,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             roadType = RoadType.car
             break
         }
-        if keepInitial {
+        if !keepInitial {
             points.forEach { p in
                 let markers = mapView.markers.filter { m in
                     m.point == p.toLocationCoordinate()
@@ -772,15 +772,15 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 }
             }
         }
-        if (!roadManager.roads.isEmpty) {
-            roadManager.roads.forEach { folder in
-                roadManager.removeRoadFolder(folder: folder, for: mapView)
-            }
-        }
-        if (roadMarkerPolyline != nil) {
-            mapView.markerRemove(roadMarkerPolyline!)
-            roadMarkerPolyline = nil
-        }
+//        if (!roadManager.roads.isEmpty) {
+//            roadManager.roads.forEach { folder in
+//                roadManager.removeRoadFolder(folder: folder, for: mapView)
+//            }
+//        }
+//        if (roadMarkerPolyline != nil) {
+//            mapView.markerRemove(roadMarkerPolyline!)
+//            roadMarkerPolyline = nil
+//        }
         var intersectPoint = [GeoPoint]()
         if (args.keys.contains("middlePoint")) {
             intersectPoint = args["middlePoint"] as! [GeoPoint]
@@ -914,7 +914,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             }
 
         }
-        let markerRoad = roadManager.drawRoadOnMap(on: road, for: mapView, polyLine: route, interestPoints: interestGeoPoints)
+        let roadKey = args["key"] as! String
+        let markerRoad = roadManager.drawRoadOnMap( roadKey: roadKey,on: road, for: mapView,roadInfo: nil, polyLine: route, interestPoints: interestGeoPoints)
         roadMarkerPolyline = markerRoad
         if (zoomInto) {
             let box = route.coordinates!.toBounds()
@@ -1010,12 +1011,23 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             let points = mapView.markers.filter { m in
                 m.stylingString.contains("points")
             }
+            let lines = mapView.markers.filter { m in
+                m.stylingString.contains("lines")
+            }
             let isExist = points.contains { m in
                 m.point == marker.point
+            }
+            let isExistLineInteractive = lines.contains { line in
+                line.polyline == marker.polyline
             }
             if isExist {
                 channel.invokeMethod("receiveGeoPoint", arguments: marker.point.toGeoPoint())
             }
+            if isExistLineInteractive {
+                let road = roadManager.roads.first(where: {$0.tgRouteMarker.polyline == marker.polyline})
+                channel.invokeMethod("receiveRoad", arguments: road?.toMap() ?? [])
+            }
+
         } else {
             let point = pickedLocationSingleTap!// mapView.coordinate(fromViewPosition: position)
 

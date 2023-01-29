@@ -59,4 +59,5 @@ struct RoadFolder {
     let id :String
     var tgRouteMarker:TGMarker
     var interestPoints: [GeoPointMap]?
+    let roadInformation:RoadInformation?
 }

@@ -22,9 +22,9 @@ enum RoadType: String {
 protocol PRoadManager {
 
 
-     func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler)
+    func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler)
 
-     func drawRoadOnMap (on road:Road,for map:TGMapView,roadKey:String,polyLine:Polyline?, interestPoints : [GeoPointMap]?) -> TGMarker
+    func drawRoadOnMap(roadKey: String, on road: Road, for map: TGMapView, roadInfo: RoadInformation?, polyLine: Polyline?, interestPoints: [GeoPointMap]?) -> TGMarker
 
 }
 
@@ -67,16 +67,16 @@ class RoadManager: PRoadManager {
     ];
 
     private var road: Road? = nil
-    private var lastMarkerRoad : RoadFolder? = nil
-    private(set) var roads : [RoadFolder] = [RoadFolder]()
+    private var lastMarkerRoad: RoadFolder? = nil
+    private(set) var roads: [RoadFolder] = [RoadFolder]()
+
     init() {
 
     }
 
 
-
-    public func clearRoads (for map:TGMapView) {
-        if(lastMarkerRoad != nil){
+    public func clearRoads(for map: TGMapView) {
+        if (lastMarkerRoad != nil) {
             map.markerRemove(lastMarkerRoad!.tgRouteMarker)
             lastMarkerRoad = nil
         }
@@ -84,108 +84,111 @@ class RoadManager: PRoadManager {
             roads.forEach { folder in
                 map.markerRemove(folder.tgRouteMarker)
                 if folder.interestPoints != nil && !folder.interestPoints!.isEmpty {
-                   let mPoints = folder.interestPoints!.filter { p  in
-                        p.marker != nil
-                    }.map { p in
-                               p.marker!
-                    }
+                    let mPoints = folder.interestPoints!.filter { p in
+                                p.marker != nil
+                            }
+                            .map { p in
+                                p.marker!
+                            }
                     map.removeMarkers(markers: mPoints)
                 }
             }
 
         }
     }
-    func removeRoadFolder(folder:RoadFolder,for map:TGMapView){
+
+    func removeRoadFolder(folder: RoadFolder, for map: TGMapView) {
         map.markerRemove(folder.tgRouteMarker)
         if folder.interestPoints != nil && !folder.interestPoints!.isEmpty {
-            let mPoints = folder.interestPoints!.filter { p  in
+            let mPoints = folder.interestPoints!.filter { p in
                         p.marker != nil
-                    }.map { p in
+                    }
+                    .map { p in
                         p.marker!
                     }
             map.removeMarkers(markers: mPoints)
         }
     }
 
-    public  func drawRoadOnMap(on road: Road, for map: TGMapView,roadKey:String,polyLine:Polyline? = nil,interestPoints : [GeoPointMap]? = nil) -> TGMarker {
+    public func drawRoadOnMap(roadKey: String, on road: Road, for map: TGMapView, roadInfo: RoadInformation?, polyLine: Polyline? = nil, interestPoints: [GeoPointMap]? = nil) -> TGMarker {
         /*if(lastMarkerRoad != nil){
            removeRoadFolder(folder: lastMarkerRoad!, for: map)
         }*/
         let marker = map.markerAdd()
-        marker.stylingString = "{ style: 'lines',interactive: false, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), order: 1500 }"
+        marker.stylingString = "{ style: 'lines',interactive: true, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), order: 1500 }"
 
         var route = polyLine
-        if(route  == nil){
-           route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
+        if (route == nil) {
+            route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
         }
-        let tgPolyline = TGGeoPolyline(coordinates: route!.coordinates!,count: UInt(route!.coordinates!.count))
+        let tgPolyline = TGGeoPolyline(coordinates: route!.coordinates!, count: UInt(route!.coordinates!.count))
         marker.polyline = tgPolyline
-        let folder = RoadFolder(id: roadKey,tgRouteMarker: marker, interestPoints: interestPoints)
+        let folder = RoadFolder(id: roadKey, tgRouteMarker: marker, interestPoints: interestPoints, roadInformation: roadInfo)
         self.roads.append(folder)
         lastMarkerRoad = folder
         return marker
     }
 
-    public  func drawMultiRoadsOnMap(on roads: [(String,Road)], for map: TGMapView)  {
+    public func drawMultiRoadsOnMap(on roads: [(String, Road)], for map: TGMapView) {
         clearRoads(for: map)
-        for (key,road) in roads {
+        for (key, road) in roads {
             let marker = map.markerAdd()
             marker.stylingString = "{ style: 'lines',interactive: true, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), order: 1500 }"
             let route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
-            let tgPolyline = TGGeoPolyline(coordinates: route.coordinates!,count: UInt(route.coordinates!.count))
+            let tgPolyline = TGGeoPolyline(coordinates: route.coordinates!, count: UInt(route.coordinates!.count))
             marker.polyline = tgPolyline
-            self.roads.append(RoadFolder(id: key,tgRouteMarker: marker, interestPoints: nil))
+            self.roads.append(RoadFolder(id: key, tgRouteMarker: marker, interestPoints: nil,roadInformation: nil))
         }
         /*
         lastMarkerRoad = marker */
     }
 
-      func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler) {
+    func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler) {
         let serverURL = buildURL(wayPoints, typeRoad.rawValue)
-       DispatchQueue.global(qos : .background).async{
-           self.httpCall(url: serverURL) { json in
-               if json != nil {
-                  let road = self.parserRoad(json: json!)
-                   DispatchQueue.main.async {
-                       self.road = road
-                       handler(road)
-                   }
-               } else {
-                   DispatchQueue.main.async {
-                       handler(nil)
-                   }
-               }
-           }
-       }
+        DispatchQueue.global(qos: .background).async {
+            self.httpCall(url: serverURL) { json in
+                if json != nil {
+                    let road = self.parserRoad(json: json!)
+                    DispatchQueue.main.async {
+                        self.road = road
+                        handler(road)
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        handler(nil)
+                    }
+                }
+            }
+        }
     }
 
 
-      func buildURL(_ waysPoints: [String], _ typeRoad: String, alternative: Bool = false) -> String {
+    func buildURL(_ waysPoints: [String], _ typeRoad: String, alternative: Bool = false) -> String {
         let serverBaseURL = "https://routing.openstreetmap.de/\(typeRoad)/route/v1/driving/"
         let points = waysPoints.reduce("") { (result, s) in
             "\(result);\(s)"
         }
-          var stringWayPoint = points
-                stringWayPoint.removeFirst()
+        var stringWayPoint = points
+        stringWayPoint.removeFirst()
 
 
         return "\(serverBaseURL)\(stringWayPoint)?alternatives=\(alternative)&overview=full&steps=true"
     }
 
-    private  func httpCall(url: String, parseHandler: @escaping (_ json: [String:Any?]?)->Void) {
+    private func httpCall(url: String, parseHandler: @escaping (_ json: [String: Any?]?) -> Void) {
         AF.request(url, method: .get).responseJSON { response in
             if response.data != nil {
                 let data = response.value as? [String: Any?]
-                 parseHandler(data!)
-            }else {
+                parseHandler(data!)
+            } else {
                 parseHandler(nil)
             }
         }
     }
 
-    private  func parserRoad(json: [String: Any?]) -> Road {
+    private func parserRoad(json: [String: Any?]) -> Road {
         var road: Road = Road()
-        if  json.keys.contains("routes") {
+        if json.keys.contains("routes") {
             let routes = json["routes"] as! [[String: Any?]]
             routes.forEach { route in
                 road.distance = (route["distance"] as! Double) / 1000
@@ -199,7 +202,7 @@ class RoadManager: PRoadManager {
 
                     let jsonSteps = jLeg["steps"] as! [[String: Any?]]
                     var lastName = ""
-                    var lastNode :RoadNode? = nil
+                    var lastNode: RoadNode? = nil
                     jsonSteps.forEach { step in
                         var node = RoadNode()
                         let maneuver = (step["maneuver"] as! [String: Any?])
@@ -210,13 +213,15 @@ class RoadManager: PRoadManager {
                         node.duration = step["duration"] as! Double
                         var direction = maneuver["type"] as! String
                         var modifierDirection = ""
-                        if(maneuver.contains { k,v in k == "modifier"}){
+                        if (maneuver.contains { k, v in
+                            k == "modifier"
+                        }) {
                             modifierDirection = maneuver["modifier"] as! String
                         }
 
                         switch (direction) {
                         case "turn", "ramp", "merge":
-                            if(!modifierDirection.isEmpty) {
+                            if (!modifierDirection.isEmpty) {
                                 direction += "-" + modifierDirection
                             }
                             break;
@@ -230,19 +235,19 @@ class RoadManager: PRoadManager {
                             break
                         }
                         ///TODO add direction instruction
-                        node.maneuver =  0
+                        node.maneuver = 0
                         if Array(MANEUVERS.keys).contains(direction) {
                             node.maneuver = MANEUVERS[direction]!
                         }
-                        var name  = ""
+                        var name = ""
                         if step["name"] as? String? != nil {
-                            name =  step["name"] as! String
+                            name = step["name"] as! String
                         }
 
                         if lastNode != nil && node.maneuver != 2 && lastName == name {
                             lastNode?.duration += node.duration
                             lastNode?.distance += node.distance
-                        }else{
+                        } else {
                             road.steps.append(node)
                             lastNode = node
                             lastName = name
@@ -270,13 +275,12 @@ extension RoadManager {
 	 */
 
 
-
 //From: Project-OSRM-Web / WebContent / localization / OSRM.Locale.en.js
 // driving directions
 // %s: road name
 // %d: direction => removed
 // <*>: will only be printed when there actually is a road name
-    static let DIRECTIONS:[Int: String] = [
+    static let DIRECTIONS: [Int: String] = [
         1: "", 2: "", 3: "",
     ]
 

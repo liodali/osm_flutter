@@ -158,6 +158,11 @@ extension RoadInformation {
     }
 }
 
+extension RoadFolder {
+    func toMap() -> [String: Any] {
+        ["key":self.id ,"distance": self.roadInformation?.distance ?? 0.0, "duration": self.roadInformation?.seconds ?? 0.0, "routePoints": self.roadInformation?.encodedRoute ?? ""]
+    }
+}
 extension Array where Element == Int {
     func toUIColor() -> UIColor {
         UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
