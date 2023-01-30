@@ -455,13 +455,9 @@ class FlutterOsmView(
                 "user#removeMarkerPosition" -> {
                     removePosition(call, result)
                 }
-                "user#removeroad" -> {
-                    if (folderRoad.items.isNotEmpty()) {
-                        mapSnapShot().clearCachedRoad()
-                        folderRoad.items.clear()
-                        map?.invalidate()
-                    }
-                    result.success(null)
+                "delete#road" -> {
+
+                    deleteRoad(call, result)
 
                 }
                 "road" -> {
@@ -558,6 +554,37 @@ class FlutterOsmView(
             Log.e(e.cause.toString(), "error osm plugin ${e.stackTraceToString()}")
             result.error("404", e.message, e.stackTraceToString())
         }
+    }
+
+    private fun deleteRoad(call: MethodCall, result: MethodChannel.Result) {
+        val roadKey = call.arguments as String?
+        when (roadKey != null) {
+            true -> {
+                val road = folderRoad.items.map {
+                    it as FlutterRoad
+                }.first { road ->
+                    road.idRoad == roadKey
+                }
+                if (flutterRoad?.idRoad == roadKey) {
+                    mapSnapShot().clearCachedRoad()
+                    flutterRoad = null
+                }
+                folderRoad.items.remove(road)
+                map?.invalidate()
+                map?.invalidate()
+
+            }
+            else -> {
+                if (folderRoad.items.isNotEmpty()) {
+                    mapSnapShot().clearCachedRoad()
+                    folderRoad.items.clear()
+                    map?.invalidate()
+                    flutterRoad = null
+                }
+            }
+        }
+
+        result.success(null)
     }
 
     private fun changeLayerTile(tile: CustomTile) {
@@ -1391,15 +1418,16 @@ class FlutterOsmView(
 
         //val showPoiMarker = args["showMarker"] as Boolean
 
-        flutterRoad?.road?.let {
-            map!!.overlays.remove(it)
-        }
+//        flutterRoad?.road?.let {
+//            map!!.overlays.remove(it)
+//        }
+//        folderRoad.items.clear()
+//        val cachedRoads = map!!.overlays.filterIsInstance<Polyline>().toSet()
+//        if (cachedRoads.isNotEmpty()) {
+//            map!!.overlays.removeAll(cachedRoads)
+//        }
         checkRoadFolderAboveUserOverlay()
-        folderRoad.items.clear()
-        val cachedRoads = map!!.overlays.filterIsInstance<Polyline>().toSet()
-        if (cachedRoads.isNotEmpty()) {
-            map!!.overlays.removeAll(cachedRoads)
-        }
+
         map!!.invalidate()
 
         val resultRoads = emptyList<HashMap<String, Any>>().toMutableList();
