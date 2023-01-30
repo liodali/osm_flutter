@@ -54,7 +54,6 @@ extension TGMapView {
         userLocationMarker.marker = map.markerAdd()
         userLocationMarker.marker!.point = userLocationMarker.coordinate
         userLocationMarker.setDirectionArrow(personIcon: personIcon, arrowDirection: arrowDirection)
-        userLocationMarker.marker!.stylingString = userLocationMarker.styleMarker
         userLocationMarker.marker!.visible = true
         return userLocationMarker
     }
@@ -76,54 +75,50 @@ extension TGMapView {
 }
 
 extension MyLocationMarker {
+
     func setDirectionArrow(personIcon: MarkerIconData?, arrowDirection: MarkerIconData?) {
         self.personIcon = personIcon
         arrowDirectionIcon = arrowDirection
         var iconM: MarkerIconData? = nil
-        var size = [48.0, 48.0]
+        lazy var size = defaultSizeMarker
         if (arrowDirectionIcon == nil && personIcon == nil) {
             switch (self.userLocationMarkerType) {
             case .person:
-                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) ,size: [48px,48px] , angle: \(self.angle) } "
+                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , size: [\(size.first)px,\(size.last)px] , angle: \(self.angle) } "
                 break;
             case .arrow:
-                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) ,size: [48px,48px] , angle: \(angle)  } "
+                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(size.first)px,\(size.last)px] , angle: \(angle)  } "
                 break;
             }
         } else {
-            if (arrowDirectionIcon != nil && self.personIcon == nil) {
+            if (arrowDirectionIcon != nil && userLocationMarkerType == .arrow) {
                 iconM = arrowDirectionIcon
-            } else if (arrowDirectionIcon == nil && self.personIcon != nil) {
+            } else if (self.personIcon != nil && userLocationMarkerType == .person) {
                 iconM = self.personIcon
-            } else {
-                switch (userLocationMarkerType) {
-                case .person:
-                    iconM = self.personIcon
-                    break;
-                case .arrow:
-                    iconM = arrowDirectionIcon
-                    break;
-                }
             }
+            marker?.stylingString = " { style: 'points', interactive: false ,color: 'white',size: [\(iconM!.size.first ?? 48)px,\(iconM!.size.last ?? 48)px], order: 2000, collide: false , angle : \(angle) } "
             marker?.icon = iconM!.image!
-            marker?.stylingString = " { style: 'points', interactive: \(interactive),color: 'white',size: [\(iconM!.size.first ?? 48)px,\(iconM!.size.last ?? 48)px], order: 1000, collide: false , angle : \(angle) } "
         }
     }
 
     func rotateMarker(angle: Int) {
         userLocationMarkerType = UserLocationMarkerType.arrow
         self.angle = angle
+        var size = defaultSizeMarker
         if (arrowDirectionIcon == nil || personIcon == nil) {
             switch (userLocationMarkerType) {
             case .person:
-                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , angle: \(self.angle) } "
+                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle), size: [\(size.first)px,\(size.last)px] , angle: \(self.angle) } "
                 break;
             case .arrow:
-                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , angle: \(self.angle)  } "
+                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(size.first)px,\(size.last)px] , angle: \(self.angle)  } "
                 break;
             }
         } else {
             self.marker?.stylingString = "{ style: 'points', interactive: \(interactive),color: 'white',size: [\(markerIcon.size.first ?? 48)px,\(markerIcon.size.last ?? 48)px], order: 1000, collide: false , angle: \(angle)  } "
+            if (arrowDirectionIcon != nil ) {
+                self.marker?.icon = arrowDirectionIcon!.image!
+            }
         }
     }
 }

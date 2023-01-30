@@ -57,7 +57,7 @@ class MyLocationMarker: GeoPointMap {
 
     static let personStyle = "style: 'ux-location-gem-overlay',sprite: ux-current-location, interactive: false,color: 'white',order: 2000, collide: false  "
     static let arrowStyle = "style: 'ux-location-gem-overlay',sprite: ux-route-arrow, interactive: false,color: 'white',order: 2000, collide: false  "
-
+    let  defaultSizeMarker = [48, 48]
     var userLocationMarkerType: UserLocationMarkerType = UserLocationMarkerType.person
     var angle: Int = 0
 
@@ -72,7 +72,9 @@ class MyLocationMarker: GeoPointMap {
         var style: String? = nil
         var iconM: MarkerIconData = MarkerIconData(image: nil)
         self.userLocationMarkerType = userLocationMarkerType
-        if (arrowDirectionIcon == nil && personIcon == nil) {
+        self.personIcon = personIcon
+        self.arrowDirectionIcon = arrowDirectionIcon
+        if (arrowDirectionIcon != nil && personIcon != nil) {
             switch (userLocationMarkerType) {
             case .person:
                 style = "{ \(MyLocationMarker.personStyle) , angle: \(angle) } "
@@ -82,21 +84,10 @@ class MyLocationMarker: GeoPointMap {
                 break;
             }
         } else {
-            if (arrowDirectionIcon != nil && personIcon == nil) {
+            if (arrowDirectionIcon != nil && userLocationMarkerType == .person) {
                 iconM = arrowDirectionIcon ?? MarkerIconData(image: nil)
-            } else if (arrowDirectionIcon == nil && personIcon != nil) {
+            } else if (personIcon != nil && userLocationMarkerType == .arrow) {
                 iconM = personIcon ?? MarkerIconData(image: nil)
-            } else {
-                switch (userLocationMarkerType) {
-                case .person:
-                    iconM = personIcon ?? MarkerIconData(image: nil)
-                    self.personIcon = personIcon
-                    break;
-                case .arrow:
-                    iconM = arrowDirectionIcon ?? MarkerIconData(image: nil)
-                    self.arrowDirectionIcon = arrowDirectionIcon
-                    break;
-                }
             }
         }
         super.init(icon: iconM, coordinate: coordinate, styleMarker: style, angle: angle)
