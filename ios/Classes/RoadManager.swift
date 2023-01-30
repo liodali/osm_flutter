@@ -96,7 +96,18 @@ class RoadManager: PRoadManager {
 
         }
     }
-
+    func removeLastRoad(for map: TGMapView) {
+        if let lastRoad = lastMarkerRoad{
+            removeRoadFolder(folder: lastRoad, for: map)
+            lastMarkerRoad = nil
+        }
+    }
+    func removeRoadByKey(key: String, for map: TGMapView) {
+        let folderRoad = roads.first { folder in folder.id == key }
+        if let road = folderRoad {
+            removeRoadFolder(folder: road, for: map)
+        }
+    }
     func removeRoadFolder(folder: RoadFolder, for map: TGMapView) {
         map.markerRemove(folder.tgRouteMarker)
         if folder.interestPoints != nil && !folder.interestPoints!.isEmpty {

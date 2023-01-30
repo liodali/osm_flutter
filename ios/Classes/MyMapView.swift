@@ -276,7 +276,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     var newRoad = road
                     newRoad?.roadData = roadData!
                     let roadKey = (call.arguments as! [String: Any])["key"] as! String
-                    roadManager.drawRoadOnMap(roadKey: roadKey,on: newRoad!, for: mapView,roadInfo: roadInfo, polyLine: nil, interestPoints: interestPoints)
+                    roadManager.drawRoadOnMap(roadKey: roadKey, on: newRoad!, for: mapView, roadInfo: roadInfo, polyLine: nil, interestPoints: interestPoints)
                     if let bounding = box {
                         mapView.cameraPosition = mapView.cameraThatFitsBounds(bounding, withPadding: UIEdgeInsets.init(top: 25.0, left: 25.0, bottom: 25.0, right: 25.0))
                     }
@@ -314,6 +314,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             break;
         case "drawRoad#manually":
             drawRoadManually(call: call, result: result)
+            break;
+        case "delete#road":
+            deleteRoad(call: call, result: result)
             break;
         case "clear#roads":
             roadManager.clearRoads(for: mapView)
@@ -915,7 +918,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
         }
         let roadKey = args["key"] as! String
-        let markerRoad = roadManager.drawRoadOnMap( roadKey: roadKey,on: road, for: mapView,roadInfo: nil, polyLine: route, interestPoints: interestGeoPoints)
+        let markerRoad = roadManager.drawRoadOnMap(roadKey: roadKey, on: road, for: mapView, roadInfo: nil, polyLine: route, interestPoints: interestGeoPoints)
         roadMarkerPolyline = markerRoad
         if (zoomInto) {
             let box = route.coordinates!.toBounds()
@@ -924,6 +927,19 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
 
         result(nil)
+    }
+
+
+    private func deleteRoad(call: FlutterMethodCall, result: FlutterResult) {
+
+        let roadKey = call.arguments as! String?
+        if roadKey == nil {
+            roadManager.removeLastRoad(for: mapView)
+        }
+        if let key = roadKey {
+            roadManager.removeRoadByKey(key: key, for: mapView)
+        }
+        result(200)
     }
 
     private func setRoadMarkersIcon(call: FlutterMethodCall, result: FlutterResult) {
@@ -1024,7 +1040,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 channel.invokeMethod("receiveGeoPoint", arguments: marker.point.toGeoPoint())
             }
             if isExistLineInteractive {
-                let road = roadManager.roads.first(where: {$0.tgRouteMarker.polyline == marker.polyline})
+                let road = roadManager.roads.first(where: { $0.tgRouteMarker.polyline == marker.polyline })
                 channel.invokeMethod("receiveRoad", arguments: road?.toMap() ?? [])
             }
 
