@@ -9,28 +9,33 @@ import org.osmdroid.views.overlay.FolderOverlay
 import org.osmdroid.views.overlay.Polyline
 
 open class FlutterRoad(
-    private val context: Context,
-    private val mapView: MapView,
-    private val interestPoint: List<GeoPoint> = emptyList(),
-    private val showInterestPoints: Boolean = false,
-    val idRoad:String
+        private val context: Context,
+        private val mapView: MapView,
+        private val interestPoint: List<GeoPoint> = emptyList(),
+        private val showInterestPoints: Boolean = false,
+        val idRoad: String,
+        val roadDuration: Double,
+        val roadDistance: Double,
 ) : FolderOverlay() {
     lateinit var start: FlutterRoadMarker//? = null
     lateinit var end: FlutterRoadMarker//? = null
-    var middlePoints: MutableList<FlutterRoadMarker> =
-        emptyList<FlutterRoadMarker>().toMutableList()
+    private var middlePoints: MutableList<FlutterRoadMarker> =
+            emptyList<FlutterRoadMarker>().toMutableList()
     var road: Polyline? = null
         set(value) {
             if (value != null) {
                 field = value
                 items.add(value)
-
                 if (showInterestPoints) {
                     initStartEndPoints(
-                        value.actualPoints.first(),
-                        value.actualPoints.last(),
-                        interestPoint
+                            value.actualPoints.first(),
+                            value.actualPoints.last(),
+                            interestPoint
                     )
+                }
+                field?.setOnClickListener { polyline, _, _ ->
+                    onRoadClickListener?.onClick(this)
+                    true
                 }
             }
         }
@@ -38,11 +43,12 @@ open class FlutterRoad(
         set(value) {
             if (value.isNotEmpty()) field = value
         }
+    var onRoadClickListener: OnRoadClickListener? = null
 
     private fun initStartEndPoints(
-        startRoad: GeoPoint,
-        destinationRoad: GeoPoint,
-        interestPoint: List<GeoPoint> = emptyList()
+            startRoad: GeoPoint,
+            destinationRoad: GeoPoint,
+            interestPoint: List<GeoPoint> = emptyList()
     ) {
         val listInterest = interestPoint.toMutableList()
         start = FlutterRoadMarker(context, mapView, startRoad).apply {
@@ -59,7 +65,7 @@ open class FlutterRoad(
         }
 
 
-        if(interestPoint.isNotEmpty()){
+        if (interestPoint.isNotEmpty()) {
             if (interestPoint.first() == startRoad) {
                 listInterest.removeFirst()
             }
@@ -69,11 +75,11 @@ open class FlutterRoad(
             }
             listInterest.forEach { geoPoint ->
                 middlePoints.add(
-                    FlutterRoadMarker(context, mapView, geoPoint).apply {
-                        this.mapIconsBitmaps = markersIcons
-                        this.iconPosition(Constants.PositionMarker.MIDDLE)
-                        this.visibilityInfoWindow(false)
-                    }
+                        FlutterRoadMarker(context, mapView, geoPoint).apply {
+                            this.mapIconsBitmaps = markersIcons
+                            this.iconPosition(Constants.PositionMarker.MIDDLE)
+                            this.visibilityInfoWindow(false)
+                        }
                 )
             }
             items.addAll(middlePoints.toList())
@@ -84,4 +90,7 @@ open class FlutterRoad(
     }
 
 
+    interface OnRoadClickListener {
+        fun onClick(road: FlutterRoad)
+    }
 }

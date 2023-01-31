@@ -456,9 +456,7 @@ class FlutterOsmView(
                     removePosition(call, result)
                 }
                 "delete#road" -> {
-
                     deleteRoad(call, result)
-
                 }
                 "road" -> {
                     drawRoad(call, result)
@@ -729,6 +727,8 @@ class FlutterOsmView(
                         roadWidth = lastRoad.roadWith,
                         listInterestPoints = lastRoad.listInterestPoints,
                         showPoiMarker = lastRoad.showIcons,
+                        roadDuration = lastRoad.duration,
+                        roadDistance = lastRoad.distance
                 )
 
                 map!!.invalidate()
@@ -750,6 +750,8 @@ class FlutterOsmView(
                         listInterestPoints = road.listInterestPoints,
                         showPoiMarker = road.showIcons,
                         roadID = road.roadID,
+                        roadDuration = road.duration,
+                        roadDistance = road.distance
                 )
             }
         }
@@ -1461,7 +1463,9 @@ class FlutterOsmView(
                                         roadWidth = config.roadWidth,
                                         showPoiMarker = false,
                                         listInterestPoints = config.interestPoints,
-                                        roadID = config.roadID
+                                        roadID = config.roadID,
+                                        roadDuration = road.mDuration,
+                                        roadDistance = road.mLength
                                 )
 
                                 mapSnapShot().cacheListRoad(
@@ -1471,13 +1475,16 @@ class FlutterOsmView(
                                                 roadWith = config.roadWidth,
                                                 listInterestPoints = config.interestPoints,
                                                 showIcons = false,
-                                                roadID = config.roadID
+                                                roadID = config.roadID,
+                                                duration = road.mDuration,
+                                                distance = road.mLength
                                         )
                                 )
                                 resultRoads.add(HashMap<String, Any>().apply {
                                     this["duration"] = road.mDuration
                                     this["distance"] = road.mLength
                                     this["routePoints"] = routePointsEncoded
+                                    this["key"] = config.roadID
                                 })
                             }
                         }
@@ -1583,7 +1590,9 @@ class FlutterOsmView(
                                 roadWidth = roadWidth,
                                 showPoiMarker = showPoiMarker,
                                 listInterestPoints = listInterestPoints,
-                                roadID = roadID
+                                roadID = roadID,
+                                roadDuration = road.mDuration,
+                                roadDistance = road.mLength
                         )
                         mapSnapShot().cacheRoad(
                                 RoadSnapShot(
@@ -1592,7 +1601,9 @@ class FlutterOsmView(
                                         roadWith = roadWidth,
                                         listInterestPoints = listInterestPoints,
                                         showIcons = showPoiMarker,
-                                        roadID = roadID
+                                        roadID = roadID,
+                                        duration = road.mDuration,
+                                        distance = road.mLength
                                 )
                         )
                         if (zoomToRegion) {
@@ -1606,6 +1617,7 @@ class FlutterOsmView(
                         map!!.invalidate()
                     }
                     result.success(HashMap<String, Any>().apply {
+                        this["key"] = roadID
                         this["duration"] = road.mDuration
                         this["distance"] = road.mLength
                         this["routePoints"] = routePointsEncoded
@@ -1663,6 +1675,8 @@ class FlutterOsmView(
                         roadColor = color,
                         roadWith = widthRoad.toFloat(),
                         showIcons = false,
+                        duration = 0.0,
+                        distance = 0.0
                 )
         )
         if (zoomToRegion) {
@@ -1684,11 +1698,10 @@ class FlutterOsmView(
             listInterestPoints: List<GeoPoint>,
             roadWidth: Float,
             bitmapIcon: Bitmap? = null,
+            roadDuration: Double = 0.0,
+            roadDistance: Double = 0.0,
     ): FlutterRoad {
-        polyLine.setOnClickListener { _, _, eventPos ->
-            methodChannel.invokeMethod("receiveSinglePress", eventPos?.toHashMap())
-            true
-        }
+
         /// set polyline color
         polyLine.outlinePaint.color = colorRoad ?: Color.GREEN
 
@@ -1714,7 +1727,9 @@ class FlutterOsmView(
                 map!!,
                 interestPoint = if (showPoiMarker) listInterestPoints else emptyList(),
                 showInterestPoints = showPoiMarker,
-                roadID
+                roadID,
+                roadDistance = roadDistance,
+                roadDuration = roadDuration,
         )
         flutterRoad.let { roadF ->
             if (showPoiMarker) {
@@ -1723,6 +1738,21 @@ class FlutterOsmView(
             polyLine.outlinePaint.strokeWidth = roadWidth
 
             roadF.road = polyLine
+            //roadF.road.setOnClickListener { polyline, mapView, eventPos ->  }
+            roadF.onRoadClickListener = object : FlutterRoad.OnRoadClickListener {
+                override fun onClick(road: FlutterRoad) {
+                    val map = HashMap<String, Any>()
+                    map["roadPoints"] = road.road?.actualPoints?.map {
+                        it.toHashMap()
+                    } ?: emptyList<Any>()
+                    map["distance"] = road.roadDistance
+                    map["duration"] = road.roadDuration
+                    map["key"] = road.idRoad
+                    methodChannel.invokeMethod("receiveRoad", map)
+
+                }
+
+            }
             folderRoad.items.add(roadF)
         }
 

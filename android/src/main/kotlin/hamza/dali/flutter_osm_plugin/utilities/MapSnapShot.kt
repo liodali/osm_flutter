@@ -153,4 +153,6 @@ data class RoadSnapShot(
     val roadWith: Float,
     val listInterestPoints: List<GeoPoint> = emptyList(),
     val roadID:String,
+    val duration:Double,
+    val distance:Double
 )
