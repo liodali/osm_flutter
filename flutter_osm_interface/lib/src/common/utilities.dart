@@ -117,6 +117,7 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
 
     for (MultiRoadConfiguration roadConf in this) {
       final map = <String, dynamic>{};
+
       map["wayPoints"] = [
         roadConf.startPoint.toMap(),
         roadConf.destinationPoint.toMap(),
@@ -170,6 +171,19 @@ extension ExtTileUrls on TileURLs {
       return toWeb();
     }
     throw UnsupportedError("platform not supported yet");
+  }
+}
+
+extension ExtString on String {
+  List<GeoPoint> stringToGeoPoints() {
+    return decodePolyline(
+      this,
+    )
+        .map((e) => GeoPoint(
+              latitude: e.first.toDouble(),
+              longitude: e.last.toDouble(),
+            ))
+        .toList();
   }
 }
 

@@ -81,6 +81,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
     return _events(idMap).whereType<RegionIsChangingEvent>();
   }
 
+  @override
+  Stream<RoadTapEvent> onRoadMapClickListener(int idMap) {
+    return _events(idMap).whereType<RoadTapEvent>();
+  }
+
   void setGeoPointHandler(int idMap) async {
     _channels[idMap]!.setMethodCallHandler((call) async {
       switch (call.method) {
@@ -99,6 +104,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
           final result = call.arguments;
           _streamController
               .add(SingleTapEvent(idMap, GeoPoint.fromMap(result)));
+          break;
+        case "receiveRoad":
+          final result = call.arguments;
+          _streamController.add(RoadTapEvent(idMap, RoadInfo.fromMap(result)));
           break;
         case "receiveGeoPoint":
           final result = call.arguments;
@@ -214,8 +223,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
     List<GeoPoint>? interestPoints,
     RoadOption roadOption = const RoadOption.empty(),
   }) async {
+    final roadInfo = RoadInfo();
+
     /// add point of the road
     final Map args = {
+      'key': roadInfo.key,
       "wayPoints": [
         start.toMap(),
         end.toMap(),
@@ -230,17 +242,20 @@ class MethodChannelOSM extends MobileOSMPlatform {
     /// add middle point that will pass through it
     if (interestPoints != null && interestPoints.isNotEmpty) {
       args.addAll(
-          {"middlePoints": interestPoints.map((e) => e.toMap()).toList()});
+        {
+          "middlePoints": interestPoints.map((e) => e.toMap()).toList(),
+        },
+      );
     }
 
     args.addAll(roadOption.toMap());
 
     try {
-      Map map = (await (_channels[idOSM]?.invokeMethod(
+      Map? map = await _channels[idOSM]?.invokeMapMethod(
         "road",
         args,
-      )))!;
-      return RoadInfo.fromMap(map);
+      );
+      return RoadInfo.fromMap(map!);
     } on PlatformException catch (e) {
       throw RoadException(msg: e.message);
     }
@@ -280,7 +295,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> removeLastRoad(int idOSM) async {
-    await _channels[idOSM]?.invokeMethod("user#removeroad");
+    await _channels[idOSM]?.invokeMethod("delete#road");
   }
 
   @override
@@ -482,17 +497,18 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @override
   Future<void> drawRoadManually(
     int idOSM,
+    String roadKey,
     List<GeoPoint> road, {
     Color roadColor = Colors.green,
     double width = 5.0,
     bool zoomInto = false,
-    bool deleteOldRoads = false,
     GlobalKey? keyIconForInterestPoints,
     List<GeoPoint> interestPoints = const [],
   }) async {
     final coordinates = road.map((e) => e.toListNum()).toList();
     final encodedCoordinates = encodePolyline(coordinates);
     Map<String, dynamic> data = {
+      'key': roadKey,
       "road": encodedCoordinates,
       "roadWidth": width,
     };
@@ -502,7 +518,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
       data.addAll(roadColor.toMap("roadColor"));
     }
     data["zoomInto"] = zoomInto;
-    data["clearPreviousRoad"] = deleteOldRoads;
     data["iconInterestPoints"] = null;
     data["interestPoints"] = null;
     if (interestPoints.isNotEmpty) {
@@ -674,12 +689,26 @@ class MethodChannelOSM extends MobileOSMPlatform {
     List<MultiRoadConfiguration> configs, {
     MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
   }) async {
-    final args = configs.toListMap(commonRoadOption: commonRoadOption);
+    final len = configs.length;
+    final roadInfos = <RoadInfo>[];
+    final args = configs.toListMap(
+      commonRoadOption: commonRoadOption,
+    );
+    for (var i = 0; i < len; i++) {
+      final roadInfo = RoadInfo();
+      roadInfos.add(roadInfo);
+      args[i]['key'] = roadInfo.key;
+    }
+
     final List result =
         (await _channels[idOSM]?.invokeListMethod("draw#multi#road", args))!;
     final List<Map<String, dynamic>> mapRoadInfo =
         result.map((e) => Map<String, dynamic>.from(e)).toList();
-    return mapRoadInfo.map((e) => RoadInfo.fromMap(e)).toList();
+    return mapRoadInfo
+        .asMap()
+        .entries
+        .map((entry) => roadInfos[entry.key].copyFromMap(map: entry.value))
+        .toList();
   }
 
   @override
@@ -709,6 +738,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @override
   Future<void> changeTileLayer(int idOSM, CustomTile? tile) async {
     await _channels[idOSM]!.invokeMethod("change#tile", tile?.toMap() ?? null);
+  }
+
+  @override
+  Future<void> removeRoad(int idOSM, String roadKey) async {
+    await _channels[idOSM]!.invokeMethod("delete#road", roadKey);
   }
 }
 

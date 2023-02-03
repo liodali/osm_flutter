@@ -20,12 +20,16 @@ abstract class IBaseMapController {
   late ValueNotifier<GeoPoint?> _listenerMapSingleTapping = ValueNotifier(null);
   late ValueNotifier<bool> _listenerMapIsReady = ValueNotifier(false);
   late ValueNotifier<Region?> _listenerRegionIsChanging = ValueNotifier(null);
+  late ValueNotifier<RoadInfo?> _listenerRoadTapped = ValueNotifier(null);
 
   ValueListenable<GeoPoint?> get listenerMapLongTapping =>
       _listenerMapLongTapping;
 
   ValueListenable<GeoPoint?> get listenerMapSingleTapping =>
       _listenerMapSingleTapping;
+
+  ValueListenable<RoadInfo?> get listenerRoadTapped =>
+      _listenerRoadTapped;
 
   @Deprecated("this callback is deprecated,will be removed in the future,"
       "use OSMMixinObserver instead,see readme for more details")
@@ -67,6 +71,9 @@ extension setLiteners on IBaseMapController {
 
   void setValueListenerRegionIsChanging(Region region) {
     _listenerRegionIsChanging.value = region;
+  }
+  void setValueListenerMapRoadTapping(RoadInfo road) {
+    _listenerRoadTapped.value = road;
   }
 }
 

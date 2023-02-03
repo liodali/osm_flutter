@@ -27,6 +27,8 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Stream<LongTapEvent> onLongPressMapClickListener(int idMap);
 
+  Stream<RoadTapEvent> onRoadMapClickListener(int idMap);
+
   Stream<GeoPointEvent> onGeoPointClickListener(int idMap);
 
   Stream<UserLocationEvent> onUserPositionListener(int idMap);
@@ -135,6 +137,10 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idOSM,
   );
 
+  Future<void> removeRoad(
+    int idOSM,
+    String roadKey,
+  );
   Future<RoadInfo> drawRoad(
     int idOSM,
     GeoPoint start,
@@ -257,11 +263,11 @@ abstract class MobileOSMPlatform extends OSMPlatform {
 
   Future<void> drawRoadManually(
     int idOSM,
+    String roadKey,
     List<GeoPoint> road, {
     Color roadColor = Colors.green,
     double width = 5.0,
     bool zoomInto = false,
-    bool deleteOldRoads = false,
     GlobalKey? keyIconForInterestPoints,
     List<GeoPoint> interestPoints = const [],
   });
