@@ -134,14 +134,12 @@ mixin WebMixin {
     return GeoPoint.fromMap(Map<String, double>.from(value));
   }
 
-  Future<void> removeAllCircle() {
-    // TODO: implement removeAllCircle
-    throw UnimplementedError();
+  Future<void> removeAllCircle() async{
+    promiseToFuture(interop.removeAllCircle(mapIdMixin));
   }
 
-  Future<void> removeAllRect() {
-    // TODO: implement removeAllRect
-    throw UnimplementedError();
+  Future<void> removeAllRect() async{
+    promiseToFuture(interop.removeAllRect(mapIdMixin));
   }
 
   Future<void> removeAllShapes() {
