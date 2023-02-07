@@ -99,11 +99,20 @@ class MobileOSMController extends IBaseOSMController {
     osmPlatform.onLongPressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapLongTapping(event.value);
+      _osmFlutterState.widget.controller.osMMixin?.onLongTap(event.value);
     });
 
     osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
+
+      _osmFlutterState.widget.controller.osMMixin?.onSingleTap(event.value);
+    });
+
+    osmPlatform.onRoadMapClickListener(_idMap).listen((event) {
+      _osmFlutterState.widget.controller
+          .setValueListenerMapRoadTapping(event.value);
+      _osmFlutterState.widget.controller.osMMixin?.onRoadTap(event.value);
     });
     osmPlatform.onMapIsReady(_idMap).listen((event) async {
       if (_androidOSMLifecycle != null &&
@@ -123,6 +132,7 @@ class MobileOSMController extends IBaseOSMController {
     osmPlatform.onRegionIsChangingListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
+      _osmFlutterState.widget.controller.osMMixin?.onRegionChanged(event.value);
     });
 
     osmPlatform.onMapRestored(_idMap).listen((event) {
@@ -560,12 +570,12 @@ class MobileOSMController extends IBaseOSMController {
 
   /// draw road
   ///  [path] : (list) path of the road
-  Future<void> drawRoadManually(
+  Future<String> drawRoadManually(
+    String roadKey,
     List<GeoPoint> path, {
     Color roadColor = Colors.green,
     double width = 5.0,
     bool zoomInto = false,
-    bool deleteOldRoads = false,
     MarkerIcon? interestPointIcon,
     List<GeoPoint> interestPoints = const [],
   }) async {
@@ -594,20 +604,26 @@ class MobileOSMController extends IBaseOSMController {
     }
     await osmPlatform.drawRoadManually(
       _idMap,
+      roadKey,
       path,
       roadColor: roadColor,
       width: width,
       zoomInto: zoomInto,
-      deleteOldRoads: deleteOldRoads,
       interestPoints: interestPoints,
       keyIconForInterestPoints:
           interestPointIcon != null ? _osmFlutterState.dynamicMarkerKey : null,
     );
+    return roadKey;
   }
 
   ///delete last road draw in the map
   Future<void> removeLastRoad() async {
     return await osmPlatform.removeLastRoad(_idMap);
+  }
+
+  @override
+  Future<void> removeRoad({required String roadKey}) async {
+    return await osmPlatform.removeRoad(_idMap, roadKey);
   }
 
   // Future<bool> checkServiceLocation() async {
