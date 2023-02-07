@@ -6,10 +6,11 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.min.js"></script>
-
   <!-- 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mapbox-polyline/1.1.1/polyline.min.js"></script>
+  
      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-plugins/3.4.0/layer/Marker.Rotate.min.js" integrity="sha512-Ffr5ejFKbhg2ZAR8TaHe2v28uyY74DYthE0kdl0eFRHHH/D5Aa9eSM88TP6OEif5M008v5B6ICUDuis/3ZsX6w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> 
- -->
+  -->
   <style>
     html,
     body {
@@ -434,9 +435,19 @@
         return 400;
       }
       var routePolyline = route.map((elem) => L.latLng(elem.lat, elem.lon))//[elem.lon,elem.lat])
-      lastRoad = L.polyline(routePolyline, { color: colorRoute, weight: routeWidth }).addTo(mymap)
-
+      lastRoad = L.polyline(routePolyline, 
+       {  
+         id:key,
+         color: colorRoute,
+         weight: routeWidth
+      })
+      .on('click',function(event){
+        onRoadClicked(event.target.options.id);
+        L.DomEvent.stopPropagation(event);
+      }).addTo(mymap)
+      
       routesLayer.set(key,lastRoad)
+      routesLayer[key]
       if (zoomInto) {
         mymap.flyToBounds(lastRoad.getBounds());
       }
@@ -486,10 +497,14 @@
 
     function removeRoad(key){
       if(routesLayer.has(key)){
+      console.log("html remove road "+key)
+   
           if(routesLayer[key]==lastRoad){
-            lastRoad==undefined;
+            lastRoad=undefined;
+            console.log("html roads "+routesLayer)
           }
-          routesLayer[key].remove();
+          console.log("html roads "+routesLayer.get(key))
+          routesLayer.get(key).remove();
           routesLayer.delete(key);
       }
       return 200;

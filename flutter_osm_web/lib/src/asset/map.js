@@ -190,6 +190,7 @@ async function setUpMap(mapId){
    innerWindow.onGeoPointClicked = onGeoPointClicked;
    innerWindow.onMapSingleTapClicked = onMapSingleTapClicked;
    innerWindow.onRegionChanged = onRegionChanged;
+   innerWindow.onRoadClicked = onRoadClicked;
    return 200;
 }
 /*
@@ -206,6 +207,9 @@ function onMapSingleTapClicked(lon, lat) {
 }
 function onRegionChanged(box, center) {
    onRegionChangedListener(box.north, box.east, box.south, box.west, center.lon, center.lat);
+}
+function onRoadClicked(roadKey) {
+   onRoadListener(roadKey);
 }
 
 
