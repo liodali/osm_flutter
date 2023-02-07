@@ -231,6 +231,11 @@ external dynamic drawCircle(int mapId, CircleShapeJS circle);
 
 @JS('removePath')
 external dynamic removePath(int mapId, String rectKey);
+@JS('removeAllCircle')
+external dynamic removeAllCircle(int mapId);
+
+@JS('removeAllRect')
+external dynamic removeAllRect(int mapId);
 
 @JS('clearAllRoads')
 external dynamic clearAllRoads(int mapId);
@@ -261,5 +266,8 @@ external set onRegionChangedListener(
 /// Allows assigning a function to be callable from `window.onRegionChangedListener(region)`
 @JS('onRoadListener')
 external set onRoadListener(
-  void Function(String,) f,
+  void Function(
+    String,
+  )
+      f,
 );

@@ -581,7 +581,7 @@
 
     async function drawRect(key,bounds,color,strokeWidth){
       var rectPoints = bounds.map(p => [p.lat,p.lon]);
-      var polygon = L.polygon(
+      var polygon = L.rectangle(
             rectPoints,
             {
               color: color, 
@@ -610,13 +610,34 @@
     }
 
     async function removePath(key){
-      console.log(shapesLayers)
-      console.log(shapesLayers.has(key))
       if(shapesLayers.has(key)){  
         mymap.removeLayer(shapesLayers.get(key))
-        console.log(key)
         shapesLayers.delete(key)
       }
+    }
+    async function removeAllCircle(){
+      var circles = []
+      shapesLayers.forEach(function(key,layer){
+        if(layer instanceof L.polygon){
+          circles.push(key)
+          mymap.removeLayer(layer)
+        }
+      })
+      circles.forEach(function(circle){
+        shapesLayers.delete(circle)
+      })
+    }
+    async function removeAllRect(){
+      var rectangles = []
+      shapesLayers.forEach(function(key,layer){
+        if(layer instanceof L.rectangle){
+          rectangles.push(key)
+          mymap.removeLayer(layer)
+        }
+      })
+      rectangles.forEach(function(rect){
+        shapesLayers.delete(rect)
+      })
     }
     function setHomeMarker(point, args) {
       if (homeMarker == undefined) {

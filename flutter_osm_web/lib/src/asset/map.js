@@ -164,6 +164,7 @@ async function cancelAdvSearchLocation(mapId) {
    return await iframe.contentWindow.cancelAdvSearchLocation();
 }
 async function drawRect(mapId,config,bounds){
+   var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.drawRect(config.key,bounds,config.color,config.strokeWidth);
 }
 async function drawCircle(mapId,config){
@@ -173,6 +174,16 @@ async function drawCircle(mapId,config){
 async function removePath(mapId,key){
    var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.removePath(key);
+}
+
+async function removeAllCircle(mapId){
+   var iframe = document.getElementById("frame_map_"+mapId);
+   return await iframe.contentWindow.removeAllCircle();
+}
+
+async function removeAllRect(mapId){
+   var iframe = document.getElementById("frame_map_"+mapId);
+   return await iframe.contentWindow.removeAllRect();
 }
 async function clearAllRoads(mapId){
    var iframe = document.getElementById("frame_map_"+mapId);
