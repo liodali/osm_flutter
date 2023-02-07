@@ -144,10 +144,12 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     webPlatform.onLongPressMapClickListener(_mapId).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapLongTapping(event.value);
+      osmWebFlutterState.widget.controller.osMMixin?.onLongTap(event.value);
     });
     webPlatform.onSinglePressMapClickListener(_mapId).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
+      osmWebFlutterState.widget.controller.osMMixin?.onSingleTap(event.value);
       //event.value;
     });
     webPlatform.onMapIsReady(_mapId).listen((event) async {
@@ -165,6 +167,13 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       print(event.value);
       osmWebFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
+      osmWebFlutterState.widget.controller.osMMixin
+          ?.onRegionChanged(event.value);
+    });
+    webPlatform.onRoadMapClickListener(_mapId).listen((event) {
+      osmWebFlutterState.widget.controller
+          .setValueListenerMapRoadTapping(event.value);
+      osmWebFlutterState.widget.controller.osMMixin?.onRoadTap(event.value);
     });
 
     if (osmWebFlutterState.widget.onGeoPointClicked != null) {
@@ -418,5 +427,4 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       interop.setUserLocationIconMarker(_mapId, iconPNG);
     }
   }
-  
 }

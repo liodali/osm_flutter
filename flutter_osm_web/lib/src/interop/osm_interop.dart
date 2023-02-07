@@ -236,7 +236,7 @@ external dynamic removePath(int mapId, String rectKey);
 external dynamic clearAllRoads(int mapId);
 
 @JS('removeRoad')
-external dynamic removeRoad(int mapId,String roadKey);
+external dynamic removeRoad(int mapId, String roadKey);
 
 @JS('setUpMap')
 external dynamic setUpMap(int mapId);
@@ -257,3 +257,9 @@ external set onMapSingleTapListener(void Function(double, double) f);
 @JS('onRegionChangedListener')
 external set onRegionChangedListener(
     void Function(double, double, double, double, double, double) f);
+
+/// Allows assigning a function to be callable from `window.onRegionChangedListener(region)`
+@JS('onRoadListener')
+external set onRoadListener(
+  void Function(String,) f,
+);

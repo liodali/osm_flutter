@@ -134,10 +134,13 @@ class MultiRoadConfiguration {
   });
 }
 
-/// RoadInfo
+/// [RoadInfo]
+/// 
 /// this class is represent road information for specific road
 /// has unique key to remove road
+/// 
 /// contain 3 object distance,duration and list of route
+/// 
 /// [distance] : (double) distance of  the road in km, can be null
 ///
 /// [duration] : (double) duration of the road in seconds,can be null
@@ -162,6 +165,7 @@ class RoadInfo {
             ? (map["routePoints"] as String).stringToGeoPoints()
             : [];
   RoadInfo copyWith({
+    String? roadKey,
     double? distance,
     double? duration,
     List<GeoPoint>? route = const [],
@@ -170,7 +174,7 @@ class RoadInfo {
       distance: distance ?? this.distance,
       duration: duration ?? this.duration,
       route: route ?? this.route,
-    )..setKey(this._key);
+    )..setKey(roadKey ?? this._key);
   }
 
   RoadInfo copyFromMap({

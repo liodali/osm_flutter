@@ -18,6 +18,8 @@ mixin WebMixin {
 
   late OsmWebWidgetState _osmWebFlutterState;
 
+  Map<String, RoadInfo> roadsWebCache = {};
+
   Future<void> initLocationMap(GeoPoint p) async {
     await promiseToFuture(interop.initMapLocation(mapIdMixin, p.toGeoJS()));
   }
@@ -153,6 +155,7 @@ mixin WebMixin {
 
   Future<void> removeLastRoad() async {
     await promiseToFuture(interop.removeLastRoad(mapIdMixin));
+    roadsWebCache.remove(roadsWebCache.keys.last);
   }
 
   Future<void> removeMarker(GeoPoint p) async {
@@ -258,7 +261,7 @@ mixin WebMixin {
       interop.removeMarker(mapIdMixin, start.toGeoJS());
       interop.removeMarker(mapIdMixin, end.toGeoJS());
     }
-    final roadInfo = RoadInfo();
+    var roadInfo = RoadInfo();
     interop.drawRoad(
       mapIdMixin,
       roadInfo.key,
@@ -273,11 +276,13 @@ mixin WebMixin {
           : [],
       null,
     );
-    return roadInfo.copyWith(
+    roadInfo = roadInfo.copyWith(
       duration: road.duration,
       distance: road.distance,
       route: road.polyline!.mapToListGeoPoints(),
     );
+    roadsWebCache[roadInfo.key] = roadInfo;
+    return roadInfo;
   }
 
   Future<String> drawRoadManually(
@@ -315,15 +320,21 @@ mixin WebMixin {
         icon,
       );
     });
+
+    roadsWebCache[roadKey] = RoadInfo(route: path).copyWith(
+      roadKey: roadKey,
+    );
     return roadKey;
   }
 
   Future<void> clearAllRoads() async {
     await promiseToFuture(interop.clearAllRoads(mapIdMixin));
+    roadsWebCache.clear();
   }
 
   Future<void> removeRoad({required String roadKey}) async {
     await promiseToFuture(interop.removeRoad(mapIdMixin, roadKey));
+    roadsWebCache.remove(roadKey);
   }
 
   Future<List<RoadInfo>> drawMultipleRoad(
@@ -342,6 +353,9 @@ mixin WebMixin {
       );
     });
     final infos = await Future.wait(futureRoads);
+    infos.forEach((roadInfo) {
+      roadsWebCache[roadInfo.key] = roadInfo;
+    });
     return infos;
   }
 

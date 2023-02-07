@@ -26,6 +26,7 @@ void BindingWebOSM() {
   interop.onStaticGeoPointClicked = allowInterop(onStaticGeoPointClicked);
   interop.onMapSingleTapListener = allowInterop(onMapSingleTapListener);
   interop.onRegionChangedListener = allowInterop(onRegionChangedListener);
+  interop.onRoadListener = allowInterop(onRoadListener);
 }
 
 void initMapFinished(bool isReady) {
@@ -58,4 +59,11 @@ void onRegionChangedListener(
   };
   final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
   controller.channel!.invokeMethod("receiveRegionIsChanging", region);
+}
+
+void onRoadListener(
+  String roadKey,
+) {
+  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
+  controller.channel!.invokeMethod("receiveRoad", roadKey);
 }

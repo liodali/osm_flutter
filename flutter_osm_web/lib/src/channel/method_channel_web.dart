@@ -70,6 +70,11 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
+  Stream<RoadTapEvent> onRoadMapClickListener(int idMap) {
+    return _events(idMap).whereType<RoadTapEvent>();
+  }
+
+  @override
   Future<void> init(int idOSM) async {
     if (_streamController.isClosed) {
       _streamController = StreamController<EventOSM>.broadcast();
@@ -119,6 +124,13 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
           final result = call.arguments;
           _streamController
               .add(RegionIsChangingEvent(idOSM, Region.fromMap(result)));
+          break;
+        case "receiveRoad":
+          final roadKey = call.arguments as String;
+          if (map != null && map!.roadsWebCache.containsKey(roadKey)) {
+            _streamController
+                .add(RoadTapEvent(idOSM, map!.roadsWebCache[roadKey]!));
+          }
           break;
         default:
           throw PlatformException(
