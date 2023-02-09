@@ -354,15 +354,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     }
     RenderRepaintBoundary boundary =
         globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-
-    ui.Image image;
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      //added pixelRatio : 5 in ios to get clear image
-      image = await boundary.toImage(pixelRatio: 5);
-    } else {
-      image = await boundary.toImage();
-    }
-
+    ui.Image image = await boundary.toImage(pixelRatio: 5);
     ByteData byteData =
         (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
     Uint8List pngBytes = byteData.buffer.asUint8List();
