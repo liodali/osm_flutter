@@ -237,6 +237,9 @@ external dynamic removeAllCircle(int mapId);
 @JS('removeAllRect')
 external dynamic removeAllRect(int mapId);
 
+@JS('removeAllShapes')
+external dynamic removeAllShapes(int mapId);
+
 @JS('clearAllRoads')
 external dynamic clearAllRoads(int mapId);
 

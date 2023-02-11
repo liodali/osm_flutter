@@ -639,6 +639,12 @@
         shapesLayers.delete(rect)
       })
     }
+    async function removeAllShapes(){
+      shapesLayers.forEach(function(key,layer){
+        mymap.removeLayer(layer)
+      })
+      shapesLayers = []
+    }
     function setHomeMarker(point, args) {
       if (homeMarker == undefined) {
         homeMarker = L.marker([point.lat, point.lon], args).addTo(mymap);

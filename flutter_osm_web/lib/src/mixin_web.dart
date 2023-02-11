@@ -142,9 +142,8 @@ mixin WebMixin {
     promiseToFuture(interop.removeAllRect(mapIdMixin));
   }
 
-  Future<void> removeAllShapes() {
-    // TODO: implement removeAllShapes
-    throw UnimplementedError();
+  Future<void> removeAllShapes() async{
+    promiseToFuture(interop.removeAllShapes(mapIdMixin));
   }
 
   Future<void> removeCircle(String key) async {

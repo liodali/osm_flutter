@@ -185,6 +185,12 @@ async function removeAllRect(mapId){
    var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.removeAllRect();
 }
+
+async function removeAllShapes(mapId){
+   var iframe = document.getElementById("frame_map_"+mapId);
+   return await iframe.contentWindow.removeAllShapes();
+}
+
 async function clearAllRoads(mapId){
    var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.clearAllRoads();
