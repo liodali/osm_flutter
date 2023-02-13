@@ -694,8 +694,13 @@ class FlutterOsmView(
                 }
                 val polyLine = Polyline(map!!)
                 polyLine.setPoints(lastRoad.roadPoints)
+
+                val borderPolyline = Polyline(map!!)
+                borderPolyline.setPoints(lastRoad.roadPoints)
+
                 flutterRoad = createRoad(
                         polyLine = polyLine,
+                        borderPolyline =borderPolyline,
                         colorRoad = lastRoad.roadColor,
                         roadWidth = lastRoad.roadWith,
                         listInterestPoints = lastRoad.listInterestPoints,
@@ -713,9 +718,13 @@ class FlutterOsmView(
                 }
                 val polyLine = Polyline(map!!)
                 polyLine.setPoints(road.roadPoints)
+
+                val borderPolyline = Polyline(map!!)
+                borderPolyline.setPoints(road.roadPoints)
                 //customRoadMarkerIcon.p
                 flutterRoad = createRoad(
                         polyLine = polyLine,
+                        borderPolyline =borderPolyline,
                         colorRoad = road.roadColor,
                         roadWidth = road.roadWith,
                         listInterestPoints = road.listInterestPoints,
@@ -1421,8 +1430,10 @@ class FlutterOsmView(
                             if (road.mRouteHigh.size > 2) {
                                 routePointsEncoded = PolylineEncoder.encode(road.mRouteHigh, 10)
                                 val polyLine = RoadManager.buildRoadOverlay(road)
+                                val borderPolyline = RoadManager.buildRoadOverlay(road)
                                 createRoad(
                                         polyLine = polyLine,
+                                        borderPolyline =borderPolyline,
                                         colorRoad = config.colorRoad,
                                         roadWidth = config.roadWidth,
                                         showPoiMarker = false,
@@ -1542,8 +1553,10 @@ class FlutterOsmView(
                     if (road.mRouteHigh.size > 2) {
                         routePointsEncoded = PolylineEncoder.encode(road.mRouteHigh, 10)
                         val polyLine = RoadManager.buildRoadOverlay(road)
+                        val borderPolyLine = RoadManager.buildRoadOverlay(road)
                         flutterRoad = createRoad(
                                 polyLine = polyLine,
+                                borderPolyline =borderPolyLine,
                                 colorRoad = colorRoad,
                                 roadWidth = roadWidth,
                                 showPoiMarker = showPoiMarker,
@@ -1610,8 +1623,16 @@ class FlutterOsmView(
         polyLine.setPoints(route)
         polyLine.outlinePaint.color = color
         polyLine.outlinePaint.strokeWidth = widthRoad.toFloat()
+
+        val borderPolyLine = Polyline(map!!)
+        borderPolyLine.setPoints(route)
+        borderPolyLine.outlinePaint.color = color
+        borderPolyLine.outlinePaint.strokeWidth = widthRoad.toFloat() +5
+
+
         createRoad(
                 polyLine = polyLine,
+                borderPolyline =borderPolyLine,
                 colorRoad = color,
                 roadWidth = widthRoad.toFloat(),
                 showPoiMarker = listInterestPoints.isNotEmpty(),
@@ -1640,6 +1661,7 @@ class FlutterOsmView(
 
     private fun createRoad(
             polyLine: Polyline,
+            borderPolyline: Polyline,
             colorRoad: Int?,
             showPoiMarker: Boolean,
             listInterestPoints: List<GeoPoint>,
@@ -1681,9 +1703,26 @@ class FlutterOsmView(
             if (showPoiMarker) {
                 roadF.markersIcons = iconsRoads
             }
+
+            //added border to the polyline
+            borderPolyline.outlinePaint.strokeCap = Paint.Cap.ROUND
+            borderPolyline.outlinePaint.strokeJoin =Paint.Join.ROUND
+            borderPolyline.outlinePaint.color=  Color.BLACK
+            borderPolyline.outlinePaint.strokeWidth =roadWidth +5
+
+            roadF.road = borderPolyline
+            folderRoad.items.add(roadF )
+
+
             polyLine.outlinePaint.strokeWidth = roadWidth
+            polyLine.outlinePaint.color = colorRoad ?: Color.RED
+            //made the polyline seamless
+            polyLine.outlinePaint.strokeCap = Paint.Cap.ROUND
+            polyLine.outlinePaint.strokeJoin =Paint.Join.ROUND
+
 
             roadF.road = polyLine
+            folderRoad.items.add(roadF)
             /*if (showPoiMarker) {
                 // if (it.start != null)
                 folderRoad.items.add(roadF.start.apply {
@@ -1696,7 +1735,7 @@ class FlutterOsmView(
                 folderRoad.items.addAll(roadF.middlePoints)
             }*/
 
-            folderRoad.items.add(roadF)
+
         }
 
         return flutterRoad
