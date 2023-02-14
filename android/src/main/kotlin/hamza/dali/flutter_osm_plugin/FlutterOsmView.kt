@@ -884,7 +884,7 @@ class FlutterOsmView(
                                                     errorDrawable: Drawable?
                                             ) {
                                                 marker.icon = ContextCompat.getDrawable(
-                                                        context!!,
+                                                        context,
                                                         R.drawable.ic_location_on_red_24dp
                                                 )
                                                 map!!.overlays.add(marker)

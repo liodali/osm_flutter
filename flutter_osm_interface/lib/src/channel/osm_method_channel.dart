@@ -21,12 +21,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, MethodChannel> _channels = {};
 
   //final Map<int, List<EventChannel>> _eventsChannels = {};
-  StreamController _streamController = StreamController<EventOSM>.broadcast();
+  var _streamController = StreamController<EventOSM>.broadcast();
 
   // Returns a filtered view of the events in the _controller, by mapId.
   Stream<EventOSM> _events(int mapId) =>
-      _streamController.stream.where((event) => event.mapId == mapId)
-          as Stream<EventOSM>;
+      _streamController.stream.where((event) => event.mapId == mapId);
 
   @override
   Future<void> init(int idOSMMap) async {
