@@ -55,6 +55,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
+import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.bonuspack.utils.PolylineEncoder
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -1562,6 +1563,29 @@ class FlutterOsmView(
                                 showPoiMarker = showPoiMarker,
                                 listInterestPoints = listInterestPoints,
                         )
+                       // drawNodesOnRoad(road, map!!)
+                        val nodeIcon = map!!.resources.getDrawable(R.drawable.moreinfo_arrow)
+                        for (i in 0 until road.mNodes.size) {
+                            val node = road.mNodes[i]
+                            val nodeMarker = Marker(map)
+                            nodeMarker.position = node.mLocation
+                            nodeMarker.icon = nodeIcon
+                            nodeMarker.title = "Step $i"
+                            //4. Filling the bubbles
+
+                            //4. Filling the bubbles
+                            nodeMarker.title = "Step $i"
+                            nodeMarker.snippet = node.mInstructions
+                            nodeMarker.subDescription =
+                                Road.getLengthDurationText(context,node.mLength, node.mDuration);
+
+                            val iconContinue = map!!.resources.getDrawable(R.drawable.center)
+                            nodeMarker.image = iconContinue
+
+                            map!!.overlays.add(nodeMarker)
+                        }
+
+
                         mapSnapShot().cacheRoad(
                                 RoadSnapShot(
                                         roadPoints = road.mRouteHigh,
@@ -1591,6 +1615,7 @@ class FlutterOsmView(
             }
         }
     }
+
 
     private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
         val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
@@ -1723,7 +1748,7 @@ class FlutterOsmView(
 
             roadF.road = polyLine
             folderRoad.items.add(roadF)
-            /*if (showPoiMarker) {
+               /*if (showPoiMarker) {
                 // if (it.start != null)
                 folderRoad.items.add(roadF.start.apply {
                     this.visibilityInfoWindow(visibilityInfoWindow)
@@ -1734,7 +1759,6 @@ class FlutterOsmView(
                 })
                 folderRoad.items.addAll(roadF.middlePoints)
             }*/
-
 
         }
 
