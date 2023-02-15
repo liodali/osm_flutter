@@ -53,11 +53,7 @@ class GeoPointWithOrientation extends GeoPoint {
         );
 
   Map<String, double> toMap() {
-    return super.toMap()
-      ..putIfAbsent(
-        "angle",
-        () => angle * (180 / pi),
-      );
+    return super.toMap()..putIfAbsent("angle", () => angle);
   }
 
   @override
