@@ -45,32 +45,32 @@ class RoadConfiguration {
 class RoadOption {
   final Color? roadColor;
   final int? roadWidth;
-  final bool showMarkerOfPOI;
   final bool zoomInto;
-  final bool keepInitialGeoPoints;
+  final Color? roadBorderColor;
+  final double? roadBorderWidth;
 
   const RoadOption({
     this.roadColor,
     this.roadWidth,
-    this.showMarkerOfPOI = false,
+    this.roadBorderColor,
     this.zoomInto = true,
-    this.keepInitialGeoPoints = true,
+    this.roadBorderWidth,
   });
 
   const RoadOption.empty()
-      : this.roadWidth = null,
-        this.roadColor = null,
-        this.zoomInto = false,
-        this.showMarkerOfPOI = false,
-        this.keepInitialGeoPoints = true;
+      : roadWidth = null,
+        roadColor = null,
+        zoomInto = false,
+        roadBorderWidth = null,
+        roadBorderColor = null;
 
   Map toMap() {
     Map args = {};
 
     /// disable/show markers in start,middle,end points
     args.putIfAbsent(
-      "showMarker",
-      () => showMarkerOfPOI,
+      "roadBorderWidth",
+      () => roadBorderWidth,
     );
 
     args.putIfAbsent(
@@ -84,7 +84,8 @@ class RoadOption {
       args.putIfAbsent("roadWidth",
           () => Platform.isIOS ? "${roadWidth}px" : roadWidth!.toDouble());
     }
-    args.putIfAbsent("keepInitialGeoPoint", () => keepInitialGeoPoints);
+    args.putIfAbsent("roadBorderColor",
+        () => roadBorderColor ?? (roadColor ?? Colors.green).dark().toPlatform());
     return args;
   }
 }
@@ -101,16 +102,22 @@ class MultiRoadOption extends RoadOption {
     Color? roadColor,
     int? roadWidth,
     this.roadType = RoadType.car,
+    Color? roadBorderColor,
+    double? roadBorderWidth,
   }) : super(
           roadColor: roadColor,
           roadWidth: roadWidth,
           zoomInto: false,
-          showMarkerOfPOI: false,
+          roadBorderColor: roadBorderColor,
+
         );
 
   const MultiRoadOption.empty()
       : this.roadType = RoadType.car,
-        super(roadColor: Colors.green, zoomInto: false, showMarkerOfPOI: false);
+        super(
+          roadColor: Colors.green,
+          zoomInto: false,
+        );
 }
 
 /// [MultiRoadConfiguration]
@@ -135,12 +142,12 @@ class MultiRoadConfiguration {
 }
 
 /// [RoadInfo]
-/// 
+///
 /// this class is represent road information for specific road
 /// has unique key to remove road
-/// 
+///
 /// contain 3 object distance,duration and list of route
-/// 
+///
 /// [distance] : (double) distance of  the road in km, can be null
 ///
 /// [duration] : (double) duration of the road in seconds,can be null
