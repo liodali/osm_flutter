@@ -237,9 +237,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     );
     final bounds = await controller.bounds;
     print(bounds.toString());
-    Future.delayed(Duration(seconds: 5), () {
-      controller.changeTileLayer(tileLayer: CustomTile.cycleOSM());
-    });
+    // Future.delayed(Duration(seconds: 5), () {
+    //   controller.changeTileLayer(tileLayer: CustomTile.cycleOSM());
+    // });
   }
 
   @override
@@ -691,16 +691,16 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           roadOption: RoadOption(
             roadWidth: 10,
             roadColor: Colors.blue,
-            showMarkerOfPOI: true,
-            keepInitialGeoPoints: false,
             zoomInto: true,
+            roadBorderWidth: 6,
+            roadBorderColor: Colors.amber
           ),
         );
         pointsRoad.clear();
         debugPrint(
             "app duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         debugPrint("app distance:${roadInformation.distance}Km");
-        debugPrint("app road:"+roadInformation.toString());
+        debugPrint("app road:" + roadInformation.toString());
         // final box = await BoundingBox.fromGeoPointsAsync([point2, point]);
         // controller.zoomToBoundingBox(
         //   box,
