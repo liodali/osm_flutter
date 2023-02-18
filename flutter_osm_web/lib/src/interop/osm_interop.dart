@@ -180,8 +180,8 @@ external dynamic drawRoad(
   String color,
   double roadWidth,
   bool zoomInto,
-  bool keepInitialGeoPoints,
-  bool showMarkerOfPOI,
+  String roadBorderColor,
+  double roadBorderWidth,
   List<GeoPointJs> interestPoints,
   String? iconInterestPoints,
 );

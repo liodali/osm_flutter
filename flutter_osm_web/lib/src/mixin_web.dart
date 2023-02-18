@@ -134,15 +134,15 @@ mixin WebMixin {
     return GeoPoint.fromMap(Map<String, double>.from(value));
   }
 
-  Future<void> removeAllCircle() async{
+  Future<void> removeAllCircle() async {
     promiseToFuture(interop.removeAllCircle(mapIdMixin));
   }
 
-  Future<void> removeAllRect() async{
+  Future<void> removeAllRect() async {
     promiseToFuture(interop.removeAllRect(mapIdMixin));
   }
 
-  Future<void> removeAllShapes() async{
+  Future<void> removeAllShapes() async {
     promiseToFuture(interop.removeAllShapes(mapIdMixin));
   }
 
@@ -252,25 +252,19 @@ mixin WebMixin {
       geometrie: routing.Geometries.geojson,
     );
     final routeJs = road.polyline!.mapToListGeoJS();
-    if (roadOption != null &&
-        !roadOption.showMarkerOfPOI &&
-        !roadOption.keepInitialGeoPoints) {
-      interop.removeMarker(mapIdMixin, start.toGeoJS());
-      interop.removeMarker(mapIdMixin, end.toGeoJS());
-    }
+
+    debugPrint((roadOption?.roadBorderColor ?? Colors.green).toHexColor());
     var roadInfo = RoadInfo();
     interop.drawRoad(
       mapIdMixin,
       roadInfo.key,
       routeJs,
-      roadOption?.roadColor?.toHexColorWeb() ?? Colors.green.toHexColorWeb(),
+      roadOption?.roadColor?.toHexColor() ?? Colors.green.toHexColor(),
       roadOption?.roadWidth?.toDouble() ?? 5.0,
       roadOption?.zoomInto ?? true,
-      roadOption?.keepInitialGeoPoints ?? false,
-      roadOption?.showMarkerOfPOI ?? false,
-      roadOption != null && roadOption.showMarkerOfPOI
-          ? interestPoints?.toListGeoPointJs() ?? []
-          : [],
+      (roadOption?.roadBorderColor ?? Colors.green).toHexColor(),
+      roadOption?.roadBorderWidth ?? 0,
+      interestPoints?.toListGeoPointJs() ?? [],
       null,
     );
     roadInfo = roadInfo.copyWith(
@@ -287,6 +281,8 @@ mixin WebMixin {
     List<GeoPoint> path, {
     Color roadColor = Colors.green,
     double width = 5.0,
+    double roadBorderWidth = 0.0,
+    Color? roadBorderColor,
     bool zoomInto = true,
     MarkerIcon? interestPointIcon,
     List<GeoPoint> interestPoints = const [],
@@ -311,8 +307,8 @@ mixin WebMixin {
         roadColor.toHexColorWeb(),
         width,
         zoomInto,
-        false,
-        false,
+        (roadBorderColor ?? Colors.green).toHexColor(),
+        roadBorderWidth,
         interestPoints.toListGeoPointJs(),
         icon,
       );
