@@ -58,11 +58,32 @@ extension TransformEncodedPolyLineToListGeo on String {
 }
 
 extension ColorMap on Color {
+  Color dark() {
+    final hsl = HSLColor.fromColor(this);
+    final hslDark = hsl.withLightness((hsl.lightness - .3).clamp(0.0, 1.0));
+
+    return hslDark.toColor();
+  }
+
   Map<String, dynamic> toMapPlatform(String key) {
     if (Platform.isIOS) {
       return toHexMap(key);
     }
     return toMap(key);
+  }
+
+  dynamic toPlatform() {
+    if (kIsWeb) {
+      return toHexColorWeb();
+    }
+    if (Platform.isIOS) {
+      return toHexColor();
+    }
+    return [
+      this.red,
+      this.blue,
+      this.green,
+    ];
   }
 
   Map<String, List<int>> toMap(String key) {
@@ -95,7 +116,7 @@ extension ColorMap on Color {
   }
 
   String toHexColorWeb() {
-    return "#${this.value.toRadixString(16)}".replaceAll("ff", "");
+    return "#${this.value.toRadixString(16)}".replaceFirst("ff", "");
   }
 }
 
