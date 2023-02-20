@@ -826,9 +826,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
         var roadWidth = "5px"
         if (args.keys.contains("roadWidth")) {
-            roadWidth = "\(args["roadWidth"] as! Double)px"
+            roadWidth = args["roadWidth"] as! String
         }
-        let zoomInto = args["zoomInto"] as! Bool
+        let zoomInto = args["zoomIntoRegion"] as! Bool
 
         var road = Road()
         road.mRouteHigh = roadEncoded
