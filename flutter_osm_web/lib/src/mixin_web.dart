@@ -278,41 +278,25 @@ mixin WebMixin {
 
   Future<String> drawRoadManually(
     String roadKey,
-    List<GeoPoint> path, {
-    Color roadColor = Colors.green,
-    double width = 5.0,
-    double roadBorderWidth = 0.0,
-    Color? roadBorderColor,
-    bool zoomInto = true,
-    MarkerIcon? interestPointIcon,
-    List<GeoPoint> interestPoints = const [],
-  }) async {
+    List<GeoPoint> path,
+    RoadOption roadOption,
+  ) async {
     final routeJs = path.toListGeoPointJs();
-    var waitDelay = 0;
-    if (interestPointIcon != null) {
-      osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value =
-          interestPointIcon;
-      waitDelay = 300;
-    }
-    await Future.delayed(Duration(milliseconds: waitDelay), () async {
-      var icon = null;
-      if (interestPointIcon != null) {
-        icon = (await capturePng(osmWebFlutterState.dynamicMarkerKey!))
-            .convertToString();
-      }
+
+    await promiseToFuture(
       interop.drawRoad(
         mapIdMixin,
         roadKey,
         routeJs,
-        roadColor.toHexColorWeb(),
-        width,
-        zoomInto,
-        (roadBorderColor ?? Colors.green).toHexColor(),
-        roadBorderWidth,
-        interestPoints.toListGeoPointJs(),
-        icon,
-      );
-    });
+        (roadOption.roadColor ?? Colors.green).toHexColorWeb(),
+        (roadOption.roadWidth ?? 5).toDouble(),
+        roadOption.zoomInto,
+        (roadOption.roadBorderColor ?? Colors.green).toHexColor(),
+        (roadOption.roadBorderWidth ?? 0).toDouble(),
+        [],
+        null,
+      ),
+    );
 
     roadsWebCache[roadKey] = RoadInfo(route: path).copyWith(
       roadKey: roadKey,
