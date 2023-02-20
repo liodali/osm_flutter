@@ -21,8 +21,8 @@ const rad2deg = 180.0 / pi;
 extension ExtGeoPoint on GeoPoint {
   List<num> toListNum() {
     return [
-      this.longitude,
       this.latitude,
+      this.longitude,
     ];
   }
 }
