@@ -572,14 +572,9 @@ class MobileOSMController extends IBaseOSMController {
   ///  [path] : (list) path of the road
   Future<String> drawRoadManually(
     String roadKey,
-    List<GeoPoint> path, {
-    Color roadColor = Colors.green,
-    double width = 5.0,
-    bool zoomInto = false,
-    MarkerIcon? interestPointIcon,
-    List<GeoPoint> interestPoints = const [],
-  }) async {
-    assert(width > 0.0);
+    List<GeoPoint> path,
+    RoadOption roadOption,
+  ) async {
     if (path.isEmpty) {
       throw Exception("you cannot make road with empty list of  geoPoint");
     }
@@ -588,30 +583,12 @@ class MobileOSMController extends IBaseOSMController {
         path.length < 3) {
       throw Exception("you cannot make line with same geoPoint");
     }
-    var icon = interestPointIcon;
-    if (Platform.isIOS && icon == null && interestPoints.isNotEmpty) {
-      icon = MarkerIcon(
-        icon: Icon(
-          Icons.location_on,
-          color: Colors.red,
-          size: 32,
-        ),
-      );
-    }
-    if (icon != null && interestPoints.isNotEmpty) {
-      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
-      await Future.delayed(Duration(milliseconds: 350));
-    }
+
     await osmPlatform.drawRoadManually(
       _idMap,
       roadKey,
       path,
-      roadColor: roadColor,
-      width: width,
-      zoomInto: zoomInto,
-      interestPoints: interestPoints,
-      keyIconForInterestPoints:
-          interestPointIcon != null ? _osmFlutterState.dynamicMarkerKey : null,
+      roadOption,
     );
     return roadKey;
   }

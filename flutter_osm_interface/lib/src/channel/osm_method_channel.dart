@@ -505,37 +505,17 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> drawRoadManually(
     int idOSM,
     String roadKey,
-    List<GeoPoint> road, {
-    Color roadColor = Colors.green,
-    double width = 5.0,
-    bool zoomInto = false,
-    GlobalKey? keyIconForInterestPoints,
-    List<GeoPoint> interestPoints = const [],
-  }) async {
+    List<GeoPoint> road,
+    RoadOption roadOption,
+  ) async {
     final coordinates = road.map((e) => e.toListNum()).toList();
     final encodedCoordinates = encodePolyline(coordinates);
     Map<String, dynamic> data = {
       'key': roadKey,
       "road": encodedCoordinates,
-      "roadWidth": width,
+      "roadWidth": roadOption.roadWidth,
     };
-    if (Platform.isIOS) {
-      data.addAll(roadColor.toHexMap("roadColor"));
-    } else {
-      data.addAll(roadColor.toMap("roadColor"));
-    }
-    data["zoomInto"] = zoomInto;
-    data["iconInterestPoints"] = null;
-    data["interestPoints"] = null;
-    if (interestPoints.isNotEmpty) {
-      data["interestPoints"] = await interestPoints.encodedToString();
-      if (keyIconForInterestPoints != null) {
-        try {
-          data["iconInterestPoints"] =
-              await _capturePng(keyIconForInterestPoints);
-        } catch (e) {}
-      }
-    }
+    data.addAll(Map.from(roadOption.toMap()));
 
     await _channels[idOSM]?.invokeMethod(
       "drawRoad#manually",

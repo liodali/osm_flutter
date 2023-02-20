@@ -319,9 +319,9 @@ class MapController extends BaseMapController {
   ///
   ///  you can configure your road in runtime with [roadOption], and change the road type drawn by modify
   ///  the [routeType].
-  /// 
+  ///
   ///  * to delete the road use [RoadInfo.key]
-  /// 
+  ///
   ///  return [RoadInfo] that contain road information such as distance,duration, list of geopoints
   ///
   ///  [start] : started point of your Road
@@ -371,14 +371,14 @@ class MapController extends BaseMapController {
   }
 
   /// [removeLastRoad]
-  /// 
+  ///
   ///delete last road draw in the map
   Future<void> removeLastRoad() async {
     await osmBaseController.removeLastRoad();
   }
 
   /// [removeRoad]
-  /// 
+  ///
   ///delete road draw in the map using [roadKey]
   Future<void> removeRoad({required String roadKey}) async {
     await osmBaseController.removeRoad(roadKey: roadKey);
@@ -454,42 +454,21 @@ class MapController extends BaseMapController {
   ///   if you have you own routing api you can use this method to draw your route
   ///   manually and you can customize the color,width of the route
   ///   zoom into the boundingbox and show POIs of the route
-  ///   
+  ///
   ///   return String unique key can be used to delete road
   ///   paramteres :
   ///
   ///  [path] : (list of GeoPoint) path of the road
   ///
-  ///  [roadColor] : (Color) the color that uses to change the  default road color
-  ///
-  ///  [roadWidth] : (double) uses to change width of the  road
-  ///
-  ///  [zoomInto] : (bool) uses to zoom out to the boundingbox of the route
-  ///
-  ///  [deleteOldRoads] : (bool) uses to delete the last road drawn in the map
-  ///
-  ///  [interestPointIcon] : (MarkerIcon) uses to change marker icon of interestPoints
-  ///
-  ///  [interestPoints] : (List of GeoPoint) list of interest point that you want to show marker for them
-  Future<String> drawRoadManually(
-    List<GeoPoint> path, {
-    Color roadColor = Colors.green,
-    double roadWidth = 5.0,
-    bool zoomInto = false,
-    bool deleteOldRoads = false,
-    MarkerIcon? interestPointIcon,
-    List<GeoPoint> interestPoints = const [],
-  }) async {
-    assert(path.length > 3);
-    assert(roadWidth > 0);
+  ///  [roadOption] : (RoadOption) define styles of the road
+ Future<String> drawRoadManually(
+    List<GeoPoint> path,
+    RoadOption roadOption,
+  ) async {
     return await osmBaseController.drawRoadManually(
       UniqueKey().toString(),
       path,
-      roadColor: roadColor,
-      width: roadWidth,
-      zoomInto: zoomInto,
-      interestPoints: interestPoints,
-      interestPointIcon: interestPointIcon,
+      roadOption,
     );
   }
 

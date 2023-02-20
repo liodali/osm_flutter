@@ -264,13 +264,9 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   Future<void> drawRoadManually(
     int idOSM,
     String roadKey,
-    List<GeoPoint> road, {
-    Color roadColor = Colors.green,
-    double width = 5.0,
-    bool zoomInto = false,
-    GlobalKey? keyIconForInterestPoints,
-    List<GeoPoint> interestPoints = const [],
-  });
+    List<GeoPoint> road,
+    RoadOption roadOption,
+  );
 
   Future<void> mapRotation(
     int idOSM,

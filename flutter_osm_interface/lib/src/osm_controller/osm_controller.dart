@@ -175,23 +175,19 @@ abstract class IBaseOSMController {
   });
 
   /// [drawRoadManually]
+  /// 
   /// this method allow to draw road manually without using any internal api
   /// the path should be provided from any external api like your own OSRM server or google map api
   /// and you can change color of the road and width also
+  /// 
   ///  [path]  : (list) list of GeoPoint that represent the path of the road
   ///
-  ///  [color] : (Color) color of the road
-  ///
-  ///  [width] : (int) width of the road
+  ///  [roadOption] : (RoadOption) contain style of road such as color,width,borderColor,zoomInto
   Future<String> drawRoadManually(
     String Key,
-    List<GeoPoint> path, {
-    Color roadColor = Colors.green,
-    double width = 5.0,
-    bool zoomInto = false,
-    MarkerIcon? interestPointIcon,
-    List<GeoPoint> interestPoints = const [],
-  });
+    List<GeoPoint> path,
+    RoadOption roadOption,
+  );
 
   /// [drawMultipleRoad]
   /// this method will call draw list of roads in sametime with making  api continually
@@ -213,12 +209,12 @@ abstract class IBaseOSMController {
   Future<void> clearAllRoads();
 
   /// [removeLastRoad]
-  /// 
+  ///
   /// this method will delete last road draw in the map
   Future<void> removeLastRoad();
 
   /// [removeRoad]
-  /// 
+  ///
   /// this method will delete  road using [roadKey] in the map
   /// it the [roadKey] not exist nothing will happen
   Future<void> removeRoad({required String roadKey});
