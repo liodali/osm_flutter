@@ -70,7 +70,7 @@ class RoadOption {
     /// disable/show markers in start,middle,end points
     args.putIfAbsent(
       "roadBorderWidth",
-      () => roadBorderWidth,
+      () => roadBorderWidth ?? 0,
     );
 
     args.putIfAbsent(
@@ -84,8 +84,11 @@ class RoadOption {
       args.putIfAbsent("roadWidth",
           () => Platform.isIOS ? "${roadWidth}px" : roadWidth!.toDouble());
     }
-    args.putIfAbsent("roadBorderColor",
-        () => roadBorderColor ?? (roadColor ?? Colors.green).dark().toPlatform());
+    args.putIfAbsent(
+        "roadBorderColor",
+        () => (roadBorderColor ?? (roadColor ?? Colors.green).dark())
+            .toPlatform());
+
     return args;
   }
 }
@@ -109,7 +112,6 @@ class MultiRoadOption extends RoadOption {
           roadWidth: roadWidth,
           zoomInto: false,
           roadBorderColor: roadBorderColor,
-
         );
 
   const MultiRoadOption.empty()
