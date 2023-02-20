@@ -37,11 +37,11 @@ class RoadConfiguration {
 ///
 /// [roadWidth]            : (double) change width of the road
 ///
-/// [showMarkerOfPOI]      : (bool) if true, and [intersectPoint] in [drawRoad] not empty , will show marker for intermediate point of the road (default false)
-///
+/// [roadBorderColor]      : (Color) it will define outline border color for road
+/// 
+/// [roadBorderWidth]      : (double) if null the road will be without border,else we will show border but if [roadBorderColor] null road border color will be the same as [roadColor]
+/// 
 /// [zoomInto]             : (bool) to zoomIn/Out that will make all the road visible in the map (default false)
-///
-/// [keepInitialGeoPoints] : (bool)  to keep the point desired to draw the road
 class RoadOption {
   final Color? roadColor;
   final int? roadWidth;
@@ -70,7 +70,11 @@ class RoadOption {
     /// disable/show markers in start,middle,end points
     args.putIfAbsent(
       "roadBorderWidth",
-      () => roadBorderWidth ?? 0,
+      () => roadBorderWidth != null
+          ? Platform.isIOS
+              ? "${roadBorderWidth}px"
+              : roadBorderWidth
+          : 0,
     );
 
     args.putIfAbsent(
