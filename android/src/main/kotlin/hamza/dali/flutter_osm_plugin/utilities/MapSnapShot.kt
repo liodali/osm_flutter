@@ -148,10 +148,10 @@ class MapSnapShot {
 
 data class RoadSnapShot(
     val roadPoints: List<GeoPoint>,
-    val showIcons: Boolean,
     val roadColor: Int?,
-    val roadWith: Float,
-    val listInterestPoints: List<GeoPoint> = emptyList(),
+    val roadBorderColor: Int?,
+    val roadWidth: Float,
+    val roadBorderWidth: Float,
     val roadID:String,
     val duration:Double,
     val distance:Double
