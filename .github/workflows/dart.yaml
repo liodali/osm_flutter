@@ -17,8 +17,8 @@ jobs:
       - name: setup flutter
         uses: flutter-actions/setup-flutter@v2
         with:
-            flutter-version: '3.7.4'
-            channel: 'stable'
+            channel: stable
+            version: 3.7.4
       - name: Setup credentials
         run: |
           mkdir -p ~/.pub-cache
