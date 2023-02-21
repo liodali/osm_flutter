@@ -259,8 +259,8 @@ mixin WebMixin {
       mapIdMixin,
       roadInfo.key,
       routeJs,
-      roadOption?.roadColor?.toHexColor() ?? Colors.green.toHexColor(),
-      roadOption?.roadWidth?.toDouble() ?? 5.0,
+      (roadOption?.roadColor ?? Colors.green).toHexColor(),
+      (roadOption?.roadWidth ?? 5.0).toDouble(),
       roadOption?.zoomInto ?? true,
       (roadOption?.roadBorderColor ?? Colors.green).toHexColor(),
       roadOption?.roadBorderWidth ?? 0,
@@ -283,19 +283,17 @@ mixin WebMixin {
   ) async {
     final routeJs = path.toListGeoPointJs();
 
-    await promiseToFuture(
-      interop.drawRoad(
-        mapIdMixin,
-        roadKey,
-        routeJs,
-        (roadOption.roadColor ?? Colors.green).toHexColorWeb(),
-        (roadOption.roadWidth ?? 5).toDouble(),
-        roadOption.zoomInto,
-        (roadOption.roadBorderColor ?? Colors.green).toHexColor(),
-        (roadOption.roadBorderWidth ?? 0).toDouble(),
-        [],
-        null,
-      ),
+    interop.drawRoad(
+      mapIdMixin,
+      roadKey,
+      routeJs,
+      roadOption.roadColor.toHexColor(),
+      roadOption.roadWidth.toDouble(),
+      roadOption.zoomInto,
+      (roadOption.roadBorderColor ?? Colors.green).toHexColor(),
+      roadOption.roadBorderWidth.toDouble(),
+      [],
+      null,
     );
 
     roadsWebCache[roadKey] = RoadInfo(route: path).copyWith(
