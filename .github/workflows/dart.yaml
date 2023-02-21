@@ -15,10 +15,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
       - name: setup flutter
-        uses: flutter-actions/setup-flutter@v2
+        uses: subosito/setup-flutter@v2
         with:
             channel: stable
-            version: 3.7.4
+      - run: flutter --version
       - name: Setup credentials
         run: |
           mkdir -p ~/.pub-cache
