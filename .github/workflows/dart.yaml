@@ -15,9 +15,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
       - name: setup flutter
-        uses: subosito/flutter-action@v2
-        with:
-            channel: stable
+        uses: britannio/action-install-flutter@v1
       - run: flutter --version
       - name: Setup credentials
         run: |
