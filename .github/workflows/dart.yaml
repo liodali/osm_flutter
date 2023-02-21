@@ -16,7 +16,7 @@ jobs:
           pip install requests
       - name: setup flutter
         uses: subosito/flutter-action@v2
-          with:
+        with:
             flutter-version: '3.7.4'
             channel: 'stable'
       - name: Setup credentials
