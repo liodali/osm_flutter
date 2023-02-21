@@ -1,6 +1,6 @@
 # flutter_osm_plugin 
 ![pub](https://img.shields.io/badge/pub-v0.42.0-orange)   
-![pub](https://img.shields.io/badge/pub-v0.50.0--alpha.5-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.50.0--rc.0-yellow) 
 
 
 ## Platform Support
@@ -19,15 +19,15 @@
 * customize user Marker (Android/iOS/web)
 * assisted selection position (Android/iOS)
 * set BoundingBox (Android/Web)
-* zoom into region (Android/iOS)
+* zoom into region (Android/iOS/web)
 * draw Road,recuperate information (duration/distance) of the current road (Android/iOS/web)
 * draw Road manually (Android/iOS/web)
-* draw multiple Roads  (Android)
+* draw multiple Roads  (Android/iOS/web)
 * ClickListener on Marker (Android/iOS/web)
 * ClickListener on Map (Android/iOS/web)
 * calculate distance between 2 points 
 * address suggestion
-* draw shapes (Only Android)
+* draw shapes (Android/web)
 * simple dialog location picker (Android/iOS)
 * listen to region change (Android/iOS/Web)
 * set custom tiles (Android/iOS/Web) 
@@ -96,6 +96,10 @@ many thanks for @ben-xD
 
     * change kotlin version from `1.4.21` to `1.5.21`
     * change gradle version from `4.1.1` to `7.0.2`
+
+### For web integration
+
+> to show buttons,UI that have to manage user click over the map, you should use this library : `pointer_interceptor`
 
 
 ## Simple Usage
@@ -470,7 +474,6 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
    roadOption: RoadOption(
        roadWidth: 10,
        roadColor: Colors.blue,
-       showMarkerOfPOI: false,
        zoomInto: true,
    ),
 );
@@ -484,10 +487,11 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 
 | Properties               | Description                         |
 | ------------------------ | ----------------------------------- |
-| `roadColor`              | (Color?)  change the default color of the route in runtime    |
-| `roadWidth`              | (int?)    change the road width       |
-| `showMarkerOfPOI`        | (bool)    change the visibility of the markers of the POI (default:false)       |
-| `zoomInto`               | (bool)    change zoom level to make the all the road visible (default:true)    |
+| `roadColor`              | (Color) required Field,  change the default color of the route in runtime    |
+| `roadWidth`              | (double) change the road width, default value 5.0       |
+| `roadBorderColor`        | (Color?) set color of border polyline       |
+| `roadBorderWidth`        | (double?) set border width of polyline, if width null or 0,polyline will drawed without border |
+| `zoomInto`               | (bool)  change zoom level to make the all the road visible (default:true)    |
 
 
 
@@ -647,8 +651,12 @@ final configs = [
 
 | Methods                       | Description                         |
 | ----------------------------- | ----------------------------------- |
-| `mapIsReady`                  | (callback) should be override this method, to get notified when map is ready to go or not,     |
-| `mapRestored`                 | (callback) should be override this method, to get notified when map is restored you can also add you bakcup   |
+| `mapIsReady`                  | (callback) Should be override this method, to get notified when map is ready to go or not,     |
+| `mapRestored`                 | (callback) Should be override this method, to get notified when map is restored you can also add you bakcup   |
+| `onSingleTap`                 | (callback) Notified when user make single click on marker   |
+| `onLongTap`                   | (callback) Called when map make long click on marker   |
+| `onRegionChanged`             | (callback) Notified when map is change regsion (on moves)    |
+| `onRoadTap`                   | (callback) Notified when user click on the poyline (road)   |
 
 
 ** example 
