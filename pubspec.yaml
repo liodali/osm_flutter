@@ -21,6 +21,7 @@ dependencies:
     git:
       url: https://github.com/arbyazra123/osm_flutter.git
       path: flutter_osm_interface
+      ref: 8cb1416c50d722c3b63c822ee73fb992ce91edb6
   
 dev_dependencies:
   flutter_test:
