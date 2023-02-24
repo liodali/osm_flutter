@@ -14,9 +14,10 @@ dependencies:
   stream_transform: ^2.0.0
   permission_handler: ^10.0.0
   url_launcher: ^6.1.5
-  dio: ^4.0.6
+  dio: ^5.0.0
   uuid: ^3.0.6
   flutter_osm_interface:
+    # path: ./flutter_osm_interface
     git:
       url: https://github.com/arbyazra123/osm_flutter.git
       path: flutter_osm_interface
