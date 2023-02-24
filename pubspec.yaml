@@ -17,10 +17,10 @@ dependencies:
   dio: ^5.0.0
   uuid: ^3.0.6
   flutter_osm_interface:
-    # path: ./flutter_osm_interface
-    git:
-      url: https://github.com/arbyazra123/osm_flutter.git
-      path: flutter_osm_interface
+    path: ./flutter_osm_interface
+    # git:
+    #   url: https://github.com/arbyazra123/osm_flutter.git
+    #   path: flutter_osm_interface
   
 dev_dependencies:
   flutter_test:
