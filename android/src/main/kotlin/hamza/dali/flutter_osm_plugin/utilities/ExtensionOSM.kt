@@ -2,9 +2,10 @@ package hamza.dali.flutter_osm_plugin.utilities
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Paint
 import android.provider.Settings
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
-import org.osmdroid.tileprovider.MapTileProviderBasic
 import org.osmdroid.tileprovider.tilesource.ITileSource
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -12,6 +13,8 @@ import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.util.MapTileIndex
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Polyline
+import org.osmdroid.views.overlay.advancedpolyline.MonochromaticPaintList
 
 
 fun GeoPoint.toHashMap(): HashMap<String, Double> {
@@ -62,27 +65,27 @@ fun FlutterOsmView.openSettingLocation(requestCode: Int, activity: Activity?) {
 }
 
 fun MapView.setCustomTile(
-        name: String,
-        minZoomLvl: Int = 1,
-        maxZoomLvl: Int = 19,
-        tileSize: Int = 256,
-        tileExtensionFile: String = ".png",
-        baseURLs: Array<String>,
-        api: Pair<String, String>?
+    name: String,
+    minZoomLvl: Int = 1,
+    maxZoomLvl: Int = 19,
+    tileSize: Int = 256,
+    tileExtensionFile: String = ".png",
+    baseURLs: Array<String>,
+    api: Pair<String, String>?
 ) {
     //val imageEndingTile = tileExtensionFile
 
     val tileSource: ITileSource = object : OnlineTileSourceBase(
-            name,
-            minZoomLvl,
-            maxZoomLvl,
-            tileSize,
-            tileExtensionFile,
-            baseURLs
+        name,
+        minZoomLvl,
+        maxZoomLvl,
+        tileSize,
+        tileExtensionFile,
+        baseURLs
     ) {
         override fun getTileURLString(pMapTileIndex: Long): String {
             val url = baseUrl + MapTileIndex.getZoom(pMapTileIndex) + "/" + MapTileIndex.getX(
-                    pMapTileIndex
+                pMapTileIndex
             ) + "/" + MapTileIndex.getY(pMapTileIndex) + mImageFilenameEnding
             val key = when {
                 api != null -> "?${api.first}=${api.second}"
@@ -98,7 +101,53 @@ fun MapView.setCustomTile(
 
 fun MapView.resetTileSource() {
     //val imageEndingTile = tileExtensionFile
-    if (tileProvider.tileSource != TileSourceFactory.DEFAULT_TILE_SOURCE){
+    if (tileProvider.tileSource != TileSourceFactory.DEFAULT_TILE_SOURCE) {
         this.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
     }
+}
+
+fun Polyline.setStyle(
+    color: Int,
+    width: Float,
+    borderColor: Int?,
+    borderWidth: Float,
+) {
+    outlinePaint.strokeWidth = width
+    outlinePaint.style = Paint.Style.FILL_AND_STROKE
+    outlinePaint.color = color
+    outlinePaint.strokeCap = Paint.Cap.ROUND
+
+    if (borderWidth > 0) {
+        val paintBorder = createPaintPolyline(
+            color = borderColor ?: Color.BLACK,
+            width = borderWidth + width,
+            style = Paint.Style.FILL_AND_STROKE
+        )
+        val insideBorder = createPaintPolyline(
+            color = color,
+            width = width,
+            style = Paint.Style.FILL
+        )
+        this.outlinePaintLists.add(MonochromaticPaintList(paintBorder))
+        this.outlinePaintLists.add(MonochromaticPaintList(insideBorder))
+    }
+
+}
+
+fun List<Int>.toRGB(): Int = Color.rgb(first(), last(), this[1])
+
+fun createPaintPolyline(
+    color: Int,
+    width: Float,
+    style: Paint.Style
+): Paint {
+    val paint = Paint()
+    paint.isAntiAlias = true
+    paint.strokeWidth = width
+    paint.style = style
+    paint.color = color
+    paint.strokeCap = Paint.Cap.ROUND
+    paint.strokeJoin = Paint.Join.ROUND
+    paint.isAntiAlias = true
+    return paint
 }

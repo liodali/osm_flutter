@@ -23,11 +23,11 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Stream<MapInitialization> onMapIsReady(int idMap);
 
-  Stream<MapRestoration> onMapRestored(int idMap);
-
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap);
 
   Stream<LongTapEvent> onLongPressMapClickListener(int idMap);
+
+  Stream<RoadTapEvent> onRoadMapClickListener(int idMap);
 
   Stream<GeoPointEvent> onGeoPointClickListener(int idMap);
 
@@ -40,18 +40,12 @@ abstract class OSMPlatform extends PlatformInterface {
   );
 
   void close(int idOSM);
-
-// Future<void> configureZoomMap(
-//   int idOSM,
-//   double initZoom,
-//   int minZoomLevel,
-//   int maxZoomLevel,
-//   double stepZoom,
-// );
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {
-  Future<void> initMap(
+  Stream<MapRestoration> onMapRestored(int idMap);
+
+  Future<void> initPositionMap(
     int idOSM,
     GeoPoint point,
   );
@@ -143,6 +137,10 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idOSM,
   );
 
+  Future<void> removeRoad(
+    int idOSM,
+    String roadKey,
+  );
   Future<RoadInfo> drawRoad(
     int idOSM,
     GeoPoint start,
@@ -265,14 +263,10 @@ abstract class MobileOSMPlatform extends OSMPlatform {
 
   Future<void> drawRoadManually(
     int idOSM,
-    List<GeoPoint> road, {
-    Color roadColor = Colors.green,
-    double width = 5.0,
-    bool zoomInto = false,
-    bool deleteOldRoads = false,
-    GlobalKey? keyIconForInterestPoints,
-    List<GeoPoint> interestPoints = const [],
-  });
+    String roadKey,
+    List<GeoPoint> road,
+    RoadOption roadOption,
+  );
 
   Future<void> mapRotation(
     int idOSM,

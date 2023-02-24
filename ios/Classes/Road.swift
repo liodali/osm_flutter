@@ -19,6 +19,8 @@ struct RoadData {
 
     var roadColor : String = "#ff0000"
     var roadWidth : String = "5px"
+    var roadBorderWidth : String = "=px"
+    var roadBorderColor : String = "#ff0000"
 }
 
 struct  Road {
@@ -56,7 +58,7 @@ struct RoadConfig {
     var roadType:RoadType
 }
 struct RoadFolder {
-    let id = UUID().uuidString
+    let id :String
     var tgRouteMarker:TGMarker
-    var interestPoints: [GeoPointMap]?
+    let roadInformation:RoadInformation?
 }

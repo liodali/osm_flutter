@@ -5,7 +5,7 @@ import 'marker.dart';
 class StaticPositionGeoPoint {
   final String id;
   final MarkerIcon? markerIcon;
-  final List<GeoPoint>? geoPoints;
+  final List<GeoPoint> geoPoints;
 
   StaticPositionGeoPoint(
     this.id,

@@ -64,4 +64,20 @@ void main() {
     };
     expect(urlsIOS, result);
   });
+  test('convert urls for web', () {
+    final tileUrls = TileURLs(
+      url: "https://{s}.tile.opentopomap.org/",
+      subdomains: [
+        "a",
+        "b",
+        "c",
+      ],
+    );
+    final urlsWeb = tileUrls.toWeb();
+    final result = [
+      "https://{s}.tile.opentopomap.org/",
+      'abc',
+    ];
+    expect(urlsWeb, result);
+  });
 }
