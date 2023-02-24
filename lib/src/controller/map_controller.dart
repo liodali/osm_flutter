@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
 
@@ -461,7 +460,7 @@ class MapController extends BaseMapController {
   ///  [path] : (list of GeoPoint) path of the road
   ///
   ///  [roadOption] : (RoadOption) define styles of the road
- Future<String> drawRoadManually(
+  Future<String> drawRoadManually(
     List<GeoPoint> path,
     RoadOption roadOption,
   ) async {
@@ -480,7 +479,11 @@ class MapController extends BaseMapController {
     if (angle != null) {
       assert(angle >= -pi && angle <= pi, "angle should be between -pi and pi");
     }
-    await osmBaseController.addMarker(p, markerIcon: markerIcon, angle: angle);
+    await osmBaseController.addMarker(
+      p,
+      markerIcon: markerIcon,
+      angle: angle,
+    );
   }
 
   Future<void> changeLocationMarker({

@@ -3,7 +3,6 @@
 @JS()
 library osm_interop;
 
-import 'dart:html';
 
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
 import 'package:flutter_osm_web/src/interop/models/shape_js.dart';

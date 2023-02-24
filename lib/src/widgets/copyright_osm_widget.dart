@@ -1,6 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class CopyrightOSMWidget extends StatelessWidget {
   final String internationalContributorName;
@@ -29,10 +29,10 @@ class CopyrightOSMWidget extends StatelessWidget {
               recognizer: TapGestureRecognizer()
                 ..onTap = () async {
                   final url = 'https://www.openstreetmap.org/copyright';
-                  if (await canLaunch(url)) {
-                    await launch(
+                  if (await canLaunchUrlString(url)) {
+                    await launchUrlString(
                       url,
-                      forceSafariVC: false,
+                      mode: LaunchMode.externalApplication,
                     );
                   }
                 },

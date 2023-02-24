@@ -134,7 +134,6 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
     ),
   }) {
     final List<Map<String, dynamic>> listMap = [];
-    final defaultWidth = 5.0;
 
     for (MultiRoadConfiguration roadConf in this) {
       final map = <String, dynamic>{};
@@ -148,18 +147,15 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
       final color = roadConf.roadOptionConfiguration?.roadColor ??
           commonRoadOption.roadColor;
       if (Platform.isIOS) {
-        if (color != null) {
-          map.addAll(color.toHexMap("roadColor"));
-        }
+        map.addAll(color.toHexMap("roadColor"));
+
         map["roadWidth"] =
-            "${roadConf.roadOptionConfiguration?.roadWidth ?? commonRoadOption.roadWidth ?? defaultWidth}px";
+            "${roadConf.roadOptionConfiguration?.roadWidth ?? commonRoadOption.roadWidth}px";
       } else {
-        if (color != null) {
-          map.addAll(color.toMap("roadColor"));
-        }
+        map.addAll(color.toMap("roadColor"));
+
         map["roadWidth"] = roadConf.roadOptionConfiguration?.roadWidth ??
-            commonRoadOption.roadWidth ??
-            defaultWidth;
+            commonRoadOption.roadWidth;
       }
 
       map["middlePoints"] =

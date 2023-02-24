@@ -249,7 +249,7 @@ mixin WebMixin {
       waypoints: waypoints,
       roadType: routing.RoadType.values[roadType.index],
       alternative: false,
-      geometrie: routing.Geometries.geojson,
+      geometries: routing.Geometries.geojson,
     );
     final routeJs = road.polyline!.mapToListGeoJS();
 
