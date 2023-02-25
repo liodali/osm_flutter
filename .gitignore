@@ -3,7 +3,7 @@
 .idea/
 .packages
 .pub/
-
+.history/
 build/
 # Android related
 **/android/**/gradle-wrapper.jar

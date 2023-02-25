@@ -57,4 +57,14 @@ class PickerMapController extends BaseMapController {
   void init() {
     super.init();
   }
+
+  // void init() {
+  //   //setBaseOSMController(controller);
+  //   Future.delayed(Duration(milliseconds: 1250), () async {
+  //     await osmBaseController.initMap(
+  //       initPosition: initPosition,
+  //       initWithUserPosition: initMapWithUserPosition,
+  //     );
+  //   });
+  // }
 }

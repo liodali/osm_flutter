@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
 
@@ -109,7 +109,9 @@ class MapController extends BaseMapController {
 
   /// [dispose]
   void dispose() {
-    (osmBaseController as MobileOSMController).dispose();
+    if (!kIsWeb) {
+      (osmBaseController as MobileOSMController).dispose();
+    }
     super.dispose();
   }
 
@@ -280,9 +282,12 @@ class MapController extends BaseMapController {
     return await osmBaseController.myLocation();
   }
 
-  /// enabled tracking user location
-  Future<void> enableTracking() async {
-    await osmBaseController.enableTracking();
+  /// [enableTracking]
+  ///
+  /// this method will enabled tracking user location,[enableStopFollow] is true ,
+  /// the map will follow the user location when it change
+  Future<void> enableTracking({bool enableStopFollow = false}) async {
+    await osmBaseController.enableTracking(enableStopFollow: enableStopFollow);
   }
 
   /// disabled tracking user location
@@ -313,6 +318,10 @@ class MapController extends BaseMapController {
   ///
   ///  you can configure your road in runtime with [roadOption], and change the road type drawn by modify
   ///  the [routeType].
+  ///
+  ///  * to delete the road use [RoadInfo.key]
+  ///
+  ///  return [RoadInfo] that contain road information such as distance,duration, list of geopoints
   ///
   ///  [start] : started point of your Road
   ///
@@ -361,9 +370,17 @@ class MapController extends BaseMapController {
   }
 
   /// [removeLastRoad]
+  ///
   ///delete last road draw in the map
   Future<void> removeLastRoad() async {
     await osmBaseController.removeLastRoad();
+  }
+
+  /// [removeRoad]
+  ///
+  ///delete road draw in the map using [roadKey]
+  Future<void> removeRoad({required String roadKey}) async {
+    await osmBaseController.removeRoad(roadKey: roadKey);
   }
 
   /// [clearAllRoads]
@@ -431,46 +448,26 @@ class MapController extends BaseMapController {
     return await osmBaseController.mapOrientation(degree);
   }
 
-  ///   draw road manually
+  ///   [drawRoadManually]
   ///
   ///   if you have you own routing api you can use this method to draw your route
   ///   manually and you can customize the color,width of the route
   ///   zoom into the boundingbox and show POIs of the route
   ///
+  ///   return String unique key can be used to delete road
   ///   paramteres :
   ///
   ///  [path] : (list of GeoPoint) path of the road
   ///
-  ///  [roadColor] : (Color) the color that uses to change the  default road color
-  ///
-  ///  [roadWidth] : (double) uses to change width of the  road
-  ///
-  ///  [zoomInto] : (bool) uses to zoom out to the boundingbox of the route
-  ///
-  ///  [deleteOldRoads] : (bool) uses to delete the last road drawn in the map
-  ///
-  ///  [interestPointIcon] : (MarkerIcon) uses to change marker icon of interestPoints
-  ///
-  ///  [interestPoints] : (List of GeoPoint) list of interest point that you want to show marker for them
-  Future<void> drawRoadManually(
-    List<GeoPoint> path, {
-    Color roadColor = Colors.green,
-    double roadWidth = 5.0,
-    bool zoomInto = false,
-    bool deleteOldRoads = false,
-    MarkerIcon? interestPointIcon,
-    List<GeoPoint> interestPoints = const [],
-  }) async {
-    assert(path.length > 3);
-    assert(roadWidth > 0);
-    await osmBaseController.drawRoadManually(
+  ///  [roadOption] : (RoadOption) define styles of the road
+  Future<String> drawRoadManually(
+    List<GeoPoint> path,
+    RoadOption roadOption,
+  ) async {
+    return await osmBaseController.drawRoadManually(
+      UniqueKey().toString(),
       path,
-      roadColor: roadColor,
-      width: roadWidth,
-      zoomInto: zoomInto,
-      deleteOldRoads: deleteOldRoads,
-      interestPoints: interestPoints,
-      interestPointIcon: interestPointIcon,
+      roadOption,
     );
   }
 
@@ -482,7 +479,11 @@ class MapController extends BaseMapController {
     if (angle != null) {
       assert(angle >= -pi && angle <= pi, "angle should be between -pi and pi");
     }
-    await osmBaseController.addMarker(p, markerIcon: markerIcon, angle: angle);
+    await osmBaseController.addMarker(
+      p,
+      markerIcon: markerIcon,
+      angle: angle,
+    );
   }
 
   Future<void> changeLocationMarker({

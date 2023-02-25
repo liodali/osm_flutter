@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../mixin/osm_mixin.dart';
 import '../types/types.dart';
 import 'base_map_controller.dart';
 
@@ -13,17 +14,22 @@ abstract class IBaseMapController {
   final bool initMapWithUserPosition;
   final GeoPoint? initPosition;
   final BoundingBox? areaLimit;
+  OSMMixinObserver? _mixinObserver;
 
   late ValueNotifier<GeoPoint?> _listenerMapLongTapping = ValueNotifier(null);
   late ValueNotifier<GeoPoint?> _listenerMapSingleTapping = ValueNotifier(null);
   late ValueNotifier<bool> _listenerMapIsReady = ValueNotifier(false);
   late ValueNotifier<Region?> _listenerRegionIsChanging = ValueNotifier(null);
+  late ValueNotifier<RoadInfo?> _listenerRoadTapped = ValueNotifier(null);
 
   ValueListenable<GeoPoint?> get listenerMapLongTapping =>
       _listenerMapLongTapping;
 
   ValueListenable<GeoPoint?> get listenerMapSingleTapping =>
       _listenerMapSingleTapping;
+
+  ValueListenable<RoadInfo?> get listenerRoadTapped =>
+      _listenerRoadTapped;
 
   @Deprecated("this callback is deprecated,will be removed in the future,"
       "use OSMMixinObserver instead,see readme for more details")
@@ -45,9 +51,12 @@ abstract class IBaseMapController {
     // _listenerMapIsReady.dispose();
     // _listenerRegionIsChanging.dispose();
   }
+  void addObserver(OSMMixinObserver osmMixinObserver) {
+    _mixinObserver = osmMixinObserver;
+  }
 }
 
-extension setLiteners on BaseMapController {
+extension setLiteners on IBaseMapController {
   void setValueListenerMapLongTapping(GeoPoint p) {
     _listenerMapLongTapping.value = p;
   }
@@ -62,5 +71,16 @@ extension setLiteners on BaseMapController {
 
   void setValueListenerRegionIsChanging(Region region) {
     _listenerRegionIsChanging.value = region;
+  }
+  void setValueListenerMapRoadTapping(RoadInfo road) {
+    _listenerRoadTapped.value = road;
+  }
+}
+
+extension PrivateBaseMapController on IBaseMapController {
+  OSMMixinObserver? get osMMixin => _mixinObserver;
+
+  void removeObserver() {
+    _mixinObserver = null;
   }
 }

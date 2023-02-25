@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-hotline@0.4.0/dist/leaflet.hotline.min.js"></script>
+  <!--  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mapbox-polyline/1.1.1/polyline.min.js"></script>
+  
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-plugins/3.4.0/layer/Marker.Rotate.min.js" integrity="sha512-Ffr5ejFKbhg2ZAR8TaHe2v28uyY74DYthE0kdl0eFRHHH/D5Aa9eSM88TP6OEif5M008v5B6ICUDuis/3ZsX6w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> 
+  -->
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    #mapid {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body id="frame_body_map" style="margin:0px;">
+  <div id="mapid"></div>
+  <div id="render-icon" style="display:none;">
+  </div>
+  <script>
+
+
+
+    var zoom = 2.0;
+    var stepZoom = 1.0;
+    var defaultIcon = "";
+    var staticIcons = new Map();
+    var staticGeoPoint = new Map();
+    var shapesLayers = new Map();
+    var userLocationMarkerIcon = "";
+    var dynamicIcon = "";
+    var advSearchIcon = "";
+    var homeMarker;
+    var userPosition;
+    var isReady = false;
+    var lastRoad;
+    var colorRoad;
+    var routesLayer = new Map();
+    var idTracking;
+    var startAdvSearchLocation = false;
+    var cachedLayers = L.layerGroup([]);
+    var customTile;
+
+    var mymap = L.map('mapid', {
+      renderer: L.canvas(),
+      zoomControl: false,
+    });
+    var OpenStreetMap_Mapnik = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Leaflet | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+      minZoom: 2,
+      tileSize: 256,
+    });
+    OpenStreetMap_Mapnik.addTo(mymap);
+    //mymap.setView([0, 0], 2);
+
+    mymap.on('click', function (event) {
+      const geoP = event.latlng;
+      onMapSingleTapClicked(geoP.lng, geoP.lat);
+    });
+    mymap.on('moveend', function (e) {
+      if (isReady) {
+        var bounds = mymap.getBounds();
+        var center = mymap.getCenter();
+        var box = {
+          north: bounds.getNorth(),
+          east: bounds.getEast(),
+          west: bounds.getWest(),
+          south: bounds.getSouth(),
+        };
+        var centerP = {
+          lat: center.lat,
+          lon: center.lng
+        };
+        onRegionChanged(box, centerP);
+      }
+
+    });
+
+    async function initMapLocation(point) {
+      console.log("zoom init map :" + zoom);
+      console.log(point.lon + ":" + point.lat)
+      mymap.setView([point.lat, point.lon], zoom);
+      isReady = true;
+      isMapReady(isReady);
+      //L.polyline([{lat: 8.498037, lng: 47.489106},{lat: 8.537061, lng: 47.412961}],{color:'red'}).addTo(mymap)
+    }
+
+    async function changeTileLayer(tile) {
+      if(tile == undefined && customTile != undefined){
+        customTile.remove();
+        customTile = undefined;
+        OpenStreetMap_Mapnik.addTo(mymap);
+      }else {
+          if(customTile != undefined){
+            customTile.remove();
+          }
+          customTile = L.tileLayer(tile.url+'{z}/{x}/{y}'+tile.tileExtension+tile.apiKey,//'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
+          {
+            subdomains:tile.subDomains,
+            //attribution: 'Leaflet | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: tile.maxZoom,
+            minZoom: tile.minZoom,
+            tileSize: tile.tileSize,
+         });
+        customTile.addTo(mymap);
+        OpenStreetMap_Mapnik.remove();
+      }
+    
+    }
+
+    async function userLocation() {
+      getMyLocation().then((user) => {
+        mymap.flyTo([user.lat, user.lon], mymap.getZoom());
+      });
+
+      return 200;
+    }
+    async function centerMap() {
+      var center = mymap.getCenter();
+      return {
+        lat: center.lat,
+        lon: center.lng
+      };
+    }
+
+    async function getMyLocation() {
+      var position = await new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject({ error: true, message: 'Geolocation is not supported by your browser' });
+        } else {
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            (position) => {
+              reject({ error: true, message: 'Unable to retrieve your location' });
+            }
+          );
+        }
+      });
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      return {
+        lat: latitude,
+        lon: longitude
+      };
+    }
+    async function getGeoPoints() {
+      var listGeoPoint = [];
+      mymap.eachLayer(function (layer) {
+        if (layer instanceof L.Marker) {
+          var geoPoint = layer.getLatLng();
+          listGeoPoint.push({
+            lat: geoPoint.lat,
+            lon: geoPoint.lng
+          })
+        }
+      });
+      return { list: JSON.stringify(listGeoPoint) };
+    }
+
+    async function changePosition(point, showMarker, animate) {
+      const position = [point.lat, point.lon];
+      var args = {}
+      if (showMarker && defaultIcon != "") {
+        args = {
+          icon: L.icon(
+            {
+              iconUrl: "data:image/png;base64," + defaultIcon,
+              iconSize: [32, 32]
+            }
+          )
+        }
+
+      }
+      if (!animate) {
+        mymap.setView(position, mymap.getZoom());
+      } else {
+        mymap.flyTo(position, mymap.getZoom());
+      }
+      setHomeMarker(point, args);
+      return 200;
+    }
+    function addMarker(point, iconMarker) {
+      const position = [point.lat, point.lon];
+      var argsIcon = {
+        iconSize: [32, 32],
+      }
+      if (iconMarker != "") {
+        argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
+      }
+      var args = {
+        icon: L.icon(
+          argsIcon
+        )
+      }
+      L.marker(position, args)
+        .addTo(mymap)
+        .on("click", function (event) {
+          const geoP = event.latlng;
+          onGeoPointClicked(geoP.lng, geoP.lat)
+        });
+      return 200;
+    }
+    async function changeMarker(oldPoint, point, icon) {
+
+      var latlng = L.latLng([point.lat, point.lon]);
+      var oldLatlng = L.latLng([oldPoint.lat, oldPoint.lon]);
+      mymap.eachLayer(function (layer) {
+        if (layer instanceof L.Marker) {
+          var geoPoint = layer.getLatLng();
+          if (geoPoint.lat == oldLatlng.lat && geoPoint.lng == oldLatlng.lng) {
+            layer.setLatLng(latlng)
+            if (icon != undefined) {
+              var iconMarker = L.icon({
+                iconUrl: "data:image/png;base64," + icon,
+                iconSize: [32, 32]
+              });
+              layer.setIcon(iconMarker)
+            }
+            return this;
+          }
+        }
+      })
+    }
+
+    async function modifyMarker(point, icon) {
+      const position = [point.lat, point.lon];
+      var latlng = L.latLng(position);
+      mymap.eachLayer(function (layer) {
+        if (layer instanceof L.Marker) {
+          var geoPoint = layer.getLatLng();
+          if (geoPoint.lat == latlng.lat && geoPoint.lng == latlng.lng) {
+            var iconMarker = L.icon({
+              iconUrl: "data:image/png;base64," + icon,
+              iconSize: [32, 32]
+            });
+            layer.setIcon(iconMarker)
+            return this;
+          }
+        }
+      })
+    }
+
+    async function removeMarker(point) {
+      mymap.eachLayer(function (layer) {
+        if (layer instanceof L.Marker) {
+          const latlng = layer.getLatLng()
+          if (latlng.lat == point.lat && latlng.lng == point.lon) {
+            mymap.removeLayer(layer);
+          }
+        }
+      });
+    }
+
+    async function setDefaultIcon(icon) {
+      defaultIcon = icon;
+      return 200;
+    }
+
+    async function setStaticGeoPointIcon(id, icon) {
+      staticIcons.set(id, icon)
+      return 200;
+    }
+
+    async function setStaticGeoPoint(id, points) {
+      var markers = [];
+      if (staticGeoPoint.has(id) && staticGeoPoint[id] != undefined) {
+        staticGeoPoint[id].clearLayers();
+      }
+      var args = {}
+      if (staticIcons.has(id)) {
+
+        args = {
+          icon: L.icon(
+            {
+              iconUrl: "data:image/png;base64," + staticIcons.get(id),
+              iconSize: [32, 32]
+            }
+          )
+        }
+      }
+
+      points.forEach(function (ele) {
+        removeMarker(ele);
+        markers.push(L.marker([ele.lat, ele.lon], args)
+          .addTo(mymap)
+          .on("click", function (event) {
+            const geoP = event.latlng;
+            onGeoPointClicked(geoP.lng, geoP.lat)
+          }))
+      })
+      const groupLayer = L.layerGroup(markers).addTo(mymap);
+      staticGeoPoint.set(id, groupLayer);
+
+      return 200;
+    }
+    async function setStaticGeoPointsWithOrientation(id, points) {
+      var markers = [];
+      if (staticGeoPoint.has(id) && staticGeoPoint[id] != undefined) {
+        staticGeoPoint[id].clearLayers();
+      }
+      var icon = L.icon(
+        {
+          iconUrl: "data:image/png;base64," + staticIcons.get(id),
+          iconSize: [32, 32]
+        }
+      )
+      points.forEach(function (ele) {
+
+        removeMarker(ele);
+        var marker = L.marker([ele.lat, ele.lon], {
+          icon: icon,
+          //iconAngle: ele.angle
+          rotationAngle: ele.angle,
+          rotationOrigin: "center"
+        })
+          .addTo(mymap)
+          .on("click", function (event) {
+            const geoP = event.latlng;
+            onGeoPointClicked(geoP.lng, geoP.lat)
+          });
+        //marker.setRotationAngle(ele.angle);
+        markers.push(marker);
+
+      })
+      const groupLayer = L.layerGroup(markers).addTo(mymap);
+      staticGeoPoint.set(id, groupLayer);
+
+      return 200;
+    }
+    async function configInitZoomMap(step, initZoom, minZoomLevel, maxZoomLevel) {
+      mymap.setMinZoom(minZoomLevel);
+      mymap.setMaxZoom(maxZoomLevel);
+      zoom = initZoom;
+      stepZoom = step;
+      return 200;
+    }
+
+    async function setZoomStep(zoomStep) {
+      stepZoom = zoomStep
+      return 200;
+    }
+    async function zoomIn() {
+      mymap.zoomIn(stepZoom);
+      return 200;
+    }
+    async function zoomOut() {
+      mymap.zoomOut(stepZoom);
+      return 200;
+    }
+    async function setZoomLevel(zoom) {
+      var nzoomlevel = zoom;
+      if (nzoomlevel >= mymap.getMinZoom() && nzoomlevel <= mymap.getMaxZoom()) {
+        console.log(nzoomlevel)
+        mymap.setZoom(nzoomlevel);
+      }
+      return 200;
+    }
+    async function setZoomWithStep(step) {
+      var nzoomlevel = mymap.getZoom() + step;
+      if (nzoomlevel >= mymap.getMinZoom() && nzoomlevel <= mymap.getMaxZoom()) {
+        mymap.setZoom(nzoomlevel);
+      } else {
+        if (nzoomlevel > mymap.getMaxZoom()) {
+          mymap.setZoom(mymap.getMaxZoom());
+        } else if (nzoomlevel < mymap.getMinZoom()) {
+          mymap.setZoom(mymap.getMinZoom());
+        }
+      }
+      return 200;
+    }
+    async function getZoom() {
+      return mymap.getZoom();
+    }
+    async function setMaxZoomLevel(zoomLevel) {
+      mymap.setMaxZoom(zoomLevel);
+    }
+    async function setMinZoomLevel(zoomLevel) {
+      mymap.setMinZoom(zoomLevel);
+    }
+    async function limitBoundingBox(box) {
+      var bounds = L.latLngBounds(
+        L.latLng(box.north, box.east),
+        L.latLng(box.south, box.west)
+      );
+      mymap.setMaxBounds(bounds);
+      return 200;
+    }
+    async function getBounds() {
+      var box = mymap.getBounds();
+      return {
+        south: box.getSouth(),
+        west: box.getWest(),
+        east: box.getEast(),
+        north: box.getNorth()
+      };
+    }
+    async function flyToBoundingBox(box, pad) {
+      var bounds = L.latLngBounds(
+        L.latLng(box.north, box.east),
+        L.latLng(box.south, box.west)
+      );
+      mymap.flyToBounds(bounds, { padding: [pad, pad] });
+      return 200;
+    }
+
+    
+
+    function drawRoad(key,route, colorRoute, routeWidth, zoomInto, roadBorderColor,roadBorderWidth, interestGeoPts, iconInterestPoint) {
+      /*if (lastRoad != undefined ) {
+        mymap.removeLayer(lastRoad)
+        routesLayer.pop()
+        lastRoad = undefined;
+      }*/
+      if(key == undefined){
+        return 400;
+      }
+      var routePolyline = route.map((elem) => L.latLng(elem.lat, elem.lon,0))//[elem.lon,elem.lat])
+      var argsPolyline = {  
+         id:key,
+         color : colorRoute,
+         fillColor: colorRoute,
+         weight: routeWidth,
+      }
+      if(roadBorderWidth==0){
+        lastRoad = L.polyline(routePolyline,argsPolyline)
+          .on('click',function(event){
+            onRoadClicked(event.target.options.id);
+            L.DomEvent.stopPropagation(event);
+          }).addTo(mymap)
+      }
+
+      if(roadBorderWidth!=0){
+            routePolyline = route.map((elem) => [elem.lat,elem.lon,0])
+            var polylineLenght = routePolyline.length -1
+            routePolyline[polylineLenght] = [routePolyline[polylineLenght][0],routePolyline[polylineLenght][1],1]
+            lastRoad = L.hotline(routePolyline,
+            {
+              id:key,
+              min: 0,
+              max: 1,
+              palette: {
+                0: colorRoute,
+                1: colorRoute
+              },
+              weight: routeWidth,
+              outlineColor: roadBorderColor,
+              outlineWidth: roadBorderWidth,
+              smoothFactor:0
+            }
+          ).on('click',function(event){
+            onRoadClicked(event.target.options.id);
+            L.DomEvent.stopPropagation(event);
+          }).addTo(mymap)
+      }
+      
+      
+      routesLayer.set(key,lastRoad)
+      routesLayer[key]
+      if (zoomInto) {
+        mymap.flyToBounds(lastRoad.getBounds());
+      }
+      return 200;
+    }
+    function removeLastRoad(){
+      if (lastRoad != undefined) {
+        mymap.removeLayer(lastRoad)
+        var k;
+        routesLayer.forEach((value,key)=>{
+          if(value==lastRoad){
+              k=key;
+          }
+        })
+        routesLayer.delete(k);
+        lastRoad = undefined;
+      }
+    }
+    function clearAllRoads(){
+      routesLayer.forEach((road)=>{
+        road.remove();
+      });
+      routesLayer = [];
+      return 200;
+    }
+
+    function removeRoad(key){
+      if(routesLayer.has(key)){
+      console.log("html remove road "+key)
+   
+          if(routesLayer[key]==lastRoad){
+            lastRoad=undefined;
+            console.log("html roads "+routesLayer)
+          }
+          console.log("html roads "+routesLayer.get(key))
+          routesLayer.get(key).remove();
+          routesLayer.delete(key);
+      }
+      return 200;
+    }
+    function setUserLocationIconMarker(icon) {
+      if (icon != undefined && icon != "")
+        userLocationMarkerIcon = icon;
+    }
+    async function enableTracking() {
+      idTracking = navigator.geolocation.watchPosition(function (position) {
+        var userPos = [position.coords.latitude, position.coords.longitude]
+
+        mymap.flyTo(userPos, mymap.getZoom());
+        var args = {}
+        if (userLocationMarkerIcon != undefined) {
+          args = {
+            icon: L.icon({
+              iconUrl: "data:image/png;base64," + userLocationMarkerIcon,
+              iconSize: [32, 32]
+            })
+          }
+        }
+        if (userPosition == undefined) {
+          userPosition = L.marker(userPos, args).addTo(mymap);
+        } else if (userPosition != undefined) {
+          userPosition.setLatLng(userPos);
+        }
+      })
+    }
+
+    function disableTracking() {
+      navigator.geolocation.clearWatch(idTracking);
+    }
+
+    async function advSearchLocation() {
+      startAdvSearchLocation = true
+      mymap.eachLayer(function (layer) {
+        if (!(layer instanceof L.TileLayer)) {
+          var cachedLayer = layer;
+          cachedLayers.addLayer(cachedLayer);
+          mymap.removeLayer(layer);
+        }
+      });
+      /*
+          display: block;
+    position: absolute;
+    z-index: 1000;
+    overflow: hidden;
+    top: 47%;
+    left: 47%;
+      */
+      document.getElementById("render-icon").style.display = "block";
+      document.getElementById("render-icon").style.position = "absolute";
+      document.getElementById("render-icon").style.zIndex = "1000";
+      document.getElementById("render-icon").style.top = "45%";
+      document.getElementById("render-icon").style.left = "45%";
+    }
+    async function cancelAdvSearchLocation() {
+      document.getElementById("render-icon").style.display = "none";
+      cachedLayers.eachLayer(function (layer) {
+        mymap.addLayer(layer);
+      });
+      cachedLayers.clearLayers();
+
+    }
+    async function changeIconAdvPickerMarker(icon) {
+      advSearchIcon = icon;
+      const nodeImg = document.createElement("img");
+      nodeImg.setAttribute('src', 'data:image/png;base64,' + icon);
+      document.getElementById("render-icon").appendChild(nodeImg);
+      nodeImg.style.height = "32px";
+      nodeImg.style.width = "32px";
+    }
+
+    async function drawRect(key,bounds,color,strokeWidth){
+      var rectPoints = bounds.map(p => [p.lat,p.lon]);
+      var polygon = L.rectangle(
+            rectPoints,
+            {
+              color: color, 
+              weight: strokeWidth,
+              fill:true,
+              fillOpacity:0.5
+            }
+      )
+      polygon.addTo(mymap);
+      shapesLayers.set(key,polygon);
+    }
+    async function drawCircle(configuration){
+      
+      var circle = L.circle(
+        [configuration.center.lat,configuration.center.lon],
+            {
+              color: configuration.color, 
+              radius:configuration.radius,
+              weight: configuration.strokeWidth,
+              fill:true,
+              fillOpacity:0.5
+            }
+      )
+      circle.addTo(mymap);
+      shapesLayers.set(configuration.key,circle);
+    }
+
+    async function removePath(key){
+      if(shapesLayers.has(key)){  
+        mymap.removeLayer(shapesLayers.get(key))
+        shapesLayers.delete(key)
+      }
+    }
+    async function removeAllCircle(){
+      var circles = []
+      shapesLayers.forEach(function(key,layer){
+        if(layer instanceof L.polygon){
+          circles.push(key)
+          mymap.removeLayer(layer)
+        }
+      })
+      circles.forEach(function(circle){
+        shapesLayers.delete(circle)
+      })
+    }
+    async function removeAllRect(){
+      var rectangles = []
+      shapesLayers.forEach(function(key,layer){
+        if(layer instanceof L.rectangle){
+          rectangles.push(key)
+          mymap.removeLayer(layer)
+        }
+      })
+      rectangles.forEach(function(rect){
+        shapesLayers.delete(rect)
+      })
+    }
+    async function removeAllShapes(){
+      shapesLayers.forEach(function(key,layer){
+        mymap.removeLayer(layer)
+      })
+      shapesLayers = []
+    }
+    function setHomeMarker(point, args) {
+      if (homeMarker == undefined) {
+        homeMarker = L.marker([point.lat, point.lon], args).addTo(mymap);
+
+      } else {
+        homeMarker.setLatLng([point.lat, point.lon]);
+      }
+    }
+
+
+
+
+
+  </script>
+
+
+</body>
+
+</html>

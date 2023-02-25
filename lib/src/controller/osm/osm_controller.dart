@@ -6,6 +6,8 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 import '../../widgets/mobile_osm_flutter.dart';
 
+MobileOSMController getOSMMap() => MobileOSMController();
+
 class MobileOSMController extends IBaseOSMController {
   late int _idMap;
   late MobileOsmFlutterState _osmFlutterState;
@@ -18,6 +20,7 @@ class MobileOSMController extends IBaseOSMController {
   late double stepZoom = 1;
   late double minZoomLevel = 2;
   late double maxZoomLevel = 18;
+  RoadOption? defaultRoadOption;
   AndroidLifecycleMixin? _androidOSMLifecycle;
 
   MobileOSMController();
@@ -52,7 +55,7 @@ class MobileOSMController extends IBaseOSMController {
   /// [initPosition]          : (geoPoint) animate map to initPosition
   /// [initWithUserPosition]  : set map in user position
   /// [box]                   : (BoundingBox) area limit of the map
-  Future<void> initMap({
+  Future<void> initPositionMap({
     GeoPoint? initPosition,
     bool initWithUserPosition = false,
     BoundingBox? box,
@@ -97,11 +100,20 @@ class MobileOSMController extends IBaseOSMController {
     osmPlatform.onLongPressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapLongTapping(event.value);
+      _osmFlutterState.widget.controller.osMMixin?.onLongTap(event.value);
     });
 
     osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
+
+      _osmFlutterState.widget.controller.osMMixin?.onSingleTap(event.value);
+    });
+
+    osmPlatform.onRoadMapClickListener(_idMap).listen((event) {
+      _osmFlutterState.widget.controller
+          .setValueListenerMapRoadTapping(event.value);
+      _osmFlutterState.widget.controller.osMMixin?.onRoadTap(event.value);
     });
     osmPlatform.onMapIsReady(_idMap).listen((event) async {
       if (_androidOSMLifecycle != null &&
@@ -121,6 +133,7 @@ class MobileOSMController extends IBaseOSMController {
     osmPlatform.onRegionIsChangingListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
+      _osmFlutterState.widget.controller.osMMixin?.onRegionChanged(event.value);
     });
 
     osmPlatform.onMapRestored(_idMap).listen((event) {
@@ -208,7 +221,7 @@ class MobileOSMController extends IBaseOSMController {
 
     /// road configuration
     if (_osmFlutterState.widget.roadConfig != null) {
-      await _initializeRoadInformation();
+      defaultRoadOption = _osmFlutterState.widget.roadConfig!;
     }
 
     /// draw static position
@@ -223,10 +236,10 @@ class MobileOSMController extends IBaseOSMController {
               points.id,
             );
           }
-          if (points.geoPoints != null && points.geoPoints!.isNotEmpty) {
+          if (points.geoPoints.isNotEmpty) {
             await osmPlatform.staticPosition(
               _idMap,
-              points.geoPoints!,
+              points.geoPoints,
               points.id,
             );
           }
@@ -250,7 +263,7 @@ class MobileOSMController extends IBaseOSMController {
       await limitAreaMap(box);
     }
     if (initPosition != null && !_osmFlutterState.setCache.value) {
-      await osmPlatform.initMap(
+      await osmPlatform.initPositionMap(
         _idMap,
         initPosition,
       );
@@ -281,21 +294,9 @@ class MobileOSMController extends IBaseOSMController {
     }
   }
 
-  Future _initializeRoadInformation() async {
-    await osmPlatform.setColorRoad(
-      _idMap,
-      _osmFlutterState.widget.roadConfig!.roadColor,
-    );
-    await osmPlatform.setMarkersRoad(
-      _idMap,
-      [
-        _osmFlutterState.startIconKey,
-        _osmFlutterState.middleIconKey,
-        _osmFlutterState.endIconKey,
-      ],
-    );
-  }
 
+
+  @override
   Future<void> configureZoomMap(
     double minZoomLevel,
     double maxZoomLevel,
@@ -312,8 +313,11 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<void> changeTileLayer({ CustomTile? tileLayer}) =>
-      osmPlatform.changeTileLayer(_idMap, tileLayer,);
+  Future<void> changeTileLayer({CustomTile? tileLayer}) =>
+      osmPlatform.changeTileLayer(
+        _idMap,
+        tileLayer,
+      );
 
   /// set area camera limit of the map
   /// [box] : (BoundingBox) bounding that map cannot exceed from it
@@ -470,10 +474,13 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   /// enabled tracking user location
-  Future<void> enableTracking() async {
+  Future<void> enableTracking({bool enableStopFollow = false}) async {
     /// make in native when is enabled ,nothing is happen
     await _osmFlutterState.requestPermission();
-    await osmPlatform.enableTracking(_idMap);
+    await osmPlatform.enableTracking(
+      _idMap,
+      stopFollowInDrag: enableStopFollow,
+    );
   }
 
   /// disabled tracking user location
@@ -545,22 +552,17 @@ class MobileOSMController extends IBaseOSMController {
       end,
       roadType: roadType,
       interestPoints: interestPoints,
-      roadOption: roadOption ?? const RoadOption.empty(),
+      roadOption: roadOption ?? defaultRoadOption ?? const RoadOption.empty(),
     );
   }
 
   /// draw road
   ///  [path] : (list) path of the road
-  Future<void> drawRoadManually(
-    List<GeoPoint> path, {
-    Color roadColor = Colors.green,
-    double width = 5.0,
-    bool zoomInto = false,
-    bool deleteOldRoads = false,
-    MarkerIcon? interestPointIcon,
-    List<GeoPoint> interestPoints = const [],
-  }) async {
-    assert(width > 0.0);
+  Future<String> drawRoadManually(
+    String roadKey,
+    List<GeoPoint> path,
+    RoadOption roadOption,
+  ) async {
     if (path.isEmpty) {
       throw Exception("you cannot make road with empty list of  geoPoint");
     }
@@ -569,36 +571,24 @@ class MobileOSMController extends IBaseOSMController {
         path.length < 3) {
       throw Exception("you cannot make line with same geoPoint");
     }
-    var icon = interestPointIcon;
-    if (Platform.isIOS && icon == null && interestPoints.isNotEmpty) {
-      icon = MarkerIcon(
-        icon: Icon(
-          Icons.location_on,
-          color: Colors.red,
-          size: 32,
-        ),
-      );
-    }
-    if (icon != null && interestPoints.isNotEmpty) {
-      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
-      await Future.delayed(Duration(milliseconds: 350));
-    }
+
     await osmPlatform.drawRoadManually(
       _idMap,
+      roadKey,
       path,
-      roadColor: roadColor,
-      width: width,
-      zoomInto: zoomInto,
-      deleteOldRoads: deleteOldRoads,
-      interestPoints: interestPoints,
-      keyIconForInterestPoints:
-          interestPointIcon != null ? _osmFlutterState.dynamicMarkerKey : null,
+      roadOption,
     );
+    return roadKey;
   }
 
   ///delete last road draw in the map
   Future<void> removeLastRoad() async {
     return await osmPlatform.removeLastRoad(_idMap);
+  }
+
+  @override
+  Future<void> removeRoad({required String roadKey}) async {
+    return await osmPlatform.removeRoad(_idMap, roadKey);
   }
 
   // Future<bool> checkServiceLocation() async {
