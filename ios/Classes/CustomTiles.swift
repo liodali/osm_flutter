@@ -8,7 +8,7 @@ class CustomTiles {
     var tileURL: String
     var subDomains: String
     var tileSize: String
-    var maxZoom: 
+    var maxZoom: String
 
     init(_ mapTile: [String: Any]) {
         let tiles = (mapTile["urls"] as! [[String: Any]]).first

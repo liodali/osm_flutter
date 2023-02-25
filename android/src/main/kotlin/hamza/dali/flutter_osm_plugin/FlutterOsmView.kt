@@ -1544,27 +1544,7 @@ class FlutterOsmView(
                             roadDistance = road.mLength
 
                         )
-                       // drawNodesOnRoad(road, map!!)
-                        val nodeIcon = map!!.resources.getDrawable(R.drawable.moreinfo_arrow)
-                        for (i in 0 until road.mNodes.size) {
-                            val node = road.mNodes[i]
-                            val nodeMarker = Marker(map)
-                            nodeMarker.position = node.mLocation
-                            nodeMarker.icon = nodeIcon
-                            nodeMarker.title = "Step $i"
-                            //4. Filling the bubbles
-
-                            //4. Filling the bubbles
-                            nodeMarker.title = "Step $i"
-                            nodeMarker.snippet = node.mInstructions
-                            nodeMarker.subDescription =
-                                Road.getLengthDurationText(context,node.mLength, node.mDuration);
-
-                            val iconContinue = map!!.resources.getDrawable(R.drawable.center)
-                            nodeMarker.image = iconContinue
-
-                            map!!.overlays.add(nodeMarker)
-                        }
+                       
 
 
                         mapSnapShot().cacheRoad(
