@@ -33,7 +33,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var dictClusterAnnotation: [String: [StaticGeoPMarker]] = [String: [StaticGeoPMarker]]()
     var dictIconClusterAnnotation = [String: MarkerIconData]()
     var roadMarkerPolyline: TGMarker? = nil
-    lazy var markersIconsRoadPoint: [String: MarkerIconData] = [String: MarkerIconData]()
     var defaultIcon: MarkerIconData?
     var pickedLocationSingleTap: CLLocationCoordinate2D? = nil
     var colorRoad: String = "#ff0000"
@@ -259,13 +258,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             break;
         case "staticPosition":
             setStaticGeoPoint(call: call)
-            result(200)
-            break;
-        case "road#markers":
-            setRoadMarkersIcon(call: call, result: result)
-            break;
-        case "road#color":
-            colorRoad = call.arguments as! String
             result(200)
             break;
         case "road":
@@ -856,22 +848,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         result(200)
     }
 
-    private func setRoadMarkersIcon(call: FlutterMethodCall, result: FlutterResult) {
-        let iconsBase64 = call.arguments as! [String: Any]
-        if let startPointIconRoad = iconsBase64["START"] {
-            let startIcon = convertImage(codeImage: (startPointIconRoad as! [String: Any])["icon"] as! String)
-            markersIconsRoadPoint["start"] = MarkerIconData(image: startIcon, size: (startPointIconRoad as! [String: Any])["size"] as! [Int])
-        }
-        if let middlePointIcon = iconsBase64["MIDDLE"] {
-            let startIcon = convertImage(codeImage: (middlePointIcon as! [String: Any])["icon"] as! String)
-            markersIconsRoadPoint["middle"] = MarkerIconData(image: startIcon, size: (middlePointIcon as! [String: Any])["size"] as! [Int])
-        }
-        if let endPointIcon = iconsBase64["END"] {
-            let startIcon = convertImage(codeImage: (endPointIcon as! [String: Any])["icon"] as! String)
-            markersIconsRoadPoint["end"] = MarkerIconData(image: startIcon, size: (endPointIcon as! [String: Any])["size"] as! [Int])
-        }
-        result(200)
-    }
 
     // ------- delegation func ----
 
