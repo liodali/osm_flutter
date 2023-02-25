@@ -28,11 +28,12 @@ class GeoPoint {
       "lat": latitude,
     };
   }
+
   /// [destinationPoint]
-  /// 
-  /// this method will calculate  new [GeoPoint] using giving distance [distanceInMeters] 
+  ///
+  /// this method will calculate  new [GeoPoint] using giving distance [distanceInMeters]
   /// using [bearingInDegrees] we will determine direction of that [GeoPoint]
-  /// 
+  ///
   /// return [GeoPoint]
   GeoPoint destinationPoint(
       {required double distanceInMeters, required bearingInDegrees}) {
@@ -86,6 +87,15 @@ class GeoPointWithOrientation extends GeoPoint {
     required double latitude,
     required double longitude,
   }) : super(
+          latitude: latitude,
+          longitude: longitude,
+        );
+  GeoPointWithOrientation.radian({
+    double radianAngle = 0.0,
+    required double latitude,
+    required double longitude,
+  })  : angle = radianAngle * (180 / pi),
+        super(
           latitude: latitude,
           longitude: longitude,
         );
