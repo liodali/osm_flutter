@@ -304,12 +304,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
-  Future<void> setColorRoad(int idOSM, Color color) async {
-    dynamic args = [color.red, color.green, color.blue];
-    if (Platform.isIOS) {
-      args = color.toHexColor();
-    }
-    await _channels[idOSM]?.invokeMethod("road#color", args);
+  Future<void> setRoadConfiguration(int idOSM, RoadOption roadOption) async {
+    await _channels[idOSM]?.invokeMethod(
+      "road#option",
+      roadOption.toMap(),
+    );
   }
 
   @override

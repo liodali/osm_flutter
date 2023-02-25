@@ -116,10 +116,6 @@ async function flyToBounds(mapId,box, padding) {
    var iframe = document.getElementById("frame_map_"+mapId);
    return await iframe.contentWindow.flyToBoundingBox(box, padding);
 }
-async function configRoad(mapId,color, startIcon, middleIcon, endIcon) {
-   var iframe = document.getElementById("frame_map_"+mapId);
-   return await iframe.contentWindow.configRoad(color, startIcon, middleIcon, endIcon);
-}
 function drawRoad(mapId,key,route, color, roadWidth, zoomInto, roadBorderColor,roadBorderWidth, interestPoints, iconInteretPoint) {
    console.log(route);
    var iframe = document.getElementById("frame_map_"+mapId);

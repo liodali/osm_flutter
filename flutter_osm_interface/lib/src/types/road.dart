@@ -11,19 +11,7 @@ enum RoadType {
   bike,
 }
 
-class RoadConfiguration {
-  final Color roadColor;
-  final MarkerIcon? startIcon;
-  final MarkerIcon? endIcon;
-  final MarkerIcon? middleIcon;
 
-  RoadConfiguration({
-    this.roadColor = Colors.blue,
-    this.startIcon,
-    this.middleIcon,
-    this.endIcon,
-  });
-}
 
 /// [RoadOption]
 ///

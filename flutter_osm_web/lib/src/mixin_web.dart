@@ -17,7 +17,7 @@ mixin WebMixin {
   final manager = routing.OSRMManager();
 
   late OsmWebWidgetState _osmWebFlutterState;
-
+  RoadOption? defaultRoadOption;
   Map<String, RoadInfo> roadsWebCache = {};
 
   Future<void> initLocationMap(GeoPoint p) async {
@@ -259,11 +259,13 @@ mixin WebMixin {
       mapIdMixin,
       roadInfo.key,
       routeJs,
-      (roadOption?.roadColor ?? Colors.green).toHexColor(),
-      (roadOption?.roadWidth ?? 5.0).toDouble(),
-      roadOption?.zoomInto ?? true,
-      (roadOption?.roadBorderColor ?? Colors.green).toHexColor(),
-      roadOption?.roadBorderWidth ?? 0,
+      ((roadOption ?? defaultRoadOption)?.roadColor ?? Colors.green)
+          .toHexColor(),
+      ((roadOption ?? defaultRoadOption)?.roadWidth ?? 5.0).toDouble(),
+      (roadOption ?? defaultRoadOption)?.zoomInto ?? true,
+      ((roadOption ?? defaultRoadOption)?.roadBorderColor ?? Colors.green)
+          .toHexColor(),
+      (roadOption ?? defaultRoadOption)?.roadBorderWidth ?? 0,
       interestPoints?.toListGeoPointJs() ?? [],
       null,
     );

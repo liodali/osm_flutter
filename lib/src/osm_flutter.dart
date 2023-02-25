@@ -57,7 +57,7 @@ class OSMFlutter extends StatefulWidget {
   final Function(bool)? onMapIsReady;
   final MarkerOption? markerOption;
   final UserLocationMaker? userLocationMarker;
-  final RoadConfiguration? roadConfiguration;
+  final RoadOption? roadConfiguration;
   final double stepZoom;
   final double initZoom;
   final double minZoomLevel;
@@ -168,7 +168,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
           children: <Widget>[
             MapConfiguration(
               userLocationMarker: widget.userLocationMarker,
-              roadConfiguration: widget.roadConfiguration,
               markerOption: widget.markerOption,
               staticPoints: widget.staticPoints,
               dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
@@ -292,99 +291,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
       },
     );
   }
-
-  /*Widget widgetConfigMap() {
-    return Positioned(
-      top: 0,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Stack(
-        children: <Widget>[
-          ValueListenableBuilder<Widget?>(
-            valueListenable: dynamicMarkerWidgetNotifier,
-            builder: (ctx, widget, child) {
-              if (widget == null) {
-                return SizedBox.fromSize();
-              }
-              return Offstage(
-                child: RepaintBoundary(
-                  key: dynamicMarkerKey,
-                  child: widget,
-                ),
-              );
-            },
-          ),
-          if ((widget.markerOption?.defaultMarker != null)) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: defaultMarkerKey,
-                child: widget.markerOption!.defaultMarker!,
-              ),
-            ),
-          ],
-          if (widget.markerOption?.advancedPickerMarker != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: advancedPickerMarker,
-                child: widget.markerOption?.advancedPickerMarker,
-              ),
-            ),
-          ],
-          if (widget.staticPoints.isNotEmpty) ...[
-            for (int i = 0; i < widget.staticPoints.length; i++) ...[
-              Offstage(
-                child: RepaintBoundary(
-                  key: staticMarkersKeys[widget.staticPoints[i].id],
-                  child: widget.staticPoints[i].markerIcon,
-                ),
-              ),
-            ]
-          ],
-          if (widget.roadConfiguration?.endIcon != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: endIconKey,
-                child: widget.roadConfiguration!.endIcon,
-              ),
-            ),
-          ],
-          if (widget.roadConfiguration?.startIcon != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: startIconKey,
-                child: widget.roadConfiguration!.startIcon,
-              ),
-            ),
-          ],
-          if (widget.roadConfiguration?.middleIcon != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: middleIconKey,
-                child: widget.roadConfiguration!.middleIcon,
-              ),
-            ),
-          ],
-          if (widget.userLocationMarker?.personMarker != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: personIconMarkerKey,
-                child: widget.userLocationMarker?.personMarker,
-              ),
-            ),
-          ],
-          if (widget.userLocationMarker?.directionArrowMarker != null) ...[
-            Offstage(
-              child: RepaintBoundary(
-                key: arrowDirectionMarkerKey,
-                child: widget.userLocationMarker?.directionArrowMarker,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }*/
 }
 
 class MapConfiguration extends StatelessWidget {
@@ -400,7 +306,6 @@ class MapConfiguration extends StatelessWidget {
       personIconMarkerKey,
       arrowDirectionMarkerKey;
   final Map<String, GlobalKey> staticMarkersKeys;
-  final RoadConfiguration? roadConfiguration;
   final List<StaticPositionGeoPoint> staticPoints;
   final UserLocationMaker? userLocationMarker;
 
@@ -408,7 +313,6 @@ class MapConfiguration extends StatelessWidget {
     Key? key,
     required this.dynamicMarkerWidgetNotifier,
     this.markerOption,
-    this.roadConfiguration,
     this.userLocationMarker,
     required this.staticPoints,
     required this.dynamicMarkerKey,
@@ -462,24 +366,6 @@ class MapConfiguration extends StatelessWidget {
                 child: staticPoints[i].markerIcon,
               ),
             ]
-          ],
-          if (roadConfiguration?.endIcon != null) ...[
-            RepaintBoundary(
-              key: endIconKey,
-              child: roadConfiguration!.endIcon,
-            ),
-          ],
-          if (roadConfiguration?.startIcon != null) ...[
-            RepaintBoundary(
-              key: startIconKey,
-              child: roadConfiguration!.startIcon,
-            ),
-          ],
-          if (roadConfiguration?.middleIcon != null) ...[
-            RepaintBoundary(
-              key: middleIconKey,
-              child: roadConfiguration!.middleIcon,
-            ),
           ],
           if (userLocationMarker?.personMarker != null) ...[
             RepaintBoundary(

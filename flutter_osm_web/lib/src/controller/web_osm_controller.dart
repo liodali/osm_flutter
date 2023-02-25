@@ -20,6 +20,8 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     _mapId = mapId;
   }
 
+  
+
   late MethodChannel? channel;
   AndroidLifecycleMixin? _androidOSMLifecycle;
 
@@ -205,33 +207,8 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       });
     }
     if (osmWebFlutterState.widget.roadConfiguration != null) {
-      final defaultColor =
-          osmWebFlutterState.widget.roadConfiguration!.roadColor.toHexColor();
-      final keyStartMarker =
-          osmWebFlutterState.widget.roadConfiguration!.startIcon != null
-              ? osmWebFlutterState.startIconKey != null
-                  ? await capturePng(osmWebFlutterState.startIconKey!)
-                  : null
-              : null;
-      final keyMiddleMarker =
-          osmWebFlutterState.widget.roadConfiguration!.middleIcon != null
-              ? osmWebFlutterState.middleIconKey != null
-                  ? await capturePng(osmWebFlutterState.middleIconKey!)
-                  : null
-              : null;
-      final keyEndMarker =
-          osmWebFlutterState.widget.roadConfiguration!.endIcon != null
-              ? osmWebFlutterState.endIconKey != null
-                  ? await capturePng(osmWebFlutterState.endIconKey!)
-                  : null
-              : null;
-      await interop.configRoad(
-        _mapId,
-        defaultColor,
-        keyStartMarker?.convertToString() ?? "",
-        keyMiddleMarker?.convertToString() ?? "",
-        keyEndMarker?.convertToString() ?? "",
-      );
+      
+      defaultRoadOption = osmWebFlutterState.widget.roadConfiguration!;
     }
 
     if (osmWebFlutterState.widget.markerOption?.advancedPickerMarker != null) {

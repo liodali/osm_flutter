@@ -18,7 +18,7 @@ Widget buildWidget({
   required List<GlobalKey> globalKeys,
   required Map<String, GlobalKey> staticIconGlobalKeys,
   MarkerOption? markerOption,
-  RoadConfiguration? roadConfiguration,
+  RoadOption? roadConfiguration,
   bool showZoomController = false,
   bool showDefaultInfoWindow = false,
   bool isPicker = false,

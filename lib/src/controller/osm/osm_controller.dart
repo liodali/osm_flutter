@@ -20,6 +20,7 @@ class MobileOSMController extends IBaseOSMController {
   late double stepZoom = 1;
   late double minZoomLevel = 2;
   late double maxZoomLevel = 18;
+  RoadOption? defaultRoadOption;
   AndroidLifecycleMixin? _androidOSMLifecycle;
 
   MobileOSMController();
@@ -220,7 +221,7 @@ class MobileOSMController extends IBaseOSMController {
 
     /// road configuration
     if (_osmFlutterState.widget.roadConfig != null) {
-      await _initializeRoadInformation();
+      defaultRoadOption = _osmFlutterState.widget.roadConfig!;
     }
 
     /// draw static position
@@ -293,20 +294,7 @@ class MobileOSMController extends IBaseOSMController {
     }
   }
 
-  Future _initializeRoadInformation() async {
-    await osmPlatform.setColorRoad(
-      _idMap,
-      _osmFlutterState.widget.roadConfig!.roadColor,
-    );
-    await osmPlatform.setMarkersRoad(
-      _idMap,
-      [
-        _osmFlutterState.startIconKey,
-        _osmFlutterState.middleIconKey,
-        _osmFlutterState.endIconKey,
-      ],
-    );
-  }
+
 
   @override
   Future<void> configureZoomMap(
@@ -564,7 +552,7 @@ class MobileOSMController extends IBaseOSMController {
       end,
       roadType: roadType,
       interestPoints: interestPoints,
-      roadOption: roadOption ?? const RoadOption.empty(),
+      roadOption: roadOption ?? defaultRoadOption ?? const RoadOption.empty(),
     );
   }
 

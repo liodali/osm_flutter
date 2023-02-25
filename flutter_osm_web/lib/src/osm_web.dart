@@ -12,7 +12,7 @@ class OsmWebWidget extends StatefulWidget {
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
   final MarkerOption? markerOption;
-  final RoadConfiguration? roadConfiguration;
+  final RoadOption? roadConfiguration;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool trackMyPosition;

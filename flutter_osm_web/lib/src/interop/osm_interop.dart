@@ -5,6 +5,7 @@ library osm_interop;
 
 
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
+import 'package:flutter_osm_web/src/interop/models/road_option_js.dart';
 import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
 import 'package:js/js.dart';
 
@@ -162,14 +163,6 @@ external dynamic flyToBounds(
   int padding,
 );
 
-@JS('configRoad')
-external dynamic configRoad(
-  int mapId,
-  String color,
-  String startMarkerIcon,
-  String middleMarkerIcon,
-  String endMarkerIcon,
-);
 
 @JS('drawRoad')
 external dynamic drawRoad(

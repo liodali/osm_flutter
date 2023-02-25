@@ -256,7 +256,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     debugPrint("road:" + road.toString());
     Future.microtask(() => controller.removeRoad(roadKey: road.key));
   }
-  
+
   @override
   void dispose() {
     if (timer != null && timer!.isActive) {
@@ -482,18 +482,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                       ],
                     )*/
               ],
-              roadConfiguration: RoadConfiguration(
-                startIcon: MarkerIcon(
-                  icon: Icon(
-                    Icons.person,
-                    size: 32,
-                    color: Colors.brown,
-                  ),
-                ),
-                middleIcon: MarkerIcon(
-                  icon: Icon(Icons.location_history_sharp),
-                ),
-                roadColor: Colors.red,
+              roadConfiguration: RoadOption(
+                roadColor: Colors.blueAccent,
               ),
               markerOption: MarkerOption(
                 defaultMarker: MarkerIcon(
@@ -678,13 +668,13 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           roadType: notifierRoadType.value,
           intersectPoint:
               pointsRoad.getRange(1, pointsRoad.length - 1).toList(),
-          roadOption: RoadOption(
-            roadWidth: 15,
-            roadColor: Colors.red,
-            zoomInto: true,
-            roadBorderWidth: 2,
-            roadBorderColor: Colors.green,
-          ),
+          // roadOption: RoadOption(
+          //   roadWidth: 15,
+          //   roadColor: Colors.red,
+          //   zoomInto: true,
+          //   roadBorderWidth: 2,
+          //   roadBorderColor: Colors.green,
+          // ),
         );
         pointsRoad.clear();
         debugPrint(

@@ -84,15 +84,6 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     GlobalKey directionArrowGlobalKey,
   );
 
-  Future<void> setColorRoad(
-    int idOSM,
-    Color color,
-  );
-
-  Future<void> setMarkersRoad(
-    int idOSM,
-    List<GlobalKey?> keys,
-  );
 
   Future<void> enableTracking(
     int idOSM, {

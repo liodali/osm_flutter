@@ -1,7 +1,10 @@
 package hamza.dali.flutter_osm_plugin.utilities
 
+import android.graphics.Color
 import android.util.ArrayMap
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
+import hamza.dali.flutter_osm_plugin.models.RoadConfig
+import hamza.dali.flutter_osm_plugin.models.RoadOption
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 
@@ -9,7 +12,6 @@ class MapSnapShot {
     private var customPersonMarkerIcon: ByteArray? = null
     private var customArrowMarkerIcon: ByteArray? = null
     private var customPickerMarkerIcon: ByteArray? = null
-    private var customRoadMarkerIcon = HashMap<String, ByteArray>()
     private var staticPointsIcons = HashMap<String, ByteArray>()
     private var staticPoints: HashMap<String, Pair<List<GeoPoint>, List<Double>>> =
         HashMap()
@@ -102,13 +104,12 @@ class MapSnapShot {
     fun cache(
         geoPoint: GeoPoint,
         zoom: Double,
-        customRoadMarkerIcon: HashMap<String, ByteArray>,
         customPickerMarkerIcon: ByteArray?,
     ) {
         centerMap = geoPoint
         this.zoom = zoom
-        this.customRoadMarkerIcon = customRoadMarkerIcon
         this.customPickerMarkerIcon = customPickerMarkerIcon
+
     }
 
     fun setAdvancedPicker(isActive: Boolean) {
@@ -138,7 +139,6 @@ class MapSnapShot {
             lastRoadCache = null
             roadsCache.clear()
         }
-        customRoadMarkerIcon.clear()
         customPersonMarkerIcon = null
         customArrowMarkerIcon = null
         customPickerMarkerIcon = null
