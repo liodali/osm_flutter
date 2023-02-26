@@ -89,21 +89,15 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
         )
     }
 
-
     override fun onMarkerClick(marker: Marker?, mapView: MapView?): Boolean {
         showInfoWindow()
         return onClickListener?.onMarkerClick(this, mapView) ?: true
     }
 
-
-//    override fun onLongPress(event: MotionEvent?, mapView: MapView?): Boolean {
-//        longPress?.let { it(this) }
-//        return super.onLongPress(event, mapView)
-//    }
-
     fun setIconMaker(color: Int?, bitmap: Bitmap?, angle: Double = 0.0) {
         getDefaultIconDrawable(color, bitmap, angle).also {
             icon = it
+            setAnchor(0.5f, 0.5f)
         }
     }
 

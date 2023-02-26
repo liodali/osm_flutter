@@ -42,7 +42,9 @@ class LongTapEvent extends TapEvent {
 class GeoPointEvent extends EventOSM<GeoPoint> {
   GeoPointEvent(int mapId, GeoPoint position) : super(mapId, position);
 }
-
+class RoadTapEvent extends EventOSM<RoadInfo> {
+  RoadTapEvent(int mapId, RoadInfo road) : super(mapId, road);
+}
 class UserLocationEvent extends EventOSM<GeoPoint> {
   UserLocationEvent(int mapId, GeoPoint position) : super(mapId, position);
 }

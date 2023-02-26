@@ -16,8 +16,6 @@ abstract class BaseMapController extends IBaseMapController {
   final CustomTile? customTile;
   late Timer? _timer;
 
-  OSMMixinObserver? _mixinObserver;
-
   IBaseOSMController get osmBaseController => _osmBaseController;
 
   BaseMapController({
@@ -48,29 +46,17 @@ abstract class BaseMapController extends IBaseMapController {
   @override
   void init() {
     _timer = Timer(Duration(milliseconds: 1250), () async {
-      await osmBaseController.initMap(
+      await osmBaseController.initPositionMap(
         initPosition: initPosition,
         initWithUserPosition: initMapWithUserPosition,
       );
       _timer?.cancel();
     });
   }
-
-  void addObserver(OSMMixinObserver osmMixinObserver) {
-    _mixinObserver = osmMixinObserver;
-  }
 }
 
 extension OSMControllerOfBaseMapController on BaseMapController {
   void setBaseOSMController(IBaseOSMController controller) {
     _osmBaseController = controller;
-  }
-}
-
-extension PrivateBaseMapController on BaseMapController {
-  OSMMixinObserver? get osMMixin => _mixinObserver;
-
-  void removeObserver() {
-    _mixinObserver = null;
   }
 }

@@ -1,35 +1,35 @@
-# flutter_osm_plugin
-![pub](https://img.shields.io/badge/pub-v0.41.2-orange) 
+# flutter_osm_plugin 
+![pub](https://img.shields.io/badge/pub-v0.50.0-orange)   
 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | 0.50.0-alpha.4 (not stable) |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | 0.50.0 :heavy_check_mark: |
 
 
 <b>osm plugin for flutter apps </b>
 
-* current position (Android/iOS)
-* change position (Android/iOS) 
-* create Marker manually (Android/iOS)
-* tracking user location (Android/iOS)
-* customize Icon Marker (Android/iOS)
-* customize user Marker (Android/iOS)
+* current position (Android/iOS/web)
+* change position (Android/iOS/web) 
+* create Marker manually (Android/iOS/web)
+* tracking user location (Android/iOS/web)
+* customize Icon Marker (Android/iOS/web)
+* customize user Marker (Android/iOS/web)
 * assisted selection position (Android/iOS)
-* set BoundingBox (Android)
-* zoom into regon (Android/iOS)
-* draw Road,recuperate information (duration/distance) of the current road (Android/iOS)
-* draw Road manually (Android/iOS)
-* draw multiple Roads  (Android)
-* ClickListener on Marker (Android/iOS)
-* ClickListener on Map (Android/iOS)
+* set BoundingBox (Android/Web)
+* zoom into region (Android/iOS/web)
+* draw Road,recuperate information (duration/distance) of the current road (Android/iOS/web)
+* draw Road manually (Android/iOS/web)
+* draw multiple Roads  (Android/iOS/web)
+* ClickListener on Marker (Android/iOS/web)
+* ClickListener on Map (Android/iOS/web)
 * calculate distance between 2 points 
 * address suggestion
-* draw shapes (Only Android)
+* draw shapes (Android/web)
 * simple dialog location picker (Android/iOS)
-* listen to region change (Android/iOS)
-* set custom tiles (Android,iOS) 
+* listen to region change (Android/iOS/Web)
+* set custom tiles (Android/iOS/Web) 
 
 
 ## Getting Started
@@ -44,12 +44,14 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.41.2
+      flutter_osm_plugin: ^0.50.0-alpha.5
+
+
 
 ## Integration with Hooks
 
-> To use our map library with `Flutter_Hooks` library use our new extension library 
-https://pub.dev/packages/osm_flutter_hooks 
+> To use our map library with `Flutter_Hooks` library use our new extension library
+https://pub.dev/packages/osm_flutter_hooks
 many thanks for @ben-xD
 
 ### Migration to `0.41.2` (Android Only)
@@ -59,6 +61,7 @@ many thanks for @ben-xD
     * change kotlin version from `1.5.21` to `1.7.20`
     * change gradle version from `7.0.4` to `7.1.3`
     * change compileSdkVersion to 33
+
 
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
@@ -80,6 +83,10 @@ many thanks for @ben-xD
 
     * change kotlin version from `1.4.21` to `1.5.21`
     * change gradle version from `4.1.1` to `7.0.2`
+
+### For web integration
+
+> To show buttons,UI that have to manage user click over the map, you should use this library : `pointer_interceptor`
 
 
 ## Simple Usage
@@ -109,14 +116,7 @@ many thanks for @ben-xD
                 ),
             ),
         ),
-         roadConfiguration: RoadConfiguration(
-                startIcon: MarkerIcon(
-                  icon: Icon(
-                    Icons.person,
-                    size: 64,
-                    color: Colors.brown,
-                  ),
-                ),
+         roadConfiguration: RoadOption(
                 roadColor: Colors.yellowAccent,
         ),
         markerOption: MarkerOption(
@@ -297,8 +297,10 @@ await controller.removeLimitAreaMap();
 > from version 0.40.0 we can call only `enableTracking` will animate to user location 
 without need to call `currentLocation`
 
+> when `enableStopFollow` is true,map will not be centered if the user location changed
+
 ```dart
- await controller.enableTracking();
+ await controller.enableTracking(enableStopFollow:false);
 ```
 
 <b> 9) Disable tracking user position </b>
@@ -452,7 +454,6 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
    roadOption: RoadOption(
        roadWidth: 10,
        roadColor: Colors.blue,
-       showMarkerOfPOI: false,
        zoomInto: true,
    ),
 );
@@ -466,10 +467,11 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 
 | Properties               | Description                         |
 | ------------------------ | ----------------------------------- |
-| `roadColor`              | (Color?)  change the default color of the route in runtime    |
-| `roadWidth`              | (int?)    change the road width       |
-| `showMarkerOfPOI`        | (bool)    change the visibility of the markers of the POI (default:false)       |
-| `zoomInto`               | (bool)    change zoom level to make the all the road visible (default:true)    |
+| `roadColor`              | (Color) required Field,  change the default color of the route in runtime    |
+| `roadWidth`              | (double) change the road width, default value 5.0       |
+| `roadBorderColor`        | (Color?) set color of border polyline       |
+| `roadBorderWidth`        | (double?) set border width of polyline, if width null or 0,polyline will drawed without border |
+| `zoomInto`               | (bool)  change zoom level to make the all the road visible (default:true)    |
 
 
 
@@ -629,8 +631,12 @@ final configs = [
 
 | Methods                       | Description                         |
 | ----------------------------- | ----------------------------------- |
-| `mapIsReady`                  | (callback) should be override this method, to get notified when map is ready to go or not,     |
-| `mapRestored`                 | (callback) should be override this method, to get notified when map is restored you can also add you bakcup   |
+| `mapIsReady`                  | (callback) Should be override this method, to get notified when map is ready to go or not,     |
+| `mapRestored`                 | (callback) Should be override this method, to get notified when map is restored you can also add you bakcup   |
+| `onSingleTap`                 | (callback) Notified when user make single click on marker   |
+| `onLongTap`                   | (callback) Called when map make long click on marker   |
+| `onRegionChanged`             | (callback) Notified when map is change regsion (on moves)    |
+| `onRoadTap`                   | (callback) Notified when user click on the poyline (road)   |
 
 
 ** example 
@@ -673,7 +679,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `initZoom`                    | set init zoom level in the map (default 10)       |
 | `maxZoomLevel`                | set maximum zoom level in the map  (2 <= x <= 19)       |
 | `minZoomLevel`                | set minimum zoom level in the map  (2 <= x <= 19 )       |
-| `roadConfiguration`           | (RoadConfiguration) set color and start/end/middle markers in road |
+| `roadConfiguration`           | (RoadOption) set  default color,width,borderColor,borderWdith for polylines |
 | `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
 | `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |
