@@ -1,12 +1,11 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.42.0-orange)   
-![pub](https://img.shields.io/badge/pub-v0.50.0--rc.0-yellow) 
+![pub](https://img.shields.io/badge/pub-v0.50.0-orange)   
 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | 0.50.0-alpha.5 |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | 0.50.0 :heavy_check_mark: |
 
 
 <b>osm plugin for flutter apps </b>
@@ -49,18 +48,6 @@ Add the following to your `pubspec.yaml` file:
 
 
 
-### Web integration
-
-Add this line below :point_down:  in index.html in web folder 
-
-```javascript
-<script src="packages/flutter_osm_web/src/asset/map_init.js"></script>
-```
-
-
-> **Note** 
-> We have limitation in handling user interaction in the map  inside our plugin, if you put button on the top of the map and you listen to click on the map both will be fired
-
 ## Integration with Hooks
 
 > To use our map library with `Flutter_Hooks` library use our new extension library
@@ -99,7 +86,7 @@ many thanks for @ben-xD
 
 ### For web integration
 
-> to show buttons,UI that have to manage user click over the map, you should use this library : `pointer_interceptor`
+> To show buttons,UI that have to manage user click over the map, you should use this library : `pointer_interceptor`
 
 
 ## Simple Usage
@@ -129,14 +116,7 @@ many thanks for @ben-xD
                 ),
             ),
         ),
-         roadConfiguration: RoadConfiguration(
-                startIcon: MarkerIcon(
-                  icon: Icon(
-                    Icons.person,
-                    size: 64,
-                    color: Colors.brown,
-                  ),
-                ),
+         roadConfiguration: RoadOption(
                 roadColor: Colors.yellowAccent,
         ),
         markerOption: MarkerOption(
@@ -699,7 +679,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `initZoom`                    | set init zoom level in the map (default 10)       |
 | `maxZoomLevel`                | set maximum zoom level in the map  (2 <= x <= 19)       |
 | `minZoomLevel`                | set minimum zoom level in the map  (2 <= x <= 19 )       |
-| `roadConfiguration`           | (RoadConfiguration) set color and start/end/middle markers in road |
+| `roadConfiguration`           | (RoadOption) set  default color,width,borderColor,borderWdith for polylines |
 | `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
 | `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |

@@ -1,13 +1,8 @@
-### 0.50.0-rc.0 :  add outline for polyline
+### 0.50.0 :  add Web support,improve road APIs
 * add `roadBorderColor`,`roadBorderWidth` to [RoadOption]
 * remove `keepInitialGeoPoints` and `showMarkerOfPOI`
+* add new  callbacks to `OSMMixinObserver`
 * add callback to get polyline event
-### 0.50.0-alpha.5 :  add drawRect,removeRect,changeCustomTile
-### 0.50.0-alpha.4 :  fix issue in publish
-### 0.50.0-alpha.3 :  fix issue in publish
-### 0.50.0-alpha.2 :  fix issue in publish
-### 0.50.0-alpha.1 :  fix issue in pubspec
-### 0.50.0-alpha : add web support
 * add osm_web_interface plugin
 * add create osm widget for web
 ### 0.42.0 : add api to enableTracking
