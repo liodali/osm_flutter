@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -304,14 +303,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
-  Future<void> setRoadConfiguration(int idOSM, RoadOption roadOption) async {
-    await _channels[idOSM]?.invokeMethod(
-      "road#option",
-      roadOption.toMap(),
-    );
-  }
-
-  @override
   Future<void> setStepZoom(int idOSM, int defaultZoom) async {
     try {
       await _channels[idOSM]?.invokeMethod("change#stepZoom", defaultZoom);
@@ -320,29 +311,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
     }
   }
 
-  /// change marker of road
-  /// [keys]   :(List of GlobalKey) keys of widget of start,middle and end custom marker in road
-  /// [idOSM]     : (int) osm id native
-  @override
-  Future<void> setMarkersRoad(int idOSM, List<GlobalKey?> keys) async {
-    final startKey = keys.first!;
-    final middleKey = keys[1]!;
-    final endKey = keys.last!;
-    Map<String, dynamic> bitmaps = {};
-    if (startKey.currentContext != null) {
-      final marker = await _capturePng(startKey);
-      bitmaps.putIfAbsent("START", () => marker);
-    }
-    if (endKey.currentContext != null) {
-      final marker = await _capturePng(endKey);
-      bitmaps.putIfAbsent("END", () => marker);
-    }
-    if (middleKey.currentContext != null) {
-      final marker = await _capturePng(middleKey);
-      bitmaps.putIfAbsent("MIDDLE", () => marker);
-    }
-    await _channels[idOSM]?.invokeMethod("road#markers", bitmaps);
-  }
 
   @override
   Future<void> staticPosition(

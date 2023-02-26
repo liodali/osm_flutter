@@ -5,7 +5,6 @@ library osm_interop;
 
 
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
-import 'package:flutter_osm_web/src/interop/models/road_option_js.dart';
 import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
 import 'package:js/js.dart';
 

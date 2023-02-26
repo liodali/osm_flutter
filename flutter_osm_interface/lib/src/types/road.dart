@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/src/common/utilities.dart';
 import 'geo_point.dart';
-import 'marker.dart';
 
 enum RoadType {
   car,
