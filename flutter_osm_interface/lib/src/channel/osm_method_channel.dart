@@ -311,7 +311,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
     }
   }
 
-
   @override
   Future<void> staticPosition(
     int idOSM,
@@ -697,6 +696,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @override
   Future<void> removeRoad(int idOSM, String roadKey) async {
     await _channels[idOSM]!.invokeMethod("delete#road", roadKey);
+  }
+
+  @override
+  Future<void> removeMarkers(int idOSM, List<GeoPoint> markers) async {
+    await _channels[idOSM]!.invokeMethod(
+      "delete#markers",
+      markers.map((e) => e.toMap()).toList(),
+    );
   }
 }
 
