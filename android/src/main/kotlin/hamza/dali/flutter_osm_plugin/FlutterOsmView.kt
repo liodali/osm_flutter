@@ -533,6 +533,9 @@ class FlutterOsmView(
                 "get#geopoints" -> {
                     getGeoPoints(result)
                 }
+                "delete#markers" -> {
+                    deleteMarkers(call,result)
+                }
                 else -> {
                     result.notImplemented()
                 }
@@ -542,6 +545,17 @@ class FlutterOsmView(
             Log.e(e.cause.toString(), "error osm plugin ${e.stackTraceToString()}")
             result.error("404", e.message, e.stackTraceToString())
         }
+    }
+
+    private fun deleteMarkers(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as List<HashMap<String,Double>>
+        val geoPoints = args.map { mapGeoP ->
+            mapGeoP.toGeoPoint()
+        }
+        geoPoints.forEach {geoPoint->
+            deleteMarker(geoPoint)
+        }
+        result.success(200)
     }
 
 
