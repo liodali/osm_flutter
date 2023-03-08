@@ -164,6 +164,12 @@ class MapController extends BaseMapController {
   Future<void> removeMarker(GeoPoint p) async {
     osmBaseController.removeMarker(p);
   }
+  /// [removeMarkers]
+  ///
+  ///remove markers from map of position
+  Future<void> removeMarkers(List<GeoPoint> geoPoints) async {
+    osmBaseController.removeMarkers(geoPoints);
+  }
 
   /// [changeIconMarker]
   ///
