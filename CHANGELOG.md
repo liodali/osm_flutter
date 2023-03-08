@@ -1,3 +1,6 @@
+### 0.51.0 :  fix bugs,add new API
+* add removeMarkers
+* fix bug name attribute zoomInto in android 
 ### 0.50.0 :  add Web support,improve road APIs
 * add `roadBorderColor`,`roadBorderWidth` to [RoadOption]
 * remove `keepInitialGeoPoints` and `showMarkerOfPOI`
