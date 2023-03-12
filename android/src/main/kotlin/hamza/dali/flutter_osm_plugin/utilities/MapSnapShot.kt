@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.util.ArrayMap
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
 import hamza.dali.flutter_osm_plugin.models.RoadConfig
+import hamza.dali.flutter_osm_plugin.models.RoadGeoPointInstruction
 import hamza.dali.flutter_osm_plugin.models.RoadOption
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -154,5 +155,6 @@ data class RoadSnapShot(
     val roadBorderWidth: Float,
     val roadID:String,
     val duration:Double,
-    val distance:Double
+    val distance:Double,
+    val instructions:List<RoadGeoPointInstruction>
 )
