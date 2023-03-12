@@ -84,7 +84,6 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     GlobalKey directionArrowGlobalKey,
   );
 
-
   Future<void> enableTracking(
     int idOSM, {
     bool stopFollowInDrag = false,
@@ -122,6 +121,10 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   Future<void> removePosition(
     int idOSM,
     GeoPoint p,
+  );
+  Future<void> removeMarkers(
+    int idOSM,
+    List<GeoPoint> markers,
   );
 
   Future<void> removeLastRoad(

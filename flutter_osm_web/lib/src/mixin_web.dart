@@ -159,6 +159,16 @@ mixin WebMixin {
     interop.removeMarker(mapIdMixin, p.toGeoJS());
   }
 
+  Future<void> removeMarkers(
+    List<GeoPoint> markers,
+  ) async {
+    final futures = <Future>[];
+    markers.forEach((geoPoint) {
+      futures.add(removeMarker(geoPoint));
+    });
+    await Future.wait(futures);
+  }
+
   Future<void> removeRect(String key) async {
     await promiseToFuture(interop.removePath(mapIdMixin, key));
   }

@@ -130,7 +130,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             // let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
             let sceneUrl = URL(string: urlStyle)! // "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
             mapView.loadScene(from: sceneUrl, with: sceneUpdates)
-
             //channel.invokeMethod("map#init", arguments: true)
             result(200)
             break
@@ -349,6 +348,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         case "change#Marker":
             changePositionMarker(call: call)
             break;
+        case "delete#markers":
+            deleteMarkers(call: call)
+            result(200)
+            break;
         case "get#geopoints":
             getGeoPoints(result)
             break;
@@ -368,7 +371,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
         }
         //let view = UIStackView(arrangedSubviews: [mapView])
-
         return mainView
     }
 
@@ -498,6 +500,18 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let point = call.arguments as! GeoPoint
         let markers = mapView.markers.filter { m in
             m.point == point.toLocationCoordinate()
+        }
+        markers.forEach { m in
+            mapView.markerRemove(m)
+        }
+    }
+
+    private func deleteMarkers(call: FlutterMethodCall) {
+        let geoPoints = (call.arguments as! [GeoPoint]).map { point -> LocationCoordinate2D in
+            point.toLocationCoordinate()
+        }
+        let markers = mapView.markers.filter { m in
+            geoPoints.contains(m.point)
         }
         markers.forEach { m in
             mapView.markerRemove(m)

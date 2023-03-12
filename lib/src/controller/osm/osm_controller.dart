@@ -294,8 +294,6 @@ class MobileOSMController extends IBaseOSMController {
     }
   }
 
-
-
   @override
   Future<void> configureZoomMap(
     double minZoomLevel,
@@ -769,6 +767,11 @@ class MobileOSMController extends IBaseOSMController {
             newMarkerIcon != null ? _osmFlutterState.dynamicMarkerKey : null,
       );
     });
+  }
+
+  @override
+  Future<void> removeMarkers(List<GeoPoint> markers) async {
+    await osmPlatform.removeMarkers(_idMap, markers);
   }
 }
 

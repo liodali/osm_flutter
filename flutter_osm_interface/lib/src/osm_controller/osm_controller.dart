@@ -271,11 +271,18 @@ abstract class IBaseOSMController {
   /// and the user can move freely
   Future<void> removeLimitArea();
 
-  /// geoPoints
+  /// [geoPoints]
   ///
   /// this method will get location of existing marker in the mapview
   /// this method will not get static markers.
   ///
   /// return list of geopoint that represent location of the markers
   Future<List<GeoPoint>> geoPoints();
+
+  /// [removeMarkers]
+  /// 
+  /// this method will delete list of markers, even if the markers not exist will be skipped
+  Future<void> removeMarkers(
+    List<GeoPoint> markers,
+  );
 }
