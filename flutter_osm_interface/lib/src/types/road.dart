@@ -10,8 +10,6 @@ enum RoadType {
   bike,
 }
 
-
-
 /// [RoadOption]
 ///
 /// this class used to configure road in runtime by change default color
@@ -143,17 +141,24 @@ class RoadInfo {
   final double? distance;
   final double? duration;
   final List<GeoPoint> route;
+  final List<Instruction> instructions;
   late String _key;
   RoadInfo({
     this.distance,
     this.duration,
     this.route = const [],
+    this.instructions = const [],
   }) : _key = UniqueKey().toString();
 
   RoadInfo.fromMap(Map map)
       : _key = map["key"] ?? UniqueKey().toString(),
         this.duration = map["duration"],
         this.distance = map["distance"],
+        this.instructions = map.containsKey("instructions")
+            ? (map["instructions"] as List)
+                .map((e) => Instruction.fromMap(map))
+                .toList()
+            : [],
         this.route = map.containsKey(map)
             ? (map["routePoints"] as String).stringToGeoPoints()
             : [];
@@ -200,6 +205,19 @@ class RoadInfo {
   String toString() {
     return "key:$key,distance:$distance,duration:$duration";
   }
+}
+
+class Instruction {
+  final String instruction;
+  final GeoPoint geoPoint;
+
+  Instruction({
+    required this.instruction,
+    required this.geoPoint,
+  });
+  Instruction.fromMap(Map map)
+      : instruction = map["instruction"],
+        geoPoint = GeoPoint.fromMap(map["geoPoint"]);
 }
 
 extension PExtRoadInfo on RoadInfo {
