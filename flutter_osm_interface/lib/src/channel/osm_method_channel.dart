@@ -263,8 +263,15 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> enableTracking(
     int idOSM, {
     bool stopFollowInDrag = false,
+    bool disableMarkerRotation = false,
   }) async {
-    await _channels[idOSM]?.invokeMethod('trackMe', stopFollowInDrag);
+    await _channels[idOSM]?.invokeMethod(
+      'trackMe',
+      [
+        stopFollowInDrag,
+        disableMarkerRotation,
+      ],
+    );
   }
 
   /// select position and show marker on it

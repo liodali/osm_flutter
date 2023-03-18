@@ -87,6 +87,7 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   Future<void> enableTracking(
     int idOSM, {
     bool stopFollowInDrag = false,
+    bool disableMarkerRotation = false,
   });
 
   Future<void> addPosition(

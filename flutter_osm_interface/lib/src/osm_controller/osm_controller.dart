@@ -141,7 +141,10 @@ abstract class IBaseOSMController {
   Future<void> goToPosition(GeoPoint p);
 
   /// enabled tracking user location
-  Future<void> enableTracking({bool enableStopFollow = false});
+  Future<void> enableTracking({
+    bool enableStopFollow = false,
+    bool disableMarkerRotation,
+  });
 
   /// disabled tracking user location
   Future<void> disabledTracking();
@@ -175,11 +178,11 @@ abstract class IBaseOSMController {
   });
 
   /// [drawRoadManually]
-  /// 
+  ///
   /// this method allow to draw road manually without using any internal api
   /// the path should be provided from any external api like your own OSRM server or google map api
   /// and you can change color of the road and width also
-  /// 
+  ///
   ///  [path]  : (list) list of GeoPoint that represent the path of the road
   ///
   ///  [roadOption] : (RoadOption) contain style of road such as color,width,borderColor,zoomInto
@@ -280,7 +283,7 @@ abstract class IBaseOSMController {
   Future<List<GeoPoint>> geoPoints();
 
   /// [removeMarkers]
-  /// 
+  ///
   /// this method will delete list of markers, even if the markers not exist will be skipped
   Future<void> removeMarkers(
     List<GeoPoint> markers,
