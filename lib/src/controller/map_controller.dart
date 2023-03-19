@@ -164,6 +164,7 @@ class MapController extends BaseMapController {
   Future<void> removeMarker(GeoPoint p) async {
     osmBaseController.removeMarker(p);
   }
+
   /// [removeMarkers]
   ///
   ///remove markers from map of position
@@ -291,9 +292,16 @@ class MapController extends BaseMapController {
   /// [enableTracking]
   ///
   /// this method will enabled tracking user location,[enableStopFollow] is true ,
-  /// the map will follow the user location when it change
-  Future<void> enableTracking({bool enableStopFollow = false}) async {
-    await osmBaseController.enableTracking(enableStopFollow: enableStopFollow);
+  /// the map will follow the user location when it change,
+  /// to disable rotation of user marker, change [disableUserMarkerRotation] to true (default : false)
+  Future<void> enableTracking({
+    bool enableStopFollow = false,
+    bool disableUserMarkerRotation = false,
+  }) async {
+    await osmBaseController.enableTracking(
+      enableStopFollow: enableStopFollow,
+      disableMarkerRotation: disableUserMarkerRotation,
+    );
   }
 
   /// disabled tracking user location
