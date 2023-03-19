@@ -28,7 +28,9 @@ fun RoadNode.toInstruction(): RoadGeoPointInstruction = RoadGeoPointInstruction(
 )
 
 fun List<RoadNode>.toRoadInstruction(): List<RoadGeoPointInstruction> {
-    return this.map { node->
+    return this.filter { node ->
+        node.mInstructions != null
+    }.map { node ->
         node.toInstruction()
     }
 }
