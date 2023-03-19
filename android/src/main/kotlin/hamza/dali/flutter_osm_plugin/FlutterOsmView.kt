@@ -413,8 +413,10 @@ class FlutterOsmView(
                     changePosition(call, result)
                 }
                 "trackMe" -> {
-                    val enableStopFollow = call.arguments as Boolean? ?: false
-                    trackUserLocation(enableStopFollow, result)
+                    val args = call.arguments as List<Boolean>
+                    val enableStopFollow = args.first()
+                    val disableRotation = args.last()
+                    trackUserLocation(enableStopFollow,disableRotation, result)
                 }
                 "deactivateTrackMe" -> {
                     deactivateTrackMe(result)
@@ -1084,12 +1086,17 @@ class FlutterOsmView(
     }
 
 
-    private fun trackUserLocation(enableStopFollow: Boolean, result: MethodChannel.Result) {
+    private fun trackUserLocation(
+        enableStopFollow: Boolean,
+        disableRotation: Boolean = false,
+        result: MethodChannel.Result
+    ) {
         try {
             if (homeMarker != null) {
                 folderMarkers.items.remove(homeMarker)
                 map?.invalidate()
             }
+            locationNewOverlay.disableRotateDirection = disableRotation
             if (!locationNewOverlay.isMyLocationEnabled) {
                 isEnabled = true
                 locationNewOverlay.enableAutoStop = enableStopFollow
@@ -1122,6 +1129,18 @@ class FlutterOsmView(
         }
     }
 
+    private fun deactivateTrackMe(result: MethodChannel.Result) {
+        isTracking = false
+        isEnabled = false
+        mapSnapShot().setTrackLocation(isTracking)
+        mapSnapShot().setEnableMyLocation(isEnabled)
+        try {
+            locationNewOverlay.onStopLocation()
+            result.success(true)
+        } catch (e: Exception) {
+            result.error("400", e.stackTraceToString(), "")
+        }
+    }
     private fun goToSpecificPosition(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments!! as HashMap<String, *>
         val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
@@ -1289,18 +1308,7 @@ class FlutterOsmView(
 
     }
 
-    private fun deactivateTrackMe(result: MethodChannel.Result) {
-        isTracking = false
-        isEnabled = false
-        mapSnapShot().setTrackLocation(isTracking)
-        mapSnapShot().setEnableMyLocation(isEnabled)
-        try {
-            locationNewOverlay.onStopLocation()
-            result.success(true)
-        } catch (e: Exception) {
-            result.error("400", e.stackTraceToString(), "")
-        }
-    }
+
 
     private fun removeCircle(call: MethodCall, result: MethodChannel.Result) {
         val id = call.arguments as String?

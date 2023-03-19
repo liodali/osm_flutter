@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Paint
+import android.location.Location
 import android.provider.Settings
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
 import hamza.dali.flutter_osm_plugin.models.RoadGeoPointInstruction
@@ -39,6 +40,7 @@ fun HashMap<String, Double>.toGeoPoint(): GeoPoint {
     throw IllegalArgumentException("cannot map this hashMap to GeoPoint")
 
 }
+fun Location.toGeoPoint():GeoPoint = GeoPoint(latitude,longitude)
 
 fun List<GeoPoint>.containGeoPoint(point: GeoPoint): Boolean {
     return this.firstOrNull { p ->

@@ -25,6 +25,7 @@ class MapSnapShot {
     private var isAdvancedPicker: Boolean = false
     private var isTrackMe: Boolean = false
     private var enableLocation: Boolean = false
+    private var disableRotation: Boolean = false
     private var mapOrientation: Float = 0f
 
     private var markers: ArrayMap<GeoPoint, ByteArray?> = ArrayMap<GeoPoint, ByteArray?>()
@@ -49,6 +50,7 @@ class MapSnapShot {
     }
 
     fun getEnableMyLocation() = enableLocation
+    fun getDisableRotation() = disableRotation
     fun trackMyLocation() = isTrackMe
     fun lastCachedRoad() = lastRoadCache
     fun cachedRoads() = roadsCache
@@ -78,8 +80,9 @@ class MapSnapShot {
         isTrackMe = isTracking
     }
 
-    fun setEnableMyLocation(isEnabled: Boolean) {
+    fun setEnableMyLocation(isEnabled: Boolean,disableRotation:Boolean = false) {
         enableLocation = isEnabled
+        this.disableRotation = disableRotation
     }
 
     fun cacheLocation(
@@ -137,6 +140,7 @@ class MapSnapShot {
             isAdvancedPicker = false
             isTrackMe = false
             enableLocation = false
+            disableRotation = false
             lastRoadCache = null
             roadsCache.clear()
         }
