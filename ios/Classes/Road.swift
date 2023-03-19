@@ -14,9 +14,11 @@ struct RoadInformation {
 }
 
 
-
+struct RoadInstruction {
+    var location:CLLocationCoordinate2D
+    var instruction:String
+}
 struct RoadData {
-
     var roadColor : String = "#ff0000"
     var roadWidth : String = "5px"
     var roadBorderWidth : String = "=px"
@@ -42,13 +44,13 @@ struct  RoadLeg {
     public var  duration:Double = 0
 }
 struct RoadNode {
-    var location:CLLocationCoordinate2D?
+    var  location:CLLocationCoordinate2D
     var instruction:String = ""
     var distance:Double = 0.0
     var duration:Double = 0
     var maneuver : Int = 0
-    init(){
-
+    init(location:CLLocationCoordinate2D){
+        self.location = location
     }
 }
 struct RoadConfig {

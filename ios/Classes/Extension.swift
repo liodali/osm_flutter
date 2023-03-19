@@ -58,9 +58,9 @@ extension TGMapView {
         return userLocationMarker
     }
 
-    func flyToUserLocation(for location: CLLocationCoordinate2D,flyEnd: ((Bool) -> Void)? = nil) {
+    func flyToUserLocation(for location: CLLocationCoordinate2D, flyEnd: ((Bool) -> Void)? = nil) {
         let cameraOption = TGCameraPosition(center: location, zoom: self.zoom, bearing: self.bearing, pitch: self.pitch)
-        self.fly(to: cameraOption!, withSpeed: 50,callback: flyEnd)
+        self.fly(to: cameraOption!, withSpeed: 50, callback: flyEnd)
     }
 
     func removeUserLocation(for marker: TGMarker) {
@@ -75,7 +75,6 @@ extension TGMapView {
 }
 
 extension MyLocationMarker {
-
     func setDirectionArrow(personIcon: MarkerIconData?, arrowDirection: MarkerIconData?) {
         self.personIcon = personIcon
         arrowDirectionIcon = arrowDirection
@@ -116,7 +115,7 @@ extension MyLocationMarker {
             }
         } else {
             self.marker?.stylingString = "{ style: 'points', interactive: \(interactive),color: 'white',size: [\(markerIcon.size.first ?? 48)px,\(markerIcon.size.last ?? 48)px], order: 1000, collide: false , angle: \(angle)  } "
-            if (arrowDirectionIcon != nil ) {
+            if (arrowDirectionIcon != nil) {
                 self.marker?.icon = arrowDirectionIcon!.image!
             }
         }
@@ -147,17 +146,45 @@ extension GeoPoint {
     }
 }
 
-extension RoadInformation {
+extension Road {
+    func toInstruction() -> [RoadInstruction] {
+        steps.map { node -> RoadInstruction in
+            node.toInstruction()
+        }
+    }
+}
+
+extension RoadNode {
+    func toInstruction() -> RoadInstruction {
+        RoadInstruction(location: location, instruction: instruction)
+    }
+}
+
+
+extension RoadInstruction {
     func toMap() -> [String: Any] {
-        ["distance": self.distance, "duration": self.seconds, "routePoints": self.encodedRoute]
+        ["instruction": instruction, "geoPoint": location.toGeoPoint()]
+    }
+}
+
+extension RoadInformation {
+    func toMap(instructions: [RoadInstruction]) -> [String: Any] {
+        var args: [String: Any] = ["distance": self.distance, "duration": self.seconds, "routePoints": self.encodedRoute]
+        if (instructions.isEmpty) {
+            args["instructions"] = [String: Any]()
+        } else {
+            args["instructions"] = instructions.toMap()
+        }
+        return args
     }
 }
 
 extension RoadFolder {
     func toMap() -> [String: Any] {
-        ["key":self.id ,"distance": self.roadInformation?.distance ?? 0.0, "duration": self.roadInformation?.seconds ?? 0.0, "routePoints": self.roadInformation?.encodedRoute ?? ""]
+        ["key": self.id, "distance": self.roadInformation?.distance ?? 0.0, "duration": self.roadInformation?.seconds ?? 0.0, "routePoints": self.roadInformation?.encodedRoute ?? ""]
     }
 }
+
 extension Array where Element == Int {
     func toUIColor() -> UIColor {
         UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
@@ -170,6 +197,14 @@ extension Array where Element == GeoPoint {
         self.map { point -> String in
             let wayP = String(format: "%F,%F", point["lon"]!, point["lat"]!)
             return wayP
+        }
+    }
+}
+
+extension Array where Element == RoadInstruction {
+    func toMap() -> [[String: Any]] {
+        map { (instruction: RoadInstruction) -> [String: Any] in
+            instruction.toMap()
         }
     }
 }

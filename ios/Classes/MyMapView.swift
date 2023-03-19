@@ -274,7 +274,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     if let bounding = box {
                         mapView.cameraPosition = mapView.cameraThatFitsBounds(bounding, withPadding: UIEdgeInsets.init(top: 25.0, left: 25.0, bottom: 25.0, right: 25.0))
                     }
-                    result(roadInfo!.toMap())
+                    let instructions = road?.toInstruction() ?? [RoadInstruction]()
+                    result(roadInfo!.toMap(instructions: instructions))
                 }
 
             }
@@ -298,8 +299,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     let infos = roadInfos.filter { info in
                                 info != nil
                             }
-                            .map { info -> [String: Any] in
-                                info!.toMap()
+                            .enumerated()
+                            .map { (index, info) -> [String: Any] in
+                                let instructions = roads[index].1.toInstruction()
+                                return info!.toMap(instructions: instructions)
                             }
                     result(infos)
                 }
