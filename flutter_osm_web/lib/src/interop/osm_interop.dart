@@ -3,7 +3,6 @@
 @JS()
 library osm_interop;
 
-
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
 import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
 import 'package:js/js.dart';
@@ -162,7 +161,6 @@ external dynamic flyToBounds(
   int padding,
 );
 
-
 @JS('drawRoad')
 external dynamic drawRoad(
   int mapId,
@@ -193,6 +191,7 @@ external dynamic setUserLocationIconMarker(int mapId, String icon);
 @JS("enableTracking")
 external dynamic enableTracking(
   int mapId,
+  bool enableStopFollow,
 );
 
 @JS("disableTracking")

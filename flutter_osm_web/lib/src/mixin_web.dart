@@ -104,9 +104,13 @@ mixin WebMixin {
     ));
   }
 
-  Future<void> enableTracking({bool enableStopFollow = false}) async {
+  Future<void> enableTracking({
+    bool enableStopFollow = false,
+    bool disableMarkerRotation = false,
+  }) async {
     await interop.enableTracking(
       mapIdMixin,
+      enableStopFollow,
     );
   }
 
