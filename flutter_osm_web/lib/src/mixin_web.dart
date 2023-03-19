@@ -286,6 +286,12 @@ mixin WebMixin {
     roadInfo = roadInfo.copyWith(
       duration: road.duration,
       distance: road.distance,
+      instructions: road.instructions
+          .map((e) => Instruction(
+                instruction: e.instruction,
+                geoPoint: e.location.toGeoPoint(),
+              ))
+          .toList(),
       route: road.polyline!.mapToListGeoPoints(),
     );
     roadsWebCache[roadInfo.key] = roadInfo;

@@ -166,12 +166,14 @@ class RoadInfo {
     String? roadKey,
     double? distance,
     double? duration,
+    List<Instruction>? instructions = const [],
     List<GeoPoint>? route = const [],
   }) {
     return RoadInfo(
       distance: distance ?? this.distance,
       duration: duration ?? this.duration,
       route: route ?? this.route,
+      instructions: instructions ?? this.instructions,
     )..setKey(roadKey ?? this._key);
   }
 
