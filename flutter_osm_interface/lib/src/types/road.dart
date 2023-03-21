@@ -156,7 +156,7 @@ class RoadInfo {
         this.distance = map["distance"],
         this.instructions = map.containsKey("instructions")
             ? (map["instructions"] as List)
-                .map((e) => Instruction.fromMap(map))
+                .map((e) => Instruction.fromMap(e))
                 .toList()
             : [],
         this.route = map.containsKey(map)
@@ -220,6 +220,11 @@ class Instruction {
   Instruction.fromMap(Map map)
       : instruction = map["instruction"],
         geoPoint = GeoPoint.fromMap(map["geoPoint"]);
+
+  @override
+  String toString() {
+    return "$instruction at $geoPoint";
+  }
 }
 
 extension PExtRoadInfo on RoadInfo {
