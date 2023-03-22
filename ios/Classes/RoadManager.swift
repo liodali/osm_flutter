@@ -86,18 +86,23 @@ class RoadManager: PRoadManager {
             }
         }
     }
+
     func removeLastRoad(for map: TGMapView) {
-        if let lastRoad = lastMarkerRoad{
+        if let lastRoad = lastMarkerRoad {
             removeRoadFolder(folder: lastRoad, for: map)
             lastMarkerRoad = nil
         }
     }
+
     func removeRoadByKey(key: String, for map: TGMapView) {
-        let folderRoad = roads.first { folder in folder.id == key }
+        let folderRoad = roads.first { folder in
+            folder.id == key
+        }
         if let road = folderRoad {
             removeRoadFolder(folder: road, for: map)
         }
     }
+
     func removeRoadFolder(folder: RoadFolder, for map: TGMapView) {
         map.markerRemove(folder.tgRouteMarker)
     }
@@ -129,7 +134,7 @@ class RoadManager: PRoadManager {
             let route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
             let tgPolyline = TGGeoPolyline(coordinates: route.coordinates!, count: UInt(route.coordinates!.count))
             marker.polyline = tgPolyline
-            self.roads.append(RoadFolder(id: key, tgRouteMarker: marker,roadInformation: nil))
+            self.roads.append(RoadFolder(id: key, tgRouteMarker: marker, roadInformation: nil))
         }
         /*
         lastMarkerRoad = marker */
@@ -196,11 +201,14 @@ class RoadManager: PRoadManager {
                     var lastName = ""
                     var lastNode: RoadNode? = nil
                     jsonSteps.forEach { step in
-                        var node = RoadNode()
                         let maneuver = (step["maneuver"] as! [String: Any?])
                         let location = maneuver["location"] as! [Double]
-                        node.location = CLLocationCoordinate2D(latitude: (location)[1],
-                                longitude: (location)[0])
+                        var node = RoadNode(
+                                location: CLLocationCoordinate2D(
+                                        latitude: (location)[1],
+                                        longitude: (location)[0]
+                                )
+                        )
                         node.distance = (step["distance"] as! Double) / 1000
                         node.duration = step["duration"] as! Double
                         var direction = maneuver["type"] as! String

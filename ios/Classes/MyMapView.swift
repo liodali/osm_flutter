@@ -54,6 +54,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var oldCustomTile: CustomTiles? = nil
     var bounds: [Double]? = nil
     var enableStopFollowInDrag: Bool = false
+    var disableRotation: Bool = false
     var canSkipFollow: Bool = false
     let urlStyle = "https://github.com/liodali/osm_flutter/raw/dc7424dacd77f4eced626abf64486d70fd03240d/assets/dynamic-styles.zip"
 
@@ -182,7 +183,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(mapView.position.toGeoPoint())
             break;
         case "trackMe":
-            enableStopFollowInDrag = call.arguments as? Bool ?? false
+            let args = call.arguments as! [Bool]
+            enableStopFollowInDrag = args.first ?? false
+            disableRotation = args.last ?? false
             trackUserLocation()
             result(200)
             break;
@@ -271,7 +274,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     if let bounding = box {
                         mapView.cameraPosition = mapView.cameraThatFitsBounds(bounding, withPadding: UIEdgeInsets.init(top: 25.0, left: 25.0, bottom: 25.0, right: 25.0))
                     }
-                    result(roadInfo!.toMap())
+                    let instructions = road?.toInstruction() ?? [RoadInstruction]()
+                    result(roadInfo!.toMap(instructions: instructions))
                 }
 
             }
@@ -295,8 +299,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     let infos = roadInfos.filter { info in
                                 info != nil
                             }
-                            .map { info -> [String: Any] in
-                                info!.toMap()
+                            .enumerated()
+                            .map { (index, info) -> [String: Any] in
+                                let instructions = roads[index].1.toInstruction()
+                                return info!.toMap(instructions: instructions)
                             }
                     result(infos)
                 }
@@ -874,9 +880,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                         userLocation = mapView.addUserLocation(for: location, on: mapView, personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
                         //userLocation?.setDirectionArrow(personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
                     }
-                    let angle = CGFloat(manager.heading?.trueHeading ?? 0.0).toDegrees
-                    if (angle != 0) {
-                        userLocation?.rotateMarker(angle: Int(angle))
+                    if (!disableRotation) {
+                        let angle = CGFloat(manager.heading?.trueHeading ?? 0.0).toDegrees
+                        if (angle != 0) {
+                            userLocation?.rotateMarker(angle: Int(angle))
+                        }
                     }
                     userLocation?.marker?.point = location
                     //userLocation?.marker?.point = location

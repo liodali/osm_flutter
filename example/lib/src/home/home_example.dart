@@ -384,9 +384,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     //   size: 48,
                     // ),
                     iconWidget: SizedBox.square(
-                      dimension: 32,
                       child: Image.asset(
                         "asset/taxi.png",
+                        scale: .4,
                       ),
                     ),
                     /* assetMarker: AssetMarker(
@@ -397,7 +397,10 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   ), */
                   ),
                   directionArrowMarker: MarkerIcon(
-                    icon: Icon(Icons.navigation_rounded),
+                    icon: Icon(
+                      Icons.navigation_rounded,
+                      size: 48,
+                    ),
                   )
                   // directionArrowMarker: MarkerIcon(
                   //   assetMarker: AssetMarker(
@@ -617,7 +620,10 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             onPressed: () async {
               if (!trackingNotifier.value) {
                 await controller.currentLocation();
-                await controller.enableTracking(enableStopFollow: false);
+                await controller.enableTracking(
+                  enableStopFollow: false,
+                  disableUserMarkerRotation: true,
+                );
                 //await controller.zoom(5.0);
               } else {
                 await controller.disabledTracking();
@@ -681,6 +687,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             "app duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         debugPrint("app distance:${roadInformation.distance}Km");
         debugPrint("app road:" + roadInformation.toString());
+        debugPrint("app road instructions :" + roadInformation.instructions.toString());
         // final box = await BoundingBox.fromGeoPointsAsync([point2, point]);
         // controller.zoomToBoundingBox(
         //   box,

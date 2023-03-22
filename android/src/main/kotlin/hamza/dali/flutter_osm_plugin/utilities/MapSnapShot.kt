@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.util.ArrayMap
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
 import hamza.dali.flutter_osm_plugin.models.RoadConfig
+import hamza.dali.flutter_osm_plugin.models.RoadGeoPointInstruction
 import hamza.dali.flutter_osm_plugin.models.RoadOption
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -24,6 +25,7 @@ class MapSnapShot {
     private var isAdvancedPicker: Boolean = false
     private var isTrackMe: Boolean = false
     private var enableLocation: Boolean = false
+    private var disableRotation: Boolean = false
     private var mapOrientation: Float = 0f
 
     private var markers: ArrayMap<GeoPoint, ByteArray?> = ArrayMap<GeoPoint, ByteArray?>()
@@ -48,6 +50,7 @@ class MapSnapShot {
     }
 
     fun getEnableMyLocation() = enableLocation
+    fun getDisableRotation() = disableRotation
     fun trackMyLocation() = isTrackMe
     fun lastCachedRoad() = lastRoadCache
     fun cachedRoads() = roadsCache
@@ -77,8 +80,9 @@ class MapSnapShot {
         isTrackMe = isTracking
     }
 
-    fun setEnableMyLocation(isEnabled: Boolean) {
+    fun setEnableMyLocation(isEnabled: Boolean,disableRotation:Boolean = false) {
         enableLocation = isEnabled
+        this.disableRotation = disableRotation
     }
 
     fun cacheLocation(
@@ -136,6 +140,7 @@ class MapSnapShot {
             isAdvancedPicker = false
             isTrackMe = false
             enableLocation = false
+            disableRotation = false
             lastRoadCache = null
             roadsCache.clear()
         }
@@ -154,5 +159,6 @@ data class RoadSnapShot(
     val roadBorderWidth: Float,
     val roadID:String,
     val duration:Double,
-    val distance:Double
+    val distance:Double,
+    val instructions:List<RoadGeoPointInstruction>
 )

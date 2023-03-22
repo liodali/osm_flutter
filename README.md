@@ -1,11 +1,11 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.51.0-orange)   
+![pub](https://img.shields.io/badge/pub-v0.53.0-orange)   
 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | 0.50.0 :heavy_check_mark: |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | supported :heavy_check_mark: |
 
 
 <b>osm plugin for flutter apps </b>
@@ -19,7 +19,7 @@
 * assisted selection position (Android/iOS)
 * set BoundingBox (Android/Web)
 * zoom into region (Android/iOS/web)
-* draw Road,recuperate information (duration/distance) of the current road (Android/iOS/web)
+* draw Road,recuperate information (instruction/duration/distance) of the current road (Android/iOS/web)
 * draw Road manually (Android/iOS/web)
 * draw multiple Roads  (Android/iOS/web)
 * ClickListener on Marker (Android/iOS/web)
@@ -44,7 +44,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.50.0-alpha.5
+      flutter_osm_plugin: ^0.53.0
 
 
 
@@ -299,8 +299,10 @@ without need to call `currentLocation`
 
 > when `enableStopFollow` is true,map will not be centered if the user location changed
 
+> you can disable rotation of personIcon using [disableUserMarkerRotation] (default: false)
+
 ```dart
- await controller.enableTracking(enableStopFollow:false);
+ await controller.enableTracking(enableStopFollow:false,);
 ```
 
 <b> 9) Disable tracking user position </b>
@@ -438,7 +440,7 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 ```
 * PS : static position cannot be removed by this method 
 
-<b>16) Draw road,recuperate distance in km and duration in sec</b>
+<b>16) Draw road,recuperate instructions ,distance in km and duration in sec</b>
 
 > you can add an middle position to pass your route through them
 > change configuration of the road in runtime
@@ -459,6 +461,7 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 );
  print("${roadInfo.distance}km");
  print("${roadInfo.duration}sec");
+ print("${roadInfo.instructions}");
 ```
 
 
@@ -474,7 +477,8 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 | `zoomInto`               | (bool)  change zoom level to make the all the road visible (default:true)    |
 
 
-
+> **Warning** 
+> For now intructions in `RoadInfo` not working perfectly in iOS and web, we will fix those issues in upcoming version
 
 <b> 16.b) draw road manually </b>
 ```dart

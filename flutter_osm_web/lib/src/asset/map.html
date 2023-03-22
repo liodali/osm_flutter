@@ -50,6 +50,7 @@
     var colorRoad;
     var routesLayer = new Map();
     var idTracking;
+    var skipFollow = false;
     var startAdvSearchLocation = false;
     var cachedLayers = L.layerGroup([]);
     var customTile;
@@ -515,11 +516,17 @@
       if (icon != undefined && icon != "")
         userLocationMarkerIcon = icon;
     }
-    async function enableTracking() {
+    async function enableTracking(enableStopFollow) {
       idTracking = navigator.geolocation.watchPosition(function (position) {
-        var userPos = [position.coords.latitude, position.coords.longitude]
-
-        mymap.flyTo(userPos, mymap.getZoom());
+        var userPos;
+        if(!skipFollow){
+          userPos = [position.coords.latitude, position.coords.longitude];
+          mymap.flyTo(userPos, mymap.getZoom());
+          if(enableStopFollow){
+            skipFollow = true
+          }
+        }
+        
         var args = {}
         if (userLocationMarkerIcon != undefined) {
           args = {
@@ -531,7 +538,7 @@
         }
         if (userPosition == undefined) {
           userPosition = L.marker(userPos, args).addTo(mymap);
-        } else if (userPosition != undefined) {
+        } else if (userPosition != undefined && !skipFollow) {
           userPosition.setLatLng(userPos);
         }
       })
@@ -539,6 +546,10 @@
 
     function disableTracking() {
       navigator.geolocation.clearWatch(idTracking);
+      if (userPosition != undefined) {
+          userPosition.remove();
+          userPosition = undefined;
+        } 
     }
 
     async function advSearchLocation() {

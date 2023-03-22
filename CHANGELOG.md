@@ -1,3 +1,6 @@
+### 0.53.0 :new feature 
+* disable rotation for person marker
+* add instruction in RoadInfo
 ### 0.51.0 :  fix bugs,add new API
 * add removeMarkers
 * fix bug name attribute zoomInto in android 

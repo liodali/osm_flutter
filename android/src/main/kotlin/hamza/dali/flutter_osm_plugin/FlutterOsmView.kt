@@ -52,7 +52,6 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
-import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.bonuspack.utils.PolylineEncoder
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -414,8 +413,10 @@ class FlutterOsmView(
                     changePosition(call, result)
                 }
                 "trackMe" -> {
-                    val enableStopFollow = call.arguments as Boolean? ?: false
-                    trackUserLocation(enableStopFollow, result)
+                    val args = call.arguments as List<Boolean>
+                    val enableStopFollow = args.first()
+                    val disableRotation = args.last()
+                    trackUserLocation(enableStopFollow,disableRotation, result)
                 }
                 "deactivateTrackMe" -> {
                     deactivateTrackMe(result)
@@ -534,7 +535,7 @@ class FlutterOsmView(
                     getGeoPoints(result)
                 }
                 "delete#markers" -> {
-                    deleteMarkers(call,result)
+                    deleteMarkers(call, result)
                 }
                 else -> {
                     result.notImplemented()
@@ -548,11 +549,11 @@ class FlutterOsmView(
     }
 
     private fun deleteMarkers(call: MethodCall, result: MethodChannel.Result) {
-        val args = call.arguments as List<HashMap<String,Double>>
+        val args = call.arguments as List<HashMap<String, Double>>
         val geoPoints = args.map { mapGeoP ->
             mapGeoP.toGeoPoint()
         }
-        geoPoints.forEach {geoPoint->
+        geoPoints.forEach { geoPoint ->
             deleteMarker(geoPoint)
         }
         result.success(200)
@@ -695,7 +696,7 @@ class FlutterOsmView(
                 val polyLine = Polyline(map!!)
                 polyLine.setPoints(lastRoad.roadPoints)
                 polyLine.setStyle(
-                    color = lastRoad.roadColor  ?: Color.GREEN,
+                    color = lastRoad.roadColor ?: Color.GREEN,
                     width = lastRoad.roadWidth,
                     borderColor = lastRoad.roadBorderColor,
                     borderWidth = lastRoad.roadBorderWidth
@@ -725,7 +726,7 @@ class FlutterOsmView(
                 polyLine.setStyle(
                     borderColor = road.roadBorderColor,
                     borderWidth = road.roadBorderWidth,
-                    color = road.roadColor ?:  Color.GREEN,
+                    color = road.roadColor ?: Color.GREEN,
                     width = road.roadWidth,
                 )
                 flutterRoad = createRoad(
@@ -1085,12 +1086,17 @@ class FlutterOsmView(
     }
 
 
-    private fun trackUserLocation(enableStopFollow: Boolean, result: MethodChannel.Result) {
+    private fun trackUserLocation(
+        enableStopFollow: Boolean,
+        disableRotation: Boolean = false,
+        result: MethodChannel.Result
+    ) {
         try {
             if (homeMarker != null) {
                 folderMarkers.items.remove(homeMarker)
                 map?.invalidate()
             }
+            locationNewOverlay.disableRotateDirection = disableRotation
             if (!locationNewOverlay.isMyLocationEnabled) {
                 isEnabled = true
                 locationNewOverlay.enableAutoStop = enableStopFollow
@@ -1123,6 +1129,18 @@ class FlutterOsmView(
         }
     }
 
+    private fun deactivateTrackMe(result: MethodChannel.Result) {
+        isTracking = false
+        isEnabled = false
+        mapSnapShot().setTrackLocation(isTracking)
+        mapSnapShot().setEnableMyLocation(isEnabled)
+        try {
+            locationNewOverlay.onStopLocation()
+            result.success(true)
+        } catch (e: Exception) {
+            result.error("400", e.stackTraceToString(), "")
+        }
+    }
     private fun goToSpecificPosition(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments!! as HashMap<String, *>
         val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
@@ -1290,18 +1308,7 @@ class FlutterOsmView(
 
     }
 
-    private fun deactivateTrackMe(result: MethodChannel.Result) {
-        isTracking = false
-        isEnabled = false
-        mapSnapShot().setTrackLocation(isTracking)
-        mapSnapShot().setEnableMyLocation(isEnabled)
-        try {
-            locationNewOverlay.onStopLocation()
-            result.success(true)
-        } catch (e: Exception) {
-            result.error("400", e.stackTraceToString(), "")
-        }
-    }
+
 
     private fun removeCircle(call: MethodCall, result: MethodChannel.Result) {
         val id = call.arguments as String?
@@ -1432,7 +1439,7 @@ class FlutterOsmView(
                                     roadDuration = road.mDuration,
                                     roadDistance = road.mLength
                                 )
-
+                                val instructions = road.mNodes.toRoadInstruction()
                                 mapSnapShot().cacheListRoad(
                                     RoadSnapShot(
                                         roadPoints = road.mRouteHigh,
@@ -1442,15 +1449,17 @@ class FlutterOsmView(
                                         roadBorderWidth = config.roadOption.roadBorderWidth,
                                         roadID = config.roadID,
                                         duration = road.mDuration,
-                                        distance = road.mLength
+                                        distance = road.mLength,
+                                        instructions = instructions
                                     )
                                 )
-                                resultRoads.add(HashMap<String, Any>().apply {
-                                    this["duration"] = road.mDuration
-                                    this["distance"] = road.mLength
-                                    this["routePoints"] = routePointsEncoded
-                                    this["key"] = config.roadID
-                                })
+                                resultRoads.add(
+                                    road.toMap(
+                                        config.roadID,
+                                        routePointsEncoded,
+                                        instructions
+                                    )
+                                )
                             }
                         }
                         delay(100)
@@ -1523,7 +1532,7 @@ class FlutterOsmView(
         val roadConfig = args.toRoadConfig()
         checkRoadFolderAboveUserOverlay()
 
-
+        var instructions = emptyList<RoadGeoPointInstruction>()
         if (roadManager == null)
             roadManager = OSRMRoadManager(context, "json/application")
         roadManager?.let { manager ->
@@ -1558,9 +1567,7 @@ class FlutterOsmView(
                             roadDistance = road.mLength
 
                         )
-                       
-
-
+                        instructions = road.mNodes.toRoadInstruction()
                         mapSnapShot().cacheRoad(
                             RoadSnapShot(
                                 roadPoints = road.mRouteHigh,
@@ -1571,7 +1578,8 @@ class FlutterOsmView(
                                 roadBorderColor = roadConfig.roadOption.roadBorderColor,
                                 roadID = roadConfig.roadID,
                                 duration = road.mDuration,
-                                distance = road.mLength
+                                distance = road.mLength,
+                                instructions = instructions
                             )
                         )
                         if (zoomToRegion) {
@@ -1584,12 +1592,13 @@ class FlutterOsmView(
 
                         map!!.invalidate()
                     }
-                    result.success(HashMap<String, Any>().apply {
-                        this["key"] = roadConfig.roadID
-                        this["duration"] = road.mDuration
-                        this["distance"] = road.mLength
-                        this["routePoints"] = routePointsEncoded
-                    })
+                    result.success(
+                        road.toMap(
+                            roadConfig.roadID,
+                            routePointsEncoded,
+                            instructions
+                        )
+                    )
                 }
 
             }
@@ -1636,7 +1645,8 @@ class FlutterOsmView(
                 roadWidth = roadWidth,
                 roadBorderWidth = roadWidth,
                 duration = 0.0,
-                distance = 0.0
+                distance = 0.0,
+                instructions = emptyList()
             )
         )
         if (zoomToRegion) {
@@ -1656,7 +1666,7 @@ class FlutterOsmView(
         roadDuration: Double = 0.0,
         roadDistance: Double = 0.0,
 
-    ): FlutterRoad {
+        ): FlutterRoad {
 
 
         val flutterRoad = FlutterRoad(
@@ -1750,8 +1760,6 @@ class FlutterOsmView(
         }
         result.success(null)
     }
-
-
 
 
     private fun changeIcon(call: MethodCall, result: MethodChannel.Result) {

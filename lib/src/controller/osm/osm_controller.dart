@@ -472,12 +472,16 @@ class MobileOSMController extends IBaseOSMController {
   }
 
   /// enabled tracking user location
-  Future<void> enableTracking({bool enableStopFollow = false}) async {
+  Future<void> enableTracking({
+    bool enableStopFollow = false,
+    bool disableMarkerRotation = false,
+  }) async {
     /// make in native when is enabled ,nothing is happen
     await _osmFlutterState.requestPermission();
     await osmPlatform.enableTracking(
       _idMap,
       stopFollowInDrag: enableStopFollow,
+      disableMarkerRotation: disableMarkerRotation,
     );
   }
 

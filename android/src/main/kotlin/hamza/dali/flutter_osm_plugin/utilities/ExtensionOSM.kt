@@ -4,8 +4,12 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Paint
+import android.location.Location
 import android.provider.Settings
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
+import hamza.dali.flutter_osm_plugin.models.RoadGeoPointInstruction
+import hamza.dali.flutter_osm_plugin.models.toMap
+import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.tileprovider.tilesource.ITileSource
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -36,6 +40,7 @@ fun HashMap<String, Double>.toGeoPoint(): GeoPoint {
     throw IllegalArgumentException("cannot map this hashMap to GeoPoint")
 
 }
+fun Location.toGeoPoint():GeoPoint = GeoPoint(latitude,longitude)
 
 fun List<GeoPoint>.containGeoPoint(point: GeoPoint): Boolean {
     return this.firstOrNull { p ->
@@ -135,6 +140,24 @@ fun Polyline.setStyle(
 }
 
 fun List<Int>.toRGB(): Int = Color.rgb(first(), last(), this[1])
+
+fun Road.toMap(
+    key: String,
+    routePointsEncoded: String,
+    instructions: List<RoadGeoPointInstruction>
+): HashMap<String, Any> {
+    return HashMap<String, Any>().apply {
+        this["duration"] = mDuration
+        this["distance"] = mLength
+        this["routePoints"] = routePointsEncoded
+        this["key"] = key
+        this["instructions"] = when {
+            instructions.isNotEmpty() ->instructions.toMap()
+            else -> emptyList()
+        }
+    }
+}
+
 
 fun createPaintPolyline(
     color: Int,
