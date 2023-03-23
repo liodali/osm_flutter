@@ -100,20 +100,26 @@ class MobileOSMController extends IBaseOSMController {
     osmPlatform.onLongPressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapLongTapping(event.value);
-      _osmFlutterState.widget.controller.osMMixin?.onLongTap(event.value);
+      _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+        osmMixin.onLongTap(event.value);
+      });
     });
 
     osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
 
-      _osmFlutterState.widget.controller.osMMixin?.onSingleTap(event.value);
+      _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+        osmMixin.onSingleTap(event.value);
+      });
     });
 
     osmPlatform.onRoadMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapRoadTapping(event.value);
-      _osmFlutterState.widget.controller.osMMixin?.onRoadTap(event.value);
+      _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+        osmMixin.onRoadTap(event.value);
+      });
     });
     osmPlatform.onMapIsReady(_idMap).listen((event) async {
       if (_androidOSMLifecycle != null &&
@@ -133,7 +139,9 @@ class MobileOSMController extends IBaseOSMController {
     osmPlatform.onRegionIsChangingListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
-      _osmFlutterState.widget.controller.osMMixin?.onRegionChanged(event.value);
+      _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+        osmMixin.onRegionChanged(event.value);
+      });
     });
 
     osmPlatform.onMapRestored(_idMap).listen((event) {
@@ -141,7 +149,9 @@ class MobileOSMController extends IBaseOSMController {
         if (!_osmFlutterState.widget.mapIsReadyListener.value) {
           _osmFlutterState.widget.mapIsReadyListener.value = true;
         }
-        _osmFlutterState.widget.controller.osMMixin?.mapRestored();
+        _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+          osmMixin.mapRestored();
+        });
       });
     });
 

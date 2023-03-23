@@ -190,7 +190,9 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   void mapIsReady(bool isReady) async {
     if (!setCache.value) {
       Future.delayed(Duration(milliseconds: 300), () async {
-        await widget.controller.osMMixin?.mapIsReady(isReady);
+        widget.controller.osMMixins.forEach((osm) async {
+          await osm.mapIsReady(isReady);
+        });
       });
     }
   }

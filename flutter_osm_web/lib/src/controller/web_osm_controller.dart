@@ -20,8 +20,6 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     _mapId = mapId;
   }
 
-  
-
   late MethodChannel? channel;
   AndroidLifecycleMixin? _androidOSMLifecycle;
 
@@ -131,10 +129,6 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     webPlatform.mapsController.remove(this);
   }
 
-  void addObserver(AndroidLifecycleMixin androidOSMLifecycle) {
-    _androidOSMLifecycle = androidOSMLifecycle;
-  }
-
   @override
   Future<void> initPositionMap({
     GeoPoint? initPosition,
@@ -146,13 +140,16 @@ class WebOsmController with WebMixin implements IBaseOSMController {
     webPlatform.onLongPressMapClickListener(_mapId).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapLongTapping(event.value);
-      osmWebFlutterState.widget.controller.osMMixin?.onLongTap(event.value);
+      osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+        osmMixin.onLongTap(event.value);
+      });
     });
     webPlatform.onSinglePressMapClickListener(_mapId).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
-      osmWebFlutterState.widget.controller.osMMixin?.onSingleTap(event.value);
-      //event.value;
+      osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+        osmMixin.onSingleTap(event.value);
+      });
     });
     webPlatform.onMapIsReady(_mapId).listen((event) async {
       osmWebFlutterState.widget.mapIsReadyListener.value = event.value;
@@ -160,6 +157,11 @@ class WebOsmController with WebMixin implements IBaseOSMController {
           .setValueListenerMapIsReady(event.value);
       if (osmWebFlutterState.widget.onMapIsReady != null) {
         osmWebFlutterState.widget.onMapIsReady!(event.value);
+      }
+      if (osmWebFlutterState.widget.controller.osMMixins.isNotEmpty) {
+        osmWebFlutterState.widget.controller.osMMixins.forEach((element) async {
+          await element.mapIsReady(event.value);
+        });
       }
       if (_androidOSMLifecycle != null) {
         _androidOSMLifecycle!.mapIsReady(event.value);
@@ -169,13 +171,16 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       print(event.value);
       osmWebFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
-      osmWebFlutterState.widget.controller.osMMixin
-          ?.onRegionChanged(event.value);
+      osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+        osmMixin.onRegionChanged(event.value);
+      });
     });
     webPlatform.onRoadMapClickListener(_mapId).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapRoadTapping(event.value);
-      osmWebFlutterState.widget.controller.osMMixin?.onRoadTap(event.value);
+      osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+        osmMixin.onRoadTap(event.value);
+      });
     });
 
     if (osmWebFlutterState.widget.onGeoPointClicked != null) {
@@ -207,7 +212,6 @@ class WebOsmController with WebMixin implements IBaseOSMController {
       });
     }
     if (osmWebFlutterState.widget.roadConfiguration != null) {
-      
       defaultRoadOption = osmWebFlutterState.widget.roadConfiguration!;
     }
 
