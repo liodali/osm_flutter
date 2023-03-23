@@ -37,7 +37,7 @@ abstract class BaseMapController extends IBaseMapController {
     if (_timer != null && _timer!.isActive) {
       _timer?.cancel();
     }
-    removeObserver();
+    removeObservers();
     super.dispose();
   }
 

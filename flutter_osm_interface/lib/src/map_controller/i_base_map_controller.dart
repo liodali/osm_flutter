@@ -14,7 +14,7 @@ abstract class IBaseMapController {
   final bool initMapWithUserPosition;
   final GeoPoint? initPosition;
   final BoundingBox? areaLimit;
-  OSMMixinObserver? _mixinObserver;
+  final List<OSMMixinObserver> _mixinObserver = [];
 
   late ValueNotifier<GeoPoint?> _listenerMapLongTapping = ValueNotifier(null);
   late ValueNotifier<GeoPoint?> _listenerMapSingleTapping = ValueNotifier(null);
@@ -28,8 +28,7 @@ abstract class IBaseMapController {
   ValueListenable<GeoPoint?> get listenerMapSingleTapping =>
       _listenerMapSingleTapping;
 
-  ValueListenable<RoadInfo?> get listenerRoadTapped =>
-      _listenerRoadTapped;
+  ValueListenable<RoadInfo?> get listenerRoadTapped => _listenerRoadTapped;
 
   @Deprecated("this callback is deprecated,will be removed in the future,"
       "use OSMMixinObserver instead,see readme for more details")
@@ -52,7 +51,13 @@ abstract class IBaseMapController {
     // _listenerRegionIsChanging.dispose();
   }
   void addObserver(OSMMixinObserver osmMixinObserver) {
-    _mixinObserver = osmMixinObserver;
+    if (!_mixinObserver.contains(osmMixinObserver)) {
+      _mixinObserver.add(osmMixinObserver);
+    }
+  }
+
+  void removeObserver(OSMMixinObserver osmMixinObserver) {
+    _mixinObserver.remove(osmMixinObserver);
   }
 }
 
@@ -72,15 +77,16 @@ extension setLiteners on IBaseMapController {
   void setValueListenerRegionIsChanging(Region region) {
     _listenerRegionIsChanging.value = region;
   }
+
   void setValueListenerMapRoadTapping(RoadInfo road) {
     _listenerRoadTapped.value = road;
   }
 }
 
 extension PrivateBaseMapController on IBaseMapController {
-  OSMMixinObserver? get osMMixin => _mixinObserver;
+  List<OSMMixinObserver> get osMMixins => _mixinObserver;
 
-  void removeObserver() {
-    _mixinObserver = null;
+  void removeObservers() {
+    _mixinObserver.clear();
   }
 }
