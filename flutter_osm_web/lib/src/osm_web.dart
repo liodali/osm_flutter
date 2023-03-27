@@ -52,7 +52,7 @@ class OsmWebWidget extends StatefulWidget {
   OsmWebWidgetState createState() => OsmWebWidgetState();
 }
 
-class OsmWebWidgetState extends State<OsmWebWidget> with AndroidLifecycleMixin {
+class OsmWebWidgetState extends State<OsmWebWidget>  {
   late WebOsmController controller;
 
   GlobalKey? get defaultMarkerKey => widget.globalKeys[0];
@@ -99,7 +99,7 @@ class OsmWebWidgetState extends State<OsmWebWidget> with AndroidLifecycleMixin {
   Future<void> onPlatformViewCreated(int id) async {
     controller.init(this, id);
     controller.createHtml();
-    controller.addObserver(this);
+    //controller.addObserver(this);
     (OSMPlatform.instance as FlutterOsmPluginWeb).setWebMapController(
       id,
       controller,
@@ -108,15 +108,5 @@ class OsmWebWidgetState extends State<OsmWebWidget> with AndroidLifecycleMixin {
     widget.controller.init();
   }
 
-  @override
-  void configChanged() {}
-
-  @override
-  void mapIsReady(bool isReady) {
-    if (widget.controller.osMMixin != null) {
-      Future.delayed(Duration(milliseconds: 10), () async {
-        await widget.controller.osMMixin!.mapIsReady(isReady);
-      });
-    }
-  }
+ 
 }

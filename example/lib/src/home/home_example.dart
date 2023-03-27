@@ -227,11 +227,11 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           longitude: 8.4680184,
           angle: pi / 4,
         ),
-        /*GeoPointWithOrientation(
+        GeoPointWithOrientation(
           latitude: 47.4517782,
           longitude: 8.4716146,
           angle: pi / 2,
-        ),*/
+        ),
       ],
       "line 2",
     );
@@ -244,10 +244,9 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
 
   @override
   Future<void> mapIsReady(bool isReady) async {
-    if (!isReady) {
-      return;
+    if (isReady) {
+      await mapIsInitialized();
     }
-    await mapIsInitialized();
   }
 
   @override
@@ -687,7 +686,8 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             "app duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         debugPrint("app distance:${roadInformation.distance}Km");
         debugPrint("app road:" + roadInformation.toString());
-        debugPrint("app road instructions :" + roadInformation.instructions.toString());
+        debugPrint("app road instructions :" +
+            roadInformation.instructions.toString());
         // final box = await BoundingBox.fromGeoPointsAsync([point2, point]);
         // controller.zoomToBoundingBox(
         //   box,

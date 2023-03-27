@@ -1,3 +1,5 @@
+### 0.53.1 : improve add OSMMixinObserver
+* improve implementation of  OSMMixinObserver in mobile,web
 ### 0.53.0 :new feature 
 * disable rotation for person marker
 * add instruction in RoadInfo
