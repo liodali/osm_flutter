@@ -247,12 +247,11 @@ class RoadManager: PRoadManager {
                         )
                         node.distance = (step["distance"] as! Double) / 1000
                         node.duration = step["duration"] as! Double
-                        var direction = maneuver["type"] as! String
                         let roadStep = RoadStep(json: step)
                         node.instruction = roadStep.buildInstruction(instructions: instructionResource,options: [
                             "legIndex":indexLeg , "legCount" : jsonLegs.count - 1
                         ])
-                        if lastNode != nil && node.maneuver != 2 && lastName == roadStep.name {
+                        if lastNode != nil && roadStep.maneuver.maneuverType == "new name" && lastName == roadStep.name {
                             lastNode?.duration += node.duration
                             lastNode?.distance += node.distance
                         } else {
@@ -267,11 +266,6 @@ class RoadManager: PRoadManager {
                 }
             }
         }
-        /*json.forEach { key, value in
-            if key == "routes" {
-
-            }
-        }*/
         return road
 
     }
@@ -291,19 +285,3 @@ class RoadManager: PRoadManager {
 
  }
 
-extension RoadManager {
-    /**
-	 * mapping from OSRM StepManeuver types to MapQuest maneuver IDs:
-	 */
-
-
-//From: Project-OSRM-Web / WebContent / localization / OSRM.Locale.en.js
-// driving directions
-// %s: road name
-// %d: direction => removed
-// <*>: will only be printed when there actually is a road name
-    static let DIRECTIONS: [Int: String] = [
-        1: "", 2: "", 3: "",
-    ]
-
-}

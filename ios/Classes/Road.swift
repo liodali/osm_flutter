@@ -216,15 +216,22 @@ extension RoadStep {
         var firstDestination: String? = nil
         do {
             if destinations != nil {
-                print(destinations)
                 let destinationSplits = destinations!.split(separator: ":")
                 let destinationRef = try destinationSplits.first?.split(separator: ",").first
                 if destinationSplits.count > 1 {
                     let destination = try destinationSplits[1].split(separator: ",").first
-                    firstDestination = "\(destinationRef ?? destination ?? "")"
+                        firstDestination = "\(destinationRef ?? destination ?? "")"
                     if let destination = destination, let destinationRef = destinationRef {
                         firstDestination = "\(destinationRef): \(destination)"
+                    }else{
+                        if let destination = destination {
+                            firstDestination = "\(destinationRef): \(destination)"
+                        }else if let destinationRef = destinationRef {
+                            firstDestination = "\(destinationRef)"
+                        }
                     }
+                }else{
+                    firstDestination = String("\(destinationRef ?? "")")
                 }
             }
         } catch let e {
@@ -233,7 +240,6 @@ extension RoadStep {
 
         var modifierInstruction = ""
         if let modifier = maneuver.modifier {
-            print(modifier)
             modifierInstruction = ((instructionsV5["constants"] as! [String: Any])["modifier"] as! [String: String])[modifier] as! String
         }
         var nthWaypoint = ""
