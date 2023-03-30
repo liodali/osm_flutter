@@ -14,6 +14,7 @@ osm plugin for flutter apps (only Android for now, iOS will be supported in futu
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
+  s.resources = ['Assets/**.json']
   s.dependency 'Flutter'
   s.dependency 'Tangram-es'
   s.dependency 'Alamofire'

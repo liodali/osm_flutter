@@ -686,8 +686,16 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             "app duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         debugPrint("app distance:${roadInformation.distance}Km");
         debugPrint("app road:" + roadInformation.toString());
-        debugPrint("app road instructions :" +
-            roadInformation.instructions.toString());
+        final console = roadInformation.instructions
+            .map((e) => e.toString())
+            .reduce(
+              (value, element) => "$value -> \n $element",
+            )
+            .toString();
+        debugPrint(
+          console,
+          wrapWidth: console.length,
+        );
         // final box = await BoundingBox.fromGeoPointsAsync([point2, point]);
         // controller.zoomToBoundingBox(
         //   box,

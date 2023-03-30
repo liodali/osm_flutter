@@ -205,7 +205,7 @@ class RoadInfo {
 
   @override
   String toString() {
-    return "key:$key,distance:$distance,duration:$duration";
+    return "key : $key, distance: $distance, duration : $duration";
   }
 }
 
@@ -223,7 +223,7 @@ class Instruction {
 
   @override
   String toString() {
-    return "$instruction at $geoPoint";
+    return "$instruction";
   }
 }
 
