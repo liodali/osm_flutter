@@ -40,14 +40,14 @@ class RoadManager: PRoadManager {
         "turn-sharp left": 5,
         "turn-left": 4,
         "turn-slight left": 3,
-        "depart": 24,
+        "depart": 25,
         "arrive": 24,
         "roundabout-1": 27,
         "roundabout-2": 28,
         "roundabout-3": 29,
         "roundabout-4": 30,
         "roundabout-5": 31,
-        "roundabout-6": 31,
+        "roundabout-6": 32,
         "roundabout-7": 33,
         "roundabout-8": 34,
         "merge-left": 20,
@@ -65,6 +65,31 @@ class RoadManager: PRoadManager {
         "ramp-slight right": 18,
         "ramp-straight": 19
     ];
+
+    public let DIRECTIONS = [
+        1: ["en": "Continue[ on %s]", "de": ""],
+        2: ["en": "[Go on %s]", "de": ""],
+        3: ["en": "Turn slight left[ on %s]", "de": ""],
+        4: ["en": "Turn left[ on %s]", "de": ""],
+        5: ["en": "Turn sharp left[ on %s]", "de": ""],
+        6: ["en": "Turn slight right[ on %s]", "de": ""],
+        7: ["en": "Turn right[ on %s]", "de": ""],
+        8: ["en": "Turn sharp right[ on %s]", "de": ""],
+        12: ["en": "U-Turn[ on %s]", "de": ""],
+        17: ["en": "Take the ramp on the left[ on %s]", "de": ""],
+        18: ["en": "Take the ramp on the right[ on %s", "de": ""],
+        19: ["en": "Take the ramp straight ahead[ on %s]", "de": ""],
+        24: ["en": "You have reached a waypoint of your trip", "de": ""],
+        25: ["en": "Head {direction} [on %s]", "de": ""],
+        27: ["en": "Enter roundabout and leave at first exit[ on %s]", "de": ""],
+        28: ["en": "Enter roundabout and leave at second exit[ on %s]", "de": ""],
+        29: ["en": "Enter roundabout and leave at third exit[ on %s]", "de": ""],
+        30: ["en": "Enter roundabout and leave at fourth exit[ on %s]", "de": ""],
+        31: ["en": "Enter roundabout and leave at fifth exit[ on %s]", "de": ""],
+        32: ["en": "Enter roundabout and leave at sixth exit[ on %s]", "de": ""],
+        33: ["en": "Enter roundabout and leave at seventh exit[ on %s]", "de": ""],
+        34: ["en": "Enter roundabout and leave at eighth exit[ on %s]", "de": ""],
+    ]
 
     private var road: Road? = nil
     private var lastMarkerRoad: RoadFolder? = nil
@@ -142,10 +167,21 @@ class RoadManager: PRoadManager {
 
     func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler) {
         let serverURL = buildURL(wayPoints, typeRoad.rawValue)
+        guard let url = Bundle(for: type(of: self)).url(forResource: "en", withExtension: "json") else {
+            return print("File not found")
+        }
+        var contentLangEn: [String:Any] = [String:Any]()
+        do {
+            let data = try String(contentsOf: url).data(using: .utf8)
+            contentLangEn = parse(jsonData: data)
+        } catch let error {
+            print(error)
+        }
+
         DispatchQueue.global(qos: .background).async {
             self.httpCall(url: serverURL) { json in
                 if json != nil {
-                    let road = self.parserRoad(json: json!)
+                    let road = self.parserRoad(json: json!, instructionResource: contentLangEn)
                     DispatchQueue.main.async {
                         self.road = road
                         handler(road)
@@ -183,7 +219,7 @@ class RoadManager: PRoadManager {
         }
     }
 
-    private func parserRoad(json: [String: Any?]) -> Road {
+    private func parserRoad(json: [String: Any?], instructionResource: [String:Any]) -> Road {
         var road: Road = Road()
         if json.keys.contains("routes") {
             let routes = json["routes"] as! [[String: Any?]]
@@ -192,7 +228,7 @@ class RoadManager: PRoadManager {
                 road.duration = route["duration"] as! Double
                 road.mRouteHigh = route["geometry"] as! String
                 let jsonLegs = route["legs"] as! [[String: Any]]
-                jsonLegs.forEach { jLeg in
+                jsonLegs.enumerated().forEach { indexLeg,jLeg in
                     var legR: RoadLeg = RoadLeg()
                     legR.distance = (jLeg["distance"] as! Double) / 1000
                     legR.duration = jLeg["duration"] as! Double
@@ -200,7 +236,7 @@ class RoadManager: PRoadManager {
                     let jsonSteps = jLeg["steps"] as! [[String: Any?]]
                     var lastName = ""
                     var lastNode: RoadNode? = nil
-                    jsonSteps.forEach { step in
+                    jsonSteps.enumerated().forEach { index,step in
                         let maneuver = (step["maneuver"] as! [String: Any?])
                         let location = maneuver["location"] as! [Double]
                         var node = RoadNode(
@@ -212,45 +248,17 @@ class RoadManager: PRoadManager {
                         node.distance = (step["distance"] as! Double) / 1000
                         node.duration = step["duration"] as! Double
                         var direction = maneuver["type"] as! String
-                        var modifierDirection = ""
-                        if (maneuver.contains { k, v in
-                            k == "modifier"
-                        }) {
-                            modifierDirection = maneuver["modifier"] as! String
-                        }
-
-                        switch (direction) {
-                        case "turn", "ramp", "merge":
-                            if (!modifierDirection.isEmpty) {
-                                direction += "-" + modifierDirection
-                            }
-                            break;
-                        case "roundabout":
-                            direction += "-" + "\(maneuver["exit"] as! Int)"
-                            break;
-                        case "rotary":
-                            let exit = maneuver["exit"] as! Int
-                            direction = "roundabout-\(exit)"
-                        default:
-                            break
-                        }
-                        ///TODO add direction instruction
-                        node.maneuver = 0
-                        if Array(MANEUVERS.keys).contains(direction) {
-                            node.maneuver = MANEUVERS[direction]!
-                        }
-                        var name = ""
-                        if step["name"] as? String? != nil {
-                            name = step["name"] as! String
-                        }
-
-                        if lastNode != nil && node.maneuver != 2 && lastName == name {
+                        let roadStep = RoadStep(json: step)
+                        node.instruction = roadStep.buildInstruction(instructions: instructionResource,options: [
+                            "legIndex":indexLeg , "legCount" : jsonLegs.count - 1
+                        ])
+                        if lastNode != nil && node.maneuver != 2 && lastName == roadStep.name {
                             lastNode?.duration += node.duration
                             lastNode?.distance += node.distance
                         } else {
                             road.steps.append(node)
                             lastNode = node
-                            lastName = name
+                            lastName = roadStep.name
                         }
 
 
@@ -267,7 +275,21 @@ class RoadManager: PRoadManager {
         return road
 
     }
-}
+    private func parse(jsonData: Data?) -> [String:Any] {
+        if jsonData == nil {
+            return [String:Any]()
+        }
+        do {
+            let decodedData = try JSONSerialization.jsonObject(with: jsonData!)
+            return decodedData as! [String:Any]
+        } catch {
+            print("decode error")
+        }
+        return [String:Any]()
+    }
+
+
+ }
 
 extension RoadManager {
     /**
