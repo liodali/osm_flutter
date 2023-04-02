@@ -283,10 +283,11 @@ mixin WebMixin {
       interestPoints?.toListGeoPointJs() ?? [],
       null,
     );
+    final instructions = await manager.buildInstructions(road);
     roadInfo = roadInfo.copyWith(
       duration: road.duration,
       distance: road.distance,
-      instructions: road.instructions
+      instructions: instructions
           .map((e) => Instruction(
                 instruction: e.instruction,
                 geoPoint: e.location.toGeoPoint(),
