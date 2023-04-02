@@ -1,5 +1,5 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.53.2-orange)   
+![pub](https://img.shields.io/badge/pub-v0.53.3-orange)   
 
 
 ## Platform Support
@@ -476,9 +476,6 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 | `roadBorderWidth`        | (double?) set border width of polyline, if width null or 0,polyline will drawed without border |
 | `zoomInto`               | (bool)  change zoom level to make the all the road visible (default:true)    |
 
-
-> **Warning** 
-> For now intructions in `RoadInfo` not working perfectly in iOS and web, we will fix those issues in upcoming version
 
 <b> 16.b) draw road manually </b>
 ```dart
