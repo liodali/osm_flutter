@@ -122,9 +122,8 @@ mixin WebMixin {
     await _addPosition(p, animate: true, showMarker: false);
   }
 
-  Future<void> mapOrientation(double? degree) {
-    // TODO: implement mapOrientation
-    throw UnimplementedError();
+  Future<void> mapOrientation(double? degree) async {
+    debugPrint("not implemented in web side");
   }
 
   Future<GeoPoint> myLocation() async {
@@ -283,10 +282,11 @@ mixin WebMixin {
       interestPoints?.toListGeoPointJs() ?? [],
       null,
     );
+    final instructions = await manager.buildInstructions(road);
     roadInfo = roadInfo.copyWith(
       duration: road.duration,
       distance: road.distance,
-      instructions: road.instructions
+      instructions: instructions
           .map((e) => Instruction(
                 instruction: e.instruction,
                 geoPoint: e.location.toGeoPoint(),
