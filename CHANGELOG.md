@@ -1,3 +1,5 @@
+### 0.53.3 : fix bug #385
+* improve js/dart code to manage show multiple maps in web side
 ### 0.53.3 : Improve instruction for roadInfo in web
 ### 0.53.2 : Improve instruction for roadInfo in iOS
 * re-impl build intruction retrieved fron orsm api in drawRoad
