@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
+import 'package:flutter_osm_web/src/controller/web_osm_controller.dart';
 
 class OsmWebWidget extends StatefulWidget {
   final IBaseMapController controller;
@@ -52,7 +53,7 @@ class OsmWebWidget extends StatefulWidget {
   OsmWebWidgetState createState() => OsmWebWidgetState();
 }
 
-class OsmWebWidgetState extends State<OsmWebWidget>  {
+class OsmWebWidgetState extends State<OsmWebWidget> {
   late WebOsmController controller;
 
   GlobalKey? get defaultMarkerKey => widget.globalKeys[0];
@@ -91,7 +92,7 @@ class OsmWebWidgetState extends State<OsmWebWidget>  {
   Widget build(BuildContext context) {
     return HtmlElementView(
       key: keyWidget,
-      viewType: FlutterOsmPluginWeb.getViewType(),
+      viewType: FlutterOsmPluginWeb.getViewType(mapId),
       onPlatformViewCreated: onPlatformViewCreated,
     );
   }
@@ -107,6 +108,4 @@ class OsmWebWidgetState extends State<OsmWebWidget>  {
     (widget.controller as BaseMapController).setBaseOSMController(controller);
     widget.controller.init();
   }
-
- 
 }

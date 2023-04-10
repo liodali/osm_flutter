@@ -122,9 +122,8 @@ mixin WebMixin {
     await _addPosition(p, animate: true, showMarker: false);
   }
 
-  Future<void> mapOrientation(double? degree) {
-    // TODO: implement mapOrientation
-    throw UnimplementedError();
+  Future<void> mapOrientation(double? degree) async {
+    debugPrint("not implemented in web side");
   }
 
   Future<GeoPoint> myLocation() async {

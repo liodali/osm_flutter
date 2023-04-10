@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/src/controller/web_osm_controller.dart';
 import 'package:flutter_osm_web/src/web_platform.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:stream_transform/stream_transform.dart';
+import 'package:flutter_osm_web/src/interop/osm_interop.dart' as interop;
 
 class FlutterOsmPluginWeb extends OsmWebPlatform {
   late BinaryMessenger? messenger;
@@ -18,7 +20,8 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
 
   final Map<int, MethodChannel> _channels = {};
 
-  static String getViewType() => viewType; // "${viewType}_$mapId";
+  static String getViewType(int mapId) =>
+      viewType + "_$mapId"; // "${viewType}_$mapId";
 
   Map<int, WebOsmController> mapsController = <int, WebOsmController>{};
 
@@ -81,7 +84,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
     }
     if (!_channels.containsKey(idOSM)) {
       _channels[idOSM] = MethodChannel(
-        '${getViewType()}_$idOSM',
+        '${getViewType(idOSM)}',
         const StandardMethodCodec(),
         messenger,
       );
@@ -97,13 +100,16 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
     //_streamController.close();
     mapsController.remove(idOSM);
     _channels.remove(idOSM);
+    if (mapsController.isNotEmpty) {
+      map = mapsController.values.last;
+      mapId = mapsController.keys.last;
+    }
   }
 
   /// Handles method calls over the MethodChannel of this plugin.
   /// Note: Check the "federated" architecture for a new way of doing this:
   /// https://flutter.dev/go/federated-plugins
   Future<dynamic> handleMethodCall(int idOSM) async {
-    print("handle $idOSM");
     _channels[idOSM]!.setMethodCallHandler((call) async {
       switch (call.method) {
         case "initMap":
@@ -148,9 +154,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   ) {
     if (!mapsController.containsKey(idChannel)) {
       map = controller;
-      map!.mapId = idChannel;
       mapsController.putIfAbsent(idChannel, () => map!);
-      //OsmWebPlatform.idOsmWeb++;
     }
   }
 }
