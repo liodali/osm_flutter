@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 class LocationAppExample extends StatefulWidget {
   @override
@@ -116,55 +117,59 @@ class _SearchPageState extends State<SearchPage> {
           children: [
             Row(
               children: [
-                TextButton(
-                  style: TextButton.styleFrom(),
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Icon(
-                    Icons.arrow_back_ios,
+                PointerInterceptor(
+                  child: TextButton(
+                    style: TextButton.styleFrom(),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Icon(
+                      Icons.arrow_back_ios,
+                    ),
                   ),
                 ),
                 Expanded(
-                  child: TextField(
-                    controller: textEditingController,
-                    onEditingComplete: () async {
-                      FocusScope.of(context).requestFocus(new FocusNode());
-                    },
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Colors.black,
-                      ),
-                      suffix: ValueListenableBuilder<TextEditingValue>(
-                        valueListenable: textEditingController,
-                        builder: (ctx, text, child) {
-                          if (text.text.isNotEmpty) {
-                            return child!;
-                          }
-                          return SizedBox.shrink();
-                        },
-                        child: InkWell(
-                          focusNode: FocusNode(),
-                          onTap: () {
-                            textEditingController.clear();
-                            controller.setSearchableText("");
-                            FocusScope.of(context)
-                                .requestFocus(new FocusNode());
+                  child: PointerInterceptor(
+                    child: TextField(
+                      controller: textEditingController,
+                      onEditingComplete: () async {
+                        FocusScope.of(context).requestFocus(new FocusNode());
+                      },
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Colors.black,
+                        ),
+                        suffix: ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: textEditingController,
+                          builder: (ctx, text, child) {
+                            if (text.text.isNotEmpty) {
+                              return child!;
+                            }
+                            return SizedBox.shrink();
                           },
-                          child: Icon(
-                            Icons.close,
-                            size: 16,
-                            color: Colors.black,
+                          child: InkWell(
+                            focusNode: FocusNode(),
+                            onTap: () {
+                              textEditingController.clear();
+                              controller.setSearchableText("");
+                              FocusScope.of(context)
+                                  .requestFocus(new FocusNode());
+                            },
+                            child: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
-                      ),
-                      focusColor: Colors.black,
-                      filled: true,
-                      hintText: "search",
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      fillColor: Colors.grey[300],
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red),
+                        focusColor: Colors.black,
+                        filled: true,
+                        hintText: "search",
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        fillColor: Colors.grey[300],
+                        errorBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
                       ),
                     ),
                   ),
@@ -181,12 +186,14 @@ class _SearchPageState extends State<SearchPage> {
       bottomWidgetPicker: Positioned(
         bottom: 12,
         right: 8,
-        child: FloatingActionButton(
-          onPressed: () async {
-            GeoPoint p = await controller.selectAdvancedPositionPicker();
-            Navigator.pop(context, p);
-          },
-          child: Icon(Icons.arrow_forward),
+        child: PointerInterceptor(
+          child: FloatingActionButton(
+            onPressed: () async {
+              GeoPoint p = await controller.selectAdvancedPositionPicker();
+              Navigator.pop(context, p);
+            },
+            child: Icon(Icons.arrow_forward),
+          ),
         ),
       ),
       pickerConfig: CustomPickerLocationConfig(
@@ -286,25 +293,27 @@ class _TopSearchWidgetState extends State<TopSearchWidget> {
             return ListView.builder(
               itemExtent: 50.0,
               itemBuilder: (ctx, index) {
-                return ListTile(
-                  title: Text(
-                    snap.data![index].address.toString(),
-                    maxLines: 1,
-                    overflow: TextOverflow.fade,
-                  ),
-                  onTap: () async {
-                    /// go to location selected by address
-                    controller.goToLocation(
-                      snap.data![index].point!,
-                    );
+                return PointerInterceptor(
+                  child: ListTile(
+                    title: Text(
+                      snap.data![index].address.toString(),
+                      maxLines: 1,
+                      overflow: TextOverflow.fade,
+                    ),
+                    onTap: () async {
+                      /// go to location selected by address
+                      controller.goToLocation(
+                        snap.data![index].point!,
+                      );
 
-                    /// hide suggestion card
-                    notifierAutoCompletion.value = false;
-                    await reInitStream();
-                    FocusScope.of(context).requestFocus(
-                      new FocusNode(),
-                    );
-                  },
+                      /// hide suggestion card
+                      notifierAutoCompletion.value = false;
+                      await reInitStream();
+                      FocusScope.of(context).requestFocus(
+                        new FocusNode(),
+                      );
+                    },
+                  ),
                 );
               },
               itemCount: snap.data!.length,

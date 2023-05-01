@@ -29,7 +29,7 @@ Widget getWidget({
   Function(bool)? onMapIsReady,
 }) =>
     OsmWebWidget(
-      controller: controller as MapController,
+      controller: controller,
       staticPoints: staticPoints,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
