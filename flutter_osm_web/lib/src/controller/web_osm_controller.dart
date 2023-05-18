@@ -13,7 +13,7 @@ import 'package:flutter_osm_web/src/osm_web.dart';
 
 int mapId = 0;
 
-class WebOsmController with WebMixin implements IBaseOSMController {
+final class WebOsmController with WebMixin implements IBaseOSMController {
   late MethodChannel? channel;
   AndroidLifecycleMixin? _androidOSMLifecycle;
 

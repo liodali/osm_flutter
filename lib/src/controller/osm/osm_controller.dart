@@ -8,7 +8,7 @@ import '../../widgets/mobile_osm_flutter.dart';
 
 MobileOSMController getOSMMap() => MobileOSMController();
 
-class MobileOSMController extends IBaseOSMController {
+final class MobileOSMController extends IBaseOSMController {
   late int _idMap;
   late MobileOsmFlutterState _osmFlutterState;
 

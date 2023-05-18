@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../types/types.dart';
+import 'package:flutter_osm_interface/src/types/types.dart';
 
 abstract class IBaseOSMController {
   Future<void> initPositionMap({
