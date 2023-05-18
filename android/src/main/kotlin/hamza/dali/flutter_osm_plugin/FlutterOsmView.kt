@@ -934,38 +934,7 @@ class FlutterOsmView(
         return iconDrawable
     }
 
-    private fun enableUserLocation() {
 
-        if (markerSelectionPicker != null) {
-            mainLinearLayout.removeView(markerSelectionPicker)
-            if (!map!!.overlays.contains(folderShape))
-                map!!.overlays.add(folderShape)
-            if (!map!!.overlays.contains(folderRoad))
-                map!!.overlays.add(folderRoad)
-            if (!map!!.overlays.contains(folderStaticPosition))
-                map!!.overlays.add(folderStaticPosition)
-            markerSelectionPicker = null
-        }
-
-
-        //locationNewOverlay!!.setPersonIcon()
-        setMarkerTracking()
-        if (!locationNewOverlay.isMyLocationEnabled) {
-            isEnabled = true
-            locationNewOverlay.enableMyLocation()
-        }
-        mapSnapShot().setEnableMyLocation(isEnabled)
-        locationNewOverlay.runOnFirstFix {
-            scope!!.launch(Main) {
-                val currentPosition = GeoPoint(locationNewOverlay.lastFix)
-                map!!.controller.animateTo(currentPosition)
-            }
-        }
-        if (!map!!.overlays.contains(locationNewOverlay)) {
-            map!!.overlays.add(locationNewOverlay)
-        }
-
-    }
 
     private fun setMarkerTracking() {
         locationNewOverlay.setMarkerIcon(customPersonMarkerIcon, customArrowMarkerIcon)
@@ -1085,9 +1054,41 @@ class FlutterOsmView(
         result.success(null)
     }
 
+    private fun enableUserLocation() {
 
+        if (markerSelectionPicker != null) {
+            mainLinearLayout.removeView(markerSelectionPicker)
+            if (!map!!.overlays.contains(folderShape))
+                map!!.overlays.add(folderShape)
+            if (!map!!.overlays.contains(folderRoad))
+                map!!.overlays.add(folderRoad)
+            if (!map!!.overlays.contains(folderStaticPosition))
+                map!!.overlays.add(folderStaticPosition)
+            markerSelectionPicker = null
+        }
+
+
+        //locationNewOverlay!!.setPersonIcon()
+        setMarkerTracking()
+        /*if (!locationNewOverlay.isMyLocationEnabled) {
+            isEnabled = true
+            locationNewOverlay.enableMyLocation()
+        }
+        mapSnapShot().setEnableMyLocation(isEnabled)*/
+        locationNewOverlay.runOnFirstFix {
+            scope!!.launch(Main) {
+                val currentPosition = GeoPoint(locationNewOverlay.lastFix)
+                map!!.controller.animateTo(currentPosition)
+            }
+
+        }
+        if (!map!!.overlays.contains(locationNewOverlay)) {
+            map!!.overlays.add(locationNewOverlay)
+        }
+
+    }
     private fun trackUserLocation(
-        enableStopFollow: Boolean,
+        enableStopFollow: Boolean = true,
         disableRotation: Boolean = false,
         result: MethodChannel.Result
     ) {
@@ -1097,9 +1098,9 @@ class FlutterOsmView(
                 map?.invalidate()
             }
             locationNewOverlay.disableRotateDirection = disableRotation
+            locationNewOverlay.enableAutoStop = enableStopFollow
             if (!locationNewOverlay.isMyLocationEnabled) {
                 isEnabled = true
-                locationNewOverlay.enableAutoStop = enableStopFollow
                 locationNewOverlay.enableMyLocation()
                 mapSnapShot().setEnableMyLocation(isEnabled)
             }
