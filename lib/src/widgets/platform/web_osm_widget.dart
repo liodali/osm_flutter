@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import '../../controller/map_controller.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 
 Widget getWidget({
@@ -27,6 +26,7 @@ Widget getWidget({
   double maxZoomLevel = 18,
   UserLocationMaker? userLocationMarker,
   Function(bool)? onMapIsReady,
+  bool enableRotationByGesture = false,
 }) =>
     OsmWebWidget(
       controller: controller,
