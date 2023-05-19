@@ -39,6 +39,6 @@ jobs:
           rm -rf flutter_osm_web
           rm -f check_pubspec_release.py
       - name: fomarting files
-        run : flutter format .
+        run : dart format .
       - name: Publish package
         run:  flutter pub publish -f
