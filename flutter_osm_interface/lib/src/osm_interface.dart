@@ -67,11 +67,6 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idMap,
   );
 
-  Future<GeoPoint> pickLocation(
-    int idOSM, {
-    GlobalKey? key,
-    String imageURL = "",
-  });
 
   Future<void> customMarker(
     int idOSM,

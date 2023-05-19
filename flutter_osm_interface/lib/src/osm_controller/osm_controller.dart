@@ -149,11 +149,7 @@ abstract class IBaseOSMController {
   /// disabled tracking user location
   Future<void> disabledTracking();
 
-  /// pick Position in map
-  Future<GeoPoint> selectPosition({
-    MarkerIcon? icon,
-    String imageURL = "",
-  });
+
 
   /// [drawRoad]
   /// this method will call ORSM api to get list of geopoint and

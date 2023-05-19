@@ -25,5 +25,6 @@ Widget getWidget({
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
   bool androidHotReloadSupport = false,
+  bool enableRotationByGesture = false,
 }) =>
     throw UnsupportedError("");

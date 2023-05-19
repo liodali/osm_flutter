@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-
-import '../../widgets/mobile_osm_flutter.dart';
+import 'package:flutter_osm_plugin/src/widgets/mobile_osm_flutter.dart';
 
 Widget getWidget({
   required BaseMapController controller,
@@ -27,6 +26,7 @@ Widget getWidget({
   UserLocationMaker? userLocationMarker,
   Function(bool)? onMapIsReady,
   bool androidHotReloadSupport = false,
+  bool enableRotationByGesture = false,
 }) =>
     MobileOsmFlutter(
       controller: controller,
@@ -52,4 +52,5 @@ Widget getWidget({
       maxZoomLevel: maxZoomLevel,
       stepZoom: stepZoom,
       androidHotReloadSupport: androidHotReloadSupport,
+      enableRotationByGesture: enableRotationByGesture,
     );

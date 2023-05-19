@@ -33,6 +33,7 @@ class MobileOsmFlutter extends StatefulWidget {
   final Function(bool)? onMapIsReady;
   final UserLocationMaker? userLocationMarker;
   final bool androidHotReloadSupport;
+  final bool enableRotationByGesture;
 
   MobileOsmFlutter({
     Key? key,
@@ -59,6 +60,7 @@ class MobileOsmFlutter extends StatefulWidget {
     this.onMapIsReady,
     this.userLocationMarker,
     this.androidHotReloadSupport = false,
+    this.enableRotationByGesture = false,
   }) : super(key: key);
 
   @override
@@ -206,6 +208,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       uuidMapCache: keyUUID,
       customTile: widget.controller.customTile,
       bounds: widget.controller.areaLimit?.toIOSList() ?? null,
+      enableRotationGesture: widget.enableRotationByGesture,
     );
   }
 
@@ -250,6 +253,7 @@ class PlatformView extends StatelessWidget {
   final String uuidMapCache;
   final CustomTile? customTile;
   final List<double>? bounds;
+  final bool enableRotationGesture;
   const PlatformView({
     this.mobileKey,
     this.androidKey,
@@ -257,6 +261,7 @@ class PlatformView extends StatelessWidget {
     required this.uuidMapCache,
     this.customTile,
     this.bounds,
+    this.enableRotationGesture = false,
   }) : super(key: mobileKey);
 
   @override
@@ -269,6 +274,7 @@ class PlatformView extends StatelessWidget {
         creationParams: getParams(
           customTile,
           bounds: bounds,
+          enableRotationGesture: enableRotationGesture,
         ),
         creationParamsCodec: StandardMethodCodec().messageCodec,
       );
@@ -277,7 +283,10 @@ class PlatformView extends StatelessWidget {
       key: androidKey,
       viewType: 'plugins.dali.hamza/osmview',
       onPlatformViewCreated: onPlatformCreatedView,
-      creationParams: getParams(customTile),
+      creationParams: getParams(
+        customTile,
+        enableRotationGesture: enableRotationGesture,
+      ),
       //creationParamsCodec: null,
       creationParamsCodec: StandardMethodCodec().messageCodec,
     );
@@ -286,6 +295,7 @@ class PlatformView extends StatelessWidget {
   Map getParams(
     CustomTile? customTile, {
     List<double>? bounds,
+    bool enableRotationGesture = false,
   }) {
     final Map<String, dynamic> params = {
       "uuid": uuidMapCache,
@@ -297,6 +307,8 @@ class PlatformView extends StatelessWidget {
     if (bounds != null) {
       params.putIfAbsent("bounds", () => bounds);
     }
+    params.putIfAbsent("enableRotationGesture", () => enableRotationGesture);
+
     return params;
   }
 }

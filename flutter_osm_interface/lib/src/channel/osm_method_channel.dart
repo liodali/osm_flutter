@@ -274,29 +274,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
     );
   }
 
-  /// select position and show marker on it
-  @override
-  Future<GeoPoint> pickLocation(
-    int idOSM, {
-    GlobalKey? key,
-    String imageURL = "",
-  }) async {
-    Map args = {};
-    if (key != null) {
-      args.addAll({"icon": await _capturePng(key)});
-    }
-    if (imageURL.isNotEmpty) {
-      args.addAll({"imageURL": imageURL});
-    }
-
-    try {
-      Map<String, dynamic>? map = (await (_channels[idOSM]
-          ?.invokeMapMethod("user#pickPosition", args)));
-      return GeoPoint(latitude: map!["lat"], longitude: map["lon"]);
-    } on PlatformException catch (e) {
-      throw GeoPointException(msg: e.message);
-    }
-  }
 
   @override
   Future<void> removeLastRoad(int idOSM) async {

@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
-import '../../widgets/mobile_osm_flutter.dart';
+import 'package:flutter_osm_plugin/src/widgets/mobile_osm_flutter.dart';
 
 MobileOSMController getOSMMap() => MobileOSMController();
 
@@ -498,29 +498,6 @@ final class MobileOSMController extends IBaseOSMController {
   /// disabled tracking user location
   Future<void> disabledTracking() async {
     await osmPlatform.disableTracking(_idMap);
-  }
-
-  /// pick Position in map
-  Future<GeoPoint> selectPosition({
-    MarkerIcon? icon,
-    String imageURL = "",
-  }) async {
-    if (icon != null) {
-      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
-      return await Future.delayed(Duration(milliseconds: 300), () async {
-        GeoPoint p = await osmPlatform.pickLocation(
-          _idMap,
-          key: _osmFlutterState.dynamicMarkerKey,
-        );
-        return p;
-      });
-    } else {
-      GeoPoint p = await osmPlatform.pickLocation(
-        _idMap,
-        imageURL: imageURL,
-      );
-      return p;
-    }
   }
 
   Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
