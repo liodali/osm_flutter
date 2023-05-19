@@ -120,7 +120,7 @@ private class ProxyLifecycleProvider constructor(
     activity: Activity
 ) : Application.ActivityLifecycleCallbacks, LifecycleOwner, ProviderLifecycle {
 
-    val lifecycle: LifecycleRegistry = LifecycleRegistry(this)
+    override val lifecycle: LifecycleRegistry = LifecycleRegistry(this)
     var registrarActivityHashCode: Int = activity.hashCode()
 
     init {
@@ -173,7 +173,5 @@ private class ProxyLifecycleProvider constructor(
 
 
     override fun getLifecyle(): Lifecycle = lifecycle
-
-    override fun getLifecycle(): Lifecycle = lifecycle
 
 }
