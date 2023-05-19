@@ -27,7 +27,7 @@ enum RoadType {
 /// [zoomInto]             : (bool) to zoomIn/Out that will make all the road visible in the map (default false)
 class RoadOption {
   final Color roadColor;
-  final int roadWidth;
+  final double roadWidth;
   final bool zoomInto;
   final Color? roadBorderColor;
   final double roadBorderWidth;
@@ -85,7 +85,7 @@ class MultiRoadOption extends RoadOption {
 
   const MultiRoadOption({
     required Color roadColor,
-    int roadWidth = 5,
+    double roadWidth = 5,
     this.roadType = RoadType.car,
     Color? roadBorderColor,
     double? roadBorderWidth,
