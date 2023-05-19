@@ -689,7 +689,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |
 | `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
 | `androidHotReloadSupport`     | (bool) enable to restart  osm map in android to support hotReload, default: false  |
-
+| `enableRotationByGesture`     | (bool) enable to rotation gesture for map, default: false  |
 
 ### Custom Controller
 > To create your own MapController to need to extends from `BaseMapController`,
