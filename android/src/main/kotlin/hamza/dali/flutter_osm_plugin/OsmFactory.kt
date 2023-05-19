@@ -25,8 +25,12 @@ open class OsmFactory(
     ): PlatformView {
         val keyUUID = (args as HashMap<*, *>)["uuid"] as String
         var customTile: CustomTile? = null
+        var enableRotationGesture = false
         if ((args).containsKey("customTile")) {
             customTile = CustomTile.fromMap(args["customTile"] as HashMap<String, Any>)
+        }
+        if ((args).containsKey("enableRotationGesture")) {
+            enableRotationGesture = args["enableRotationGesture"] as Boolean
         }
         osmFlutterView = FlutterOsmView(
             requireNotNull(context),
@@ -34,7 +38,8 @@ open class OsmFactory(
             viewId,
             provider,
             keyUUID,
-            customTile = customTile
+            customTile = customTile,
+            isEnabledRotationGesture = enableRotationGesture
         )
         return osmFlutterView
     }

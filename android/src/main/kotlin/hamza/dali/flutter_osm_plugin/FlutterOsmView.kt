@@ -65,6 +65,8 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.*
+import org.osmdroid.views.overlay.gestures.RotationGestureDetector.RotationListener
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import java.io.ByteArrayOutputStream
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -74,7 +76,7 @@ import kotlin.collections.set
 typealias VoidCallback = () -> Unit
 
 fun FlutterOsmView.configZoomMap(call: MethodCall, result: MethodChannel.Result) {
-    val args = call.arguments as HashMap<String, Any>
+    val args = call.arguments as HashMap<*, *>
     this.map?.minZoomLevel = (args["minZoomLevel"] as Double)
     this.map?.maxZoomLevel = (args["maxZoomLevel"] as Double)
     stepZoom = args["stepZoom"] as Double
@@ -99,7 +101,8 @@ class FlutterOsmView(
     private val id: Int,//viewId
     private val providerLifecycle: ProviderLifecycle,
     private val keyArgMapSnapShot: String,
-    private val customTile: CustomTile?
+    private val customTile: CustomTile?,
+    private val isEnabledRotationGesture:Boolean = false
 ) :
     OnSaveInstanceStateListener,
     PlatformView,
@@ -149,11 +152,14 @@ class FlutterOsmView(
     private var flutterRoad: FlutterRoad? = null
     private var job: Job? = null
     private var scope: CoroutineScope? = null
-    private var sendUserLocationToDart: Boolean = false
     private var skipCheckLocation: Boolean = false
     private var resultFlutter: MethodChannel.Result? = null
     private lateinit var methodChannel: MethodChannel
-
+    private val mRotationGestureOverlay: RotationGestureOverlay by lazy {
+         RotationGestureOverlay(map!!).apply {
+             this.isEnabled = isEnabledRotationGesture
+         }
+    }
     private lateinit var activity: Activity
 
     private val gpsServiceManager: LocationManager by lazy {
@@ -188,7 +194,7 @@ class FlutterOsmView(
         this.activity = activity
     }
 
-    fun mapSnapShot(): MapSnapShot {
+   private fun mapSnapShot(): MapSnapShot {
         if (keyMapSnapshot.isEmpty()) {
             return MapSnapShot()
         }
@@ -313,10 +319,12 @@ class FlutterOsmView(
         map!!.addMapListener(mapListener)
         map!!.overlayManager.add(0, staticOverlayListener)
         map!!.overlayManager.add(folderMarkers)
-
+        map!!.overlayManager.add(mRotationGestureOverlay)
         mainLinearLayout.addView(map)
         /// init LocationManager
         locationNewOverlay = CustomLocationManager(map!!)
+
+
 
     }
 
@@ -326,7 +334,7 @@ class FlutterOsmView(
             when (call.method) {
                 "change#tile" -> {
                     val args = call.arguments as HashMap<String, Any>?
-                    when (args != null && args.isNotEmpty()) {
+                    when (!args.isNullOrEmpty()) {
                         true -> {
                             val tile = CustomTile.fromMap(args)
                             if (!tile.urls.contains((map!!.tileProvider.tileSource as OnlineTileSourceBase).baseUrl)) {
@@ -443,9 +451,9 @@ class FlutterOsmView(
                     }
                 }
 
-                "user#pickPosition" -> {
+                /*"user#pickPosition" -> {
                     pickPosition(call, result)
-                }
+                }*/
                 "goto#position" -> {
                     goToSpecificPosition(call, result)
                 }
@@ -799,7 +807,7 @@ class FlutterOsmView(
         @Suppress("UNCHECKED_CAST")
         val args = methodCall.arguments!! as HashMap<String, Double>
         if (homeMarker != null) {
-            map!!.overlays.remove(homeMarker)
+            folderMarkers.remove(homeMarker)
         }
         //map!!.overlays.clear()
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
@@ -837,7 +845,7 @@ class FlutterOsmView(
                 folderMarkers.items.add(marker)
 
             }
-            imageURL != null && imageURL.isNotEmpty() -> {
+            !imageURL.isNullOrEmpty() -> {
                 Picasso.get()
                     .load(imageURL)
                     .fetch(object : Callback {
@@ -852,7 +860,8 @@ class FlutterOsmView(
 
                                         marker.icon =
                                             BitmapDrawable(context.resources, bitmapMarker)
-                                        map!!.overlays.add(marker)
+
+                                        folderMarkers.add(marker)
 
                                     }
 
@@ -864,7 +873,7 @@ class FlutterOsmView(
                                             context,
                                             R.drawable.ic_location_on_red_24dp
                                         )
-                                        map!!.overlays.add(marker)
+                                        folderMarkers.add(marker)
 
                                     }
 
@@ -1152,7 +1161,7 @@ class FlutterOsmView(
 
 
     private fun drawRect(call: MethodCall, result: MethodChannel.Result) {
-        val args = call.arguments!! as HashMap<String, *>
+        val args = call.arguments!! as HashMap<*, *>
         val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
         val key = args["key"] as String
         val colors = args["color"] as List<Double>
@@ -1787,7 +1796,7 @@ class FlutterOsmView(
         }
     }
 
-    private fun pickPosition(call: MethodCall, result: MethodChannel.Result) {
+   /* private fun pickPosition(call: MethodCall, result: MethodChannel.Result) {
         //val usingCamera=call.arguments as Boolean
 
         val args = call.arguments as Map<String, Any>
@@ -1835,7 +1844,7 @@ class FlutterOsmView(
                 map!!.overlays.add(0, mapEventsOverlay)
         }
 
-    }
+    }*/
 
     private fun removePosition(call: MethodCall, result: MethodChannel.Result) {
         val geoMap = call.arguments as HashMap<String, Double>
