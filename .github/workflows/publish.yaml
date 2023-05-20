@@ -50,7 +50,7 @@ jobs:
            const coreActions = require('@actions/core')
            let id_token = await coreActions.getIDToken('https://pub.dev')
            coreActions.setOutput('PUB_TOKEN', id_token)
-           echo "${PUB_TOKEN}"
+           echo $PUB_TOKEN
       - name: preparation release
         run: python check_pubspec_release.py
       - name: clear before release
