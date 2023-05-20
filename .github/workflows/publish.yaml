@@ -18,7 +18,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
       - name: Install Flutter SDK
-      - uses: britannio/action-install-flutter@v1
+        uses: britannio/action-install-flutter@v1
       - run: dart --version
       - run: flutter --version
       - name: Setup credentials
