@@ -14,21 +14,24 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install requests
-      - name: setup flutter
+      - name: setup dart
         uses: dart-lang/setup-dart@v1
+      - name: Install Flutter SDK
+        uses: k-paxian/dart-package-publisher@master #mobiledevops/flutter-sdk-action@v1.0.0
       - run: dart --version
-      - name: Setup credentials
-        run: |
-          mkdir -p ~/.pub-cache
-          cat <<EOF > ~/.pub-cache/credentials.json
-          {
-            "accessToken":"${{ secrets.OAUTH_ACCESS_TOKEN }}",
-            "refreshToken":"${{ secrets.OAUTH_REFRESH_TOKEN }}",
-            "tokenEndpoint":"https://accounts.google.com/o/oauth2/token",
-            "scopes":["https://www.googleapis.com/auth/userinfo.email","openid"],
-            "expiration": 1583530852703
-          }
-          EOF
+      - run: flutter --version
+      #- name: Setup credentials
+      #  run: |
+      #    mkdir -p ~/.pub-cache
+      #    cat <<EOF > ~/.pub-cache/credentials.json
+      #    {
+      #      "accessToken":"${{ secrets.OAUTH_ACCESS_TOKEN }}",
+      #      "refreshToken":"${{ secrets.OAUTH_REFRESH_TOKEN }}",
+      #      "tokenEndpoint":"https://accounts.google.com/o/oauth2/token",
+      #      "scopes":["https://www.googleapis.com/auth/userinfo.email","openid"],
+      #      "expiration": 1583530852703
+      #    }
+      #    EOF
       - name: preparation release
         run: python check_pubspec_release.py
       - name: clear before release
@@ -41,4 +44,4 @@ jobs:
       - name: fomarting files
         run : dart format .
       - name: Publish package
-        run:  dart pub publish -f
+        run:  flutter pub publish -f
