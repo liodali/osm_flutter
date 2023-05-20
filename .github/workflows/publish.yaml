@@ -5,6 +5,10 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -33,6 +37,17 @@ jobs:
             "expiration": ${{ secrets.EXP }}
           }
           EOF
+      - name: Install OIDC Client from Core Package
+        run: npm install @actions/core@1.6.0 @actions/http-client
+      - name: Get Id Token
+        uses: actions/github-script@v6
+        id: idtoken
+        with:
+         script: |
+           const coreActions = require('@actions/core')
+           let id_token = await coreActions.getIDToken('https://pub.dev')
+           coreActions.setOutput('PUB_TOKEN', id_token)
+           echo "${PUB_TOKEN}"
       - name: preparation release
         run: python check_pubspec_release.py
       - name: clear before release
