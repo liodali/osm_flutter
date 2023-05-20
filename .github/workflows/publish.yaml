@@ -38,19 +38,29 @@ jobs:
             "expiration": ${{ secrets.EXP }}
           }
           EOF
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
-      - name: Install OIDC Client from Core Package
-        run: npm install @actions/core@1.6.0 @actions/http-client
-      - name: Get Id Token
-        uses: actions/github-script@v6
-        id: idtoken
+      - uses: actions/github-script@v6
+        id: script
+        timeout-minutes: 10
         with:
-         script: |
-           const coreActions = require('@actions/core')
-           let id_token = await coreActions.getIDToken('https://pub.dev')
-           coreActions.setOutput('PUB_TOKEN', id_token)
-           echo $PUB_TOKEN
+          debug: true
+          script: |
+            const token = process.env['ACTIONS_RUNTIME_TOKEN']
+            const runtimeUrl = process.env['ACTIONS_ID_TOKEN_REQUEST_URL']
+            core.setOutput('TOKEN', token.trim())
+            core.setOutput('IDTOKENURL', runtimeUrl.trim())
+      - name: Get Id Token
+        run: |
+          IDTOKEN=$(curl -H "Authorization: bearer  ${{steps.script.outputs.TOKEN}}" ${{steps.script.outputs.IDTOKENURL}}  -H "Accept: application/json; api-version=2.0" -H "Content-Type: application/json" -d "{}" | jq -r '.value')
+          echo $IDTOKEN
+          jwtd() {
+              if [[ -x $(command -v jq) ]]; then
+                  jq -R 'split(".") | .[0],.[1] | @base64d | fromjson' <<< "${1}"
+                  echo "Signature: $(echo "${1}" | awk -F'.' '{print $3}')"
+              fi
+          }
+          jwtd $IDTOKEN
+          echo "PUB_TOKEN=${IDTOKEN}"
+        id: tokenid
       - name: preparation release
         run: python check_pubspec_release.py
       - name: clear before release
