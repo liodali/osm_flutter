@@ -15,8 +15,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
       - name: setup flutter
-        uses: britannio/action-install-flutter@v1
-      - run: flutter --version
+        uses: dart-lang/setup-dart@v1
+      - run: dart --version
       - name: Setup credentials
         run: |
           mkdir -p ~/.pub-cache
@@ -41,4 +41,4 @@ jobs:
       - name: fomarting files
         run : dart format .
       - name: Publish package
-        run:  flutter pub publish -f
+        run:  dart pub publish -f

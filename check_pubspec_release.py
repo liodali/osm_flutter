@@ -23,13 +23,13 @@ def check_version_exist(url_package,version):
 
 
 def publish_osm_interface():
-    stream = os.popen("cd flutter_osm_interface && flutter pub publish -f && cd ..")
+    stream = os.popen("cd flutter_osm_interface && dart pub publish -f && cd ..")
     lines = stream.readlines()
     for line in lines:
         print(line)
 
 def publish_osm_web():
-    stream = os.popen("cd flutter_osm_web && flutter pub publish -f && cd ..")
+    stream = os.popen("cd flutter_osm_web && dart pub publish -f && cd ..")
     lines = stream.readlines()
     for line in lines:
         print(line)
