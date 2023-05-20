@@ -355,6 +355,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               controller: controller,
               trackMyPosition: false,
               androidHotReloadSupport: true,
+              enableRotationByGesture: true,
               mapIsLoading: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -620,7 +621,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               if (!trackingNotifier.value) {
                 await controller.currentLocation();
                 await controller.enableTracking(
-                  enableStopFollow: false,
+                  enableStopFollow: true,
                   disableUserMarkerRotation: true,
                 );
                 //await controller.zoom(5.0);

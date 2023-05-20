@@ -7,12 +7,12 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'interface_osm/base_osm_platform.dart';
 import 'widgets/copyright_osm_widget.dart';
 
-// typedef OnGeoPointClicked = void Function(GeoPoint);
-// typedef OnLocationChanged = void Function(GeoPoint);
-
-/// Principal widget to show OSMMap using osm api
+/// [OSMFlutter]
+///
+/// Principal widget to show OSMMap using osm api (native sdks)
 /// you can track you current location,show static points like position of your stores
-/// show road between 2 points
+/// show road(s)
+///
 /// [isPicker] : (bool) if is true, map will behave as picker and will start advanced picker
 ///
 /// [trackMyPosition] : (bool) if is true, map will track your location
@@ -62,6 +62,7 @@ class OSMFlutter extends StatefulWidget {
   final double initZoom;
   final double minZoomLevel;
   final double maxZoomLevel;
+  final bool enableRotationByGesture;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
@@ -88,6 +89,7 @@ class OSMFlutter extends StatefulWidget {
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
     this.androidHotReloadSupport = false,
+    this.enableRotationByGesture = false,
   })  : assert(maxZoomLevel <= 19),
         assert(minZoomLevel >= 2),
         assert(initZoom >= 2 && initZoom <= 19),
@@ -189,42 +191,44 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         Container(
                           color: Colors.white,
                           child: buildWidget(
-                              controller: widget.controller,
-                              onGeoPointClicked: widget.onGeoPointClicked,
-                              onLocationChanged: widget.onLocationChanged,
-                              dynamicMarkerWidgetNotifier:
-                                  dynamicMarkerWidgetNotifier,
-                              mapIsLoading: widget.mapIsLoading,
-                              trackMyPosition: widget.trackMyPosition,
-                              mapIsReadyListener: mapIsReadyListener,
-                              staticIconGlobalKeys: staticMarkersKeys,
-                              roadConfiguration: widget.roadConfiguration,
-                              showContributorBadgeForOSM:
-                                  widget.showContributorBadgeForOSM,
-                              isPicker: widget.isPicker,
-                              markerOption: widget.markerOption,
-                              showDefaultInfoWindow:
-                                  widget.showDefaultInfoWindow,
-                              showZoomController: widget.showZoomController,
-                              staticPoints: widget.staticPoints,
-                              globalKeys: [
-                                defaultMarkerKey,
-                                advancedPickerMarker,
-                                startIconKey,
-                                endIconKey,
-                                middleIconKey,
-                                dynamicMarkerKey,
-                                personIconMarkerKey,
-                                arrowDirectionMarkerKey,
-                              ],
-                              stepZoom: widget.stepZoom,
-                              initZoom: widget.initZoom,
-                              minZoomLevel: widget.minZoomLevel,
-                              maxZoomLevel: widget.maxZoomLevel,
-                              userLocationMarker: widget.userLocationMarker,
-                              onMapIsReady: widget.onMapIsReady,
-                              androidHotReloadSupport:
-                                  widget.androidHotReloadSupport),
+                            controller: widget.controller,
+                            onGeoPointClicked: widget.onGeoPointClicked,
+                            onLocationChanged: widget.onLocationChanged,
+                            dynamicMarkerWidgetNotifier:
+                                dynamicMarkerWidgetNotifier,
+                            mapIsLoading: widget.mapIsLoading,
+                            trackMyPosition: widget.trackMyPosition,
+                            mapIsReadyListener: mapIsReadyListener,
+                            staticIconGlobalKeys: staticMarkersKeys,
+                            roadConfiguration: widget.roadConfiguration,
+                            showContributorBadgeForOSM:
+                                widget.showContributorBadgeForOSM,
+                            isPicker: widget.isPicker,
+                            markerOption: widget.markerOption,
+                            showDefaultInfoWindow: widget.showDefaultInfoWindow,
+                            showZoomController: widget.showZoomController,
+                            staticPoints: widget.staticPoints,
+                            globalKeys: [
+                              defaultMarkerKey,
+                              advancedPickerMarker,
+                              startIconKey,
+                              endIconKey,
+                              middleIconKey,
+                              dynamicMarkerKey,
+                              personIconMarkerKey,
+                              arrowDirectionMarkerKey,
+                            ],
+                            stepZoom: widget.stepZoom,
+                            initZoom: widget.initZoom,
+                            minZoomLevel: widget.minZoomLevel,
+                            maxZoomLevel: widget.maxZoomLevel,
+                            userLocationMarker: widget.userLocationMarker,
+                            onMapIsReady: widget.onMapIsReady,
+                            androidHotReloadSupport:
+                                widget.androidHotReloadSupport,
+                            enableRotationByGesture:
+                                widget.enableRotationByGesture,
+                          ),
                         ),
                         Positioned.fill(
                           child: ValueListenableBuilder<bool>(
@@ -277,6 +281,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                       maxZoomLevel: widget.maxZoomLevel,
                       userLocationMarker: widget.userLocationMarker,
                       onMapIsReady: widget.onMapIsReady,
+                      enableRotationByGesture: widget.enableRotationByGesture,
                     ),
             ),
             if (widget.showContributorBadgeForOSM && !kIsWeb) ...[

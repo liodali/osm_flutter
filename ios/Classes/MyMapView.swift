@@ -56,6 +56,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var enableStopFollowInDrag: Bool = false
     var disableRotation: Bool = false
     var canSkipFollow: Bool = false
+    var enableRotationGesture: Bool = false
     let urlStyle = "https://github.com/liodali/osm_flutter/raw/dc7424dacd77f4eced626abf64486d70fd03240d/assets/dynamic-styles.zip"
 
     init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?) {
@@ -66,12 +67,20 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         mapView = TGMapView()
         mapView.frame = frame
         mainView = UIStackView(arrangedSubviews: [mapView])
-        if let tiles = args {
-            customTiles = (tiles as! [String: Any])["customTile"] as? [String: Any]
+        if (args as? [String: Any]) != nil {
+            if ((args as! [String: Any]).keys.contains("customTile")) {
+                customTiles = (args as! [String: Any])["customTile"] as? [String: Any]
+
+            }
+            if ((args as! [String: Any]).keys.contains("bounds")) {
+                bounds = (args as! [String: Any])["bounds"] as? [Double]
+            }
+
+            if ((args as! [String: Any]).keys.contains("enableRotationGesture")) {
+                enableRotationGesture = (args as! [String: Any])["enableRotationGesture"] as! Bool
+            }
         }
-        if let arg = args {
-            bounds = (arg as! [String: Any])["bounds"] as? [Double]
-        }
+
         //mapview.mapType = MKMapType.standard
         //mapview.isZoomEnabled = true
         //mapview.isScrollEnabled = true
@@ -560,6 +569,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func deactivateTrackMe() {
         canTrackUserLocation = false
+        canSkipFollow = false
         locationManager.stopUpdatingLocation()
         locationManager.stopUpdatingHeading()
         if userLocation != nil && userLocation!.marker != nil {
@@ -671,8 +681,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     homeMarker = nil
                 }
                 let geoMarker = GeoPointMap(icon: markerIcon!, coordinate: coordinate)
-                geoMarker.setupMarker(on: mapView)
-                homeMarker = geoMarker.marker
+                homeMarker = geoMarker.setupMarker(on: mapView)
                 cancelAdvancedPickerMarker()
                 isAdvancedPicker = false
             }
@@ -896,7 +905,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 if (canGetLastUserLocation) {
                     canGetLastUserLocation = false
                 }
-                if !canSkipFollow && !enableStopFollowInDrag {
+                if !canSkipFollow {
                     mapView.flyToUserLocation(for: location) { [self] end in
                         if enableStopFollowInDrag {
                             canSkipFollow = true
@@ -963,6 +972,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             pickedLocationSingleTap = nil
 
         }
+    }
+
+    public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!, shouldRecognizeRotationGesture location: CGPoint) -> Bool {
+        enableRotationGesture
     }
 
     /*public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!, shouldRecognizePanGesture displacement: CGPoint) -> Bool {

@@ -1,10 +1,10 @@
 name: flutter_osm_web
 description: flutter web interface for flutter osm contain web channel and web api
-version: 0.2.7
+version: 0.3.0
 homepage:
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
   flutter: ">=1.20.0"
 
 dependencies:

@@ -1,21 +1,30 @@
 name: osm_flutter
-on: [ push, pull_request ]
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
 
 jobs:
-  build:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+  publish:
     runs-on: ubuntu-latest
     container:
       image:  python:3
       #image:  google/dart:latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests
-      - name: setup flutter
+      - uses: dart-lang/setup-dart@v1
+      - name: Install Flutter SDK
         uses: britannio/action-install-flutter@v1
+      - run: dart --version
       - run: flutter --version
       - name: Setup credentials
         run: |
@@ -26,7 +35,7 @@ jobs:
             "refreshToken":"${{ secrets.OAUTH_REFRESH_TOKEN }}",
             "tokenEndpoint":"https://accounts.google.com/o/oauth2/token",
             "scopes":["https://www.googleapis.com/auth/userinfo.email","openid"],
-            "expiration": 1583530852703
+            "expiration": ${{ secrets.EXP }}
           }
           EOF
       - name: preparation release
@@ -39,6 +48,6 @@ jobs:
           rm -rf flutter_osm_web
           rm -f check_pubspec_release.py
       - name: fomarting files
-        run : flutter format .
+        run : dart format .
       - name: Publish package
         run:  flutter pub publish -f

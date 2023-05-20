@@ -2,7 +2,7 @@ group 'hamza.dali.flutter_osm_plugin'
 version '1.0'
 
 buildscript {
-    ext.kotlin_version = '1.7.20'
+    ext.kotlin_version = '1.8.0'
     repositories {
         google()
         mavenCentral()
@@ -28,7 +28,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 32
+    compileSdk 33
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -36,6 +36,7 @@ android {
 
     defaultConfig {
         minSdkVersion 19
+        multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     lintOptions {
@@ -44,6 +45,17 @@ android {
     buildFeatures {
         viewBinding  true
     }
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+        // Sets Java compatibility to Java 8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 dependencies {
 
@@ -51,7 +63,7 @@ dependencies {
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.6.0-rc01'
+    implementation 'androidx.appcompat:appcompat:1.7.0-alpha02'
     //implementation 'androidx.core:core-ktx:1.9.0'
     //implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     // Retrofit and relevant converters
@@ -72,6 +84,8 @@ dependencies {
 
     implementation 'org.osmdroid:osmdroid-android:6.1.13'
     implementation 'com.github.MKergall:osmbonuspack:6.9.0'
-    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'com.google.android.material:material:1.9.0'
+
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
 }
 

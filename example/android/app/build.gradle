@@ -49,6 +49,7 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+    namespace 'hamza.dali.flutter_osm_plugin_example'
 }
 
 flutter {
@@ -56,9 +57,9 @@ flutter {
 }
 
 dependencies {
-    testImplementation 'junit:junit:4.13.1'
-    androidTestImplementation 'androidx.test:runner:1.3.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     def multidex_version = "2.0.1"
     implementation "androidx.multidex:multidex:$multidex_version"
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../types/types.dart';
+import 'package:flutter_osm_interface/src/types/types.dart';
 
 abstract class IBaseOSMController {
   Future<void> initPositionMap({
@@ -149,11 +149,7 @@ abstract class IBaseOSMController {
   /// disabled tracking user location
   Future<void> disabledTracking();
 
-  /// pick Position in map
-  Future<GeoPoint> selectPosition({
-    MarkerIcon? icon,
-    String imageURL = "",
-  });
+
 
   /// [drawRoad]
   /// this method will call ORSM api to get list of geopoint and

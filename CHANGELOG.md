@@ -1,3 +1,7 @@
+### 0.54.0 : improvement and fux bugs
+* migrate to v3.10
+* fix bugs #407 #409
+* add support rotation by gesture for android/ios (add `enableRotationByGesture` attribute)
 ### 0.53.4+1 : fix bug
 * fix web_widget platform by removing the cast
 ### 0.53.4 : fix bug #385

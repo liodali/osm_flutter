@@ -1,5 +1,5 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.53.4%2B1-orange)   
+![pub](https://img.shields.io/badge/pub-v0.54.0-orange)   
 
 
 ## Platform Support
@@ -44,7 +44,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.53.4+1
+      flutter_osm_plugin: ^0.54.0
 
 
 
@@ -689,7 +689,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |
 | `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
 | `androidHotReloadSupport`     | (bool) enable to restart  osm map in android to support hotReload, default: false  |
-
+| `enableRotationByGesture`     | (bool) enable to rotation gesture for map, default: false  |
 
 ### Custom Controller
 > To create your own MapController to need to extends from `BaseMapController`,
