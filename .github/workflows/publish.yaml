@@ -38,6 +38,8 @@ jobs:
             "expiration": ${{ secrets.EXP }}
           }
           EOF
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
       - name: Get Id Token
