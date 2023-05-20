@@ -38,29 +38,6 @@ jobs:
             "expiration": ${{ secrets.EXP }}
           }
           EOF
-      - uses: actions/github-script@v6
-        id: script
-        timeout-minutes: 10
-        with:
-          debug: true
-          script: |
-            const token = process.env['ACTIONS_RUNTIME_TOKEN']
-            const runtimeUrl = process.env['ACTIONS_ID_TOKEN_REQUEST_URL']
-            core.setOutput('TOKEN', token.trim())
-            core.setOutput('IDTOKENURL', runtimeUrl.trim())
-      - name: Get Id Token
-        run: |
-          IDTOKEN=$(curl -H "Authorization: bearer  ${{steps.script.outputs.TOKEN}}" ${{steps.script.outputs.IDTOKENURL}}  -H "Accept: application/json; api-version=2.0" -H "Content-Type: application/json" -d "https://pub.dev" | jq -r '.value')
-          echo $IDTOKEN
-          jwtd() {
-              if [[ -x $(command -v jq) ]]; then
-                  jq -R 'split(".") | .[0],.[1] | @base64d | fromjson' <<< "${1}"
-                  echo "Signature: $(echo "${1}" | awk -F'.' '{print $3}')"
-              fi
-          }
-          jwtd $IDTOKEN
-          echo "PUB_TOKEN=${IDTOKEN}"
-        id: tokenid
       - name: preparation release
         run: python check_pubspec_release.py
       - name: clear before release
