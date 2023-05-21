@@ -596,7 +596,7 @@ class FlutterOsmView(
             scope?.launch {
                 mapSnapShot().overlaySnapShotMarker(
                     point = newLocation,
-                    icon = args["icon"] as ByteArray
+                    icon = args["new_icon"] as ByteArray
                 )
             }
             marker?.icon = getDefaultIconDrawable(null, icon = bitmap)
