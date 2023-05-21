@@ -95,6 +95,13 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
             onChangedLocation(geoPMap)
         }
     }
+    fun onChangedLocation(onChangedLocation: (gp: GeoPoint) -> Unit) {
+        runOnFirstFix {
+            val location = this.lastFix
+            val geoPMap = GeoPoint(location)
+            onChangedLocation(geoPMap)
+        }
+    }
 
     override fun draw(canvas: Canvas, pProjection: Projection) {
         mDrawAccuracyEnabled = false
