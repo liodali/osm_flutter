@@ -1106,6 +1106,9 @@ class FlutterOsmView(
                 folderMarkers.items.remove(homeMarker)
                 map?.invalidate()
             }
+            if(locationNewOverlay.isMyLocationEnabled){
+                locationNewOverlay.disableMyLocation()
+            }
             locationNewOverlay.disableRotateDirection = disableRotation
             locationNewOverlay.enableAutoStop = enableStopFollow
             if (!locationNewOverlay.isMyLocationEnabled) {
