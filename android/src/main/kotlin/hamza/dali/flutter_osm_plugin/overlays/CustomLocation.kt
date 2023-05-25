@@ -87,6 +87,14 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         super.onLocationChanged(location, source)
     }
 
+    fun toggleFollow(enableStop: Boolean) {
+        enableAutoStop = enableStop
+        when (enableStop) {
+            true -> disableFollowLocation()
+            else -> {}
+        }
+    }
+
     fun followLocation(onChangedLocation: (gp: GeoPoint) -> Unit) {
         this.enableFollowLocation()
         runOnFirstFix {
@@ -95,6 +103,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
             onChangedLocation(geoPMap)
         }
     }
+
     fun onChangedLocation(onChangedLocation: (gp: GeoPoint) -> Unit) {
         runOnFirstFix {
             val location = this.lastFix
@@ -111,6 +120,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
                     drawOnlyPerson(canvas, pProjection, lastFix)
                 }
             }
+
             else -> super.draw(canvas, pProjection)
         }
 
@@ -129,6 +139,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
 //                    mScale * (personIcon.width / 3f) + 0.5f,
 //                )
             }
+
             personIcon != null -> {
                 setPersonIcon(personIcon)
             }
