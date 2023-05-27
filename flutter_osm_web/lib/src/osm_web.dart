@@ -16,7 +16,6 @@ class OsmWebWidget extends StatefulWidget {
   final RoadOption? roadConfiguration;
   final bool showDefaultInfoWindow;
   final bool isPicker;
-  final bool trackMyPosition;
   final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
   final double stepZoom;
   final double initZoom;
@@ -34,7 +33,6 @@ class OsmWebWidget extends StatefulWidget {
     this.mapIsLoading,
     required this.globalKeys,
     this.staticIconGlobalKeys = const {},
-    this.trackMyPosition = false,
     this.markerOption,
     this.roadConfiguration,
     this.showDefaultInfoWindow = false,

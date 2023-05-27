@@ -33,18 +33,23 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   @override
   void initState() {
     super.initState();
-    controller = MapController.withPosition(
-      initPosition: GeoPoint(
-        latitude: 47.4358055,
-        longitude: 8.4737324,
-      ),
-      // areaLimit: BoundingBox(
-      //   east: 10.4922941,
-      //   north: 47.8084648,
-      //   south: 45.817995,
-      //   west: 5.9559113,
-      // ),
-    );
+    controller = MapController.withUserPosition(
+        trackUserLocation: UserTrackingOption(
+      enableTracking: true,
+      unFollowUser: true,
+    )
+        // controller = MapController.withPosition(
+        //   initPosition: GeoPoint(
+        //     latitude: 47.4358055,
+        //     longitude: 8.4737324,
+        //   ),
+        // areaLimit: BoundingBox(
+        //   east: 10.4922941,
+        //   north: 47.8084648,
+        //   south: 45.817995,
+        //   west: 5.9559113,
+        // ),
+        );
     //  controller = MapController.cyclOSMLayer(
     //   initMapWithUserPosition: false,
     //   initPosition: GeoPoint(
@@ -353,7 +358,6 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           children: [
             OSMFlutter(
               controller: controller,
-              trackMyPosition: false,
               androidHotReloadSupport: true,
               enableRotationByGesture: true,
               mapIsLoading: Center(

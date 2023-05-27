@@ -73,7 +73,7 @@ class SimpleOSMState extends State<SimpleOSM>
   void initState() {
     super.initState();
     controller = MapController(
-      initMapWithUserPosition: true,
+      initMapWithUserPosition: UserTrackingOption(),
     );
   }
 
@@ -92,7 +92,6 @@ class SimpleOSMState extends State<SimpleOSM>
           ),
         ),
       ),
-      trackMyPosition: false,
     );
   }
 

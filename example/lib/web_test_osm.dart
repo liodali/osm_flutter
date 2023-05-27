@@ -23,7 +23,6 @@ class WebTestOsm extends StatefulWidget {
 
 class _WebTestOsmState extends State<WebTestOsm> with OSMMixinObserver {
   late final MapController controller = MapController(
-    initMapWithUserPosition: false,
     // initPosition: GeoPoint(
     //   latitude: 44.01753206961715,
     //   longitude: 42.868008613586426,
