@@ -41,11 +41,11 @@ Future<GeoPoint?> showSimplePickerLocation({
   double minZoomLevel = 2,
   double maxZoomLevel = 18,
   bool isDismissible = false,
-  bool initCurrentUserPosition = true,
+  UserTrackingOption? initCurrentUserPosition,
 }) async {
   assert(title == null || titleWidget == null);
-  assert((initCurrentUserPosition && initPosition == null) ||
-      !initCurrentUserPosition && initPosition != null);
+  assert(((initCurrentUserPosition != null) && initPosition == null) ||
+      ((initCurrentUserPosition == null) && initPosition != null));
   final MapController controller = MapController(
     initMapWithUserPosition: initCurrentUserPosition,
     initPosition: initPosition,

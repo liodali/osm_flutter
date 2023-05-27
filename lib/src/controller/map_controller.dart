@@ -12,11 +12,11 @@ import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 class MapController extends BaseMapController {
   MapController({
-    bool initMapWithUserPosition = true,
+    UserTrackingOption? initMapWithUserPosition,
     GeoPoint? initPosition,
     BoundingBox? areaLimit = const BoundingBox.world(),
   })  : assert(
-          initMapWithUserPosition ^ (initPosition != null),
+          (initMapWithUserPosition != null) ^ (initPosition != null),
         ),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
@@ -29,7 +29,7 @@ class MapController extends BaseMapController {
     required GeoPoint initPosition,
     BoundingBox? areaLimit = const BoundingBox.world(),
   }) : super(
-          initMapWithUserPosition: false,
+          initMapWithUserPosition: null,
           initPosition: initPosition,
           areaLimit: areaLimit,
           customTile: null,
@@ -37,20 +37,24 @@ class MapController extends BaseMapController {
 
   MapController.withUserPosition({
     BoundingBox? areaLimit = const BoundingBox.world(),
+    UserTrackingOption trackUserLocation = const UserTrackingOption(
+      enableTracking: false,
+      unFollowUser: false,
+    ),
   }) : super(
-          initMapWithUserPosition: true,
+          initMapWithUserPosition: trackUserLocation,
           initPosition: null,
           areaLimit: areaLimit,
           customTile: null,
         );
 
   MapController.customLayer({
-    bool initMapWithUserPosition = true,
+    UserTrackingOption? initMapWithUserPosition,
     GeoPoint? initPosition,
     BoundingBox? areaLimit = const BoundingBox.world(),
     required CustomTile customTile,
   })  : assert(
-          initMapWithUserPosition || initPosition != null,
+          (initMapWithUserPosition != null) || initPosition != null,
         ),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
@@ -60,11 +64,11 @@ class MapController extends BaseMapController {
         );
 
   MapController.cyclOSMLayer({
-    bool initMapWithUserPosition = true,
+    UserTrackingOption? initMapWithUserPosition,
     GeoPoint? initPosition,
     BoundingBox? areaLimit = const BoundingBox.world(),
   })  : assert(
-          initMapWithUserPosition || initPosition != null,
+          (initMapWithUserPosition != null) || initPosition != null,
         ),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
@@ -87,11 +91,11 @@ class MapController extends BaseMapController {
           ),
         );
   MapController.publicTransportationLayer({
-    bool initMapWithUserPosition = true,
+    UserTrackingOption? initMapWithUserPosition,
     GeoPoint? initPosition,
     BoundingBox? areaLimit = const BoundingBox.world(),
   })  : assert(
-          initMapWithUserPosition || initPosition != null,
+          (initMapWithUserPosition != null) || initPosition != null,
         ),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
@@ -308,7 +312,6 @@ class MapController extends BaseMapController {
   Future<void> disabledTracking() async {
     await osmBaseController.disabledTracking();
   }
-
 
   ///  draw road
   ///

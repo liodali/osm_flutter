@@ -3,7 +3,6 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 Widget getWidget({
   required BaseMapController controller,
-  required bool trackMyPosition,
   OnGeoPointClicked? onGeoPointClicked,
   OnLocationChanged? onLocationChanged,
   required ValueNotifier<bool> mapIsReadyListener,

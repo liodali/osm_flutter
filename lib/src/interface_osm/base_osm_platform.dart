@@ -7,7 +7,6 @@ import '../widgets/stub.dart'
 
 Widget buildWidget({
   required BaseMapController controller,
-  required bool trackMyPosition,
   OnGeoPointClicked? onGeoPointClicked,
   OnLocationChanged? onLocationChanged,
   required ValueNotifier<bool> mapIsReadyListener,
@@ -33,7 +32,6 @@ Widget buildWidget({
 }) =>
     getWidget(
       controller: controller,
-      trackMyPosition: trackMyPosition,
       mapIsReadyListener: mapIsReadyListener,
       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
       globalKeys: globalKeys,
