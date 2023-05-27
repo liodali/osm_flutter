@@ -5,7 +5,8 @@ import 'package:flutter_osm_interface/src/types/types.dart';
 abstract class IBaseOSMController {
   Future<void> initPositionMap({
     GeoPoint? initPosition,
-    bool initWithUserPosition = false,
+    //bool initWithUserPosition = false,
+    UserTrackingOption? userPositionOption,
   });
 
   /// [changeTileLayer]
@@ -148,8 +149,6 @@ abstract class IBaseOSMController {
 
   /// disabled tracking user location
   Future<void> disabledTracking();
-
-
 
   /// [drawRoad]
   /// this method will call ORSM api to get list of geopoint and

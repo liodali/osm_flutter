@@ -11,7 +11,7 @@ import 'package:flutter_osm_interface/src/map_controller/base_map_controller.dar
 ///
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 abstract class IBaseMapController {
-  final bool initMapWithUserPosition;
+  final UserTrackingOption? initMapWithUserPosition;
   final GeoPoint? initPosition;
   final BoundingBox? areaLimit;
   final List<OSMMixinObserver> _mixinObserver = [];
@@ -37,10 +37,10 @@ abstract class IBaseMapController {
       _listenerRegionIsChanging;
 
   IBaseMapController({
-    this.initMapWithUserPosition = true,
+    this.initMapWithUserPosition,
     this.initPosition,
     this.areaLimit = const BoundingBox.world(),
-  }) : assert(initMapWithUserPosition || initPosition != null);
+  }) : assert((initMapWithUserPosition != null) ^ (initPosition != null));
 
   void init();
 

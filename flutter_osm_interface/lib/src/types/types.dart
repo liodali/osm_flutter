@@ -7,3 +7,4 @@ export 'search_completion.dart';
 export 'shape_osm.dart';
 export 'region.dart';
 export 'custom_tile.dart';
+export 'user_option.dart';
