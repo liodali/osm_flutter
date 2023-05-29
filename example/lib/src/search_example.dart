@@ -53,7 +53,6 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                       isDismissible: true,
                       title: "location picker",
                       textConfirmPicker: "pick",
-                      initCurrentUserPosition: false,
                       initZoom: 8,
                       initPosition: GeoPoint(
                         latitude: 47.4358055,
@@ -84,7 +83,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   late TextEditingController textEditingController = TextEditingController();
   late PickerMapController controller = PickerMapController(
-    initMapWithUserPosition: true,
+    initMapWithUserPosition: UserTrackingOption(),
   );
 
   @override

@@ -26,18 +26,6 @@ jobs:
         uses: britannio/action-install-flutter@v1
       - run: dart --version
       - run: flutter --version
-      - name: Setup credentials
-        run: |
-          mkdir -p ~/.pub-cache
-          cat <<EOF > ~/.pub-cache/credentials.json
-          {
-            "accessToken":"${{ secrets.OAUTH_ACCESS_TOKEN }}",
-            "refreshToken":"${{ secrets.OAUTH_REFRESH_TOKEN }}",
-            "tokenEndpoint":"https://accounts.google.com/o/oauth2/token",
-            "scopes":["https://www.googleapis.com/auth/userinfo.email","openid"],
-            "expiration": ${{ secrets.EXP }}
-          }
-          EOF
       - name: preparation release
         run: python check_pubspec_release.py
       - name: clear before release

@@ -15,7 +15,6 @@ class MobileOsmFlutter extends StatefulWidget {
   final OnLocationChanged? onLocationChanged;
   final ValueNotifier<bool> mapIsReadyListener;
   final Widget? mapIsLoading;
-  final bool trackMyPosition;
   final List<StaticPositionGeoPoint> staticPoints;
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
@@ -38,7 +37,6 @@ class MobileOsmFlutter extends StatefulWidget {
   MobileOsmFlutter({
     Key? key,
     required this.controller,
-    this.trackMyPosition = false,
     this.onGeoPointClicked,
     this.onLocationChanged,
     required this.mapIsReadyListener,
@@ -235,8 +233,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     this._osmController = await MobileOSMController.init(id, this);
     _osmController!.addObserver(this);
     widget.controller.setBaseOSMController(this._osmController!);
-    if (((widget.controller).initMapWithUserPosition ||
-        widget.trackMyPosition)) {
+    if ((widget.controller).initMapWithUserPosition != null) {
       await requestPermission();
     }
     widget.controller.init();

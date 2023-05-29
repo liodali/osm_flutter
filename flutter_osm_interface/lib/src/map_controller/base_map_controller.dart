@@ -20,11 +20,11 @@ abstract class BaseMapController extends IBaseMapController {
   IBaseOSMController get osmBaseController => _osmBaseController;
 
   BaseMapController({
-    bool initMapWithUserPosition = true,
+    UserTrackingOption? initMapWithUserPosition,
     GeoPoint? initPosition,
     this.areaLimit = const BoundingBox.world(),
     this.customTile,
-  })  : assert(initMapWithUserPosition ^ (initPosition != null)),
+  })  : assert((initMapWithUserPosition != null) ^ (initPosition != null)),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
           initPosition: initPosition,
@@ -49,7 +49,7 @@ abstract class BaseMapController extends IBaseMapController {
     _timer = Timer(Duration(milliseconds: 1250), () async {
       await osmBaseController.initPositionMap(
         initPosition: initPosition,
-        initWithUserPosition: initMapWithUserPosition,
+        userPositionOption: initMapWithUserPosition,
       );
       _timer?.cancel();
     });

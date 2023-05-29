@@ -1,4 +1,11 @@
-### 0.54.0 : improvement and fux bugs
+### 0.55.0 : add UserTrackingOption to MapController
+* create UserTrackOption class and add it MapController
+### 0.54.2 : fix bugs
+* fix bug #407
+* fix jdk 17 to 8
+### 0.54.1 : fix bugs
+* fix bug #407,#403
+### 0.54.0 : improvement and fix bugs
 * migrate to v3.10
 * fix bugs #407 #409
 * add support rotation by gesture for android/ios (add `enableRotationByGesture` attribute)

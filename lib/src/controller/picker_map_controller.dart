@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 
-/// controller for custom picker location widget
+/// [PickerMapController]
+/// 
+/// this controller for custom picker location widget
 /// you will cancel/get/finish advanced picker
 /// you can also draw road,change current location
 /// get also current searchable text
@@ -11,7 +13,7 @@ class PickerMapController extends BaseMapController {
   ValueListenable<String> get searchableText => _searchableText;
 
   PickerMapController({
-    bool initMapWithUserPosition = true,
+    UserTrackingOption? initMapWithUserPosition,
     GeoPoint? initPosition,
   }) : super(
           initMapWithUserPosition: initMapWithUserPosition,

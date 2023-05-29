@@ -81,14 +81,15 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     channel = null;
     webPlatform.mapsController.remove(this);
   }
+  
 
   @override
   Future<void> initPositionMap({
     GeoPoint? initPosition,
-    bool initWithUserPosition = false,
+    UserTrackingOption? userPositionOption,
   }) async {
     interop.setUpMap(mapId);
-    assert(initPosition != null || initWithUserPosition == true);
+    assert((initPosition != null) ^ (userPositionOption != null));
 
     webPlatform.onLongPressMapClickListener(mapId).listen((event) {
       osmWebFlutterState.widget.controller
@@ -201,7 +202,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
 
     GeoPoint? initLocation = initPosition;
 
-    if (initWithUserPosition) {
+    if (userPositionOption != null) {
       initLocation = await myLocation();
     }
     await initLocationMap(initLocation!);

@@ -53,11 +53,11 @@ final class MobileOSMController extends IBaseOSMController {
 
   /// initMap: initialisation of osm map
   /// [initPosition]          : (geoPoint) animate map to initPosition
-  /// [initWithUserPosition]  : set map in user position
+  /// [userPositionOption]    : set map in user position
   /// [box]                   : (BoundingBox) area limit of the map
   Future<void> initPositionMap({
     GeoPoint? initPosition,
-    bool initWithUserPosition = false,
+    UserTrackingOption? userPositionOption,
     BoundingBox? box,
     double? initZoom,
   }) async {
@@ -258,7 +258,7 @@ final class MobileOSMController extends IBaseOSMController {
     }
 
     /// init location in map
-    if (initWithUserPosition) {
+    if (userPositionOption != null && userPositionOption.initWithUserPosition) {
       if (Platform.isAndroid) {
         bool granted = await _osmFlutterState.requestPermission();
         if (!granted) {
@@ -284,9 +284,11 @@ final class MobileOSMController extends IBaseOSMController {
       );
       _osmFlutterState.setCache.value = false;
     }
-    if (_osmFlutterState.widget.trackMyPosition) {
+    if (userPositionOption != null && userPositionOption.enableTracking) {
       await currentLocation();
-      await enableTracking();
+      await enableTracking(
+        enableStopFollow: userPositionOption.unFollowUser,
+      );
     }
 
     /// picker config

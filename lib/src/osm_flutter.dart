@@ -48,7 +48,6 @@ import 'widgets/copyright_osm_widget.dart';
 /// [showContributorBadgeForOSM] : (bool) for copyright of osm, we need to add badge in bottom of the map (default false)
 class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
-  final bool trackMyPosition;
   final bool showZoomController;
   final Widget? mapIsLoading;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -72,7 +71,6 @@ class OSMFlutter extends StatefulWidget {
     Key? key,
     required this.controller,
     this.mapIsLoading,
-    this.trackMyPosition = false,
     this.showZoomController = false,
     this.staticPoints = const [],
     this.markerOption,
@@ -197,7 +195,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
                             dynamicMarkerWidgetNotifier:
                                 dynamicMarkerWidgetNotifier,
                             mapIsLoading: widget.mapIsLoading,
-                            trackMyPosition: widget.trackMyPosition,
                             mapIsReadyListener: mapIsReadyListener,
                             staticIconGlobalKeys: staticMarkersKeys,
                             roadConfiguration: widget.roadConfiguration,
@@ -253,7 +250,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
                       onLocationChanged: widget.onLocationChanged,
                       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
                       mapIsLoading: widget.mapIsLoading,
-                      trackMyPosition: widget.trackMyPosition,
                       mapIsReadyListener: mapIsReadyListener,
                       staticIconGlobalKeys: staticMarkersKeys,
                       roadConfiguration: widget.roadConfiguration,
