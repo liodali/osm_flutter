@@ -36,7 +36,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
     controller = MapController.withUserPosition(
         trackUserLocation: UserTrackingOption(
       enableTracking: true,
-      unFollowUser: true,
+      unFollowUser: false,
     )
         // controller = MapController.withPosition(
         //   initPosition: GeoPoint(
@@ -388,9 +388,10 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     //   size: 48,
                     // ),
                     iconWidget: SizedBox.square(
+                      dimension: 32,
                       child: Image.asset(
                         "asset/taxi.png",
-                        scale: .4,
+                        scale: .1,
                       ),
                     ),
                     /* assetMarker: AssetMarker(
@@ -423,7 +424,10 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               },
               onGeoPointClicked: (geoPoint) async {
                 if (geoPoint ==
-                    GeoPoint(latitude: 47.442475, longitude: 8.4680389)) {
+                    GeoPoint(
+                      latitude: 47.442475,
+                      longitude: 8.4680389,
+                    )) {
                   final newGeoPoint = GeoPoint(
                     latitude: 47.4517782,
                     longitude: 8.4716146,

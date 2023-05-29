@@ -83,10 +83,10 @@ extension MyLocationMarker {
         if (arrowDirectionIcon == nil && personIcon == nil) {
             switch (self.userLocationMarkerType) {
             case .person:
-                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , size: [\(size.first)px,\(size.last)px] , angle: \(self.angle) } "
+                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , size: [\(String(describing:size.first))px,\(String(describing: size.last))px] , angle: \(self.angle) } "
                 break;
             case .arrow:
-                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(size.first)px,\(size.last)px] , angle: \(angle)  } "
+                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(String(describing: size.first))px,\(String(describing: size.last))px] , angle: \(angle)  } "
                 break;
             }
         } else {

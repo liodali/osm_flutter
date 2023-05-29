@@ -1,3 +1,5 @@
+### 0.55.0 : add UserTrackingOption to MapController
+* create UserTrackOption class and add it MapController
 ### 0.54.2 : fix bugs
 * fix bug #407
 * fix jdk 17 to 8
