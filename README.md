@@ -144,8 +144,8 @@ many thanks for @ben-xD
 > or if you want to initialize the map with user position use `withUserPosition`
 
 ```dart
+// default constructor
  MapController controller = MapController(
-                            initMapWithUserPosition: false,
                             initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
                             areaLimit: BoundingBox( 
                                 east: 10.4922941, 
@@ -154,20 +154,20 @@ many thanks for @ben-xD
                                 west:  5.9559113,
                             ),
             );
-// or 
-
- MapController controller = MapController.withPosition(
-                            initPosition: GeoPoint(
-                              latitude: 47.4358055,
-                               longitude: 8.4737324
-                            ,),
-                            areaLimit: BoundingBox( 
-                                east: 10.4922941, 
-                                north: 47.8084648, 
-                                south: 45.817995, 
-                                west:  5.9559113,
-                            ),
-            );
+// or set manually init position
+ final controller = MapController.withPosition(
+            initPosition: GeoPoint(
+              latitude: 47.4358055,
+              longitude: 8.4737324,
+          ),
+);
+// init the position using the user location
+final controller = MapController.withUserPosition(
+        trackUserLocation: UserTrackingOption(
+           enableTracking: true,
+           unFollowUser: false,
+        )
+)
 ```
 
 
@@ -180,7 +180,7 @@ many thanks for @ben-xD
 
 | Properties                   | Description                                                             |
 | ---------------------------- | ----------------------------------------------------------------------- |
-| `initMapWithUserPosition`    | (bool) initialize map with user position (default:true                  |
+| `initMapWithUserPosition`    | (UserTrackingOption?) initialize map with user position   |
 | `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
 | `areaLimit`                  | (Bounding) set area limit of the map (default BoundingBox.world())   |
 | `customLayer`                | (CustomTile) set customer layer  using different osm server , this attribute used only with named constructor `customLayer`  |
@@ -193,7 +193,6 @@ many thanks for @ben-xD
 ```dart
 
 controller = MapController.customLayer(
-      initMapWithUserPosition: false,
       initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
