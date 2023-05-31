@@ -64,6 +64,8 @@ final class MobileOSMController extends IBaseOSMController {
     if (_osmFlutterState.widget.onMapIsReady != null) {
       _osmFlutterState.widget.onMapIsReady!(false);
     }
+    final userTrackOption =
+        userPositionOption ?? _osmFlutterState.widget.userTrackingOption;
 
     /// load config map scene for iOS
     if (Platform.isIOS) {
@@ -258,7 +260,7 @@ final class MobileOSMController extends IBaseOSMController {
     }
 
     /// init location in map
-    if (userPositionOption != null && userPositionOption.initWithUserPosition) {
+    if (userTrackOption != null && userTrackOption.initWithUserPosition) {
       if (Platform.isAndroid) {
         bool granted = await _osmFlutterState.requestPermission();
         if (!granted) {
@@ -284,10 +286,10 @@ final class MobileOSMController extends IBaseOSMController {
       );
       _osmFlutterState.setCache.value = false;
     }
-    if (userPositionOption != null && userPositionOption.enableTracking) {
+    if (userTrackOption != null && userTrackOption.enableTracking) {
       await currentLocation();
       await enableTracking(
-        enableStopFollow: userPositionOption.unFollowUser,
+        enableStopFollow: userTrackOption.unFollowUser,
       );
     }
 

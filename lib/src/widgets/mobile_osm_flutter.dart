@@ -11,6 +11,7 @@ import '../controller/osm/osm_controller.dart';
 
 class MobileOsmFlutter extends StatefulWidget {
   final BaseMapController controller;
+  final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
   final ValueNotifier<bool> mapIsReadyListener;
@@ -37,6 +38,7 @@ class MobileOsmFlutter extends StatefulWidget {
   MobileOsmFlutter({
     Key? key,
     required this.controller,
+    this.userTrackingOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
     required this.mapIsReadyListener,
