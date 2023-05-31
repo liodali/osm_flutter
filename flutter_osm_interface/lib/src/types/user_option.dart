@@ -7,4 +7,9 @@ class UserTrackingOption {
     this.enableTracking = false,
     this.unFollowUser = false,
   }) : this.initWithUserPosition = true;
+
+  const UserTrackingOption.withoutUserPosition({
+    this.enableTracking = false,
+    this.unFollowUser = false,
+  }) : this.initWithUserPosition = false;
 }
