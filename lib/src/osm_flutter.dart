@@ -66,10 +66,11 @@ class OSMFlutter extends StatefulWidget {
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final bool androidHotReloadSupport;
-
+  final UserTrackingOption? userTrackingOption;
   OSMFlutter({
     Key? key,
     required this.controller,
+    this.userTrackingOption,
     this.mapIsLoading,
     this.showZoomController = false,
     this.staticPoints = const [],
@@ -190,6 +191,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                           color: Colors.white,
                           child: buildWidget(
                             controller: widget.controller,
+                            userTrackingOption: widget.userTrackingOption,
                             onGeoPointClicked: widget.onGeoPointClicked,
                             onLocationChanged: widget.onLocationChanged,
                             dynamicMarkerWidgetNotifier:
@@ -246,6 +248,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                     )
                   : buildWidget(
                       controller: widget.controller,
+                      userTrackingOption: widget.userTrackingOption,
                       onGeoPointClicked: widget.onGeoPointClicked,
                       onLocationChanged: widget.onLocationChanged,
                       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
