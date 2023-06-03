@@ -1,3 +1,6 @@
+### 0.55.1 : fix bugs
+* replace the removed attribute `enableTracking` by `UserTrackingOption` in OSMFlutter
+* fix method `enableTracking` when `enableStopFollow=false`
 ### 0.55.0 : add UserTrackingOption to MapController
 * create UserTrackOption class and add it MapController
 ### 0.54.2 : fix bugs

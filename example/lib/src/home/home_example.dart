@@ -26,6 +26,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   ValueNotifier<bool> showFab = ValueNotifier(true);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
   ValueNotifier<bool> beginDrawRoad = ValueNotifier(false);
+  ValueNotifier<bool> followUser = ValueNotifier(false);
   List<GeoPoint> pointsRoad = [];
   Timer? timer;
   int x = 0;
@@ -33,23 +34,23 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   @override
   void initState() {
     super.initState();
-    controller = MapController.withUserPosition(
-        trackUserLocation: UserTrackingOption(
-      enableTracking: true,
-      unFollowUser: false,
-    )
-        // controller = MapController.withPosition(
-        //   initPosition: GeoPoint(
-        //     latitude: 47.4358055,
-        //     longitude: 8.4737324,
-        //   ),
-        // areaLimit: BoundingBox(
-        //   east: 10.4922941,
-        //   north: 47.8084648,
-        //   south: 45.817995,
-        //   west: 5.9559113,
-        // ),
-        );
+    // controller = MapController.withUserPosition(
+    //     trackUserLocation: UserTrackingOption(
+    //   enableTracking: true,
+    //   unFollowUser: false,
+    // )
+    controller = MapController.withPosition(
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      // areaLimit: BoundingBox(
+      //   east: 10.4922941,
+      //   north: 47.8084648,
+      //   south: 45.817995,
+      //   west: 5.9559113,
+      // ),
+    );
     //  controller = MapController.cyclOSMLayer(
     //   initMapWithUserPosition: false,
     //   initPosition: GeoPoint(
@@ -360,6 +361,10 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               controller: controller,
               androidHotReloadSupport: true,
               enableRotationByGesture: true,
+              userTrackingOption: UserTrackingOption.withoutUserPosition(
+                enableTracking: true,
+                unFollowUser: true,
+              ),
               mapIsLoading: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -514,6 +519,30 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               ),
             ),
             Positioned(
+              bottom: 90,
+              right: 10,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: trackingNotifier,
+                builder: (ctx, trackingEnabled, child) {
+                  if (!trackingEnabled) {
+                    return SizedBox.fromSize();
+                  }
+                  return child!;
+                },
+                child: FloatingActionButton(
+                  key: UniqueKey(),
+                  child: Icon(Icons.person),
+                  heroTag: "locate user",
+                  onPressed: () async {
+                    followUser.value = !followUser.value;
+                    await controller.enableTracking(
+                      enableStopFollow: followUser.value,
+                    );
+                  },
+                ),
+              ),
+            ),
+            Positioned(
               bottom: 10,
               left: 10,
               child: ValueListenableBuilder<bool>(
@@ -629,7 +658,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               if (!trackingNotifier.value) {
                 await controller.currentLocation();
                 await controller.enableTracking(
-                  enableStopFollow: true,
+                  enableStopFollow: followUser.value,
                   disableUserMarkerRotation: true,
                 );
                 //await controller.zoom(5.0);

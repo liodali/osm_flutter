@@ -1,5 +1,5 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.55.0-orange)   
+![pub](https://img.shields.io/badge/pub-v0.55.1-orange)   
 
 
 ## Platform Support
@@ -44,7 +44,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.55.0
+      flutter_osm_plugin: ^0.55.1
 
 
 
@@ -95,8 +95,11 @@ many thanks for @ben-xD
   
 ```dart
  OSMFlutter( 
-        controller:mapController,
-        trackMyPosition: false,
+        controller: mapController,
+        /*userTrackingOption: UserTrackingOption.withoutUserPosition(
+          enableTracking: true,
+          unFollowUser: true,
+        ),*/
         initZoom: 12,
         minZoomLevel: 8,
         maxZoomLevel: 14,
@@ -671,7 +674,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | Properties                    | Description                         |
 | ----------------------------- | ----------------------------------- |
 | `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
-| `trackMyPosition`             | enable tracking user position.     |
+| `userTrackingOption`          | (UserTrackingOption?) enable tracking user position.     |
 | `showZoomController`          | show default zoom controller.       |
 | `userLocationMarker`          | change user marker or direction marker icon in tracking location                |
 | `markerOption`                | configure marker of osm map                   |
