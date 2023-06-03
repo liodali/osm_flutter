@@ -91,7 +91,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         enableAutoStop = enableStop
         when (enableStop) {
             true -> disableFollowLocation()
-            else -> {}
+            else -> enableFollowLocation()
         }
     }
 

@@ -4,6 +4,7 @@ import 'package:flutter_osm_plugin/src/widgets/mobile_osm_flutter.dart';
 
 Widget getWidget({
   required BaseMapController controller,
+  UserTrackingOption? userTrackingOption,
   OnGeoPointClicked? onGeoPointClicked,
   OnLocationChanged? onLocationChanged,
   required ValueNotifier<bool> mapIsReadyListener,
@@ -29,6 +30,7 @@ Widget getWidget({
 }) =>
     MobileOsmFlutter(
       controller: controller,
+      userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
       mapIsReadyListener: mapIsReadyListener,

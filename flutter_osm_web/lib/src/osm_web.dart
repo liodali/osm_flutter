@@ -5,6 +5,8 @@ import 'package:flutter_osm_web/src/controller/web_osm_controller.dart';
 
 class OsmWebWidget extends StatefulWidget {
   final IBaseMapController controller;
+
+  final UserTrackingOption? userTrackingOption;
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
@@ -27,6 +29,7 @@ class OsmWebWidget extends StatefulWidget {
   OsmWebWidget({
     Key? key,
     required this.controller,
+    this.userTrackingOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
     required this.mapIsReadyListener,

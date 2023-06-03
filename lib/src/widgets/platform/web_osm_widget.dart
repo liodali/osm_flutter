@@ -4,6 +4,7 @@ import 'package:flutter_osm_web/flutter_osm_web.dart';
 
 Widget getWidget({
   required BaseMapController controller,
+  UserTrackingOption? userTrackingOption,
   OnGeoPointClicked? onGeoPointClicked,
   OnLocationChanged? onLocationChanged,
   required ValueNotifier<bool> mapIsReadyListener,
@@ -29,6 +30,7 @@ Widget getWidget({
 }) =>
     OsmWebWidget(
       controller: controller,
+      userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
       staticPoints: staticPoints,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
