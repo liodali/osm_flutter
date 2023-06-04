@@ -96,7 +96,10 @@ many thanks for @ben-xD
 ```dart
  OSMFlutter( 
         controller:mapController,
-        trackMyPosition: false,
+        userTrackingOption: UserTrackingOption(
+           enableTracking: true,
+           unFollowUser: false,
+        ),
         initZoom: 12,
         minZoomLevel: 8,
         maxZoomLevel: 14,
