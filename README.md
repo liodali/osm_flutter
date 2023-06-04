@@ -1,5 +1,5 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.55.0-orange)   
+![pub](https://img.shields.io/badge/pub-v0.55.1-orange)   
 
 
 ## Platform Support
@@ -44,7 +44,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.55.0
+      flutter_osm_plugin: ^0.55.1
 
 
 
@@ -329,19 +329,19 @@ without need to call `currentLocation`
 ```dart
  GeoPoint geoPoint = await controller.myLocation();
 ```
-<b> 12) get center map </b>b>
+<b> 12) get center map </b>
 
 ```dart
 GeoPoint centerMap = await controller.centerMap;
 ```
-<b> 12.1) get geoPoint in the map </b>b>
+<b> 12.1) get geoPoint in the map </b>
 
 * recuperate geoPoint of marker add it by user except static points
 
 ```dart
 List<GeoPoint> geoPoints = await controller.geopoints;
 ```
-<b> 13) get bounding box  map </b>b>
+<b> 13) get bounding box  map </b>
 
 ```dart
 BoundingBox bounds = await controller.bounds;
@@ -660,7 +660,32 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
     super.mapRestored();
     /// TODO
   }
-    //etc
+    @override
+  void onSingleTap(GeoPoint position) {
+    super.onSingleTap();
+    /// TODO
+  }
+
+  @override
+  void onLongTap(GeoPoint position) {
+    super.onLongTap();
+    /// TODO
+
+  }
+
+  @override
+  void onRegionChanged(Region region) {
+    super.onRegionChanged();
+    /// TODO
+
+  }
+
+  @override
+  void onRoadTap(RoadInfo road) {
+    super.onRoadTap();
+    /// TODO
+
+  }
 }
 ```
 
