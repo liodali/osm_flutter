@@ -1,5 +1,5 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.55.0-orange)   
+![pub](https://img.shields.io/badge/pub-v0.55.1%2B1-orange)   
 
 
 ## Platform Support
@@ -44,7 +44,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.55.0
+      flutter_osm_plugin: ^0.55.1+1
 
 
 
@@ -96,7 +96,10 @@ many thanks for @ben-xD
 ```dart
  OSMFlutter( 
         controller:mapController,
-        trackMyPosition: false,
+        userTrackingOption: UserTrackingOption(
+           enableTracking: true,
+           unFollowUser: false,
+        ),
         initZoom: 12,
         minZoomLevel: 8,
         maxZoomLevel: 14,
@@ -173,12 +176,17 @@ final controller = MapController.withUserPosition(
 
 
 <b>2) Dispose </b>
+
 ```dart
      controller.dispose();
 ```
-<b> 3) Properties  of `MapController` </b>
 
-| Properties                   | Description                                                             |
+<b> 3) Properties  of default `MapController` </b>
+
+> `MapController` has 2 named Constructor `MapController.withPosition`,
+`MapController.withUserPosition` to control initialization of the Map
+
+| Properties                   |  Description                                                        |
 | ---------------------------- | ----------------------------------------------------------------------- |
 | `initMapWithUserPosition`    | (UserTrackingOption?) initialize map with user position   |
 | `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
@@ -213,11 +221,12 @@ controller = MapController.customLayer(
     )
 
 ```
-* also,you can use our predefined custom tiles like 
-  * `cyclOSMLayer` constructor for cycling tiles
-  * `publicTransportationLayer` constructor for transport tiles ,it's public osm server
 
-for more example see our example in `home_example.dart`
+* also,you can use our predefined custom tiles like 
+* `cyclOSMLayer` constructor for cycling tiles
+* `publicTransportationLayer` constructor for transport tiles ,it's public osm server
+
+For more example see our example in `home_example.dart`
 <br>
 <br>
 <b> 3.2) Change Layers in runtime </b>
@@ -329,19 +338,19 @@ without need to call `currentLocation`
 ```dart
  GeoPoint geoPoint = await controller.myLocation();
 ```
-<b> 12) get center map </b>b>
+<b> 12) get center map </b>
 
 ```dart
 GeoPoint centerMap = await controller.centerMap;
 ```
-<b> 12.1) get geoPoint in the map </b>b>
+<b> 12.1) get geoPoint in the map </b>
 
 * recuperate geoPoint of marker add it by user except static points
 
 ```dart
 List<GeoPoint> geoPoints = await controller.geopoints;
 ```
-<b> 13) get bounding box  map </b>b>
+<b> 13) get bounding box  map </b>
 
 ```dart
 BoundingBox bounds = await controller.bounds;
@@ -660,7 +669,32 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
     super.mapRestored();
     /// TODO
   }
-    //etc
+    @override
+  void onSingleTap(GeoPoint position) {
+    super.onSingleTap();
+    /// TODO
+  }
+
+  @override
+  void onLongTap(GeoPoint position) {
+    super.onLongTap();
+    /// TODO
+
+  }
+
+  @override
+  void onRegionChanged(Region region) {
+    super.onRegionChanged();
+    /// TODO
+
+  }
+
+  @override
+  void onRoadTap(RoadInfo road) {
+    super.onRoadTap();
+    /// TODO
+
+  }
 }
 ```
 

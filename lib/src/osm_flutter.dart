@@ -15,7 +15,7 @@ import 'widgets/copyright_osm_widget.dart';
 ///
 /// [isPicker] : (bool) if is true, map will behave as picker and will start advanced picker
 ///
-/// [trackMyPosition] : (bool) if is true, map will track your location
+/// [userTrackingOption] : (UserTrackingOption?) if is not null, used to paramter tracking of user location where you can disable/enable follow user
 ///
 /// [mapIsLoading]   :(Widget) show custom  widget when the map finish initialization
 ///
