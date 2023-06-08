@@ -112,6 +112,8 @@ class MapController extends BaseMapController {
         );
 
   /// [dispose]
+  /// 
+  /// this method used to dispose controller in the map
   void dispose() {
     if (!kIsWeb) {
       (osmBaseController as MobileOSMController).dispose();
@@ -121,7 +123,8 @@ class MapController extends BaseMapController {
 
   /// [changeTileLayer]
   ///
-  ///
+  /// this method used to change tiles of map,
+  /// for now we support only raster tiles for now
   Future<void> changeTileLayer({
     CustomTile? tileLayer,
   }) async {
@@ -130,10 +133,11 @@ class MapController extends BaseMapController {
 
   /// [limitAreaMap]
   ///
-  /// set area camera limit of the map
-  /// [box] : (BoundingBox) bounding that map cannot exceed from it
-  Future<void> limitAreaMap(BoundingBox box) async {
-    await osmBaseController.limitArea(box);
+  /// this method is to set area camera limit of the map
+  /// 
+  /// [boundingBox] : (BoundingBox) bounding that map cannot exceed from it
+  Future<void> limitAreaMap(BoundingBox boundingBox) async {
+    await osmBaseController.limitArea(boundingBox);
   }
 
   /// [removeLimitAreaMap]
@@ -148,23 +152,23 @@ class MapController extends BaseMapController {
   /// initialise or change of position with creating marker in that specific position
   ///
   /// [p] : geoPoint
-  Future<void> changeLocation(GeoPoint p) async {
-    await osmBaseController.changeLocation(p);
+  Future<void> changeLocation(GeoPoint position) async {
+    await osmBaseController.changeLocation(position);
   }
 
   /// [goToLocation]
   ///
   ///animate  to specific position with out add marker into the map
   ///
-  /// [p] : (GeoPoint) position that will be go to map
-  Future<void> goToLocation(GeoPoint p) async {
-    await osmBaseController.goToPosition(p);
+  /// [position] : (GeoPoint) position that will be go to map
+  Future<void> goToLocation(GeoPoint position) async {
+    await osmBaseController.goToPosition(position);
   }
 
   /// [removeMarker]
   ///
   ///remove marker from map of position
-  /// [p] : geoPoint
+  /// [position] : geoPoint
   Future<void> removeMarker(GeoPoint p) async {
     osmBaseController.removeMarker(p);
   }
@@ -204,6 +208,8 @@ class MapController extends BaseMapController {
     await osmBaseController.changeIconAdvPickerMarker(key);
   }*/
 
+  /// [setStaticPosition]
+  /// 
   /// change static position in runtime
   ///  [geoPoints] : list of static geoPoint
   ///  [id] : String of that list of static geoPoint
@@ -211,7 +217,9 @@ class MapController extends BaseMapController {
     await osmBaseController.setStaticPosition(geoPoints, id);
   }
 
-  ///change  Marker of specific static points
+  /// [setMarkerOfStaticPoint]
+  /// 
+  /// change  Marker of specific static points
   /// we need to global key to recuperate widget from tree element
   /// [id] : (String) id  of the static group geopoint
   ///
@@ -224,6 +232,8 @@ class MapController extends BaseMapController {
         refresh: true);
   }
 
+  /// [getZoom]
+  /// 
   /// recuperate current zoom level
   Future<double> getZoom() async => await osmBaseController.getZoom();
 

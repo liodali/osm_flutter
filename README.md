@@ -1,5 +1,5 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.55.1-orange)   
+![pub](https://img.shields.io/badge/pub-v0.55.1%2B1-orange)   
 
 
 ## Platform Support
@@ -44,7 +44,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.55.1
+      flutter_osm_plugin: ^0.55.1+1
 
 
 
@@ -176,12 +176,17 @@ final controller = MapController.withUserPosition(
 
 
 <b>2) Dispose </b>
+
 ```dart
      controller.dispose();
 ```
-<b> 3) Properties  of `MapController` </b>
 
-| Properties                   | Description                                                             |
+<b> 3) Properties  of default `MapController` </b>
+
+> `MapController` has 2 named Constructor `MapController.withPosition`,
+`MapController.withUserPosition` to control initialization of the Map
+
+| Properties                   |  Description                                                        |
 | ---------------------------- | ----------------------------------------------------------------------- |
 | `initMapWithUserPosition`    | (UserTrackingOption?) initialize map with user position   |
 | `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
@@ -216,11 +221,12 @@ controller = MapController.customLayer(
     )
 
 ```
-* also,you can use our predefined custom tiles like 
-  * `cyclOSMLayer` constructor for cycling tiles
-  * `publicTransportationLayer` constructor for transport tiles ,it's public osm server
 
-for more example see our example in `home_example.dart`
+* also,you can use our predefined custom tiles like 
+* `cyclOSMLayer` constructor for cycling tiles
+* `publicTransportationLayer` constructor for transport tiles ,it's public osm server
+
+For more example see our example in `home_example.dart`
 <br>
 <br>
 <b> 3.2) Change Layers in runtime </b>
