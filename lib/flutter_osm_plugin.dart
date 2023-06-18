@@ -16,3 +16,4 @@ export 'src/osm_flutter.dart';
 export 'src/widgets/copyright_osm_widget.dart';
 export 'src/widgets/custom_picker_location.dart';
 export 'src/widgets/picker_location.dart';
+export 'src/common/osm_option.dart';

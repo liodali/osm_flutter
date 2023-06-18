@@ -161,7 +161,46 @@ class _WebTestOsmState extends State<WebTestOsm> with OSMMixinObserver {
           return OSMFlutter(
             key: key,
             controller: controller,
-            initZoom: 5,
+            osmOption: OSMOption(
+              zoomOption: ZoomOption(
+                initZoom: 5,
+              ),
+              markerOption: MarkerOption(
+                defaultMarker: MarkerIcon(
+                  icon: Icon(
+                    Icons.add_location,
+                    color: Colors.amber,
+                  ),
+                ),
+              ),
+              staticPoints: [
+                StaticPositionGeoPoint(
+                  "line 1",
+                  MarkerIcon(
+                    icon: Icon(
+                      Icons.train,
+                      color: Colors.green,
+                      size: 48,
+                    ),
+                  ),
+                  [
+                    GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
+                    GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
+                  ],
+                ),
+                // StaticPositionGeoPoint(
+                //   "line 2",
+                //   null,
+                //   [
+                //     GeoPoint(
+                //       latitude: 44.01753206961715,
+                //       longitude: 42.868008613586426,
+                //     )
+                //   ],
+                // )
+              ],
+              showContributorBadgeForOSM: true,
+            ),
             onGeoPointClicked: (geoPoint) async {
               if (geoPoint ==
                   GeoPoint(latitude: 47.442475, longitude: 8.4680389)) {
@@ -191,41 +230,6 @@ class _WebTestOsmState extends State<WebTestOsm> with OSMMixinObserver {
             mapIsLoading: Center(
               child: Text("map is Loading"),
             ),
-            markerOption: MarkerOption(
-              defaultMarker: MarkerIcon(
-                icon: Icon(
-                  Icons.add_location,
-                  color: Colors.amber,
-                ),
-              ),
-            ),
-            staticPoints: [
-              StaticPositionGeoPoint(
-                "line 1",
-                MarkerIcon(
-                  icon: Icon(
-                    Icons.train,
-                    color: Colors.green,
-                    size: 48,
-                  ),
-                ),
-                [
-                  GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
-                  GeoPoint(latitude: 47.4317782, longitude: 8.4716146),
-                ],
-              ),
-              // StaticPositionGeoPoint(
-              //   "line 2",
-              //   null,
-              //   [
-              //     GeoPoint(
-              //       latitude: 44.01753206961715,
-              //       longitude: 42.868008613586426,
-              //     )
-              //   ],
-              // )
-            ],
-            showContributorBadgeForOSM: true,
           );
         },
       ),

@@ -358,106 +358,52 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           children: [
             OSMFlutter(
               controller: controller,
-              androidHotReloadSupport: true,
-              enableRotationByGesture: true,
-              mapIsLoading: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    Text("Map is Loading.."),
-                  ],
+              osmOption: OSMOption(
+                androidHotReloadSupport: true,
+                enableRotationByGesture: true,
+                zoomOption: ZoomOption(
+                  initZoom: 8,
+                  minZoomLevel: 3,
+                  maxZoomLevel: 19,
+                  stepZoom: 1.0,
                 ),
-              ),
-              onMapIsReady: (isReady) {
-                if (isReady) {
-                  print("map is ready");
-                }
-              },
-              initZoom: 8,
-              minZoomLevel: 3,
-              maxZoomLevel: 19,
-              stepZoom: 1.0,
-              userLocationMarker: UserLocationMaker(
-                  personMarker: MarkerIcon(
-                    // icon: Icon(
-                    //   Icons.car_crash_sharp,
-                    //   color: Colors.red,
-                    //   size: 48,
-                    // ),
-                    iconWidget: SizedBox.square(
-                      dimension: 32,
-                      child: Image.asset(
-                        "asset/taxi.png",
-                        scale: .1,
+                userLocationMarker: UserLocationMaker(
+                    personMarker: MarkerIcon(
+                      // icon: Icon(
+                      //   Icons.car_crash_sharp,
+                      //   color: Colors.red,
+                      //   size: 48,
+                      // ),
+                      iconWidget: SizedBox.square(
+                        dimension: 32,
+                        child: Image.asset(
+                          "asset/taxi.png",
+                          scale: .1,
+                        ),
                       ),
-                    ),
-                    /* assetMarker: AssetMarker(
+                      /* assetMarker: AssetMarker(
                     image: AssetImage(
                       "asset/taxi.png",
                     ),
                     scaleAssetImage: 0.3,
                   ), */
-                  ),
-                  directionArrowMarker: MarkerIcon(
-                    icon: Icon(
-                      Icons.navigation_rounded,
-                      size: 48,
                     ),
-                  )
-                  // directionArrowMarker: MarkerIcon(
-                  //   assetMarker: AssetMarker(
-                  //     image: AssetImage(
-                  //       "asset/taxi.png",
-                  //     ),
-                  //     scaleAssetImage: 0.25,
-                  //   ),
-                  // ),
-                  ),
-              showContributorBadgeForOSM: true,
-              //trackMyPosition: trackingNotifier.value,
-              showDefaultInfoWindow: false,
-              onLocationChanged: (myLocation) {
-                print(myLocation);
-              },
-              onGeoPointClicked: (geoPoint) async {
-                if (geoPoint ==
-                    GeoPoint(
-                      latitude: 47.442475,
-                      longitude: 8.4680389,
-                    )) {
-                  final newGeoPoint = GeoPoint(
-                    latitude: 47.4517782,
-                    longitude: 8.4716146,
-                  );
-                  await controller.changeLocationMarker(
-                    oldLocation: geoPoint,
-                    newLocation: newGeoPoint,
-                    markerIcon: MarkerIcon(
+                    directionArrowMarker: MarkerIcon(
                       icon: Icon(
-                        Icons.bus_alert,
-                        color: Colors.blue,
-                        size: 24,
+                        Icons.navigation_rounded,
+                        size: 48,
                       ),
+                    )
+                    // directionArrowMarker: MarkerIcon(
+                    //   assetMarker: AssetMarker(
+                    //     image: AssetImage(
+                    //       "asset/taxi.png",
+                    //     ),
+                    //     scaleAssetImage: 0.25,
+                    //   ),
+                    // ),
                     ),
-                  );
-                }
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      "${geoPoint.toMap().toString()}",
-                    ),
-                    action: SnackBarAction(
-                      onPressed: () =>
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-                      label: "hide",
-                    ),
-                  ),
-                );
-              },
-              staticPoints: [
+                staticPoints: [
                 StaticPositionGeoPoint(
                   "line 1",
                   MarkerIcon(
@@ -512,6 +458,65 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   ),
                 ),
               ),
+                showContributorBadgeForOSM: true,
+                //trackMyPosition: trackingNotifier.value,
+                showDefaultInfoWindow: false,
+              ),
+              mapIsLoading: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    Text("Map is Loading.."),
+                  ],
+                ),
+              ),
+              onMapIsReady: (isReady) {
+                if (isReady) {
+                  print("map is ready");
+                }
+              },
+              onLocationChanged: (myLocation) {
+                print(myLocation);
+              },
+              onGeoPointClicked: (geoPoint) async {
+                if (geoPoint ==
+                    GeoPoint(
+                      latitude: 47.442475,
+                      longitude: 8.4680389,
+                    )) {
+                  final newGeoPoint = GeoPoint(
+                    latitude: 47.4517782,
+                    longitude: 8.4716146,
+                  );
+                  await controller.changeLocationMarker(
+                    oldLocation: geoPoint,
+                    newLocation: newGeoPoint,
+                    markerIcon: MarkerIcon(
+                      icon: Icon(
+                        Icons.bus_alert,
+                        color: Colors.blue,
+                        size: 24,
+                      ),
+                    ),
+                  );
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      "${geoPoint.toMap().toString()}",
+                    ),
+                    action: SnackBarAction(
+                      onPressed: () =>
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                      label: "hide",
+                    ),
+                  ),
+                );
+              },
+              
             ),
             Positioned(
               bottom: 10,

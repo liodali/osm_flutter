@@ -53,7 +53,9 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                       isDismissible: true,
                       title: "location picker",
                       textConfirmPicker: "pick",
-                      initZoom: 8,
+                      zoomOption: ZoomOption(
+                        initZoom: 8,
+                      ),
                       initPosition: GeoPoint(
                         latitude: 47.4358055,
                         longitude: 8.4737324,
@@ -196,7 +198,9 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ),
       pickerConfig: CustomPickerLocationConfig(
-        initZoom: 8,
+        zoomOption: ZoomOption(
+          initZoom: 8,
+        ),
       ),
     );
   }

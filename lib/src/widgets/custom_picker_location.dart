@@ -60,13 +60,17 @@ class CustomPickerLocation extends StatefulWidget {
     final _CustomPickerLocationState? result =
         context.findAncestorStateOfType<_CustomPickerLocationState>();
     if (nullOk || result != null) return result!.widget.controller;
-    throw FlutterError.fromParts(<DiagnosticsNode>[
-      ErrorSummary(
-          'CustomPickerLocation.of() called with a context that does not contain an MapController.'),
-      ErrorDescription(
-          'No CustomPickerLocation ancestor could be found starting from the context that was passed to CustomPickerLocation.of().'),
-      context.describeElement('The context used was')
-    ]);
+    throw FlutterError.fromParts(
+      <DiagnosticsNode>[
+        ErrorSummary(
+          'CustomPickerLocation.of() called with a context that does not contain an MapController.',
+        ),
+        ErrorDescription(
+          'No CustomPickerLocation ancestor could be found starting from the context that was passed to CustomPickerLocation.of().',
+        ),
+        context.describeElement('The context used was')
+      ],
+    );
   }
 
   @override
