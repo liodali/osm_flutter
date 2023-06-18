@@ -34,6 +34,7 @@ extension GeoPointMap {
             m.point == self.coordinate
         }
         if indexToUpdate != nil {
+            map.markers[indexToUpdate!].stylingString = styleMarker
             map.markers[indexToUpdate!].point = mPosition
         }
     }
@@ -83,7 +84,7 @@ extension MyLocationMarker {
         if (arrowDirectionIcon == nil && personIcon == nil) {
             switch (self.userLocationMarkerType) {
             case .person:
-                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , size: [\(String(describing:size.first))px,\(String(describing: size.last))px] , angle: \(self.angle) } "
+                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , size: [\(String(describing: size.first))px,\(String(describing: size.last))px] , angle: \(self.angle) } "
                 break;
             case .arrow:
                 self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(String(describing: size.first))px,\(String(describing: size.last))px] , angle: \(angle)  } "
