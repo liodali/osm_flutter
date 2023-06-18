@@ -81,7 +81,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     channel = null;
     webPlatform.mapsController.remove(this);
   }
-  
 
   @override
   Future<void> initPositionMap({
@@ -298,6 +297,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     required GeoPoint oldLocation,
     required GeoPoint newLocation,
     MarkerIcon? newMarkerIcon,
+    double? angle = null,
   }) async {
     var duration = 0;
     if (newMarkerIcon != null) {

@@ -274,7 +274,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
     );
   }
 
-
   @override
   Future<void> removeLastRoad(int idOSM) async {
     await _channels[idOSM]?.invokeMethod("delete#road");
@@ -660,10 +659,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GeoPoint oldLocation,
     GeoPoint newLocation, {
     GlobalKey? globalKeyIcon,
+    double? angle = null,
   }) async {
     Map<String, dynamic> args = {
       "new_location": newLocation.toMap(),
       "old_location": oldLocation.toMap(),
+      "angle": angle,
     };
     if (globalKeyIcon != null) {
       final icon = await _capturePng(globalKeyIcon);

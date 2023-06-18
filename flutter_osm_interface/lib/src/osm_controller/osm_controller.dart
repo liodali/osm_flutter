@@ -45,13 +45,16 @@ abstract class IBaseOSMController {
     required GeoPoint oldLocation,
     required GeoPoint newLocation,
     MarkerIcon? newMarkerIcon,
+    double? angle = null,
   });
 
-  /// removeMarker
+  /// [removeMarker]
   /// remove marker from map of position
   ///
   /// [p] : geoPoint
-  Future<void> removeMarker(GeoPoint p);
+  Future<void> removeMarker(
+    GeoPoint p,
+  );
 
   /// setIconMarker
   /// this method change marker icon , marker should be already exist in the map

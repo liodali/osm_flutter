@@ -112,7 +112,7 @@ class MapController extends BaseMapController {
         );
 
   /// [dispose]
-  /// 
+  ///
   /// this method used to dispose controller in the map
   void dispose() {
     if (!kIsWeb) {
@@ -134,7 +134,7 @@ class MapController extends BaseMapController {
   /// [limitAreaMap]
   ///
   /// this method is to set area camera limit of the map
-  /// 
+  ///
   /// [boundingBox] : (BoundingBox) bounding that map cannot exceed from it
   Future<void> limitAreaMap(BoundingBox boundingBox) async {
     await osmBaseController.limitArea(boundingBox);
@@ -209,7 +209,7 @@ class MapController extends BaseMapController {
   }*/
 
   /// [setStaticPosition]
-  /// 
+  ///
   /// change static position in runtime
   ///  [geoPoints] : list of static geoPoint
   ///  [id] : String of that list of static geoPoint
@@ -218,7 +218,7 @@ class MapController extends BaseMapController {
   }
 
   /// [setMarkerOfStaticPoint]
-  /// 
+  ///
   /// change  Marker of specific static points
   /// we need to global key to recuperate widget from tree element
   /// [id] : (String) id  of the static group geopoint
@@ -233,7 +233,7 @@ class MapController extends BaseMapController {
   }
 
   /// [getZoom]
-  /// 
+  ///
   /// recuperate current zoom level
   Future<double> getZoom() async => await osmBaseController.getZoom();
 
@@ -501,11 +501,13 @@ class MapController extends BaseMapController {
     required GeoPoint oldLocation,
     required GeoPoint newLocation,
     MarkerIcon? markerIcon,
+    double? angle = null,
   }) async {
     await osmBaseController.changeMarker(
       oldLocation: oldLocation,
       newLocation: newLocation,
       newMarkerIcon: markerIcon,
+      angle: angle,
     );
   }
 

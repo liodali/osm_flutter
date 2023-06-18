@@ -465,18 +465,18 @@ final class MobileOSMController extends IBaseOSMController {
     double? angle,
   }) async {
     if (markerIcon != null) {
-      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value =
-          ((angle == null) || (angle == 0.0))
-              ? markerIcon
-              : Transform.rotate(
-                  angle: angle,
-                  child: markerIcon,
-                );
+      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
       int duration = 500;
       await Future.delayed(Duration(milliseconds: duration), () async {
         await osmPlatform.addMarker(
           _idMap,
-          p,
+          angle != null && angle != 0
+              ? GeoPointWithOrientation(
+                  angle: angle,
+                  latitude: p.latitude,
+                  longitude: p.longitude,
+                )
+              : p,
           globalKeyIcon: _osmFlutterState.dynamicMarkerKey,
         );
       });
@@ -747,6 +747,7 @@ final class MobileOSMController extends IBaseOSMController {
     required GeoPoint oldLocation,
     required GeoPoint newLocation,
     MarkerIcon? newMarkerIcon,
+    double? angle = null,
   }) async {
     var duration = 0;
     if (newMarkerIcon != null) {
@@ -760,6 +761,7 @@ final class MobileOSMController extends IBaseOSMController {
         newLocation,
         globalKeyIcon:
             newMarkerIcon != null ? _osmFlutterState.dynamicMarkerKey : null,
+        angle: angle,
       );
     });
   }
