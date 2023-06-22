@@ -1,3 +1,5 @@
+### 0.55.2 : fix bugs
+* fix issue related to rotate markers
 ### 0.55.1+1 : fix readme
 ### 0.55.1 : fix bugs
 ### 0.55.0 : add UserTrackingOption to MapController
