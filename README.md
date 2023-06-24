@@ -1,5 +1,5 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.55.2-orange)   
+![pub](https://img.shields.io/badge/pub-v0.55.3-orange)   
 
 
 ## Platform Support
@@ -44,7 +44,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.55.1+1
+      flutter_osm_plugin: ^0.55.3
 
 
 
@@ -427,6 +427,7 @@ controller.listenerRegionIsChanging.addListener(() {
 <b>15) Create Marker Programmatically </b>
 
 > you can change marker icon by using attribute `markerIcon`
+> the angle value should be between [0,2pi]
 
 ```dart
 await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);

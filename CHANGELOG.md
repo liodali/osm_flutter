@@ -1,3 +1,5 @@
+### 0.55.3 : fix bugs
+* fix angle for addMarker where it should be between 0 and 2pi
 ### 0.55.2 : fix bugs
 * fix issue related to rotate markers
 ### 0.55.1+1 : fix readme
