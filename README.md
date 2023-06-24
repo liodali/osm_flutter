@@ -1,5 +1,5 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.55.1%2B1-orange)   
+![pub](https://img.shields.io/badge/pub-v0.55.3-orange)   
 
 
 ## Platform Support
@@ -44,7 +44,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.55.1+1
+      flutter_osm_plugin: ^0.55.3
 
 
 
@@ -427,11 +427,19 @@ controller.listenerRegionIsChanging.addListener(() {
 <b>15) Create Marker Programmatically </b>
 
 > you can change marker icon by using attribute `markerIcon`
+> the angle value should be between [0,2pi]
 
 ```dart
 await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
 ```
-<b> 15.1) Change Icon Marker  </b>
+ <b> 15.1) Update Marker </b>
+ > you change change the location,icon,angle of the specific marker
+
+```dart
+await controller.changeLocationMarker(oldGeoPoint,newGeoPoint,newMarkerIcon,angle);
+```
+
+<b> 15.2) Change Icon Marker  </b>
 
 > You can change marker icon by using attribute `markerIcon` of existing Marker
 > The GeoPoint/Marker should be exist
@@ -440,8 +448,7 @@ await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
 await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 ```
 
-
-<b> 15.2) Remove marker </b>
+<b> 15.3) Remove marker </b>
 
 ```dart
  await controller.removeMarker(geoPoint);

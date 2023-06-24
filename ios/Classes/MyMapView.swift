@@ -488,7 +488,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             let iconArg = args["icon"] as! [String: Any]
             let icon = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as! [Int])
             let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
-            GeoPointMap(icon: icon, coordinate: coordinate).setupMarker(on: mapView)
+            let point = args["point"] as! GeoPoint
+            var angle = 0
+            if let _angle = point["angle"] {
+                angle = Int(CGFloat(_angle).toDegrees)
+            }
+            GeoPointMap(icon: icon, coordinate: coordinate, angle: angle).setupMarker(on: mapView)
         }
     }
 
@@ -497,7 +502,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
         let coordinate_old = (args["old_location"] as! GeoPoint).toLocationCoordinate()
         let coordinate_new = (args["new_location"] as! GeoPoint).toLocationCoordinate()
-        GeoPointMap(icon: MarkerIconData(image: nil), coordinate: coordinate_old).changePositionMarker(on: mapView, mPosition: coordinate_new)
+        var icon: MarkerIconData = MarkerIconData(image: nil)
+        if let iconStr = args["new_icon"] as? [String: Any] {
+            icon = MarkerIconData(image: convertImage(codeImage: iconStr["icon"] as! String), size: iconStr["size"] as! [Int])
+        }
+        var angle = 0
+        if let _angle = args["angle"] as? Double {
+            angle = Int(CGFloat(_angle).toDegrees)
+        }
+        GeoPointMap(icon: icon, coordinate: coordinate_old, angle: angle)
+                .changePositionMarker(on: mapView, mPosition: coordinate_new)
     }
 
     private func updateMarkerIcon(call: FlutterMethodCall) {

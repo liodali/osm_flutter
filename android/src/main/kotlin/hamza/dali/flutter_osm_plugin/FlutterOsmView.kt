@@ -5,8 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.*
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.location.LocationManager
 import android.location.LocationManager.GPS_PROVIDER
 import android.location.LocationManager.NETWORK_PROVIDER
@@ -18,18 +16,12 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.graphics.BlendModeColorFilterCompat
-import androidx.core.graphics.BlendModeCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import androidx.preference.PreferenceManager
-import com.squareup.picasso.Callback
-import com.squareup.picasso.Picasso
-import com.squareup.picasso.Target
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.CREATED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.DESTROYED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.PAUSED
@@ -605,18 +597,6 @@ class FlutterOsmView(
     }
 
 
-    private fun deleteMarkers(call: MethodCall, result: MethodChannel.Result) {
-        val args = call.arguments as List<HashMap<String, Double>>
-        val geoPoints = args.map { mapGeoP ->
-            mapGeoP.toGeoPoint()
-        }
-        geoPoints.forEach { geoPoint ->
-            deleteMarker(geoPoint)
-        }
-        result.success(200)
-    }
-
-
     private fun changeLayerTile(tile: CustomTile) {
         map?.setCustomTile(
             name = tile.sourceName,
@@ -628,29 +608,6 @@ class FlutterOsmView(
             api = tile.api,
         )
 
-    }
-
-    private fun changePositionMarker(call: MethodCall, result: MethodChannel.Result) {
-        val args = call.arguments as HashMap<*, *>
-        val oldLocation = (args["old_location"] as HashMap<String, Double>).toGeoPoint()
-        val newLocation = (args["new_location"] as HashMap<String, Double>).toGeoPoint()
-
-        val marker: FlutterMarker? = folderMarkers.items.filterIsInstance<FlutterMarker>()
-            .firstOrNull { marker ->
-                marker.position.eq(oldLocation)
-            }
-        marker?.position = newLocation
-        if (args.containsKey("new_icon")) {
-            val bitmap = getBitmap(args["new_icon"] as ByteArray)
-            scope?.launch {
-                mapSnapShot().overlaySnapShotMarker(
-                    point = newLocation,
-                    icon = args["new_icon"] as ByteArray
-                )
-            }
-            marker?.icon = getDefaultIconDrawable(null, icon = bitmap)
-        }
-        map?.invalidate()
     }
 
     private fun getGeoPoints(result: MethodChannel.Result) {
@@ -675,6 +632,25 @@ class FlutterOsmView(
             callback,
             scope!!
         )
+    }
+
+    private fun changeLocationMarkers(call: MethodCall, result: MethodChannel.Result) {
+        val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
+        try {
+            val personIcon = (args["personIcon"] as ByteArray)
+            val arrowIcon = (args["arrowDirectionIcon"] as ByteArray)
+            customPersonMarkerIcon = getBitmap(personIcon)
+            customArrowMarkerIcon = getBitmap(arrowIcon)
+            mapSnapShot().setUserTrackMarker(
+                personMarker = personIcon,
+                arrowMarker = arrowIcon
+            )
+            result.success(null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            result.success(e.message)
+
+        }
     }
 
     private fun zoomingMapToBoundingBox(call: MethodCall, result: MethodChannel.Result) {
@@ -722,11 +698,11 @@ class FlutterOsmView(
         scope?.launch {
             mapSnapShot.markers().forEach { (point, bytes) ->
                 val icon = bytes?.let { getBitmap(bytes = it) }
-                val drawable = getDefaultIconDrawable(icon = icon, color = null)
+                //val drawable = getDefaultIconDrawable(icon = icon, color = null)
                 withContext(Main) {
                     addMarker(
                         point,
-                        dynamicMarkerBitmap = drawable,
+                        dynamicMarkerBitmap = icon,
                         animateTo = false,
                         zoom = mapSnapShot.zoomLevel(initZoom)
                     )
@@ -870,136 +846,6 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    private fun addMarker(
-        geoPoint: GeoPoint,
-        zoom: Double,
-        color: Int? = null,
-        dynamicMarkerBitmap: Drawable? = null,
-        imageURL: String? = null,
-        animateTo: Boolean = true,
-    ): FlutterMarker {
-        map!!.controller.setZoom(zoom)
-        if (animateTo)
-            map!!.controller.animateTo(geoPoint)
-        val marker: FlutterMarker = createMarker(geoPoint, color) as FlutterMarker
-        marker.onClickListener = Marker.OnMarkerClickListener { marker, _ ->
-            val hashMap = HashMap<String, Double>()
-            hashMap["lon"] = marker!!.position.longitude
-            hashMap["lat"] = marker.position.latitude
-            methodChannel.invokeMethod("receiveGeoPoint", hashMap)
-            true
-        }
-        when {
-            dynamicMarkerBitmap != null -> {
-                marker.icon = dynamicMarkerBitmap
-                folderMarkers.items.add(marker)
-
-            }
-
-            !imageURL.isNullOrEmpty() -> {
-                Picasso.get()
-                    .load(imageURL)
-                    .fetch(object : Callback {
-                        override fun onSuccess() {
-                            Picasso.get()
-                                .load(imageURL)
-                                .into(object : Target {
-                                    override fun onBitmapLoaded(
-                                        bitmapMarker: Bitmap?,
-                                        from: Picasso.LoadedFrom?
-                                    ) {
-
-                                        marker.icon =
-                                            BitmapDrawable(context.resources, bitmapMarker)
-
-                                        folderMarkers.add(marker)
-
-                                    }
-
-                                    override fun onBitmapFailed(
-                                        e: java.lang.Exception?,
-                                        errorDrawable: Drawable?
-                                    ) {
-                                        marker.icon = ContextCompat.getDrawable(
-                                            context,
-                                            R.drawable.ic_location_on_red_24dp
-                                        )
-                                        folderMarkers.add(marker)
-
-                                    }
-
-                                    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
-                                        // marker.icon = ContextCompat.getDrawable(context!!, R.drawable.ic_location_on_red_24dp)
-                                    }
-
-                                })
-                        }
-
-                        override fun onError(e: java.lang.Exception?) {
-                            Log.e("error image", e?.stackTraceToString() ?: "")
-                        }
-
-                    })
-
-
-            }
-
-            else -> folderMarkers.items.add(marker)
-
-        }
-
-        map?.invalidate()
-        return marker
-    }
-
-    private fun createMarker(geoPoint: GeoPoint, color: Int?, icon: Bitmap? = null): Marker {
-        val marker = FlutterMarker(context, map!!, geoPoint, scope)
-        marker.visibilityInfoWindow(visibilityInfoWindow)
-//        marker.longPress = object : LongClickHandler {
-//            override fun invoke(marker: Marker): Boolean {
-//                map!!.overlays.remove(marker)
-//                map!!.invalidate()
-//                return true
-//            }
-//        }
-        val iconDrawable: Drawable = getDefaultIconDrawable(color, icon = icon)
-        //marker.setPosition(geoPoint);
-        marker.icon = iconDrawable
-        //marker.setInfoWindow(new FlutterInfoWindow(creatWindowInfoView(),map!!,geoPoint));
-        marker.position = geoPoint
-        return marker
-    }
-
-    private fun getDefaultIconDrawable(color: Int?, icon: Bitmap? = null): Drawable {
-        val iconDrawable: Drawable
-        if (icon != null) {
-            iconDrawable = BitmapDrawable(context.resources, icon)
-            if (color != null) iconDrawable.setColorFilter(
-                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                    color,
-                    BlendModeCompat.SRC_OVER
-                )
-            )
-        } else if (customMarkerIcon != null) {
-            iconDrawable = BitmapDrawable(context.resources, customMarkerIcon)
-            if (color != null) iconDrawable.setColorFilter(
-                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                    color,
-                    BlendModeCompat.SRC_OVER
-                )
-            )
-        } else {
-            iconDrawable =
-                ContextCompat.getDrawable(context, R.drawable.ic_location_on_red_24dp)!!
-        }
-        return iconDrawable
-    }
-
-
-    private fun setMarkerTracking() {
-        locationNewOverlay.setMarkerIcon(customPersonMarkerIcon, customArrowMarkerIcon)
-    }
-
 
     private fun addMarkerManually(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as HashMap<*, *>
@@ -1015,13 +861,18 @@ class FlutterOsmView(
                 )
             }
         }
+        val angle = when ((args["point"] as HashMap<String, Double>).containsKey("angle")) {
+            true -> (args["point"] as HashMap<String, Double>)["angle"] as Double
+            else -> 0.0
+        }
 
 
         addMarker(
             point,
-            dynamicMarkerBitmap = getDefaultIconDrawable(null, icon = bitmap),
+            dynamicMarkerBitmap = bitmap,
             zoom = map!!.zoomLevelDouble,
-            animateTo = false
+            animateTo = false,
+            angle = angle,
         )
 
 
@@ -1048,7 +899,7 @@ class FlutterOsmView(
             }
         when (marker != null) {
             true -> {
-                marker.icon = getDefaultIconDrawable(null, icon = bitmap)
+                marker.setIconMaker(null, bitmap = bitmap)
                 val index = folderMarkers.items.indexOf(marker)
                 folderMarkers.items[index] = marker
                 map!!.invalidate()
@@ -1065,24 +916,128 @@ class FlutterOsmView(
     }
 
 
-    private fun changeLocationMarkers(call: MethodCall, result: MethodChannel.Result) {
-        val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
-        try {
-            val personIcon = (args["personIcon"] as ByteArray)
-            val arrowIcon = (args["arrowDirectionIcon"] as ByteArray)
-            customPersonMarkerIcon = getBitmap(personIcon)
-            customArrowMarkerIcon = getBitmap(arrowIcon)
-            mapSnapShot().setUserTrackMarker(
-                personMarker = personIcon,
-                arrowMarker = arrowIcon
+    private fun changePositionMarker(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as HashMap<*, *>
+        val oldLocation = (args["old_location"] as HashMap<String, Double>).toGeoPoint()
+        val newLocation = (args["new_location"] as HashMap<String, Double>).toGeoPoint()
+
+        val marker: FlutterMarker? = folderMarkers.items.filterIsInstance<FlutterMarker>()
+            .firstOrNull { marker ->
+                marker.position.eq(oldLocation)
+            }
+        marker?.position = newLocation
+        val angle = when (args.containsKey("angle") && args["angle"] != null) {
+            true -> {
+                val angle = args["angle"] as Double
+                when (marker?.angle != angle) {
+                    true -> args["angle"] as Double
+                    else -> marker?.angle ?: 0.0
+                }
+            }
+
+            else -> marker?.angle ?: 0.0
+        }
+
+        val icon = when (args.containsKey("new_icon")) {
+            true -> args["new_icon"] as ByteArray
+            else -> mapSnapShot().markers()[oldLocation] as ByteArray
+        }.let { byteArray ->
+            scope?.launch {
+                mapSnapShot().overlaySnapShotMarker(
+                    point = newLocation,
+                    oldPoint = oldLocation,
+                    icon = byteArray
+                )
+            }
+            val bitmap = getBitmap(byteArray)
+            bitmap
+        }
+        folderMarkers.items.remove(marker)
+        addMarker(
+            newLocation,
+            dynamicMarkerBitmap = icon,
+            angle = angle,
+            animateTo = false,
+            imageURL = null,
+
             )
-            result.success(null)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            result.success(e.message)
+        map?.invalidate()
+    }
+
+    private fun addMarker(
+        geoPoint: GeoPoint,
+        zoom: Double = map!!.zoomLevelDouble,
+        color: Int? = null,
+        dynamicMarkerBitmap: Bitmap? = null,
+        imageURL: String? = null,
+        animateTo: Boolean = true,
+        angle: Double = 0.0,
+    ): FlutterMarker {
+        map!!.controller.setZoom(zoom)
+        if (animateTo)
+            map!!.controller.animateTo(geoPoint)
+        val marker: FlutterMarker = createMarker(geoPoint, color) as FlutterMarker
+        marker.onClickListener = Marker.OnMarkerClickListener { marker, _ ->
+            val hashMap = HashMap<String, Double>()
+            hashMap["lon"] = marker!!.position.longitude
+            hashMap["lat"] = marker.position.latitude
+            methodChannel.invokeMethod("receiveGeoPoint", hashMap)
+            true
+        }
+        when {
+            dynamicMarkerBitmap != null -> {
+                marker.setIconMaker(null, bitmap = dynamicMarkerBitmap, angle)
+                folderMarkers.items.add(marker)
+            }
+
+            !imageURL.isNullOrEmpty() -> {
+                marker.setIconMarkerFromURL(imageURL, angle)
+                folderMarkers.items.add(marker)
+            }
+
+            else -> folderMarkers.items.add(marker)
 
         }
+
+        map?.invalidate()
+        return marker
     }
+
+    private fun createMarker(
+        geoPoint: GeoPoint,
+        color: Int?,
+        icon: Bitmap? = null,
+        angle: Double = 0.0,
+    ): Marker {
+        val marker = FlutterMarker(context, map!!, geoPoint, scope)
+        marker.visibilityInfoWindow(visibilityInfoWindow)
+//        marker.longPress = object : LongClickHandler {
+//            override fun invoke(marker: Marker): Boolean {
+//                map!!.overlays.remove(marker)
+//                map!!.invalidate()
+//                return true
+//            }
+//        }
+        marker.setIconMaker(color, bitmap = icon, angle)
+        //marker.setPosition(geoPoint);
+        return marker
+    }
+
+    private fun deleteMarkers(call: MethodCall, result: MethodChannel.Result) {
+        val args = call.arguments as List<HashMap<String, Double>>
+        val geoPoints = args.map { mapGeoP ->
+            mapGeoP.toGeoPoint()
+        }
+        geoPoints.forEach { geoPoint ->
+            deleteMarker(geoPoint)
+        }
+        result.success(200)
+    }
+
+    private fun setMarkerTracking() {
+        locationNewOverlay.setMarkerIcon(customPersonMarkerIcon, customArrowMarkerIcon)
+    }
+
 
     private fun removeLimitCameraArea(result: MethodChannel.Result) {
         map!!.setScrollableAreaLimitDouble(boundingWorldBox)
