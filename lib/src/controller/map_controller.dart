@@ -488,7 +488,7 @@ class MapController extends BaseMapController {
     double? angle,
   }) async {
     if (angle != null) {
-      assert(angle >= -pi && angle <= pi, "angle should be between -pi and pi");
+      assert(angle >= 0 && angle <= 2*pi, "angle should be between 0 and 2*pi");
     }
     await osmBaseController.addMarker(
       p,
