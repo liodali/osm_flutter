@@ -167,6 +167,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           controller.changeLocationMarker(
             oldLocation: lastGeoPoint.value!,
             newLocation: controller.listenerMapSingleTapping.value!,
+            angle: Random.secure().nextDouble() * (2 * pi)
           );
           lastGeoPoint.value = controller.listenerMapSingleTapping.value;
         } else {

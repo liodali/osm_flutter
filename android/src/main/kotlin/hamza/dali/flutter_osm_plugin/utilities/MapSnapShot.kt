@@ -120,8 +120,9 @@ class MapSnapShot {
         isAdvancedPicker = isActive
     }
 
-    fun overlaySnapShotMarker(point: GeoPoint, icon: ByteArray) {
+    fun overlaySnapShotMarker(point: GeoPoint, icon: ByteArray,oldPoint:GeoPoint?=null,) {
         markers[point] = icon
+        markers.remove(oldPoint)
     }
 
     fun removeMarkersFromSnapShot(removedPoints: List<GeoPoint>) {

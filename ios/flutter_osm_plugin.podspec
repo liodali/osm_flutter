@@ -5,9 +5,9 @@
 Pod::Spec.new do |s|
   s.name             = 'flutter_osm_plugin'
   s.version          = '0.0.1'
-  s.summary          = 'osm plugin for flutter apps (only Android for now, iOS will be supported in future)'
+  s.summary          = 'OSM plugin for flutter apps  Android,iOS,web '
   s.description      = <<-DESC
-osm plugin for flutter apps (only Android for now, iOS will be supported in future)
+  OSM plugin for flutter apps  Android,iOS,web
                        DESC
   s.homepage         = 'http://example.com'
   s.license          = { :file => '../LICENSE' }
