@@ -57,6 +57,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.*
+import org.osmdroid.views.overlay.Marker.ANCHOR_BOTTOM
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import java.io.ByteArrayOutputStream
 import kotlin.collections.component1
@@ -865,7 +866,10 @@ class FlutterOsmView(
             true -> (args["point"] as HashMap<String, Double>)["angle"] as Double
             else -> 0.0
         }
-
+        val anchor = when (args.containsKey("iconAnchor")) {
+            true -> Anchor(args["iconAnchor"] as HashMap<String, Double>)
+            else -> null
+        }
 
         addMarker(
             point,
@@ -873,6 +877,7 @@ class FlutterOsmView(
             zoom = map!!.zoomLevelDouble,
             animateTo = false,
             angle = angle,
+            anchor = anchor,
         )
 
 
@@ -972,11 +977,13 @@ class FlutterOsmView(
         imageURL: String? = null,
         animateTo: Boolean = true,
         angle: Double = 0.0,
+        anchor: Anchor? = null,
     ): FlutterMarker {
         map!!.controller.setZoom(zoom)
         if (animateTo)
             map!!.controller.animateTo(geoPoint)
-        val marker: FlutterMarker = createMarker(geoPoint, color) as FlutterMarker
+        val marker: FlutterMarker =
+            createMarker(geoPoint, color, anchor = anchor, angle = angle) as FlutterMarker
         marker.onClickListener = Marker.OnMarkerClickListener { marker, _ ->
             val hashMap = HashMap<String, Double>()
             hashMap["lon"] = marker!!.position.longitude
@@ -984,6 +991,13 @@ class FlutterOsmView(
             methodChannel.invokeMethod("receiveGeoPoint", hashMap)
             true
         }
+        /*marker.longPress = { GeoPoint ->
+            val hashMap = HashMap<String, Double>()
+            hashMap["lon"] = GeoPoint.position.longitude
+            hashMap["lat"] = GeoPoint.position.latitude
+            methodChannel.invokeMethod("receiveLongPressGeoPoint", hashMap)
+            true
+        }*/
         when {
             dynamicMarkerBitmap != null -> {
                 marker.setIconMaker(null, bitmap = dynamicMarkerBitmap, angle)
@@ -1008,9 +1022,16 @@ class FlutterOsmView(
         color: Int?,
         icon: Bitmap? = null,
         angle: Double = 0.0,
+        anchor: Anchor? = null,
     ): Marker {
         val marker = FlutterMarker(context, map!!, geoPoint, scope)
         marker.visibilityInfoWindow(visibilityInfoWindow)
+        anchor?.let { markerAnchor ->
+            marker.setAnchor(
+                markerAnchor.x,
+                markerAnchor.y,
+            )
+        }
 //        marker.longPress = object : LongClickHandler {
 //            override fun invoke(marker: Marker): Boolean {
 //                map!!.overlays.remove(marker)

@@ -8,6 +8,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
@@ -71,7 +72,6 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
             onMarkerClick(marker, map)
         }
         initInfoWindow()
-
     }
 
     constructor(
@@ -99,6 +99,13 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
     override fun onMarkerClick(marker: Marker?, mapView: MapView?): Boolean {
         showInfoWindow()
         return onClickListener?.onMarkerClick(this, mapView) ?: true
+    }
+
+    override fun onLongPress(event: MotionEvent?, mapView: MapView?): Boolean {
+        if (longPress != null) {
+            longPress!!(this)
+        }
+        return super.onLongPress(event, mapView)
     }
 
     fun setIconMaker(color: Int? = null, bitmap: Bitmap?, angle: Double? = null) {
@@ -213,4 +220,8 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
     override fun showInfoWindow() {
         super.showInfoWindow()
     }
+}
+
+data class Anchor(val x: Float, val y: Float) {
+    constructor(map: HashMap<String, Double>) : this(map["x"]!!.toFloat(), map["y"]!!.toFloat())
 }
