@@ -486,9 +486,11 @@ class MapController extends BaseMapController {
     GeoPoint p, {
     MarkerIcon? markerIcon,
     double? angle,
+    IconAnchor? iconAnchor,
   }) async {
     if (angle != null) {
-      assert(angle >= 0 && angle <= 2*pi, "angle should be between 0 and 2*pi");
+      assert(
+          angle >= 0 && angle <= 2 * pi, "angle should be between 0 and 2*pi");
     }
     await osmBaseController.addMarker(
       p,

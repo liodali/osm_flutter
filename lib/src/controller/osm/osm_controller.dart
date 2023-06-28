@@ -463,6 +463,7 @@ final class MobileOSMController extends IBaseOSMController {
     GeoPoint p, {
     MarkerIcon? markerIcon,
     double? angle,
+    IconAnchor? iconAnchor,
   }) async {
     if (markerIcon != null) {
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
@@ -478,10 +479,15 @@ final class MobileOSMController extends IBaseOSMController {
                 )
               : p,
           globalKeyIcon: _osmFlutterState.dynamicMarkerKey,
+          iconAnchor: iconAnchor,
         );
       });
     } else {
-      await osmPlatform.addMarker(_idMap, p);
+      await osmPlatform.addMarker(
+        _idMap,
+        p,
+        iconAnchor: iconAnchor,
+      );
     }
   }
 

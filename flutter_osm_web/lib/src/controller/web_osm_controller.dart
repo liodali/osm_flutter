@@ -238,6 +238,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     GeoPoint p, {
     MarkerIcon? markerIcon,
     double? angle,
+    IconAnchor? iconAnchor,
   }) async {
     Widget? icon = markerIcon;
     if (icon == null) {

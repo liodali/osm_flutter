@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+typedef IconAnchor = ({double x, double y});
+
 class MarkerOption {
   final MarkerIcon? defaultMarker;
   final MarkerIcon? advancedPickerMarker;
@@ -14,9 +16,9 @@ class MarkerOption {
     MarkerIcon? advancedPickerMarker,
   }) {
     return MarkerOption(
-        defaultMarker: defaultMarker ?? this.defaultMarker,
-        advancedPickerMarker:
-            advancedPickerMarker ?? this.advancedPickerMarker);
+      defaultMarker: defaultMarker ?? this.defaultMarker,
+      advancedPickerMarker: advancedPickerMarker ?? this.advancedPickerMarker,
+    );
   }
 }
 
@@ -46,7 +48,7 @@ class MarkerIcon extends StatelessWidget {
   final Icon? icon;
   final AssetMarker? assetMarker;
   final Widget? iconWidget;
-
+  
   const MarkerIcon({
     this.icon,
     this.assetMarker,

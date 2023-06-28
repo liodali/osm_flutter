@@ -528,12 +528,21 @@ class MethodChannelOSM extends MobileOSMPlatform {
     int idOSM,
     GeoPoint p, {
     GlobalKey? globalKeyIcon,
+    IconAnchor? iconAnchor,
   }) async {
-    Map<String, dynamic> args = {"point": p.toMap()};
+    Map<String, dynamic> args = {
+      "point": p.toMap(),
+    };
     if (globalKeyIcon != null) {
       var icon = await _capturePng(globalKeyIcon);
 
       args["icon"] = icon;
+    }
+    if (iconAnchor != null) {
+      args["iconAnchor"] = {
+        "x": iconAnchor.x,
+        "y": iconAnchor.y,
+      };
     }
 
     await _channels[idOSM]?.invokeMethod("add#Marker", args);
