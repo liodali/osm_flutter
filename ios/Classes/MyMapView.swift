@@ -490,10 +490,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
             let point = args["point"] as! GeoPoint
             var angle = 0
+            var anchor:AnchorGeoPoint? = nil
             if let _angle = point["angle"] {
                 angle = Int(CGFloat(_angle).toDegrees)
             }
-            GeoPointMap(icon: icon, coordinate: coordinate, angle: angle).setupMarker(on: mapView)
+            if let _anchor = args["iconAnchor"]{
+                let x = (_anchor  as! [String:Any] )["x"] as! NSNumber
+                let y = (_anchor as! [String:Any] )["y"] as! NSNumber
+                anchor = AnchorGeoPoint(x: Int(CGFloat(x)),y: Int(CGFloat(y)))
+            }
+            GeoPointMap(icon: icon, coordinate: coordinate, angle: angle, anchor: anchor).setupMarker(on: mapView)
         }
     }
 

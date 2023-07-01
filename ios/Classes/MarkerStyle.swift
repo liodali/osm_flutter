@@ -37,7 +37,7 @@ extension MarkerStyle {
             styleStr = "\(styleStr),sprite: '\(sprite.rawValue)'"
         }
         if offset != nil {
-            styleStr = "\(styleStr),offset: [\(offset!.first!)px,\(offset!.last!)px],anchor: center"
+            styleStr = "\(styleStr),offset: [\(String(describing: offset!.first!))px,\(String(describing: offset!.last!))px],anchor: center"
         }
         styleStr = "\(styleStr)}"
 
