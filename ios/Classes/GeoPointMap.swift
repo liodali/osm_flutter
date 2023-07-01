@@ -10,35 +10,49 @@ import TangramMap
 
 
 typealias GeoPoint = [String: Double]
+struct AnchorGeoPoint {
+    var x: Int = 0
+    var y: Int = 0
+}
 
 protocol GenericGeoPoint {
     var coordinate: CLLocationCoordinate2D { get set }
-
 }
 
 class GeoPointMap {
 
 
     let coordinate: CLLocationCoordinate2D
-    let styleMarker: String
+    //let styleMarker: String
     let markerIcon: MarkerIconData
     public var marker: TGMarker? = nil
     var interactive: Bool = true
-
+    var anchor:AnchorGeoPoint? = nil
+    var markerStyle:MarkerStyle = MarkerStyle()
     init(
             icon: MarkerIconData,
             coordinate: CLLocationCoordinate2D,
             interactive: Bool = true,
-            styleMarker: String? = nil,
-            angle: Int = 0
+            //styleMarker: String? = nil,
+            angle: Int = 0,
+            anchor:AnchorGeoPoint? = nil
     ) {
         self.interactive = interactive
 
         self.coordinate = coordinate
 
         self.markerIcon = icon
-
-        self.styleMarker = styleMarker ?? " { style: 'points', interactive: \(interactive), color: 'white',size: [\(icon.size.first ?? 48)px,\(icon.size.last ?? 48)px], order: 1000, collide: false , angle : \(angle) } "
+        
+        self.markerStyle.size = icon.size
+        if anchor != nil {
+            self.markerStyle.offset = [anchor!.x,anchor!.y]
+        }
+        self.markerStyle.angle = angle
+        self.markerStyle.interactive = interactive
+        
+        /*
+         self.styleMarker = styleMarker ?? " { style: 'points', interactive: \(interactive), color: 'white',size: [\(icon.size.first ?? 48)px,\(icon.size.last ?? 48)px], order: 1000, collide: false , angle : \(angle) } "
+         */
     }
 
     var location: CLLocation {
@@ -66,21 +80,25 @@ class MyLocationMarker: GeoPointMap {
             personIcon: MarkerIconData? = nil,
             arrowDirectionIcon: MarkerIconData? = nil,
             userLocationMarkerType: UserLocationMarkerType = UserLocationMarkerType.person,
-            angle: Int = 0
+            angle: Int = 0,
+            anchor:AnchorGeoPoint? = nil
     ) {
         self.angle = angle
-        var style: String? = nil
+        //var style: String? = nil
         var iconM: MarkerIconData = MarkerIconData(image: nil)
         self.userLocationMarkerType = userLocationMarkerType
         self.personIcon = personIcon
         self.arrowDirectionIcon = arrowDirectionIcon
+       
+        super.init(icon: iconM, coordinate: coordinate,interactive:false,angle: angle,anchor:anchor)
+        self.markerStyle.style = StyleType.location
         if (arrowDirectionIcon != nil && personIcon != nil) {
             switch (userLocationMarkerType) {
             case .person:
-                style = "{ \(MyLocationMarker.personStyle) , angle: \(angle) } "
+                self.markerStyle.sprite = SpriteType.person
                 break;
             case .arrow:
-                style = "{ \(MyLocationMarker.arrowStyle) , angle: \(angle)  } "
+                self.markerStyle.sprite = SpriteType.arrow
                 break;
             }
         } else {
@@ -90,8 +108,7 @@ class MyLocationMarker: GeoPointMap {
                 iconM = personIcon ?? MarkerIconData(image: nil)
             }
         }
-        super.init(icon: iconM, coordinate: coordinate, styleMarker: style, angle: angle)
-
+        self.markerStyle.order = 2000
     }
 }
 
@@ -103,11 +120,12 @@ class StaticGeoPMarker: GeoPointMap {
     init(
             icon: MarkerIconData,
             coordinate: CLLocationCoordinate2D,
-            angle: Int = 0
+            angle: Int = 0,
+            anchor:AnchorGeoPoint? = nil
     ) {
 
         self.angle = angle
-        super.init(icon: icon, coordinate: coordinate, interactive: true, angle: angle)
+        super.init(icon: icon, coordinate: coordinate, interactive: true, angle: angle,anchor:anchor)
 
     }
 
