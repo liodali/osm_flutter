@@ -21,17 +21,17 @@ async function addPosition(mapId,point, showMarker, animate) {
    return await iframe.contentWindow.changePosition(point, showMarker, animate);
 }
 
-async function addMarker(mapId,point, icon) {
+async function addMarker(mapId,point, icon,angle,anchor) {
    console.log("id map :" + mapId);
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.addMarker(point, icon);
+   return iframe.contentWindow.addMarker(point, icon,angle,anchor);
 }
-async function changeMarker(mapId,oldPoint, point, icon) {
+async function changeMarker(mapId,oldPoint, point, icon,angle) {
    console.log("id map :" + mapId);
    console.log("change : " + oldPoint)
    console.log("to :" + point)
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.changeMarker(oldPoint, point, icon);
+   return iframe.contentWindow.changeMarker(oldPoint, point, icon,angle);
 }
 
 async function modifyMarker(mapId,point, icon) {

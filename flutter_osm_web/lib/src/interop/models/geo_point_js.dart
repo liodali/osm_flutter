@@ -30,3 +30,13 @@ class GeoPointWithOrientationJs {
     num angle,
   });
 }
+@JS()
+@anonymous
+class IconAnchorJS {
+  external num get x;
+
+  external num get y;
+
+  // Must have an unnamed factory constructor with named arguments.
+  external factory IconAnchorJS({num x, num y});
+}

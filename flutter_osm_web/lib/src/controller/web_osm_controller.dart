@@ -1,4 +1,5 @@
 import 'dart:html' as html;
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -16,7 +17,7 @@ int mapId = 0;
 final class WebOsmController with WebMixin implements IBaseOSMController {
   late MethodChannel? channel;
   AndroidLifecycleMixin? _androidOSMLifecycle;
-
+  final Duration duration = Duration(milliseconds: 300);
   FlutterOsmPluginWeb get webPlatform =>
       OSMPlatform.instance as FlutterOsmPluginWeb;
 
@@ -180,7 +181,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         color: Colors.red,
         size: 32,
       );
-      Future.delayed(const Duration(milliseconds: 300), () async {
+      Future.delayed(duration, () async {
         await changeIconAdvPickerMarker(osmWebFlutterState.dynamicMarkerKey!);
       });
     }
@@ -221,7 +222,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   }) async {
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
 
-    await Future.delayed(Duration(milliseconds: 250), () async {
+    await Future.delayed(duration, () async {
       final base64Icon =
           (await capturePng(osmWebFlutterState.dynamicMarkerKey!))
               .convertToString();
@@ -248,17 +249,20 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         color: Colors.red,
       );
     }
-    osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value =
-        ((angle == null) || (angle == 0.0))
-            ? icon
-            : Transform.rotate(
-                angle: angle,
-                child: icon,
-              );
-    int duration = 350;
-    await Future.delayed(Duration(milliseconds: duration), () async {
+    osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
+    await Future.delayed(duration, () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
-      interop.addMarker(mapId, p.toGeoJS(), icon.convertToString());
+      var anchor = null;
+      if (iconAnchor != null) {
+        anchor = iconAnchor.toAnchorJS();
+      }
+      interop.addMarker(
+        mapId,
+        p.toGeoJS(),
+        icon.convertToString(),
+        angle != null ? (angle * (180 / pi)) : 0,
+        anchor,
+      );
     });
   }
 
@@ -277,7 +281,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   @override
   Future<void> setIconMarker(GeoPoint point, MarkerIcon markerIcon) async {
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
-    await Future.delayed(Duration(milliseconds: 300), () async {
+    await Future.delayed(duration, () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
       final jsP = point.toGeoJS();
       await interop.modifyMarker(mapId, jsP, icon.convertToString());
@@ -287,7 +291,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   @override
   Future changeDefaultIconMarker(MarkerIcon homeMarker) async {
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = homeMarker;
-    await Future.delayed(Duration(milliseconds: 300), () async {
+    await Future.delayed(duration, () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
       await interop.setDefaultIcon(mapId, icon.convertToString());
     });
@@ -312,11 +316,13 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         final iconPNG = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
         icon = iconPNG.convertToString();
       }
+      debugPrint("changedMarker:angle:${angle != null ? (angle * (180 / pi)) : 0}");
       await interop.changeMarker(
         mapId,
         oldLocation.toGeoJS(),
         newLocation.toGeoJS(),
         icon,
+        angle != null ? (angle * (180 / pi)) : 0,
       );
     });
   }

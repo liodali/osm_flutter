@@ -78,3 +78,13 @@ extension ExtListGeoPoints on List<GeoPoint> {
     return this.map((e) => e.toGeoJS()).toList();
   }
 }
+extension ExtAnchor on IconAnchor {
+  IconAnchorJS toAnchorJS() {
+    return IconAnchorJS(
+      x: x,
+      y: y,
+    );
+  }
+
+  
+}

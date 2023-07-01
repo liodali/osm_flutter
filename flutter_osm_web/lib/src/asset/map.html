@@ -3,8 +3,17 @@
 
 <head>
   <meta charset="UTF-8">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+  <!--<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" 
+    integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" 
+  integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-hotline@0.4.0/dist/leaflet.hotline.min.js"></script>
   <!--  
@@ -195,7 +204,8 @@
       setHomeMarker(point, args);
       return 200;
     }
-    function addMarker(point, iconMarker) {
+    
+    function addMarker(point, iconMarker,angle,anchor) {
       const position = [point.lat, point.lon];
       var argsIcon = {
         iconSize: [32, 32],
@@ -206,7 +216,9 @@
       var args = {
         icon: L.icon(
           argsIcon
-        )
+        ),
+        rotationAngle: angle,
+        rotationOrigin: "center"
       }
       L.marker(position, args)
         .addTo(mymap)
@@ -216,7 +228,7 @@
         });
       return 200;
     }
-    async function changeMarker(oldPoint, point, icon) {
+    async function changeMarker(oldPoint, point, icon,angle) {
 
       var latlng = L.latLng([point.lat, point.lon]);
       var oldLatlng = L.latLng([oldPoint.lat, oldPoint.lon]);
@@ -224,14 +236,22 @@
         if (layer instanceof L.Marker) {
           var geoPoint = layer.getLatLng();
           if (geoPoint.lat == oldLatlng.lat && geoPoint.lng == oldLatlng.lng) {
-            layer.setLatLng(latlng)
+            //layer.setLatLng(latlng)
+            var iconMarker = layer.getIcon();
             if (icon != undefined) {
-              var iconMarker = L.icon({
+               iconMarker = L.icon({
                 iconUrl: "data:image/png;base64," + icon,
                 iconSize: [32, 32]
               });
-              layer.setIcon(iconMarker)
+              //layer.setIcon(iconMarker)
             }
+            const iconMarkerURL = iconMarker.options.iconUrl.split("data:image/png;base64,")[1];
+            var angleMarker = layer.options.rotationAngle;
+            if(angle != undefined && angleMarker!=angle) {
+              angleMarker = angle;
+            }
+            mymap.removeLayer(layer);
+            addMarker(point,iconMarkerURL,angleMarker,undefined)
             return this;
           }
         }

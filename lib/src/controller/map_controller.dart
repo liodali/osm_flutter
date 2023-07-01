@@ -496,6 +496,7 @@ class MapController extends BaseMapController {
       p,
       markerIcon: markerIcon,
       angle: angle,
+      iconAnchor: iconAnchor
     );
   }
 
