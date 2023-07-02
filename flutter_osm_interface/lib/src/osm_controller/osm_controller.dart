@@ -32,7 +32,7 @@ abstract class IBaseOSMController {
   ///
   /// create marker int specific position without
   /// change map camera,
-  /// you can rotate marker using [angle] 
+  /// you can rotate marker using [angle]
   /// and also set marker anchor using [iconAnchor]
   ///
   /// [p] : (GeoPoint) desired location
@@ -44,12 +44,14 @@ abstract class IBaseOSMController {
     double? angle,
     IconAnchor? iconAnchor,
   });
+
   /// [changeMarker]
   Future<void> changeMarker({
     required GeoPoint oldLocation,
     required GeoPoint newLocation,
     MarkerIcon? newMarkerIcon,
     double? angle = null,
+    IconAnchor? iconAnchor,
   });
 
   /// [removeMarker]

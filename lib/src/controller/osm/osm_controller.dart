@@ -14,7 +14,7 @@ final class MobileOSMController extends IBaseOSMController {
 
   static MobileOSMPlatform osmPlatform =
       OSMPlatform.instance as MobileOSMPlatform;
-
+  final duration = Duration(milliseconds: 300);
   Timer? _timer;
 
   late double stepZoom = 1;
@@ -76,7 +76,7 @@ final class MobileOSMController extends IBaseOSMController {
           size: 24,
         ),
       );
-      await Future.delayed(Duration(milliseconds: 300));
+      await Future.delayed(duration);
       await (osmPlatform as MethodChannelOSM)
           .initIosMap(_idMap, _osmFlutterState.dynamicMarkerKey);
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
@@ -147,7 +147,7 @@ final class MobileOSMController extends IBaseOSMController {
     });
 
     osmPlatform.onMapRestored(_idMap).listen((event) {
-      Future.delayed(Duration(milliseconds: 300), () {
+      Future.delayed(duration, () {
         if (!_osmFlutterState.widget.mapIsReadyListener.value) {
           _osmFlutterState.widget.mapIsReadyListener.value = true;
         }
@@ -189,7 +189,7 @@ final class MobileOSMController extends IBaseOSMController {
           color: Colors.red,
           size: 32,
         );
-        await Future.delayed(Duration(milliseconds: 300), () async {
+        await Future.delayed(duration, () async {
           _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
           if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
             await _changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
@@ -214,7 +214,7 @@ final class MobileOSMController extends IBaseOSMController {
         color: Colors.red,
         size: 32,
       );
-      await Future.delayed(Duration(milliseconds: 300), () async {
+      await Future.delayed(duration, () async {
         if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
           await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
           //_osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
@@ -372,7 +372,7 @@ final class MobileOSMController extends IBaseOSMController {
   /// [icon] : (MarkerIcon) marker icon that will change  home icon
   Future changeDefaultIconMarker(MarkerIcon icon) async {
     _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
-    await Future.delayed(Duration(milliseconds: 300), () async {
+    await Future.delayed(duration, () async {
       await osmPlatform.customMarker(_idMap, _osmFlutterState.dynamicMarkerKey);
     });
   }
@@ -387,7 +387,7 @@ final class MobileOSMController extends IBaseOSMController {
     bool refresh = false,
   }) async {
     _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
-    await Future.delayed(Duration(milliseconds: 300), () async {
+    await Future.delayed(duration, () async {
       await osmPlatform.customMarkerStaticPosition(
         _idMap,
         _osmFlutterState.dynamicMarkerKey,
@@ -467,8 +467,8 @@ final class MobileOSMController extends IBaseOSMController {
   }) async {
     if (markerIcon != null) {
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
-      int duration = 500;
-      await Future.delayed(Duration(milliseconds: duration), () async {
+      int durationSecond = 500;
+      await Future.delayed(duration, () async {
         await osmPlatform.addMarker(
           _idMap,
           angle != null && angle != 0
@@ -717,7 +717,7 @@ final class MobileOSMController extends IBaseOSMController {
   @override
   Future<void> setIconMarker(GeoPoint point, MarkerIcon markerIcon) async {
     _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
-    await Future.delayed(Duration(milliseconds: 300), () async {
+    await Future.delayed(duration, () async {
       await osmPlatform.setIconMarker(
         _idMap,
         point,
@@ -754,13 +754,14 @@ final class MobileOSMController extends IBaseOSMController {
     required GeoPoint newLocation,
     MarkerIcon? newMarkerIcon,
     double? angle = null,
+    IconAnchor? iconAnchor,
   }) async {
-    var duration = 0;
+    var durationMilliSecond = 0;
     if (newMarkerIcon != null) {
-      duration = 300;
+      durationMilliSecond = 300;
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = newMarkerIcon;
     }
-    await Future.delayed(Duration(milliseconds: duration), () async {
+    await Future.delayed(Duration(milliseconds: durationMilliSecond), () async {
       await osmPlatform.changeMarker(
         _idMap,
         oldLocation,
@@ -768,6 +769,7 @@ final class MobileOSMController extends IBaseOSMController {
         globalKeyIcon:
             newMarkerIcon != null ? _osmFlutterState.dynamicMarkerKey : null,
         angle: angle,
+        iconAnchor: iconAnchor,
       );
     });
   }

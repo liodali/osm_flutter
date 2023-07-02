@@ -107,6 +107,7 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     GeoPoint newLocation, {
     GlobalKey? globalKeyIcon,
     double? angle = null,
+    IconAnchor? iconAnchor,
   });
 
   Future<void> setIconMarker(

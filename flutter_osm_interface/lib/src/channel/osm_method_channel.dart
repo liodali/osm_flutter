@@ -669,6 +669,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GeoPoint newLocation, {
     GlobalKey? globalKeyIcon,
     double? angle = null,
+    IconAnchor? iconAnchor,
   }) async {
     Map<String, dynamic> args = {
       "new_location": newLocation.toMap(),
