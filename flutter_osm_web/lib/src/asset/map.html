@@ -213,6 +213,10 @@
       if (iconMarker != "") {
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
+      if (anchor != undefined && (anchor.x!=0 && anchor.y!=0)) {
+        console.log("anchor: "+JSON.stringify(anchor))
+        argsIcon["iconAnchor"] = [anchor.x,anchor.y]
+      }
       var args = {
         icon: L.icon(
           argsIcon
@@ -220,6 +224,8 @@
         rotationAngle: angle,
         rotationOrigin: "center"
       }
+      console.log("icon: "+JSON.stringify(args.icon.options))
+
       L.marker(position, args)
         .addTo(mymap)
         .on("click", function (event) {
@@ -228,7 +234,7 @@
         });
       return 200;
     }
-    async function changeMarker(oldPoint, point, icon,angle) {
+    async function changeMarker(oldPoint, point, icon,angle,anchor) {
 
       var latlng = L.latLng([point.lat, point.lon]);
       var oldLatlng = L.latLng([oldPoint.lat, oldPoint.lon]);
@@ -250,8 +256,14 @@
             if(angle != undefined && angleMarker!=angle) {
               angleMarker = angle;
             }
+            var iconAnchor = iconMarker.options.iconAnchor;
+            if(anchor != undefined && anchor!=iconAnchor) {
+              console.log("old anchor: "+JSON.stringify(iconAnchor))
+              console.log("new anchor: "+JSON.stringify(anchor))
+              iconAnchor = anchor;
+            }
             mymap.removeLayer(layer);
-            addMarker(point,iconMarkerURL,angleMarker,undefined)
+            addMarker(point,iconMarkerURL,angleMarker,iconAnchor)
             return this;
           }
         }

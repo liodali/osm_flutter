@@ -303,6 +303,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     required GeoPoint newLocation,
     MarkerIcon? newMarkerIcon,
     double? angle = null,
+    IconAnchor? iconAnchor,
   }) async {
     var duration = 0;
     if (newMarkerIcon != null) {
@@ -316,13 +317,15 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         final iconPNG = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
         icon = iconPNG.convertToString();
       }
-      debugPrint("changedMarker:angle:${angle != null ? (angle * (180 / pi)) : 0}");
+      debugPrint(
+          "changedMarker:angle:${angle != null ? (angle * (180 / pi)) : 0}");
       await interop.changeMarker(
         mapId,
         oldLocation.toGeoJS(),
         newLocation.toGeoJS(),
         icon,
         angle != null ? (angle * (180 / pi)) : 0,
+        iconAnchor?.toAnchorJS() ?? null,
       );
     });
   }

@@ -26,12 +26,12 @@ async function addMarker(mapId,point, icon,angle,anchor) {
    var iframe = getIframe(mapId);
    return iframe.contentWindow.addMarker(point, icon,angle,anchor);
 }
-async function changeMarker(mapId,oldPoint, point, icon,angle) {
+async function changeMarker(mapId,oldPoint, point, icon,angle,anchor) {
    console.log("id map :" + mapId);
    console.log("change : " + oldPoint)
    console.log("to :" + point)
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.changeMarker(oldPoint, point, icon,angle);
+   return iframe.contentWindow.changeMarker(oldPoint, point, icon,angle,anchor);
 }
 
 async function modifyMarker(mapId,point, icon) {

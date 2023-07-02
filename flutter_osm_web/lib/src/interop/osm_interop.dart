@@ -105,6 +105,7 @@ external dynamic changeMarker(
   GeoPointJs newP,
   String? icon,
   double? angle,
+  IconAnchorJS? iconAnchor,
 );
 
 @JS('modifyMarker')
