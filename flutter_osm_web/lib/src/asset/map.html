@@ -214,7 +214,6 @@
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
       if (anchor != undefined && (anchor.x!=0 && anchor.y!=0)) {
-        console.log("anchor: "+JSON.stringify(anchor))
         argsIcon["iconAnchor"] = [anchor.x,anchor.y]
       }
       var args = {
@@ -224,8 +223,6 @@
         rotationAngle: angle,
         rotationOrigin: "center"
       }
-      console.log("icon: "+JSON.stringify(args.icon.options))
-
       L.marker(position, args)
         .addTo(mymap)
         .on("click", function (event) {
@@ -258,8 +255,6 @@
             }
             var iconAnchor = iconMarker.options.iconAnchor;
             if(anchor != undefined && anchor!=iconAnchor) {
-              console.log("old anchor: "+JSON.stringify(iconAnchor))
-              console.log("new anchor: "+JSON.stringify(anchor))
               iconAnchor = anchor;
             }
             mymap.removeLayer(layer);
