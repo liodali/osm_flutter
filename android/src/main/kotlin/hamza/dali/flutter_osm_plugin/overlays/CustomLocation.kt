@@ -19,11 +19,14 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
+typealias OnChangedLocation = (gp: GeoPoint) -> Unit
+
 class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
     private var provider: GpsMyLocationProvider? = GpsMyLocationProvider(mapView.context)
     var disableRotateDirection = false
     private var mDrawPixel: Point = Point()
     private var customIcons = false
+    private var onChangedLocation: OnChangedLocation? = null
 
     init {
         setEnableAutoStop(true)
@@ -43,6 +46,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
     }
 
     fun onStopLocation() {
+        this.onChangedLocation = null
         disableFollowAndLocation()
         mMyLocationProvider.stopLocationProvider()
     }
@@ -85,6 +89,12 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
 
     override fun onLocationChanged(location: Location?, source: IMyLocationProvider?) {
         super.onLocationChanged(location, source)
+        if (isFollowLocationEnabled && location != null) {
+            val geoPMap = GeoPoint(this.lastFix)
+            if (onChangedLocation != null) {
+                this.onChangedLocation!!(geoPMap)
+            }
+        }
     }
 
     fun toggleFollow(enableStop: Boolean) {
@@ -104,7 +114,8 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         }
     }
 
-    fun onChangedLocation(onChangedLocation: (gp: GeoPoint) -> Unit) {
+    fun onChangedLocation(onChangedLocation: OnChangedLocation) {
+        this.onChangedLocation = onChangedLocation
         runOnFirstFix {
             val location = this.lastFix
             val geoPMap = GeoPoint(location)
@@ -134,7 +145,6 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
     }
 
     fun setMarkerIcon(personIcon: Bitmap?, directionIcon: Bitmap?) {
-        val mScale = mMapView!!.context.resources.displayMetrics.density
 
         when {
             personIcon != null && directionIcon != null -> {
