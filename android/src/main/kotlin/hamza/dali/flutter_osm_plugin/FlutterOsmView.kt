@@ -684,14 +684,16 @@ class FlutterOsmView(
          * show  cached markers
          */
         scope?.launch {
-            mapSnapShot.markers().forEach { (point, bytes) ->
-                val icon = bytes?.let { getBitmap(bytes = it) }
+            mapSnapShot.markers().forEach { point ->
+                val icon = point.icon?.let { getBitmap(bytes = it) }
                 //val drawable = getDefaultIconDrawable(icon = icon, color = null)
                 withContext(Main) {
                     addMarker(
-                        point,
+                        point.geoPoint,
                         dynamicMarkerBitmap = icon,
                         animateTo = false,
+                        angle = point.angle,
+                        anchor = point.anchor,
                         zoom = mapSnapShot.zoomLevel(initZoom)
                     )
                 }
@@ -840,11 +842,7 @@ class FlutterOsmView(
         var bitmap = customMarkerIcon
         if (args.containsKey("icon")) {
             bitmap = getBitmap(args["icon"] as ByteArray)
-            scope?.launch {
-                mapSnapShot().overlaySnapShotMarker(
-                    point = point, icon = args["icon"] as ByteArray
-                )
-            }
+
         }
         val angle = when ((args["point"] as HashMap<String, Double>).containsKey("angle")) {
             true -> (args["point"] as HashMap<String, Double>)["angle"] as Double
@@ -854,7 +852,16 @@ class FlutterOsmView(
             true -> Anchor(args["iconAnchor"] as HashMap<String, Any>)
             else -> null
         }
-
+        scope?.launch {
+            mapSnapShot().overlaySnapShotMarker(
+                point = FlutterGeoPoint(
+                    point,
+                    icon = args["icon"] as ByteArray,
+                    angle = angle,
+                    anchor = anchor,
+                )
+            )
+        }
         addMarker(
             point,
             dynamicMarkerBitmap = bitmap,
@@ -876,8 +883,12 @@ class FlutterOsmView(
         if (args.containsKey("icon")) {
             bitmap = getBitmap(args["icon"] as ByteArray)
             scope?.launch {
+                val oldFlutterGeoPoint =  mapSnapShot().markers().firstOrNull { fGeoPoint -> fGeoPoint.geoPoint==point  }
                 mapSnapShot().overlaySnapShotMarker(
-                    point = point, icon = args["icon"] as ByteArray
+                    point = oldFlutterGeoPoint!!.copy(
+                        geoPoint = point,
+                        icon = args["icon"] as ByteArray
+                    )
                 )
             }
         }
@@ -928,11 +939,17 @@ class FlutterOsmView(
 
         val icon = when (args.containsKey("new_icon")) {
             true -> args["new_icon"] as ByteArray
-            else -> mapSnapShot().markers()[oldLocation] as ByteArray
+            else -> mapSnapShot().markers()
+                .first { p -> p.geoPoint == oldLocation }.icon as ByteArray
         }.let { byteArray ->
             scope?.launch {
                 mapSnapShot().overlaySnapShotMarker(
-                    point = newLocation, oldPoint = oldLocation, icon = byteArray
+                    point = FlutterGeoPoint(
+                        geoPoint = newLocation,
+                        icon = byteArray,
+                        angle = angle
+                    ),
+                    oldPoint = oldLocation,
                 )
             }
             val bitmap = getBitmap(byteArray)
@@ -993,12 +1010,13 @@ class FlutterOsmView(
         val offsetY = (anchor?.offset()?.first ?: 0.0).toFloat()
 
         anchor?.let { markerAnchor ->
-            marker.setAnchor(when (markerAnchor.x) {
+            marker.setAnchor(
+                when (markerAnchor.x) {
                     in 0.0..1.0 -> markerAnchor.x
                     else -> (markerAnchor.x + offsetX) / marker.icon.intrinsicWidth
                 },
-                when(markerAnchor.y){
-                    in 0.0 .. 1.0 -> markerAnchor.y
+                when (markerAnchor.y) {
+                    in 0.0..1.0 -> markerAnchor.y
                     else -> (markerAnchor.y + offsetY) / marker.icon.intrinsicHeight
                 }
             )
