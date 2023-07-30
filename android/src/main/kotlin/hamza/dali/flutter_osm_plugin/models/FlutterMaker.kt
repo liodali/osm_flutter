@@ -17,12 +17,14 @@ import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 import hamza.dali.flutter_osm_plugin.R
+import hamza.dali.flutter_osm_plugin.utilities.scaleDensity
 import kotlinx.coroutines.CoroutineScope
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
 import kotlin.math.PI
+
 
 typealias LongClickHandler = (marker: Marker) -> Boolean
 
@@ -174,7 +176,15 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
         angle: Double = 0.0
     ): Drawable {
         var iconDrawable: Drawable? = null
-        bitmap?.let { bitmap ->
+        val iconBitmap = bitmap?.run {
+            val matrix = Matrix()
+            matrix.postScale(mapView.scaleDensity(),mapView.scaleDensity())
+            val resizedBitmap = Bitmap.createBitmap(
+                this, 0, 0, width, height, matrix, false
+            )
+            resizedBitmap
+        }
+        iconBitmap?.let { bitmap ->
             iconDrawable = when (angle > 0.0) {
                 true -> BitmapDrawable(mapView.resources, rotateMarker(bitmap, angle))
                 false -> BitmapDrawable(mapView.resources, bitmap)
@@ -223,5 +233,13 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
 }
 
 data class Anchor(val x: Float, val y: Float) {
-    constructor(map: HashMap<String, Double>) : this(map["x"]!!.toFloat(), map["y"]!!.toFloat())
+    private var offset : Pair<Double,Double>? = null
+
+    constructor(map: HashMap<String, Any>) : this((map["x"]!! as Double).toFloat(), (map["y"]!! as Double).toFloat()) {
+        if( map.containsKey("offset") ){
+            val offsetMap = map["offset"]!! as HashMap<String,Double>
+            offset = Pair(offsetMap["x"]!!,offsetMap["y"]!!)
+        }
+    }
+    fun offset() = offset
 }
