@@ -11,8 +11,8 @@ import TangramMap
 
 typealias GeoPoint = [String: Double]
 struct AnchorGeoPoint {
-    var x: Int = 0
-    var y: Int = 0
+    var anchor: AnchorType = AnchorType.center
+    var offset:(Int,Int)? = nil
 }
 
 protocol GenericGeoPoint {
@@ -45,7 +45,8 @@ class GeoPointMap {
         
         self.markerStyle.size = icon.size
         if anchor != nil {
-            self.markerStyle.offset = [anchor!.x,anchor!.y]
+            self.markerStyle.anchor = anchor!.anchor
+            self.markerStyle.offset = anchor!.offset != nil ? [anchor!.offset!.0,anchor!.offset!.1] : nil
         }
         self.markerStyle.angle = angle
         self.markerStyle.interactive = interactive

@@ -432,7 +432,11 @@ extension TGCoordinateBounds {
         return min(latitudeZoom, longitudeZoom);
     }
 }
-
+extension AnchorType {
+   static func fromString(anchorStr:String) -> AnchorType {
+        AnchorType.allCasesValues.contains(where: {$0 == anchorStr}) ? self.init(rawValue:anchorStr)! : AnchorType.center
+    }
+}
 func getMaxLatitude() -> Double {
     85.0
 }

@@ -58,12 +58,18 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var canSkipFollow: Bool = false
     var enableRotationGesture: Bool = false
     let urlStyle = "https://github.com/liodali/osm_flutter/raw/dc7424dacd77f4eced626abf64486d70fd03240d/assets/dynamic-styles.zip"
-
-    init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?) {
+    var fromAsset = true
+    var dynamicOSMPath:String? = nil
+    
+    init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?,dynamicOSM:String?) {
         self.frame = frame
         self.viewId = viewId
         self.channel = channel
-
+        if(dynamicOSM == nil ){
+            fromAsset = false
+        }else {
+            self.dynamicOSMPath = dynamicOSM
+        }
         mapView = TGMapView()
         mapView.frame = frame
         mainView = UIStackView(arrangedSubviews: [mapView])
@@ -80,7 +86,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 enableRotationGesture = (args as! [String: Any])["enableRotationGesture"] as! Bool
             }
         }
-
+        
         //mapview.mapType = MKMapType.standard
         //mapview.isZoomEnabled = true
         //mapview.isScrollEnabled = true
@@ -138,8 +144,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
             // let sceneUpdates = [TGSceneUpdate(path: "global.sdk_api_key", value: "qJz9K05vRu6u_tK8H3LmzQ")]
             // let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
-            let sceneUrl = URL(string: urlStyle)! // "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
-            mapView.loadScene(from: sceneUrl, with: sceneUpdates)
+            if (fromAsset){
+                //let urlRes = URL(resource: URLResource(name: dynamicOSMPath!))!
+                let url = Bundle.main.url(forAuxiliaryExecutable: dynamicOSMPath!)!//(forResource: dynamicOSMPath!,withExtension: "yaml")!
+                mapView.loadScene(from: url,with: sceneUpdates)
+                
+            }else {
+                let sceneUrl = URL(string: urlStyle)! // "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
+                mapView.loadScene(from: sceneUrl, with: sceneUpdates)
+            }
+
             //channel.invokeMethod("map#init", arguments: true)
             result(200)
             break
@@ -495,9 +509,17 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 angle = Int(CGFloat(_angle).toDegrees)
             }
             if let _anchor = args["iconAnchor"]{
-                let x = (_anchor  as! [String:Any] )["x"] as! NSNumber
-                let y = (_anchor as! [String:Any] )["y"] as! NSNumber
-                anchor = AnchorGeoPoint(x: Int(CGFloat(x)),y: Int(CGFloat(y)))
+                let anchorStr = (_anchor  as! [String:Any] )["anchor"] as! String
+                let anchorType = AnchorType.fromString(anchorStr: anchorStr)
+                var x = NSNumber(value: 0)
+                var y = NSNumber(value: 0)
+                var offset:(Int,Int)? = nil
+                if (_anchor  as! [String:Any]).contains(where: { $0.key == "offset" }) {
+                    x = ((_anchor  as! [String:Any])["offset"] as! [String:Any])["x"] as! NSNumber
+                    y = ((_anchor  as! [String:Any])["offset"] as! [String:Any])["y"] as! NSNumber
+                    offset = (Int(CGFloat(truncating: x)),Int(CGFloat(truncating: y)))
+                }
+                anchor = AnchorGeoPoint(anchor:anchorType,offset: offset)
             }
             GeoPointMap(icon: icon, coordinate: coordinate, angle: angle, anchor: anchor).setupMarker(on: mapView)
         }
