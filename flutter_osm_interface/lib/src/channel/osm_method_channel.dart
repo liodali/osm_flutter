@@ -539,10 +539,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       args["icon"] = icon;
     }
     if (iconAnchor != null) {
-      args["iconAnchor"] = {
-        "x": iconAnchor.x,
-        "y": iconAnchor.y,
-      };
+      args["iconAnchor"] = iconAnchor.toMap();
     }
 
     await _channels[idOSM]?.invokeMethod("add#Marker", args);
