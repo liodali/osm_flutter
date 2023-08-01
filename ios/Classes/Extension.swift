@@ -34,7 +34,10 @@ extension GeoPointMap {
             m.point == self.coordinate
         }
         if indexToUpdate != nil {
-            map.markers[indexToUpdate!].stylingString = markerStyle.toString()
+            let oldStyleMarker = map.markers[indexToUpdate!].stylingString
+            markerStyle.copyFromOldStyle(oldMarkerStyleStr: oldStyleMarker)
+            let markerStyleStr = markerStyle.toString()
+            map.markers[indexToUpdate!].stylingString = markerStyleStr
             map.markers[indexToUpdate!].point = mPosition
         }
     }
@@ -225,7 +228,19 @@ extension Array where Element == RoadInstruction {
         }
     }
 }
+extension Sizes: Decodable {
 
+    init(from array: [String]) throws {
+        let sizesStrs =  array.map({$0.replacingOccurrences(of: "px", with: "")})
+        var sizes = [Int]()
+        sizesStrs.forEach({
+            print($0)
+            sizes.append(Int($0)!)
+        })
+        self.init(sizes)
+        
+    }
+}
 extension CLLocationCoordinate2D: Equatable {
     static public func ==(lhs: Self, rhs: Self) -> Bool {
         lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude

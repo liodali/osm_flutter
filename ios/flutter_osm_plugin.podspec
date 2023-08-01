@@ -19,6 +19,7 @@ Pod::Spec.new do |s|
   s.dependency 'Tangram-es'
   s.dependency 'Alamofire'
   s.dependency 'Polyline'
+  s.dependency 'Yams'
   s.platform = :ios, '12.0'
 
   # Flutter.framework does not contain a i386 slice. Only x86_64 simulators are supported.

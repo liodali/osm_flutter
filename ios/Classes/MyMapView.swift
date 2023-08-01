@@ -527,18 +527,31 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func changePositionMarker(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
-
         let coordinate_old = (args["old_location"] as! GeoPoint).toLocationCoordinate()
         let coordinate_new = (args["new_location"] as! GeoPoint).toLocationCoordinate()
         var icon: MarkerIconData = MarkerIconData(image: nil)
+        var angle = 0
+        var anchor:AnchorGeoPoint? = nil
         if let iconStr = args["new_icon"] as? [String: Any] {
             icon = MarkerIconData(image: convertImage(codeImage: iconStr["icon"] as! String), size: iconStr["size"] as! [Int])
         }
-        var angle = 0
         if let _angle = args["angle"] as? Double {
             angle = Int(CGFloat(_angle).toDegrees)
         }
-        GeoPointMap(icon: icon, coordinate: coordinate_old, angle: angle)
+        if let _anchor = args["iconAnchor"]{
+            let anchorStr = (_anchor  as! [String:Any] )["anchor"] as! String
+            let anchorType = AnchorType.fromString(anchorStr: anchorStr)
+            var x = NSNumber(value: 0)
+            var y = NSNumber(value: 0)
+            var offset:(Int,Int)? = nil
+            if (_anchor  as! [String:Any]).contains(where: { $0.key == "offset" }) {
+                x = ((_anchor  as! [String:Any])["offset"] as! [String:Any])["x"] as! NSNumber
+                y = ((_anchor  as! [String:Any])["offset"] as! [String:Any])["y"] as! NSNumber
+                offset = (Int(CGFloat(truncating: x)),Int(CGFloat(truncating: y)))
+            }
+            anchor = AnchorGeoPoint(anchor:anchorType,offset: offset)
+        }
+        GeoPointMap(icon: icon, coordinate: coordinate_old, angle: angle,anchor: anchor)
                 .changePositionMarker(on: mapView, mPosition: coordinate_new)
     }
 

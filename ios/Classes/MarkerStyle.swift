@@ -6,17 +6,21 @@
 //
 
 import Foundation
+import Yams
 
-enum StyleType:String{
+typealias Sizes = [Int]
+typealias SizesStrs = [String]
+
+enum StyleType:String,Codable{
     case points   = "points"
     case lines    = "lines"
     case location = "ux-location-gem-overlay"
 }
-enum SpriteType : String{
+enum SpriteType : String,Codable{
     case person   = "ux-current-location"
     case arrow    = "ux-route-arrow"
 }
-enum AnchorType : String {
+enum AnchorType : String,Codable {
     case center        = "center"
     case left          = "left"
     case right         = "right"
@@ -38,24 +42,57 @@ enum AnchorType : String {
 
 
 /// { style: 'points', interactive: \(interactive), color: 'white',size: [\(icon.size.first ?? 48)px,\(icon.size.last ?? 48)px], order: 1000, collide: false , angle : \(angle) }
-struct MarkerStyle {
+struct MarkerStyle: Codable {
     var style:StyleType = StyleType.points;
-    var angle :Int = 0;
+    var angle :Int? = nil;
     var order :Int = 1000;
-    var size :[Int] = [48,48];
+    var size :Sizes = [48,48];
     var sprite : SpriteType? ;
     var color :String = "white";
     var interactive :Bool = true ;
     var collide :Bool = false ;
     var offset: [Int]? = nil;
-    var anchor: AnchorType = AnchorType.center
+    var anchor: AnchorType? = nil
+    init(){}
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.style = try container.decode(StyleType.self, forKey: .style)
+        self.angle = try container.decodeIfPresent(Int.self, forKey: .angle)
+        self.order = try container.decode(Int.self, forKey: .order)
+        self.size = try Sizes.init(from: try container.decode(SizesStrs.self, forKey: .size))
+        self.sprite = try container.decodeIfPresent(SpriteType.self, forKey: .sprite)
+        self.color = try container.decode(String.self, forKey: .color)
+        self.interactive = try container.decode(Bool.self, forKey: .interactive)
+        self.collide = try container.decode(Bool.self, forKey: .collide)
+        self.offset = try container.decodeIfPresent([Int].self, forKey: .offset)
+        self.anchor = try container.decodeIfPresent(AnchorType.self, forKey: .anchor)
+    }
+    mutating func copyFromOldStyle(oldMarkerStyleStr:String) {
+        let oldMarkerStyleYaml = try? YAMLDecoder().decode(MarkerStyle.self, from: oldMarkerStyleStr)
+        if let oldMarkerStyle = oldMarkerStyleYaml {
+            if self.angle == nil && oldMarkerStyle.angle != nil  && oldMarkerStyle.angle != 0 {
+                self.angle = oldMarkerStyle.angle
+            }
+            if  self.anchor == nil && oldMarkerStyle.anchor != nil {
+                self.anchor = oldMarkerStyle.anchor
+            }
+            if self.offset == nil && oldMarkerStyle.offset != nil  {
+                self.offset = oldMarkerStyle.offset
+            }
+        }
+    }
 }
 extension MarkerStyle {
     func toString() -> String {
-        var styleStr = "{style: '\(style.rawValue)',interactive: \(interactive),color: '\(color)',size: [\(String(describing: size.first!))px,\(String(describing: size.last!))px],order: \(order),collide: \(collide),angle: \(angle),anchor: \(anchor.rawValue)"
+        var styleStr = "{style: '\(style.rawValue)',interactive: \(interactive),color: '\(color)',size: [\(String(describing: size.first!))px,\(String(describing: size.last!))px],order: \(order),collide: \(collide)"
+        if angle != nil {
+            styleStr = "\(styleStr),angle: \(angle!)"
+        }
         if let sprite = sprite {
-            print(sprite)
             styleStr = "\(styleStr),sprite: '\(sprite.rawValue)'"
+        }
+        if anchor != nil  {
+            styleStr = "\(styleStr),anchor: \(anchor!.rawValue)"
         }
         if offset != nil  {
             styleStr = "\(styleStr),offset: [\(String(describing: offset!.first!))px,\(String(describing: -1*offset!.last!))px]"
