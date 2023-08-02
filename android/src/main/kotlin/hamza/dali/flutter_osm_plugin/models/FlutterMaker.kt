@@ -212,6 +212,21 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
+     fun updateAnchor(anchor: Anchor) {
+         val offsetX = (anchor.offset()?.first ?: 0.0).toFloat()
+         val offsetY = (anchor.offset()?.second ?: 0.0).toFloat()
+         setAnchor(
+             when (anchor.x) {
+                 in 0.0..1.0 -> anchor.x
+                 else -> (anchor.x + offsetX) / icon.intrinsicWidth
+             },
+             when (anchor.y) {
+                 in 0.0..1.0 -> anchor.y
+                 else -> (anchor.y + offsetY) / icon.intrinsicHeight
+             }
+         )
+    }
+
     private fun createWindowInfoView(): View {
         val inflater =
             context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater

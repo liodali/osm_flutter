@@ -883,7 +883,8 @@ class FlutterOsmView(
         if (args.containsKey("icon")) {
             bitmap = getBitmap(args["icon"] as ByteArray)
             scope?.launch {
-                val oldFlutterGeoPoint =  mapSnapShot().markers().firstOrNull { fGeoPoint -> fGeoPoint.geoPoint==point  }
+                val oldFlutterGeoPoint =
+                    mapSnapShot().markers().firstOrNull { fGeoPoint -> fGeoPoint.geoPoint == point }
                 mapSnapShot().overlaySnapShotMarker(
                     point = oldFlutterGeoPoint!!.copy(
                         geoPoint = point,
@@ -955,6 +956,11 @@ class FlutterOsmView(
             val bitmap = getBitmap(byteArray)
             bitmap
         }
+        if (args.containsKey("iconAnchor")) {
+            val anchor = Anchor(args["iconAnchor"] as HashMap<String, Any>)
+            marker?.updateAnchor(anchor = anchor)
+        }
+
         folderMarkers.items.remove(marker)
         addMarker(
             newLocation,
@@ -1006,20 +1012,10 @@ class FlutterOsmView(
             }
 
         }
-        val offsetX = (anchor?.offset()?.first ?: 0.0).toFloat()
-        val offsetY = (anchor?.offset()?.first ?: 0.0).toFloat()
+
 
         anchor?.let { markerAnchor ->
-            marker.setAnchor(
-                when (markerAnchor.x) {
-                    in 0.0..1.0 -> markerAnchor.x
-                    else -> (markerAnchor.x + offsetX) / marker.icon.intrinsicWidth
-                },
-                when (markerAnchor.y) {
-                    in 0.0..1.0 -> markerAnchor.y
-                    else -> (markerAnchor.y + offsetY) / marker.icon.intrinsicHeight
-                }
-            )
+           marker.updateAnchor(anchor = markerAnchor)
         }
 
         folderMarkers.items.add(marker)
