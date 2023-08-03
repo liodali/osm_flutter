@@ -178,7 +178,7 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
         var iconDrawable: Drawable? = null
         val iconBitmap = bitmap?.run {
             val matrix = Matrix()
-            matrix.postScale(mapView.scaleDensity(),mapView.scaleDensity())
+            matrix.postScale(mapView.scaleDensity(), mapView.scaleDensity())
             val resizedBitmap = Bitmap.createBitmap(
                 this, 0, 0, width, height, matrix, false
             )
@@ -212,19 +212,19 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
-     fun updateAnchor(anchor: Anchor) {
-         val offsetX = (anchor.offset()?.first ?: 0.0).toFloat()
-         val offsetY = (anchor.offset()?.second ?: 0.0).toFloat()
-         setAnchor(
-             when (anchor.x) {
-                 in 0.0..1.0 -> anchor.x
-                 else -> (anchor.x + offsetX) / icon.intrinsicWidth
-             },
-             when (anchor.y) {
-                 in 0.0..1.0 -> anchor.y
-                 else -> (anchor.y + offsetY) / icon.intrinsicHeight
-             }
-         )
+    fun updateAnchor(anchor: Anchor) {
+        val offsetX = (anchor.offset()?.first ?: 0.0).toFloat()
+        val offsetY = (anchor.offset()?.second ?: 0.0).toFloat()
+        setAnchor(
+            when (anchor.x) {
+                in 0.0..1.0 -> anchor.x
+                else -> (anchor.x + offsetX) / icon.intrinsicWidth
+            },
+            when (anchor.y) {
+                in 0.0..1.0 -> anchor.y
+                else -> (anchor.y + offsetY) / icon.intrinsicHeight
+            }
+        )
     }
 
     private fun createWindowInfoView(): View {
@@ -245,16 +245,23 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
     override fun showInfoWindow() {
         super.showInfoWindow()
     }
+
+    fun getOldAnchor(): Anchor = Anchor(mAnchorU, mAnchorV)
+
 }
 
 data class Anchor(val x: Float, val y: Float) {
-    private var offset : Pair<Double,Double>? = null
+    private var offset: Pair<Double, Double>? = null
 
-    constructor(map: HashMap<String, Any>) : this((map["x"]!! as Double).toFloat(), (map["y"]!! as Double).toFloat()) {
-        if( map.containsKey("offset") ){
-            val offsetMap = map["offset"]!! as HashMap<String,Double>
-            offset = Pair(offsetMap["x"]!!,offsetMap["y"]!!)
+    constructor(map: HashMap<String, Any>) : this(
+        (map["x"]!! as Double).toFloat(),
+        (map["y"]!! as Double).toFloat()
+    ) {
+        if (map.containsKey("offset")) {
+            val offsetMap = map["offset"]!! as HashMap<String, Double>
+            offset = Pair(offsetMap["x"]!!, offsetMap["y"]!!)
         }
     }
+
     fun offset() = offset
 }
