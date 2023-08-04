@@ -713,9 +713,7 @@ class FlutterOsmView(
         }
         mapSnapShot.lastCachedRoad()?.let { lastRoad ->
             if (lastRoad.roadPoints.isNotEmpty()) {
-                if (!map!!.overlayManager.contains(folderRoad)) {
-                    map!!.overlayManager.add(folderRoad)
-                }
+                checkRoadFolderAboveUserOverlay()
                 val polyLine = Polyline(map!!)
                 polyLine.setPoints(lastRoad.roadPoints)
                 polyLine.setStyle(
@@ -737,9 +735,7 @@ class FlutterOsmView(
         }
         mapSnapShot.cachedRoads().forEach { road ->
             if (road.roadPoints.isNotEmpty()) {
-                if (!map!!.overlayManager.contains(folderRoad)) {
-                    map!!.overlayManager.add(folderRoad)
-                }
+                checkRoadFolderAboveUserOverlay()
                 val polyLine = Polyline(map!!)
                 polyLine.setPoints(road.roadPoints)
 
@@ -1103,7 +1099,7 @@ class FlutterOsmView(
         if (markerSelectionPicker != null) {
             mainLinearLayout.removeView(markerSelectionPicker)
             if (!map!!.overlays.contains(folderShape)) map!!.overlays.add(folderShape)
-            if (!map!!.overlays.contains(folderRoad)) map!!.overlays.add(folderRoad)
+            checkRoadFolderAboveUserOverlay()
             if (!map!!.overlays.contains(folderStaticPosition)) map!!.overlays.add(
                 folderStaticPosition
             )
@@ -1259,7 +1255,7 @@ class FlutterOsmView(
                 homeMarker = addMarker(position, map!!.zoomLevelDouble, null)
                 markerSelectionPicker = null
                 map!!.overlays.add(folderShape)
-                map!!.overlays.add(folderRoad)
+                checkRoadFolderAboveUserOverlay()
                 map!!.overlays.add(folderStaticPosition)
                 map!!.overlays.add(folderMarkers)
                 map?.overlays?.add(0, staticOverlayListener)
@@ -1302,7 +1298,7 @@ class FlutterOsmView(
                 }
             }
             map!!.overlays.add(folderShape)
-            map!!.overlays.add(folderRoad)
+            checkRoadFolderAboveUserOverlay()
             map!!.overlays.add(folderStaticPosition)
             map!!.overlays.add(folderMarkers)
             map?.overlays?.add(0, staticOverlayListener)
@@ -1512,11 +1508,7 @@ class FlutterOsmView(
 
     private fun checkRoadFolderAboveUserOverlay() {
         if (!map!!.overlays.contains(folderRoad)) {
-            val indexOf = map!!.overlays.indexOf(locationNewOverlay)
-            when (indexOf != -1) {
-                true -> map!!.overlays.add(indexOf - 1, folderRoad)
-                false -> map!!.overlays.add(folderRoad)
-            }
+            map!!.overlays.add(1, folderRoad)
         }
     }
 
