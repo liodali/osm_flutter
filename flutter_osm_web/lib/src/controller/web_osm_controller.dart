@@ -60,7 +60,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     if (html.window.document.getElementById("mapScript") == null) {
       mapScript = html.ScriptElement()
         ..id = "mapScript"
-        ..src = 'packages/flutter_osm_web/src/asset/map.js' 
+        ..src = 'packages/flutter_osm_web/src/asset/map.js'
         ..type = 'text/javascript';
       body.append(mapScript!);
     }

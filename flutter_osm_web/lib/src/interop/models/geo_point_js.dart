@@ -37,6 +37,19 @@ class IconAnchorJS {
 
   external num get y;
 
+  external IconOffsetAnchorJS? get offset;
+
   // Must have an unnamed factory constructor with named arguments.
-  external factory IconAnchorJS({num x, num y});
+  external factory IconAnchorJS({num x, num y,IconOffsetAnchorJS? offset});
+}
+
+@JS()
+@anonymous
+class IconOffsetAnchorJS {
+  external num get x;
+
+  external num get y;
+
+  // Must have an unnamed factory constructor with named arguments.
+  external factory IconOffsetAnchorJS({num x, num y});
 }
