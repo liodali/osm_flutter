@@ -22,14 +22,10 @@ async function addPosition(mapId,point, showMarker, animate) {
 }
 
 async function addMarker(mapId,point, icon,angle,anchor) {
-   console.log("id map :" + mapId);
    var iframe = getIframe(mapId);
    return iframe.contentWindow.addMarker(point, icon,angle,anchor);
 }
 async function changeMarker(mapId,oldPoint, point, icon,angle,anchor) {
-   console.log("id map :" + mapId);
-   console.log("change : " + oldPoint)
-   console.log("to :" + point)
    var iframe = getIframe(mapId);
    return iframe.contentWindow.changeMarker(oldPoint, point, icon,angle,anchor);
 }
