@@ -231,14 +231,14 @@
         var anchorX = anchor.x
         var anchorY = anchor.y
         if(anchor.offset != undefined){
-          var offsetX = anchor.offset.x
+          var offsetX = -anchor.offset.x
           var offsetY = anchor.offset.y
-          if(anchor.offset.x>1){
+         /* if(anchor.offset.x > 1 ){
             offsetX = anchor.offset.x / 32
           }
           if(anchor.offset.y > 1 ){
             offsetY = anchor.offset.y / 32
-          }
+          }*/
           anchorX += offsetX
           anchorY += offsetY
         }
