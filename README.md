@@ -361,38 +361,12 @@ List<GeoPoint> geoPoints = await controller.geopoints;
 BoundingBox bounds = await controller.bounds;
 ```
 
-<b> 14) select/create new position </b>
+<b> 14) Map Listener  </b>
 
-* we have 2 way to select location in map
+> Get GeoPoint from  listener from controller directly
+ (for more example: see home_example.dart )
 
-<b>14.1 Manual selection (deprecated) </b>
-
-a) select without change default marker 
-```dart
- GeoPoint geoPoint = await controller.selectPosition();
-```
-b) select position with dynamic marker
- * Flutter widget 
-```dart
- GeoPoint geoPoint = await controller.selectPosition(
-     icon: MarkerIcon(
-              icon: Icon(
-                  Icons.location_history,
-                  color: Colors.amber,
-                  size: 48,
-          ), 
-);
-```
- * image from network
- ```dart
-  GeoPoint geoPoint = await controller.selectPosition(  
-          imageURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png"
-);
- ```
-
-c) select using listener from controller directly
-* for more example  see  home_example.dart 
-c.1) single tap listener
+a.1) single tap listener
 ```dart
 controller.listenerMapSingleTapping.addListener(() {
       if (controller.listenerMapSingleTapping.value != null) {
@@ -400,7 +374,7 @@ controller.listenerMapSingleTapping.addListener(() {
       }
     });
 ```
-c.2) long tap listener
+a.2) long tap listener
 ```dart
 controller.listenerMapLongTapping.addListener(() {
       if (controller.listenerMapLongTapping.value != null) {
@@ -408,7 +382,7 @@ controller.listenerMapLongTapping.addListener(() {
       }
     });
 ```
-c.3) region change listener
+a.3) region change listener
 ```dart
 controller.listenerRegionIsChanging.addListener(() {
       if (controller.listenerRegionIsChanging.value != null) {
@@ -416,19 +390,6 @@ controller.listenerRegionIsChanging.addListener(() {
       }
     });
 ```
-<b>14.2 Assisted selection </b> (for more details see example) 
-
-```dart
- /// To Start assisted Selection
- await controller.advancedPositionPicker();
- /// To get location desired
-  GeoPoint p = await controller.getCurrentPositionAdvancedPositionPicker();
-  /// To get location desired and close picker
- GeoPoint p = await controller.selectAdvancedPositionPicker();
- /// To cancel assisted Selection
- await controller.cancelAdvancedPositionPicker();
-```
-
 <b>15) Create Marker Programmatically </b>
 
 > you can change marker icon by using attribute `markerIcon`
@@ -468,6 +429,19 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
  await controller.removeMarker(geoPoint);
 ```
 * PS : static position cannot be removed by this method 
+
+<b>15.4 Assisted selection </b> (for more details see example) 
+
+```dart
+ /// To Start assisted Selection
+ await controller.advancedPositionPicker();
+ /// To get location desired
+  GeoPoint p = await controller.getCurrentPositionAdvancedPositionPicker();
+  /// To get location desired and close picker
+ GeoPoint p = await controller.selectAdvancedPositionPicker();
+ /// To cancel assisted Selection
+ await controller.cancelAdvancedPositionPicker();
+```
 
 <b>16) Draw road,recuperate instructions ,distance in km and duration in sec</b>
 
