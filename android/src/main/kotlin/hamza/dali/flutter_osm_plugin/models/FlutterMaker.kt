@@ -24,6 +24,8 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
 import kotlin.math.PI
+import kotlin.math.absoluteValue
+import kotlin.math.sign
 
 
 typealias LongClickHandler = (marker: Marker) -> Boolean
@@ -213,17 +215,33 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
     }
 
     fun updateAnchor(anchor: Anchor) {
-        val offsetX = (anchor.offset()?.first ?: 0.0).toFloat()
-        val offsetY = (anchor.offset()?.second ?: 0.0).toFloat()
-        setAnchor(
-            when (anchor.x) {
-                in 0.0..1.0 -> anchor.x
-                else -> (anchor.x + offsetX) / icon.intrinsicWidth
-            },
-            when (anchor.y) {
-                in 0.0..1.0 -> anchor.y
-                else -> (anchor.y + offsetY) / icon.intrinsicHeight
+        val offsetX = ((anchor.offset()?.first ?: 0.0) / icon.intrinsicWidth).toFloat()
+        val offsetY = ((anchor.offset()?.second ?: 0.0) / icon.intrinsicHeight).toFloat()
+        val anchorX = when (anchor.x) {
+            in 0.0..1.0 -> anchor.x
+            else -> anchor.x / icon.intrinsicWidth
+        } - when {
+            anchor.x < 1 -> {
+                val sign = offsetX.sign
+                (offsetX.absoluteValue + anchor.x) * sign
             }
+
+            else -> offsetX
+        }
+        val anchorY = when (anchor.y) {
+            in 0.0..1.0 -> anchor.y
+            else -> anchor.y / icon.intrinsicHeight
+        } + when {
+            anchor.y < 1 -> {
+                val sign = offsetY.sign
+                (offsetY.absoluteValue + anchor.y) * sign
+            }
+
+            else -> offsetY
+        }
+        setAnchor(
+            anchorX,
+            anchorY
         )
     }
 
