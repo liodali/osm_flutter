@@ -1,3 +1,4 @@
+### 0.60.1 : fix issue
 ### 0.60.0+3 : fix py script for automator
 ### 0.60.0+2 : forget update changelog
 ### 0.60.0+1 : fix issue
