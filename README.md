@@ -1,5 +1,5 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.55.3-orange)   
+![pub](https://img.shields.io/badge/pub-v0.60.0-orange)   
 
 
 ## Platform Support
@@ -19,7 +19,8 @@
 * assisted selection position (Android/iOS)
 * set BoundingBox (Android/Web)
 * zoom into region (Android/iOS/web)
-* draw Road,recuperate information (instruction/duration/distance) of the current road (Android/iOS/web)
+* draw Road  (Android/iOS/web)
+* recuperate information (instruction/duration/distance) of the current road  (Android/iOS/web)
 * draw Road manually (Android/iOS/web)
 * draw multiple Roads  (Android/iOS/web)
 * ClickListener on Marker (Android/iOS/web)
@@ -44,7 +45,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.55.3
+      flutter_osm_plugin: ^0.60.0
 
 
 
@@ -96,41 +97,45 @@ many thanks for @ben-xD
 ```dart
  OSMFlutter( 
         controller:mapController,
-        userTrackingOption: UserTrackingOption(
-           enableTracking: true,
-           unFollowUser: false,
-        ),
-        initZoom: 12,
-        minZoomLevel: 8,
-        maxZoomLevel: 14,
-        stepZoom: 1.0,
-        userLocationMarker: UserLocationMaker(
-            personMarker: MarkerIcon(
-                icon: Icon(
-                    Icons.location_history_rounded,
-                    color: Colors.red,
-                    size: 48,
+        osmOption: OSMOption(
+              userTrackingOption: UserTrackingOption(
+              enableTracking: true,
+              unFollowUser: false,
+            ),
+            zoomOption: ZoomOption(
+                  initZoom: 8,
+                  minZoomLevel: 3,
+                  maxZoomLevel: 19,
+                  stepZoom: 1.0,
+            ),
+            userLocationMarker: UserLocationMaker(
+                personMarker: MarkerIcon(
+                    icon: Icon(
+                        Icons.location_history_rounded,
+                        color: Colors.red,
+                        size: 48,
+                    ),
+                ),
+                directionArrowMarker: MarkerIcon(
+                    icon: Icon(
+                        Icons.double_arrow,
+                        size: 48,
+                    ),
                 ),
             ),
-            directionArrowMarker: MarkerIcon(
-                icon: Icon(
-                    Icons.double_arrow,
-                    size: 48,
-                ),
+            roadConfiguration: RoadOption(
+                    roadColor: Colors.yellowAccent,
             ),
-        ),
-         roadConfiguration: RoadOption(
-                roadColor: Colors.yellowAccent,
-        ),
-        markerOption: MarkerOption(
-            defaultMarker: MarkerIcon(
-                icon: Icon(
-                  Icons.person_pin_circle,
-                  color: Colors.blue,
-                  size: 56,
-                  ),
+            markerOption: MarkerOption(
+                defaultMarker: MarkerIcon(
+                    icon: Icon(
+                      Icons.person_pin_circle,
+                      color: Colors.blue,
+                      size: 56,
+                    ),
                 )
-        ),
+            ),
+        )
     );
 
 ```
@@ -155,7 +160,7 @@ many thanks for @ben-xD
                                 north: 47.8084648, 
                                 south: 45.817995, 
                                 west:  5.9559113,
-                            ),
+                      ),
             );
 // or set manually init position
  final controller = MapController.withPosition(
@@ -371,10 +376,10 @@ b) select position with dynamic marker
 ```dart
  GeoPoint geoPoint = await controller.selectPosition(
      icon: MarkerIcon(
-                      icon: Icon(
-                        Icons.location_history,
-                        color: Colors.amber,
-                        size: 48,
+              icon: Icon(
+                  Icons.location_history,
+                  color: Colors.amber,
+                  size: 48,
           ), 
 );
 ```
@@ -428,15 +433,24 @@ controller.listenerRegionIsChanging.addListener(() {
 
 > you can change marker icon by using attribute `markerIcon`
 > the angle value should be between [0,2pi]
+> set anchor of ther Marker
 
 ```dart
-await controller.addMarker(GeoPoint,markerIcon:MarkerIcon,angle:pi/3);
+await controller.addMarker(GeoPoint,
+      markerIcon:MarkerIcon,
+      angle:pi/3,
+      anchor:IconAnchor(anchor: Anchor.top,)
+);
 ```
  <b> 15.1) Update Marker </b>
- > you change change the location,icon,angle of the specific marker
+
+ > you can change the location,icon,angle,anchor of the specific marker
+
+ > The old configuration of the Marker will be keep it the same if not specificied
+
 
 ```dart
-await controller.changeLocationMarker(oldGeoPoint,newGeoPoint,newMarkerIcon,angle);
+await controller.changeLocationMarker(oldGeoPoint,newGeoPoint,MarkerIcon,angle,IconAnchor);
 ```
 
 <b> 15.2) Change Icon Marker  </b>
@@ -712,24 +726,38 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | Properties                    | Description                         |
 | ----------------------------- | ----------------------------------- |
 | `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
+| `osmOption`                   | (OSMOption) used to configure OSM Map such as zoom,road,userLocationMarker    |
+| `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
+| `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |
+| `onMapIsReady`                | (callback) listener trigger to get map is initialized or not |
+
+## `OSMOption` 
+
+| Properties                    | Description                         |
+| ----------------------------- | ----------------------------------- |
+| `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
 | `trackMyPosition`             | enable tracking user position.     |
 | `showZoomController`          | show default zoom controller.       |
 | `userLocationMarker`          | change user marker or direction marker icon in tracking location                |
 | `markerOption`                | configure marker of osm map                   |
-| `stepZoom`                    | set step zoom to use in zoomIn()/zoomOut() (default 1)       |
-| `initZoom`                    | set init zoom level in the map (default 10)       |
-| `maxZoomLevel`                | set maximum zoom level in the map  (2 <= x <= 19)       |
-| `minZoomLevel`                | set minimum zoom level in the map  (2 <= x <= 19 )       |
+| `zoomOption`                  | set  configuration for zoom in the Map
 | `roadConfiguration`           | (RoadOption) set  default color,width,borderColor,borderWdith for polylines |
 | `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
-| `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
-| `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |
-| `onMapIsReady`                | (callback) listener trigger to get map is initialized or not |
+| `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
+| `androidHotReloadSupport`     | (bool) enable to restart  osm map in android to support hotReload (default = false)  |
+| `enableRotationByGesture`     | (bool) enable to rotation gesture for map, default: false  |
 | `showDefaultInfoWindow`       | (bool) enable/disable default infoWindow of marker (default = false)         |
 | `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |
-| `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
-| `androidHotReloadSupport`     | (bool) enable to restart  osm map in android to support hotReload, default: false  |
-| `enableRotationByGesture`     | (bool) enable to rotation gesture for map, default: false  |
+
+
+## `ZoomOption`
+
+| Properties                    | Description                                                  |
+| ----------------------------- | ------------------------------------------------------------ |
+| `stepZoom`                    | set step zoom to use in zoomIn()/zoomOut() (default 1)       |
+| `initZoom`                    | set init zoom level in the map (default 10)                  |
+| `maxZoomLevel`                | set maximum zoom level in the map  (2 <= x <= 19)            |
+| `minZoomLevel`                | set minimum zoom level in the map  (2 <= x <= 19 )           |
 
 ### Custom Controller
 > To create your own MapController to need to extends from `BaseMapController`,

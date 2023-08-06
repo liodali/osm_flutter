@@ -1,3 +1,7 @@
+### 0.60.0 : Improvement API and fix bugs ( contain break changes )
+* Add iconAnchor for addMarker/changeLocationMarker
+* Fix bugs #420 , #262 , #430 , #419
+* Add `OSMOption` as configuration for `OSMFlutter`
 ### 0.55.3 : fix bugs
 * fix angle for addMarker where it should be between 0 and 2pi
 ### 0.55.2 : fix bugs
