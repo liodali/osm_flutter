@@ -677,6 +677,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
       final icon = await _capturePng(globalKeyIcon);
       args["new_icon"] = icon;
     }
+    if (iconAnchor != null) {
+      args["iconAnchor"] = iconAnchor.toMap();
+    }
     await _channels[idOSM]!.invokeMethod("change#Marker", args);
   }
 
