@@ -30,6 +30,7 @@ class GeoPointWithOrientationJs {
     num angle,
   });
 }
+
 @JS()
 @anonymous
 class IconAnchorJS {
@@ -40,7 +41,7 @@ class IconAnchorJS {
   external IconOffsetAnchorJS? get offset;
 
   // Must have an unnamed factory constructor with named arguments.
-  external factory IconAnchorJS({num x, num y,IconOffsetAnchorJS? offset});
+  external factory IconAnchorJS({num x, num y, IconOffsetAnchorJS? offset});
 }
 
 @JS()

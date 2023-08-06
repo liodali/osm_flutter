@@ -28,7 +28,7 @@ class IconAnchor {
   });
 
   Map<String, dynamic> toMap() {
-    final map =  <String, dynamic>{
+    final map = <String, dynamic>{
       "x": anchor.value.$1,
       "y": anchor.value.$2,
       "anchor": anchor.name,

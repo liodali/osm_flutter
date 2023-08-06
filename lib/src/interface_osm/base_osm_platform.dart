@@ -33,7 +33,8 @@ Widget buildWidget({
 }) =>
     getWidget(
       controller: controller,
-      userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
+      userTrackingOption:
+          userTrackingOption ?? controller.initMapWithUserPosition,
       mapIsReadyListener: mapIsReadyListener,
       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
       globalKeys: globalKeys,

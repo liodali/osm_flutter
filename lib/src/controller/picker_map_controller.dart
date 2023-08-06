@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 
 /// [PickerMapController]
-/// 
+///
 /// this controller for custom picker location widget
 /// you will cancel/get/finish advanced picker
 /// you can also draw road,change current location

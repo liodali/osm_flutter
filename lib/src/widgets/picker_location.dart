@@ -5,7 +5,6 @@ import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 import 'package:flutter_osm_plugin/src/controller/map_controller.dart';
 import 'package:flutter_osm_plugin/src/osm_flutter.dart';
 
-
 /// showSimplePickerLocation : picker to select specific position
 ///
 /// [context] : (BuildContext) dialog context parent

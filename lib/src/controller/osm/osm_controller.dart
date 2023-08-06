@@ -467,7 +467,7 @@ final class MobileOSMController extends IBaseOSMController {
   }) async {
     if (markerIcon != null) {
       _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
-      int durationSecond = 500;
+      //int durationSecond = 500;
       await Future.delayed(duration, () async {
         await osmPlatform.addMarker(
           _idMap,

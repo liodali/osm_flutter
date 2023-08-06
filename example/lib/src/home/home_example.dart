@@ -33,23 +33,23 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   @override
   void initState() {
     super.initState();
-    controller = MapController.withUserPosition(
-        trackUserLocation: UserTrackingOption(
-      enableTracking: true,
-      unFollowUser: false,
-    )
-        // controller = MapController.withPosition(
-        //   initPosition: GeoPoint(
-        //     latitude: 47.4358055,
-        //     longitude: 8.4737324,
-        //   ),
-        // areaLimit: BoundingBox(
-        //   east: 10.4922941,
-        //   north: 47.8084648,
-        //   south: 45.817995,
-        //   west: 5.9559113,
-        // ),
-        );
+    // controller = MapController.withUserPosition(
+    //     trackUserLocation: UserTrackingOption(
+    //   enableTracking: true,
+    //   unFollowUser: false,
+    // )
+    controller = MapController.withPosition(
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      // areaLimit: BoundingBox(
+      //   east: 10.4922941,
+      //   north: 47.8084648,
+      //   south: 45.817995,
+      //   west: 5.9559113,
+      // ),
+    );
     //  controller = MapController.cyclOSMLayer(
     //   initMapWithUserPosition: false,
     //   initPosition: GeoPoint(
@@ -167,7 +167,14 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
           controller.changeLocationMarker(
             oldLocation: lastGeoPoint.value!,
             newLocation: controller.listenerMapSingleTapping.value!,
-            angle: Random.secure().nextDouble() * (2 * pi)
+            //angle: Random.secure().nextDouble() * (2 * pi),
+            iconAnchor: IconAnchor(
+              anchor: Anchor.center,
+              offset: (
+                x: 32,
+                y: 16,
+              ),
+            ),
           );
           lastGeoPoint.value = controller.listenerMapSingleTapping.value;
         } else {
@@ -186,6 +193,10 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
               //   image: AssetImage("asset/pin.png"),
               //   //scaleAssetImage: 2,
               // ),
+            ),
+            iconAnchor: IconAnchor(
+              anchor: Anchor.top,
+              //offset: (x: 32.5, y: -32),
             ),
             //angle: -pi / 4,
           );
@@ -368,7 +379,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   maxZoomLevel: 19,
                   stepZoom: 1.0,
                 ),
-                userLocationMarker: UserLocationMaker(
+                /*userLocationMarker: UserLocationMaker(
                     personMarker: MarkerIcon(
                       // icon: Icon(
                       //   Icons.car_crash_sharp,
@@ -376,18 +387,18 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                       //   size: 48,
                       // ),
                       iconWidget: SizedBox.square(
-                        dimension: 32,
+                        dimension: 56,
                         child: Image.asset(
                           "asset/taxi.png",
-                          scale: .1,
+                          scale: .3,
                         ),
                       ),
-                      /* assetMarker: AssetMarker(
-                    image: AssetImage(
-                      "asset/taxi.png",
-                    ),
-                    scaleAssetImage: 0.3,
-                  ), */
+                      // assetMarker: AssetMarker(
+                      //   image: AssetImage(
+                      //     "asset/taxi.png",
+                      //   ),
+                      //   scaleAssetImage: 0.3,
+                      // ),
                     ),
                     directionArrowMarker: MarkerIcon(
                       icon: Icon(
@@ -403,29 +414,29 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     //     scaleAssetImage: 0.25,
                     //   ),
                     // ),
-                    ),
+                    ),*/
                 staticPoints: [
-                StaticPositionGeoPoint(
-                  "line 1",
-                  MarkerIcon(
-                    icon: Icon(
-                      Icons.train,
-                      color: Colors.green,
-                      size: 32,
+                  StaticPositionGeoPoint(
+                    "line 1",
+                    MarkerIcon(
+                      icon: Icon(
+                        Icons.train,
+                        color: Colors.green,
+                        size: 32,
+                      ),
                     ),
+                    [
+                      GeoPoint(
+                        latitude: 47.4333594,
+                        longitude: 8.4680184,
+                      ),
+                      GeoPoint(
+                        latitude: 47.4317782,
+                        longitude: 8.4716146,
+                      ),
+                    ],
                   ),
-                  [
-                    GeoPoint(
-                      latitude: 47.4333594,
-                      longitude: 8.4680184,
-                    ),
-                    GeoPoint(
-                      latitude: 47.4317782,
-                      longitude: 8.4716146,
-                    ),
-                  ],
-                ),
-                /*StaticPositionGeoPoint(
+                  /*StaticPositionGeoPoint(
                       "line 2",
                       MarkerIcon(
                         icon: Icon(
@@ -439,26 +450,26 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                         GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
                       ],
                     )*/
-              ],
-              roadConfiguration: RoadOption(
-                roadColor: Colors.blueAccent,
-              ),
-              markerOption: MarkerOption(
-                defaultMarker: MarkerIcon(
-                  icon: Icon(
-                    Icons.home,
-                    color: Colors.orange,
-                    size: 24,
+                ],
+                roadConfiguration: RoadOption(
+                  roadColor: Colors.blueAccent,
+                ),
+                markerOption: MarkerOption(
+                  defaultMarker: MarkerIcon(
+                    icon: Icon(
+                      Icons.home,
+                      color: Colors.orange,
+                      size: 24,
+                    ),
+                  ),
+                  advancedPickerMarker: MarkerIcon(
+                    icon: Icon(
+                      Icons.location_searching,
+                      color: Colors.green,
+                      size: 56,
+                    ),
                   ),
                 ),
-                advancedPickerMarker: MarkerIcon(
-                  icon: Icon(
-                    Icons.location_searching,
-                    color: Colors.green,
-                    size: 56,
-                  ),
-                ),
-              ),
                 showContributorBadgeForOSM: true,
                 //trackMyPosition: trackingNotifier.value,
                 showDefaultInfoWindow: false,
@@ -480,7 +491,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 }
               },
               onLocationChanged: (myLocation) {
-                print(myLocation);
+                print('user location :$myLocation');
               },
               onGeoPointClicked: (geoPoint) async {
                 if (geoPoint ==
@@ -517,7 +528,6 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                   ),
                 );
               },
-              
             ),
             Positioned(
               bottom: 10,
@@ -636,7 +646,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 await controller.currentLocation();
                 await controller.enableTracking(
                   enableStopFollow: true,
-                  disableUserMarkerRotation: true,
+                  disableUserMarkerRotation: false,
                 );
                 //await controller.zoom(5.0);
               } else {

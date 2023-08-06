@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/src/osm_controller/osm_controller.dart';
 import 'package:flutter_osm_interface/src/types/types.dart';
 import 'package:flutter_osm_interface/src/map_controller/i_base_map_controller.dart';
+
 ///  class [BaseMapController] : base controller for osm flutter
 ///
 ///
