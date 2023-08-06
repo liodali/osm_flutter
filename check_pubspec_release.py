@@ -108,7 +108,7 @@ def change_dependencies_version(package,name, version, isLocal=False,skipMaxVers
                 elif useDefault == False :
                     v = f"\">={version}\"".strip()
                 else :
-                    v = f"\^{version}".strip()
+                    v = f"^{version}".strip()
                 lines.append(f"  {name} {v}")
                 if(isLocal):
                     removeNext = True
