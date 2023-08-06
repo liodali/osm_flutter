@@ -228,11 +228,19 @@
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
       if (anchor != undefined && (anchor.x!=0 && anchor.y!=0)) {
-        var anchorX = anchor.x*32
-        var anchorY = anchor.y*32
+        var anchorX = anchor.x
+        var anchorY = anchor.y
         if(anchor.offset != undefined){
-          anchorX += anchor.offset.x
-          anchorY += anchor.offset.y
+          var offsetX = anchor.offset.x
+          var offsetY = anchor.offset.y
+          if(anchor.offset.x>1){
+            offsetX = anchor.offset.x / 32
+          }
+          if(anchor.offset.y > 1 ){
+            offsetY = anchor.offset.y / 32
+          }
+          anchorX += offsetX
+          anchorY += offsetY
         }
         argsIcon["iconAnchor"] = [anchorX,anchorY]
       }
@@ -273,7 +281,10 @@
             if(angle != undefined && angleMarker!=angle) {
               angleMarker = angle;
             }
-            var iconAnchor = iconMarker.options.iconAnchor;
+            var iconAnchor = {
+              x:iconMarker.options.iconAnchor[0],
+              y:iconMarker.options.iconAnchor[1]
+            };
             if(anchor != undefined && anchor!=iconAnchor) {
               iconAnchor = anchor;
             }
