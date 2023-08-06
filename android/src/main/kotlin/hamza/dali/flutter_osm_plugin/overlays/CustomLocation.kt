@@ -2,28 +2,31 @@ package hamza.dali.flutter_osm_plugin.overlays
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.Point
 import android.location.Location
+import android.util.Log
 import hamza.dali.flutter_osm_plugin.VoidCallback
-import hamza.dali.flutter_osm_plugin.utilities.toGeoPoint
 import hamza.dali.flutter_osm_plugin.utilities.toHashMap
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.osmdroid.api.IMapView
 import org.osmdroid.util.GeoPoint
-import org.osmdroid.util.TileSystem
 import org.osmdroid.views.MapView
 import org.osmdroid.views.Projection
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
+typealias OnChangedLocation = (gp: GeoPoint) -> Unit
+
 class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
     private var provider: GpsMyLocationProvider? = GpsMyLocationProvider(mapView.context)
     var disableRotateDirection = false
     private var mDrawPixel: Point = Point()
+    private var customIcons = false
+    private var onChangedLocation: OnChangedLocation? = null
 
     init {
         setEnableAutoStop(true)
@@ -43,6 +46,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
     }
 
     fun onStopLocation() {
+        this.onChangedLocation = null
         disableFollowAndLocation()
         mMyLocationProvider.stopLocationProvider()
     }
@@ -85,6 +89,12 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
 
     override fun onLocationChanged(location: Location?, source: IMyLocationProvider?) {
         super.onLocationChanged(location, source)
+        if (isFollowLocationEnabled && location != null) {
+            val geoPMap = GeoPoint(this.lastFix)
+            if (onChangedLocation != null) {
+                this.onChangedLocation!!(geoPMap)
+            }
+        }
     }
 
     fun toggleFollow(enableStop: Boolean) {
@@ -104,7 +114,8 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         }
     }
 
-    fun onChangedLocation(onChangedLocation: (gp: GeoPoint) -> Unit) {
+    fun onChangedLocation(onChangedLocation: OnChangedLocation) {
+        this.onChangedLocation = onChangedLocation
         runOnFirstFix {
             val location = this.lastFix
             val geoPMap = GeoPoint(location)
@@ -114,8 +125,11 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
 
     override fun draw(canvas: Canvas, pProjection: Projection) {
         mDrawAccuracyEnabled = false
+        if (customIcons) {
+            setPersonAnchor(0.5f, 0.5f)
+        }
         when {
-            disableRotateDirection -> {
+            disableRotateDirection && customIcons -> {
                 if (lastFix != null && isMyLocationEnabled) {
                     drawOnlyPerson(canvas, pProjection, lastFix)
                 }
@@ -126,13 +140,19 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
 
     }
 
+    override fun onSnapToItem(x: Int, y: Int, snapPoint: Point?, mapView: IMapView?): Boolean {
+        return false
+    }
+
     fun setMarkerIcon(personIcon: Bitmap?, directionIcon: Bitmap?) {
+
         when {
             personIcon != null && directionIcon != null -> {
+                customIcons = true
                 mPersonBitmap = personIcon
                 mDirectionArrowBitmap = directionIcon
+
                 setDirectionAnchor(.5f, .5f)
-                val mScale = mMapView!!.context.resources.displayMetrics.density
 
 //                mPersonHotspot.set(
 //                    mScale * (personIcon.width / 4f) + 0.5f,
@@ -141,38 +161,19 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
             }
 
             personIcon != null -> {
+                customIcons = true
                 setPersonIcon(personIcon)
+                setPersonAnchor(
+                    .5f,
+                    .1f
+                )
             }
         }
     }
 
     private fun drawOnlyPerson(canvas: Canvas, pProjection: Projection, lastFix: Location) {
-        val mGeoPoint = lastFix.toGeoPoint()
-        pProjection.toPixels(mGeoPoint, mDrawPixel)
-
-        if (mDrawAccuracyEnabled) {
-            val radius: Float = (lastFix.accuracy
-                    / TileSystem.GroundResolution(
-                lastFix.latitude,
-                pProjection.zoomLevel
-            ).toFloat())
-            mCirclePaint.alpha = 50
-            mCirclePaint.style = Paint.Style.FILL
-            canvas.drawCircle(
-                mDrawPixel.x.toFloat(),
-                mDrawPixel.y.toFloat(),
-                radius,
-                mCirclePaint
-            )
-            mCirclePaint.alpha = 150
-            mCirclePaint.style = Paint.Style.STROKE
-            canvas.drawCircle(
-                mDrawPixel.x.toFloat(),
-                mDrawPixel.y.toFloat(),
-                radius,
-                mCirclePaint
-            )
-        }
+        //val mGeoPoint = lastFix.toGeoPoint()
+        pProjection.toPixels(super.getMyLocation(), mDrawPixel)
         canvas.save()
         // Unrotate the icon if the maps are rotated so the little man stays upright
         // Unrotate the icon if the maps are rotated so the little man stays upright
@@ -182,9 +183,21 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         )
         // Draw the bitmap
         // Draw the bitmap
+        Log.d(
+            "personBitmap location",
+            "${super.getMyLocation()}"
+        )
+        Log.d(
+            "personBitmap",
+            "${mDrawPixel.x},${mDrawPixel.y},${mPersonHotspot.x},${mPersonHotspot.y}"
+        )
+        Log.d(
+            "personBitmap point",
+            "${mDrawPixel.x - mPersonHotspot.x},${mDrawPixel.y - mPersonHotspot.y}"
+        )
         canvas.drawBitmap(
-            mPersonBitmap, mDrawPixel.x - mPersonHotspot.x,
-            mDrawPixel.y - mPersonHotspot.y, mPaint
+            mPersonBitmap, mDrawPixel.x.toFloat() - mPersonHotspot.x,
+            mDrawPixel.y.toFloat() - mPersonHotspot.y, mPaint
         )
         canvas.restore()
     }

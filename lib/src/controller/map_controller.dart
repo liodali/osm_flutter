@@ -486,15 +486,14 @@ class MapController extends BaseMapController {
     GeoPoint p, {
     MarkerIcon? markerIcon,
     double? angle,
+    IconAnchor? iconAnchor,
   }) async {
     if (angle != null) {
-      assert(angle >= 0 && angle <= 2*pi, "angle should be between 0 and 2*pi");
+      assert(
+          angle >= 0 && angle <= 2 * pi, "angle should be between 0 and 2*pi");
     }
-    await osmBaseController.addMarker(
-      p,
-      markerIcon: markerIcon,
-      angle: angle,
-    );
+    await osmBaseController.addMarker(p,
+        markerIcon: markerIcon, angle: angle, iconAnchor: iconAnchor);
   }
 
   Future<void> changeLocationMarker({
@@ -502,12 +501,14 @@ class MapController extends BaseMapController {
     required GeoPoint newLocation,
     MarkerIcon? markerIcon,
     double? angle = null,
+    IconAnchor? iconAnchor,
   }) async {
     await osmBaseController.changeMarker(
       oldLocation: oldLocation,
       newLocation: newLocation,
       newMarkerIcon: markerIcon,
       angle: angle,
+      iconAnchor: iconAnchor,
     );
   }
 

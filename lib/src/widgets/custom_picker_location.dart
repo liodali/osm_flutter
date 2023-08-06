@@ -1,25 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 
-import '../controller/picker_map_controller.dart';
-import '../osm_flutter.dart';
+import 'package:flutter_osm_plugin/src/controller/picker_map_controller.dart';
+import 'package:flutter_osm_plugin/src/osm_flutter.dart';
 
 class CustomPickerLocationConfig {
   final Widget? loadingWidget;
   final MarkerIcon? advancedMarkerPicker;
-
-  final double stepZoom;
-  final double initZoom;
-  final double minZoomLevel;
-  final double maxZoomLevel;
+  final ZoomOption zoomOption;
 
   const CustomPickerLocationConfig({
     this.loadingWidget,
     this.advancedMarkerPicker,
-    this.stepZoom = 1,
-    this.initZoom = 2,
-    this.minZoomLevel = 2,
-    this.maxZoomLevel = 18,
+    this.zoomOption = const ZoomOption(
+      maxZoomLevel: 18,
+      minZoomLevel: 2,
+    ),
   });
 }
 
@@ -63,13 +60,17 @@ class CustomPickerLocation extends StatefulWidget {
     final _CustomPickerLocationState? result =
         context.findAncestorStateOfType<_CustomPickerLocationState>();
     if (nullOk || result != null) return result!.widget.controller;
-    throw FlutterError.fromParts(<DiagnosticsNode>[
-      ErrorSummary(
-          'CustomPickerLocation.of() called with a context that does not contain an MapController.'),
-      ErrorDescription(
-          'No CustomPickerLocation ancestor could be found starting from the context that was passed to CustomPickerLocation.of().'),
-      context.describeElement('The context used was')
-    ]);
+    throw FlutterError.fromParts(
+      <DiagnosticsNode>[
+        ErrorSummary(
+          'CustomPickerLocation.of() called with a context that does not contain an MapController.',
+        ),
+        ErrorDescription(
+          'No CustomPickerLocation ancestor could be found starting from the context that was passed to CustomPickerLocation.of().',
+        ),
+        context.describeElement('The context used was')
+      ],
+    );
   }
 
   @override
@@ -99,18 +100,18 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
               Positioned.fill(
                 child: OSMFlutter(
                   controller: widget.controller,
-                  markerOption: widget.pickerConfig.advancedMarkerPicker != null
-                      ? MarkerOption(
-                          advancedPickerMarker:
-                              widget.pickerConfig.advancedMarkerPicker,
-                        )
-                      : null,
-                  isPicker: true,
                   mapIsLoading: widget.pickerConfig.loadingWidget,
-                  stepZoom: widget.pickerConfig.stepZoom,
-                  initZoom: widget.pickerConfig.initZoom,
-                  minZoomLevel: widget.pickerConfig.minZoomLevel,
-                  maxZoomLevel: widget.pickerConfig.maxZoomLevel,
+                  osmOption: OSMOption(
+                    markerOption:
+                        widget.pickerConfig.advancedMarkerPicker != null
+                            ? MarkerOption(
+                                advancedPickerMarker:
+                                    widget.pickerConfig.advancedMarkerPicker,
+                              )
+                            : null,
+                    isPicker: true,
+                    zoomOption: widget.pickerConfig.zoomOption,
+                  ),
                   onMapIsReady: widget.onMapReady,
                 ),
               ),

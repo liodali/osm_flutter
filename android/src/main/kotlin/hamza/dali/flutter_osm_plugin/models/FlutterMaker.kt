@@ -8,6 +8,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
@@ -16,12 +17,16 @@ import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 import hamza.dali.flutter_osm_plugin.R
+import hamza.dali.flutter_osm_plugin.utilities.scaleDensity
 import kotlinx.coroutines.CoroutineScope
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
 import kotlin.math.PI
+import kotlin.math.absoluteValue
+import kotlin.math.sign
+
 
 typealias LongClickHandler = (marker: Marker) -> Boolean
 
@@ -71,7 +76,6 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
             onMarkerClick(marker, map)
         }
         initInfoWindow()
-
     }
 
     constructor(
@@ -99,6 +103,13 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
     override fun onMarkerClick(marker: Marker?, mapView: MapView?): Boolean {
         showInfoWindow()
         return onClickListener?.onMarkerClick(this, mapView) ?: true
+    }
+
+    override fun onLongPress(event: MotionEvent?, mapView: MapView?): Boolean {
+        if (longPress != null) {
+            longPress!!(this)
+        }
+        return super.onLongPress(event, mapView)
     }
 
     fun setIconMaker(color: Int? = null, bitmap: Bitmap?, angle: Double? = null) {
@@ -167,7 +178,15 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
         angle: Double = 0.0
     ): Drawable {
         var iconDrawable: Drawable? = null
-        bitmap?.let { bitmap ->
+        val iconBitmap = bitmap?.run {
+            val matrix = Matrix()
+            matrix.postScale(mapView.scaleDensity(), mapView.scaleDensity())
+            val resizedBitmap = Bitmap.createBitmap(
+                this, 0, 0, width, height, matrix, false
+            )
+            resizedBitmap
+        }
+        iconBitmap?.let { bitmap ->
             iconDrawable = when (angle > 0.0) {
                 true -> BitmapDrawable(mapView.resources, rotateMarker(bitmap, angle))
                 false -> BitmapDrawable(mapView.resources, bitmap)
@@ -195,6 +214,37 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
+    fun updateAnchor(anchor: Anchor) {
+        val offsetX = ((anchor.offset()?.first ?: 0.0) / icon.intrinsicWidth).toFloat()
+        val offsetY = ((anchor.offset()?.second ?: 0.0) / icon.intrinsicHeight).toFloat()
+        val anchorX = when (anchor.x) {
+            in 0.0..1.0 -> anchor.x
+            else -> anchor.x / icon.intrinsicWidth
+        } - when {
+            anchor.x < 1 -> {
+                val sign = offsetX.sign
+                (offsetX.absoluteValue + anchor.x) * sign
+            }
+
+            else -> offsetX
+        }
+        val anchorY = when (anchor.y) {
+            in 0.0..1.0 -> anchor.y
+            else -> anchor.y / icon.intrinsicHeight
+        } + when {
+            anchor.y < 1 -> {
+                val sign = offsetY.sign
+                (offsetY.absoluteValue + anchor.y) * sign
+            }
+
+            else -> offsetY
+        }
+        setAnchor(
+            anchorX,
+            anchorY
+        )
+    }
+
     private fun createWindowInfoView(): View {
         val inflater =
             context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -213,4 +263,23 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
     override fun showInfoWindow() {
         super.showInfoWindow()
     }
+
+    fun getOldAnchor(): Anchor = Anchor(mAnchorU, mAnchorV)
+
+}
+
+data class Anchor(val x: Float, val y: Float) {
+    private var offset: Pair<Double, Double>? = null
+
+    constructor(map: HashMap<String, Any>) : this(
+        (map["x"]!! as Double).toFloat(),
+        (map["y"]!! as Double).toFloat()
+    ) {
+        if (map.containsKey("offset")) {
+            val offsetMap = map["offset"]!! as HashMap<String, Double>
+            offset = Pair(offsetMap["x"]!!, offsetMap["y"]!!)
+        }
+    }
+
+    fun offset() = offset
 }

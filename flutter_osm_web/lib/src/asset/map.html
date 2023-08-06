@@ -3,8 +3,17 @@
 
 <head>
   <meta charset="UTF-8">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+  <!--<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" 
+    integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" 
+  integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-hotline@0.4.0/dist/leaflet.hotline.min.js"></script>
   <!--  
@@ -40,7 +49,7 @@
     var staticIcons = new Map();
     var staticGeoPoint = new Map();
     var shapesLayers = new Map();
-    var userLocationMarkerIcon = "";
+    var userLocationMarkerIcon = undefined;
     var dynamicIcon = "";
     var advSearchIcon = "";
     var homeMarker;
@@ -53,6 +62,13 @@
     var skipFollow = false;
     var startAdvSearchLocation = false;
     var cachedLayers = L.layerGroup([]);
+    var mainLayers = new Map([    
+      ['roads', L.layerGroup([]),],
+      ['static', L.layerGroup([]),],
+      ['markers', L.layerGroup([]),],
+      ['userLocation', L.layerGroup([])],
+    ])
+    var keysMainLayers = ["roads",'static','markers','userLocation'];
     var customTile;
 
     var mymap = L.map('mapid', {
@@ -97,6 +113,13 @@
       mymap.setView([point.lat, point.lon], zoom);
       isReady = true;
       isMapReady(isReady);
+      keysMainLayers.forEach((key)=>{
+          if(mymap.hasLayer(mainLayers.get(key))){
+            mymap.removeLayer(mainLayers.get(key))
+          }
+          mymap.addLayer(mainLayers.get(key))
+
+      })
       //L.polyline([{lat: 8.498037, lng: 47.489106},{lat: 8.537061, lng: 47.412961}],{color:'red'}).addTo(mymap)
     }
 
@@ -195,7 +218,8 @@
       setHomeMarker(point, args);
       return 200;
     }
-    function addMarker(point, iconMarker) {
+    
+    function addMarker(point, iconMarker,angle,anchor) {
       const position = [point.lat, point.lon];
       var argsIcon = {
         iconSize: [32, 32],
@@ -203,20 +227,39 @@
       if (iconMarker != "") {
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
+      if (anchor != undefined && (anchor.x!=0 && anchor.y!=0)) {
+        var anchorX = anchor.x
+        var anchorY = anchor.y
+        if(anchor.offset != undefined){
+          var offsetX = -anchor.offset.x
+          var offsetY = anchor.offset.y
+         /* if(anchor.offset.x > 1 ){
+            offsetX = anchor.offset.x / 32
+          }
+          if(anchor.offset.y > 1 ){
+            offsetY = anchor.offset.y / 32
+          }*/
+          anchorX += offsetX
+          anchorY += offsetY
+        }
+        argsIcon["iconAnchor"] = [anchorX,anchorY]
+      }
       var args = {
         icon: L.icon(
           argsIcon
-        )
+        ),
+        rotationAngle: angle,
+        rotationOrigin: "center"
       }
       L.marker(position, args)
-        .addTo(mymap)
+        .addTo(mainLayers.get("markers"))
         .on("click", function (event) {
           const geoP = event.latlng;
           onGeoPointClicked(geoP.lng, geoP.lat)
         });
       return 200;
     }
-    async function changeMarker(oldPoint, point, icon) {
+    async function changeMarker(oldPoint, point, icon,angle,anchor) {
 
       var latlng = L.latLng([point.lat, point.lon]);
       var oldLatlng = L.latLng([oldPoint.lat, oldPoint.lon]);
@@ -224,14 +267,29 @@
         if (layer instanceof L.Marker) {
           var geoPoint = layer.getLatLng();
           if (geoPoint.lat == oldLatlng.lat && geoPoint.lng == oldLatlng.lng) {
-            layer.setLatLng(latlng)
+            //layer.setLatLng(latlng)
+            var iconMarker = layer.getIcon();
             if (icon != undefined) {
-              var iconMarker = L.icon({
+               iconMarker = L.icon({
                 iconUrl: "data:image/png;base64," + icon,
                 iconSize: [32, 32]
               });
-              layer.setIcon(iconMarker)
+              //layer.setIcon(iconMarker)
             }
+            const iconMarkerURL = iconMarker.options.iconUrl.split("data:image/png;base64,")[1];
+            var angleMarker = layer.options.rotationAngle;
+            if(angle != undefined && angleMarker!=angle) {
+              angleMarker = angle;
+            }
+            var iconAnchor = {
+              x:iconMarker.options.iconAnchor[0],
+              y:iconMarker.options.iconAnchor[1]
+            };
+            if(anchor != undefined && anchor!=iconAnchor) {
+              iconAnchor = anchor;
+            }
+            mainLayers.get("markers").removeLayer(layer);
+            addMarker(point,iconMarkerURL,angleMarker,iconAnchor)
             return this;
           }
         }
@@ -261,7 +319,7 @@
         if (layer instanceof L.Marker) {
           const latlng = layer.getLatLng()
           if (latlng.lat == point.lat && latlng.lng == point.lon) {
-            mymap.removeLayer(layer);
+            mainLayers.get("markers").removeLayer(layer);
           }
         }
       });
@@ -298,13 +356,13 @@
       points.forEach(function (ele) {
         removeMarker(ele);
         markers.push(L.marker([ele.lat, ele.lon], args)
-          .addTo(mymap)
+          .addTo(mainLayers.get("static"))
           .on("click", function (event) {
             const geoP = event.latlng;
             onGeoPointClicked(geoP.lng, geoP.lat)
           }))
       })
-      const groupLayer = L.layerGroup(markers).addTo(mymap);
+      const groupLayer = L.layerGroup(markers).addTo(mainLayers.get("static"));
       staticGeoPoint.set(id, groupLayer);
 
       return 200;
@@ -329,7 +387,7 @@
           rotationAngle: ele.angle,
           rotationOrigin: "center"
         })
-          .addTo(mymap)
+          .addTo(mainLayers.get("static"))
           .on("click", function (event) {
             const geoP = event.latlng;
             onGeoPointClicked(geoP.lng, geoP.lat)
@@ -338,7 +396,7 @@
         markers.push(marker);
 
       })
-      const groupLayer = L.layerGroup(markers).addTo(mymap);
+      const groupLayer = L.layerGroup(markers).addTo(mainLayers.get("static"));
       staticGeoPoint.set(id, groupLayer);
 
       return 200;
@@ -437,12 +495,12 @@
          fillColor: colorRoute,
          weight: routeWidth,
       }
-      if(roadBorderWidth==0){
+      if(roadBorderWidth == 0){
         lastRoad = L.polyline(routePolyline,argsPolyline)
           .on('click',function(event){
             onRoadClicked(event.target.options.id);
             L.DomEvent.stopPropagation(event);
-          }).addTo(mymap)
+          }).addTo(mainLayers.get("roads"))
       }
 
       if(roadBorderWidth!=0){
@@ -466,7 +524,7 @@
           ).on('click',function(event){
             onRoadClicked(event.target.options.id);
             L.DomEvent.stopPropagation(event);
-          }).addTo(mymap)
+          }).addTo(mainLayers.get("roads"))
       }
       
       
@@ -479,7 +537,7 @@
     }
     function removeLastRoad(){
       if (lastRoad != undefined) {
-        mymap.removeLayer(lastRoad)
+        mainLayers.get("roads").removeLayer(lastRoad)
         var k;
         routesLayer.forEach((value,key)=>{
           if(value==lastRoad){
@@ -517,35 +575,45 @@
         userLocationMarkerIcon = icon;
     }
     async function enableTracking(enableStopFollow) {
-      idTracking = navigator.geolocation.watchPosition(function (position) {
-        var userPos;
-        if(!skipFollow){
-          userPos = [position.coords.latitude, position.coords.longitude];
-          mymap.flyTo(userPos, mymap.getZoom());
-          if(enableStopFollow){
-            skipFollow = true
+      if (idTracking == undefined){
+        idTracking = navigator.geolocation.watchPosition(function (position) {
+          var userPos = [position.coords.latitude, position.coords.longitude];
+          if(!skipFollow){
+            mymap.flyTo(userPos, mymap.getZoom());
+            if(enableStopFollow){
+              skipFollow = true
+            }
           }
-        }
-        
-        var args = {}
-        if (userLocationMarkerIcon != undefined) {
-          args = {
-            icon: L.icon({
-              iconUrl: "data:image/png;base64," + userLocationMarkerIcon,
-              iconSize: [32, 32]
-            })
+          
+          var args = {}
+          if (userLocationMarkerIcon != undefined) {
+            console.log(userLocationMarkerIcon)
+            args = {
+              icon: L.icon({
+                iconUrl: "data:image/png;base64," + userLocationMarkerIcon,
+                iconSize: [32, 32]
+              })
+            }
           }
-        }
-        if (userPosition == undefined) {
-          userPosition = L.marker(userPos, args).addTo(mymap);
-        } else if (userPosition != undefined && !skipFollow) {
-          userPosition.setLatLng(userPos);
-        }
-      })
+          if (userPosition == undefined) {
+            userPosition = L.marker(userPos, args).addTo(mainLayers.get("userLocation"));
+          } else if (userPosition != undefined && !skipFollow) {
+            userPosition.setLatLng(userPos);
+          }
+        })
+      }else {
+        if(enableStopFollow){
+            skipFollow = false
+          }
+      }
+      
     }
 
     function disableTracking() {
       navigator.geolocation.clearWatch(idTracking);
+      idTracking = undefined
+      mainLayers.get("userLocation").clearLayers();
+      skipFollow = false;
       if (userPosition != undefined) {
           userPosition.remove();
           userPosition = undefined;
@@ -660,7 +728,7 @@
     }
     function setHomeMarker(point, args) {
       if (homeMarker == undefined) {
-        homeMarker = L.marker([point.lat, point.lon], args).addTo(mymap);
+        homeMarker = L.marker([point.lat, point.lon], args).addTo(mainLayers.get("markers"));
 
       } else {
         homeMarker.setLatLng([point.lat, point.lon]);

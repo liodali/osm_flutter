@@ -12,9 +12,11 @@ import Flutter
 public class MapviewFactory : NSObject, FlutterPlatformViewFactory {
     let controller: FlutterViewController
     let messenger : FlutterBinaryMessenger
-    init(controller: FlutterViewController,messenger:FlutterBinaryMessenger) {
+    let dynamicOSMPath:String?
+    init(controller: FlutterViewController,messenger:FlutterBinaryMessenger,dynamicOSM:String?) {
         self.controller = controller
         self.messenger = messenger
+        self.dynamicOSMPath = dynamicOSM
     }
     
     public func create(
@@ -26,7 +28,7 @@ public class MapviewFactory : NSObject, FlutterPlatformViewFactory {
             name: "plugins.dali.hamza/osmview_"+String(viewId),
             binaryMessenger: self.messenger
         )
-        return MyMapView(frame, viewId: viewId, channel: channel, args: args)
+        return MyMapView(frame, viewId: viewId, channel: channel, args: args,dynamicOSM: dynamicOSMPath)
     }
 
     public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {

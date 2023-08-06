@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 
 import 'package:flutter_osm_plugin/src/controller/map_controller.dart';
 import 'package:flutter_osm_plugin/src/osm_flutter.dart';
-
 
 /// showSimplePickerLocation : picker to select specific position
 ///
@@ -36,10 +36,7 @@ Future<GeoPoint?> showSimplePickerLocation({
   EdgeInsets contentPadding = EdgeInsets.zero,
   double radius = 0.0,
   GeoPoint? initPosition,
-  double stepZoom = 1,
-  double initZoom = 2,
-  double minZoomLevel = 2,
-  double maxZoomLevel = 18,
+  ZoomOption zoomOption = const ZoomOption(),
   bool isDismissible = false,
   UserTrackingOption? initCurrentUserPosition,
 }) async {
@@ -79,11 +76,10 @@ Future<GeoPoint?> showSimplePickerLocation({
               width: MediaQuery.of(context).size.height / 2,
               child: OSMFlutter(
                 controller: controller,
-                isPicker: true,
-                stepZoom: stepZoom,
-                initZoom: initZoom,
-                minZoomLevel: minZoomLevel,
-                maxZoomLevel: maxZoomLevel,
+                osmOption: OSMOption(
+                  zoomOption: zoomOption,
+                  isPicker: true,
+                ),
               ),
             ),
             actions: [

@@ -30,7 +30,8 @@ Widget getWidget({
 }) =>
     OsmWebWidget(
       controller: controller,
-      userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
+      userTrackingOption:
+          userTrackingOption ?? controller.initMapWithUserPosition,
       staticPoints: staticPoints,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,

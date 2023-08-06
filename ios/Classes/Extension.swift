@@ -13,7 +13,7 @@ extension GeoPointMap {
 
         marker = map.markerAdd()
         marker?.icon = markerIcon.image!
-        marker?.stylingString = styleMarker
+        marker?.stylingString = self.markerStyle.toString() //styleMarker
         marker?.point = coordinate
 
         marker?.visible = true
@@ -34,7 +34,10 @@ extension GeoPointMap {
             m.point == self.coordinate
         }
         if indexToUpdate != nil {
-            map.markers[indexToUpdate!].stylingString = styleMarker
+            let oldStyleMarker = map.markers[indexToUpdate!].stylingString
+            markerStyle.copyFromOldStyle(oldMarkerStyleStr: oldStyleMarker)
+            let markerStyleStr = markerStyle.toString()
+            map.markers[indexToUpdate!].stylingString = markerStyleStr
             map.markers[indexToUpdate!].point = mPosition
         }
     }
@@ -82,6 +85,7 @@ extension MyLocationMarker {
         var iconM: MarkerIconData? = nil
         lazy var size = defaultSizeMarker
         if (arrowDirectionIcon == nil && personIcon == nil) {
+           /*
             switch (self.userLocationMarkerType) {
             case .person:
                 self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , size: [\(String(describing: size.first))px,\(String(describing: size.last))px] , angle: \(self.angle) } "
@@ -90,13 +94,20 @@ extension MyLocationMarker {
                 self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(String(describing: size.first))px,\(String(describing: size.last))px] , angle: \(angle)  } "
                 break;
             }
+            */
+            self.marker?.stylingString = self.markerStyle.toString()
         } else {
             if (arrowDirectionIcon != nil && userLocationMarkerType == .arrow) {
                 iconM = arrowDirectionIcon
             } else if (self.personIcon != nil && userLocationMarkerType == .person) {
                 iconM = self.personIcon
             }
-            marker?.stylingString = " { style: 'points', interactive: false ,color: 'white',size: [\(iconM!.size.first ?? 48)px,\(iconM!.size.last ?? 48)px], order: 2000, collide: false , angle : \(angle) } "
+            self.markerStyle.style = StyleType.points
+            self.markerStyle.sprite = nil
+            /*
+             marker?.stylingString = " { style: 'points', interactive: false ,color: 'white',size: [\(iconM!.size.first ?? 48)px,\(iconM!.size.last ?? 48)px], order: 2000, collide: false , angle : \(angle) } "
+             */
+            marker?.stylingString = self.markerStyle.toString()
             marker?.icon = iconM!.image!
         }
     }
@@ -105,17 +116,25 @@ extension MyLocationMarker {
         userLocationMarkerType = UserLocationMarkerType.arrow
         self.angle = angle
         var size = defaultSizeMarker
+        self.markerStyle.angle = angle
         if (arrowDirectionIcon == nil || personIcon == nil) {
-            switch (userLocationMarkerType) {
-            case .person:
-                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle), size: [\(size.first)px,\(size.last)px] , angle: \(self.angle) } "
-                break;
-            case .arrow:
-                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(size.first)px,\(size.last)px] , angle: \(self.angle)  } "
-                break;
-            }
+            self.markerStyle.size = size
+            /*switch (userLocationMarkerType) {
+                case .person:
+                    self.marker?.stylingString = "{ \(MyLocationMarker.personStyle), size: [\(size.first)px,\(size.last)px] , angle: \(self.angle) } "
+                    break;
+                case .arrow:
+                    self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(size.first)px,\(size.last)px] , angle: \(self.angle)  } "
+                    break;
+                }
+            */
+            self.marker?.stylingString = self.markerStyle.toString()
         } else {
-            self.marker?.stylingString = "{ style: 'points', interactive: \(interactive),color: 'white',size: [\(markerIcon.size.first ?? 48)px,\(markerIcon.size.last ?? 48)px], order: 1000, collide: false , angle: \(angle)  } "
+            self.markerStyle.style = StyleType.points
+            /*
+             self.marker?.stylingString = "{ style: 'points', interactive: \(interactive),color: 'white',size: [\(markerIcon.size.first ?? 48)px,\(markerIcon.size.last ?? 48)px], order: 1000, collide: false , angle: \(angle)  } "
+            */
+            self.marker?.stylingString = self.markerStyle.toString()
             if (arrowDirectionIcon != nil) {
                 self.marker?.icon = arrowDirectionIcon!.image!
             }
@@ -132,7 +151,7 @@ extension StaticGeoPMarker {
         if (annotation.markerIcon.image != nil) {
             annotation.marker?.icon = annotation.markerIcon.image!
         }
-        annotation.marker?.stylingString = annotation.styleMarker
+        annotation.marker?.stylingString =  annotation.markerStyle.toString() //annotation.styleMarker
         annotation.marker?.point = annotation.coordinate
 
         annotation.marker?.visible = true
@@ -209,7 +228,19 @@ extension Array where Element == RoadInstruction {
         }
     }
 }
+extension Sizes: Decodable {
 
+    init(from array: [String]) throws {
+        let sizesStrs =  array.map({$0.replacingOccurrences(of: "px", with: "")})
+        var sizes = [Int]()
+        sizesStrs.forEach({
+            print($0)
+            sizes.append(Int($0)!)
+        })
+        self.init(sizes)
+        
+    }
+}
 extension CLLocationCoordinate2D: Equatable {
     static public func ==(lhs: Self, rhs: Self) -> Bool {
         lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
@@ -416,7 +447,11 @@ extension TGCoordinateBounds {
         return min(latitudeZoom, longitudeZoom);
     }
 }
-
+extension AnchorType {
+   static func fromString(anchorStr:String) -> AnchorType {
+        AnchorType.allCasesValues.contains(where: {$0 == anchorStr}) ? self.init(rawValue:anchorStr)! : AnchorType.center
+    }
+}
 func getMaxLatitude() -> Double {
     85.0
 }

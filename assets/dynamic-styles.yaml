@@ -1,0 +1,728 @@
+Author:  Med Ali Hamza
+
+
+global:
+    # Sign up for a Mapzen API key to enjoy higher rate limits
+    # url source 
+    url: https://tile.openstreetmap.org/{z}/{x}/{y}.png #https://tile.opentopomap.org/{z}/{x}/{y}.png
+    url_subdomains: []
+    bounds: []
+    max_zoom: 19
+    tile_size: 256
+    #ux/ui
+    ux_language: false             # l10n language code, trusting OSM in v0.10 tiles, fixed in v1.0 tiles
+    ux_language_fallback: false    # l10n language code, trusting OSM in v0.10 tiles, fixed in v1.0 tiles
+    ux_language_text_source: |
+        function() {
+            // if a ux_langauge has been defined use that, else if there is feature name in the fallback_ux_language then use that, else use the feature's default name in the local language
+            return (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature.name;
+        }
+    ux_language_text_source_left: |
+        function() {
+            // if a ux_langauge has been defined use that, else if there is feature name in the fallback_ux_language then use that, else use the feature's default name in the local language
+            return (global.ux_language && feature['name:left:'+global.ux_language]) || (global.ux_language_fallback && feature['name:left:'+global.ux_language_fallback]) || feature['name:left'];
+        }
+    ux_language_text_source_right: |
+        function() {
+            // if a ux_langauge has been defined use that, else if there is feature name in the fallback_ux_language then use that, else use the feature's default name in the local language
+            return (global.ux_language && feature['name:right:'+global.ux_language]) || (global.ux_language_fallback && feature['name:right:'+global.ux_language_fallback]) || feature['name:right'];
+        }
+    ux_language_text_source_boundary_lines_left_right:
+        left: global.ux_language_text_source_left
+        right: global.ux_language_text_source_right
+    ux_language_text_source_boundary_lines: |
+       function() {
+           var right = (global.ux_language && feature['name:right:'+global.ux_language]) || (global.ux_language_fallback && feature['name:right:'+global.ux_language_fallback]) || feature['name:right'];
+           var left = (global.ux_language && feature['name:left:'+global.ux_language]) || (global.ux_language_fallback && feature['name:left:'+global.ux_language_fallback]) || feature['name:left'];
+           if( right && left ) {
+               //if( right.includes(' ') || left.includes(' ') ) {
+                   return left + " - " + right;
+               //} else {
+               //    return right + '\n' + left;
+               //}
+           } else {
+               return (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature.name;
+           }
+       }
+    ux_language_text_source_short: |
+        function() {
+            return (global.ux_language && feature['name:short:'+global.ux_language]) || (global.ux_language_fallback && feature['name:short:'+global.ux_language_fallback]) || feature['name:short'];
+        }
+    ux_language_text_source_short_proxy_name: |
+        function() {
+            var name  = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'] || '';
+            var short = (global.ux_language && feature['name:short:'+global.ux_language]) || (global.ux_language_fallback && feature['name:short:'+global.ux_language_fallback]) || feature['name:short'];
+            return short ? name : '';
+        }
+    ux_language_text_source_abbreviation: |
+        function() {
+            var name  = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'] || '';
+            var abbrev = (global.ux_language && feature['name:abbreviation:'+global.ux_language]) || (global.ux_language_fallback && feature['name:abbreviation:'+global.ux_language_fallback]) || feature['name:abbreviation'];
+            return abbrev || name;
+        }
+    ux_language_text_source_iata: |
+        function() {
+            var name = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'];
+            if(feature.iata) {
+                if (name) {
+                    return name + ' (' + feature.iata + ')';
+                }
+                else {
+                    return feature.iata;
+                }
+            } else {
+                return name;
+            }
+        }
+    ux_language_text_source_ocean: |
+        function() {
+            var name = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'] || '';
+            name = name.split(' ').join('\n');
+            return name.split('').join('  ');
+        }
+    ux_language_text_source_sea: |
+        function() {
+            var name = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'] || '';
+            name = name.split(' ').join('\n');
+            return name.split('').join(' ');
+        }
+    ux_language_text_source_continent_stacked_only: |
+        function() {
+            var name = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'] || '';
+            return name.split(' ').join('\n');
+        }
+    ux_language_text_source_continent: |
+        function() {
+            var name = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'] || '';
+            name = name.split(' ').join('\n');
+            return name.split('').join(' ');
+        }
+    ux_language_text_source_road_ref_and_name: |
+        function() {
+            // if a ux_langauge has been defined use that, else if there is feature name in the fallback_ux_language then use that, else use the feature's default name in the local language
+            return (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature.name;
+
+            /*
+            var name = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'];
+            if(feature.ref && name) {
+                return (feature.ref + ' ' + name);
+            } else {
+                return name;
+            }
+            */
+        }
+    ux_language_text_source_road_ref_and_name_short: |
+        function() {
+            // if a ux_langauge has been defined use that, else if there is feature name in the fallback_ux_language then use that, else use the feature's default name in the local language
+            return (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature.name;
+
+            /*
+            var name = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'];
+            if (feature.ref && (feature.ref.length < 6) && name) {
+                return feature.ref + ' ' + name;
+            } else {
+                return name;
+            }
+            */
+        }
+    ux_language_text_source_piste_advanced: |
+        function() {
+            var name = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'];
+            return name ? ('◆ ' + name) : '◆';
+        }
+    ux_language_text_source_piste_expert: |
+        function() {
+            var name = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'];
+            return name ? ('◆◆ ' + name) : '◆◆';
+        }
+    ux_language_text_source_building_and_address: |
+        function() {
+            var name = (global.ux_language && feature['name:'+global.ux_language]) || (global.ux_language_fallback && feature['name:'+global.ux_language_fallback]) || feature['name'];
+            if (name && feature.addr_housenumber) {
+                return name + '\n' + feature.addr_housenumber;
+            } else {
+                return name;
+            }
+        }
+    #label visibility
+    text_visible_continent:             true
+    text_visible_admin:                 true
+    text_visible_populated_places:      true
+    icon_visible_populated_places:      true
+    text_visible_neighbourhoods:        true
+    text_visible_neighbourhoods_e:      true
+    text_visible_building:              false     # false for default
+    text_visible_address:               false     # false for default
+    text_visible_water_labels:          true
+    text_visible_island:                true
+    icon_visible_landuse_green:         true     # needs work
+    text_visible_landuse_green:         true
+    icon_size_green:                    [[0, '0px']]    # 0px for no, default, more  [[13, 14px], [16, 18px], [18, 19px]]
+    icon_size_green_l:                  [[0, '0px']]    # 0px for no, default, more  [[14,24px],[16,32px]]
+    icon_visible_arrows:                true
+    icon_visible_poi_landuse:           false     # false for default
+    text_visible_poi_landuse:           false     # false for default
+    icon_visible_poi_landuse_e:         false     # false for default
+    text_visible_landuse_generic:       false     # false for default
+    icon_visible_station:               false     # false for default
+    text_visible_station:               false     # false for default
+    text_visible_highway:               true
+    text_visible_trunk_primary:         true
+    text_visible_trunk_primary_route:   true        # true by default
+    text_visible_trunk_primary_e:       false     # false for default, false for more
+    text_visible_secondary:             true
+    text_visible_secondary_e:           false     # false for default, false for more
+    text_visible_tertiary:              true
+    text_visible_tertiary_e:            false     # false for default, false for more
+    text_visible_minor_road:            true
+    text_visible_minor_road_e:          true
+    text_visible_service_road:          true
+    text_visible_path:                  true
+    text_visible_piste:                 true
+    text_visible_steps:                 true
+    text_visible_aerialway:             true
+    text_visible_airport_gate:          true
+    sdk_road_shields:                   true
+    text_visible_exits:                 true
+    # To facilitate data visualizations several recommended sort orders are provided
+    #
+    # Your classic raster map overlay.
+    # Over all line and polygon features.
+    # Under map labels (icons and text), under UI elements
+    # (like routeline and search result pins).
+    sdk_order_over_everything_but_text_0: 490
+    sdk_order_over_everything_but_text_1: 491
+    sdk_order_over_everything_but_text_2: 492
+    sdk_order_over_everything_but_text_3: 493
+    sdk_order_over_everything_but_text_4: 494
+    sdk_order_over_everything_but_text_5: 495
+    sdk_order_over_everything_but_text_6: 496
+    sdk_order_over_everything_but_text_7: 497
+    sdk_order_over_everything_but_text_8: 498
+    sdk_order_over_everything_but_text_9: 499
+    #
+    # Your classic "underlay"
+    # Under roads. Above borders, water, landuse, and earth.
+    sdk_order_under_roads_0: 290
+    sdk_order_under_roads_1: 291
+    sdk_order_under_roads_2: 292
+    sdk_order_under_roads_3: 293
+    sdk_order_under_roads_4: 294
+    sdk_order_under_roads_5: 295
+    sdk_order_under_roads_6: 296
+    sdk_order_under_roads_7: 297
+    sdk_order_under_roads_8: 298
+    sdk_order_under_roads_9: 299
+    #
+    # Under water.
+    # Above earth and most landuse.
+    sdk_order_under_water_0: 190
+    sdk_order_under_water_1: 191
+    sdk_order_under_water_2: 192
+    sdk_order_under_water_3: 193
+    sdk_order_under_water_4: 194
+    sdk_order_under_water_5: 195
+    sdk_order_under_water_6: 196
+    sdk_order_under_water_7: 197
+    sdk_order_under_water_8: 198
+    sdk_order_under_water_9: 199
+    #
+    # Under everything.
+    # Tip: disable earth layer.
+    sdk_order_under_everything_0: 0
+    sdk_order_under_everything_1: 1
+    sdk_order_under_everything_2: 2
+    sdk_order_under_everything_3: 3
+    sdk_order_under_everything_4: 4
+    sdk_order_under_everything_5: 5
+    sdk_order_under_everything_6: 6
+    sdk_order_under_everything_7: 7
+    sdk_order_under_everything_8: 8
+    sdk_order_under_everything_9: 9
+    #
+    # TRANSIT OVERLAY
+    # should default to "auto", with SDK overriding it to true or false,
+    # or app logic sets other booleans that triggers auto behavior later
+    sdk_transit_overlay: false
+    #
+    # SHIELDS
+    sdk_shield_color: [0.506,0.192,0.169]
+    sdk_shield_text_color: white
+    #
+    # enable interactivity for key features
+    sdk_interactive: true
+    #
+    # default order for basemap features
+    feature_order: function() { return feature.sort_rank; }
+    #
+    #
+    #label styling
+    text_fill: [0.300, 0.300, 0.300]         # BLACK
+    text_fill2: '#555'                       # WHITE
+    text_fill_road_e: '#555'                 # WHITE
+    text_fill_exits: [0.920,0.398,0.340]     # motorway junctions, highway_casing1
+    text_fill_building: '#ccc'               # WHITE
+    text_fill_address: '#aaa'                # HUH
+    text_fill_water: '#4c89b5'               # blue
+    text_fill_park: [0.35,0.35,0.35]         # black
+    text_fill_beach: [0.35,0.35,0.35]        # black
+    text_fill_piste: '#444'                  # dark gray
+    text_fill_piste_e: '#666'                # dark gray early
+    text_fill_shield: white                  # road shield fill color
+    text_stroke: [0.870,0.870,0.870]         # land color
+    text_stroke_water: [0.9, 0.9, 0.9]       # water stroke color
+    text_stroke_park: '#bddec5'              # park stroke color
+    text_stroke_building: [0.83, 0.83, 0.83] # building stroke color
+    text_stroke_address:  [0.85, 0.85, 0.85] # address stroke color
+    text_stroke_road1: [0.9, 0.9, 0.9]       # road stroke color highway
+    text_stroke_road2: [0.9, 0.9, 0.9]       # road stroke color major road
+    text_stroke_road3: [0.9, 0.9, 0.9]       # road stroke color major road route
+    text_stroke_road4: [0.9, 0.9, 0.9]       # road stroke color minor road
+    text_stroke_shield: '#D16768'            # road shield stroke color &highway_casing1
+    townspot_sprite: townspot-m-rev          # depends on land color and text settings
+    text_font_family: 'Open Sans'            # branding in asperational Unicode, yo (or Helvetica)
+    #
+    #roads
+    highway1: [0.988,0.495,0.439]
+    highway1_e: [0.988,0.495,0.439]
+    highway_link1: [1.000,0.631,0.590]
+    highway_casing1: [0.859,0.859,0.859]
+    highway_tunnel1: [0.800,0.800,0.800]
+    highway_tunnel_casing1: [0.870,0.870,0.870]
+    highway_link_tunnel_casing1: [0.8, 0.8, 0.7]
+    ferry1: '#8bb5e4'
+    rail1: '#999'
+    rail1_e: '#bbb'
+    rail2: '#777'                           # less important rail (service, sidings)
+    major_road1: [1, 1, 1]
+    major_road1b: [1.0,1.0,1.0]
+    major_road1c: white                     #15%
+    major_road2: [1.0,1.0,1.0]
+    major_road2a: [1.0,1.0,1.0]
+    major_road2b: [1.0,1.0,1.0]
+    major_road3: [1.0,1.0,1.0]
+    major_road4: white
+    major_road5: white
+    major_casing1: [0.859,0.859,0.859]      # same as highway_casing1
+    major_casing2: [0.859,0.859,0.859]      # zoomed out
+    major_tunnel1: [.870,0.870,0.870]       # light orange (major_route1)
+    major_tunnel_casing1: [0.780,0.780,0.780]
+    major_route1: [1.000,0.631,0.590]
+    major_route2: [1.000,0.752,0.730]       # zoomed out
+    minor_route: [1.000,0.631,0.590]        # same as major_route
+    minor_road1: [0.9,0.9,0.9]              # natural earth
+    minor_road2: [0.9,0.9,0.9]              # natural earth, same as major_road2
+    minor_road3: [0.9,0.9,0.9]
+    minor_road4: [0.9,0.9,0.9]              # zoomed out
+    minor_road5: [0.9,0.9,0.9]              # zoomed out, again
+    minor_casing1: white                    # same as highway_casing1
+    minor_casing2: white                    # zoomed out
+    minor_tunnel1: [0.8, 0.8, 0.7]
+    minor_tunnel_casing1: white
+    service_road1: white
+    service_road2: white
+    service_road_casing1: [0.770,0.770,0.770]
+    service_road_casing2: white
+    path1: [0.91,0.91,0.91]
+    path2: [0.91,0.91,0.91]                 # zoomed out
+    path_casing1: [0.875,0.875,0.875]
+    path_bridge_casing1: [0.870,0.870,0.870]
+    path_bridge_casing2: [0.870,0.870,0.870] # zoomed out
+    path_steps1: [0.91,0.91,0.91]
+    path_steps1_b: '#f0ebeb'
+    piste_easy: [0.367,0.750,0.622]
+    piste_intermediate: [0.420,0.678,0.863]
+    piste_advanced: [0.450,0.450,0.450]
+    piste_expert: [0.450,0.450,0.450]
+    #
+    #boundaries
+    country_boundary: [1.0,1.0,1.0]
+    region_boundary: [0.96,0.96,0.96]
+    subregion_boundary: '#bbb'
+    city_wall: [0.682,0.682,0.682]
+    retaining_wall: [0.827,0.808,0.780]
+    snow_fence: [0.827,0.808,0.780]
+    fence: [0.827,0.808,0.780]
+    #
+    #landuse
+    water1: [0.83, 0.83, 0.83]              # water
+    water2: [0.83, 0.83, 0.83]              # playa
+    water1_o: '#9dc3de'                     # water stroke
+    water2_o: '#9dc3de'                     # water stroke 2
+    earth1: [0.870,0.870,0.870]             # land color, used to set scene background color
+    earth1_r: '#666'                        # land color road
+    earth2: '#e9e4e0'                       # urban
+    earth2_v: false                         # urban
+    earth2_e: '#b3b3b3'                     # urban early
+    earth2_e2: '#b3b3b3'                    # urban early fade in
+    earth2_e3: '#bbbbbb'                    # urban early fade in 3
+    earth2_ev: true                         # urban early visibility
+    green1: [0.140,0.843,0.824]             # park
+    green1_r: [0.140,0.843,0.824]           # roads in parks
+    green1_b: '#94d8d6'                     # buildings in parks
+    green1_bo: '#7fc3c1'                    # buildings in parks, outlines
+    green1_w: '#b7d7bf'                     # wilderness area
+    green1_ws: '#aed0b6'                    # wilderness area stroke
+    green1b: [0.80,0.80,0.80]               # park
+    green2: [0.547,0.760,0.590]             # cemetery
+    green2_r: [0.7,0.7,0.7]                 # cemetery road
+    green3: [0.000,0.779,0.328]             # golf course
+    green4: '#526054'                       # farm faint
+    green4_v: false                         # farm faint
+    green5: '#5a695c'                       # farm
+    green6: '#648560'                       # nature reserve
+    green7: [0.169,0.651,0.631]             # forest
+    green8: [0.123,0.770,0.587]             # conservation
+    green9: '#cfe3d4'                       # forest (landcover)
+    green9_e: '#cfe3d4'                     # forest (landcover) early
+    green9_v: true                          # forest (landcover) visibility
+    green10: '#c7d4c0'                      # sports_centre
+    green11: '#d8ddd0'                      # minor zoo related AOIs
+    green11_o: '#aec7b5'                    # minor zoo related AOIs outline
+    orange1: '#bfb08e'                      # stadium
+    orange2: '#d8ccb0'                      # pitch (play field)
+    orange3: '#b9a597'                      # racetrack (play field)
+    brown1: [0.814,0.692,0.570]             # university
+    brown1_r: [0.814,0.692,0.570]           # roads in university
+    brown1_b: [.65, .65, .65]               # university buildings
+    brown1_bo: [.8, .8, .8]                 # university building outlines
+    brown2: '#ada497'                       # school
+    brown3: '#c7b7a2'                       # playground
+    red1: [0.840,0.503,0.541]               # hospital
+    red1_r: [0.840,0.503,0.541]             # roads in hospital
+    red1_b: [.65, .65, .65]                 # hospital buildings
+    red1_bo: [.8, .8, .8]                   # hospital building outlines
+    grey1: '#717171'                        # pedestrian, retail, airport apron, parking, church
+    grey1_e: '#cac6c4'                      # pedestrian, retail, airport apron, parking, church early zoom 14
+    grey1_v: true                           # pedestrian, retail, airport apron, parking, church
+    grey2: [0.5, 0.5, 0.5]                  # airport runway
+    grey3: grey                             # railway
+    grey4: '#ffc52a'                        # airport taxiway
+    grey5: '#ffc52a'                        # airport taxiway
+    grey6: '#c6c6c6'                        # industrial
+    grey6_b: [.65, .65, .65]                # industrial buildings
+    grey6_bo: [.8, .8, .8]                  # industrial building outlines
+    grey7: '#ecebe9'                        # pedestrian, match minor road / path color
+    grey7_v: true                           # pedestrian visibility
+    grey8: '#ecebe9'                        # winter sports
+    grey8_v: true                           # winter sports visibility
+    grey9: [.7, .0, .0, 0.5]                # [.7, .7, .7]        # transit platform
+    grey9_o: [.5, .5, .5]                   # transit platform outline
+    grey9_v: true                           # transit platform visibility
+    grey10: '#d4cce6'                       # generic major landuse (theme park, resort, aquarium, winery)
+    grey10_o: '#bcb9c5'                     # generic major landuse outline
+    grey11: '#d7d7d7'                       # generic minor landuse (attraction, artwork)
+    grey11_o: '#cccccc'                     # generic minor landuse outline
+    grey12: '#cfcfcf'                       # generic minor amusements (roller coasters, rides, slide, carousel)
+    grey12_o: '#c5c5c5'                     # generic minor amusements
+    purple: '#f0e1e1'                       # airport
+    purple_v: false                         # airport
+    purple_b: '#c2c3c4'                     # airport buildings
+    purple_bo: '#969798'                    # airport buildings outline
+    mystry1: '#bfb08e'                      # recreation ground
+    yellow1: '#e7eda8'                      # beach
+    building1: [0.784, 0.784, 0.784]        # building
+    building2: [.860, .860, .860]           # building stroke
+    building_o:  5                          # building stroke order
+    building_e: true                        # building stroke order early
+    sdk_building_extrude: true              # building extrusion toggle
+    building_extrude_height: |              # building extrude height logic
+        function() { return feature.height || 20; }
+
+
+sources:
+    mapzen-osm:
+        type: Raster
+        url:  global.url
+        url_subdomains: global.url_subdomains
+        tile_size : global.tile_size
+        max_zoom: global.max_zoom
+        bounds: global.bounds
+layers:
+  osm-raster:
+    data:
+      source: mapzen-osm
+    draw:
+      raster:
+        order: 0 # draw on bottom
+  
+cameras:
+    isometric:
+        type: flat
+
+styles:
+    dashed:
+        base: lines
+        dash: [1.25, 1.25]
+        dash_background_color: [0.808,0.860,0.851]
+    dashed_big:
+        base: lines
+        dash: [2.0, 1.0]
+        dash_background_color: [0.808,0.860,0.851]
+    dashed_steps:
+        base: lines
+        dash: [0.5, 0.5]
+        dash_background_color: [0.867, 0.867, 0.867]
+    tools-tilecoords:
+        shaders:
+            blocks:
+                global: |
+                    // Varying to be added to both vertex and fragment shaders
+                    varying vec2 v_pos;
+                    #ifdef TANGRAM_FRAGMENT_SHADER
+                    vec2 TileCoords() {
+                        return fract(v_pos);
+                    }
+                    #endif
+                position: |
+                    v_pos = modelPosition().xy;
+    tools-aastep:
+        shaders:
+            extensions: OES_standard_derivatives
+            blocks:
+                global: |
+                    float aastep(float threshold, float value) {
+                        #ifdef TANGRAM_FRAGMENT_SHADER
+                            #ifdef TANGRAM_EXTENSION_OES_standard_derivatives
+                                float afwidth = length(vec2(dFdx(value), dFdy(value))) * 0.70710678118654757;
+                                return smoothstep(threshold - afwidth, threshold + afwidth, value);
+                            #else
+                                return step(threshold, value);
+                            #endif
+                        #else
+                            return step(threshold, value);
+                        #endif
+                    }
+    tools-grid:
+        mix: tools-tilecoords
+        shaders:
+            blocks:
+                global: |
+                    #ifdef TANGRAM_FRAGMENT_SHADER
+                    bool grid(vec2 st, float res, float press) {
+                        vec2 grid = fract(st * res);
+                        return (grid.x < res * press) || (grid.y < res * press);
+                    }
+                    float TileGrid(float res) {
+                        vec2 st = TileCoords() * 100. * res;
+                        float pct = 0.0;
+                        float press = 0.4 + (1.0 - fract(u_map_position.z)) * 0.1;
+                        if (grid(st, 0.01, press)) { pct += 0.5; }
+                        if (grid(st, 0.1, press)) { pct += 0.15; }
+                        return pct;
+                    }
+                    float TileGrid() {
+                        return mix(TileGrid(1.), TileGrid(2.), fract(u_map_position.z));
+                    }
+                    #endif
+    grid:
+        base: polygons
+        mix: [tools-grid]
+        shaders:
+            blocks:
+                filter: |
+                    color.rgb = vec3(0.899, 0.95, 1.0);
+                    color.rgb = mix(color.rgb, vec3(0.654,0.856,0.896), TileGrid());
+    water_border:
+        base: lines
+        texcoords: true
+        mix: tools-aastep
+        shaders:
+            blocks:
+                global: |
+                    float pulse(float x, float p, float w) {
+                        x = abs(x - p);
+                        if (x > w) { return 0.0; }
+                        x /= w;
+                        return (1.0 - x * x * (3.0 - 2.0 * x));
+                    }
+                width: |
+                    // Comment/Uncomment to fix the line to the border
+                    width *= 1.0 - v_texcoord.x;
+                color: |
+                    vec2 st = v_texcoord.xy;
+                    float pattern = aastep(.5, pulse(st.x, .75, .15) + pulse(st.x, .4, .10) + pulse(st.x, .1, .1));
+                    color.rgb = mix(color.rgb, vec3(0.675,0.855,0.886), pattern);
+    shapes-circle:
+        shaders:
+            blocks:
+                global: |
+                    // get distance field of a Circle
+                    // ================================
+                    float circleDF (vec2 st) {
+                        return dot(st,st);
+                    }
+
+    tiling-brick:
+        shaders:
+            blocks:
+                global: |
+                    // Repeats a coordinate space (st) in diferent brick-like tiles
+                    // ================================
+                    vec2 brick(vec2 st, float zoom){
+                        st *= zoom;
+                        // Here is where the offset is happening
+                        st.x += step(1., mod(st.y, 2.0)) * 0.5;
+                        return fract(st);
+                    }
+    pattern-dots:
+        mix: [tools-tilecoords, tiling-brick, shapes-circle, tools-aastep]
+        shaders:
+            blocks:
+                global: |
+                    #ifdef TANGRAM_FRAGMENT_SHADER
+                        float TileDots(float scale, float size) {
+                            vec2 tc = TileCoords() * scale * pow(2., floor(u_map_position.z) - abs(u_tile_origin.z));
+                            vec2 IN = brick(tc, 2.);
+                            float A = circleDF(vec2(0.5) - IN) * 1.8;
+                            float d = 0.0;
+                            if (u_map_position.z < 18.) {
+                                vec2 OUT = fract(tc * 2.);
+                                float B = circleDF(vec2(0.25) - OUT) * 7.;
+                                B = min(B, circleDF(vec2(0.75, 0.25) - OUT) * 7.);
+                                B = min(B, circleDF(vec2(0.50, 0.75) - OUT) * 7.);
+                                B = min(B, circleDF(vec2(0.00, 0.75) - OUT) * 7.);
+                                B = min(B, circleDF(vec2(1.00, 0.75) - OUT) * 7.);
+                                d = mix(A, B, pow(fract(u_map_position.z), 10.));
+                            } else {
+                                d = A;
+                            }
+                            return aastep(size, d);
+                        }
+                    #endif
+    dots:
+        base: polygons
+        mix: pattern-dots
+        shaders:
+            blocks:
+                color: |
+                    color.rgb = mix(color.rgb, vec3(0.850), TileDots(45., 0.1));
+                    // size was set to 35 previously, now 45
+
+    dots-rev:
+        base: polygons
+        mix: pattern-dots
+        shaders:
+            blocks:
+                color: |
+                    color.rgb = mix(vec3(0.850), color.rgb, TileDots(45., .21));
+
+    # HSV/RGB functions
+    hsv:
+        shaders:
+            blocks:
+                global: |
+                    vec3 rgb2hsv(vec3 c)
+                    {
+                        vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+                        vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+                        vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+                        float d = q.x - min(q.w, q.y);
+                        float e = 1.0e-10;
+                        return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+                    }
+                    vec3 hsv2rgb(vec3 c)
+                    {
+                        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+                        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+                    }
+
+    scale-buildings:
+        shaders:
+            blocks:
+                position: |
+                    // scale buildings based on zoom
+                    float zoom = u_map_position.z;
+                    float min = .1;       // minimum building scale
+                    float midpoint = 16.; // middle of zoom range
+                    float inspeed = .1;   // number of zooms to scale buildings up
+                    float outspeed = 2.;  // number of zooms to scale buildings back down
+                    float e = 0.;
+
+                    if (zoom >= midpoint) {
+                        e = (zoom - midpoint) / (outspeed * .2);
+                    } else {
+                        e = abs(zoom - midpoint) / inspeed;
+                    }
+                    position.z *= ((1. - min) / (1. + (exp(e)))) + min;
+
+    building-grid:
+        base: polygons
+        lighting: false
+        mix: [hsv, scale-buildings]
+        texcoords: true
+        shaders:
+            uniforms:
+                u_tex_grid: building-grid
+            defines:
+                WALL_TINT: vec3(1., 3., .800)
+            blocks:
+                color: |
+                    if (dot(vec3(0., 0., 1.), worldNormal()) < .5) {
+                        // If it's a wall
+                        color.rgb = hsv2rgb(rgb2hsv(color.rgb) * WALL_TINT);
+                        color.rgb = mix(color.rgb, vec3(0.),
+                                        texture2D(u_tex_grid, v_texcoord).a);
+                    }
+
+    building-lines:
+        base: lines
+        mix: scale-buildings
+    lines_transparent:
+        base: lines
+        blend: overlay
+    outline_transparent:
+        base: lines
+        blend: overlay
+    polygons_transparent:
+        base: polygons
+        blend: overlay
+    text-blend-order:
+        base: text
+        blend_order: 1
+    ux-route-line-overlay:
+        base: lines
+        blend: overlay
+        blend_order: 0
+    ux-route-line-dash-overlay:
+        base: lines
+        blend: overlay
+        blend_order: 0
+        dash: [2, 1]
+    ux-transit-line-overlay:
+        base: lines
+        blend: overlay
+        blend_order: 0
+    ux-location-gem-overlay:
+        base: points
+        texture: mapzen_icon_library
+        blend: overlay
+        blend_order: 2
+    ux-icons-overlay:
+        base: points
+        texture: mapzen_icon_library
+        blend: overlay
+        blend_order: 3
+    sdk-point-overlay:
+        base: points
+        texture: mapzen_icon_library
+        blend: overlay
+        blend_order: 3
+    sdk-shield-overlay:
+        base: points
+        texture: mapzen_icon_library
+        blend: overlay
+        blend_order: 3
+    sdk-line-overlay:
+        base: lines
+        blend: overlay
+        blend_order: 0
+    sdk-polygon-overlay:
+        base: polygons
+        blend: overlay
+        blend_order: 0
+
+scene:
+    background:
+        color: global.earth1

@@ -1,11 +1,8 @@
 package hamza.dali.flutter_osm_plugin.utilities
 
-import android.graphics.Color
-import android.util.ArrayMap
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
-import hamza.dali.flutter_osm_plugin.models.RoadConfig
+import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
 import hamza.dali.flutter_osm_plugin.models.RoadGeoPointInstruction
-import hamza.dali.flutter_osm_plugin.models.RoadOption
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 
@@ -14,8 +11,7 @@ class MapSnapShot {
     private var customArrowMarkerIcon: ByteArray? = null
     private var customPickerMarkerIcon: ByteArray? = null
     private var staticPointsIcons = HashMap<String, ByteArray>()
-    private var staticPoints: HashMap<String, Pair<List<GeoPoint>, List<Double>>> =
-        HashMap()
+    private var staticPoints: HashMap<String, Pair<List<GeoPoint>, List<Double>>> = HashMap()
     private var centerMap: GeoPoint? = null
     private var boundingWorldBox: BoundingBox = FlutterOsmView.boundingWorldBox
 
@@ -28,7 +24,8 @@ class MapSnapShot {
     private var disableRotation: Boolean = false
     private var mapOrientation: Float = 0f
 
-    private var markers: ArrayMap<GeoPoint, ByteArray?> = ArrayMap<GeoPoint, ByteArray?>()
+    private var markers: MutableList<FlutterGeoPoint> = emptyList<FlutterGeoPoint>().toMutableList()
+    //ArrayMap<GeoPoint, HashMap<String, Any>>()//ByteArray?
 
     fun advancedPicker() = isAdvancedPicker
     fun centerGeoPoint() = centerMap
@@ -80,7 +77,7 @@ class MapSnapShot {
         isTrackMe = isTracking
     }
 
-    fun setEnableMyLocation(isEnabled: Boolean,disableRotation:Boolean = false) {
+    fun setEnableMyLocation(isEnabled: Boolean, disableRotation: Boolean = false) {
         enableLocation = isEnabled
         this.disableRotation = disableRotation
     }
@@ -94,8 +91,7 @@ class MapSnapShot {
     }
 
     fun setUserTrackMarker(
-        personMarker: ByteArray?,
-        arrowMarker: ByteArray?
+        personMarker: ByteArray?, arrowMarker: ByteArray?
     ) {
         this.customPersonMarkerIcon = personMarker
         this.customArrowMarkerIcon = arrowMarker
@@ -120,16 +116,26 @@ class MapSnapShot {
         isAdvancedPicker = isActive
     }
 
-    fun overlaySnapShotMarker(point: GeoPoint, icon: ByteArray,oldPoint:GeoPoint?=null,) {
-        markers[point] = icon
-        markers.remove(oldPoint)
+    fun overlaySnapShotMarker(
+        point: FlutterGeoPoint,
+        oldPoint: GeoPoint? = null,
+    ) {/*markers[point] = HashMap<String, Any>().apply {
+            this["icon"] = icon
+        }*/
+        when {
+            !markers.contains(point) -> markers.add(point)
+            else -> {
+                markers[markers.indexOf(point)] = point
+            }
+        }
+        oldPoint?.let { old ->
+            markers.removeIf { m -> m.geoPoint == old }
+
+        }
     }
 
     fun removeMarkersFromSnapShot(removedPoints: List<GeoPoint>) {
-        val geoPoints = markers.filter { geo ->
-            removedPoints.containGeoPoint(geo.key)
-        }.keys
-        markers.removeAll(geoPoints)
+        markers.removeIf { m -> removedPoints.contains(m.geoPoint) }
     }
 
     fun reset(all: Boolean = false) {
@@ -158,8 +164,8 @@ data class RoadSnapShot(
     val roadBorderColor: Int?,
     val roadWidth: Float,
     val roadBorderWidth: Float,
-    val roadID:String,
-    val duration:Double,
-    val distance:Double,
-    val instructions:List<RoadGeoPointInstruction>
+    val roadID: String,
+    val duration: Double,
+    val distance: Double,
+    val instructions: List<RoadGeoPointInstruction>
 )

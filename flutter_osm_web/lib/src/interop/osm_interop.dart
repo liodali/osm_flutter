@@ -94,6 +94,8 @@ external dynamic addMarker(
   int mapId,
   GeoPointJs p,
   String icon,
+  double? angle,
+  IconAnchorJS? iconAnchor,
 );
 
 @JS('changeMarker')
@@ -102,6 +104,8 @@ external dynamic changeMarker(
   GeoPointJs oldP,
   GeoPointJs newP,
   String? icon,
+  double? angle,
+  IconAnchorJS? iconAnchor,
 );
 
 @JS('modifyMarker')
@@ -261,6 +265,5 @@ external set onRegionChangedListener(
 external set onRoadListener(
   void Function(
     String,
-  )
-      f,
+  ) f,
 );

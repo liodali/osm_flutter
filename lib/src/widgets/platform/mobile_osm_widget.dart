@@ -30,7 +30,8 @@ Widget getWidget({
 }) =>
     MobileOsmFlutter(
       controller: controller,
-      userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
+      userTrackingOption:
+          userTrackingOption ?? controller.initMapWithUserPosition,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
       mapIsReadyListener: mapIsReadyListener,

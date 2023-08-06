@@ -1,5 +1,48 @@
 import 'package:flutter/material.dart';
 
+typedef IconAnchorOffset = ({double x, double y});
+
+enum Anchor {
+  center("center", (0.5, 0.5)),
+  left("left", (1, 0.5)),
+  right("right", (0, 0.5)),
+  top("top", (0.5, 1)),
+  bottom("bottom", (0.5, 0)),
+  top_left("top-left", (1, 1)),
+  top_right("top-right", (0, 1)),
+  bottom_left("bottom-left", (1, 0)),
+  bottom_right("bottom-right", (0, 0));
+
+  const Anchor(this.name, this.value);
+  final String name;
+  final (double, double) value;
+}
+
+class IconAnchor {
+  final Anchor anchor;
+  final IconAnchorOffset? offset;
+
+  IconAnchor({
+    this.anchor = Anchor.center,
+    this.offset,
+  });
+
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      "x": anchor.value.$1,
+      "y": anchor.value.$2,
+      "anchor": anchor.name,
+    };
+    if (offset != null) {
+      map["offset"] = {
+        "x": offset!.x,
+        "y": offset!.y,
+      };
+    }
+    return map;
+  }
+}
+
 class MarkerOption {
   final MarkerIcon? defaultMarker;
   final MarkerIcon? advancedPickerMarker;
@@ -14,9 +57,9 @@ class MarkerOption {
     MarkerIcon? advancedPickerMarker,
   }) {
     return MarkerOption(
-        defaultMarker: defaultMarker ?? this.defaultMarker,
-        advancedPickerMarker:
-            advancedPickerMarker ?? this.advancedPickerMarker);
+      defaultMarker: defaultMarker ?? this.defaultMarker,
+      advancedPickerMarker: advancedPickerMarker ?? this.advancedPickerMarker,
+    );
   }
 }
 

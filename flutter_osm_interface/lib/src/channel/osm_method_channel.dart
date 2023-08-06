@@ -528,12 +528,18 @@ class MethodChannelOSM extends MobileOSMPlatform {
     int idOSM,
     GeoPoint p, {
     GlobalKey? globalKeyIcon,
+    IconAnchor? iconAnchor,
   }) async {
-    Map<String, dynamic> args = {"point": p.toMap()};
+    Map<String, dynamic> args = {
+      "point": p.toMap(),
+    };
     if (globalKeyIcon != null) {
       var icon = await _capturePng(globalKeyIcon);
 
       args["icon"] = icon;
+    }
+    if (iconAnchor != null) {
+      args["iconAnchor"] = iconAnchor.toMap();
     }
 
     await _channels[idOSM]?.invokeMethod("add#Marker", args);
@@ -660,6 +666,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GeoPoint newLocation, {
     GlobalKey? globalKeyIcon,
     double? angle = null,
+    IconAnchor? iconAnchor,
   }) async {
     Map<String, dynamic> args = {
       "new_location": newLocation.toMap(),
@@ -669,6 +676,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     if (globalKeyIcon != null) {
       final icon = await _capturePng(globalKeyIcon);
       args["new_icon"] = icon;
+    }
+    if (iconAnchor != null) {
+      args["iconAnchor"] = iconAnchor.toMap();
     }
     await _channels[idOSM]!.invokeMethod("change#Marker", args);
   }
