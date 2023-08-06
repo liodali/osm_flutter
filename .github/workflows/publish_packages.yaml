@@ -1,4 +1,4 @@
-name: osm_flutter
+name: osm_flutter_packages
 
 on:
   push:
