@@ -207,4 +207,9 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         )
         canvas.restore()
     }
+
+    fun setAnchor(anchor: List<Double>) {
+        setPersonAnchor(anchor.first().toFloat(),anchor.last().toFloat())
+        setDirectionAnchor(anchor.first().toFloat(),anchor.last().toFloat())
+    }
 }

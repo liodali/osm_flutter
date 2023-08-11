@@ -422,9 +422,11 @@ class FlutterOsmView(
                 }
 
                 "trackMe" -> {
-                    val args = call.arguments as List<Boolean>
-                    val enableStopFollow = args.first()
-                    val disableRotation = args.last()
+                    val args = call.arguments as List<*>
+                    val enableStopFollow = args.first() as Boolean
+                    val disableRotation = args[1] as Boolean
+                    val anchor = args.last() as List<Double>
+                    locationNewOverlay.setAnchor(anchor)
                     trackUserLocation(enableStopFollow, disableRotation, result)
                 }
 
