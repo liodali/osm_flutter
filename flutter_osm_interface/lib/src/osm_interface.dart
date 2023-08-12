@@ -82,6 +82,7 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idOSM, {
     bool stopFollowInDrag = false,
     bool disableMarkerRotation = false,
+    Anchor anchor = Anchor.center,
   });
 
   Future<void> addPosition(
