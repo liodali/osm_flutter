@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 typedef IconAnchorOffset = ({double x, double y});
@@ -16,6 +18,16 @@ enum Anchor {
   const Anchor(this.name, this.value);
   final String name;
   final (double, double) value;
+
+  dynamic toMapAndroidWeb() {
+      return [
+        value.$1,
+        value.$2,
+      ];
+  }
+
+  String toMapIOS() => name;
+
 }
 
 class IconAnchor {

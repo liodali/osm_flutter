@@ -125,8 +125,7 @@ final class MobileOSMController extends IBaseOSMController {
     });
     osmPlatform.onMapIsReady(_idMap).listen((event) async {
       if (_androidOSMLifecycle != null &&
-          _osmFlutterState.widget.controller.listenerMapIsReady.value !=
-              event.value &&
+          _osmFlutterState.widget.mapIsReadyListener.value != event.value &&
           !_osmFlutterState.setCache.value) {
         _androidOSMLifecycle!.mapIsReady(event.value);
       }
@@ -495,6 +494,7 @@ final class MobileOSMController extends IBaseOSMController {
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableMarkerRotation = false,
+    Anchor anchor = Anchor.center,
   }) async {
     /// make in native when is enabled ,nothing is happen
     await _osmFlutterState.requestPermission();
@@ -502,6 +502,7 @@ final class MobileOSMController extends IBaseOSMController {
       _idMap,
       stopFollowInDrag: enableStopFollow,
       disableMarkerRotation: disableMarkerRotation,
+      anchor: anchor,
     );
   }
 

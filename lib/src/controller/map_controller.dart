@@ -311,10 +311,12 @@ class MapController extends BaseMapController {
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableUserMarkerRotation = false,
+    Anchor anchor = Anchor.center,
   }) async {
     await osmBaseController.enableTracking(
       enableStopFollow: enableStopFollow,
       disableMarkerRotation: disableUserMarkerRotation,
+      anchor: anchor,
     );
   }
 
