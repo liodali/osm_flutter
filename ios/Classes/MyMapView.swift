@@ -206,9 +206,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(mapView.position.toGeoPoint())
             break;
         case "trackMe":
-            let args = call.arguments as! [Bool]
-            enableStopFollowInDrag = args.first ?? false
-            disableRotation = args.last ?? false
+            let args = call.arguments as! [Any]
+            enableStopFollowInDrag = args.first as? Bool ?? false
+            disableRotation = args[1] as? Bool ?? false
+            let anchorArgs = args.last as? String ?? "center"
+            MyLocationMarker.defaultAnchorStr = anchorArgs
             trackUserLocation()
             result(200)
             break;
@@ -510,7 +512,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             }
             if let _anchor = args["iconAnchor"]{
                 let anchorStr = (_anchor  as! [String:Any] )["anchor"] as! String
-                let anchorType = AnchorType.fromString(anchorStr: anchorStr)
+                //let anchorType = AnchorType.fromString(anchorStr: anchorStr)
                 var x = NSNumber(value: 0)
                 var y = NSNumber(value: 0)
                 var offset:(Int,Int)? = nil
@@ -519,7 +521,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     y = ((_anchor  as! [String:Any])["offset"] as! [String:Any])["y"] as! NSNumber
                     offset = (Int(CGFloat(truncating: x)),Int(CGFloat(truncating: y)))
                 }
-                anchor = AnchorGeoPoint(anchor:anchorType,offset: offset)
+                anchor = AnchorGeoPoint(anchorStr,offset: offset)
             }
             GeoPointMap(icon: icon, coordinate: coordinate, angle: angle, anchor: anchor).setupMarker(on: mapView)
         }
@@ -941,9 +943,15 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 //mapView.setRegion(region, animated: true)
                 if (canTrackUserLocation) {
                     if (userLocation == nil) {
-                        userLocation = mapView.addUserLocation(for: location, on: mapView, personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
+                        userLocation = mapView.addUserLocation(
+                            for: location, on: mapView,
+                            personIcon: personMarkerIcon,
+                            arrowDirection: arrowDirectionIcon
+                        )
                         //userLocation?.setDirectionArrow(personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
                     }
+                    // setAnchor should be done after adding user location marker
+                    userLocation?.setAnchorLocation(MyLocationMarker.defaultAnchorStr)
                     if (!disableRotation) {
                         let angle = CGFloat(manager.heading?.trueHeading ?? 0.0).toDegrees
                         if (angle != 0) {

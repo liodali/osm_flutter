@@ -61,7 +61,7 @@ extension TGMapView {
         userLocationMarker.marker!.visible = true
         return userLocationMarker
     }
-
+    
     func flyToUserLocation(for location: CLLocationCoordinate2D, flyEnd: ((Bool) -> Void)? = nil) {
         let cameraOption = TGCameraPosition(center: location, zoom: self.zoom, bearing: self.bearing, pitch: self.pitch)
         self.fly(to: cameraOption!, withSpeed: 50, callback: flyEnd)
@@ -79,6 +79,12 @@ extension TGMapView {
 }
 
 extension MyLocationMarker {
+    
+    func updateUserLocationStyle(for style: MarkerStyle) {
+        self.marker!.stylingString = style.toString()
+    }
+    
+    
     func setDirectionArrow(personIcon: MarkerIconData?, arrowDirection: MarkerIconData?) {
         self.personIcon = personIcon
         arrowDirectionIcon = arrowDirection
