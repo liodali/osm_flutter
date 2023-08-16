@@ -32,7 +32,7 @@ jobs:
       #- pana
       permissions:
         id-token: write # Required for authentication using OIDC
-      uses: liodali/osm_flutter/.github/workflows/base_publish_pcks.yaml@84deffa883990c45dbc09be4b0fc7bf94201c09a
+      uses: liodali/osm_flutter/.github/workflows/base_publish_pcks.yaml@02fecd87cfebf9fdb333a454d847ca2c8e87de2e
       with:
         environment: pub.dev
         working-directory: ${{needs.find-package.outputs.package}}
