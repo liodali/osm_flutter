@@ -22,21 +22,18 @@ on:
 jobs:
     publish:
         runs-on: ubuntu-latest
-        container:
-            image:  python:3
-        #image:  google/dart:latest
         steps:
             - uses: actions/checkout@v3
-            - name: install dependencies
-              run: |
-                python -m pip install --upgrade pip
-                pip install requests
             - uses: dart-lang/setup-dart@v1
             - name: Install Flutter SDK
               uses: britannio/action-install-flutter@v1
             - run: dart --version
+              working-directory: ${{ inputs.working-directory }}
             - run: flutter --version
+              working-directory: ${{ inputs.working-directory }}
             - name: fomarting files
               run : dart format .
+              working-directory: ${{ inputs.working-directory }}
             - name: Publish package
               run:  flutter pub publish -f
+              working-directory: ${{ inputs.working-directory }}
