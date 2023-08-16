@@ -31,7 +31,8 @@ jobs:
       - name: clear before release
         run: |
           rm -f *.gif
-          rm -rf assets
+          rm -rf assets/dynamic-styles.zip
+          rm -rf assets/osm-style.zip
           rm -rf flutter_osm_interface
           rm -rf flutter_osm_web
           rm -f check_pubspec_release.py
