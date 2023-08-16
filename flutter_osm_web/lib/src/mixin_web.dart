@@ -107,6 +107,7 @@ mixin WebMixin {
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableMarkerRotation = false,
+    Anchor anchor = Anchor.center,
   }) async {
     await interop.enableTracking(
       mapIdMixin,
