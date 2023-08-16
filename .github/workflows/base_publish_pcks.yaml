@@ -1,0 +1,39 @@
+name: Publish osm packages to pub.dev
+
+## Caller of this workflow should use it as follows:
+## jobs:
+##   publish:
+##     uses: dart-lang/setup-dart/.github/workflows/publish.yml@main [or a recent commit hash / version tag]
+##     # with:
+##     #   working-directory: path/to/sub/directory
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: if specified, the workflow is required to be run in this environment (with additional approvals)
+        required: false
+        type: string
+      working-directory:
+        description: directory with-in the repository where the package is located (if not in the repository root)
+        required: false
+        type: string
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: dart-lang/setup-dart@v1
+            - name: Install Flutter SDK
+              uses: britannio/action-install-flutter@v1
+            - run: dart --version
+              working-directory: ${{ inputs.working-directory }}
+            - run: flutter --version
+              working-directory: ${{ inputs.working-directory }}
+            - name: fomarting files
+              run : dart format .
+              working-directory: ${{ inputs.working-directory }}
+            - name: Publish package
+              run:  flutter pub publish -f
+              working-directory: ${{ inputs.working-directory }}

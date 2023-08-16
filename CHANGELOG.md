@@ -1,3 +1,6 @@
+### 0.60.2 : fix bugs #433,#434
+* remove `androidHotReloadSupport` from OSMOption
+* fix parsing route in `RoadInfo`
 ### 0.60.1 : fix issue
 ### 0.60.0+3 : fix py script for automator
 ### 0.60.0+2 : forget update changelog

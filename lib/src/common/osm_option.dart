@@ -34,7 +34,6 @@ class OSMOption {
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
-    this.androidHotReloadSupport = false,
     this.userTrackingOption,
   });
   final bool showZoomController;
@@ -47,7 +46,6 @@ class OSMOption {
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
-  final bool androidHotReloadSupport;
   final UserTrackingOption? userTrackingOption;
 }
 

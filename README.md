@@ -1,5 +1,5 @@
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.60.1-orange)   
+![pub](https://img.shields.io/badge/pub-v0.60.2-orange)   
 
 
 ## Platform Support
@@ -45,7 +45,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.60.1
+      flutter_osm_plugin: ^0.60.2
 
 
 
@@ -718,7 +718,6 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `roadConfiguration`           | (RoadOption) set  default color,width,borderColor,borderWdith for polylines |
 | `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
 | `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
-| `androidHotReloadSupport`     | (bool) enable to restart  osm map in android to support hotReload (default = false)  |
 | `enableRotationByGesture`     | (bool) enable to rotation gesture for map, default: false  |
 | `showDefaultInfoWindow`       | (bool) enable/disable default infoWindow of marker (default = false)         |
 | `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |

@@ -14,39 +14,13 @@ import 'widgets/copyright_osm_widget.dart';
 /// you can track you current location,show static points like position of your stores
 /// show road(s)
 ///
-/// [isPicker] : (bool) if is true, map will behave as picker and will start advanced picker
-///
-/// [userTrackingOption] : (UserTrackingOption?) if is not null, used to paramter tracking of user location where you can disable/enable follow user
-///
 /// [mapIsLoading]   :(Widget) show custom  widget when the map finish initialization
-///
-/// [showZoomController] : (bool) if us true, you can zoomIn zoomOut directly in the map
-///
-/// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
 ///
 /// [onGeoPointClicked] : (callback) is trigger when you clicked on marker,return current  geoPoint of the Marker
 ///
 /// [onLocationChanged] : (callback) it's fired when you activate tracking and  user position has been changed
 ///
 /// [onMapIsReady] : (callabck) it's fired when map initialization is complet
-///
-/// [markerOption] :  contain marker of geoPoint and customisation of advanced picker marker
-///
-/// [userLocationMarker] : change user marker or direction marker icon in tracking location
-///
-/// [roadConfiguration] : (RoadConfiguration) set color and icons marker of road
-///
-/// [stepZoom] : set default step zoom value (default = 1)
-///
-/// [initZoom] : set initialized zoom in specific location  (default = 2)
-///
-/// [minZoomLevel] : set default zoom value (default = 1)
-///
-/// [maxZoomLevel] : set default zoom value (default = 1)
-///
-/// [showDefaultInfoWindow] : (bool) enable/disable default infoWindow of marker (default = false)
-///
-/// [showContributorBadgeForOSM] : (bool) for copyright of osm, we need to add badge in bottom of the map (default false)
 class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
   final Widget? mapIsLoading;
@@ -117,12 +91,12 @@ class _OSMFlutterState extends State<OSMFlutter> {
   @override
   void didUpdateWidget(covariant OSMFlutter oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!kIsWeb) {
-      if (this.widget != oldWidget && Platform.isAndroid) {
-        widget.controller.setValueListenerMapIsReady(false);
-        mapIsReadyListener.value = false;
-      }
-    }
+    // if (!kIsWeb) {
+    //   if (this.widget != oldWidget && Platform.isAndroid) {
+    //     widget.controller.setValueListenerMapIsReady(false);
+    //     mapIsReadyListener.value = false;
+    //   }
+    // }
   }
 
   @override
@@ -201,8 +175,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
                             userLocationMarker:
                                 widget.osmOption.userLocationMarker,
                             onMapIsReady: widget.onMapIsReady,
-                            androidHotReloadSupport:
-                                widget.osmOption.androidHotReloadSupport,
                             enableRotationByGesture:
                                 widget.osmOption.enableRotationByGesture,
                           ),
@@ -234,8 +206,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
                       mapIsReadyListener: mapIsReadyListener,
                       staticIconGlobalKeys: staticMarkersKeys,
                       roadConfiguration: widget.osmOption.roadConfiguration,
-                      androidHotReloadSupport:
-                          widget.osmOption.androidHotReloadSupport,
                       showContributorBadgeForOSM:
                           widget.osmOption.showContributorBadgeForOSM,
                       isPicker: widget.osmOption.isPicker,
