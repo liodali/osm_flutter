@@ -161,7 +161,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<GeoPoint> myLocation(int idMap) async {
     try {
       Map<String, dynamic> map =
-          (await (_channels[idMap]!.invokeMapMethod("user#position")))!;
+          (await _channels[idMap]!.invokeMapMethod("user#position"))!;
       return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
     } on PlatformException catch (e) {
       throw GeoPointException(msg: e.message);

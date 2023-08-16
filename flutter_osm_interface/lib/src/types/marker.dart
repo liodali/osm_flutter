@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 typedef IconAnchorOffset = ({double x, double y});

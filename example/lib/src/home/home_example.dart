@@ -371,15 +371,15 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             OSMFlutter(
               controller: controller,
               osmOption: OSMOption(
-                androidHotReloadSupport: true,
-                enableRotationByGesture: true,
+                androidHotReloadSupport: false,
+                enableRotationByGesture: false,
                 zoomOption: ZoomOption(
                   initZoom: 8,
                   minZoomLevel: 3,
                   maxZoomLevel: 19,
                   stepZoom: 1.0,
                 ),
-                /*userLocationMarker: UserLocationMaker(
+                userLocationMarker: UserLocationMaker(
                     personMarker: MarkerIcon(
                       // icon: Icon(
                       //   Icons.car_crash_sharp,
@@ -414,7 +414,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                     //     scaleAssetImage: 0.25,
                     //   ),
                     // ),
-                    ),*/
+                    ),
                 staticPoints: [
                   StaticPositionGeoPoint(
                     "line 1",
@@ -647,6 +647,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 await controller.enableTracking(
                   enableStopFollow: true,
                   disableUserMarkerRotation: false,
+                  anchor: Anchor.center,
                 );
                 //await controller.zoom(5.0);
               } else {
