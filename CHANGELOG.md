@@ -1,4 +1,6 @@
-### 0.60.2 : Improvement API and fix bugs ( contain break changes )
+### 0.60.2 : fix bugs #433,#434
+* remove `androidHotReloadSupport` from OSMOption
+* fix parsing route in `RoadInfo`
 ### 0.60.1 : fix issue
 ### 0.60.0 : Improvement API and fix bugs ( contain break changes )
 * Add iconAnchor for addMarker/changeLocationMarker
