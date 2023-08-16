@@ -28,7 +28,6 @@ Widget buildWidget({
   double minZoomLevel = 2,
   double maxZoomLevel = 18,
   UserLocationMaker? userLocationMarker,
-  bool androidHotReloadSupport = false,
   bool enableRotationByGesture = false,
 }) =>
     getWidget(
@@ -55,6 +54,5 @@ Widget buildWidget({
       onMapIsReady: onMapIsReady,
       showZoomController: showZoomController,
       staticPoints: staticPoints,
-      androidHotReloadSupport: androidHotReloadSupport,
       enableRotationByGesture: enableRotationByGesture,
     );

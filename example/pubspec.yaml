@@ -20,8 +20,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 dependency_overrides:
-  flutter_osm_plugin: ^0.60.1
-  #  path: ../
+  flutter_osm_plugin: #^0.60.1
+    path: ../
 
   
 
