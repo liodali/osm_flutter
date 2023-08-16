@@ -42,4 +42,6 @@ jobs:
       - uses: britannio/action-install-flutter@v1
       - run: dart --version
       - run: flutter --version
+      - run : dart format .
+      - run:  flutter pub publish -f
         
