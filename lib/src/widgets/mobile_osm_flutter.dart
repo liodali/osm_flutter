@@ -32,7 +32,6 @@ class MobileOsmFlutter extends StatefulWidget {
   final double maxZoomLevel;
   final Function(bool)? onMapIsReady;
   final UserLocationMaker? userLocationMarker;
-  final bool androidHotReloadSupport;
   final bool enableRotationByGesture;
 
   MobileOsmFlutter({
@@ -59,7 +58,6 @@ class MobileOsmFlutter extends StatefulWidget {
     this.maxZoomLevel = 18,
     this.onMapIsReady,
     this.userLocationMarker,
-    this.androidHotReloadSupport = false,
     this.enableRotationByGesture = false,
   }) : super(key: key);
 
@@ -170,14 +168,14 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       saveCache();
     }
     super.didUpdateWidget(oldWidget);
-    if (this.widget != oldWidget &&
-        Platform.isAndroid &&
-        widget.androidHotReloadSupport &&
-        kDebugMode) {
-      setState(() {
-        androidKey = GlobalKey();
-      });
-    }
+    // if (this.widget != oldWidget &&
+    //     Platform.isAndroid &&
+    //     widget.androidHotReloadSupport &&
+    //     kDebugMode) {
+    //   setState(() {
+    //     androidKey = GlobalKey();
+    //   });
+    // }
   }
 
   @override

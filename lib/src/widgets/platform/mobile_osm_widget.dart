@@ -25,7 +25,6 @@ Widget getWidget({
   double maxZoomLevel = 18,
   UserLocationMaker? userLocationMarker,
   Function(bool)? onMapIsReady,
-  bool androidHotReloadSupport = false,
   bool enableRotationByGesture = false,
 }) =>
     MobileOsmFlutter(
@@ -52,6 +51,5 @@ Widget getWidget({
       minZoomLevel: minZoomLevel,
       maxZoomLevel: maxZoomLevel,
       stepZoom: stepZoom,
-      androidHotReloadSupport: androidHotReloadSupport,
       enableRotationByGesture: enableRotationByGesture,
     );
