@@ -1,3 +1,5 @@
+### 0.60.2 : Improvement API and fix bugs ( contain break changes )
+### 0.60.1 : fix issue
 ### 0.60.0 : Improvement API and fix bugs ( contain break changes )
 * Add iconAnchor for addMarker/changeLocationMarker
 * Fix bugs #420 , #262 , #430 , #419

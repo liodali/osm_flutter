@@ -371,7 +371,6 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
             OSMFlutter(
               controller: controller,
               osmOption: OSMOption(
-                androidHotReloadSupport: true,
                 enableRotationByGesture: true,
                 zoomOption: ZoomOption(
                   initZoom: 8,
