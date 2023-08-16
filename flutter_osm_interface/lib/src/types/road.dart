@@ -159,7 +159,7 @@ class RoadInfo {
                 .map((e) => Instruction.fromMap(e))
                 .toList()
             : [],
-        this.route = map.containsKey(map)
+        this.route = map.containsKey('routePoints')
             ? (map["routePoints"] as String).stringToGeoPoints()
             : [];
   RoadInfo copyWith({
