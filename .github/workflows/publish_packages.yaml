@@ -35,13 +35,13 @@ jobs:
       steps:
       #- uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
       - uses: dart-lang/setup-dart@v1
-        # with:
-        #    environment: pub.dev
-        #    working-directory: ${{needs.find-package.outputs.package}}
+        
       #- name: Install Flutter SDK
       - uses: britannio/action-install-flutter@v1
       - run: dart --version
       - run: flutter --version
       - run : dart format .
       - run:  flutter pub publish -f
+        working-directory: ${{needs.find-package.outputs.package}}
+          
         
