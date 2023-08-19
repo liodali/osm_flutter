@@ -1,3 +1,6 @@
+### 0.60.3 : 
+* fix bugs related to icon size for user location #440
+* fix bugs related to camera map rotation #355
 ### 0.60.2 : fix bugs #433,#434
 * remove `androidHotReloadSupport` from OSMOption
 * fix parsing route in `RoadInfo`
