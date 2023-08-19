@@ -454,6 +454,8 @@ class MapController extends BaseMapController {
     return await osmBaseController.cancelAdvancedPositionPicker();
   }
 
+  /// [rotateMapCamera]
+  /// 
   /// rotate camera of osm map
   Future<void> rotateMapCamera(double degree) async {
     return await osmBaseController.mapOrientation(degree);
