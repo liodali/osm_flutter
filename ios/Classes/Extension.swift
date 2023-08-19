@@ -108,6 +108,7 @@ extension MyLocationMarker {
             } else if (self.personIcon != nil && userLocationMarkerType == .person) {
                 iconM = self.personIcon
             }
+            self.markerStyle.size = iconM!.size
             self.markerStyle.style = StyleType.points
             self.markerStyle.sprite = nil
             /*

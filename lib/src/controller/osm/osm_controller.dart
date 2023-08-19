@@ -664,7 +664,21 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   Future<void> mapOrientation(double degree) async {
-    await osmPlatform.mapRotation(_idMap, degree);
+    var angle = degree;
+    if (Platform.isIOS) {
+      angle = -degree;
+      if (angle.abs() > 360) {
+        angle = angle % 360;
+      }
+      if (angle < 0) {
+        angle += 360;
+      }
+
+      if (angle.abs() == 360) {
+        angle = 0;
+      }
+    }
+    await osmPlatform.mapRotation(_idMap, angle);
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -12,7 +13,8 @@ class MainExample extends StatefulWidget {
   _MainExampleState createState() => _MainExampleState();
 }
 
-class _MainExampleState extends State<MainExample> with OSMMixinObserver {
+class _MainExampleState extends State<MainExample>
+    with OSMMixinObserver, TickerProviderStateMixin {
   late MapController controller;
   late GlobalKey<ScaffoldState> scaffoldKey;
   Key mapGlobalkey = UniqueKey();
@@ -29,7 +31,15 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
   List<GeoPoint> pointsRoad = [];
   Timer? timer;
   int x = 0;
-
+  late AnimationController animationController = AnimationController(
+    vsync: this,
+    duration: Duration(
+      milliseconds: 500,
+    ),
+  );
+  late Animation<double> animation =
+      Tween<double>(begin: 0, end: 2 * pi).animate(animationController);
+  final ValueNotifier<int> mapRotate = ValueNotifier(0);
   @override
   void initState() {
     super.initState();
@@ -279,6 +289,7 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
       timer?.cancel();
     }
     //controller.listenerMapIsReady.removeListener(mapIsInitialized);
+    animationController.dispose();
     controller.dispose();
     super.dispose();
   }
@@ -385,10 +396,18 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                       //   color: Colors.red,
                       //   size: 48,
                       // ),
-                      iconWidget: SizedBox.square(
-                        dimension: 56,
+                      // iconWidget: SizedBox.square(
+                      //   dimension: 56,
+                      //   child: Image.asset(
+                      //     "asset/taxi.png",
+                      //     scale: .3,
+                      //   ),
+                      // ),
+                      iconWidget: SizedBox(
+                        width: 32,
+                        height: 64,
                         child: Image.asset(
-                          "asset/taxi.png",
+                          "asset/directionIcon.png",
                           scale: .3,
                         ),
                       ),
@@ -400,9 +419,17 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                       // ),
                     ),
                     directionArrowMarker: MarkerIcon(
-                      icon: Icon(
-                        Icons.navigation_rounded,
-                        size: 48,
+                      // icon: Icon(
+                      //   Icons.navigation_rounded,
+                      //   size: 48,
+                      // ),
+                      iconWidget: SizedBox(
+                        width: 32,
+                        height: 64,
+                        child: Image.asset(
+                          "asset/directionIcon.png",
+                          scale: .3,
+                        ),
                       ),
                     )
                     // directionArrowMarker: MarkerIcon(
@@ -627,6 +654,32 @@ class _MainExampleState extends State<MainExample> with OSMMixinObserver {
                 },
               ),
             ),
+            if (!kIsWeb) ...[
+              Positioned(
+                top: 5,
+                right: 12,
+                child: FloatingActionButton(
+                  onPressed: () async {
+                    animationController.forward().then((value) {
+                      animationController.reset();
+                    });
+                    mapRotate.value += 30;
+                    await controller
+                        .rotateMapCamera(mapRotate.value.toDouble());
+                  },
+                  child: AnimatedBuilder(
+                    animation: animation,
+                    builder: (context, child) {
+                      return Transform.rotate(
+                        angle: animation.value,
+                        child: child!,
+                      );
+                    },
+                    child: Icon(Icons.screen_rotation_alt_outlined),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
