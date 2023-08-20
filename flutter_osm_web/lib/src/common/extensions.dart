@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:routing_client_dart/routing_client_dart.dart';
 
@@ -55,6 +56,22 @@ extension ExtListLngLat on List<LngLat> {
 
   List<GeoPoint> mapToListGeoPoints() {
     return this.map((e) => e.toGeoPoint()).toList();
+  }
+}
+
+extension ExtSize on Size? {
+  SizeJs toSizeJS() {
+    return SizeJs(
+      width: this?.width ?? 32,
+      height: this?.height ?? 32,
+    );
+  }
+}
+
+extension ExtGlobelKey on GlobalKey<State<StatefulWidget>> {
+  SizeJs toSizeJS() {
+    final size = currentContext?.size;
+    return size.toSizeJS();
   }
 }
 
