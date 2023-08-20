@@ -4,6 +4,7 @@ import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
+import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
 import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
 import 'package:js/js_util.dart';
 import 'package:routing_client_dart/routing_client_dart.dart' as routing;
@@ -112,6 +113,11 @@ mixin WebMixin {
     await interop.enableTracking(
       mapIdMixin,
       enableStopFollow,
+      IconAnchorJS(
+        x: anchor.value.$1,
+        y: anchor.value.$2,
+      ),
+      //anchor.toPlatformMap(),
     );
   }
 
