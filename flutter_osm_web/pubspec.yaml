@@ -38,8 +38,6 @@ flutter:
   assets:
     - packages/flutter_osm_web/src/asset/map.html
     - packages/flutter_osm_web/src/asset/map.js
-    - packages/flutter_osm_web/src/asset/map_init.js
-    - packages/flutter_osm_web/src/asset/map_leaflet.js
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
