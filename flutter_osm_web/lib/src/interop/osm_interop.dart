@@ -93,6 +93,7 @@ external dynamic setDefaultIcon(
 external dynamic addMarker(
   int mapId,
   GeoPointJs p,
+  SizeJs size,
   String icon,
   double? angle,
   IconAnchorJS? iconAnchor,
@@ -104,6 +105,7 @@ external dynamic changeMarker(
   GeoPointJs oldP,
   GeoPointJs newP,
   String? icon,
+  SizeJs iconSize,
   double? angle,
   IconAnchorJS? iconAnchor,
 );
@@ -190,12 +192,17 @@ external Map<String, String> getGeoPoints(
 );
 
 @JS("setUserLocationIconMarker")
-external dynamic setUserLocationIconMarker(int mapId, String icon);
+external dynamic setUserLocationIconMarker(
+  int mapId,
+  String icon,
+  SizeJs size,
+);
 
 @JS("enableTracking")
 external dynamic enableTracking(
   int mapId,
   bool enableStopFollow,
+  IconAnchorJS anchorJS,
 );
 
 @JS("disableTracking")
@@ -204,14 +211,21 @@ external dynamic disableTracking(
 );
 
 @JS("changeIconAdvPickerMarker")
-external dynamic changeIconAdvPickerMarker(int mapId, String? icon, int id);
+external dynamic changeIconAdvPickerMarker(
+  int mapId,
+  String? icon,
+  SizeJs sizeJs,
+);
 @JS("advSearchLocation")
 external dynamic advSearchLocation(int mapId);
 @JS("cancelAdvSearchLocation")
 external dynamic cancelAdvSearchLocation(int mapId);
 
 @JS('changeTileLayer')
-external dynamic changeTileLayer(int mapId, CustomTileJs? tile);
+external dynamic changeTileLayer(
+  int mapId,
+  CustomTileJs? tile,
+);
 
 @JS('drawRect')
 external dynamic drawRect(
@@ -221,10 +235,16 @@ external dynamic drawRect(
 );
 
 @JS('drawCircle')
-external dynamic drawCircle(int mapId, CircleShapeJS circle);
+external dynamic drawCircle(
+  int mapId,
+  CircleShapeJS circle,
+);
 
 @JS('removePath')
-external dynamic removePath(int mapId, String rectKey);
+external dynamic removePath(
+  int mapId,
+  String rectKey,
+);
 @JS('removeAllCircle')
 external dynamic removeAllCircle(int mapId);
 
