@@ -55,14 +55,14 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     final body = html.window.document.querySelector('body')!;
     _frame = html.IFrameElement()
       ..id = "frame_map_$mapId"
-      ..src = "packages/flutter_osm_web/src/asset/map.html"
+      ..src = "${kReleaseMode?"assets/":''}packages/flutter_osm_web/src/asset/map.html"
       ..style.width = '100%'
       ..style.height = '100%';
 
     if (html.window.document.getElementById("mapScript") == null) {
       mapScript = html.ScriptElement()
         ..id = "mapScript"
-        ..src = 'packages/flutter_osm_web/src/asset/map.js'
+        ..src = '${kReleaseMode?"assets/":''}packages/flutter_osm_web/src/asset/map.js'
         ..type = 'text/javascript';
       body.append(mapScript!);
     }
