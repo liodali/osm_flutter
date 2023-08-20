@@ -17,7 +17,7 @@ enum Anchor {
   final String name;
   final (double, double) value;
 
-  dynamic toMapAndroidWeb() {
+  dynamic toMapAndroid() {
       return [
         value.$1,
         value.$2,

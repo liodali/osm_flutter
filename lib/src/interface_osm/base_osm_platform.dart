@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
-import '../widgets/stub.dart'
-    if (dart.library.io) '../widgets/platform/mobile_osm_widget.dart'
-    if (dart.library.html) '../widgets/platform/web_osm_widget.dart';
+import 'package:flutter_osm_plugin/src/widgets/stub.dart'
+    if (dart.library.io) 'package:flutter_osm_plugin/src/widgets/platform/mobile_osm_widget.dart'
+    if (dart.library.html) 'package:flutter_osm_plugin/src/widgets/platform/web_osm_widget.dart';
 
 Widget buildWidget({
   required BaseMapController controller,
