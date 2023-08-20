@@ -2,12 +2,14 @@ import 'dart:html' as html;
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 import 'package:flutter_osm_web/src/channel/method_channel_web.dart';
 import 'package:flutter_osm_web/src/common/extensions.dart';
+import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
 import 'package:flutter_osm_web/src/interop/osm_interop.dart' as interop;
 import 'package:flutter_osm_web/src/mixin_web.dart';
 import 'package:flutter_osm_web/src/osm_web.dart';
@@ -172,7 +174,8 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     if (osmWebFlutterState.widget.markerOption?.advancedPickerMarker != null) {
       if (osmWebFlutterState.advancedPickerMarker?.currentContext != null) {
         await changeIconAdvPickerMarker(
-            osmWebFlutterState.advancedPickerMarker!);
+          osmWebFlutterState.advancedPickerMarker!,
+        );
       }
     }
     if (osmWebFlutterState.widget.markerOption?.advancedPickerMarker == null) {
@@ -252,6 +255,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
     await Future.delayed(duration, () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
+      var sizeIcon = osmWebFlutterState.dynamicMarkerKey!.currentContext?.size;
       var anchor = null;
       if (iconAnchor != null) {
         anchor = iconAnchor.toAnchorJS();
@@ -259,6 +263,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       interop.addMarker(
         mapId,
         p.toGeoJS(),
+        sizeIcon.toSizeJS(),
         icon.convertToString(),
         angle != null ? (angle * (180 / pi)) : 0,
         anchor,
@@ -313,9 +318,15 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     }
     await Future.delayed(Duration(milliseconds: duration), () async {
       var icon = null;
+      var iconSize = SizeJs(
+        width: 32,
+        height: 32,
+      );
       if (newMarkerIcon != null) {
         final iconPNG = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
         icon = iconPNG.convertToString();
+        final size = osmWebFlutterState.dynamicMarkerKey?.currentContext?.size;
+        iconSize = size.toSizeJS();
       }
       debugPrint(
           "changedMarker:angle:${angle != null ? (angle * (180 / pi)) : 0}");
@@ -324,6 +335,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         oldLocation.toGeoJS(),
         newLocation.toGeoJS(),
         icon,
+        iconSize,
         angle != null ? (angle * (180 / pi)) : 0,
         iconAnchor?.toAnchorJS() ?? null,
       );
@@ -336,7 +348,8 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     try {
       base64 = (await capturePng(key)).convertToString();
     } finally {
-      await interop.changeIconAdvPickerMarker(mapId, base64, mapId);
+      final iconSize = key.toSizeJS();
+      await interop.changeIconAdvPickerMarker(mapId, base64, iconSize);
     }
   }
 
@@ -369,7 +382,8 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       GlobalKey<State<StatefulWidget>> personIconMarkerKey) async {
     if (personIconMarkerKey.currentContext != null) {
       final iconPNG = (await capturePng(personIconMarkerKey)).convertToString();
-      interop.setUserLocationIconMarker(mapId, iconPNG);
+      final size = personIconMarkerKey.toSizeJS();
+      interop.setUserLocationIconMarker(mapId, iconPNG,size);
     }
   }
 }

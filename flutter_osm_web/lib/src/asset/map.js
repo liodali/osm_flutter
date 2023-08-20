@@ -21,13 +21,13 @@ async function addPosition(mapId,point, showMarker, animate) {
    return await iframe.contentWindow.changePosition(point, showMarker, animate);
 }
 
-async function addMarker(mapId,point, icon,angle,anchor) {
+async function addMarker(mapId,point,iconSize, icon,angle,anchor) {
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.addMarker(point, icon,angle,anchor);
+   return iframe.contentWindow.addMarker(point,iconSize, icon,angle,anchor);
 }
-async function changeMarker(mapId,oldPoint, point, icon,angle,anchor) {
+async function changeMarker(mapId,oldPoint, point, icon,iconSize,angle,anchor) {
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.changeMarker(oldPoint, point, icon,angle,anchor);
+   return iframe.contentWindow.changeMarker(oldPoint, point, icon,iconSize,angle,anchor);
 }
 
 async function modifyMarker(mapId,point, icon) {
@@ -132,9 +132,9 @@ async function getGeoPoints(mapId) {
    return await iframe.contentWindow.getGeoPoints();
 
 }
-async function setUserLocationIconMarker(mapId,icon){
+async function setUserLocationIconMarker(mapId,icon,size){
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.setUserLocationIconMarker(icon);
+   return iframe.contentWindow.setUserLocationIconMarker(icon,size);
 }
 
 async function enableTracking(mapId,enableStopFollow){
@@ -145,9 +145,9 @@ async function disableTracking(mapId) {
    var iframe = getIframe(mapId);
    return iframe.contentWindow.disableTracking();
 }
-async function changeIconAdvPickerMarker(mapId,icon) {
+async function changeIconAdvPickerMarker(mapId,icon,size) {
    var iframe = getIframe(mapId);
-   return await iframe.contentWindow.changeIconAdvPickerMarker(icon);
+   return await iframe.contentWindow.changeIconAdvPickerMarker(icon,size);
 }
 async function advSearchLocation(mapId) {
    var iframe = getIframe(mapId);

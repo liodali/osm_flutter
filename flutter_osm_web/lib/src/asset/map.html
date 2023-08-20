@@ -219,10 +219,10 @@
       return 200;
     }
     
-    function addMarker(point, iconMarker,angle,anchor) {
+    function addMarker(point,iconSize, iconMarker,angle,anchor) {
       const position = [point.lat, point.lon];
       var argsIcon = {
-        iconSize: [32, 32],
+        iconSize: [iconSize.width, iconSize.height],
       }
       if (iconMarker != "") {
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
@@ -259,7 +259,7 @@
         });
       return 200;
     }
-    async function changeMarker(oldPoint, point, icon,angle,anchor) {
+    async function changeMarker(oldPoint, point, icon,iconSize,angle,anchor) {
 
       var latlng = L.latLng([point.lat, point.lon]);
       var oldLatlng = L.latLng([oldPoint.lat, oldPoint.lon]);
@@ -272,7 +272,7 @@
             if (icon != undefined) {
                iconMarker = L.icon({
                 iconUrl: "data:image/png;base64," + icon,
-                iconSize: [32, 32]
+                iconSize: [iconSize.width,iconSize.height] //[32, 32]
               });
               //layer.setIcon(iconMarker)
             }
@@ -289,7 +289,7 @@
               iconAnchor = anchor;
             }
             mainLayers.get("markers").removeLayer(layer);
-            addMarker(point,iconMarkerURL,angleMarker,iconAnchor)
+            addMarker(point,iconMarker.options.iconSize,iconMarkerURL,angleMarker,iconAnchor)
             return this;
           }
         }
@@ -570,9 +570,9 @@
       }
       return 200;
     }
-    function setUserLocationIconMarker(icon) {
+    function setUserLocationIconMarker(icon,size) {
       if (icon != undefined && icon != "")
-        userLocationMarkerIcon = icon;
+        userLocationMarkerIcon = {icon:icon,size:size};
     }
     async function enableTracking(enableStopFollow) {
       if (idTracking == undefined){
@@ -587,11 +587,11 @@
           
           var args = {}
           if (userLocationMarkerIcon != undefined) {
-            console.log(userLocationMarkerIcon)
+            console.log(userLocationMarkerIcon.icon)
             args = {
               icon: L.icon({
-                iconUrl: "data:image/png;base64," + userLocationMarkerIcon,
-                iconSize: [32, 32]
+                iconUrl: "data:image/png;base64," + userLocationMarkerIcon.icon,
+                iconSize: userLocationMarkerIcon.size,
               })
             }
           }
@@ -651,13 +651,13 @@
       cachedLayers.clearLayers();
 
     }
-    async function changeIconAdvPickerMarker(icon) {
+    async function changeIconAdvPickerMarker(icon,size) {
       advSearchIcon = icon;
       const nodeImg = document.createElement("img");
       nodeImg.setAttribute('src', 'data:image/png;base64,' + icon);
       document.getElementById("render-icon").appendChild(nodeImg);
-      nodeImg.style.height = "32px";
-      nodeImg.style.width = "32px";
+      nodeImg.style.height = size.height+"px";
+      nodeImg.style.width = size.height+" px";
     }
 
     async function drawRect(key,bounds,color,strokeWidth){
