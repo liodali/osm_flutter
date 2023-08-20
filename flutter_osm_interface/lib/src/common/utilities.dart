@@ -194,7 +194,7 @@ extension ExtTileUrls on TileURLs {
 extension ExtAnchor on Anchor {
   dynamic toPlatformMap() {
     if (Platform.isIOS) return toMapIOS();
-    return toMapAndroidWeb();
+    return toMapAndroid();
   }
 }
 
