@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:routing_client_dart/routing_client_dart.dart';
 
-import '../interop/models/bounding_box_js.dart';
-import '../interop/models/geo_point_js.dart';
+import 'package:flutter_osm_web/src/interop/models/bounding_box_js.dart';
+import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
 
 extension ExtGeoPoint on GeoPoint {
   GeoPointJs toGeoJS() {
