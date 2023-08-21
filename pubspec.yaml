@@ -50,6 +50,7 @@ flutter:
   # To add assets to your plugin package, add an assets section, like this:
   assets:
      - assets/dynamic-styles.yaml
+     - assets/default_pin.png
   #  - images/a_dot_burr.jpeg
   #  - images/a_dot_ham.jpeg
   #
