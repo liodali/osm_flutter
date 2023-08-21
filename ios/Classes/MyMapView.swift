@@ -21,6 +21,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     let channel: FlutterMethodChannel
     let mapView: TGMapView
     let locationManager: CLLocationManager = CLLocationManager()
+    let defaultMarker: MarkerIconData
     var markerIcon: MarkerIconData? = nil
     var personMarkerIcon: MarkerIconData? = nil
     var arrowDirectionIcon: MarkerIconData? = nil
@@ -33,7 +34,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var dictClusterAnnotation: [String: [StaticGeoPMarker]] = [String: [StaticGeoPMarker]]()
     var dictIconClusterAnnotation = [String: MarkerIconData]()
     var roadMarkerPolyline: TGMarker? = nil
-    var defaultIcon: MarkerIconData?
     var pickedLocationSingleTap: CLLocationCoordinate2D? = nil
     var colorRoad: String = "#ff0000"
     var homeMarker: TGMarker? = nil
@@ -61,7 +61,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var fromAsset = true
     var dynamicOSMPath:String? = nil
     
-    init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?,dynamicOSM:String?) {
+    init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?,dynamicOSM:String?,defaultPin:String?) {
         self.frame = frame
         self.viewId = viewId
         self.channel = channel
@@ -86,7 +86,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 enableRotationGesture = (args as! [String: Any])["enableRotationGesture"] as! Bool
             }
         }
-        
+        let defaultIcon = UIImage(contentsOfFile: defaultPin!)!.imageResize(sizeChange: CGSize(width: 32, height: 48))
+        self.defaultMarker = MarkerIconData(image: defaultIcon,
+                                            size:[Int(defaultIcon.size.width),Int(defaultIcon.size.height)])
+        self.markerIcon = defaultMarker
         //mapview.mapType = MKMapType.standard
         //mapview.isZoomEnabled = true
         //mapview.isScrollEnabled = true
@@ -177,7 +180,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         case "setDefaultIOSIcon":
             let args = call.arguments as! [String: Any]
             let iconString = args["icon"] as! String
-            defaultIcon = MarkerIconData(image: convertImage(codeImage: iconString), size: args["size"] as! [Int])
+            //defaultIcon = MarkerIconData(image: convertImage(codeImage: iconString), size: args["size"] as! [Int])
             result(200)
             break;
         case "initMap":
@@ -394,13 +397,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
 
     public func view() -> UIView {
-        if #available(iOS 11.0, *) {
-            /*  mapView.register(
-                      MarkerView.self,
-                      forAnnotationViewWithReuseIdentifier:
-                      MKMapViewDefaultAnnotationViewReuseIdentifier)*/
-
-        }
+      
         //let view = UIStackView(arrangedSubviews: [mapView])
         return mainView
     }
@@ -482,9 +479,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
         let location = CLLocationCoordinate2D(latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
         mapView.fly(to: TGCameraPosition(center: location, zoom: mapView.zoom, bearing: 0, pitch: 0), withDuration: 0.2) { finish in
-            let geoMarker = GeoPointMap(icon: self.markerIcon!, coordinate: location)
-            geoMarker.setupMarker(on: self.mapView)
-            self.homeMarker = geoMarker.marker
+            if finish {
+                let geoMarker = GeoPointMap(icon: self.markerIcon ?? self.defaultMarker, coordinate: location)
+                geoMarker.setupMarker(on: self.mapView)
+                self.homeMarker = geoMarker.marker
+            }
             result(200)
         }
 
@@ -639,8 +638,17 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func setCustomIconMarker(call: FlutterMethodCall, result: FlutterResult) {
         let args = call.arguments as! [String: Any]
         let iconSize = args["size"] as! [Double]
-        let image = convertImage(codeImage: args["icon"] as! String)
-        pickerMarker = UIImageView(image: image)
+        if args.keys.contains("icon") {
+            let image = convertImage(codeImage: args["icon"] as! String) ?? defaultMarker.image
+            
+            pickerMarker = UIImageView(image: image)
+            pickerMarker?.frame.size = CGSize(width: iconSize.first!, height: iconSize.last!)
+        }else {
+            pickerMarker = UIImageView(image: defaultMarker.image)
+            pickerMarker?.frame.size = CGSize(width: 32, height: 48)
+
+        }
+        
         pickerMarker?.sizeThatFits(CGSize(width: iconSize.first!, height: iconSize.last!))
         result(200)
     }
@@ -718,6 +726,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 //             }
             //pickerMarker?.frame = CGRect(x: frame.width/2,y: frame.height/2,width: 32,height: 32)
             pickerMarker?.center = mainView.center
+            if pickerMarker?.image == nil {
+                pickerMarker?.image =  defaultMarker.image
+            }
             mainView.addSubview(pickerMarker!)
             result(200)
         }
