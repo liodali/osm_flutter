@@ -137,9 +137,9 @@ async function setUserLocationIconMarker(mapId,icon,size){
    return iframe.contentWindow.setUserLocationIconMarker(icon,size);
 }
 
-async function enableTracking(mapId,enableStopFollow){
+async function enableTracking(mapId,enableStopFollow,anchorJS){
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.enableTracking(enableStopFollow);
+   return iframe.contentWindow.enableTracking(enableStopFollow,anchorJS);
 }
 async function disableTracking(mapId) {
    var iframe = getIframe(mapId);

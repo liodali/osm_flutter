@@ -88,6 +88,9 @@
       const geoP = event.latlng;
       onMapSingleTapClicked(geoP.lng, geoP.lat);
     });
+    mymap.on('zoom', function (event) {
+      console.log("zoom:"+mymap.getZoom())
+    });
     mymap.on('moveend', function (e) {
       if (isReady) {
         var bounds = mymap.getBounds();
@@ -228,8 +231,8 @@
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
       if (anchor != undefined && (anchor.x!=0 && anchor.y!=0)) {
-        var anchorX = anchor.x
-        var anchorY = anchor.y
+        var anchorX = anchor.x 
+        var anchorY = anchor.y-1
         if(anchor.offset != undefined){
           var offsetX = -anchor.offset.x
           var offsetY = anchor.offset.y
@@ -239,8 +242,8 @@
           if(anchor.offset.y > 1 ){
             offsetY = anchor.offset.y / 32
           }*/
-          anchorX += offsetX
-          anchorY += offsetY
+          anchorX += (offsetX) 
+          anchorY += (offsetY) 
         }
         argsIcon["iconAnchor"] = [anchorX,anchorY]
       }
@@ -574,7 +577,7 @@
       if (icon != undefined && icon != "")
         userLocationMarkerIcon = {icon:icon,size:size};
     }
-    async function enableTracking(enableStopFollow) {
+    async function enableTracking(enableStopFollow,anchorJS) {
       if (idTracking == undefined){
         idTracking = navigator.geolocation.watchPosition(function (position) {
           var userPos = [position.coords.latitude, position.coords.longitude];
@@ -586,19 +589,33 @@
           }
           
           var args = {}
+          var icon;
           if (userLocationMarkerIcon != undefined) {
-            console.log(userLocationMarkerIcon.icon)
-            args = {
-              icon: L.icon({
+           
+            var iconArgs = {
                 iconUrl: "data:image/png;base64," + userLocationMarkerIcon.icon,
-                iconSize: userLocationMarkerIcon.size,
-              })
+                iconSize: [userLocationMarkerIcon.size.width,userLocationMarkerIcon.size.height],
+              }
+            if(anchorJS!= undefined){
+                var anchor =  undefined;
+                if(mymap.getZoom()>14){
+                  anchor = [anchorJS.x * userLocationMarkerIcon.size.width,
+                  anchorJS.y * userLocationMarkerIcon.size.height-1]
+                }
+               iconArgs["iconAnchor"]= anchor;
             }
+            icon = L.icon(iconArgs)
+            console.log("args user location:"+JSON.stringify(iconArgs));
+            console.log("args size:"+JSON.stringify(userLocationMarkerIcon.size));
           }
           if (userPosition == undefined) {
+            args = {
+              icon: icon,
+            }
             userPosition = L.marker(userPos, args).addTo(mainLayers.get("userLocation"));
           } else if (userPosition != undefined && !skipFollow) {
             userPosition.setLatLng(userPos);
+            userPosition.setIcon(icon);
           }
         })
       }else {
