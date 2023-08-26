@@ -58,7 +58,6 @@ import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.*
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
-import java.io.ByteArrayOutputStream
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
@@ -153,9 +152,6 @@ class FlutterOsmView(
     private val gpsServiceManager: LocationManager by lazy {
         context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     }
-
-
-    private var mapEventsOverlay: MapEventsOverlay? = null
 
 
     private var roadManager: OSRMRoadManager? = null
@@ -628,8 +624,8 @@ class FlutterOsmView(
         try {
             val personIcon = (args["personIcon"] as ByteArray)
             val arrowIcon = (args["arrowDirectionIcon"] as ByteArray)
-            customPersonMarkerIcon = getBitmap(personIcon)
-            customArrowMarkerIcon = getBitmap(arrowIcon)
+            customPersonMarkerIcon = personIcon.toBitmap()
+            customArrowMarkerIcon = arrowIcon.toBitmap()
             mapSnapShot().setUserTrackMarker(
                 personMarker = personIcon, arrowMarker = arrowIcon
             )
@@ -685,7 +681,7 @@ class FlutterOsmView(
          */
         scope?.launch {
             mapSnapShot.markers().forEach { point ->
-                val icon = point.icon?.let { getBitmap(bytes = it) }
+                val icon = point.icon?.toBitmap()
                 //val drawable = getDefaultIconDrawable(icon = icon, color = null)
                 withContext(Main) {
                     addMarker(
@@ -703,7 +699,7 @@ class FlutterOsmView(
         if (mapSnapShot.staticGeoPointsIcons().isNotEmpty()) {
             scope?.launch {
                 mapSnapShot.staticGeoPointsIcons().forEach { (key, icon) ->
-                    staticMarkerIcon[key] = getBitmap(icon)
+                    staticMarkerIcon[key] = icon.toBitmap()
                 }
             }
         }
@@ -767,7 +763,7 @@ class FlutterOsmView(
         mapSnapShot().cache(
             geoPoint = map!!.mapCenter as GeoPoint,
             zoom = map!!.zoomLevelDouble,
-            customPickerMarkerIcon = getBytesFromBitmap(customPickerMarkerIcon),
+            customPickerMarkerIcon = customPickerMarkerIcon.toByteArray(),
         )
     }
 
@@ -837,7 +833,7 @@ class FlutterOsmView(
 
         var bitmap = customMarkerIcon
         if (args.containsKey("icon")) {
-            bitmap = getBitmap(args["icon"] as ByteArray)
+            bitmap = (args["icon"] as ByteArray).toBitmap()
 
         }
         val angle = when ((args["point"] as HashMap<String, Double>).containsKey("angle")) {
@@ -852,7 +848,7 @@ class FlutterOsmView(
             mapSnapShot().overlaySnapShotMarker(
                 point = FlutterGeoPoint(
                     point,
-                    icon = args["icon"] as ByteArray,
+                    icon = bitmap.toByteArray(), //args["icon"] as ByteArray,
                     angle = angle,
                     anchor = anchor,
                 )
@@ -877,7 +873,7 @@ class FlutterOsmView(
         val point = (args["point"] as HashMap<String, Double>).toGeoPoint()
         var bitmap = customMarkerIcon
         if (args.containsKey("icon")) {
-            bitmap = getBitmap(args["icon"] as ByteArray)
+            bitmap = (args["icon"] as ByteArray).toBitmap()
             scope?.launch {
                 val oldFlutterGeoPoint =
                     mapSnapShot().markers().firstOrNull { fGeoPoint -> fGeoPoint.geoPoint == point }
@@ -957,7 +953,7 @@ class FlutterOsmView(
                     oldPoint = oldLocation,
                 )
             }
-            val bitmap = getBitmap(byteArray)
+            val bitmap = byteArray.toBitmap()
             bitmap
         }
 
@@ -990,10 +986,10 @@ class FlutterOsmView(
         val marker = createMarker(
             geoPoint, color, angle = angle
         )
-        marker.onClickListener = Marker.OnMarkerClickListener { marker, _ ->
+        marker.onClickListener = Marker.OnMarkerClickListener { markerP, _ ->
             val hashMap = HashMap<String, Double>()
-            hashMap["lon"] = marker!!.position.longitude
-            hashMap["lat"] = marker.position.latitude
+            hashMap["lon"] = markerP!!.position.longitude
+            hashMap["lat"] = markerP.position.latitude
             methodChannel.invokeMethod("receiveGeoPoint", hashMap)
             true
         }
@@ -1316,6 +1312,7 @@ class FlutterOsmView(
                     locationNewOverlay.onStopLocation()
                 }
             } catch (e: Exception) {
+                Log.e("OSMF startAdvS error",e.toString())
             }
         }
         map!!.invalidate()
@@ -1432,7 +1429,7 @@ class FlutterOsmView(
 
         map!!.invalidate()
 
-        val resultRoads = emptyList<HashMap<String, Any>>().toMutableList();
+        val resultRoads = emptyList<HashMap<String, Any>>().toMutableList()
         job = scope?.launch(Default) {
             withContext(IO) {
                 for (config in listConfigRoad) {
@@ -1440,7 +1437,7 @@ class FlutterOsmView(
                         OSRMRoadManager(context, "json/application")
                     roadManager?.let { manager ->
                         manager.setMean(config.meanUrl)
-                        var routePointsEncoded = ""
+                        var routePointsEncoded: String
                         // this part to remove marker of interest points
                         withContext(Main) {
                             folderMarkers.items.removeAll {
@@ -1725,7 +1722,7 @@ class FlutterOsmView(
         try {
             val key = (hashMap["id"] as String)
             val bytes = (hashMap["bitmap"] as ByteArray)
-            val bitmap = getBitmap(bytes)
+            val bitmap = bytes.toBitmap()
             val refresh = hashMap["refresh"] as Boolean
             staticMarkerIcon[key] = bitmap
             mapSnapShot().addToIconsStaticGeoPoints(key, bytes)
@@ -1784,7 +1781,7 @@ class FlutterOsmView(
 
     private fun changeIcon(call: MethodCall, result: MethodChannel.Result) {
         try {
-            customMarkerIcon = getBitmap(call.arguments as ByteArray)
+            customMarkerIcon = (call.arguments as ByteArray).toBitmap()
             //customMarkerIcon.recycle();
             result.success(null)
         } catch (e: Exception) {
@@ -1796,7 +1793,7 @@ class FlutterOsmView(
 
     private fun setCustomAdvancedPickerMarker(call: MethodCall, result: MethodChannel.Result) {
         try {
-            customPickerMarkerIcon = getBitmap(call.arguments as ByteArray)
+            customPickerMarkerIcon = (call.arguments as ByteArray).toBitmap()
             //customMarkerIcon.recycle();
             result.success(null)
         } catch (e: Exception) {
@@ -1836,9 +1833,7 @@ class FlutterOsmView(
             (it as FolderOverlay).name?.equals(idStaticPosition) == true
         } as FolderOverlay?
 
-        overlay?.let {
-            it.items.clear()
-        }
+        overlay?.items?.clear()
         if (overlay != null) {
             folderStaticPosition.remove(overlay)
         }
@@ -1854,10 +1849,10 @@ class FlutterOsmView(
 
             marker.defaultInfoWindow()
             marker.visibilityInfoWindow(visibilityInfoWindow)
-            marker.onClickListener = Marker.OnMarkerClickListener { marker, _ ->
+            marker.onClickListener = Marker.OnMarkerClickListener { markerP, _ ->
                 val hashMap = HashMap<String, Double>()
-                hashMap["lon"] = marker!!.position.longitude
-                hashMap["lat"] = marker.position.latitude
+                hashMap["lon"] = markerP!!.position.longitude
+                hashMap["lat"] = markerP.position.latitude
                 methodChannel.invokeMethod("receiveGeoPoint", hashMap)
                 true
             }
@@ -1883,18 +1878,7 @@ class FlutterOsmView(
     }
 
 
-    private fun getBitmap(bytes: ByteArray): Bitmap {
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-    }
 
-    private fun getBytesFromBitmap(bitmap: Bitmap?): ByteArray? {
-        if (bitmap == null) {
-            return null
-        }
-        val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream)
-        return stream.toByteArray()
-    }
 
 
     override fun getView(): View {
@@ -1922,7 +1906,7 @@ class FlutterOsmView(
         if (map == null) {
             val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
             Configuration.getInstance()
-                .load(context, PreferenceManager.getDefaultSharedPreferences(context))
+                .load(context, prefs)
 //            map?.forceLayout()
         }
 
@@ -2049,11 +2033,11 @@ class FlutterOsmView(
                 if (isEnabled || isTracking) {
 
                     mapSnapShot.getPersonUserTrackMarker()?.let { bytes ->
-                        customPersonMarkerIcon = getBitmap(bytes)
+                        customPersonMarkerIcon = bytes.toBitmap()
 
                     }
                     mapSnapShot.getArrowDirectionTrackMarker()?.let { bytes ->
-                        customArrowMarkerIcon = getBitmap(bytes)
+                        customArrowMarkerIcon = bytes.toBitmap()
 
                     }
                     if (isEnabled) {
@@ -2086,7 +2070,7 @@ class FlutterOsmView(
         scope?.launch {
             withContext(Default) {
                 mapSnapShot.staticGeoPointsIcons().forEach { (key, icon) ->
-                    staticMarkerIcon[key] = getBitmap(icon)
+                    staticMarkerIcon[key] = icon.toBitmap()
                 }
             }
             mapSnapShot.staticGeoPoints().forEach { staticPoint ->

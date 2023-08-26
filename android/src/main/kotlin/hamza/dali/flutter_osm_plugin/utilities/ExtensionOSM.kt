@@ -2,6 +2,8 @@ package hamza.dali.flutter_osm_plugin.utilities
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Paint
 import android.location.Location
@@ -19,6 +21,7 @@ import org.osmdroid.util.MapTileIndex
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.advancedpolyline.MonochromaticPaintList
+import java.io.ByteArrayOutputStream
 
 
 fun GeoPoint.toHashMap(): HashMap<String, Double> {
@@ -158,6 +161,15 @@ fun Road.toMap(
     }
 }
 
+fun ByteArray.toBitmap(): Bitmap = BitmapFactory.decodeByteArray(this, 0, this.size)
+fun Bitmap?.toByteArray(): ByteArray? {
+    if (this == null){
+        return null
+    }
+    val stream = ByteArrayOutputStream()
+    this.compress(Bitmap.CompressFormat.PNG, 90, stream)
+    return stream.toByteArray()
+}
 
 fun createPaintPolyline(
     color: Int,
