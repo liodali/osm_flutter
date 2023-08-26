@@ -137,7 +137,7 @@ class RoadManager: PRoadManager {
            removeRoadFolder(folder: lastMarkerRoad!, for: map)
         }*/
         let marker = map.markerAdd()
-        marker.stylingString = "{ style: 'lines',interactive: true, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), outline : { color: '\(road.roadData.roadBorderColor)', width: '\(road.roadData.roadBorderWidth)' } , order: 1500 }"
+        marker.stylingString = "{ style: 'lines',interactive: true, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), outline : { color: '\(road.roadData.roadBorderColor)', width: '\(road.roadData.roadBorderWidth)' } , order: 900 }"
 
         var route = polyLine
         if (route == nil) {
