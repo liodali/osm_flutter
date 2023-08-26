@@ -1,13 +1,19 @@
+### 0.60.4 : 
+* fix bug in cache marker in android #445
 ### 0.60.3 : 
 * fix bugs related to icon size for user location #440
 * fix bugs related to camera map rotation #355
 ### 0.60.2 : fix bugs #433,#434
 * remove `androidHotReloadSupport` from OSMOption
 * fix parsing route in `RoadInfo`
-### 0.60.1 : fix issue
-### 0.60.0+3 : fix py script for automator
-### 0.60.0+2 : forget update changelog
-### 0.60.0+1 : fix issue
+### 0.60.1 :  
+* fix issue
+### 0.60.0+3 : 
+* fix py script for automator
+### 0.60.0+2 : 
+* forget update changelog
+### 0.60.0+1 : 
+* fix issue
 ### 0.60.0 : Improvement API and fix bugs ( contain break changes )
 * Add iconAnchor for addMarker/changeLocationMarker
 * Fix bugs #420 , #262 , #430 , #419
@@ -16,8 +22,10 @@
 * fix angle for addMarker where it should be between 0 and 2pi
 ### 0.55.2 : fix bugs
 * fix issue related to rotate markers
-### 0.55.1+1 : fix readme
-### 0.55.1 : fix bugs
+### 0.55.1+1 : 
+* fix readme
+### 0.55.1 : 
+* fix bugs
 ### 0.55.0 : add UserTrackingOption to MapController
 * create UserTrackOption class and add it MapController
 ### 0.54.2 : fix bugs
