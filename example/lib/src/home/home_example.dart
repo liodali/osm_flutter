@@ -131,7 +131,9 @@ class _MainExampleState extends State<MainExample>
         print(controller.listenerMapLongTapping.value);
         final randNum = Random.secure().nextInt(100).toString();
         print(randNum);
-        await controller.addMarker(
+        await controller
+            .changeLocation(controller.listenerMapLongTapping.value!);
+        /* await controller.addMarker(
           controller.listenerMapLongTapping.value!,
           markerIcon: MarkerIcon(
             iconWidget: SizedBox.fromSize(
@@ -152,7 +154,7 @@ class _MainExampleState extends State<MainExample>
             ),
           ),
           //angle: pi / 3,
-        );
+        );*/
       }
     });
     controller.listenerMapSingleTapping.addListener(() async {
@@ -485,7 +487,7 @@ class _MainExampleState extends State<MainExample>
                     icon: Icon(
                       Icons.home,
                       color: Colors.orange,
-                      size: 24,
+                      size: 32,
                     ),
                   ),
                   advancedPickerMarker: MarkerIcon(
@@ -663,7 +665,7 @@ class _MainExampleState extends State<MainExample>
                     animationController.forward().then((value) {
                       animationController.reset();
                     });
-                    mapRotate.value += 30;
+                    mapRotate.value = 0;
                     await controller
                         .rotateMapCamera(mapRotate.value.toDouble());
                   },
@@ -699,7 +701,7 @@ class _MainExampleState extends State<MainExample>
                 await controller.enableTracking(
                   enableStopFollow: true,
                   disableUserMarkerRotation: false,
-                  anchor: Anchor.center,
+                  anchor: Anchor.left,
                 );
                 //await controller.zoom(5.0);
               } else {
@@ -751,13 +753,13 @@ class _MainExampleState extends State<MainExample>
           roadType: notifierRoadType.value,
           intersectPoint:
               pointsRoad.getRange(1, pointsRoad.length - 1).toList(),
-          // roadOption: RoadOption(
-          //   roadWidth: 15,
-          //   roadColor: Colors.red,
-          //   zoomInto: true,
-          //   roadBorderWidth: 2,
-          //   roadBorderColor: Colors.green,
-          // ),
+          roadOption: RoadOption(
+            roadWidth: 15,
+            roadColor: Colors.red,
+            zoomInto: true,
+           //roadBorderWidth: 2,
+           //roadBorderColor: Colors.green,
+          ),
         );
         pointsRoad.clear();
         debugPrint(
