@@ -55,14 +55,16 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     final body = html.window.document.querySelector('body')!;
     _frame = html.IFrameElement()
       ..id = "frame_map_$mapId"
-      ..src = "${kReleaseMode?"assets/":''}packages/flutter_osm_web/src/asset/map.html"
+      ..src =
+          "${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/map.html"
       ..style.width = '100%'
       ..style.height = '100%';
 
     if (html.window.document.getElementById("mapScript") == null) {
       mapScript = html.ScriptElement()
         ..id = "mapScript"
-        ..src = '${kReleaseMode?"assets/":''}packages/flutter_osm_web/src/asset/map.js'
+        ..src =
+            '${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/map.js'
         ..type = 'text/javascript';
       body.append(mapScript!);
     }
@@ -258,7 +260,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       var sizeIcon = osmWebFlutterState.dynamicMarkerKey!.currentContext?.size;
       var anchor = null;
       if (iconAnchor != null) {
-        anchor = iconAnchor.toAnchorJS();
+        anchor = iconAnchor.toAnchorJS(sizeIcon ?? Size(32, 32));
       }
       interop.addMarker(
         mapId,
@@ -337,7 +339,13 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         icon,
         iconSize,
         angle != null ? (angle * (180 / pi)) : 0,
-        iconAnchor?.toAnchorJS() ?? null,
+        iconAnchor?.toAnchorJS(
+              Size(
+                iconSize.width.toDouble(),
+                iconSize.height.toDouble(),
+              ),
+            ) ??
+            null,
       );
     });
   }
@@ -383,7 +391,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     if (personIconMarkerKey.currentContext != null) {
       final iconPNG = (await capturePng(personIconMarkerKey)).convertToString();
       final size = personIconMarkerKey.toSizeJS();
-      interop.setUserLocationIconMarker(mapId, iconPNG,size);
+      interop.setUserLocationIconMarker(mapId, iconPNG, size);
     }
   }
 }
