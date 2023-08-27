@@ -445,6 +445,17 @@ layers:
     draw:
       raster:
         order: 0 # draw on bottom
+  route_line:
+       data: { source: route_line }
+       draw:
+           lines:
+               color: function() { return feature.color || red; }
+               order: 500
+               width: function() { return feature.width || '10px'; } 
+               interactive: true
+               outline: 
+                    color: function() { return feature.outlineColor || [1.0, 1.0, 1.0, 0.0]; } 
+                    width: function() { return feature.outlineWidth || '0px'; }
   
 cameras:
     isometric:

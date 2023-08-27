@@ -33,8 +33,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var userLocation: MyLocationMarker? = nil
     var dictClusterAnnotation: [String: [StaticGeoPMarker]] = [String: [StaticGeoPMarker]]()
     var dictIconClusterAnnotation = [String: MarkerIconData]()
-    var roadMarkerPolyline: TGMarker? = nil
+
     var pickedLocationSingleTap: CLLocationCoordinate2D? = nil
+    var roadPicked: RoadFolder? = nil
     var colorRoad: String = "#ff0000"
     var homeMarker: TGMarker? = nil
     var resultFlutter: FlutterResult? = nil
@@ -229,11 +230,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         case "map#bounds":
             getMapBounds(result: result)
             break;
-        case "user#pickPosition":
+        /*case "user#pickPosition":
             //let frameV = UIView()
             methodCall = call
             resultFlutter = result
-            break;
+            break;*/
         case "user#removeMarkerPosition":
             removeMarkerFromMap(call: call)
             result(200)
@@ -924,8 +925,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         road.roadData = RoadData(roadColor: roadColor, roadWidth: roadWidth)
         let route: Polyline = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
         let roadKey = args["key"] as! String
-        let markerRoad = roadManager.drawRoadOnMap(roadKey: roadKey, on: road, for: mapView, roadInfo: nil, polyLine: route)
-        roadMarkerPolyline = markerRoad
+        let roadLayer = roadManager.drawRoadOnMap(roadKey: roadKey, on: road, for: mapView, roadInfo: nil, polyLine: route)
         if (zoomInto) {
             let box = route.coordinates!.toBounds()
             mapView.cameraPosition = mapView.cameraThatFitsBounds(box, withPadding: UIEdgeInsets.init(top: 25.0, left: 25.0, bottom: 25.0, right: 25.0))
@@ -1036,7 +1036,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 channel.invokeMethod("receiveGeoPoint", arguments: marker.point.toGeoPoint())
             }
             if isExistLineInteractive {
-                let road = roadManager.roads.first(where: { $0.tgRouteMarker.polyline == marker.polyline })
+                //marker.
+                let road = roadManager.hasTGMarkerPoylines()
+                    .first(where: { road in road.tgRouteLayer.tgMarkerPolyline! == marker.polyline  })
                 channel.invokeMethod("receiveRoad", arguments: road?.toMap() ?? [])
             }
 
@@ -1046,6 +1048,16 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             channel.invokeMethod("receiveSinglePress", arguments: point.toGeoPoint())
             pickedLocationSingleTap = nil
 
+        }
+    }
+    public func mapView(_ mapView: TGMapView, didSelectFeature feature: [String : String]?, atScreenPosition position: CGPoint) {
+        if feature != nil && feature!["type"] == "lines" {
+            print(feature)
+            //
+        }
+        if let road = roadPicked {
+            channel.invokeMethod("receiveRoad", arguments: road.toMap())
+            roadPicked = nil
         }
     }
 
@@ -1082,24 +1094,23 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
                         didRecognizeSingleTapGesture location: CGPoint) {
-        if (resultFlutter != nil && methodCall != nil && methodCall?.method == "user#pickPosition") {
-            var iconM = markerIcon
-            let dict: [String: Any] = methodCall?.arguments as! [String: Any]
-            if let icon = dict["icon"] {
-                let iconArg = (icon as! [String: Any])["icon"] as! String
-                iconM = MarkerIconData(image: convertImage(codeImage: iconArg), size: (icon as! [String: Any])["size"] as! [Int])
-            }
-            let coordinate = view.coordinate(fromViewPosition: location)
-            let geoP = GeoPointMap(icon: iconM!, coordinate: coordinate)
-            geoP.setupMarker(on: view)
-            resultFlutter!(geoP.toMap())
-            methodCall = nil
-        } else {
+       
             pickedLocationSingleTap = view.coordinate(fromViewPosition: location)
+            
+        if roadManager.roads.isEmpty {
             mapView.setPickRadius(56)
             //print("pick  x: \(location.x) y: \(location.y)")
             mapView.pickMarker(at: location)
-
+        }else {
+            
+            var road:RoadFolder? = roadManager.roadContainCLLocationCoordinate2D(location: pickedLocationSingleTap!)
+            if road != nil {
+                   channel.invokeMethod("receiveRoad", arguments: road?.toMap() ?? [String: Any]())
+            }else {
+                mapView.setPickRadius(56)
+                //print("pick  x: \(location.x) y: \(location.y)")
+                mapView.pickMarker(at: location)
+            }
         }
     }
 

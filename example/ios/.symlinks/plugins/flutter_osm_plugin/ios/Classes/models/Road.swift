@@ -5,6 +5,7 @@
 import Foundation
 import MapKit
 import TangramMap
+import Polyline
 
 
 struct RoadInformation {
@@ -65,10 +66,19 @@ struct RoadConfig {
     var roadData: RoadData
     var roadType: RoadType
 }
-
+struct TGPolyline {
+    let dataLayer:TGMapData?
+    let tgPolyline:TGGeoPolyline
+    let polyline:Polyline
+}
+struct TGRoute {
+    let tgPolyline: TGPolyline?
+    let tgMarkerPolyline: TGMarker?
+}
 struct RoadFolder {
     let id: String
-    var tgRouteMarker: TGMarker
+    //var tgRouteMarker: TGMarker
+    var tgRouteLayer: TGRoute
     let roadInformation: RoadInformation?
 }
 
