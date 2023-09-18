@@ -31,7 +31,7 @@ extension GeoPointMap {
 
     public func changePositionMarker(on map: TGMapView, mPosition: CLLocationCoordinate2D) {
         let indexToUpdate = map.markers.firstIndex { m in
-            m.point == self.coordinate
+            return  m.point == self.coordinate
         }
         if indexToUpdate != nil {
             let oldStyleMarker = map.markers[indexToUpdate!].stylingString
@@ -49,11 +49,15 @@ extension GeoPointMap {
 
 extension TGMapView {
     func addUserLocation(for userLocation: CLLocationCoordinate2D, on map: TGMapView,
-                         personIcon: MarkerIconData?, arrowDirection: MarkerIconData?,
+                         personIcon: MarkerIconData?,
+                         arrowDirection: MarkerIconData?,
+                         anchor:String,
                          userLocationMarkerType: UserLocationMarkerType = UserLocationMarkerType.person) -> MyLocationMarker {
         let userLocationMarker = MyLocationMarker(coordinate: userLocation,
                 personIcon: personIcon, arrowDirectionIcon: arrowDirection,
-                userLocationMarkerType: userLocationMarkerType)
+                userLocationMarkerType: userLocationMarkerType,
+                anchor: AnchorGeoPoint(anchor)
+            )
 
         userLocationMarker.marker = map.markerAdd()
         userLocationMarker.marker!.point = userLocationMarker.coordinate
@@ -64,7 +68,7 @@ extension TGMapView {
     
     func flyToUserLocation(for location: CLLocationCoordinate2D, flyEnd: ((Bool) -> Void)? = nil) {
         let cameraOption = TGCameraPosition(center: location, zoom: self.zoom, bearing: self.bearing, pitch: self.pitch)
-        self.fly(to: cameraOption!, withSpeed: 50, callback: flyEnd)
+        self.fly(to: cameraOption!, withSpeed: CGFloat(3.5), callback: flyEnd)
     }
 
     func removeUserLocation(for marker: TGMarker) {
@@ -89,6 +93,7 @@ extension RoadManager  {
 extension MyLocationMarker {
     
     func updateUserLocationStyle(for style: MarkerStyle) {
+        print("marker stringstyling : \(style.toString())")
         self.marker!.stylingString = style.toString()
     }
     

@@ -84,7 +84,7 @@ struct MarkerStyle: Codable {
 }
 extension MarkerStyle {
     func toString() -> String {
-        var styleStr = "{style: '\(style.rawValue)',interactive: \(interactive),color: '\(color)',size: [\(String(describing: size.first!))px,\(String(describing: size.last!))px],order: \(order),collide: \(collide)"
+        var styleStr = "{style: '\(style.rawValue)',interactive: \(interactive),color: '\(color)',size: [\(String(describing: size.first!))px,\(String(describing: size.last!))px],collide: \(collide)"
         if angle != nil {
             styleStr = "\(styleStr),angle: \(angle!)"
         }
@@ -97,7 +97,7 @@ extension MarkerStyle {
         if offset != nil  {
             styleStr = "\(styleStr),offset: [\(String(describing: offset!.first!))px,\(String(describing: -1*offset!.last!))px]"
         }
-        styleStr = "\(styleStr)}"
+        styleStr = "\(styleStr),order: \(order)}"
 
         return styleStr;
     }

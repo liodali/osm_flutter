@@ -61,7 +61,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     let urlStyle = "https://github.com/liodali/osm_flutter/raw/dc7424dacd77f4eced626abf64486d70fd03240d/assets/dynamic-styles.zip"
     var fromAsset = true
     var dynamicOSMPath:String? = nil
-    
+    var cameraUserLocationIsMoving:Bool = false
     init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?,dynamicOSM:String?,defaultPin:String?) {
         self.frame = frame
         self.viewId = viewId
@@ -382,6 +382,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             break;
         case "change#Marker":
             changePositionMarker(call: call)
+            result(200)
             break;
         case "delete#markers":
             deleteMarkers(call: call)
@@ -554,6 +555,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             }
             anchor = AnchorGeoPoint(anchor:anchorType,offset: offset)
         }
+        print("changePositionMarker:\(coordinate_old)")
         GeoPointMap(icon: icon, coordinate: coordinate_old, angle: angle,anchor: anchor)
                 .changePositionMarker(on: mapView, mPosition: coordinate_new)
     }
@@ -598,11 +600,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     }
 
-    private func trackUserLocation() {
-        locationManager.startUpdatingLocation()
-        locationManager.startUpdatingHeading()
-        canTrackUserLocation = true
-    }
+   
 
     private func convertImage(codeImage: String) -> UIImage? {
         let dataImage = Data(base64Encoded: codeImage)
@@ -624,7 +622,14 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
 
     }
-
+    private func trackUserLocation() {
+        locationManager.startUpdatingLocation()
+        locationManager.startUpdatingHeading()
+        canTrackUserLocation = true
+        if(!enableStopFollowInDrag){
+            canSkipFollow = false
+        }
+    }
     private func deactivateTrackMe() {
         canTrackUserLocation = false
         canSkipFollow = false
@@ -958,12 +963,15 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                         userLocation = mapView.addUserLocation(
                             for: location, on: mapView,
                             personIcon: personMarkerIcon,
-                            arrowDirection: arrowDirectionIcon
+                            arrowDirection: arrowDirectionIcon,
+                            anchor: MyLocationMarker.defaultAnchorStr
                         )
                         //userLocation?.setDirectionArrow(personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
                     }
-                    // setAnchor should be done after adding user location marker
-                    userLocation?.setAnchorLocation(MyLocationMarker.defaultAnchorStr)
+                    if (userLocation?.anchor?.anchor.rawValue != MyLocationMarker.defaultAnchorStr) {
+                        // setAnchor should be done after adding user location marker
+                        userLocation?.setAnchorLocation(MyLocationMarker.defaultAnchorStr)
+                    }
                     if (!disableRotation) {
                         let angle = CGFloat(manager.heading?.trueHeading ?? 0.0).toDegrees
                         if (angle != 0) {
@@ -971,20 +979,19 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                         }
                     }
                     userLocation?.marker?.point = location
-                    //userLocation?.marker?.point = location
-
-                    //  mapView.showsUserLocation = true
-                    let geoMap = ["lon": location.longitude, "lat": location.latitude]
-                    channel.invokeMethod("receiveUserLocation", arguments: geoMap)
+                    
                 }
+                let geoMap = ["lon": location.longitude, "lat": location.latitude]
+                channel.invokeMethod("receiveUserLocation", arguments: geoMap)
+                
                 if (canGetLastUserLocation) {
                     canGetLastUserLocation = false
                 }
                 if !canSkipFollow {
+                    cameraUserLocationIsMoving = true
                     mapView.flyToUserLocation(for: location) { [self] end in
-                        if enableStopFollowInDrag {
-                            canSkipFollow = true
-                        }
+                            //canSkipFollow = true
+                            cameraUserLocationIsMoving = false
 
                     }
                 }
@@ -1065,29 +1072,31 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         enableRotationGesture
     }
 
-    /*public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!, shouldRecognizePanGesture displacement: CGPoint) -> Bool {
+    public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!, shouldRecognizePanGesture displacement: CGPoint) -> Bool {
 
         let location = view.coordinate(fromViewPosition: displacement)
-        if let bound = bounds {
+        if canTrackUserLocation && userLocation != nil {
+            canSkipFollow = true
+            mapView.notifyGestureDidEnd()
+        }
+        /*if let bound = bounds {
             let contain = bound.toBounds().contains(location: location)
             if !contain {
                 view.notifyGestureDidEnd()
             }
             return contain
-        }
+        }*/
         return true
-    }*/
+    }
 
 
     public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
 
-        if !canTrackUserLocation {
-            let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
-            let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.width)
-            let data: [String: Any] = ["center": point, "bounding": bounding]
-            channel.invokeMethod("receiveRegionIsChanging", arguments: data)
-        }
-
+       
+        let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
+        let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.width)
+        let data: [String: Any] = ["center": point, "bounding": bounding]
+        channel.invokeMethod("receiveRegionIsChanging", arguments: data)
 
     }
 
@@ -1095,21 +1104,24 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
                         didRecognizeSingleTapGesture location: CGPoint) {
        
-            pickedLocationSingleTap = view.coordinate(fromViewPosition: location)
-            
-        if roadManager.roads.isEmpty {
-            mapView.setPickRadius(56)
-            //print("pick  x: \(location.x) y: \(location.y)")
-            mapView.pickMarker(at: location)
-        }else {
-            
-            var road:RoadFolder? = roadManager.roadContainCLLocationCoordinate2D(location: pickedLocationSingleTap!)
-            if road != nil {
-                   channel.invokeMethod("receiveRoad", arguments: road?.toMap() ?? [String: Any]())
-            }else {
+        pickedLocationSingleTap = view.coordinate(fromViewPosition: location)
+        if userLocation != nil && cameraUserLocationIsMoving {
+            mapView.notifyGestureDidEnd()
+            cameraUserLocationIsMoving = false
+        }else{
+            if roadManager.roads.isEmpty {
                 mapView.setPickRadius(56)
-                //print("pick  x: \(location.x) y: \(location.y)")
                 mapView.pickMarker(at: location)
+            }else {
+                
+                var road:RoadFolder? = roadManager.roadContainCLLocationCoordinate2D(location: pickedLocationSingleTap!)
+                if road != nil {
+                    channel.invokeMethod("receiveRoad", arguments: road?.toMap() ?? [String: Any]())
+                }else {
+                    mapView.setPickRadius(56)
+                    //print("pick  x: \(location.x) y: \(location.y)")
+                    mapView.pickMarker(at: location)
+                }
             }
         }
     }
