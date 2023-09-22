@@ -154,14 +154,15 @@ final class MobileOSMController extends IBaseOSMController {
         _osmFlutterState.widget.onGeoPointClicked!(event.value);
       });
     }
-    if (_osmFlutterState.widget.onLocationChanged != null) {
-      osmPlatform.onUserPositionListener(_idMap).listen((event) {
+
+    osmPlatform.onUserPositionListener(_idMap).listen((event) {
+      if (_osmFlutterState.widget.onLocationChanged != null) {
         _osmFlutterState.widget.onLocationChanged!(event.value);
+      }
+      _osmFlutterState.widget.controller.osMMixins.forEach((mixin) {
+        mixin.onLocationChanged(event.value);
       });
-      /* this._osmController.myLocationListener(widget.onLocationChanged, (err) {
-          print(err);
-        });*/
-    }
+    });
 
     /// change default icon  marker
     final defaultIcon = _osmFlutterState.widget.markerOption?.defaultMarker;
