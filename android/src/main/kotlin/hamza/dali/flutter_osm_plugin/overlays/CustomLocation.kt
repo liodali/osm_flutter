@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Point
 import android.location.Location
+import android.util.Log
+import android.view.MotionEvent
 import hamza.dali.flutter_osm_plugin.VoidCallback
 import hamza.dali.flutter_osm_plugin.utilities.toHashMap
 import io.flutter.plugin.common.MethodChannel
@@ -87,9 +89,14 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
 
 
     override fun onLocationChanged(location: Location?, source: IMyLocationProvider?) {
-        super.onLocationChanged(location, source)
+        //super.onLocationChanged(location, source)
         if (isFollowLocationEnabled && location != null) {
-            val geoPMap = GeoPoint(this.lastFix)
+            val geoPMap = GeoPoint(location)
+            if(mIsFollowing && !enableAutoStop){
+                mMapView.controller.animateTo(geoPMap)
+                enableAutoStop = true
+                Log.d("osm user location","enable auto animate to")
+            }
             if (onChangedLocation != null) {
                 this.onChangedLocation!!(geoPMap)
             }
@@ -122,6 +129,20 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         }
     }
 
+    override fun onTouchEvent(event: MotionEvent?, mapView: MapView?): Boolean {
+        val isSingleFingerDrag =
+            event!!.action == MotionEvent.ACTION_MOVE && event.pointerCount == 1
+        if (enableAutoStop && isSingleFingerDrag){
+            mapView?.controller?.stopAnimation(false)
+            mapView?.animation?.cancel()
+            disableFollowLocation()
+            enableAutoStop = false
+            mIsFollowing = false
+            mapView?.controller?.setCenter(mapView.mapCenter)
+            Log.d("osm user location","stop animate to")
+        }
+        return false
+    }
     override fun draw(canvas: Canvas, pProjection: Projection) {
         mDrawAccuracyEnabled = false
         if (customIcons) {

@@ -6,6 +6,11 @@ import 'package:flutter_osm_interface/src/common/utilities.dart';
 ///
 /// illustrate geographique location thats contain longitude and latitude position
 ///
+/// [GeoPoint] accept Map that has two keys with values which keys should be has names as lat,lon
+/// 
+/// [GeoPoint] accept String where in should be in format lat,lon example 
+///  ``` GeoPoint('8.42,12.435') ```
+///
 /// [longitude] : (double)
 /// [latitude] : (double)
 class GeoPoint {
@@ -17,17 +22,25 @@ class GeoPoint {
     required this.longitude,
   });
 
-  GeoPoint.fromMap(Map m)
-      : this.latitude = double.parse(
-            double.parse(m["lat"].toString()).toStringAsPrecision(5)),
+  GeoPoint.fromMap(
+    Map m, {
+    int precision = 5,
+  })  : this.latitude = double.parse(
+          double.parse(m["lat"].toString()).toStringAsPrecision(precision),
+        ),
         this.longitude = double.parse(
-            double.parse(m["lon"].toString()).toStringAsPrecision(5));
+          double.parse(m["lon"].toString()).toStringAsPrecision(precision),
+        );
 
-  GeoPoint.fromString(String m)
-      : this.latitude = double.parse(
-            double.parse(m.split(",").first).toStringAsPrecision(5)),
+  GeoPoint.fromString(
+    String m, {
+    int precision = 5,
+  })  : this.latitude = double.parse(
+          double.parse(m.split(",").first).toStringAsPrecision(precision),
+        ),
         this.longitude = double.parse(
-            double.parse(m.split(",").last).toStringAsPrecision(5));
+          double.parse(m.split(",").last).toStringAsPrecision(precision),
+        );
 
   Map<String, double> toMap() {
     return {
