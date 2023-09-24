@@ -3,14 +3,14 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 //import 'package:osm_flutter_hooks/osm_flutter_hooks.dart';
 
-class SimpleExample extends StatefulWidget {
-  SimpleExample({Key? key}) : super(key: key);
+class SimpleHookExample extends StatefulWidget {
+  SimpleHookExample({Key? key}) : super(key: key);
 
   @override
   _SimpleExampleState createState() => _SimpleExampleState();
 }
 
-class _SimpleExampleState extends State<SimpleExample> {
+class _SimpleExampleState extends State<SimpleHookExample> {
   late PageController controller;
   late int indexPage;
 
