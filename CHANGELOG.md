@@ -1,4 +1,6 @@
-### 0.60.4 : 
+### 0.60.5 : 
+* fix bug #452
+### 0.60.4 :
 * fix bug in cache marker in android #445
 ### 0.60.3 : 
 * fix bugs related to icon size for user location #440
