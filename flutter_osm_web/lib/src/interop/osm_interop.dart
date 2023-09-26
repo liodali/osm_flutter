@@ -105,7 +105,7 @@ external dynamic changeMarker(
   GeoPointJs oldP,
   GeoPointJs newP,
   String? icon,
-  SizeJs iconSize,
+  SizeJs? iconSize,
   double? angle,
   IconAnchorJS? iconAnchor,
 );
@@ -280,10 +280,14 @@ external set onMapSingleTapListener(void Function(double, double) f);
 external set onRegionChangedListener(
     void Function(double, double, double, double, double, double) f);
 
-/// Allows assigning a function to be callable from `window.onRegionChangedListener(region)`
+/// Allows assigning a function to be callable from `window.onRoadListener(road)`
 @JS('onRoadListener')
 external set onRoadListener(
   void Function(
     String,
   ) f,
 );
+
+/// Allows assigning a function to be callable from `window.onUserPositionListener(lat,lon)`
+@JS('onUserPositionListener')
+external set onUserPositionListener(void Function(double, double) f);

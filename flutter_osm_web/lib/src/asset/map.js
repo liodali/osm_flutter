@@ -206,6 +206,7 @@ function setUpMap(mapId){
    innerWindow.onMapSingleTapClicked =(lon, lat)=>{ osmLinks.get(mapId).onMapSingleTapClicked(lon, lat) };
    innerWindow.onRegionChanged = (box, center)=>{ osmLinks.get(mapId).onRegionChanged(box, center) };
    innerWindow.onRoadClicked = (roadKey) => { osmLinks.get(mapId).onRoadClicked(roadKey) };
+   innerWindow.onUserPositionListener = (lon, lat) => { osmLinks.get(mapId).onUserPositionListener(lon, lat) };
    return 200;
 }
 function getIframe(mapId){
@@ -233,6 +234,9 @@ class OSMJS {
   }
   onRoadClicked(roadKey) {
    onRoadListener(roadKey);
+  }
+  onUserPositionListener(lon, lat) {
+   onUserPositionListener(lon, lat);
   }
 }
 

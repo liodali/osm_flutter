@@ -126,7 +126,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       }
     });
     webPlatform.onRegionIsChangingListener(mapId).listen((event) {
-      print(event.value);
       osmWebFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
       osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
@@ -260,7 +259,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       var sizeIcon = osmWebFlutterState.dynamicMarkerKey!.currentContext?.size;
       var anchor = null;
       if (iconAnchor != null) {
-        anchor = iconAnchor.toAnchorJS(sizeIcon ?? Size(32, 32));
+        anchor = iconAnchor.toAnchorJS;
       }
       interop.addMarker(
         mapId,
@@ -320,10 +319,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     }
     await Future.delayed(Duration(milliseconds: duration), () async {
       var icon = null;
-      var iconSize = SizeJs(
-        width: 32,
-        height: 32,
-      );
+      SizeJs? iconSize;
       if (newMarkerIcon != null) {
         final iconPNG = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
         icon = iconPNG.convertToString();
@@ -339,13 +335,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         icon,
         iconSize,
         angle != null ? (angle * (180 / pi)) : 0,
-        iconAnchor?.toAnchorJS(
-              Size(
-                iconSize.width.toDouble(),
-                iconSize.height.toDouble(),
-              ),
-            ) ??
-            null,
+        iconAnchor?.toAnchorJS,
       );
     });
   }

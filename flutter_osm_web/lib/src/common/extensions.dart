@@ -98,10 +98,9 @@ extension ExtListGeoPoints on List<GeoPoint> {
 
 extension ExtAnchor on IconAnchor {
   
-  IconAnchorJS toAnchorJS(Size size) {
-    return IconAnchorJS(
-      x:  anchor.value.$1 * size.width,
-      y: anchor.value.$2 * size.height,
+  IconAnchorJS get toAnchorJS =>IconAnchorJS(
+      x:  anchor.value.$1,
+      y: anchor.value.$2,
       offset: offset != null
           ? IconOffsetAnchorJS(
               x: offset!.x,
@@ -109,5 +108,4 @@ extension ExtAnchor on IconAnchor {
             )
           : null,
     );
-  }
 }

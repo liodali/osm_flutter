@@ -27,6 +27,7 @@ void BindingWebOSM() {
   interop.onMapSingleTapListener = allowInterop(onMapSingleTapListener);
   interop.onRegionChangedListener = allowInterop(onRegionChangedListener);
   interop.onRoadListener = allowInterop(onRoadListener);
+  interop.onUserPositionListener = allowInterop(onUserPositionListener);
 }
 
 void initMapFinished(bool isReady) {
@@ -43,6 +44,11 @@ void onStaticGeoPointClicked(double lon, double lat) {
 void onMapSingleTapListener(double lon, double lat) {
   final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
   controller.channel!.invokeMethod("onSingleTapListener", "$lat,$lon");
+}
+
+void onUserPositionListener(double lon, double lat) {
+  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
+  controller.channel!.invokeMethod("receiveUserLocation", "$lat,$lon");
 }
 
 void onRegionChangedListener(

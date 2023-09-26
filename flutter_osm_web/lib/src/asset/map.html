@@ -89,9 +89,9 @@
       onMapSingleTapClicked(geoP.lng, geoP.lat);
     });
     mymap.on('zoom', function (event) {
-      console.log("zoom:"+mymap.getZoom())
+      //console.log("zoom:"+mymap.getZoom())
     });
-    mymap.on('moveend', function (e) {
+    mymap.on('move', function (e) {
       if (isReady) {
         var bounds = mymap.getBounds();
         var center = mymap.getCenter();
@@ -108,6 +108,14 @@
         onRegionChanged(box, centerP);
       }
 
+    });
+    mymap.on('mousedown', function (e) {
+      if (isReady) {
+        if( userPosition != undefined && idTracking != undefined && skipFollow) {
+          mymap.stop();
+          skipFollow = true;
+        }
+      }
     });
 
     async function initMapLocation(point) {
@@ -231,8 +239,8 @@
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
       if (anchor != undefined && (anchor.x!=0 && anchor.y!=0)) {
-        var anchorX = anchor.x 
-        var anchorY = anchor.y-1
+        var anchorX = anchor.x * iconSize.width
+        var anchorY = anchor.y * iconSize.height
         if(anchor.offset != undefined){
           var offsetX = -anchor.offset.x
           var offsetY = anchor.offset.y
@@ -246,6 +254,7 @@
           anchorY += (offsetY) 
         }
         argsIcon["iconAnchor"] = [anchorX,anchorY]
+        console.log("arg icon : "+JSON.stringify(argsIcon["iconAnchor"]))
       }
       var args = {
         icon: L.icon(
@@ -272,13 +281,23 @@
           if (geoPoint.lat == oldLatlng.lat && geoPoint.lng == oldLatlng.lng) {
             //layer.setLatLng(latlng)
             var iconMarker = layer.getIcon();
+            var _iconSize = undefined
+            if(iconSize == undefined) {
+              _iconSize = {
+                width:iconMarker.options.iconSize[0],
+                height:iconMarker.options.iconSize[1]
+              }
+            }else {
+              _iconSize = iconSize
+            }
             if (icon != undefined) {
                iconMarker = L.icon({
                 iconUrl: "data:image/png;base64," + icon,
-                iconSize: [iconSize.width,iconSize.height] //[32, 32]
+                iconSize: [_iconSize.width,_iconSize.height] //[32, 32]
               });
               //layer.setIcon(iconMarker)
             }
+            
             const iconMarkerURL = iconMarker.options.iconUrl.split("data:image/png;base64,")[1];
             var angleMarker = layer.options.rotationAngle;
             if(angle != undefined && angleMarker!=angle) {
@@ -288,11 +307,13 @@
               x:iconMarker.options.iconAnchor[0],
               y:iconMarker.options.iconAnchor[1]
             };
+            console.log("change marker old anchor"+JSON.stringify(iconAnchor))
+            console.log("change marker new anchor"+JSON.stringify(anchor))
             if(anchor != undefined && anchor!=iconAnchor) {
               iconAnchor = anchor;
             }
             mainLayers.get("markers").removeLayer(layer);
-            addMarker(point,iconMarker.options.iconSize,iconMarkerURL,angleMarker,iconAnchor)
+            addMarker(point,_iconSize,iconMarkerURL,angleMarker,iconAnchor)
             return this;
           }
         }
@@ -581,6 +602,7 @@
       if (idTracking == undefined){
         idTracking = navigator.geolocation.watchPosition(function (position) {
           var userPos = [position.coords.latitude, position.coords.longitude];
+          onUserPositionListener(position.coords.latitude, position.coords.longitude)
           if(!skipFollow){
             mymap.flyTo(userPos, mymap.getZoom());
             if(enableStopFollow){
@@ -591,7 +613,6 @@
           var args = {}
           var icon;
           if (userLocationMarkerIcon != undefined) {
-           
             var iconArgs = {
                 iconUrl: "data:image/png;base64," + userLocationMarkerIcon.icon,
                 iconSize: [userLocationMarkerIcon.size.width,userLocationMarkerIcon.size.height],
@@ -605,8 +626,6 @@
                iconArgs["iconAnchor"]= anchor;
             }
             icon = L.icon(iconArgs)
-            console.log("args user location:"+JSON.stringify(iconArgs));
-            console.log("args size:"+JSON.stringify(userLocationMarkerIcon.size));
           }
           if (userPosition == undefined) {
             args = {
@@ -617,11 +636,26 @@
             userPosition.setLatLng(userPos);
             userPosition.setIcon(icon);
           }
+        },function(err){},{
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0,
         })
       }else {
-        if(enableStopFollow){
-            skipFollow = false
-          }
+        navigator.geolocation.getCurrentPosition(function (position){
+          var userPos = [position.coords.latitude, position.coords.longitude];
+          onUserPositionListener(position.coords.latitude, position.coords.longitude)
+          var icon = userPosition.icon
+          console.log("current user icon "+JSON.stringify(icon))
+          userPosition.setLatLng(userPos);
+          mymap.flyTo(userPos, mymap.getZoom());
+        },function(err){},{
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0,
+        });
+        skipFollow = !enableStopFollow
+
       }
       
     }
