@@ -46,7 +46,7 @@ struct MarkerStyle: Codable {
     var style:StyleType = StyleType.points;
     var angle :Int? = nil;
     var order :Int = 1000;
-    var size :Sizes = [48,48];
+    var size :Sizes? = nil;
     var sprite : SpriteType? ;
     var color :String = "white";
     var interactive :Bool = true ;
@@ -79,12 +79,16 @@ struct MarkerStyle: Codable {
             if self.offset == nil && oldMarkerStyle.offset != nil  {
                 self.offset = oldMarkerStyle.offset
             }
+            if size == nil && oldMarkerStyle.size != nil {
+                self.size = oldMarkerStyle.size
+            }
+            
         }
     }
 }
 extension MarkerStyle {
     func toString() -> String {
-        var styleStr = "{style: '\(style.rawValue)',interactive: \(interactive),color: '\(color)',size: [\(String(describing: size.first!))px,\(String(describing: size.last!))px],collide: \(collide)"
+        var styleStr = "{style: '\(style.rawValue)',interactive: \(interactive),color: '\(color)',size: [\(String(describing: size?.first ?? 48))px,\(String(describing: size?.last ?? 48))px],collide: \(collide)"
         if angle != nil {
             styleStr = "\(styleStr),angle: \(angle!)"
         }

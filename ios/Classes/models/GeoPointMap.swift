@@ -14,7 +14,7 @@ typealias GeoPoint = [String: Double]
 
 struct MarkerIconData {
     let image: UIImage?
-    var size: [Int] = [48,48]
+    var size: [Int]? = nil
 }
 
 struct CartesianPoint {
