@@ -602,7 +602,7 @@
       if (idTracking == undefined){
         idTracking = navigator.geolocation.watchPosition(function (position) {
           var userPos = [position.coords.latitude, position.coords.longitude];
-          onUserPositionListener(position.coords.latitude, position.coords.longitude)
+          onUserPositionListener(position.coords.longitude,position.coords.latitude)
           if(!skipFollow){
             mymap.flyTo(userPos, mymap.getZoom());
             if(enableStopFollow){
@@ -639,7 +639,7 @@
         },function(err){},{
           enableHighAccuracy: true,
           timeout: 5000,
-          maximumAge: 0,
+          maximumAge: 600_000,
         })
       }else {
         navigator.geolocation.getCurrentPosition(function (position){
@@ -652,7 +652,7 @@
         },function(err){},{
           enableHighAccuracy: true,
           timeout: 5000,
-          maximumAge: 0,
+          maximumAge: 600_000,
         });
         skipFollow = !enableStopFollow
 
