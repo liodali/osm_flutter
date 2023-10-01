@@ -56,7 +56,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
         await controller.changeLocationMarker(
           oldLocation: lastGeoPoint.value!,
           newLocation: position,
-          iconAnchor: IconAnchor(anchor: Anchor.top),
+          //iconAnchor: IconAnchor(anchor: Anchor.top),
         );
       } else {
         await controller.addMarker(
@@ -65,13 +65,13 @@ class _MainState extends State<Main> with OSMMixinObserver {
             icon: Icon(
               Icons.person_pin,
               color: Colors.red,
-              size: 48,
+              size: 32,
             ),
           ),
-          iconAnchor: IconAnchor(
-            anchor: Anchor.left,
-            //offset: (x: 32.5, y: -32),
-          ),
+          // iconAnchor: IconAnchor(
+          //   anchor: Anchor.left,
+          //   //offset: (x: 32.5, y: -32),
+          // ),
           //angle: -pi / 4,
         );
       }
@@ -131,63 +131,11 @@ class _MainState extends State<Main> with OSMMixinObserver {
         Positioned(
           bottom: 32,
           right: 15,
-          child: ValueListenableBuilder<bool>(
-            valueListenable: showFab,
-            builder: (ctx, isShow, child) {
-              if (!isShow) {
-                return SizedBox.shrink();
-              }
-              return child!;
-            },
-            child: PointerInterceptor(
-              child: GestureDetector(
-                behavior: HitTestBehavior.deferToChild,
-                onLongPress: () async {
-                  await controller.disabledTracking();
-                  trackingNotifier.value = false;
-                },
-                child: FloatingActionButton(
-                  onPressed: () async {
-                    if (!trackingNotifier.value) {
-                      await controller.currentLocation();
-                      await controller.enableTracking(
-                        enableStopFollow: true,
-                        disableUserMarkerRotation: true,
-                        anchor: Anchor.left,
-                      );
-                      trackingNotifier.value = true;
-
-                      //await controller.zoom(5.0);
-                    } else {
-                      await controller.enableTracking(
-                        enableStopFollow: false,
-                        disableUserMarkerRotation: true,
-                        anchor: Anchor.left,
-                      );
-                      // if (userLocationNotifier.value != null) {
-                      //   await controller
-                      //       .goToLocation(userLocationNotifier.value!);
-                      // }
-                    }
-                  },
-                  mini: true,
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: trackingNotifier,
-                    builder: (ctx, isTracking, _) {
-                      if (isTracking) {
-                        return ValueListenableBuilder<IconData>(
-                          valueListenable: userLocationIcon,
-                          builder: (context, icon, _) {
-                            return Icon(icon);
-                          },
-                        );
-                      }
-                      return Icon(Icons.near_me);
-                    },
-                  ),
-                ),
-              ),
-            ),
+          child: ActivationUserLocation(
+            controller: controller,
+            showFab: showFab,
+            trackingNotifier: trackingNotifier,
+            userLocationIcon: userLocationIcon,
           ),
         )
       ],
@@ -259,6 +207,7 @@ class MainNavigation extends StatelessWidget {
       onPressed: () {
         Scaffold.of(context).openDrawer();
       },
+      heroTag: "MainMenuFab",
       mini: true,
       child: Icon(Icons.menu),
       backgroundColor: Colors.white,
@@ -430,6 +379,90 @@ class Map extends StatelessWidget {
         showContributorBadgeForOSM: true,
         //trackMyPosition: trackingNotifier.value,
         showDefaultInfoWindow: false,
+      ),
+    );
+  }
+}
+
+class SearchLocation extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return TextField();
+  }
+}
+
+class ActivationUserLocation extends StatelessWidget {
+  final ValueNotifier<bool> showFab;
+  final ValueNotifier<bool> trackingNotifier;
+  final MapController controller;
+  final ValueNotifier<IconData> userLocationIcon;
+
+  const ActivationUserLocation({
+    super.key,
+    required this.showFab,
+    required this.trackingNotifier,
+    required this.controller,
+    required this.userLocationIcon,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: showFab,
+      builder: (ctx, isShow, child) {
+        if (!isShow) {
+          return SizedBox.shrink();
+        }
+        return child!;
+      },
+      child: PointerInterceptor(
+        child: GestureDetector(
+          behavior: HitTestBehavior.deferToChild,
+          onLongPress: () async {
+            await controller.disabledTracking();
+            trackingNotifier.value = false;
+          },
+          child: FloatingActionButton(
+            onPressed: () async {
+              if (!trackingNotifier.value) {
+                await controller.currentLocation();
+                await controller.enableTracking(
+                  enableStopFollow: true,
+                  disableUserMarkerRotation: true,
+                  anchor: Anchor.left,
+                );
+                trackingNotifier.value = true;
+
+                //await controller.zoom(5.0);
+              } else {
+                await controller.enableTracking(
+                  enableStopFollow: false,
+                  disableUserMarkerRotation: true,
+                  anchor: Anchor.left,
+                );
+                // if (userLocationNotifier.value != null) {
+                //   await controller
+                //       .goToLocation(userLocationNotifier.value!);
+                // }
+              }
+            },
+            mini: true,
+            heroTag: "UserLocationFab",
+            child: ValueListenableBuilder<bool>(
+              valueListenable: trackingNotifier,
+              builder: (ctx, isTracking, _) {
+                if (isTracking) {
+                  return ValueListenableBuilder<IconData>(
+                    valueListenable: userLocationIcon,
+                    builder: (context, icon, _) {
+                      return Icon(icon);
+                    },
+                  );
+                }
+                return Icon(Icons.near_me);
+              },
+            ),
+          ),
+        ),
       ),
     );
   }
