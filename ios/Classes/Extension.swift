@@ -11,13 +11,13 @@ extension GeoPointMap {
             on map: TGMapView
     ) -> TGMarker {
 
-        marker = map.markerAdd()
-        marker?.icon = markerIcon.image!
-        marker?.stylingString = self.markerStyle.toString() //styleMarker
-        marker?.point = coordinate
+        self.marker = map.markerAdd()
+        self.marker?.icon = markerIcon.image!
+        self.marker?.stylingString = self.markerStyle.toString() //styleMarker
+        self.marker?.point = coordinate
 
-        marker?.visible = true
-        return marker!
+        self.marker?.visible = true
+        return self.marker!
     }
 
     public func changeIconMarker(on map: TGMapView) {

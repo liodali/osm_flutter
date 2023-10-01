@@ -64,11 +64,14 @@ final class MobileOSMController extends IBaseOSMController {
     if (_osmFlutterState.widget.onMapIsReady != null) {
       _osmFlutterState.widget.onMapIsReady!(false);
     }
-    final userTrackOption =
-        userPositionOption ?? _osmFlutterState.widget.userTrackingOption;
 
     /// load config map scene for iOS
     if (Platform.isIOS) {
+      osmPlatform.onIosMapInit(_idMap).listen((event) async {
+        if (event.value) {
+          await initMap(initPosition, userPositionOption, box, initZoom);
+        }
+      });
       await (osmPlatform as MethodChannelOSM).initIosMap(
         _idMap,
       );
@@ -164,6 +167,29 @@ final class MobileOSMController extends IBaseOSMController {
       });
     });
 
+    if (Platform.isAndroid) {
+      await initMap(initPosition, userPositionOption, box, initZoom);
+    }
+  }
+
+  void _checkBoundingBox(BoundingBox? box, GeoPoint? initPosition) {
+    if (box != null && !box.isWorld() && initPosition != null) {
+      if (!box.inBoundingBox(initPosition)) {
+        throw Exception(
+            "you want to limit the area of the map but your init location is already outside the area!");
+      }
+    }
+  }
+
+  Future<void> initMap(
+    GeoPoint? initPosition,
+    UserTrackingOption? userPositionOption,
+    BoundingBox? box,
+    double? initZoom,
+  ) async {
+    final userTrackOption =
+        userPositionOption ?? _osmFlutterState.widget.userTrackingOption;
+
     /// change default icon  marker
     final defaultIcon = _osmFlutterState.widget.markerOption?.defaultMarker;
 
@@ -229,29 +255,6 @@ final class MobileOSMController extends IBaseOSMController {
       defaultRoadOption = _osmFlutterState.widget.roadConfig!;
     }
 
-    /// draw static position
-    if (_osmFlutterState.widget.staticPoints.isNotEmpty &&
-        !_osmFlutterState.setCache.value) {
-      await Future.microtask(() {
-        _osmFlutterState.widget.staticPoints.forEach((points) async {
-          if (points.markerIcon != null) {
-            await osmPlatform.customMarkerStaticPosition(
-              _idMap,
-              _osmFlutterState.widget.staticIconGlobalKeys[points.id],
-              points.id,
-            );
-          }
-          if (points.geoPoints.isNotEmpty) {
-            await osmPlatform.staticPosition(
-              _idMap,
-              points.geoPoints,
-              points.id,
-            );
-          }
-        });
-      });
-    }
-
     /// init location in map
     if (userTrackOption != null && userTrackOption.initWithUserPosition) {
       if (Platform.isAndroid) {
@@ -290,14 +293,31 @@ final class MobileOSMController extends IBaseOSMController {
     if (_osmFlutterState.widget.isPicker) {
       await osmPlatform.advancedPositionPicker(_idMap);
     }
+    await _drawInitStaticPoints();
   }
 
-  void _checkBoundingBox(BoundingBox? box, GeoPoint? initPosition) {
-    if (box != null && !box.isWorld() && initPosition != null) {
-      if (!box.inBoundingBox(initPosition)) {
-        throw Exception(
-            "you want to limit the area of the map but your init location is already outside the area!");
-      }
+  Future<void> _drawInitStaticPoints() async {
+    /// draw static position
+    if (_osmFlutterState.widget.staticPoints.isNotEmpty &&
+        !_osmFlutterState.setCache.value) {
+      await Future.microtask(() {
+        _osmFlutterState.widget.staticPoints.forEach((points) async {
+          if (points.markerIcon != null) {
+            await osmPlatform.customMarkerStaticPosition(
+              _idMap,
+              _osmFlutterState.widget.staticIconGlobalKeys[points.id],
+              points.id,
+            );
+          }
+          if (points.geoPoints.isNotEmpty) {
+            await osmPlatform.staticPosition(
+              _idMap,
+              points.geoPoints,
+              points.id,
+            );
+          }
+        });
+      });
     }
   }
 

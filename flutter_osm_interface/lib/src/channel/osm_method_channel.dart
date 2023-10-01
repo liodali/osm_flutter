@@ -83,7 +83,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Stream<RoadTapEvent> onRoadMapClickListener(int idMap) {
     return _events(idMap).whereType<RoadTapEvent>();
   }
-
+  @override
+  Stream<IosMapInit> onIosMapInit(int idMap) {
+    return _events(idMap).whereType<IosMapInit>();
+  }
   void setGeoPointHandler(int idMap) async {
     _channels[idMap]!.setMethodCallHandler((call) async {
       switch (call.method) {
@@ -120,6 +123,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
           final result = call.arguments;
           _streamController
               .add(RegionIsChangingEvent(idMap, Region.fromMap(result)));
+          break;
+        case "map#init#ios":
+          final result = call.arguments;
+          _streamController
+              .add(IosMapInit(idMap, result));
           break;
       }
       return true;
@@ -703,6 +711,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       markers.map((e) => e.toMap()).toList(),
     );
   }
+
 }
 
 extension config on MethodChannelOSM {

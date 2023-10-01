@@ -35,6 +35,7 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap);
 
+
   Future<void> init(
     int idOSM,
   );
@@ -43,6 +44,10 @@ abstract class OSMPlatform extends PlatformInterface {
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {
+
+  Stream<IosMapInit> onIosMapInit(int idMap);
+
+
   Stream<MapRestoration> onMapRestored(int idMap);
 
   Future<void> initPositionMap(
