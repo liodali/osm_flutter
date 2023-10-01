@@ -6,7 +6,7 @@ global:
     # url source 
     url: https://tile.openstreetmap.org/{z}/{x}/{y}.png #https://tile.opentopomap.org/{z}/{x}/{y}.png
     url_subdomains: []
-    bounds: []
+    #bounds: []
     max_zoom: 19
     tile_size: 256
     #ux/ui
@@ -437,7 +437,7 @@ sources:
         url_subdomains: global.url_subdomains
         tile_size : global.tile_size
         max_zoom: global.max_zoom
-        bounds: global.bounds
+        #bounds: global.bounds
 layers:
   osm-raster:
     data:
