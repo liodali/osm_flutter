@@ -7,45 +7,65 @@ import 'package:flutter_osm_interface/src/common/utilities.dart';
 /// illustrate geographique location thats contain longitude and latitude position
 ///
 /// [GeoPoint] accept Map that has two keys with values which keys should be has names as lat,lon
-/// 
-/// [GeoPoint] accept String where in should be in format lat,lon example 
+///
+/// [GeoPoint] accept String where in should be in format lat,lon example
 ///  ``` GeoPoint('8.42,12.435') ```
 ///
 /// [longitude] : (double)
 /// [latitude] : (double)
 class GeoPoint {
-  final double longitude;
-  final double latitude;
+  late double _longitude;
+  late double _latitude;
 
   GeoPoint({
-    required this.latitude,
-    required this.longitude,
-  });
+    required double latitude,
+    required double longitude,
+  })  : _latitude = latitude,
+        _longitude = longitude;
 
   GeoPoint.fromMap(
     Map m, {
-    int precision = 5,
-  })  : this.latitude = double.parse(
-          double.parse(m["lat"].toString()).toStringAsPrecision(precision),
-        ),
-        this.longitude = double.parse(
-          double.parse(m["lon"].toString()).toStringAsPrecision(precision),
-        );
+    int precision = 7,
+  }) {
+    final latPrecision = m["lat"].toString().split('.').last.length < precision
+        ? m["lat"].toString().split('.').last.length
+        : precision;
+    final lngPrecision = m["lon"].toString().split('.').last.length < precision
+        ? m["lon"].toString().split('.').last.length
+        : precision;
+    _latitude = double.parse(
+      double.parse(m["lat"].toString()).toStringAsPrecision(latPrecision),
+    );
+    _longitude = double.parse(
+      double.parse(m["lon"].toString()).toStringAsPrecision(lngPrecision),
+    );
+  }
 
   GeoPoint.fromString(
     String m, {
-    int precision = 5,
-  })  : this.latitude = double.parse(
-          double.parse(m.split(",").first).toStringAsPrecision(precision),
-        ),
-        this.longitude = double.parse(
-          double.parse(m.split(",").last).toStringAsPrecision(precision),
-        );
-
+    int precision = 7,
+  }) {
+    final mLat = m.split(",").first;
+    final mLng = m.split(",").last;
+    final latPrecision = mLat.split(".").last.length < precision
+        ? mLat.split(".").last.length
+        : precision;
+    final lngPrecision = mLat.split(".").last.length < precision
+        ? mLat.split(".").last.length
+        : precision;
+    _latitude = double.parse(
+      double.parse(mLat).toStringAsPrecision(latPrecision),
+    );
+    _longitude = double.parse(
+      double.parse(mLng).toStringAsPrecision(lngPrecision),
+    );
+  }
+  double get latitude => _latitude;
+  double get longitude => _longitude;
   Map<String, double> toMap() {
     return {
-      "lon": longitude,
-      "lat": latitude,
+      "lon": _longitude,
+      "lat": _latitude,
     };
   }
 
