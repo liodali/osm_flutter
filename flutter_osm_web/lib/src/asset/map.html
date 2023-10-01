@@ -83,7 +83,6 @@
     });
     OpenStreetMap_Mapnik.addTo(mymap);
     //mymap.setView([0, 0], 2);
-
     mymap.on('click', function (event) {
       const geoP = event.latlng;
       onMapSingleTapClicked(geoP.lng, geoP.lat);
@@ -254,8 +253,8 @@
           anchorY += (offsetY) 
         }
         argsIcon["iconAnchor"] = [anchorX,anchorY]
-        console.log("arg icon : "+JSON.stringify(argsIcon["iconAnchor"]))
       }
+
       var args = {
         icon: L.icon(
           argsIcon
@@ -290,7 +289,7 @@
             }else {
               _iconSize = iconSize
             }
-            if (icon != undefined) {
+            if (icon != undefined && icon != null) {
                iconMarker = L.icon({
                 iconUrl: "data:image/png;base64," + icon,
                 iconSize: [_iconSize.width,_iconSize.height] //[32, 32]
@@ -303,13 +302,14 @@
             if(angle != undefined && angleMarker!=angle) {
               angleMarker = angle;
             }
-            var iconAnchor = {
-              x:iconMarker.options.iconAnchor[0],
-              y:iconMarker.options.iconAnchor[1]
-            };
-            console.log("change marker old anchor"+JSON.stringify(iconAnchor))
-            console.log("change marker new anchor"+JSON.stringify(anchor))
-            if(anchor != undefined && anchor!=iconAnchor) {
+            var iconAnchor = undefined
+            if(iconMarker.options.iconAnchor != undefined){
+                iconAnchor = {
+                x:iconMarker.options.iconAnchor[0],
+                y:iconMarker.options.iconAnchor[1]
+              };
+            }
+            if((anchor != undefined && anchor != null) && anchor!=iconAnchor) {
               iconAnchor = anchor;
             }
             mainLayers.get("markers").removeLayer(layer);
