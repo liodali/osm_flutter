@@ -175,11 +175,8 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 URL(string: urlStyle)!
             }
             if args == nil && oldCustomTile != nil {
-               
                 mapView.updateOrResetScene(customTile: nil, url: url)
                 oldCustomTile = nil
-            }else {
-                mapView.loadScene(from: url, with: nil)
             }
             if let customTileArgs = args {
                 let tile = CustomTiles(customTileArgs)
