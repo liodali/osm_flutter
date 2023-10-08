@@ -194,10 +194,10 @@ async function removeRoad(mapId,roadKey){
    var iframe = getIframe(mapId);
    return await iframe.contentWindow.removeRoad(roadKey);
 }
-var osmLinks = new Map();
 function setUpMap(mapId){
    const osmJS = new OSMJS(mapId);
    osmLinks.set(mapId,osmJS);
+   console.log("getIframe")
    var innerWindow = getIframe(mapId).contentWindow;
    innerWindow.isMapReady = (isReady)=>{
       osmJS.isMapReady(isReady)
@@ -213,36 +213,4 @@ function getIframe(mapId){
    var iframe = document.getElementById("osm_map_"+mapId).firstChild;
    return iframe;
 }
-class OSMJS {
-   constructor(mapId) {
-      this.mapId = mapId;
-    }
-   /*
-   * shared dart function that called from js
-   */
-  isMapReady(isReady) {
-   initMapFinish(isReady);
-  }
-  onGeoPointClicked(lon, lat) {
-   onStaticGeoPointClicked(lon, lat);
-  }
-  onMapSingleTapClicked(lon, lat) {
-   onMapSingleTapListener(lon, lat);
-  }
-  onRegionChanged(box, center) {
-   onRegionChangedListener(box.north, box.east, box.south, box.west, center.lon, center.lat);
-  }
-  onRoadClicked(roadKey) {
-   onRoadListener(roadKey);
-  }
-  onUserPositionListener(lon, lat) {
-   onUserPositionListener(lon, lat);
-  }
-}
-
-
-
-
-
-
 

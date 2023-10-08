@@ -18,8 +18,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
 
   final Map<int, MethodChannel> _channels = {};
 
-  static String getViewType(int mapId) =>
-      viewType + "_$mapId"; // "${viewType}_$mapId";
+  static String getViewType(int mapId) => "${viewType}_$mapId";
 
   Map<int, WebOsmController> mapsController = <int, WebOsmController>{};
 

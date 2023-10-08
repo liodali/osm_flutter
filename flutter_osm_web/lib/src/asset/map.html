@@ -85,6 +85,7 @@
     //mymap.setView([0, 0], 2);
     mymap.on('click', function (event) {
       const geoP = event.latlng;
+      console.log(geoP)
       onMapSingleTapClicked(geoP.lng, geoP.lat);
     });
     mymap.on('zoom', function (event) {
