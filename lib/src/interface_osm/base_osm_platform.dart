@@ -56,3 +56,96 @@ Widget buildWidget({
       staticPoints: staticPoints,
       enableRotationByGesture: enableRotationByGesture,
     );
+
+class OSMMap extends StatefulWidget {
+  const OSMMap({
+    super.key,
+    required this.controller,
+    this.userTrackingOption,
+    this.onGeoPointClicked,
+    this.onLocationChanged,
+    required this.mapIsReadyListener,
+    required this.dynamicMarkerWidgetNotifier,
+    this.onMapIsReady,
+    this.staticPoints = const [],
+    this.mapIsLoading,
+    this.userLocationMarker,
+    required this.globalKeys,
+    required this.staticIconGlobalKeys,
+    this.markerOption,
+    this.roadConfiguration,
+    this.showZoomController = false,
+    this.stepZoom = 1,
+    this.initZoom = 2,
+    this.minZoomLevel = 2,
+    this.maxZoomLevel = 18,
+    this.showDefaultInfoWindow = false,
+    this.isPicker = false,
+    this.showContributorBadgeForOSM = false,
+    this.enableRotationByGesture = false,
+  });
+  final BaseMapController controller;
+  final UserTrackingOption? userTrackingOption;
+  final OnGeoPointClicked? onGeoPointClicked;
+  final OnLocationChanged? onLocationChanged;
+  final ValueNotifier<bool> mapIsReadyListener;
+  final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
+  final Function(bool)? onMapIsReady;
+  final List<StaticPositionGeoPoint> staticPoints;
+  final Widget? mapIsLoading;
+  final UserLocationMaker? userLocationMarker;
+  final List<GlobalKey> globalKeys;
+  final Map<String, GlobalKey> staticIconGlobalKeys;
+  final MarkerOption? markerOption;
+  final RoadOption? roadConfiguration;
+  final bool showZoomController;
+  final double stepZoom;
+  final double initZoom;
+  final double minZoomLevel;
+  final double maxZoomLevel;
+  final bool showDefaultInfoWindow;
+  final bool isPicker;
+  final bool showContributorBadgeForOSM;
+  final bool enableRotationByGesture;
+
+  @override
+  State<StatefulWidget> createState() => _OSMMapState();
+}
+
+class _OSMMapState extends State<OSMMap> {
+  final GlobalKey key = GlobalKey();
+  @override
+  void didUpdateWidget(covariant OSMMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OSMMapWidget(
+      key: key,
+      controller: widget.controller,
+      mapIsReadyListener: widget.mapIsReadyListener,
+      dynamicMarkerWidgetNotifier: widget.dynamicMarkerWidgetNotifier,
+      globalKeys: widget.globalKeys,
+      staticIconGlobalKeys: widget.staticIconGlobalKeys,
+      initZoom: widget.initZoom,
+      stepZoom: widget.stepZoom,
+      maxZoomLevel: widget.maxZoomLevel,
+      minZoomLevel: widget.minZoomLevel,
+      isPicker: widget.isPicker,
+      mapIsLoading: widget.mapIsLoading,
+      markerOption: widget.markerOption,
+      onGeoPointClicked: widget.onGeoPointClicked,
+      onLocationChanged: widget.onLocationChanged,
+      onMapIsReady: widget.onMapIsReady,
+      roadConfiguration: widget.roadConfiguration,
+      showContributorBadgeForOSM: widget.showContributorBadgeForOSM,
+      showDefaultInfoWindow: widget.showDefaultInfoWindow,
+      showZoomController: widget.showZoomController,
+      staticPoints: widget.staticPoints,
+      userLocationMarker: widget.userLocationMarker,
+      userTrackingOption: widget.userTrackingOption,
+      enableRotationByGesture: widget.enableRotationByGesture,
+    );
+  }
+}
