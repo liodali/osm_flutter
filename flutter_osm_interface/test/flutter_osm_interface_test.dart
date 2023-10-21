@@ -64,6 +64,19 @@ void main() {
     };
     expect(urlsIOS, result);
   });
+  test('convert urls for ios with key', () {
+    final tileUrls = TileURLs(
+      url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}",
+      subdomains: [
+        "a",
+        "b",
+        "c",
+      ],
+    );
+    final urlsIOS = tileUrls.toMapiOS();
+    
+    expect(urlsIOS["url"], "https://{s}.tile.opentopomap.org");
+  });
   test('convert urls for web', () {
     final tileUrls = TileURLs(
       url: "https://{s}.tile.opentopomap.org/",
