@@ -72,7 +72,7 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
   GlobalKey get personIconMarkerKey => widget.globalKeys[6];
 
   GlobalKey get arrowDirectionMarkerKey => widget.globalKeys[7];
-  late Key keyWidget = GlobalKey();
+  final keyWidget = GlobalKey();
 
   @override
   void initState() {
