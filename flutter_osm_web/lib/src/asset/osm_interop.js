@@ -7,22 +7,22 @@ class OSMJS {
    * shared dart function that called from js
    */
   isMapReady(isReady) {
-   initMapFinish(isReady);
+   initMapFinish(this.mapId,isReady);
   }
   onGeoPointClicked(lon, lat) {
-   onStaticGeoPointClicked(lon, lat);
+   onStaticGeoPointClicked(this.mapId,lon, lat);
   }
   onMapSingleTapClicked(lon, lat) {
-   onMapSingleTapListener(lon, lat);
+   onMapSingleTapListener(this.mapId,lon, lat);
   }
   onRegionChanged(box, center) {
-   onRegionChangedListener(box.north, box.east, box.south, box.west, center.lon, center.lat);
+   onRegionChangedListener(this.mapId,box.north, box.east, box.south, box.west, center.lon, center.lat);
   }
   onRoadClicked(roadKey) {
-   onRoadListener(roadKey);
+   onRoadListener(this.mapId,roadKey);
   }
   onUserPositionListener(lon, lat) {
-   onUserPositionListener(lon, lat);
+   onUserPositionListener(this.mapId,lon, lat);
   }
 }
 

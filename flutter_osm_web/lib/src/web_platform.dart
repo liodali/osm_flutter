@@ -30,28 +30,30 @@ void BindingWebOSM() {
   interop.onUserPositionListener = allowInterop(onUserPositionListener);
 }
 
-void initMapFinished(bool isReady) {
+void initMapFinished(int mapId, bool isReady) {
   final controller = (OSMPlatform.instance as FlutterOsmPluginWeb)
-      .map!; //.mapsController[OsmWebPlatform.idOsmWeb]!;
+      .mapsController[mapId]!; //[OsmWebPlatform.idOsmWeb]!;
   controller.channel!.invokeMethod("initMap", isReady);
 }
 
-void onStaticGeoPointClicked(double lon, double lat) {
-  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
+void onStaticGeoPointClicked(int mapId, double lon, double lat) {
+  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb)
+      .mapsController[mapId]!; //.map!;
   controller.channel!.invokeMethod("receiveGeoPoint", "$lat,$lon");
 }
 
-void onMapSingleTapListener(double lon, double lat) {
-  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
+void onMapSingleTapListener(int mapId, double lon, double lat) {
+  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).mapsController[mapId]!; //.map!;
   controller.channel!.invokeMethod("onSingleTapListener", "$lat,$lon");
 }
 
-void onUserPositionListener(double lon, double lat) {
-  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;
+void onUserPositionListener(int mapId, double lon, double lat) {
+  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).mapsController[mapId]!; //.map!;
   controller.channel!.invokeMethod("receiveUserLocation", "$lat,$lon");
 }
 
 void onRegionChangedListener(
+  int mapId,
   double north,
   double east,
   double south,
@@ -68,6 +70,7 @@ void onRegionChangedListener(
 }
 
 void onRoadListener(
+  int mapId,
   String roadKey,
 ) {
   final controller = (OSMPlatform.instance as FlutterOsmPluginWeb).map!;

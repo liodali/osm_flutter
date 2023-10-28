@@ -265,29 +265,29 @@ external dynamic setUpMap(int mapId);
 
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')
-external set initMapFinish(void Function(bool) f);
+external set initMapFinish(void Function(int,bool) f);
 
 /// Allows assigning a function to be callable from `window.onGeoPointClicked(lat,lon)`
 @JS('onStaticGeoPointClicked')
-external set onStaticGeoPointClicked(void Function(double, double) f);
+external set onStaticGeoPointClicked(void Function(int,double, double) f);
 
 /// Allows assigning a function to be callable from `window.onMapSingleTapClicked(lat,lon)`
 @JS('onMapSingleTapListener')
-external set onMapSingleTapListener(void Function(double, double) f);
+external set onMapSingleTapListener(void Function(int,double, double) f);
 
 /// Allows assigning a function to be callable from `window.onRegionChangedListener(region)`
 @JS('onRegionChangedListener')
 external set onRegionChangedListener(
-    void Function(double, double, double, double, double, double) f);
+    void Function(int,double, double, double, double, double, double) f);
 
 /// Allows assigning a function to be callable from `window.onRoadListener(road)`
 @JS('onRoadListener')
 external set onRoadListener(
   void Function(
-    String,
+   int, String,
   ) f,
 );
 
 /// Allows assigning a function to be callable from `window.onUserPositionListener(lat,lon)`
 @JS('onUserPositionListener')
-external set onUserPositionListener(void Function(double, double) f);
+external set onUserPositionListener(void Function(int,double, double) f);

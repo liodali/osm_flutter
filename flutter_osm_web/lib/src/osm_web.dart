@@ -103,7 +103,7 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
     controller.createHtml();
     //controller.addObserver(this);
     (OSMPlatform.instance as FlutterOsmPluginWeb).setWebMapController(
-      id,
+      mapId,
       controller,
     );
     (widget.controller as BaseMapController).setBaseOSMController(controller);
