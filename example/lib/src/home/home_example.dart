@@ -6,14 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
-class MainExample extends StatefulWidget {
-  MainExample({Key? key}) : super(key: key);
+class OldMainExample extends StatefulWidget {
+  OldMainExample({Key? key}) : super(key: key);
 
   @override
   _MainExampleState createState() => _MainExampleState();
 }
 
-class _MainExampleState extends State<MainExample>
+class _MainExampleState extends State<OldMainExample>
     with OSMMixinObserver, TickerProviderStateMixin {
   late MapController controller;
   late GlobalKey<ScaffoldState> scaffoldKey;
@@ -31,12 +31,7 @@ class _MainExampleState extends State<MainExample>
   List<GeoPoint> pointsRoad = [];
   Timer? timer;
   int x = 0;
-  late AnimationController animationController = AnimationController(
-    vsync: this,
-    duration: Duration(
-      milliseconds: 500,
-    ),
-  );
+  late AnimationController animationController;
   late Animation<double> animation =
       Tween<double>(begin: 0, end: 2 * pi).animate(animationController);
   final ValueNotifier<int> mapRotate = ValueNotifier(0);
@@ -176,7 +171,7 @@ class _MainExampleState extends State<MainExample>
             roadActionBt(context);
           }
         } else if (lastGeoPoint.value != null) {
-          controller.changeLocationMarker(
+          await controller.changeLocationMarker(
             oldLocation: lastGeoPoint.value!,
             newLocation: controller.listenerMapSingleTapping.value!,
             //angle: Random.secure().nextDouble() * (2 * pi),
@@ -222,7 +217,12 @@ class _MainExampleState extends State<MainExample>
         centerMap.value = controller.listenerRegionIsChanging.value!.center;
       }
     });
-
+    animationController = AnimationController(
+      vsync: this,
+      duration: Duration(
+        milliseconds: 500,
+      ),
+    );
     //controller.listenerMapIsReady.addListener(mapIsInitialized);
   }
 
@@ -315,7 +315,12 @@ class _MainExampleState extends State<MainExample>
                 icon: Icon(Icons.close),
               );
             }
-            return SizedBox.shrink();
+            return IconButton(
+              onPressed: () async {
+                 Navigator.pop(context);//, '/home');
+              },
+              icon: Icon(Icons.arrow_back),
+            );
           },
         ),
         actions: <Widget>[
@@ -661,6 +666,8 @@ class _MainExampleState extends State<MainExample>
                 top: 5,
                 right: 12,
                 child: FloatingActionButton(
+                  key: UniqueKey(),
+                  heroTag: "rotateCamera",
                   onPressed: () async {
                     animationController.forward().then((value) {
                       animationController.reset();
@@ -695,6 +702,8 @@ class _MainExampleState extends State<MainExample>
         },
         child: PointerInterceptor(
           child: FloatingActionButton(
+            key: UniqueKey(),
+            heroTag: "locationUser",
             onPressed: () async {
               if (!trackingNotifier.value) {
                 await controller.currentLocation();
@@ -757,8 +766,8 @@ class _MainExampleState extends State<MainExample>
             roadWidth: 10,
             roadColor: Colors.blue,
             zoomInto: true,
-           // roadBorderWidth: 4,
-           // roadBorderColor: Colors.black,
+            // roadBorderWidth: 4,
+            // roadBorderColor: Colors.black,
           ),
         );
         pointsRoad.clear();

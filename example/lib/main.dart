@@ -25,25 +25,25 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light(useMaterial3: true),
       initialRoute: "/home",
       routes: {
-        "/home": (ctx) => MainPageExample(),
-        "/old-home": (ctx) => MainExample(),
-        "/hook": (ctx) => SimpleHookExample(),
+        "/home": (context) => MainPageExample(),
+        "/old-home": (context) => OldMainExample(),
+        "/hook": (context) => SimpleHookExample(),
         //"/adv-home": (ctx) => AdvandedMainExample(),
         // "/nav": (ctx) => MyHomeNavigationPage(
         //       map: Container(),
         // ),
-        "/second": (ctx) => Scaffold(
+        "/second": (context) => Scaffold(
               body: Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.popAndPushNamed(ctx, "/home");
+                    Navigator.popAndPushNamed(context, "/home");
                   },
                   child: Text("another page"),
                 ),
               ),
             ),
-        "/picker-result": (ctx) => LocationAppExample(),
-        "/search": (ctx) => SearchPage(),
+        "/picker-result": (context) => LocationAppExample(),
+        "/search": (context) => SearchPage(),
       },
     );
   }

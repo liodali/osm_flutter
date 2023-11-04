@@ -28,11 +28,12 @@ class _MainState extends State<Main> with OSMMixinObserver {
   ValueNotifier<IconData> userLocationIcon = ValueNotifier(Icons.near_me);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
   ValueNotifier<GeoPoint?> userLocationNotifier = ValueNotifier(null);
+  final mapKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
-    controller = MapController.withPosition(
+    controller = MapController(
       initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
@@ -51,6 +52,8 @@ class _MainState extends State<Main> with OSMMixinObserver {
   @override
   void onSingleTap(GeoPoint position) {
     super.onSingleTap(position);
+    debugPrint(position.toString());
+    debugPrint(lastGeoPoint.value.toString());
     Future.microtask(() async {
       if (lastGeoPoint.value != null) {
         await controller.changeLocationMarker(
@@ -204,6 +207,7 @@ class MainNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
+      key: UniqueKey(),
       onPressed: () {
         Scaffold.of(context).openDrawer();
       },
@@ -235,9 +239,9 @@ class DrawerMain extends StatelessWidget {
               title: Text("map with hook example"),
             ),
             ListTile(
-              onTap: () {
+              onTap: () async {
                 Scaffold.of(context).closeDrawer();
-                Navigator.of(context).pushNamed('/old-home');
+                await Navigator.pushNamed(context, '/old-home');
               },
               title: Text("old home example"),
             )
@@ -422,6 +426,7 @@ class ActivationUserLocation extends StatelessWidget {
             trackingNotifier.value = false;
           },
           child: FloatingActionButton(
+            key: UniqueKey(),
             onPressed: () async {
               if (!trackingNotifier.value) {
                 await controller.currentLocation();
