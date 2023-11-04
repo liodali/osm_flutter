@@ -14,58 +14,28 @@ import 'package:flutter_osm_interface/src/common/utilities.dart';
 /// [longitude] : (double)
 /// [latitude] : (double)
 class GeoPoint {
-  late double _longitude;
-  late double _latitude;
+  final double longitude;
+  final double latitude;
 
   GeoPoint({
-    required double latitude,
-    required double longitude,
-  })  : _latitude = latitude,
-        _longitude = longitude;
+    required this.latitude,
+    required this.longitude,
+  });
 
   GeoPoint.fromMap(
-    Map m, {
-    int precision = 7,
-  }) {
-    final latPrecision = m["lat"].toString().split('.').last.length < precision
-        ? m["lat"].toString().split('.').last.length
-        : precision;
-    final lngPrecision = m["lon"].toString().split('.').last.length < precision
-        ? m["lon"].toString().split('.').last.length
-        : precision;
-    _latitude = double.parse(
-      double.parse(m["lat"].toString()).toStringAsPrecision(latPrecision),
-    );
-    _longitude = double.parse(
-      double.parse(m["lon"].toString()).toStringAsPrecision(lngPrecision),
-    );
-  }
+    Map m,
+  )   : latitude = double.parse(m["lat"].toString()),
+        longitude = double.parse(m["lon"].toString());
 
   GeoPoint.fromString(
-    String m, {
-    int precision = 7,
-  }) {
-    final mLat = m.split(",").first;
-    final mLng = m.split(",").last;
-    final latPrecision = mLat.split(".").last.length < precision
-        ? mLat.split(".").last.length
-        : precision;
-    final lngPrecision = mLat.split(".").last.length < precision
-        ? mLat.split(".").last.length
-        : precision;
-    _latitude = double.parse(
-      double.parse(mLat).toStringAsPrecision(latPrecision),
-    );
-    _longitude = double.parse(
-      double.parse(mLng).toStringAsPrecision(lngPrecision),
-    );
-  }
-  double get latitude => _latitude;
-  double get longitude => _longitude;
+    String m,
+  )   : latitude = double.parse(m.split(",").first),
+        longitude = double.parse(m.split(",").last);
+
   Map<String, double> toMap() {
     return {
-      "lon": _longitude,
-      "lat": _latitude,
+      "lon": longitude,
+      "lat": latitude,
     };
   }
 
