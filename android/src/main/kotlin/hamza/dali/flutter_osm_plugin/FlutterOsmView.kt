@@ -969,6 +969,7 @@ class FlutterOsmView(
         )
 
         map?.invalidate()
+        result.success(200)
     }
 
     private fun addMarker(
