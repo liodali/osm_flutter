@@ -580,8 +580,8 @@ final class MobileOSMController extends IBaseOSMController {
     if (path.isEmpty) {
       throw Exception("you cannot make road with empty list of  geoPoint");
     }
-    if (path.first.latitude != path.last.latitude &&
-        path.first.longitude != path.last.longitude &&
+    if (path.first.latitude == path.last.latitude &&
+        path.first.longitude == path.last.longitude &&
         path.length < 3) {
       throw Exception("you cannot make line with same geoPoint");
     }
