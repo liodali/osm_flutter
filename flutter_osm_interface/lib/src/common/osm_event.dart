@@ -1,4 +1,4 @@
-import '../types/types.dart';
+import 'package:flutter_osm_interface/src/types/types.dart';
 
 abstract class EventOSM<T> {
   /// The ID of the Map this event is associated to.
