@@ -238,7 +238,7 @@
       if (iconMarker != "") {
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
-      if (anchor != undefined && (anchor.x!=0 && anchor.y!=0)) {
+      if (anchor != undefined && (anchor.x<=1 && anchor.y<=1)) {
         var anchorX = anchor.x * iconSize.width
         var anchorY = anchor.y * iconSize.height
         if(anchor.offset != undefined){
