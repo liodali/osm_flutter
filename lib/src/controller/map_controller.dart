@@ -311,10 +311,12 @@ class MapController extends BaseMapController {
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableUserMarkerRotation = false,
+    Anchor anchor = Anchor.center,
   }) async {
     await osmBaseController.enableTracking(
       enableStopFollow: enableStopFollow,
       disableMarkerRotation: disableUserMarkerRotation,
+      anchor: anchor,
     );
   }
 
@@ -439,23 +441,29 @@ class MapController extends BaseMapController {
     await osmBaseController.advancedPositionPicker();
   }
 
+  /// [selectAdvancedPositionPicker]
+  ///
   /// select current position and finish advanced picker
   Future<GeoPoint> selectAdvancedPositionPicker() async {
     return await osmBaseController.selectAdvancedPositionPicker();
   }
 
+  /// [getCurrentPositionAdvancedPositionPicker]
+  ///
   /// get current position
   Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
     return await osmBaseController.getCurrentPositionAdvancedPositionPicker();
   }
 
+  /// [cancelAdvancedPositionPicker]
+  ///
   /// cancel advanced picker
   Future<void> cancelAdvancedPositionPicker() async {
     return await osmBaseController.cancelAdvancedPositionPicker();
   }
 
   /// [rotateMapCamera]
-  /// 
+  ///
   /// rotate camera of osm map
   Future<void> rotateMapCamera(double degree) async {
     return await osmBaseController.mapOrientation(degree);
@@ -494,8 +502,12 @@ class MapController extends BaseMapController {
       assert(
           angle >= 0 && angle <= 2 * pi, "angle should be between 0 and 2*pi");
     }
-    await osmBaseController.addMarker(p,
-        markerIcon: markerIcon, angle: angle, iconAnchor: iconAnchor);
+    await osmBaseController.addMarker(
+      p,
+      markerIcon: markerIcon,
+      angle: angle,
+      iconAnchor: iconAnchor,
+    );
   }
 
   Future<void> changeLocationMarker({

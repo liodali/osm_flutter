@@ -3,19 +3,58 @@ import 'package:flutter/material.dart';
 typedef IconAnchorOffset = ({double x, double y});
 
 enum Anchor {
-  center("center", (0.5, 0.5)),
-  left("left", (1, 0.5)),
-  right("right", (0, 0.5)),
-  top("top", (0.5, 1)),
-  bottom("bottom", (0.5, 0)),
-  top_left("top-left", (1, 1)),
-  top_right("top-right", (0, 1)),
-  bottom_left("bottom-left", (1, 0)),
-  bottom_right("bottom-right", (0, 0));
+  center(
+    "center",
+    value: (0.5, 0.5),
+  ),
+  left(
+    "left",
+    value: (1, 0.5),
+  ),
+  right(
+    "right",
+    value: (0, 0.5),
+  ),
+  top(
+    "top",
+    value: (0.5, 1),
+  ),
+  bottom(
+    "bottom",
+    value: (0.5, 0),
+  ),
+  top_left(
+    "top-left",
+    value: (1, 1),
+  ),
+  top_right(
+    "top-right",
+    value: (0, 1),
+  ),
+  bottom_left(
+    "bottom-left",
+    value: (1, 0),
+  ),
+  bottom_right(
+    "bottom-right",
+    value: (0, 0),
+  );
 
-  const Anchor(this.name, this.value);
+  const Anchor(
+    this.name, {
+    required this.value,
+  });
   final String name;
   final (double, double) value;
+
+  dynamic toMapAndroid() {
+    return [
+      value.$1,
+      value.$2,
+    ];
+  }
+
+  String toMapIOS() => name;
 }
 
 class IconAnchor {

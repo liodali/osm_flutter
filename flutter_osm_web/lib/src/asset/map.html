@@ -83,12 +83,15 @@
     });
     OpenStreetMap_Mapnik.addTo(mymap);
     //mymap.setView([0, 0], 2);
-
     mymap.on('click', function (event) {
       const geoP = event.latlng;
+      console.log(geoP)
       onMapSingleTapClicked(geoP.lng, geoP.lat);
     });
-    mymap.on('moveend', function (e) {
+    mymap.on('zoom', function (event) {
+      //console.log("zoom:"+mymap.getZoom())
+    });
+    mymap.on('move', function (e) {
       if (isReady) {
         var bounds = mymap.getBounds();
         var center = mymap.getCenter();
@@ -105,6 +108,14 @@
         onRegionChanged(box, centerP);
       }
 
+    });
+    mymap.on('mousedown', function (e) {
+      if (isReady) {
+        if( userPosition != undefined && idTracking != undefined && skipFollow) {
+          mymap.stop();
+          skipFollow = true;
+        }
+      }
     });
 
     async function initMapLocation(point) {
@@ -219,17 +230,17 @@
       return 200;
     }
     
-    function addMarker(point, iconMarker,angle,anchor) {
+    function addMarker(point,iconSize, iconMarker,angle,anchor) {
       const position = [point.lat, point.lon];
       var argsIcon = {
-        iconSize: [32, 32],
+        iconSize: [iconSize.width, iconSize.height],
       }
       if (iconMarker != "") {
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
-      if (anchor != undefined && (anchor.x!=0 && anchor.y!=0)) {
-        var anchorX = anchor.x
-        var anchorY = anchor.y
+      if (anchor != undefined && (anchor.x<=1 && anchor.y<=1)) {
+        var anchorX = anchor.x * iconSize.width
+        var anchorY = anchor.y * iconSize.height
         if(anchor.offset != undefined){
           var offsetX = -anchor.offset.x
           var offsetY = anchor.offset.y
@@ -239,11 +250,12 @@
           if(anchor.offset.y > 1 ){
             offsetY = anchor.offset.y / 32
           }*/
-          anchorX += offsetX
-          anchorY += offsetY
+          anchorX += (offsetX) 
+          anchorY += (offsetY) 
         }
         argsIcon["iconAnchor"] = [anchorX,anchorY]
       }
+
       var args = {
         icon: L.icon(
           argsIcon
@@ -259,7 +271,7 @@
         });
       return 200;
     }
-    async function changeMarker(oldPoint, point, icon,angle,anchor) {
+    async function changeMarker(oldPoint, point, icon,iconSize,angle,anchor) {
 
       var latlng = L.latLng([point.lat, point.lon]);
       var oldLatlng = L.latLng([oldPoint.lat, oldPoint.lon]);
@@ -269,27 +281,40 @@
           if (geoPoint.lat == oldLatlng.lat && geoPoint.lng == oldLatlng.lng) {
             //layer.setLatLng(latlng)
             var iconMarker = layer.getIcon();
-            if (icon != undefined) {
+            var _iconSize = undefined
+            if(iconSize == undefined) {
+              _iconSize = {
+                width:iconMarker.options.iconSize[0],
+                height:iconMarker.options.iconSize[1]
+              }
+            }else {
+              _iconSize = iconSize
+            }
+            if (icon != undefined && icon != null) {
                iconMarker = L.icon({
                 iconUrl: "data:image/png;base64," + icon,
-                iconSize: [32, 32]
+                iconSize: [_iconSize.width,_iconSize.height] //[32, 32]
               });
               //layer.setIcon(iconMarker)
             }
+            
             const iconMarkerURL = iconMarker.options.iconUrl.split("data:image/png;base64,")[1];
             var angleMarker = layer.options.rotationAngle;
             if(angle != undefined && angleMarker!=angle) {
               angleMarker = angle;
             }
-            var iconAnchor = {
-              x:iconMarker.options.iconAnchor[0],
-              y:iconMarker.options.iconAnchor[1]
-            };
-            if(anchor != undefined && anchor!=iconAnchor) {
+            var iconAnchor = undefined
+            if(iconMarker.options.iconAnchor != undefined){
+                iconAnchor = {
+                x:iconMarker.options.iconAnchor[0],
+                y:iconMarker.options.iconAnchor[1]
+              };
+            }
+            if((anchor != undefined && anchor != null) && anchor!=iconAnchor) {
               iconAnchor = anchor;
             }
             mainLayers.get("markers").removeLayer(layer);
-            addMarker(point,iconMarkerURL,angleMarker,iconAnchor)
+            addMarker(point,_iconSize,iconMarkerURL,angleMarker,iconAnchor)
             return this;
           }
         }
@@ -570,14 +595,15 @@
       }
       return 200;
     }
-    function setUserLocationIconMarker(icon) {
+    function setUserLocationIconMarker(icon,size) {
       if (icon != undefined && icon != "")
-        userLocationMarkerIcon = icon;
+        userLocationMarkerIcon = {icon:icon,size:size};
     }
-    async function enableTracking(enableStopFollow) {
+    async function enableTracking(enableStopFollow,anchorJS) {
       if (idTracking == undefined){
         idTracking = navigator.geolocation.watchPosition(function (position) {
           var userPos = [position.coords.latitude, position.coords.longitude];
+          onUserPositionListener(position.coords.longitude,position.coords.latitude)
           if(!skipFollow){
             mymap.flyTo(userPos, mymap.getZoom());
             if(enableStopFollow){
@@ -586,25 +612,51 @@
           }
           
           var args = {}
+          var icon;
           if (userLocationMarkerIcon != undefined) {
-            console.log(userLocationMarkerIcon)
-            args = {
-              icon: L.icon({
-                iconUrl: "data:image/png;base64," + userLocationMarkerIcon,
-                iconSize: [32, 32]
-              })
+            var iconArgs = {
+                iconUrl: "data:image/png;base64," + userLocationMarkerIcon.icon,
+                iconSize: [userLocationMarkerIcon.size.width,userLocationMarkerIcon.size.height],
+              }
+            if(anchorJS!= undefined){
+                var anchor =  undefined;
+                if(mymap.getZoom()>14){
+                  anchor = [anchorJS.x * userLocationMarkerIcon.size.width,
+                  anchorJS.y * userLocationMarkerIcon.size.height-1]
+                }
+               iconArgs["iconAnchor"]= anchor;
             }
+            icon = L.icon(iconArgs)
           }
           if (userPosition == undefined) {
+            args = {
+              icon: icon,
+            }
             userPosition = L.marker(userPos, args).addTo(mainLayers.get("userLocation"));
           } else if (userPosition != undefined && !skipFollow) {
             userPosition.setLatLng(userPos);
+            userPosition.setIcon(icon);
           }
+        },function(err){},{
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 600_000,
         })
       }else {
-        if(enableStopFollow){
-            skipFollow = false
-          }
+        navigator.geolocation.getCurrentPosition(function (position){
+          var userPos = [position.coords.latitude, position.coords.longitude];
+          onUserPositionListener(position.coords.latitude, position.coords.longitude)
+          var icon = userPosition.icon
+          console.log("current user icon "+JSON.stringify(icon))
+          userPosition.setLatLng(userPos);
+          mymap.flyTo(userPos, mymap.getZoom());
+        },function(err){},{
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 600_000,
+        });
+        skipFollow = !enableStopFollow
+
       }
       
     }
@@ -651,13 +703,13 @@
       cachedLayers.clearLayers();
 
     }
-    async function changeIconAdvPickerMarker(icon) {
+    async function changeIconAdvPickerMarker(icon,size) {
       advSearchIcon = icon;
       const nodeImg = document.createElement("img");
       nodeImg.setAttribute('src', 'data:image/png;base64,' + icon);
       document.getElementById("render-icon").appendChild(nodeImg);
-      nodeImg.style.height = "32px";
-      nodeImg.style.width = "32px";
+      nodeImg.style.height = size.height+"px";
+      nodeImg.style.width = size.height+" px";
     }
 
     async function drawRect(key,bounds,color,strokeWidth){

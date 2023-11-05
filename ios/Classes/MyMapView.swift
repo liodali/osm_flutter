@@ -14,6 +14,9 @@ import TangramMap
 import Polyline
 
 public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, TGMapViewDelegate, TGRecognizerDelegate {
+    
+    
+   
 
 
     let frame: CGRect
@@ -21,6 +24,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     let channel: FlutterMethodChannel
     let mapView: TGMapView
     let locationManager: CLLocationManager = CLLocationManager()
+    let defaultMarker: MarkerIconData
     var markerIcon: MarkerIconData? = nil
     var personMarkerIcon: MarkerIconData? = nil
     var arrowDirectionIcon: MarkerIconData? = nil
@@ -32,9 +36,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var userLocation: MyLocationMarker? = nil
     var dictClusterAnnotation: [String: [StaticGeoPMarker]] = [String: [StaticGeoPMarker]]()
     var dictIconClusterAnnotation = [String: MarkerIconData]()
-    var roadMarkerPolyline: TGMarker? = nil
-    var defaultIcon: MarkerIconData?
+
     var pickedLocationSingleTap: CLLocationCoordinate2D? = nil
+    var roadPicked: RoadFolder? = nil
     var colorRoad: String = "#ff0000"
     var homeMarker: TGMarker? = nil
     var resultFlutter: FlutterResult? = nil
@@ -60,8 +64,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     let urlStyle = "https://github.com/liodali/osm_flutter/raw/dc7424dacd77f4eced626abf64486d70fd03240d/assets/dynamic-styles.zip"
     var fromAsset = true
     var dynamicOSMPath:String? = nil
-    
-    init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?,dynamicOSM:String?) {
+    var cameraUserLocationIsMoving:Bool = false
+    var sceneID:Int32? = nil
+    init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?,dynamicOSM:String?,defaultPin:String?) {
         self.frame = frame
         self.viewId = viewId
         self.channel = channel
@@ -86,7 +91,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 enableRotationGesture = (args as! [String: Any])["enableRotationGesture"] as! Bool
             }
         }
-        
+        let defaultIcon = UIImage(contentsOfFile: defaultPin!)!.imageResize(sizeChange: CGSize(width: 32, height: 48))
+        self.defaultMarker = MarkerIconData(image: defaultIcon,
+                                            size:[Int(defaultIcon.size.width),Int(defaultIcon.size.height)])
+        self.markerIcon = defaultMarker
         //mapview.mapType = MKMapType.standard
         //mapview.isZoomEnabled = true
         //mapview.isScrollEnabled = true
@@ -100,7 +108,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
 
         locationManager.delegate = self
-
         //
         //self.setupTileRenderer()
         // mapView.register(MKPinAnnotationView.self, forAnnotationViewWithReuseIdentifier: NSStringFromClass(GeoPointMap.self))
@@ -133,7 +140,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 sceneUpdates.append(TGSceneUpdate(path: "global.url_subdomains", value: tile.subDomains))
                 sceneUpdates.append(TGSceneUpdate(path: "global.tile_size", value: tile.tileSize))
                 sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: tile.maxZoom))
-                sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
+                //sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
             }
             /*if(bounds != nil && bounds != [-180.0, 85, 180, -85]){
                 //urlStyle = "https://firebasestorage.googleapis.com/v0/b/osm-resources.appspot.com/o/dynamic-styles2.zip?alt=media&token=73f812ac-129f-477f-8a5b-942a5d9f325a"
@@ -146,38 +153,40 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             // let sceneUrl = URL(string: "https://www.nextzen.org/carto/bubble-wrap-style/9/bubble-wrap-style.zip")!
             if (fromAsset){
                 //let urlRes = URL(resource: URLResource(name: dynamicOSMPath!))!
-                let url = Bundle.main.url(forAuxiliaryExecutable: dynamicOSMPath!)!//(forResource: dynamicOSMPath!,withExtension: "yaml")!
+                let url = Bundle.main.url(forAuxiliaryExecutable: dynamicOSMPath!)!
+                //(forResource: dynamicOSMPath!,withExtension: "yaml")!
                 mapView.loadScene(from: url,with: sceneUpdates)
+                //mapView.loadScene(from: url,with: sceneUpdates)
                 
             }else {
                 let sceneUrl = URL(string: urlStyle)! // "https://dl.dropboxusercontent.com/s/25jzvtghx0ac2rk/osm-style.zip?dl=0")!
                 mapView.loadScene(from: sceneUrl, with: sceneUpdates)
-            }
-
+           }
+            
+        
             //channel.invokeMethod("map#init", arguments: true)
             result(200)
             break
         case "change#tile":
             let args: [String: Any]? = call.arguments as! [String: Any]?
+            let url =  if (fromAsset){
+                Bundle.main.url(forAuxiliaryExecutable: dynamicOSMPath!)!
+            } else {
+                URL(string: urlStyle)!
+            }
             if args == nil && oldCustomTile != nil {
-                mapView.updateOrResetScene(customTile: nil, urlStyle: urlStyle)
+                mapView.updateOrResetScene(customTile: nil, url: url)
                 oldCustomTile = nil
             }
             if let customTileArgs = args {
                 let tile = CustomTiles(customTileArgs)
                 if oldCustomTile == nil || (oldCustomTile != nil && oldCustomTile?.tileURL != tile.tileURL) {
-                    mapView.updateOrResetScene(customTile: tile, urlStyle: urlStyle)
+                    mapView.updateOrResetScene(customTile: tile, url: url)
                     oldCustomTile = tile
                 }
 
             }
 
-            result(200)
-            break;
-        case "setDefaultIOSIcon":
-            let args = call.arguments as! [String: Any]
-            let iconString = args["icon"] as! String
-            defaultIcon = MarkerIconData(image: convertImage(codeImage: iconString), size: args["size"] as! [Int])
             result(200)
             break;
         case "initMap":
@@ -206,9 +215,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(mapView.position.toGeoPoint())
             break;
         case "trackMe":
-            let args = call.arguments as! [Bool]
-            enableStopFollowInDrag = args.first ?? false
-            disableRotation = args.last ?? false
+            let args = call.arguments as! [Any]
+            enableStopFollowInDrag = args.first as? Bool ?? false
+            disableRotation = args[1] as? Bool ?? false
+            let anchorArgs = args.last as? String ?? "center"
+            MyLocationMarker.defaultAnchorStr = anchorArgs
             trackUserLocation()
             result(200)
             break;
@@ -224,11 +235,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         case "map#bounds":
             getMapBounds(result: result)
             break;
-        case "user#pickPosition":
+        /*case "user#pickPosition":
             //let frameV = UIView()
             methodCall = call
             resultFlutter = result
-            break;
+            break;*/
         case "user#removeMarkerPosition":
             removeMarkerFromMap(call: call)
             result(200)
@@ -274,7 +285,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         case "marker#icon":
             let args = call.arguments as! [String: Any]
             let image = convertImage(codeImage: args["icon"] as! String)
-            markerIcon = MarkerIconData(image: image, size: args["size"] as! [Int])
+            markerIcon = MarkerIconData(image: image, size: args["size"] as? [Int])
             result(200)
             break;
         case "staticPosition#IconMarker":
@@ -293,7 +304,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     var newRoad = road
                     newRoad?.roadData = roadData!
                     let roadKey = (call.arguments as! [String: Any])["key"] as! String
-                    roadManager.drawRoadOnMap(roadKey: roadKey, on: newRoad!, for: mapView, roadInfo: roadInfo, polyLine: nil)
+                    _ = roadManager.drawRoadOnMap(roadKey: roadKey, on: newRoad!, for: mapView, roadInfo: roadInfo, polyLine: nil)
                     if let bounding = box {
                         mapView.cameraPosition = mapView.cameraThatFitsBounds(bounding, withPadding: UIEdgeInsets.init(top: 25.0, left: 25.0, bottom: 25.0, right: 25.0))
                     }
@@ -376,6 +387,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             break;
         case "change#Marker":
             changePositionMarker(call: call)
+            result(200)
             break;
         case "delete#markers":
             deleteMarkers(call: call)
@@ -392,16 +404,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
 
     public func view() -> UIView {
-        if #available(iOS 11.0, *) {
-            /*  mapView.register(
-                      MarkerView.self,
-                      forAnnotationViewWithReuseIdentifier:
-                      MKMapViewDefaultAnnotationViewReuseIdentifier)*/
-
-        }
         //let view = UIStackView(arrangedSubviews: [mapView])
         return mainView
     }
+
 
     private func getGeoPoints(_ result: FlutterResult) {
         let list: [TGMarker] = mapView.markers.filter { marker in
@@ -466,6 +472,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     private func rotateMap(call: FlutterMethodCall) {
         let angle = call.arguments as! Double
+        let cameraAngle = mapView.cameraPosition.bearing
         if (angle >= 0.0) {
             mapView.setCameraPosition(TGCameraPosition(center: mapView.position, zoom: mapView.zoom, bearing: CLLocationDirection(CGFloat(angle)), pitch: 0.0), withDuration: 0.2, easeType: TGEaseType.sine)
         }
@@ -480,9 +487,11 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         }
         let location = CLLocationCoordinate2D(latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
         mapView.fly(to: TGCameraPosition(center: location, zoom: mapView.zoom, bearing: 0, pitch: 0), withDuration: 0.2) { finish in
-            let geoMarker = GeoPointMap(icon: self.markerIcon!, coordinate: location)
-            geoMarker.setupMarker(on: self.mapView)
-            self.homeMarker = geoMarker.marker
+            if finish {
+                let geoMarker = GeoPointMap(icon: self.markerIcon ?? self.defaultMarker, coordinate: location)
+                _ = geoMarker.setupMarker(on: self.mapView)
+                self.homeMarker = geoMarker.marker
+            }
             result(200)
         }
 
@@ -500,7 +509,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let args = call.arguments as! [String: Any]
         if (args.keys.contains("icon")) {
             let iconArg = args["icon"] as! [String: Any]
-            let icon = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as! [Int])
+            let icon = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as? [Int])
             let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
             let point = args["point"] as! GeoPoint
             var angle = 0
@@ -510,7 +519,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             }
             if let _anchor = args["iconAnchor"]{
                 let anchorStr = (_anchor  as! [String:Any] )["anchor"] as! String
-                let anchorType = AnchorType.fromString(anchorStr: anchorStr)
+                //let anchorType = AnchorType.fromString(anchorStr: anchorStr)
                 var x = NSNumber(value: 0)
                 var y = NSNumber(value: 0)
                 var offset:(Int,Int)? = nil
@@ -519,9 +528,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                     y = ((_anchor  as! [String:Any])["offset"] as! [String:Any])["y"] as! NSNumber
                     offset = (Int(CGFloat(truncating: x)),Int(CGFloat(truncating: y)))
                 }
-                anchor = AnchorGeoPoint(anchor:anchorType,offset: offset)
+                anchor = AnchorGeoPoint(anchorStr,offset: offset)
             }
-            GeoPointMap(icon: icon, coordinate: coordinate, angle: angle, anchor: anchor).setupMarker(on: mapView)
+           _ = GeoPointMap(icon: icon, coordinate: coordinate, angle: angle, anchor: anchor).setupMarker(on: mapView)
         }
     }
 
@@ -533,7 +542,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         var angle = 0
         var anchor:AnchorGeoPoint? = nil
         if let iconStr = args["new_icon"] as? [String: Any] {
-            icon = MarkerIconData(image: convertImage(codeImage: iconStr["icon"] as! String), size: iconStr["size"] as! [Int])
+            icon = MarkerIconData(image: convertImage(codeImage: iconStr["icon"] as! String), size: iconStr["size"] as? [Int])
         }
         if let _angle = args["angle"] as? Double {
             angle = Int(CGFloat(_angle).toDegrees)
@@ -551,6 +560,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             }
             anchor = AnchorGeoPoint(anchor:anchorType,offset: offset)
         }
+        print("changePositionMarker:\(coordinate_old)")
         GeoPointMap(icon: icon, coordinate: coordinate_old, angle: angle,anchor: anchor)
                 .changePositionMarker(on: mapView, mPosition: coordinate_new)
     }
@@ -560,7 +570,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         var icon = markerIcon
         if (args.keys.contains("icon")) {
             let iconArg = args["icon"] as! [String: Any]
-            icon = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as! [Int])
+            icon = MarkerIconData(image: convertImage(codeImage: iconArg["icon"] as! String), size: iconArg["size"] as? [Int])
         }
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
         GeoPointMap(icon: icon!, coordinate: coordinate).changeIconMarker(on: mapView)
@@ -595,11 +605,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
     }
 
-    private func trackUserLocation() {
-        locationManager.startUpdatingLocation()
-        locationManager.startUpdatingHeading()
-        canTrackUserLocation = true
-    }
+   
 
     private func convertImage(codeImage: String) -> UIImage? {
         let dataImage = Data(base64Encoded: codeImage)
@@ -621,7 +627,14 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
 
     }
-
+    private func trackUserLocation() {
+        locationManager.startUpdatingLocation()
+        locationManager.startUpdatingHeading()
+        canTrackUserLocation = true
+        if(!enableStopFollowInDrag){
+            canSkipFollow = false
+        }
+    }
     private func deactivateTrackMe() {
         canTrackUserLocation = false
         canSkipFollow = false
@@ -637,8 +650,17 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     private func setCustomIconMarker(call: FlutterMethodCall, result: FlutterResult) {
         let args = call.arguments as! [String: Any]
         let iconSize = args["size"] as! [Double]
-        let image = convertImage(codeImage: args["icon"] as! String)
-        pickerMarker = UIImageView(image: image)
+        if args.keys.contains("icon") {
+            let image = convertImage(codeImage: args["icon"] as! String) ?? defaultMarker.image
+            
+            pickerMarker = UIImageView(image: image)
+            pickerMarker?.frame.size = CGSize(width: iconSize.first!, height: iconSize.last!)
+        }else {
+            pickerMarker = UIImageView(image: defaultMarker.image)
+            pickerMarker?.frame.size = CGSize(width: 32, height: 48)
+
+        }
+        
         pickerMarker?.sizeThatFits(CGSize(width: iconSize.first!, height: iconSize.last!))
         result(200)
     }
@@ -648,12 +670,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         if let personIconString = args["personIcon"] {
             let iconArg = personIconString as! [String: Any]
             let icon = convertImage(codeImage: iconArg["icon"] as! String)
-            personMarkerIcon = MarkerIconData(image: icon, size: iconArg["size"] as! [Int])
+            personMarkerIcon = MarkerIconData(image: icon, size: iconArg["size"] as? [Int])
         }
         if let arrowDirectionIconString = args["arrowDirectionIcon"] {
             let iconArg = arrowDirectionIconString as! [String: Any]
             let icon = convertImage(codeImage: iconArg["icon"] as! String)
-            arrowDirectionIcon = MarkerIconData(image: icon, size: iconArg["size"] as! [Int])
+            arrowDirectionIcon = MarkerIconData(image: icon, size: iconArg["size"] as? [Int])
         }
     }
 
@@ -663,7 +685,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         let id = args["id"] as! String
         let bitmapArg = args["bitmap"] as! [String: Any]
         let icon = convertImage(codeImage: bitmapArg["icon"] as! String)
-        dictIconClusterAnnotation[id] = MarkerIconData(image: icon!, size: bitmapArg["size"] as! [Int])
+        dictIconClusterAnnotation[id] = MarkerIconData(image: icon!, size: bitmapArg["size"] as? [Int])
     }
 
 
@@ -716,6 +738,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 //             }
             //pickerMarker?.frame = CGRect(x: frame.width/2,y: frame.height/2,width: 32,height: 32)
             pickerMarker?.center = mainView.center
+            if pickerMarker?.image == nil {
+                pickerMarker?.image =  defaultMarker.image
+            }
             mainView.addSubview(pickerMarker!)
             result(200)
         }
@@ -910,8 +935,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         road.roadData = RoadData(roadColor: roadColor, roadWidth: roadWidth)
         let route: Polyline = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
         let roadKey = args["key"] as! String
-        let markerRoad = roadManager.drawRoadOnMap(roadKey: roadKey, on: road, for: mapView, roadInfo: nil, polyLine: route)
-        roadMarkerPolyline = markerRoad
+        let roadLayer = roadManager.drawRoadOnMap(roadKey: roadKey, on: road, for: mapView, roadInfo: nil, polyLine: route)
         if (zoomInto) {
             let box = route.coordinates!.toBounds()
             mapView.cameraPosition = mapView.cameraThatFitsBounds(box, withPadding: UIEdgeInsets.init(top: 25.0, left: 25.0, bottom: 25.0, right: 25.0))
@@ -941,8 +965,17 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 //mapView.setRegion(region, animated: true)
                 if (canTrackUserLocation) {
                     if (userLocation == nil) {
-                        userLocation = mapView.addUserLocation(for: location, on: mapView, personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
+                        userLocation = mapView.addUserLocation(
+                            for: location, on: mapView,
+                            personIcon: personMarkerIcon,
+                            arrowDirection: arrowDirectionIcon,
+                            anchor: MyLocationMarker.defaultAnchorStr
+                        )
                         //userLocation?.setDirectionArrow(personIcon: personMarkerIcon, arrowDirection: arrowDirectionIcon)
+                    }
+                    if (userLocation?.anchor?.anchor.rawValue != MyLocationMarker.defaultAnchorStr) {
+                        // setAnchor should be done after adding user location marker
+                        userLocation?.setAnchorLocation(MyLocationMarker.defaultAnchorStr)
                     }
                     if (!disableRotation) {
                         let angle = CGFloat(manager.heading?.trueHeading ?? 0.0).toDegrees
@@ -951,20 +984,19 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                         }
                     }
                     userLocation?.marker?.point = location
-                    //userLocation?.marker?.point = location
-
-                    //  mapView.showsUserLocation = true
-                    let geoMap = ["lon": location.longitude, "lat": location.latitude]
-                    channel.invokeMethod("receiveUserLocation", arguments: geoMap)
+                    
                 }
+                let geoMap = ["lon": location.longitude, "lat": location.latitude]
+                channel.invokeMethod("receiveUserLocation", arguments: geoMap)
+                
                 if (canGetLastUserLocation) {
                     canGetLastUserLocation = false
                 }
                 if !canSkipFollow {
+                    cameraUserLocationIsMoving = true
                     mapView.flyToUserLocation(for: location) { [self] end in
-                        if enableStopFollowInDrag {
-                            canSkipFollow = true
-                        }
+                            //canSkipFollow = true
+                            cameraUserLocationIsMoving = false
 
                     }
                 }
@@ -993,7 +1025,10 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print(error.localizedDescription)
     }
-
+    
+    
+   
+    
     public func mapView(_ mapView: TGMapView,
                         didSelectMarker markerPickResult: TGMarkerPickResult?,
                         atScreenPosition position: CGPoint) {
@@ -1016,7 +1051,9 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 channel.invokeMethod("receiveGeoPoint", arguments: marker.point.toGeoPoint())
             }
             if isExistLineInteractive {
-                let road = roadManager.roads.first(where: { $0.tgRouteMarker.polyline == marker.polyline })
+                //marker.
+                let road = roadManager.hasTGMarkerPoylines()
+                    .first(where: { road in road.tgRouteLayer.tgMarkerPolyline! == marker.polyline  })
                 channel.invokeMethod("receiveRoad", arguments: road?.toMap() ?? [])
             }
 
@@ -1028,58 +1065,72 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
         }
     }
+    public func mapView(_ mapView: TGMapView, didSelectFeature feature: [String : String]?, atScreenPosition position: CGPoint) {
+       /* if feature != nil && feature!["type"] == "lines" {
+            print(feature?.description)
+            //
+        }*/
+        if let road = roadPicked {
+            channel.invokeMethod("receiveRoad", arguments: road.toMap())
+            roadPicked = nil
+        }
+    }
 
     public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!, shouldRecognizeRotationGesture location: CGPoint) -> Bool {
         enableRotationGesture
     }
 
-    /*public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!, shouldRecognizePanGesture displacement: CGPoint) -> Bool {
+    public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!, shouldRecognizePanGesture displacement: CGPoint) -> Bool {
 
-        let location = view.coordinate(fromViewPosition: displacement)
-        if let bound = bounds {
+        //let location = view.coordinate(fromViewPosition: displacement)
+        if canTrackUserLocation && userLocation != nil {
+            canSkipFollow = true
+            mapView.notifyGestureDidEnd()
+        }
+        /*if let bound = bounds {
             let contain = bound.toBounds().contains(location: location)
             if !contain {
                 view.notifyGestureDidEnd()
             }
             return contain
-        }
+        }*/
         return true
-    }*/
+    }
 
 
     public func mapView(_ mapView: TGMapView, regionDidChangeAnimated animated: Bool) {
 
-        if !canTrackUserLocation {
-            let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
-            let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.width)
-            let data: [String: Any] = ["center": point, "bounding": bounding]
-            channel.invokeMethod("receiveRegionIsChanging", arguments: data)
-        }
-
+       
+        let point = mapView.coordinate(fromViewPosition: mapView.center).toGeoPoint()
+        let bounding = mapView.getBounds(width: mainView.bounds.width, height: mainView.bounds.width)
+        let data: [String: Any] = ["center": point, "bounding": bounding]
+        channel.invokeMethod("receiveRegionIsChanging", arguments: data)
 
     }
 
 
     public func mapView(_ view: TGMapView!, recognizer: UIGestureRecognizer!,
                         didRecognizeSingleTapGesture location: CGPoint) {
-        if (resultFlutter != nil && methodCall != nil && methodCall?.method == "user#pickPosition") {
-            var iconM = markerIcon
-            let dict: [String: Any] = methodCall?.arguments as! [String: Any]
-            if let icon = dict["icon"] {
-                let iconArg = (icon as! [String: Any])["icon"] as! String
-                iconM = MarkerIconData(image: convertImage(codeImage: iconArg), size: (icon as! [String: Any])["size"] as! [Int])
+       
+        pickedLocationSingleTap = view.coordinate(fromViewPosition: location)
+        if userLocation != nil && cameraUserLocationIsMoving {
+            mapView.notifyGestureDidEnd()
+            cameraUserLocationIsMoving = false
+        }else{
+            if roadManager.roads.isEmpty {
+                mapView.setPickRadius(56)
+                mapView.pickMarker(at: location)
+            }else {
+                
+                var road:RoadFolder? = roadManager.roadContainCLLocationCoordinate2D(location: pickedLocationSingleTap!)
+                if road != nil {
+                    channel.invokeMethod("receiveRoad", arguments: road?.toMap() ?? [String: Any]())
+                }else {
+                    mapView.setPickRadius(56)
+                    //print("pick  x: \(location.x) y: \(location.y)")
+                    mapView.pickMarker(at: location)
+                }
             }
-            let coordinate = view.coordinate(fromViewPosition: location)
-            let geoP = GeoPointMap(icon: iconM!, coordinate: coordinate)
-            geoP.setupMarker(on: view)
-            resultFlutter!(geoP.toMap())
-            methodCall = nil
-        } else {
-            pickedLocationSingleTap = view.coordinate(fromViewPosition: location)
-            mapView.setPickRadius(56)
-            //print("pick  x: \(location.x) y: \(location.y)")
-            mapView.pickMarker(at: location)
-
         }
     }
 
@@ -1097,7 +1148,12 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
         view.fly(to: TGCameraPosition(center: locationMap, zoom: view.zoom + CGFloat(stepZoom), bearing: view.bearing, pitch: view.pitch), withDuration: 0.2)
         return true
     }
-
+    public func mapView(_ mapView: TGMapView, didLoadScene sceneID: Int32, withError sceneError: Error?) {
+        if self.sceneID == nil {
+            channel.invokeMethod("map#init#ios", arguments: true)
+            self.sceneID = sceneID
+        }
+    }
 }
 
 private extension MyMapView {
@@ -1136,7 +1192,7 @@ private extension MyMapView {
 }
 
 extension TGMapView {
-    func updateOrResetScene(customTile: CustomTiles?, urlStyle: String) {
+    func updateOrResetScene(customTile: CustomTiles?, url: URL) {
         var sceneUpdates = [TGSceneUpdate]()
         if customTile != nil {
             sceneUpdates.append(TGSceneUpdate(path: "global.url", value: customTile!.tileURL))
@@ -1145,10 +1201,11 @@ extension TGMapView {
             sceneUpdates.append(TGSceneUpdate(path: "global.max_zoom", value: customTile!.maxZoom))
             sceneUpdates.append(TGSceneUpdate(path: "global.bounds", value: ""))
         }
-        let sceneUrl = URL(string: urlStyle)!
+        
+        //let sceneUrl = URL(string: urlStyle)!
         let markers = markers
         let zoomLevel = zoom
-        loadScene(from: sceneUrl, with: sceneUpdates)
+        loadScene(from: url, with: sceneUpdates)
         for oldMarker in markers {
             let marker = markerAdd()
             marker.stylingString = oldMarker.stylingString

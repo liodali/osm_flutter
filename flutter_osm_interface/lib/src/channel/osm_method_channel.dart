@@ -83,7 +83,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Stream<RoadTapEvent> onRoadMapClickListener(int idMap) {
     return _events(idMap).whereType<RoadTapEvent>();
   }
-
+  @override
+  Stream<IosMapInit> onIosMapInit(int idMap) {
+    return _events(idMap).whereType<IosMapInit>();
+  }
   void setGeoPointHandler(int idMap) async {
     _channels[idMap]!.setMethodCallHandler((call) async {
       switch (call.method) {
@@ -120,6 +123,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
           final result = call.arguments;
           _streamController
               .add(RegionIsChangingEvent(idMap, Region.fromMap(result)));
+          break;
+        case "map#init#ios":
+          final result = call.arguments;
+          _streamController
+              .add(IosMapInit(idMap, result));
           break;
       }
       return true;
@@ -161,7 +169,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<GeoPoint> myLocation(int idMap) async {
     try {
       Map<String, dynamic> map =
-          (await (_channels[idMap]!.invokeMapMethod("user#position")))!;
+          (await _channels[idMap]!.invokeMapMethod("user#position"))!;
       return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
     } on PlatformException catch (e) {
       throw GeoPointException(msg: e.message);
@@ -264,13 +272,16 @@ class MethodChannelOSM extends MobileOSMPlatform {
     int idOSM, {
     bool stopFollowInDrag = false,
     bool disableMarkerRotation = false,
+    Anchor anchor = Anchor.center,
   }) async {
+    final args = <dynamic>[
+      stopFollowInDrag,
+      disableMarkerRotation,
+    ];
+    args.add(anchor.toPlatformMap());
     await _channels[idOSM]?.invokeMethod(
       'trackMe',
-      [
-        stopFollowInDrag,
-        disableMarkerRotation,
-      ],
+      args,
     );
   }
 
@@ -700,6 +711,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       markers.map((e) => e.toMap()).toList(),
     );
   }
+
 }
 
 extension config on MethodChannelOSM {
@@ -720,12 +732,9 @@ extension config on MethodChannelOSM {
     await _channels[idOSM]?.invokeMethod('config#Zoom', args);
   }
 
-  Future<void> initIosMap(int idOSM, GlobalKey key) async {
+  Future<void> initIosMap(int idOSM) async {
     await _channels[idOSM]?.invokeMethod("init#ios#map");
 
-    final icon = await _capturePng(key);
-
-    await _channels[idOSM]?.invokeMethod("setDefaultIOSIcon", icon);
   }
 }
 

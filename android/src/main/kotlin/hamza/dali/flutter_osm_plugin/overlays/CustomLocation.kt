@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Point
 import android.location.Location
 import android.util.Log
+import android.view.MotionEvent
 import hamza.dali.flutter_osm_plugin.VoidCallback
 import hamza.dali.flutter_osm_plugin.utilities.toHashMap
 import io.flutter.plugin.common.MethodChannel
@@ -88,9 +89,14 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
 
 
     override fun onLocationChanged(location: Location?, source: IMyLocationProvider?) {
-        super.onLocationChanged(location, source)
+        //super.onLocationChanged(location, source)
         if (isFollowLocationEnabled && location != null) {
-            val geoPMap = GeoPoint(this.lastFix)
+            val geoPMap = GeoPoint(location)
+            if(mIsFollowing && !enableAutoStop){
+                mMapView.controller.animateTo(geoPMap)
+                enableAutoStop = true
+                Log.d("osm user location","enable auto animate to")
+            }
             if (onChangedLocation != null) {
                 this.onChangedLocation!!(geoPMap)
             }
@@ -123,21 +129,39 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         }
     }
 
+    override fun onTouchEvent(event: MotionEvent?, mapView: MapView?): Boolean {
+        val isSingleFingerDrag =
+            event!!.action == MotionEvent.ACTION_MOVE && event.pointerCount == 1
+        if (enableAutoStop && isSingleFingerDrag){
+            mapView?.controller?.stopAnimation(false)
+            mapView?.animation?.cancel()
+            disableFollowLocation()
+            enableAutoStop = false
+            mIsFollowing = false
+            mapView?.controller?.setCenter(mapView.mapCenter)
+            Log.d("osm user location","stop animate to")
+        }
+        return false
+    }
     override fun draw(canvas: Canvas, pProjection: Projection) {
         mDrawAccuracyEnabled = false
         if (customIcons) {
             setPersonAnchor(0.5f, 0.5f)
+            setDirectionAnchor(0.5f, 0.5f)
         }
         when {
             disableRotateDirection && customIcons -> {
                 if (lastFix != null && isMyLocationEnabled) {
-                    drawOnlyPerson(canvas, pProjection, lastFix)
+                    drawPerson(canvas, pProjection, lastFix)
                 }
             }
-
-            else -> super.draw(canvas, pProjection)
+            else -> {
+                when (lastFix.hasBearing()) {
+                    true -> drawDirection(canvas, pProjection, lastFix)
+                    else -> drawPerson(canvas, pProjection, lastFix)
+                }
+            }
         }
-
     }
 
     override fun onSnapToItem(x: Int, y: Int, snapPoint: Point?, mapView: IMapView?): Boolean {
@@ -171,7 +195,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         }
     }
 
-    private fun drawOnlyPerson(canvas: Canvas, pProjection: Projection, lastFix: Location) {
+    private fun drawPerson(canvas: Canvas, pProjection: Projection, lastFix: Location) {
         //val mGeoPoint = lastFix.toGeoPoint()
         pProjection.toPixels(super.getMyLocation(), mDrawPixel)
         canvas.save()
@@ -181,24 +205,32 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
             -mMapView.mapOrientation, mDrawPixel.x.toFloat(),
             mDrawPixel.y.toFloat()
         )
-        // Draw the bitmap
-        // Draw the bitmap
-        Log.d(
-            "personBitmap location",
-            "${super.getMyLocation()}"
-        )
-        Log.d(
-            "personBitmap",
-            "${mDrawPixel.x},${mDrawPixel.y},${mPersonHotspot.x},${mPersonHotspot.y}"
-        )
-        Log.d(
-            "personBitmap point",
-            "${mDrawPixel.x - mPersonHotspot.x},${mDrawPixel.y - mPersonHotspot.y}"
-        )
+
         canvas.drawBitmap(
             mPersonBitmap, mDrawPixel.x.toFloat() - mPersonHotspot.x,
             mDrawPixel.y.toFloat() - mPersonHotspot.y, mPaint
         )
         canvas.restore()
+    }
+
+    private fun drawDirection(canvas: Canvas, pProjection: Projection, lastFix: Location) {
+        //val mGeoPoint = lastFix.toGeoPoint()
+        pProjection.toPixels(super.getMyLocation(), mDrawPixel)
+        canvas.save()
+        var mapRotation = lastFix.bearing
+        if (mapRotation >= 360.0f) mapRotation -= 360f
+        canvas.rotate(mapRotation, mDrawPixel.x.toFloat(), mDrawPixel.y.toFloat())
+
+
+        canvas.drawBitmap(
+            mDirectionArrowBitmap, mDrawPixel.x.toFloat() - mDirectionArrowCenterX,
+            mDrawPixel.y.toFloat() - mDirectionArrowCenterY, mPaint
+        )
+        canvas.restore()
+    }
+
+    fun setAnchor(anchor: List<Double>) {
+        setPersonAnchor(anchor.first().toFloat(),anchor.last().toFloat())
+        setDirectionAnchor(anchor.first().toFloat(),anchor.last().toFloat())
     }
 }

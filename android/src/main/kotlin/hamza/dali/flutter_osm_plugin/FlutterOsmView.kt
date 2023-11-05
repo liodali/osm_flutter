@@ -215,12 +215,10 @@ class FlutterOsmView(
     private val mapListener by lazy {
         object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
-                if (!isTracking && !isEnabled) {
-                    val hashMap = HashMap<String, Any?>()
-                    hashMap["bounding"] = map?.boundingBox?.toHashMap()
-                    hashMap["center"] = (map?.mapCenter as GeoPoint).toHashMap()
-                    methodChannel.invokeMethod("receiveRegionIsChanging", hashMap)
-                }
+                val hashMap = HashMap<String, Any?>()
+                hashMap["bounding"] = map?.boundingBox?.toHashMap()
+                hashMap["center"] = (map?.mapCenter as GeoPoint).toHashMap()
+                methodChannel.invokeMethod("receiveRegionIsChanging", hashMap)
 
                 return true
             }
@@ -418,9 +416,11 @@ class FlutterOsmView(
                 }
 
                 "trackMe" -> {
-                    val args = call.arguments as List<Boolean>
-                    val enableStopFollow = args.first()
-                    val disableRotation = args.last()
+                    val args = call.arguments as List<*>
+                    val enableStopFollow = args.first() as Boolean
+                    val disableRotation = args[1] as Boolean
+                    val anchor = args.last() as List<Double>
+                    locationNewOverlay.setAnchor(anchor)
                     trackUserLocation(enableStopFollow, disableRotation, result)
                 }
 
@@ -969,6 +969,7 @@ class FlutterOsmView(
         )
 
         map?.invalidate()
+        result.success(200)
     }
 
     private fun addMarker(
@@ -1312,7 +1313,7 @@ class FlutterOsmView(
                     locationNewOverlay.onStopLocation()
                 }
             } catch (e: Exception) {
-                Log.e("OSMF startAdvS error",e.toString())
+                Log.e("OSMF startAdvS error", e.toString())
             }
         }
         map!!.invalidate()
@@ -1876,9 +1877,6 @@ class FlutterOsmView(
         map!!.invalidate()
 
     }
-
-
-
 
 
     override fun getView(): View {

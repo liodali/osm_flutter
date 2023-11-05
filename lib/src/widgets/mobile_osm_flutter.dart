@@ -7,7 +7,7 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
-import '../controller/osm/osm_controller.dart';
+import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
 
 class MobileOsmFlutter extends StatefulWidget {
   final BaseMapController controller;

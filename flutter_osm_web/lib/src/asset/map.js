@@ -21,13 +21,13 @@ async function addPosition(mapId,point, showMarker, animate) {
    return await iframe.contentWindow.changePosition(point, showMarker, animate);
 }
 
-async function addMarker(mapId,point, icon,angle,anchor) {
+async function addMarker(mapId,point,iconSize, icon,angle,anchor) {
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.addMarker(point, icon,angle,anchor);
+   return iframe.contentWindow.addMarker(point,iconSize, icon,angle,anchor);
 }
-async function changeMarker(mapId,oldPoint, point, icon,angle,anchor) {
+async function changeMarker(mapId,oldPoint, point, icon,iconSize,angle,anchor) {
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.changeMarker(oldPoint, point, icon,angle,anchor);
+   return iframe.contentWindow.changeMarker(oldPoint, point, icon,iconSize,angle,anchor);
 }
 
 async function modifyMarker(mapId,point, icon) {
@@ -132,22 +132,22 @@ async function getGeoPoints(mapId) {
    return await iframe.contentWindow.getGeoPoints();
 
 }
-async function setUserLocationIconMarker(mapId,icon){
+async function setUserLocationIconMarker(mapId,icon,size){
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.setUserLocationIconMarker(icon);
+   return iframe.contentWindow.setUserLocationIconMarker(icon,size);
 }
 
-async function enableTracking(mapId,enableStopFollow){
+async function enableTracking(mapId,enableStopFollow,anchorJS){
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.enableTracking(enableStopFollow);
+   return iframe.contentWindow.enableTracking(enableStopFollow,anchorJS);
 }
 async function disableTracking(mapId) {
    var iframe = getIframe(mapId);
    return iframe.contentWindow.disableTracking();
 }
-async function changeIconAdvPickerMarker(mapId,icon) {
+async function changeIconAdvPickerMarker(mapId,icon,size) {
    var iframe = getIframe(mapId);
-   return await iframe.contentWindow.changeIconAdvPickerMarker(icon);
+   return await iframe.contentWindow.changeIconAdvPickerMarker(icon,size);
 }
 async function advSearchLocation(mapId) {
    var iframe = getIframe(mapId);
@@ -194,10 +194,10 @@ async function removeRoad(mapId,roadKey){
    var iframe = getIframe(mapId);
    return await iframe.contentWindow.removeRoad(roadKey);
 }
-var osmLinks = new Map();
 function setUpMap(mapId){
    const osmJS = new OSMJS(mapId);
    osmLinks.set(mapId,osmJS);
+   console.log("getIframe")
    var innerWindow = getIframe(mapId).contentWindow;
    innerWindow.isMapReady = (isReady)=>{
       osmJS.isMapReady(isReady)
@@ -206,39 +206,11 @@ function setUpMap(mapId){
    innerWindow.onMapSingleTapClicked =(lon, lat)=>{ osmLinks.get(mapId).onMapSingleTapClicked(lon, lat) };
    innerWindow.onRegionChanged = (box, center)=>{ osmLinks.get(mapId).onRegionChanged(box, center) };
    innerWindow.onRoadClicked = (roadKey) => { osmLinks.get(mapId).onRoadClicked(roadKey) };
+   innerWindow.onUserPositionListener = (lon, lat) => { osmLinks.get(mapId).onUserPositionListener(lon, lat) };
    return 200;
 }
 function getIframe(mapId){
    var iframe = document.getElementById("osm_map_"+mapId).firstChild;
    return iframe;
 }
-class OSMJS {
-   constructor(mapId) {
-      this.mapId = mapId;
-    }
-   /*
-   * shared dart function that called from js
-   */
-  isMapReady(isReady) {
-   initMapFinish(isReady);
-  }
-  onGeoPointClicked(lon, lat) {
-   onStaticGeoPointClicked(lon, lat);
-  }
-  onMapSingleTapClicked(lon, lat) {
-   onMapSingleTapListener(lon, lat);
-  }
-  onRegionChanged(box, center) {
-   onRegionChangedListener(box.north, box.east, box.south, box.west, center.lon, center.lat);
-  }
-  onRoadClicked(roadKey) {
-   onRoadListener(roadKey);
-  }
-}
-
-
-
-
-
-
 

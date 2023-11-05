@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 
-import '../types/types.dart';
+import 'package:flutter_osm_interface/src/types/types.dart';
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
@@ -188,6 +188,13 @@ extension ExtTileUrls on TileURLs {
       return toWeb();
     }
     throw UnsupportedError("platform not supported yet");
+  }
+}
+
+extension ExtAnchor on Anchor {
+  dynamic toPlatformMap() {
+    if (Platform.isIOS) return toMapIOS();
+    return toMapAndroid();
   }
 }
 

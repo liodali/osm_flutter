@@ -72,7 +72,7 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
   GlobalKey get personIconMarkerKey => widget.globalKeys[6];
 
   GlobalKey get arrowDirectionMarkerKey => widget.globalKeys[7];
-  late Key keyWidget = GlobalKey();
+  final keyWidget = GlobalKey();
 
   @override
   void initState() {
@@ -103,7 +103,7 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
     controller.createHtml();
     //controller.addObserver(this);
     (OSMPlatform.instance as FlutterOsmPluginWeb).setWebMapController(
-      id,
+      mapId,
       controller,
     );
     (widget.controller as BaseMapController).setBaseOSMController(controller);

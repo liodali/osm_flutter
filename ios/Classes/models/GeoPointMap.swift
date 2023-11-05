@@ -10,9 +10,35 @@ import TangramMap
 
 
 typealias GeoPoint = [String: Double]
+
+
+struct MarkerIconData {
+    let image: UIImage?
+    var size: [Int]? = nil
+}
+
+struct CartesianPoint {
+  static var zero: CartesianPoint = CartesianPoint(x: 0, y: 0)
+
+  var x: Double
+  var y: Double
+}
 struct AnchorGeoPoint {
     var anchor: AnchorType = AnchorType.center
     var offset:(Int,Int)? = nil
+    
+    init(anchor: AnchorType, offset: (Int, Int)? = nil) {
+        self.anchor = anchor
+        self.offset = offset
+    }
+    init(_ anchorStr:String, offset: (Int, Int)? = nil){
+        anchor = AnchorType.fromString(anchorStr: anchorStr)
+        self.offset = offset
+    }
+    init(_ anchorStr:String){
+        anchor = AnchorType.fromString(anchorStr: anchorStr)
+        self.offset = nil
+    }
 }
 
 protocol GenericGeoPoint {
@@ -75,7 +101,7 @@ class MyLocationMarker: GeoPointMap {
     let  defaultSizeMarker = [48, 48]
     var userLocationMarkerType: UserLocationMarkerType = UserLocationMarkerType.person
     var angle: Int = 0
-
+    static var defaultAnchorStr:String = AnchorType.center.rawValue
     init(
             coordinate: CLLocationCoordinate2D,
             personIcon: MarkerIconData? = nil,
@@ -111,6 +137,15 @@ class MyLocationMarker: GeoPointMap {
         }
         self.markerStyle.order = 2000
     }
+    
+    public func setAnchorLocation(_ anchor:String){
+        self.markerStyle.anchor = AnchorType.fromString(anchorStr: anchor)
+        self.markerStyle.offset = nil
+        if let marker {
+            updateUserLocationStyle(for: markerStyle)
+        }
+    }
+    
 }
 
 class StaticGeoPMarker: GeoPointMap {

@@ -1,4 +1,4 @@
-import '../types/types.dart';
+import 'package:flutter_osm_interface/src/types/types.dart';
 
 abstract class EventOSM<T> {
   /// The ID of the Map this event is associated to.
@@ -53,4 +53,7 @@ class UserLocationEvent extends EventOSM<GeoPoint> {
 
 class RegionIsChangingEvent extends EventOSM<Region> {
   RegionIsChangingEvent(int mapId, Region region) : super(mapId, region);
+}
+class IosMapInit extends EventOSM<bool> {
+  IosMapInit(int mapId, bool loaded) : super(mapId, loaded);
 }

@@ -154,6 +154,7 @@ abstract class IBaseOSMController {
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableMarkerRotation,
+    Anchor anchor,
   });
 
   /// disabled tracking user location

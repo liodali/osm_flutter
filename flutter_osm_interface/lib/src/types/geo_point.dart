@@ -2,7 +2,15 @@ import 'dart:math';
 
 import 'package:flutter_osm_interface/src/common/utilities.dart';
 
-///[GeoPoint]:class contain longitude and latitude of geographic position
+///[GeoPoint]
+///
+/// illustrate geographique location thats contain longitude and latitude position
+///
+/// [GeoPoint] accept Map that has two keys with values which keys should be has names as lat,lon
+///
+/// [GeoPoint] accept String where in should be in format lat,lon example
+///  ``` GeoPoint('8.42,12.435') ```
+///
 /// [longitude] : (double)
 /// [latitude] : (double)
 class GeoPoint {
@@ -14,13 +22,15 @@ class GeoPoint {
     required this.longitude,
   });
 
-  GeoPoint.fromMap(Map m)
-      : this.latitude = m["lat"],
-        this.longitude = m["lon"];
+  GeoPoint.fromMap(
+    Map m,
+  )   : latitude = double.parse(m["lat"].toString()),
+        longitude = double.parse(m["lon"].toString());
 
-  GeoPoint.fromString(String m)
-      : this.latitude = double.parse(m.split(",").first),
-        this.longitude = double.parse(m.split(",").last);
+  GeoPoint.fromString(
+    String m,
+  )   : latitude = double.parse(m.split(",").first),
+        longitude = double.parse(m.split(",").last);
 
   Map<String, double> toMap() {
     return {

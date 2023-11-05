@@ -14,7 +14,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.5
   flutter_hooks: ^0.18.5+1
-  osm_flutter_hooks: ^1.4.0
+  #osm_flutter_hooks: ^1.4.0
   pointer_interceptor: ^0.9.3+3
 dev_dependencies:
   flutter_test:

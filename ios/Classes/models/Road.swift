@@ -5,9 +5,10 @@
 import Foundation
 import MapKit
 import TangramMap
+import Polyline
 
 
-struct RoadInformation {
+struct RoadInformation: Equatable {
     let distance: Double
     let seconds: Double
     let encodedRoute: String
@@ -65,10 +66,19 @@ struct RoadConfig {
     var roadData: RoadData
     var roadType: RoadType
 }
-
-struct RoadFolder {
+struct TGPolyline : Equatable {
+    let dataLayer:TGMapData?
+    let tgPolyline:TGGeoPolyline
+    let coordinates:[CLLocationCoordinate2D]
+}
+struct TGRoute : Equatable {
+    let tgPolyline: TGPolyline?
+    let tgMarkerPolyline: TGMarker?
+}
+struct RoadFolder : Equatable {
     let id: String
-    var tgRouteMarker: TGMarker
+    //var tgRouteMarker: TGMarker
+    var tgRouteLayer: TGRoute
     let roadInformation: RoadInformation?
 }
 

@@ -42,7 +42,7 @@ class OSMFlutter extends StatefulWidget {
 
 class _OSMFlutterState extends State<OSMFlutter> {
   ValueNotifier<Widget?> dynamicMarkerWidgetNotifier = ValueNotifier(null);
-  ValueNotifier<bool> mapIsReadyListener = ValueNotifier(false);
+  final ValueNotifier<bool> mapIsReadyListener = ValueNotifier(false);
 
   //_OsmCreatedCallback _osmCreatedCallback;
   late GlobalKey defaultMarkerKey,
@@ -89,18 +89,12 @@ class _OSMFlutterState extends State<OSMFlutter> {
   @override
   void didUpdateWidget(covariant OSMFlutter oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // if (!kIsWeb) {
-    //   if (this.widget != oldWidget && Platform.isAndroid) {
-    //     widget.controller.setValueListenerMapIsReady(false);
-    //     mapIsReadyListener.value = false;
-    //   }
-    // }
   }
 
   @override
   void dispose() {
-    super.dispose();
     widget.controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -130,7 +124,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   children: [
                     Container(
                       color: Colors.white,
-                      child: buildWidget(
+                      child: OSMMap(
                         controller: widget.controller,
                         userTrackingOption: widget.osmOption.userTrackingOption,
                         onGeoPointClicked: widget.onGeoPointClicked,
@@ -186,7 +180,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                     ),
                   ],
                 )
-              : buildWidget(
+              : OSMMap(
                   controller: widget.controller,
                   userTrackingOption: widget.osmOption.userTrackingOption,
                   onGeoPointClicked: widget.onGeoPointClicked,

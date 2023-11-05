@@ -1,10 +1,11 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:routing_client_dart/routing_client_dart.dart';
 
-import '../interop/models/bounding_box_js.dart';
-import '../interop/models/geo_point_js.dart';
+import 'package:flutter_osm_web/src/interop/models/bounding_box_js.dart';
+import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
 
 extension ExtGeoPoint on GeoPoint {
   GeoPointJs toGeoJS() {
@@ -58,6 +59,22 @@ extension ExtListLngLat on List<LngLat> {
   }
 }
 
+extension ExtSize on Size? {
+  SizeJs toSizeJS() {
+    return SizeJs(
+      width: this?.width ?? 32,
+      height: this?.height ?? 32,
+    );
+  }
+}
+
+extension ExtGlobelKey on GlobalKey<State<StatefulWidget>> {
+  SizeJs toSizeJS() {
+    final size = currentContext?.size;
+    return size.toSizeJS();
+  }
+}
+
 extension ExtBoundingBox on BoundingBox {
   BoundingBoxJs toBoundsJS() {
     return BoundingBoxJs(
@@ -80,10 +97,10 @@ extension ExtListGeoPoints on List<GeoPoint> {
 }
 
 extension ExtAnchor on IconAnchor {
-  IconAnchorJS toAnchorJS() {
-    return IconAnchorJS(
-      x: anchor.value.$1 * 32,
-      y: anchor.value.$2 * 32,
+  
+  IconAnchorJS get toAnchorJS =>IconAnchorJS(
+      x:  anchor.value.$1,
+      y: anchor.value.$2,
       offset: offset != null
           ? IconOffsetAnchorJS(
               x: offset!.x,
@@ -91,5 +108,4 @@ extension ExtAnchor on IconAnchor {
             )
           : null,
     );
-  }
 }

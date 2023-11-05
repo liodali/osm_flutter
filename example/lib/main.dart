@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_plugin_example/src/home/main_example.dart';
 import 'package:flutter_osm_plugin_example/src/search_example.dart';
 import 'package:flutter_osm_plugin_example/src/simple_example_hook.dart';
 
@@ -21,26 +22,28 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData.light(useMaterial3: true),
       initialRoute: "/home",
       routes: {
-        "/home": (ctx) => MainExample(),
-        "/simple": (ctx) => SimpleExample(),
+        "/home": (context) => MainPageExample(),
+        "/old-home": (context) => OldMainExample(),
+        "/hook": (context) => SimpleHookExample(),
         //"/adv-home": (ctx) => AdvandedMainExample(),
         // "/nav": (ctx) => MyHomeNavigationPage(
         //       map: Container(),
         // ),
-        "/second": (ctx) => Scaffold(
+        "/second": (context) => Scaffold(
               body: Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.popAndPushNamed(ctx, "/home");
+                    Navigator.popAndPushNamed(context, "/home");
                   },
                   child: Text("another page"),
                 ),
               ),
             ),
-        "/picker-result": (ctx) => LocationAppExample(),
-        "/search": (ctx) => SearchPage(),
+        "/picker-result": (context) => LocationAppExample(),
+        "/search": (context) => SearchPage(),
       },
     );
   }

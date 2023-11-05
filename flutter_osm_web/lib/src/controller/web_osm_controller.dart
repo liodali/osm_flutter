@@ -1,13 +1,15 @@
 import 'dart:html' as html;
 import 'dart:math';
-import 'dart:ui' as ui;
+import 'dart:ui_web' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 import 'package:flutter_osm_web/src/channel/method_channel_web.dart';
 import 'package:flutter_osm_web/src/common/extensions.dart';
+import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
 import 'package:flutter_osm_web/src/interop/osm_interop.dart' as interop;
 import 'package:flutter_osm_web/src/mixin_web.dart';
 import 'package:flutter_osm_web/src/osm_web.dart';
@@ -29,43 +31,52 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       ..style.height = '100%';
     // ui.platformViewRegistry.registerViewFactory(
     //     FlutterOsmPluginWeb.getViewType(), (int viewId) => _div);
+    mapIdMixin = mapId;
     ui.platformViewRegistry.registerViewFactory(
         FlutterOsmPluginWeb.getViewType(mapId), (int viewId) {
       debugPrint("viewId : $viewId");
-      mapId = viewId;
-      _div.id = 'osm_map_$viewId';
+      _div.id = 'osm_map_$mapIdMixin';
+      final idFrame = "frame_map_$mapIdMixin";
+      debugPrint(idFrame);
+      _frame = html.IFrameElement()
+        ..id = idFrame
+        ..src =
+            "${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/map.html"
+        ..style.width = '100%'
+        ..style.height = '100%';
+      _div.append(_frame!);
       return _div;
     });
   }
 
-  //WebOsmController._(OsmWebWidgetState _osmWebFlutterState) {}
-
   void init(OsmWebWidgetState osmWebFlutterState, int idMap) {
     debugPrint("idMap $idMap");
-    OSMPlatform.instance.init(idMap);
+    OSMPlatform.instance.init(mapIdMixin);
+    //mapIdMixin = idMap;
     this.setWidgetState(osmWebFlutterState);
-    mapIdMixin = idMap;
-    channel = MethodChannel('${FlutterOsmPluginWeb.getViewType(idMap)}');
-    debugPrint("in init _mapId $mapId");
+    channel = MethodChannel('${FlutterOsmPluginWeb.getViewType(mapIdMixin)}');
+    debugPrint("in init _mapId $mapIdMixin");
   }
 
   void createHtml() {
     final body = html.window.document.querySelector('body')!;
-    _frame = html.IFrameElement()
-      ..id = "frame_map_$mapId"
-      ..src = "packages/flutter_osm_web/src/asset/map.html"
-      ..style.width = '100%'
-      ..style.height = '100%';
 
+    debugPrint("div added iframe");
+    if (html.window.document.getElementById("osm_interop") == null) {
+      body.append(html.ScriptElement()
+        ..id = "osm_interop"
+        ..src =
+            '${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/osm_interop.js'
+        ..type = 'text/javascript');
+    }
     if (html.window.document.getElementById("mapScript") == null) {
       mapScript = html.ScriptElement()
         ..id = "mapScript"
-        ..src = 'packages/flutter_osm_web/src/asset/map.js'
+        ..src =
+            '${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/map.js'
         ..type = 'text/javascript';
       body.append(mapScript!);
     }
-
-    _div.append(_frame!);
   }
 
   // The Flutter widget that contains the rendered Map.
@@ -75,12 +86,17 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   html.ScriptElement? mapScript;
 
   void dispose() {
-    _div.remove();
+    debugPrint("delete frame_map_$mapIdMixin");
+    debugPrint("delete osm_map_$mapIdMixin");
+    html.window.document.getElementById("frame_map_$mapIdMixin")?.remove();
+    html.window.document.getElementById("osm_map_$mapIdMixin")?.remove();
+    //_div.remove();
+    _frame?.remove();
     _frame = null;
-    mapScript?.remove();
-    webPlatform.close(mapId);
+    //mapScript?.remove();
+    webPlatform.close(mapIdMixin);
     channel = null;
-    webPlatform.mapsController.remove(this);
+    webPlatform.mapsController.removeWhere((key, value) => key == mapIdMixin);
   }
 
   @override
@@ -88,24 +104,24 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     GeoPoint? initPosition,
     UserTrackingOption? userPositionOption,
   }) async {
-    interop.setUpMap(mapId);
+    interop.setUpMap(mapIdMixin);
     assert((initPosition != null) ^ (userPositionOption != null));
 
-    webPlatform.onLongPressMapClickListener(mapId).listen((event) {
+    webPlatform.onLongPressMapClickListener(mapIdMixin).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapLongTapping(event.value);
       osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
         osmMixin.onLongTap(event.value);
       });
     });
-    webPlatform.onSinglePressMapClickListener(mapId).listen((event) {
+    webPlatform.onSinglePressMapClickListener(mapIdMixin).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
       osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
         osmMixin.onSingleTap(event.value);
       });
     });
-    webPlatform.onMapIsReady(mapId).listen((event) async {
+    webPlatform.onMapIsReady(mapIdMixin).listen((event) async {
       osmWebFlutterState.widget.mapIsReadyListener.value = event.value;
       osmWebFlutterState.widget.controller
           .setValueListenerMapIsReady(event.value);
@@ -121,15 +137,14 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         _androidOSMLifecycle!.mapIsReady(event.value);
       }
     });
-    webPlatform.onRegionIsChangingListener(mapId).listen((event) {
-      print(event.value);
+    webPlatform.onRegionIsChangingListener(mapIdMixin).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
       osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
         osmMixin.onRegionChanged(event.value);
       });
     });
-    webPlatform.onRoadMapClickListener(mapId).listen((event) {
+    webPlatform.onRoadMapClickListener(mapIdMixin).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapRoadTapping(event.value);
       osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
@@ -138,18 +153,18 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     });
 
     if (osmWebFlutterState.widget.onGeoPointClicked != null) {
-      webPlatform.onGeoPointClickListener(mapId).listen((event) {
+      webPlatform.onGeoPointClickListener(mapIdMixin).listen((event) {
         osmWebFlutterState.widget.onGeoPointClicked!(event.value);
       });
     }
-    if (osmWebFlutterState.widget.onLocationChanged != null) {
-      webPlatform.onUserPositionListener(mapId).listen((event) {
+    webPlatform.onUserPositionListener(mapIdMixin).listen((event) {
+      if (osmWebFlutterState.widget.onLocationChanged != null) {
         osmWebFlutterState.widget.onLocationChanged!(event.value);
+      }
+      osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+        osmMixin.onLocationChanged(event.value);
       });
-      /* this._osmController.myLocationListener(widget.onLocationChanged, (err) {
-          print(err);
-        });*/
-    }
+    });
 
     if (osmWebFlutterState.widget.markerOption?.defaultMarker != null) {
       await changeHomeIconMarker(osmWebFlutterState.defaultMarkerKey!);
@@ -172,7 +187,8 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     if (osmWebFlutterState.widget.markerOption?.advancedPickerMarker != null) {
       if (osmWebFlutterState.advancedPickerMarker?.currentContext != null) {
         await changeIconAdvPickerMarker(
-            osmWebFlutterState.advancedPickerMarker!);
+          osmWebFlutterState.advancedPickerMarker!,
+        );
       }
     }
     if (osmWebFlutterState.widget.markerOption?.advancedPickerMarker == null) {
@@ -227,7 +243,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
           (await capturePng(osmWebFlutterState.dynamicMarkerKey!))
               .convertToString();
       await interop.setIconStaticGeoPoints(
-        mapId,
+        mapIdMixin,
         id,
         base64Icon,
       );
@@ -252,13 +268,15 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
     await Future.delayed(duration, () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
+      var sizeIcon = osmWebFlutterState.dynamicMarkerKey!.currentContext?.size;
       var anchor = null;
       if (iconAnchor != null) {
-        anchor = iconAnchor.toAnchorJS();
+        anchor = iconAnchor.toAnchorJS;
       }
       interop.addMarker(
-        mapId,
+        mapIdMixin,
         p.toGeoJS(),
+        sizeIcon.toSizeJS(),
         icon.convertToString(),
         angle != null ? (angle * (180 / pi)) : 0,
         anchor,
@@ -272,7 +290,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   ) async {
     final base64Icon = (await capturePng(key)).convertToString();
     await interop.setIconStaticGeoPoints(
-      mapId,
+      mapIdMixin,
       id,
       base64Icon,
     );
@@ -284,7 +302,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     await Future.delayed(duration, () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
       final jsP = point.toGeoJS();
-      await interop.modifyMarker(mapId, jsP, icon.convertToString());
+      await interop.modifyMarker(mapIdMixin, jsP, icon.convertToString());
     });
   }
 
@@ -293,7 +311,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = homeMarker;
     await Future.delayed(duration, () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
-      await interop.setDefaultIcon(mapId, icon.convertToString());
+      await interop.setDefaultIcon(mapIdMixin, icon.convertToString());
     });
   }
 
@@ -313,19 +331,23 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     }
     await Future.delayed(Duration(milliseconds: duration), () async {
       var icon = null;
+      SizeJs? iconSize;
       if (newMarkerIcon != null) {
         final iconPNG = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
         icon = iconPNG.convertToString();
+        final size = osmWebFlutterState.dynamicMarkerKey?.currentContext?.size;
+        iconSize = size.toSizeJS();
       }
       debugPrint(
           "changedMarker:angle:${angle != null ? (angle * (180 / pi)) : 0}");
       await interop.changeMarker(
-        mapId,
+        mapIdMixin,
         oldLocation.toGeoJS(),
         newLocation.toGeoJS(),
         icon,
+        iconSize,
         angle != null ? (angle * (180 / pi)) : 0,
-        iconAnchor?.toAnchorJS() ?? null,
+        iconAnchor?.toAnchorJS,
       );
     });
   }
@@ -336,24 +358,25 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     try {
       base64 = (await capturePng(key)).convertToString();
     } finally {
-      await interop.changeIconAdvPickerMarker(mapId, base64, mapId);
+      final iconSize = key.toSizeJS();
+      await interop.changeIconAdvPickerMarker(mapIdMixin, base64, iconSize);
     }
   }
 
   @override
   Future<void> advancedPositionPicker() async {
-    await interop.advSearchLocation(mapId);
+    await interop.advSearchLocation(mapIdMixin);
   }
 
   @override
   Future<void> cancelAdvancedPositionPicker() async {
-    await interop.cancelAdvSearchLocation(mapId);
+    await interop.cancelAdvSearchLocation(mapIdMixin);
   }
 
   Future<GeoPoint> selectAdvancedPositionPicker() async {
     Map<String, dynamic>? value =
         await html.promiseToFutureAsMap(interop.centerMap(
-      mapId,
+      mapIdMixin,
     ));
     if (value!.containsKey("error")) {
       throw Exception(value["message"]);
@@ -369,7 +392,8 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       GlobalKey<State<StatefulWidget>> personIconMarkerKey) async {
     if (personIconMarkerKey.currentContext != null) {
       final iconPNG = (await capturePng(personIconMarkerKey)).convertToString();
-      interop.setUserLocationIconMarker(mapId, iconPNG);
+      final size = personIconMarkerKey.toSizeJS();
+      interop.setUserLocationIconMarker(mapIdMixin, iconPNG, size);
     }
   }
 }

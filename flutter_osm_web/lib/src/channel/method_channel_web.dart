@@ -18,8 +18,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
 
   final Map<int, MethodChannel> _channels = {};
 
-  static String getViewType(int mapId) =>
-      viewType + "_$mapId"; // "${viewType}_$mapId";
+  static String getViewType(int mapId) => "${viewType}_$mapId";
 
   Map<int, WebOsmController> mapsController = <int, WebOsmController>{};
 
@@ -66,7 +65,6 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
 
   @override
   Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap) {
-    print("we listen on $idMap");
     return _events(idMap).whereType<RegionIsChangingEvent>();
   }
 
@@ -135,6 +133,11 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
             _streamController
                 .add(RoadTapEvent(idOSM, map!.roadsWebCache[roadKey]!));
           }
+          break;
+        case "receiveUserLocation":
+          final result = call.arguments;
+          _streamController
+              .add(UserLocationEvent(idOSM, GeoPoint.fromString(result)));
           break;
         default:
           throw PlatformException(

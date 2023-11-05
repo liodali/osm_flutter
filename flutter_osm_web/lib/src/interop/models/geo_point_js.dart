@@ -13,7 +13,16 @@ class GeoPointJs {
   // Must have an unnamed factory constructor with named arguments.
   external factory GeoPointJs({num lon, num lat});
 }
+@JS()
+@anonymous
+class SizeJs {
+  external num get width;
 
+  external num get height;
+
+  // Must have an unnamed factory constructor with named arguments.
+  external factory SizeJs({num width, num height});
+}
 @JS()
 @anonymous
 class GeoPointWithOrientationJs {
