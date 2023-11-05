@@ -1,3 +1,8 @@
+### 0.70.0 : 
+* add anchor to UserLocation
+* add onLocationChanged to osmMixin
+* fix bugs
+* some improvement for web side
 ### 0.60.5 : 
 * fix bug #452
 ### 0.60.4 :

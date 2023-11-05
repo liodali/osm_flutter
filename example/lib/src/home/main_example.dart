@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
@@ -122,6 +123,15 @@ class _MainState extends State<Main> with OSMMixinObserver {
             ),
           )
         ],
+        if (!kIsWeb) ...[
+          Positioned(
+            top: 102,
+            right: 15,
+            child: MapRotation(
+              controller: controller,
+            ),
+          )
+        ],
         Positioned(
           top: kIsWeb
               ? 26
@@ -199,6 +209,46 @@ class ZoomNavigation extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class MapRotation extends HookWidget {
+  const MapRotation({
+    super.key,
+    required this.controller,
+  });
+  final MapController controller;
+  @override
+  Widget build(BuildContext context) {
+    final angle = useValueNotifier(0.0);
+    return FloatingActionButton(
+      key: UniqueKey(),
+      onPressed: () async {
+        angle.value += 30;
+        if (angle.value > 360) {
+          angle.value = 0;
+        }
+        await controller.rotateMapCamera(angle.value);
+      },
+      heroTag: "RotationMapFab",
+      elevation: 1,
+      mini: true,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: ValueListenableBuilder(
+          valueListenable: angle,
+          builder: (ctx, angle, child) {
+            return AnimatedRotation(
+              turns: angle == 0 ? 0 : 360 / angle,
+              duration: Duration(milliseconds: 250),
+              child: child!,
+            );
+          },
+          child: Image.asset("asset/compass.png"),
+        ),
+      ),
+      backgroundColor: Colors.white,
     );
   }
 }
