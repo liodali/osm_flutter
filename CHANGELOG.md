@@ -1,4 +1,6 @@
-### 0.70.0 : 
+### 0.70.1 :
+* update dependencies, fix namespaces for gradle 8.0
+### 0.70.0 :
 * add anchor to UserLocation
 * add onLocationChanged to osmMixin
 * fix bugs
