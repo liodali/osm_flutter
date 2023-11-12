@@ -1,5 +1,9 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/liodali/osm_flutter/0.70.1/.github/OSM%20Flutter%20Logo.png?sanitize=true" width="500px">
+</p>
+
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.70.0-orange)   
+![pub](https://img.shields.io/badge/pub-v0.70.1-orange)   
 
 
 ## Platform Support
@@ -45,7 +49,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.70.0
+      flutter_osm_plugin: ^0.70.1
 
 
 
