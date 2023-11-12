@@ -25,10 +25,11 @@ rootProject.allprojects {
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
+//apply plugin: 'kotlin-kapt'
 
 android {
     compileSdk 33
+    namespace "hamza.dali.flutter_osm_plugin"
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -51,9 +52,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    /*kotlinOptions {
+    kotlinOptions {
         jvmTarget = '1.8'
-    }*/
+    }
 }
 dependencies {
 
