@@ -352,7 +352,7 @@ mixin WebMixin {
           config.startPoint,
           config.destinationPoint,
           interestPoints: config.intersectPoints,
-          roadOption: commonRoadOption,
+          roadOption: config.roadOptionConfiguration ?? commonRoadOption,
         ),
       );
     });
