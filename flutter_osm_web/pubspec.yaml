@@ -14,7 +14,7 @@ dependencies:
     sdk: flutter
   js: ^0.6.4
   stream_transform: ^2.0.0
-  routing_client_dart: ^0.4.2
+  routing_client_dart: ^0.5.3
   flutter_osm_interface: #^0.7.0
       path: ../flutter_osm_interface/
 dev_dependencies:
