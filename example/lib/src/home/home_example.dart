@@ -883,8 +883,8 @@ class RoadTypeChoiceWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 96,
-      child: WillPopScope(
-        onWillPop: () async => false,
+      child: PopScope(
+        canPop: false,
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Container(
@@ -958,8 +958,8 @@ class OSMLayersChoiceWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => false,
+    return PopScope(
+        canPop: false,
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Container(
