@@ -4,7 +4,7 @@ import 'package:flutter_osm_web/flutter_osm_web.dart';
 import 'package:flutter_osm_web/src/controller/web_osm_controller.dart';
 
 class OsmWebWidget extends StatefulWidget {
-  final IBaseMapController controller;
+  final BaseMapController controller;
 
   final UserTrackingOption? userTrackingOption;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -106,7 +106,7 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
       mapId,
       controller,
     );
-    (widget.controller as BaseMapController).setBaseOSMController(controller);
+    widget.controller.setBaseOSMController(controller);
     widget.controller.init();
   }
 }
