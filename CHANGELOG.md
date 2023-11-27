@@ -1,3 +1,5 @@
+### 0.70.3 :
+* fix bug #480
 ### 0.70.2 :
 * fix bugs (thanks for @JobiJoba)
 ### 0.70.1 :
