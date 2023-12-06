@@ -610,10 +610,6 @@ class FlutterOsmView(
     }
 
     private fun getUserLocation(result: MethodChannel.Result, callback: VoidCallback? = null) {
-
-        if (!locationNewOverlay.isMyLocationEnabled) {
-            locationNewOverlay.enableMyLocation()
-        }
         locationNewOverlay.currentUserPosition(
             result, callback, scope!!
         )
