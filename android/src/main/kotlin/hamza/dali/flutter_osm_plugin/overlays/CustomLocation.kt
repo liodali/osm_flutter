@@ -156,9 +156,11 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
                 }
             }
             else -> {
-                when (lastFix.hasBearing()) {
-                    true -> drawDirection(canvas, pProjection, lastFix)
-                    else -> drawPerson(canvas, pProjection, lastFix)
+                if (lastFix != null) {
+                    when (lastFix.hasBearing()) {
+                        true -> drawDirection(canvas, pProjection, lastFix)
+                        else -> drawPerson(canvas, pProjection, lastFix)
+                    }
                 }
             }
         }
