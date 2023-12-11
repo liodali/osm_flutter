@@ -106,7 +106,11 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   }) async {
     interop.setUpMap(mapIdMixin);
     assert((initPosition != null) ^ (userPositionOption != null));
-
+    if (osmWebFlutterState.widget.controller.customTile != null) {
+      await changeTileLayer(
+        tileLayer: osmWebFlutterState.widget.controller.customTile,
+      );
+    }
     webPlatform.onLongPressMapClickListener(mapIdMixin).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapLongTapping(event.value);

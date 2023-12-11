@@ -168,7 +168,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             result(200)
             break
         case "change#tile":
-            let args: [String: Any]? = call.arguments as! [String: Any]?
+            let args = call.arguments as! [String: Any]?
             let url =  if (fromAsset){
                 Bundle.main.url(forAuxiliaryExecutable: dynamicOSMPath!)!
             } else {

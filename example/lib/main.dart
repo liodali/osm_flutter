@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
               body: Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.popAndPushNamed(context, "/home");
+                    Navigator.pushNamed(context, "/old-home");
                   },
                   child: Text("another page"),
                 ),

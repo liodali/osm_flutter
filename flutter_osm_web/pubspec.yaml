@@ -1,7 +1,7 @@
 name: flutter_osm_web
 description: flutter web interface for flutter osm contain web channel and web api
-version: 0.6.0
-homepage:
+version: 0.6.2
+homepage: https://github.com/liodali/osm_flutter
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -12,11 +12,11 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
-  js: ^0.6.4
-  stream_transform: ^2.0.0
-  routing_client_dart: ^0.4.2
-  flutter_osm_interface: #^0.7.0
-      path: ../flutter_osm_interface/
+  js: ^0.6.7
+  stream_transform: ^2.1.0
+  routing_client_dart: ^0.5.3
+  flutter_osm_interface: ^0.7.0
+    #path: ../flutter_osm_interface/
 dev_dependencies:
   flutter_test:
     sdk: flutter
