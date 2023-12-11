@@ -153,10 +153,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                           personIconMarkerKey,
                           arrowDirectionMarkerKey,
                         ],
-                        stepZoom: widget.osmOption.zoomOption.stepZoom,
-                        initZoom: widget.osmOption.zoomOption.initZoom,
-                        minZoomLevel: widget.osmOption.zoomOption.minZoomLevel,
-                        maxZoomLevel: widget.osmOption.zoomOption.maxZoomLevel,
+                        zoomOption: widget.osmOption.zoomOption,
                         userLocationMarker: widget.osmOption.userLocationMarker,
                         onMapIsReady: widget.onMapIsReady,
                         enableRotationByGesture:
@@ -207,10 +204,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                     personIconMarkerKey,
                     arrowDirectionMarkerKey,
                   ],
-                  stepZoom: widget.osmOption.zoomOption.stepZoom,
-                  initZoom: widget.osmOption.zoomOption.initZoom,
-                  minZoomLevel: widget.osmOption.zoomOption.minZoomLevel,
-                  maxZoomLevel: widget.osmOption.zoomOption.maxZoomLevel,
+                  zoomOption: widget.osmOption.zoomOption,
                   userLocationMarker: widget.osmOption.userLocationMarker,
                   onMapIsReady: widget.onMapIsReady,
                   enableRotationByGesture:
