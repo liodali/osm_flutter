@@ -20,9 +20,17 @@ Pod::Spec.new do |s|
   s.dependency 'Alamofire'
   s.dependency 'Polyline'
   s.dependency 'Yams'
-  s.platform = :ios, '12.0'
+  s.dependency 'OSMFlutterFramework'
+  #s.source = { :git => 'https://github.com/liodali/OSMMapCoreIOSFramework.git', :tag => '0.0.1' }
+
+  #s.vendored_frameworks = 'Frameworks/OSMFlutterFramework.xcframework'
+  #s.platform = :ios, '12.0'
+  #s.xcconfig = { 'OTHER_LDFLAGS' => '-framework OSMFlutterFramework' }
+  #s.preserve_paths = 'OSMFlutterFramework.xcframework/**/*'
+  #s.dependency 'OSMFlutterFramework'
+
 
   # Flutter.framework does not contain a i386 slice. Only x86_64 simulators are supported.
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64' }
+  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'VALID_ARCHS[sdk=iphonesimulator*]' => 'i386' }
   s.swift_version = '5.0'
 end

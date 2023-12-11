@@ -55,7 +55,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
     var stepZoom = 1.0
     var initZoom = 10.0
     var customTiles: [String: Any]? = nil
-    var oldCustomTile: CustomTiles? = nil
+    var oldCustomTile: MyCustomTiles? = nil
     var bounds: [Double]? = nil
     var enableStopFollowInDrag: Bool = false
     var disableRotation: Bool = false
@@ -132,7 +132,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
             //var urlStyle = "https://github.com/liodali/osm_flutter/raw/0.40.0/assets/osm-style.zip"
 
             if (customTiles != nil) {
-                let tile = CustomTiles(customTiles!)
+                let tile = MyCustomTiles(customTiles!)
                 if oldCustomTile == nil {
                     oldCustomTile = tile
                 }
@@ -179,7 +179,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 oldCustomTile = nil
             }
             if let customTileArgs = args {
-                let tile = CustomTiles(customTileArgs)
+                let tile = MyCustomTiles(customTileArgs)
                 if oldCustomTile == nil || (oldCustomTile != nil && oldCustomTile?.tileURL != tile.tileURL) {
                     mapView.updateOrResetScene(customTile: tile, url: url)
                     oldCustomTile = tile
@@ -1192,7 +1192,7 @@ private extension MyMapView {
 }
 
 extension TGMapView {
-    func updateOrResetScene(customTile: CustomTiles?, url: URL) {
+    func updateOrResetScene(customTile: MyCustomTiles?, url: URL) {
         var sceneUpdates = [TGSceneUpdate]()
         if customTile != nil {
             sceneUpdates.append(TGSceneUpdate(path: "global.url", value: customTile!.tileURL))
