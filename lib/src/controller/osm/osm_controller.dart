@@ -26,8 +26,8 @@ final class MobileOSMController extends IBaseOSMController {
   MobileOSMController();
 
   MobileOSMController._(this._idMap, this._osmFlutterState) {
-    minZoomLevel = this._osmFlutterState.widget.minZoomLevel;
-    maxZoomLevel = this._osmFlutterState.widget.maxZoomLevel;
+    minZoomLevel = this._osmFlutterState.widget.zoomOption.minZoomLevel;
+    maxZoomLevel = this._osmFlutterState.widget.zoomOption.maxZoomLevel;
   }
 
   static Future<MobileOSMController> init(
@@ -79,13 +79,13 @@ final class MobileOSMController extends IBaseOSMController {
     }
 
     _checkBoundingBox(box, initPosition);
-    stepZoom = _osmFlutterState.widget.stepZoom;
+    stepZoom = _osmFlutterState.widget.zoomOption.stepZoom;
 
     await configureZoomMap(
-      _osmFlutterState.widget.minZoomLevel,
-      _osmFlutterState.widget.maxZoomLevel,
+      _osmFlutterState.widget.zoomOption.minZoomLevel,
+      _osmFlutterState.widget.zoomOption.maxZoomLevel,
       stepZoom,
-      initZoom ?? _osmFlutterState.widget.initZoom,
+      initZoom ?? _osmFlutterState.widget.zoomOption.initZoom,
     );
 
     if (_osmFlutterState.widget.showDefaultInfoWindow == true) {

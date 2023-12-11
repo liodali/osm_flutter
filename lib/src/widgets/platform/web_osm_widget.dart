@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 
 Widget getWidget({
@@ -20,10 +21,7 @@ Widget getWidget({
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
   bool androidHotReloadSupport = false,
-  double stepZoom = 1,
-  double initZoom = 2,
-  double minZoomLevel = 2,
-  double maxZoomLevel = 18,
+  ZoomOption zoomOption = const ZoomOption(),
   UserLocationMaker? userLocationMarker,
   Function(bool)? onMapIsReady,
   bool enableRotationByGesture = false,
@@ -46,10 +44,10 @@ Widget getWidget({
       showDefaultInfoWindow: showDefaultInfoWindow,
       onMapIsReady: onMapIsReady,
       userLocationMarker: userLocationMarker,
-      initZoom: initZoom,
-      minZoomLevel: minZoomLevel,
-      maxZoomLevel: maxZoomLevel,
-      stepZoom: stepZoom,
+      initZoom: zoomOption.initZoom,
+      minZoomLevel: zoomOption.minZoomLevel,
+      maxZoomLevel: zoomOption.maxZoomLevel,
+      stepZoom: zoomOption.stepZoom,
     );
 
 class OSMMapWidget extends StatelessWidget {
@@ -70,10 +68,7 @@ class OSMMapWidget extends StatelessWidget {
     this.markerOption,
     this.roadConfiguration,
     this.showZoomController = false,
-    this.stepZoom = 1,
-    this.initZoom = 2,
-    this.minZoomLevel = 2,
-    this.maxZoomLevel = 18,
+    this.zoomOption = const ZoomOption(),
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
@@ -94,10 +89,7 @@ class OSMMapWidget extends StatelessWidget {
   final MarkerOption? markerOption;
   final RoadOption? roadConfiguration;
   final bool showZoomController;
-  final double stepZoom;
-  final double initZoom;
-  final double minZoomLevel;
-  final double maxZoomLevel;
+  final ZoomOption zoomOption;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
@@ -123,10 +115,10 @@ class OSMMapWidget extends StatelessWidget {
       showDefaultInfoWindow: showDefaultInfoWindow,
       onMapIsReady: onMapIsReady,
       userLocationMarker: userLocationMarker,
-      initZoom: initZoom,
-      minZoomLevel: minZoomLevel,
-      maxZoomLevel: maxZoomLevel,
-      stepZoom: stepZoom,
+      initZoom: zoomOption.initZoom,
+      minZoomLevel: zoomOption.minZoomLevel,
+      maxZoomLevel: zoomOption.maxZoomLevel,
+      stepZoom: zoomOption.stepZoom,
     );
   }
 }

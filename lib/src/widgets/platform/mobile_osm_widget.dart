@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 import 'package:flutter_osm_plugin/src/widgets/mobile_osm_flutter.dart';
 
 Widget getWidget({
@@ -19,10 +20,7 @@ Widget getWidget({
   bool showDefaultInfoWindow = false,
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
-  double stepZoom = 1,
-  double initZoom = 2,
-  double minZoomLevel = 2,
-  double maxZoomLevel = 18,
+  ZoomOption zoomOption = const ZoomOption(),
   UserLocationMaker? userLocationMarker,
   Function(bool)? onMapIsReady,
   bool enableRotationByGesture = false,
@@ -47,10 +45,7 @@ Widget getWidget({
       globalKeys: globalKeys,
       onMapIsReady: onMapIsReady,
       userLocationMarker: userLocationMarker,
-      initZoom: initZoom,
-      minZoomLevel: minZoomLevel,
-      maxZoomLevel: maxZoomLevel,
-      stepZoom: stepZoom,
+      zoomOption: zoomOption,
       enableRotationByGesture: enableRotationByGesture,
     );
 
@@ -71,11 +66,8 @@ class OSMMapWidget extends StatelessWidget {
     required this.staticIconGlobalKeys,
     this.markerOption,
     this.roadConfiguration,
+    this.zoomOption = const ZoomOption(),
     this.showZoomController = false,
-    this.stepZoom = 1,
-    this.initZoom = 2,
-    this.minZoomLevel = 2,
-    this.maxZoomLevel = 18,
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
@@ -96,10 +88,7 @@ class OSMMapWidget extends StatelessWidget {
   final MarkerOption? markerOption;
   final RoadOption? roadConfiguration;
   final bool showZoomController;
-  final double stepZoom;
-  final double initZoom;
-  final double minZoomLevel;
-  final double maxZoomLevel;
+  final ZoomOption zoomOption;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
@@ -126,10 +115,7 @@ class OSMMapWidget extends StatelessWidget {
       globalKeys: globalKeys,
       onMapIsReady: onMapIsReady,
       userLocationMarker: userLocationMarker,
-      initZoom: initZoom,
-      minZoomLevel: minZoomLevel,
-      maxZoomLevel: maxZoomLevel,
-      stepZoom: stepZoom,
+      zoomOption: zoomOption,
       enableRotationByGesture: enableRotationByGesture,
     );
   }

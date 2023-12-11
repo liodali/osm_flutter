@@ -81,4 +81,11 @@ class ZoomOption {
 
   /// the maximum zoom level of the osm map
   final double maxZoomLevel;
+
+  Map<String, int> get toMap => {
+    "stepZoom":stepZoom.toInt(),
+    "initZoom":initZoom.toInt(),
+    "minZoom":minZoomLevel.toInt(),
+    "maxZoom":maxZoomLevel.toInt(),
+  };
 }
