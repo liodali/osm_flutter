@@ -607,10 +607,7 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
 
    
 
-    private func convertImage(codeImage: String) -> UIImage? {
-        let dataImage = Data(base64Encoded: codeImage)
-        return UIImage(data: dataImage!)// Note it's optional. Don't force unwrap!!!
-    }
+    
 
     private func zoomMap(_ step: Double?, _ level: Double?) {
         var zoomLvl: CGFloat? = nil

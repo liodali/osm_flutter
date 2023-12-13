@@ -5,7 +5,10 @@
 import Foundation
 import TangramMap
 
-
+func convertImage(codeImage: String) -> UIImage? {
+    let dataImage = Data(base64Encoded: codeImage)
+    return UIImage(data: dataImage!)// Note it's optional. Don't force unwrap!!!
+}
 extension GeoPointMap {
     public func setupMarker(
             on map: TGMapView
