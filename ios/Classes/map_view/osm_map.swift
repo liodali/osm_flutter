@@ -14,6 +14,7 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
     
   
     let mapOSM: OSMView
+    var homeMarker:UIImage? = nil
     var customTiles: CustomTiles? = nil
     var boundingbox: BoundingBox? = nil
     let channel: FlutterMethodChannel
@@ -53,7 +54,7 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             self.onListenMethodChannel(call: call, result: result)
         })
         self.mapOSM.onMapGestureDelegate = self
-        self.mapOSM.getMarkerManager().locationHandlerDelegate = self
+        self.mapOSM.locationHandlerDelegate = self
     }
     
     required init?(coder: NSCoder) {
@@ -153,14 +154,16 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             result(200)
             break;
         case "marker#icon":
+            let args = call.arguments as! [String: Any]
+            homeMarker = convertImage(codeImage: args["icon"] as! String)
             result(200)
             break;
         case "staticPosition#IconMarker":
-           
+            setMarkerStaticGeoPIcon(call: call)
             result(200)
             break;
         case "staticPosition":
-            
+            setStaticGeoPoint(call: call)
             result(200)
             break;
         case "road":
@@ -271,7 +274,7 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
            //GeoPointMap(icon: icon, coordinate: coordinate, angle: angle, anchor: anchor)
             let configuration = MarkerConfiguration(icon: icon!,iconSize: nil , angle: Float(angle ), anchor: nil,scaleType: MarkerScaleType.invariant)
             let marker = Marker(location: coordinate, markerConfiguration: configuration)
-            self.mapOSM.getMarkerManager().addMarker(marker: marker)
+            self.mapOSM.markerManager.addMarker(marker: marker)
         }
     }
     private func changePositionMarker(call: FlutterMethodCall) {
@@ -303,7 +306,7 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             anchor = AnchorGeoPoint(anchor:anchorType,offset: offset)
         }
         print("changePositionMarker:\(coordinate_old)")
-        self.mapOSM.getMarkerManager().updateMarker(oldlocation: coordinate_old, newlocation: coordinate_new, 
+        self.mapOSM.markerManager.updateMarker(oldlocation: coordinate_old, newlocation: coordinate_new,
                                                     icon: icon,
                                                     iconSize: nil,
                                                     angle: Float(angle), anchor: nil)
@@ -339,10 +342,41 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         
     }
     func setCameraAreaLimit(call: FlutterMethodCall){
-        
+        let bbox = call.arguments as! [Double]
+        self.mapOSM.setBoundingBox(bounds: BoundingBox(boundingBoxs: bbox))
     }
     func removeCameraAreaLimit(result: @escaping FlutterResult){
+        self.mapOSM.setBoundingBox(bounds: BoundingBox())
         result(200)
+    }
+    private func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
+        let args = call.arguments as! [String: Any]
+        let id = args["id"] as! String
+        let bitmapArg = args["bitmap"] as! [String: Any]
+        let icon = convertImage(codeImage: bitmapArg["icon"] as! String)
+        self.mapOSM.poisManager.setOrCreateIconPoi(id: id, icon: icon! )
+    }
+
+
+    private func setStaticGeoPoint(call: FlutterMethodCall) {
+        let args = call.arguments as! [String: Any]
+        let id = args["id"] as! String
+
+        
+
+        let listPois: [MarkerIconPoi] = (args["point"] as! [GeoPoint]).map { point -> MarkerIconPoi in
+            var angle = 0
+            if (point.keys.contains("angle")) {
+                angle = Int(CGFloat(point["angle"]! as Double).toDegrees)
+            }
+            let location = point.toLocationCoordinate()
+
+            return MarkerIconPoi(angle: Float(angle), anchor: nil, location: location)
+        }
+
+        self.mapOSM.poisManager.setMarkersPoi(id: id, markers: listPois)
+
+
     }
     
     func onTap(location: CLLocationCoordinate2D) {

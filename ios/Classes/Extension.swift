@@ -7,6 +7,9 @@ import TangramMap
 
 func convertImage(codeImage: String) -> UIImage? {
     let dataImage = Data(base64Encoded: codeImage)
+    if dataImage == nil, #available(iOS 13.0, *){
+            return UIImage(systemName: "mappin")
+    }
     return UIImage(data: dataImage!)// Note it's optional. Don't force unwrap!!!
 }
 extension GeoPointMap {
