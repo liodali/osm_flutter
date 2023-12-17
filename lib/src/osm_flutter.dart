@@ -104,7 +104,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
       children: <Widget>[
         MapConfiguration(
           userLocationMarker: widget.osmOption.userLocationMarker,
-          markerOption: widget.osmOption.markerOption,
           staticPoints: widget.osmOption.staticPoints,
           dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
           defaultMarkerKey: defaultMarkerKey,
@@ -138,7 +137,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         showContributorBadgeForOSM:
                             widget.osmOption.showContributorBadgeForOSM,
                         isPicker: widget.osmOption.isPicker,
-                        markerOption: widget.osmOption.markerOption,
                         showDefaultInfoWindow:
                             widget.osmOption.showDefaultInfoWindow,
                         showZoomController: widget.osmOption.showZoomController,
@@ -190,7 +188,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   showContributorBadgeForOSM:
                       widget.osmOption.showContributorBadgeForOSM,
                   isPicker: widget.osmOption.isPicker,
-                  markerOption: widget.osmOption.markerOption,
                   showDefaultInfoWindow: widget.osmOption.showDefaultInfoWindow,
                   showZoomController: widget.osmOption.showZoomController,
                   staticPoints: widget.osmOption.staticPoints,
@@ -281,12 +278,6 @@ class MapConfiguration extends StatelessWidget {
             RepaintBoundary(
               key: defaultMarkerKey,
               child: markerOption!.defaultMarker!,
-            ),
-          ],
-          if (markerOption?.advancedPickerMarker != null) ...[
-            RepaintBoundary(
-              key: advancedPickerMarker,
-              child: markerOption?.advancedPickerMarker,
             ),
           ],
           if (staticPoints.isNotEmpty) ...[

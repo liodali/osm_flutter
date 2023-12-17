@@ -53,12 +53,6 @@ mixin WebMixin {
     );
   }
 
-  @protected
-  Future changeHomeIconMarker(GlobalKey<State<StatefulWidget>>? key) async {
-    final base64 = (await capturePng(key!)).convertToString();
-    await interop.setDefaultIcon(mapIdMixin, base64);
-  }
-
   Future<void> changeLocation(GeoPoint p) async {
     await _addPosition(
       p,
@@ -320,7 +314,7 @@ mixin WebMixin {
       roadOption.roadWidth.toDouble(),
       roadOption.zoomInto,
       (roadOption.roadBorderColor ?? Colors.green).toHexColor(),
-      roadOption.roadBorderWidth.toDouble(),
+      roadOption.roadBorderWidth?.toDouble() ?? 0,
       [],
       null,
     );

@@ -102,13 +102,6 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
                   controller: widget.controller,
                   mapIsLoading: widget.pickerConfig.loadingWidget,
                   osmOption: OSMOption(
-                    markerOption:
-                        widget.pickerConfig.advancedMarkerPicker != null
-                            ? MarkerOption(
-                                advancedPickerMarker:
-                                    widget.pickerConfig.advancedMarkerPicker,
-                              )
-                            : null,
                     isPicker: true,
                     zoomOption: widget.pickerConfig.zoomOption,
                   ),

@@ -180,14 +180,6 @@ class MapController extends BaseMapController {
     osmBaseController.removeMarkers(geoPoints);
   }
 
-  /// [changeIconMarker]
-  ///
-  /// this method allow to change Home Icon Marker
-  ///
-  /// [icon] : (MarkerIcon) widget that represent the new home marker
-  Future changeIconMarker(MarkerIcon icon) async {
-    await osmBaseController.changeDefaultIconMarker(icon);
-  }
 
   /// setMarkerIcon
   ///
@@ -437,30 +429,7 @@ class MapController extends BaseMapController {
     await osmBaseController.removeAllShapes();
   }
 
-  Future<void> advancedPositionPicker() async {
-    await osmBaseController.advancedPositionPicker();
-  }
 
-  /// [selectAdvancedPositionPicker]
-  ///
-  /// select current position and finish advanced picker
-  Future<GeoPoint> selectAdvancedPositionPicker() async {
-    return await osmBaseController.selectAdvancedPositionPicker();
-  }
-
-  /// [getCurrentPositionAdvancedPositionPicker]
-  ///
-  /// get current position
-  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
-    return await osmBaseController.getCurrentPositionAdvancedPositionPicker();
-  }
-
-  /// [cancelAdvancedPositionPicker]
-  ///
-  /// cancel advanced picker
-  Future<void> cancelAdvancedPositionPicker() async {
-    return await osmBaseController.cancelAdvancedPositionPicker();
-  }
 
   /// [rotateMapCamera]
   ///

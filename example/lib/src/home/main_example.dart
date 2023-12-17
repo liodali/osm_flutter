@@ -414,22 +414,6 @@ class Map extends StatelessWidget {
         roadConfiguration: RoadOption(
           roadColor: Colors.blueAccent,
         ),
-        markerOption: MarkerOption(
-          defaultMarker: MarkerIcon(
-            icon: Icon(
-              Icons.home,
-              color: Colors.orange,
-              size: 32,
-            ),
-          ),
-          advancedPickerMarker: MarkerIcon(
-            icon: Icon(
-              Icons.location_searching,
-              color: Colors.green,
-              size: 56,
-            ),
-          ),
-        ),
         showContributorBadgeForOSM: true,
         //trackMyPosition: trackingNotifier.value,
         showDefaultInfoWindow: false,

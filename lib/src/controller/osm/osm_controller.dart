@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-
-import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 import 'package:flutter_osm_plugin/src/widgets/mobile_osm_flutter.dart';
@@ -87,11 +85,6 @@ final class MobileOSMController extends IBaseOSMController {
       stepZoom,
       initZoom ?? _osmFlutterState.widget.zoomOption.initZoom,
     );
-
-    if (_osmFlutterState.widget.showDefaultInfoWindow == true) {
-      osmPlatform.visibilityInfoWindow(
-          _idMap, _osmFlutterState.widget.showDefaultInfoWindow);
-    }
 
     /// listen to data send from native map
 
@@ -189,57 +182,7 @@ final class MobileOSMController extends IBaseOSMController {
   ) async {
     final userTrackOption =
         userPositionOption ?? _osmFlutterState.widget.userTrackingOption;
-
-    /// change default icon  marker
-    final defaultIcon = _osmFlutterState.widget.markerOption?.defaultMarker;
-
-    if (defaultIcon != null) {
-      await Future.delayed(Duration(milliseconds: 250), () async {
-        try {
-          await _changeDefaultIconMarker(_osmFlutterState.defaultMarkerKey);
-        } catch (e) {
-          debugPrint(e.toString());
-        }
-      });
-    } else {
-      if (Platform.isIOS) {
-        _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Icon(
-          Icons.location_on,
-          color: Colors.red,
-          size: 32,
-        );
-        await Future.delayed(duration, () async {
-          _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
-          if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
-            await _changeDefaultIconMarker(_osmFlutterState.dynamicMarkerKey);
-          }
-        });
-      }
-    }
-
-    /// change advanced picker icon marker
-    if (_osmFlutterState.widget.markerOption?.advancedPickerMarker != null) {
-      if (_osmFlutterState.advancedPickerMarker.currentContext != null) {
-        await Future.delayed(Duration(milliseconds: 250), () async {
-          await changeIconAdvPickerMarker(
-              _osmFlutterState.advancedPickerMarker);
-        });
-      }
-    }
-    if (Platform.isIOS &&
-        _osmFlutterState.widget.markerOption?.advancedPickerMarker == null) {
-      _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = Icon(
-        Icons.location_on,
-        color: Colors.red,
-        size: 32,
-      );
-      await Future.delayed(duration, () async {
-        if (_osmFlutterState.dynamicMarkerKey.currentContext != null) {
-          await changeIconAdvPickerMarker(_osmFlutterState.dynamicMarkerKey);
-          //_osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = null;
-        }
-      });
-    }
+    
 
     /// change user person Icon and arrow Icon
     if (_osmFlutterState.widget.userLocationMarker != null) {
@@ -289,10 +232,6 @@ final class MobileOSMController extends IBaseOSMController {
       );
     }
 
-    /// picker config
-    if (_osmFlutterState.widget.isPicker) {
-      await osmPlatform.advancedPositionPicker(_idMap);
-    }
     await _drawInitStaticPoints();
   }
 
@@ -373,22 +312,9 @@ final class MobileOSMController extends IBaseOSMController {
     await osmPlatform.removePosition(_idMap, p);
   }
 
-  /// inner method that will change home Icon Marker
-  /// we need to global key to recuperate widget from tree element
-  /// [key] : (GlobalKey) key of widget that represent the new marker
-  Future _changeDefaultIconMarker(GlobalKey? key) async {
-    await osmPlatform.customMarker(_idMap, key);
-  }
 
-  /// change Icon Marker
-  /// this method allow to change home marker icon
-  /// [icon] : (MarkerIcon) marker icon that will change  home icon
-  Future changeDefaultIconMarker(MarkerIcon icon) async {
-    _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
-    await Future.delayed(duration, () async {
-      await osmPlatform.customMarker(_idMap, _osmFlutterState.dynamicMarkerKey);
-    });
-  }
+
+
 
   ///change  Marker of specific static points
   /// we need to global key to recuperate widget from tree element
@@ -410,12 +336,7 @@ final class MobileOSMController extends IBaseOSMController {
     });
   }
 
-  ///change Icon  of advanced picker Marker
-  /// we need to global key to recuperate widget from tree element
-  /// [key] : (GlobalKey) key of widget that represent the new marker
-  Future changeIconAdvPickerMarker(GlobalKey key) async {
-    await osmPlatform.customAdvancedPickerMarker(_idMap, key);
-  }
+
 
   /// change static position in runtime
   ///  [geoPoints] : list of static geoPoint
@@ -657,41 +578,10 @@ final class MobileOSMController extends IBaseOSMController {
     return await osmPlatform.removeAllShapes(_idMap);
   }
 
-  /// to start assisted selection in the map
-  Future<void> advancedPositionPicker() async {
-    return await osmPlatform.advancedPositionPicker(_idMap);
-  }
 
-  /// to retrieve location desired
-  Future<GeoPoint> selectAdvancedPositionPicker() async {
-    return await osmPlatform.selectAdvancedPositionPicker(_idMap);
-  }
-
-  /// to retrieve current location without finish picker
-  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
-    return await osmPlatform.getPositionOnlyAdvancedPositionPicker(_idMap);
-  }
-
-  /// to cancel the assisted selection in tge map
-  Future<void> cancelAdvancedPositionPicker() async {
-    return await osmPlatform.cancelAdvancedPositionPicker(_idMap);
-  }
 
   Future<void> mapOrientation(double degree) async {
     var angle = degree;
-    if (Platform.isIOS) {
-      angle = -degree;
-      if (angle.abs() > 360) {
-        angle = angle % 360;
-      }
-      if (angle < 0) {
-        angle += 360;
-      }
-
-      if (angle.abs() == 360) {
-        angle = 0;
-      }
-    }
     await osmPlatform.mapRotation(_idMap, angle);
   }
 

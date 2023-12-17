@@ -170,9 +170,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       });
     });
 
-    if (osmWebFlutterState.widget.markerOption?.defaultMarker != null) {
-      await changeHomeIconMarker(osmWebFlutterState.defaultMarkerKey!);
-    }
     if (osmWebFlutterState.widget.staticIconGlobalKeys.isNotEmpty) {
       var keys = osmWebFlutterState.widget.staticIconGlobalKeys;
       keys.removeWhere((key, value) =>
@@ -188,23 +185,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       defaultRoadOption = osmWebFlutterState.widget.roadConfiguration!;
     }
 
-    if (osmWebFlutterState.widget.markerOption?.advancedPickerMarker != null) {
-      if (osmWebFlutterState.advancedPickerMarker?.currentContext != null) {
-        await changeIconAdvPickerMarker(
-          osmWebFlutterState.advancedPickerMarker!,
-        );
-      }
-    }
-    if (osmWebFlutterState.widget.markerOption?.advancedPickerMarker == null) {
-      osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = Icon(
-        Icons.location_on,
-        color: Colors.red,
-        size: 32,
-      );
-      Future.delayed(duration, () async {
-        await changeIconAdvPickerMarker(osmWebFlutterState.dynamicMarkerKey!);
-      });
-    }
+   
 
     /// change user person Icon and arrow Icon
     if (osmWebFlutterState.widget.userLocationMarker != null) {
@@ -310,14 +291,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     });
   }
 
-  @override
-  Future changeDefaultIconMarker(MarkerIcon homeMarker) async {
-    osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = homeMarker;
-    await Future.delayed(duration, () async {
-      final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
-      await interop.setDefaultIcon(mapIdMixin, icon.convertToString());
-    });
-  }
 
   @override
   Future<void> changeMarker({
@@ -356,41 +329,9 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     });
   }
 
-  @override
-  Future changeIconAdvPickerMarker(GlobalKey<State<StatefulWidget>> key) async {
-    var base64 = "";
-    try {
-      base64 = (await capturePng(key)).convertToString();
-    } finally {
-      final iconSize = key.toSizeJS();
-      await interop.changeIconAdvPickerMarker(mapIdMixin, base64, iconSize);
-    }
-  }
 
-  @override
-  Future<void> advancedPositionPicker() async {
-    await interop.advSearchLocation(mapIdMixin);
-  }
 
-  @override
-  Future<void> cancelAdvancedPositionPicker() async {
-    await interop.cancelAdvSearchLocation(mapIdMixin);
-  }
 
-  Future<GeoPoint> selectAdvancedPositionPicker() async {
-    Map<String, dynamic>? value =
-        await html.promiseToFutureAsMap(interop.centerMap(
-      mapIdMixin,
-    ));
-    if (value!.containsKey("error")) {
-      throw Exception(value["message"]);
-    }
-    final gp = GeoPoint.fromMap(Map<String, double>.from(value));
-
-    await cancelAdvancedPositionPicker();
-    changeLocation(gp);
-    return gp;
-  }
 
   Future customUserLocationMarker(
       GlobalKey<State<StatefulWidget>> personIconMarkerKey) async {

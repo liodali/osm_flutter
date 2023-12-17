@@ -32,23 +32,21 @@ class PickerMapController extends BaseMapController {
   }
 
   Future<void> advancedPositionPicker() async {
-    await osmBaseController.advancedPositionPicker();
+   
   }
 
   /// select current position and finish advanced picker
   Future<GeoPoint> selectAdvancedPositionPicker() async {
-    return await osmBaseController.selectAdvancedPositionPicker();
+    throw Exception();
   }
 
   /// get current position
   Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
-    return await osmBaseController.getCurrentPositionAdvancedPositionPicker();
+    throw Exception();
   }
 
   /// cancel advanced picker
-  Future<void> cancelAdvancedPositionPicker() async {
-    return await osmBaseController.cancelAdvancedPositionPicker();
-  }
+  Future<void> cancelAdvancedPositionPicker() async {}
 
   @override
   void dispose() {

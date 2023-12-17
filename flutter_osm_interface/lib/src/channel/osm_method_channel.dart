@@ -177,19 +177,13 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
+  @Deprecated("message")
   Future<void> addPosition(int idOSM, GeoPoint p) async {
     Map requestData = {"lon": p.longitude, "lat": p.latitude};
     await _channels[idOSM]?.invokeMethod(
       "changePosition",
       requestData,
     );
-  }
-
-  @override
-  Future<void> customMarker(int idOSM, GlobalKey? globalKey) async {
-    final icon = await _capturePng(globalKey!);
-
-    await _channels[idOSM]?.invokeMethod("marker#icon", icon);
   }
 
   @override
@@ -357,10 +351,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     return pngBytes;
   }
 
-  @override
-  Future<void> visibilityInfoWindow(int idOSM, bool visible) async {
-    await _channels[idOSM]?.invokeMethod("use#visiblityInfoWindow", visible);
-  }
+
 
   @override
   Future<void> drawCircle(int idOSM, CircleOSM circleOSM) async {
@@ -389,24 +380,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     await _channels[idOSM]?.invokeMethod("remove#circle", key);
   }
 
-  @override
-  Future<void> advancedPositionPicker(int idOSM) async {
-    await _channels[idOSM]?.invokeMethod("advanced#selection");
-  }
 
-  @override
-  Future<void> cancelAdvancedPositionPicker(int idOSM) async {
-    await _channels[idOSM]?.invokeMethod(
-      "cancel#advanced#selection",
-    );
-  }
-
-  @override
-  Future<GeoPoint> selectAdvancedPositionPicker(int idOSM) async {
-    Map mGeoPoint = (await (_channels[idOSM]
-        ?.invokeMapMethod("confirm#advanced#selection")))!;
-    return GeoPoint.fromMap(mGeoPoint);
-  }
 
   @override
   Future<void> drawRect(int idOSM, RectOSM rectOSM) async {
@@ -440,17 +414,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     await _channels[idOSM]?.invokeMethod("clear#shapes");
   }
 
-  /// get position without finish advanced picker
-  @override
-  Future<GeoPoint> getPositionOnlyAdvancedPositionPicker(int idOSM) async {
-    try {
-      Map? mGeoPoint = (await (_channels[idOSM]
-          ?.invokeMapMethod("get#position#advanced#selection")));
-      return GeoPoint.fromMap(mGeoPoint!);
-    } on Exception catch (e) {
-      throw Exception(e);
-    }
-  }
+
 
   @override
   Future<void> goToPosition(int idOSM, GeoPoint p) async {
@@ -494,14 +458,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     );
   }
 
-  @override
-  Future<void> customAdvancedPickerMarker(
-    int idMap,
-    GlobalKey key,
-  ) async {
-    final icon = await _capturePng(key);
-    await _channels[idMap]!.invokeMethod("advancedPicker#marker#icon", icon);
-  }
+
 
   @override
   Future<void> limitArea(int idOSM, BoundingBox box) async {

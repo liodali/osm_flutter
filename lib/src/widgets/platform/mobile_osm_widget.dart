@@ -14,7 +14,6 @@ Widget getWidget({
   Widget? mapIsLoading,
   required List<GlobalKey> globalKeys,
   required Map<String, GlobalKey> staticIconGlobalKeys,
-  MarkerOption? markerOption,
   RoadOption? roadConfiguration,
   bool showZoomController = false,
   bool showDefaultInfoWindow = false,
@@ -38,7 +37,6 @@ Widget getWidget({
       showZoomController: showZoomController,
       showDefaultInfoWindow: showDefaultInfoWindow,
       showContributorBadgeForOSM: showContributorBadgeForOSM,
-      markerOption: markerOption,
       isPicker: isPicker,
       roadConfig: roadConfiguration ?? RoadOption.empty(),
       staticPoints: staticPoints,
@@ -64,7 +62,6 @@ class OSMMapWidget extends StatelessWidget {
     this.userLocationMarker,
     required this.globalKeys,
     required this.staticIconGlobalKeys,
-    this.markerOption,
     this.roadConfiguration,
     this.zoomOption = const ZoomOption(),
     this.showZoomController = false,
@@ -85,7 +82,6 @@ class OSMMapWidget extends StatelessWidget {
   final UserLocationMaker? userLocationMarker;
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
-  final MarkerOption? markerOption;
   final RoadOption? roadConfiguration;
   final bool showZoomController;
   final ZoomOption zoomOption;
@@ -108,7 +104,6 @@ class OSMMapWidget extends StatelessWidget {
       showZoomController: showZoomController,
       showDefaultInfoWindow: showDefaultInfoWindow,
       showContributorBadgeForOSM: showContributorBadgeForOSM,
-      markerOption: markerOption,
       isPicker: isPicker,
       roadConfig: roadConfiguration ?? RoadOption.empty(),
       staticPoints: staticPoints,

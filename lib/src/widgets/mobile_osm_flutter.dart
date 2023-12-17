@@ -29,7 +29,6 @@ class MobileOsmFlutter extends StatefulWidget {
   final List<StaticPositionGeoPoint> staticPoints;
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
-  final MarkerOption? markerOption;
   final RoadOption? roadConfig;
   final bool showDefaultInfoWindow;
   final bool isPicker;
@@ -52,7 +51,6 @@ class MobileOsmFlutter extends StatefulWidget {
     this.mapIsLoading,
     required this.globalKeys,
     required this.staticIconGlobalKeys,
-    this.markerOption,
     this.roadConfig,
     this.showZoomController = false,
     this.showDefaultInfoWindow = false,
@@ -278,6 +276,7 @@ class PlatformView extends StatelessWidget {
           enableRotationGesture: configuration.enableRotationGesture,
           initlocation: configuration.initlocation,
           userlocation: configuration.userlocation,
+          zoomOption: configuration.zoomOption,
         ),
         creationParamsCodec: StandardMethodCodec().messageCodec,
       );
@@ -292,6 +291,7 @@ class PlatformView extends StatelessWidget {
         enableRotationGesture: configuration.enableRotationGesture,
         initlocation: configuration.initlocation,
         userlocation: configuration.userlocation,
+        zoomOption: configuration.zoomOption,
       ),
       //creationParamsCodec: null,
       creationParamsCodec: StandardMethodCodec().messageCodec,
