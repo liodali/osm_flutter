@@ -12,7 +12,7 @@ import MapKit
 import Flutter
 import TangramMap
 import Polyline
-
+/*
 public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, TGMapViewDelegate, TGRecognizerDelegate {
     
     
@@ -186,7 +186,6 @@ public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate
                 }
 
             }
-
             result(200)
             break;
         case "initMap":
@@ -1215,3 +1214,4 @@ extension TGMapView {
         zoom = zoomLevel
     }
 }
+*/

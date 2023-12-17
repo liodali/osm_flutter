@@ -4,6 +4,8 @@
 
 import Foundation
 import TangramMap
+import OSMFlutterFramework
+import Polyline
 
 func convertImage(codeImage: String) -> UIImage? {
     let dataImage = Data(base64Encoded: codeImage)
@@ -27,16 +29,16 @@ extension GeoPointMap {
     }
 
     public func changeIconMarker(on map: TGMapView) {
-        let indexToUpdate = map.markers.firstIndex { m in
+       /* let indexToUpdate = map.markers.firstIndex { m in
             m.point == self.coordinate
         }
         if indexToUpdate != nil {
             map.markers[indexToUpdate!].icon = markerIcon.image!
-        }
+        }*/
     }
 
     public func changePositionMarker(on map: TGMapView, mPosition: CLLocationCoordinate2D) {
-        let indexToUpdate = map.markers.firstIndex { m in
+        /*let indexToUpdate = map.markers.firstIndex { m in
             return  m.point == self.coordinate
         }
         if indexToUpdate != nil {
@@ -45,7 +47,7 @@ extension GeoPointMap {
             let markerStyleStr = markerStyle.toString()
             map.markers[indexToUpdate!].stylingString = markerStyleStr
             map.markers[indexToUpdate!].point = mPosition
-        }
+        }*/
     }
 
     public func toMap() -> GeoPoint {
@@ -89,11 +91,8 @@ extension TGMapView {
 }
 extension RoadManager  {
 
-    func hasTGMarkerPoylines() -> [RoadFolder] {
-        return roads.filter({roadF in roadF.tgRouteLayer.tgMarkerPolyline != nil })
-    }
-    func hasTGGeoPolylinePoylines() -> [RoadFolder] {
-        return roads.filter({roadF in roadF.tgRouteLayer.tgPolyline != nil })
+    func hasPoylines() -> [RoadFolder] {
+        return roads.filter({roadF in roadF.polyline.coordinates != nil })
     }
 }
 extension MyLocationMarker {
@@ -229,7 +228,7 @@ extension RoadInstruction {
 
 extension RoadInformation {
     func toMap(instructions: [RoadInstruction]) -> [String: Any] {
-        var args: [String: Any] = ["distance": self.distance, "duration": self.seconds, "routePoints": self.encodedRoute]
+        var args: [String: Any] = ["key":id,"distance": self.distance, "duration": self.seconds, "routePoints": self.encodedRoute]
         if (instructions.isEmpty) {
             args["instructions"] = [String: Any]()
         } else {
@@ -247,7 +246,7 @@ extension RoadFolder {
         ["key": self.id, "distance": self.roadInformation?.distance ?? 0.0, "duration": self.roadInformation?.seconds ?? 0.0, "routePoints": self.roadInformation?.encodedRoute ?? ""]
     }
 }
-extension TGPolyline {
+extension Polyline {
     static let defaultToleranceInMeters = 0.1
     static let kGMSEarthRadius = 6371009.0
     
@@ -269,25 +268,25 @@ extension TGPolyline {
         let coordinates = self.coordinates
 
         // No points
-        guard let prev = coordinates.first else {
+        guard let prev = coordinates?.first else {
           return false
         }
 
         // Naming: the segment is latLng1 to latLng2 and the point is targetLatLng.
         var latLng1 = prev.latLngRadians
         let targetLatLng = coordinate.latLngRadians
-        let normalizedTolerance = tolerance / TGPolyline.kGMSEarthRadius
+        let normalizedTolerance = tolerance / Polyline.kGMSEarthRadius
         let havTolerance = Math.haversine(normalizedTolerance)
 
         // Single point
-        guard coordinates.count > 1 else {
+        guard coordinates!.count > 1 else {
           let distance = Math.haversineDistance(latLng1, targetLatLng)
           return distance < havTolerance
         }
 
         // Handle geodesic
         if (geodesic) {
-          for coord in coordinates {
+          for coord in coordinates! {
             let latLng2 = coord.latLngRadians
             if (isOnSegmentGreatCircle(latLng1: latLng1, latLng2: latLng2, latLng3: targetLatLng, havTolerance: havTolerance)) {
               return true
@@ -307,7 +306,7 @@ extension TGPolyline {
 
         var point1 = CartesianPoint(x: 0, y: Math.mercatorY(latitudeInRadians: latLng1.latitude))
 
-        for coord in coordinates {
+        for coord in coordinates! {
           let latLng2 = coord.latLngRadians
 
           guard max(latLng1.latitude, latLng2.latitude) >= minAcceptable &&
@@ -358,14 +357,14 @@ extension TGPolyline {
         let coordinates = self.coordinates
 
         // Naming: the segment is latLng1 to latLng2 and the point is latLng3
-        guard var latLng1 = coordinates.last?.latLngRadians else {
+        guard var latLng1 = coordinates!.last?.latLngRadians else {
           return false
         }
         let latLng3 = coordinate.latLngRadians
 
         var intersectionsCount = 0
 
-        for coord in coordinates {
+        for coord in coordinates! {
           let wrappedLng3 = Math.wrap(value: latLng3.longitude - latLng1.longitude, min: -.pi, max: .pi)
 
           // Special-case: coordinate equal to one of the vertices.
@@ -553,30 +552,7 @@ extension TGPolyline {
        return denominator <= 0 ? 1 : (a * d - b * c) / sqrt(denominator);
      }
 }
-extension TGRoute {
-    func toCoordinates()->[CLLocationCoordinate2D] {
-        var counter = 0
-        var coordinates = [CLLocationCoordinate2D]()
-        var len = tgPolyline!.tgPolyline.count
-        while counter < len  {
-            coordinates.append(tgPolyline!.tgPolyline.coordinates[counter])
-            counter+=1
-        }
-        return coordinates
-    }
-}
-extension Array where Element == RoadFolder {
-    func onlyTGMarkerPoylines() -> [TGMarker] {
-        let filerRoad =  self.filter({ roadF in
-           return roadF.tgRouteLayer.tgMarkerPolyline != nil
-       })
-       return filerRoad.map({roadF in return roadF.tgRouteLayer.tgMarkerPolyline! })
-    }
-    func onlyTGGeoPolylinePoylines() -> [TGPolyline] {
-        let filtered =  filter({roadF in roadF.tgRouteLayer.tgPolyline != nil })
-        return filtered.map({roadF in roadF.tgRouteLayer.tgPolyline! })
-    }
-}
+
 extension Array where Element == Int {
     func toUIColor() -> UIColor {
         UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
@@ -611,11 +587,6 @@ extension Sizes: Decodable {
         })
         self.init(sizes)
         
-    }
-}
-extension CLLocationCoordinate2D: Equatable {
-    static public func ==(lhs: Self, rhs: Self) -> Bool {
-        lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
     }
 }
 
@@ -741,7 +712,7 @@ extension TGMapView {
 }
 
 extension Array where Element == CLLocationCoordinate2D {
-    func toBounds() -> TGCoordinateBounds {
+    func toBounds() -> BoundingBox {
         var maxLat = -85.0
         var maxLon = -180.0
         var minLat = 85.0
@@ -756,8 +727,7 @@ extension Array where Element == CLLocationCoordinate2D {
             maxLat = Swift.max(maxLat, lat)
             maxLon = Swift.max(maxLon, lon)
         }
-        return TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat, longitude: minLon),
-                ne: CLLocationCoordinate2D(latitude: maxLat, longitude: maxLon))
+        return BoundingBox(north:maxLat,west: minLon, east: maxLon,south: minLat)
     }
 }
 
@@ -898,4 +868,48 @@ func getY01FromLatitude(pX01: Double) -> Double {
 
 func Clip(n: Double, minValue: Double, maxValue: Double) -> Double {
     min(max(n, minValue), maxValue);
+}
+extension Optional where Wrapped == Double {
+    func toFloat()-> Float? {
+        if self == nil {
+            return nil
+        }
+        return Float(self!)
+    }
+}
+extension Array where Element == Int {
+    func toMarkerSize()-> MarkerIconSize {
+        (x:Int(CGFloat(self.first!) * UIScreen.main.scale),y:Int(CGFloat(self.last!) * UIScreen.main.scale))
+    }
+}
+extension UIColor {
+    convenience init?(hexString: String?) {
+        if hexString == nil {
+            return nil
+        }
+        let r, g, b, a: CGFloat
+        
+        if hexString!.hasPrefix("#") {
+            var start = hexString!.index(hexString!.startIndex, offsetBy: 1)
+            var hexColor = String(hexString![start...])
+
+            if hexString!.count == 9 {
+                start = hexString!.index(hexString!.startIndex, offsetBy: 3)
+                hexColor = String(hexString![start...])
+            }
+            let scanner = Scanner(string: hexColor)
+            var hexNumber: UInt64 = 0
+            if scanner.scanHexInt64(&hexNumber) {
+                r = CGFloat((hexNumber & 0xff0000) >> 16) / 255
+                g = CGFloat((hexNumber & 0x00ff00) >> 8) / 255
+                b = CGFloat(hexNumber & 0x0000ff) / 255
+                a = 1.0
+
+                self.init(red: r, green: g, blue: b, alpha: a)
+                return
+            }
+        }
+        
+        return nil
+    }
 }
