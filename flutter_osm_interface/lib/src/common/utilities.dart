@@ -191,12 +191,7 @@ extension ExtTileUrls on TileURLs {
   }
 }
 
-extension ExtAnchor on Anchor {
-  dynamic toPlatformMap() {
-    if (Platform.isIOS) return toMapIOS();
-    return toMapAndroid();
-  }
-}
+
 
 extension ExtString on String {
   List<GeoPoint> stringToGeoPoints() {

@@ -272,7 +272,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       stopFollowInDrag,
       disableMarkerRotation,
     ];
-    args.add(anchor.toPlatformMap());
+    args.add(anchor.toMap());
     await _channels[idOSM]?.invokeMethod(
       'trackMe',
       args,

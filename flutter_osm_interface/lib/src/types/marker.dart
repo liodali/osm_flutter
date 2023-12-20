@@ -47,14 +47,13 @@ enum Anchor {
   final String name;
   final (double, double) value;
 
-  dynamic toMapAndroid() {
+  dynamic toMap() {
     return [
       value.$1,
       value.$2,
     ];
   }
 
-  String toMapIOS() => name;
 }
 
 class IconAnchor {
