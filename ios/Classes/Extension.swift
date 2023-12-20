@@ -55,40 +55,6 @@ extension GeoPointMap {
     }
 }
 
-extension TGMapView {
-    func addUserLocation(for userLocation: CLLocationCoordinate2D, on map: TGMapView,
-                         personIcon: MarkerIconData?,
-                         arrowDirection: MarkerIconData?,
-                         anchor:String,
-                         userLocationMarkerType: UserLocationMarkerType = UserLocationMarkerType.person) -> MyLocationMarker {
-        let userLocationMarker = MyLocationMarker(coordinate: userLocation,
-                personIcon: personIcon, arrowDirectionIcon: arrowDirection,
-                userLocationMarkerType: userLocationMarkerType,
-                anchor: AnchorGeoPoint(anchor)
-            )
-
-        userLocationMarker.marker = map.markerAdd()
-        userLocationMarker.marker!.point = userLocationMarker.coordinate
-        userLocationMarker.setDirectionArrow(personIcon: personIcon, arrowDirection: arrowDirection)
-        userLocationMarker.marker!.visible = true
-        return userLocationMarker
-    }
-    
-    func flyToUserLocation(for location: CLLocationCoordinate2D, flyEnd: ((Bool) -> Void)? = nil) {
-        let cameraOption = TGCameraPosition(center: location, zoom: self.zoom, bearing: self.bearing, pitch: self.pitch)
-        self.fly(to: cameraOption!, withSpeed: CGFloat(3.5), callback: flyEnd)
-    }
-
-    func removeUserLocation(for marker: TGMarker) {
-        self.markerRemove(marker)
-    }
-
-    func removeMarkers(markers: [TGMarker]) {
-        for marker in markers {
-            self.markerRemove(marker)
-        }
-    }
-}
 extension RoadManager  {
 
     func hasPoylines() -> [RoadFolder] {
@@ -239,8 +205,6 @@ extension RoadInformation {
 }
 
 extension RoadFolder {
-    
-   
     
     func toMap() -> [String: Any] {
         ["key": self.id, "distance": self.roadInformation?.distance ?? 0.0, "duration": self.roadInformation?.seconds ?? 0.0, "routePoints": self.roadInformation?.encodedRoute ?? ""]
@@ -670,46 +634,6 @@ extension UIColor {
     }
 }
 
-extension TGMapView {
-    func getBounds(width: CGFloat, height: CGFloat) -> [String: Double] {
-        let rect = bounds
-        let size = CGPoint(x: width - (rect.minX - rect.maxX), y: height - (rect.minY - rect.maxY))
-        if size == CGPoint(x: 0.0, y: 0.0) {
-            return ["north": 85.0, "east": 180.0, "south": -85.0, "west": 180.0]
-        }
-        var positions = [CLLocationCoordinate2D]()
-        positions.append(self.coordinate(fromViewPosition: CGPoint(x: rect.minX, y: rect.minY)))
-        positions.append(self.coordinate(fromViewPosition: CGPoint(x: rect.minX + size.x, y: rect.minY)))
-        positions.append(self.coordinate(fromViewPosition: CGPoint(x: rect.minX, y: rect.minY + size.y)))
-        positions.append(self.coordinate(fromViewPosition: CGPoint(x: rect.minX + size.x, y: rect.minY + size.y)))
-
-        var latMin: Double? = nil, latMax: Double? = nil, lonMin: Double? = nil, lonMax: Double? = nil
-        for item in positions {
-            let lat = Double(item.latitude)
-            let lon = Double(item.longitude)
-            if latMin == nil || latMin! < lat {
-                latMin = lat
-            }
-            if latMax == nil || latMax! > lat {
-                latMax = lat
-            }
-            if lonMin == nil || lonMin! < lon {
-                lonMin = lon
-            }
-            if lonMax == nil || lonMax! > lon {
-                lonMax = lon
-            }
-        }
-
-        return ["north": latMin ?? 0.0, "east": lonMin ?? 0.0, "south": latMax ?? 0.0, "west": lonMax ?? 0.0]
-    }
-
-    func toBounds() -> TGCoordinateBounds {
-        let locations: [String: Double] = getBounds(width: bounds.width, height: bounds.height)
-        return TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: locations["south"]!, longitude: locations["west"]!),
-                ne: CLLocationCoordinate2D(latitude: locations["north"]!, longitude: locations["east"]!))
-    }
-}
 
 extension Array where Element == CLLocationCoordinate2D {
     func toBounds() -> BoundingBox {
@@ -731,22 +655,7 @@ extension Array where Element == CLLocationCoordinate2D {
     }
 }
 
-extension Array where Element == Double {
-    func toBounds() -> TGCoordinateBounds {
-        var maxLat = -85.0
-        var maxLon = -180.0
-        var minLat = 85.0
-        var minLon = 180.0
-        let locations = self
-        minLat = Swift.min(minLat, locations.first!)
-        minLon = Swift.min(minLon, locations[1])
-        maxLat = Swift.max(maxLat, locations[2])
-        maxLon = Swift.max(maxLon, locations.last!)
-        print("bounds " + locations.description)
-        return TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat, longitude: minLon),
-                ne: CLLocationCoordinate2D(latitude: maxLat, longitude: maxLon))
-    }
-}
+
 
 
 extension TGCoordinateBounds {
@@ -875,6 +784,12 @@ extension Optional where Wrapped == Double {
             return nil
         }
         return Float(self!)
+    }
+ 
+}
+extension Double {
+    func toInt()-> Int {
+        Int(self)
     }
 }
 extension Array where Element == Int {

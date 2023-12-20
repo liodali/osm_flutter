@@ -331,20 +331,10 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
                 angle = Int(CGFloat(_angle).toDegrees)
             }
             if let _anchor = args["iconAnchor"]{
-                let anchorStr = (_anchor  as! [String:Any] )["anchor"] as! String
-                //let anchorType = AnchorType.fromString(anchorStr: anchorStr)
-                var x = NSNumber(value: 0)
-                var y = NSNumber(value: 0)
-                var offset:(Int,Int)? = nil
-                if (_anchor  as! [String:Any]).contains(where: { $0.key == "offset" }) {
-                    x = ((_anchor  as! [String:Any])["offset"] as! [String:Any])["x"] as! NSNumber
-                    y = ((_anchor  as! [String:Any])["offset"] as! [String:Any])["y"] as! NSNumber
-                    offset = (Int(CGFloat(truncating: x)),Int(CGFloat(truncating: y)))
-                }
-                anchor = AnchorGeoPoint(anchorStr,offset: offset)
+                anchor = AnchorGeoPoint(anchorMap: _anchor as! [String:Any])
             }
            //GeoPointMap(icon: icon, coordinate: coordinate, angle: angle, anchor: anchor)
-            let configuration = MarkerConfiguration(icon: icon!,iconSize: sizeIcon , angle: Float(angle), anchor: nil,scaleType: MarkerScaleType.invariant)
+            let configuration = MarkerConfiguration(icon: icon!,iconSize: sizeIcon , angle: Float(angle), anchor: anchor?.compute(),scaleType: MarkerScaleType.invariant)
             let marker = Marker(location: coordinate, markerConfiguration: configuration)
             self.mapOSM.markerManager.addMarker(marker: marker)
         }
@@ -365,23 +355,13 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             angle = Int(CGFloat(_angle).toDegrees)
         }
         if let _anchor = args["iconAnchor"]{
-            let anchorStr = (_anchor  as! [String:Any] )["anchor"] as! String
-            let anchorType = AnchorType.fromString(anchorStr: anchorStr)
-            var x = NSNumber(value: 0)
-            var y = NSNumber(value: 0)
-            var offset:(Int,Int)? = nil
-            if (_anchor  as! [String:Any]).contains(where: { $0.key == "offset" }) {
-                x = ((_anchor  as! [String:Any])["offset"] as! [String:Any])["x"] as! NSNumber
-                y = ((_anchor  as! [String:Any])["offset"] as! [String:Any])["y"] as! NSNumber
-                offset = (Int(CGFloat(truncating: x)),Int(CGFloat(truncating: y)))
-            }
-            anchor = AnchorGeoPoint(anchor:anchorType,offset: offset)
+            anchor = AnchorGeoPoint(anchorMap: _anchor as! [String:Any])
         }
         print("changePositionMarker:\(coordinate_old)")
         self.mapOSM.markerManager.updateMarker(oldlocation: coordinate_old, newlocation: coordinate_new,
                                                     icon: icon,
                                                     iconSize: iconSize,
-                                                    angle: Float(angle), anchor: nil)
+                                               angle: Float(angle), anchor: anchor?.compute())
         //(x:sizeIcon?.first,y:sizeIcon?.last) as? MarkerIconSize
     }
     func updateMarkerIcon(call:FlutterMethodCall){

@@ -24,20 +24,23 @@ struct CartesianPoint {
   var y: Double
 }
 struct AnchorGeoPoint {
-    var anchor: AnchorType = AnchorType.center
+    var anchor: (x:Int,y:Int)
     var offset:(Int,Int)? = nil
     
-    init(anchor: AnchorType, offset: (Int, Int)? = nil) {
+    init(anchor: (Int,Int), offset: (Int, Int)? = nil) {
         self.anchor = anchor
-        self.offset = offset
+        self.offset = offset ?? (0,0)
     }
-    init(_ anchorStr:String, offset: (Int, Int)? = nil){
-        anchor = AnchorType.fromString(anchorStr: anchorStr)
-        self.offset = offset
+    init(anchorMap: [String:Any]) {
+        self.anchor = (x:(anchorMap["x"] as! Double).toInt(),y:(anchorMap["x"] as! Double).toInt())
+        if anchorMap.contains(where: { $0.key == "offset" }) {
+            
+         }else {
+            self.offset = (0,0)
+         }
     }
-    init(_ anchorStr:String){
-        anchor = AnchorType.fromString(anchorStr: anchorStr)
-        self.offset = nil
+    func compute()-> (x:Int,y:Int) {
+        return (x:self.anchor.x + (self.offset?.0 ?? 0),y: self.anchor.y + (self.offset?.1 ?? 0))
     }
 }
 
@@ -70,10 +73,10 @@ class GeoPointMap {
         self.markerIcon = icon
         
         self.markerStyle.size = icon.size
-        if anchor != nil {
+        /*if anchor != nil {
             self.markerStyle.anchor = anchor!.anchor
             self.markerStyle.offset = anchor!.offset != nil ? [anchor!.offset!.0,anchor!.offset!.1] : nil
-        }
+        }*/
         self.markerStyle.angle = angle
         self.markerStyle.interactive = interactive
         
