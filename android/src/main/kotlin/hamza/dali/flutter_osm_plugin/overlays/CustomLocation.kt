@@ -28,6 +28,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
     private var mDrawPixel: Point = Point()
     private var customIcons = false
     private var onChangedLocation: OnChangedLocation? = null
+    private var skipDraw = false
 
     init {
         setEnableAutoStop(true)
@@ -63,6 +64,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         scope: CoroutineScope,
 
         ) {
+        skipDraw = true
         if (!isMyLocationEnabled) {
             enableMyLocation()
         }
@@ -76,8 +78,8 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
                     if (!isFollowLocationEnabled) {
                         disableMyLocation()
                     }
-
                     result.success(point.toHashMap())
+                    skipDraw = false
                     if (afterGetLocation != null) {
                         afterGetLocation()
                     }
@@ -145,23 +147,28 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
     }
     override fun draw(canvas: Canvas, pProjection: Projection) {
         mDrawAccuracyEnabled = false
-        if (customIcons) {
-            setPersonAnchor(0.5f, 0.5f)
-            setDirectionAnchor(0.5f, 0.5f)
-        }
-        when {
-            disableRotateDirection && customIcons -> {
-                if (lastFix != null && isMyLocationEnabled) {
-                    drawPerson(canvas, pProjection, lastFix)
+        if (!skipDraw) {
+            if (customIcons) {
+                setPersonAnchor(0.5f, 0.5f)
+                setDirectionAnchor(0.5f, 0.5f)
+            }
+            when {
+                disableRotateDirection && customIcons -> {
+                    if (lastFix != null && isMyLocationEnabled) {
+                        drawPerson(canvas, pProjection, lastFix)
+                    }
+                }
+                else -> {
+                    if (lastFix != null) {
+                        when (lastFix.hasBearing()) {
+                            true -> drawDirection(canvas, pProjection, lastFix)
+                            else -> drawPerson(canvas, pProjection, lastFix)
+                        }
+                    }
                 }
             }
-            else -> {
-                when (lastFix.hasBearing()) {
-                    true -> drawDirection(canvas, pProjection, lastFix)
-                    else -> drawPerson(canvas, pProjection, lastFix)
-                }
-            }
         }
+
     }
 
     override fun onSnapToItem(x: Int, y: Int, snapPoint: Point?, mapView: IMapView?): Boolean {

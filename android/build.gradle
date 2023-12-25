@@ -2,7 +2,7 @@ group 'hamza.dali.flutter_osm_plugin'
 version '1.0'
 
 buildscript {
-    ext.kotlin_version = '1.8.0'
+    ext.kotlin_version = '1.8.22'
     repositories {
         google()
         mavenCentral()
@@ -41,7 +41,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     lintOptions {
-        disable 'InvalidPackage'
+       // disable 'InvalidPackage'
     }
     buildFeatures {
         viewBinding  true
@@ -54,6 +54,12 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+    }
+    packagingOptions {
+        pickFirst 'lib/x86/libc++_shared.so'
+        pickFirst 'lib/x86_64/libc++_shared.so'
+        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+        pickFirst 'lib/arm64-v8a/libc++_shared.so'
     }
 }
 dependencies {
@@ -81,7 +87,7 @@ dependencies {
     //implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
-    implementation 'org.osmdroid:osmdroid-android:6.1.13'
+    implementation 'org.osmdroid:osmdroid-android:6.1.17'
     implementation 'com.github.MKergall:osmbonuspack:6.9.0'
     implementation 'com.google.android.material:material:1.10.0'
 

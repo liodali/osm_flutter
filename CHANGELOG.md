@@ -1,3 +1,6 @@
+### 0.70.4 : fix bugs
+* fix bug related to user location in android ( #482, thnx for @vargab95)
+* fix launchURl (thnx for @derklaro)
 ### 0.70.3 :
 * fix bug #480
 ### 0.70.2 :
