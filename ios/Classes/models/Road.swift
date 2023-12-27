@@ -4,7 +4,6 @@
 
 import Foundation
 import MapKit
-import TangramMap
 import Polyline
 
 struct StoredRoad: Equatable {

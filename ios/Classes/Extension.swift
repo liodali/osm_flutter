@@ -3,9 +3,9 @@
 //
 
 import Foundation
-import TangramMap
 import OSMFlutterFramework
 import Polyline
+import MapKit
 
 func convertImage(codeImage: String) -> UIImage? {
     let dataImage = Data(base64Encoded: codeImage)
@@ -14,46 +14,7 @@ func convertImage(codeImage: String) -> UIImage? {
     }
     return UIImage(data: dataImage!)// Note it's optional. Don't force unwrap!!!
 }
-extension GeoPointMap {
-    public func setupMarker(
-            on map: TGMapView
-    ) -> TGMarker {
 
-        self.marker = map.markerAdd()
-        self.marker?.icon = markerIcon.image!
-        self.marker?.stylingString = self.markerStyle.toString() //styleMarker
-        self.marker?.point = coordinate
-
-        self.marker?.visible = true
-        return self.marker!
-    }
-
-    public func changeIconMarker(on map: TGMapView) {
-       /* let indexToUpdate = map.markers.firstIndex { m in
-            m.point == self.coordinate
-        }
-        if indexToUpdate != nil {
-            map.markers[indexToUpdate!].icon = markerIcon.image!
-        }*/
-    }
-
-    public func changePositionMarker(on map: TGMapView, mPosition: CLLocationCoordinate2D) {
-        /*let indexToUpdate = map.markers.firstIndex { m in
-            return  m.point == self.coordinate
-        }
-        if indexToUpdate != nil {
-            let oldStyleMarker = map.markers[indexToUpdate!].stylingString
-            markerStyle.copyFromOldStyle(oldMarkerStyleStr: oldStyleMarker)
-            let markerStyleStr = markerStyle.toString()
-            map.markers[indexToUpdate!].stylingString = markerStyleStr
-            map.markers[indexToUpdate!].point = mPosition
-        }*/
-    }
-
-    public func toMap() -> GeoPoint {
-        ["lat": self.coordinate.latitude, "lon": coordinate.longitude]
-    }
-}
 
 extension RoadManager  {
 
@@ -61,77 +22,7 @@ extension RoadManager  {
         return roads.filter({roadF in roadF.polyline.coordinates != nil })
     }
 }
-extension MyLocationMarker {
-    
-    func updateUserLocationStyle(for style: MarkerStyle) {
-        print("marker stringstyling : \(style.toString())")
-        self.marker!.stylingString = style.toString()
-    }
-    
-    
-    func setDirectionArrow(personIcon: MarkerIconData?, arrowDirection: MarkerIconData?) {
-        self.personIcon = personIcon
-        arrowDirectionIcon = arrowDirection
-        var iconM: MarkerIconData? = nil
-        lazy var size = defaultSizeMarker
-        if (arrowDirectionIcon == nil && personIcon == nil) {
-           /*
-            switch (self.userLocationMarkerType) {
-            case .person:
-                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , size: [\(String(describing: size.first))px,\(String(describing: size.last))px] , angle: \(self.angle) } "
-                break;
-            case .arrow:
-                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(String(describing: size.first))px,\(String(describing: size.last))px] , angle: \(angle)  } "
-                break;
-            }
-            */
-            self.marker?.stylingString = self.markerStyle.toString()
-        } else {
-            if (arrowDirectionIcon != nil && userLocationMarkerType == .arrow) {
-                iconM = arrowDirectionIcon
-            } else if (self.personIcon != nil && userLocationMarkerType == .person) {
-                iconM = self.personIcon
-            }
-            self.markerStyle.size = iconM!.size
-            self.markerStyle.style = StyleType.points
-            self.markerStyle.sprite = nil
-            /*
-             marker?.stylingString = " { style: 'points', interactive: false ,color: 'white',size: [\(iconM!.size.first ?? 48)px,\(iconM!.size.last ?? 48)px], order: 2000, collide: false , angle : \(angle) } "
-             */
-            marker?.stylingString = self.markerStyle.toString()
-            marker?.icon = iconM!.image!
-        }
-    }
 
-    func rotateMarker(angle: Int) {
-        userLocationMarkerType = UserLocationMarkerType.arrow
-        self.angle = angle
-        var size = defaultSizeMarker
-        self.markerStyle.angle = angle
-        if (arrowDirectionIcon == nil || personIcon == nil) {
-            self.markerStyle.size = size
-            /*switch (userLocationMarkerType) {
-                case .person:
-                    self.marker?.stylingString = "{ \(MyLocationMarker.personStyle), size: [\(size.first)px,\(size.last)px] , angle: \(self.angle) } "
-                    break;
-                case .arrow:
-                    self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(size.first)px,\(size.last)px] , angle: \(self.angle)  } "
-                    break;
-                }
-            */
-            self.marker?.stylingString = self.markerStyle.toString()
-        } else {
-            self.markerStyle.style = StyleType.points
-            /*
-             self.marker?.stylingString = "{ style: 'points', interactive: \(interactive),color: 'white',size: [\(markerIcon.size.first ?? 48)px,\(markerIcon.size.last ?? 48)px], order: 1000, collide: false , angle: \(angle)  } "
-            */
-            self.marker?.stylingString = self.markerStyle.toString()
-            if (arrowDirectionIcon != nil) {
-                self.marker?.icon = arrowDirectionIcon!.image!
-            }
-        }
-    }
-}
 extension UIImage {
 
     func imageResize (sizeChange:CGSize)-> UIImage{
@@ -148,22 +39,7 @@ extension UIImage {
 
 }
 
-extension StaticGeoPMarker {
-    public func addStaticGeosToMapView(
-            for annotation: StaticGeoPMarker, on map: TGMapView
-    ) -> StaticGeoPMarker {
-        annotation.marker = map.markerAdd()
-        if (annotation.markerIcon.image != nil) {
-            annotation.marker?.icon = annotation.markerIcon.image!
-        }
-        annotation.marker?.stylingString =  annotation.markerStyle.toString() //annotation.styleMarker
-        annotation.marker?.point = annotation.coordinate
 
-        annotation.marker?.visible = true
-        return annotation
-
-    }
-}
 
 extension GeoPoint {
     func toLocationCoordinate() -> CLLocationCoordinate2D {
@@ -540,19 +416,6 @@ extension Array where Element == RoadInstruction {
         }
     }
 }
-extension Sizes: Decodable {
-
-    init(from array: [String]) throws {
-        let sizesStrs =  array.map({$0.replacingOccurrences(of: "px", with: "")})
-        var sizes = [Int]()
-        sizesStrs.forEach({
-            print($0)
-            sizes.append(Int($0)!)
-        })
-        self.init(sizes)
-        
-    }
-}
 
 extension CLLocationCoordinate2D {
     func toGeoPoint() -> GeoPoint {
@@ -656,53 +519,6 @@ extension Array where Element == CLLocationCoordinate2D {
 }
 
 
-
-
-extension TGCoordinateBounds {
-    func contains(location: CLLocationCoordinate2D) -> Bool {
-        var latMatch = false;
-        var lonMatch = false;
-        print(sw)
-        print(ne)
-        //FIXME there's still issues when there's multiple wrap arounds
-        if (ne.latitude < sw.latitude) {
-            //either more than one world/wrapping or the bounding box is wrongish
-            latMatch = true;
-        } else {
-            //normal case
-            latMatch = ((location.latitude < ne.latitude) && (location.latitude > sw.latitude));
-        }
-
-
-        if (ne.longitude < sw.latitude) {
-            //check longitude bounds with consideration for date line with wrapping
-            lonMatch = location.longitude <= ne.longitude && location.longitude >= sw.longitude;
-            //lonMatch = (aLongitude >= mLonEast || aLongitude <= mLonWest);
-
-        } else {
-            lonMatch = ((location.longitude < ne.longitude) && (location.longitude > sw.longitude));
-        }
-
-        return latMatch && lonMatch;
-    }
-
-    func getBoundingBoxZoom(final pScreenWidth: Int, pScreenHeight: Int) -> Double {
-        let longitudeZoom = getLongitudeZoom(pEast: ne.longitude, pWest: sw.longitude, pScreenWidth: pScreenWidth);
-        let latitudeZoom = getLatitudeZoom(pNorth: ne.latitude, pSouth: sw.latitude, pScreenHeight: pScreenHeight);
-        if (longitudeZoom == Double.leastNonzeroMagnitude) {
-            return latitudeZoom;
-        }
-        if (latitudeZoom == Double.leastNonzeroMagnitude) {
-            return longitudeZoom;
-        }
-        return min(latitudeZoom, longitudeZoom);
-    }
-}
-extension AnchorType {
-   static func fromString(anchorStr:String) -> AnchorType {
-        AnchorType.allCasesValues.contains(where: {$0 == anchorStr}) ? self.init(rawValue:anchorStr)! : AnchorType.center
-    }
-}
 func getMaxLatitude() -> Double {
     85.0
 }
@@ -718,8 +534,9 @@ func getMaxLongitude() -> Double {
 func getMinLongitude() -> Double {
     -180.0
 }
-
-
+public func -(lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
+    return abs(lhs.latitude - rhs.latitude) >= 0.000001 && abs(lhs.longitude - rhs.longitude) >= 0.000001
+}
 func getLongitudeZoom(pEast: Double, pWest: Double, pScreenWidth: Int) -> Double {
     let x01West = getX01FromLongitude(longitude: pWest, true);
     let x01East = getX01FromLongitude(longitude: pEast, true);

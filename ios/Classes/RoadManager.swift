@@ -6,7 +6,6 @@ import Foundation
 import Alamofire
 import MapKit
 import Polyline
-import TangramMap
 
 typealias ParserJson = ([String: Any?]?) -> Road
 typealias RoadHandler = (Road?) -> Void
@@ -119,13 +118,7 @@ class RoadManager: PRoadManager {
     }*/
     
   
-    public func drawMultiRoadsOnMap(on roads: [(String, Road)], for map: TGMapView) {
-        for (key, road) in roads {
-           // let routeLayer = createRouteLayer(road: road, for: map)
-           // self.roads.append(RoadFolder(id: key, tgRouteLayer: routeLayer, roadInformation: nil))
-        }
-    }
-
+ 
     func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler) {
         let serverURL = buildURL(wayPoints, typeRoad.rawValue)
         guard let url = Bundle(for: type(of: self)).url(forResource: "en", withExtension: "json") else {

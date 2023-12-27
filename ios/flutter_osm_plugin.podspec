@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.source_files = 'Classes/**/*'
   s.resources = ['Assets/**.json']
   s.dependency 'Flutter'
-  s.dependency 'Tangram-es'
+  #s.dependency 'Tangram-es'
   s.dependency 'Alamofire'
   s.dependency 'Polyline'
   s.dependency 'Yams'

@@ -6,13 +6,14 @@
 //  Copyright © 2020 The Chromium Authors. All rights reserved.
 //
 
-import Foundation
-import UIKit
-import MapKit
-import Flutter
-import TangramMap
-import Polyline
+
 /*
+ import Foundation
+ import UIKit
+ import MapKit
+ import Flutter
+ import Polyline
+ 
 public class MyMapView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, TGMapViewDelegate, TGRecognizerDelegate {
     
     

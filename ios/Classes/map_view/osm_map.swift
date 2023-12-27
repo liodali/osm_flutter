@@ -24,6 +24,9 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
     var lastRoadKey:String? = nil
     var resultFlutter:FlutterResult? = nil
     var storedRoads:[String:StoredRoad] = [:]
+    var isMovedToLocation:Bool = false
+    var canSkipFollow: Bool = false
+    private(set) var latestUserLocation:CLLocationCoordinate2D? = nil
     init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?,defaultPin:String?) {
         var initLocation:CLLocationCoordinate2D?
         var  enableRotationGesture = false
@@ -65,6 +68,7 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         self.mapOSM.mapHandlerDelegate = self
         self.mapOSM.userLocationDelegate = self
         self.mapOSM.roadTapHandlerDelegate = self
+        self.mapOSM.onMapMove = self
     }
     
     required init?(coder: NSCoder) {
@@ -128,7 +132,17 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             result(200)
             break;
         case "trackMe":
-            self.mapOSM.locationManager.toggleTracking()
+            let args = call.arguments as! [Any]
+            let enableStopFollowInDrag = args.first as? Bool ?? false
+            if(!enableStopFollowInDrag){
+                canSkipFollow = false
+                self.mapOSM.locationManager.requestEnableLocation()
+            }
+            let disableRotation = args[1] as? Bool ?? false
+            self.mapOSM.enableRotation(enable: !disableRotation)
+            if(!self.mapOSM.locationManager.isTrackingEnabled()) {
+                self.mapOSM.locationManager.toggleTracking(controlMapFromOutSide: true)
+            }
             result(200)
             break;
         case "user#position":
@@ -468,19 +482,24 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         let args = call.arguments as! [String: Any]
         var personMarkerIcon:UIImage = UIImage()
         var directionMarkerIcon:UIImage?
+        var personIconConfig:MarkerConfiguration!
         if let personIconString = args["personIcon"] {
             let iconArg = personIconString as! [String: Any]
             personMarkerIcon = convertImage(codeImage: iconArg["icon"] as! String) ?? UIImage()
+            let personIconSize = (iconArg["size"] as? [Int])?.toMarkerSize()
+            personIconConfig =  MarkerConfiguration(icon: personMarkerIcon, iconSize: personIconSize, angle: nil, anchor: nil)
+            
         }
+        var directionMarkerConfiguration:MarkerConfiguration? = nil
         if let arrowDirectionIconString = args["arrowDirectionIcon"] {
             let iconArg = arrowDirectionIconString as! [String: Any]
             directionMarkerIcon = convertImage(codeImage: iconArg["icon"] as! String)
+            let directionIconSize = (iconArg["size"] as? [Int])?.toMarkerSize()
+            directionMarkerConfiguration = MarkerConfiguration(icon: directionMarkerIcon!, iconSize: directionIconSize, angle: nil, anchor: nil)
         }
-        self.mapOSM.locationManager.setUserLocationIcons(userLocationIcons:
-                                                            UserLocationConfiguration(userIcon: personMarkerIcon,
-                                                                                      directionIcon: directionMarkerIcon
-                                                                                     )
-        )
+        let userLocationConfig = UserLocationConfiguration(userIcon: personIconConfig,directionIcon: directionMarkerConfiguration )
+        self.mapOSM.locationManager.setUserLocationIcons(userLocationIcons:userLocationConfig)
+        
     }
     private func getGeoPoints(_ result: FlutterResult) {
         let list: [GeoPoint] = self.mapOSM.markerManager.getAllMarkers().map { location in
@@ -504,17 +523,39 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             
         }
     }
-    func onMove(center: CLLocationCoordinate2D, bounds: BoundingBox) {
-        let data: [String: Any] = ["center": point, "bounding": ["north":bounds.north,"south":bounds.south,"east":bounds.east,"west":bounds.west]]
-       
+    func onMove(center: CLLocationCoordinate2D, bounds: BoundingBox, zoom: Double) {
+        let data: [String: Any] = ["center": center.toGeoPoint(), "bounding": bounds.toMap()]
+        print(center)
+        print(latestUserLocation ?? "")
+        print(isMovedToLocation)
+        if self.mapOSM.locationManager.isTrackingEnabled() && !isMovedToLocation
+            && latestUserLocation != nil && latestUserLocation! - center {
+            isMovedToLocation = true
+        }
         DispatchQueue.main.async {
             self.channel.invokeMethod("receiveRegionIsChanging", arguments: data)
         }
     }
     
+    func onRotate(angle: Double) {
+        
+    }
+    func onMapInteraction() {
+         if self.mapOSM.locationManager.isTrackingEnabled() && isMovedToLocation
+                && latestUserLocation != nil && !canSkipFollow  {
+             canSkipFollow = true
+            self.mapOSM.stopCamera()
+        }
+    }
+    
     func locationChanged(userLocation: CLLocationCoordinate2D) {
         let geoMap = userLocation.toGeoPoint()
+        latestUserLocation = userLocation
         channel.invokeMethod("receiveUserLocation", arguments: geoMap)
+        if !isMovedToLocation || !canSkipFollow {
+            self.mapOSM.moveTo(location: userLocation, zoom: nil, animated: true)
+        }
+        
         if let result = resultFlutter {
             result(geoMap)
             resultFlutter = nil
@@ -524,6 +565,7 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
     func handlePermission(state: OSMFlutterFramework.LocationPermission) {
         
     }
+    
     func onTap(location: CLLocationCoordinate2D) {
         DispatchQueue.main.async {
             self.channel.invokeMethod("receiveGeoPoint", arguments: location.toGeoPoint())
