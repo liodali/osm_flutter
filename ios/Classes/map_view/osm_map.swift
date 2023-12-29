@@ -148,7 +148,6 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         case "user#position":
             self.mapOSM.locationManager.requestSingleLocation()
             resultFlutter = result
-            result(200)
             break;
         case "goto#position":
             goToSpecificLocation(call: call, result: result)
@@ -300,6 +299,13 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         case "get#geopoints":
             getGeoPoints(result)
             break;
+        case "toggle#Alllayer":
+            let isVisible = call.arguments as! Bool
+            if isVisible {
+                self.mapOSM.showAllLayers()
+            }else {
+                self.mapOSM.hideAllLayers()
+            }
         default:
             result(nil)
             break;
@@ -390,7 +396,7 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             
         }
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
-        self.mapOSM.markerManager.updatrMarkerIcon(location: coordinate, icon: icon,iconSize: iconSize)
+        self.mapOSM.markerManager.updateMarker(oldlocation: coordinate,newlocation: coordinate ,icon: icon,iconSize: iconSize)
     }
     func deleteMarkers(call:FlutterMethodCall){
         let geoPoints = (call.arguments as! [GeoPoint]).map { point -> CLLocationCoordinate2D in
@@ -428,7 +434,6 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             self.mapOSM.setZoom(zoom: Int(levelZoom))
 
         }
-
     }
     func configZoomMap(call: FlutterMethodCall){
         
