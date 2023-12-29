@@ -115,9 +115,8 @@ mixin WebMixin {
     );
   }
 
-  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
-    return await getMapCenter();
-  }
+ 
+ 
 
   Future<void> goToPosition(GeoPoint p) async {
     await _addPosition(p, animate: true, showMarker: false);
@@ -434,6 +433,13 @@ mixin WebMixin {
     return (List.castFrom(mapGeoPoints))
         .map((elem) => GeoPoint.fromMap(Map<String, double>.from(elem)))
         .toList();
+  }
+
+
+  Future<void> toggleLayer({required bool toggle}) async {
+    await promiseToFuture(interop.toggleAlllayers(
+      mapIdMixin,toggle
+    ));
   }
 }
 

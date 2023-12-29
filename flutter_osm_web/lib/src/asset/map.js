@@ -194,6 +194,10 @@ async function removeRoad(mapId,roadKey){
    var iframe = getIframe(mapId);
    return await iframe.contentWindow.removeRoad(roadKey);
 }
+async function toggleAlllayers(mapId,isVisible){
+   var iframe = getIframe(mapId);
+   return await iframe.contentWindow.toggleAlllayers(isVisible);
+}
 function setUpMap(mapId){
    const osmJS = new OSMJS(mapId);
    osmLinks.set(mapId,osmJS);

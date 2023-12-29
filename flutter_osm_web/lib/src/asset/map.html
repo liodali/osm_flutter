@@ -118,6 +118,17 @@
       }
     });
 
+    async function toggleAlllayers(visible){
+      keysMainLayers.forEach((key)=>{
+          if(!visible){
+            mymap.removeLayer(mainLayers.get(key))
+          }else {
+            mymap.addLayer(mainLayers.get(key))
+          }
+      })
+      return 200
+    }
+
     async function initMapLocation(point) {
       console.log("zoom init map :" + zoom);
       console.log(point.lon + ":" + point.lat)
@@ -129,7 +140,6 @@
             mymap.removeLayer(mainLayers.get(key))
           }
           mymap.addLayer(mainLayers.get(key))
-
       })
       //L.polyline([{lat: 8.498037, lng: 47.489106},{lat: 8.537061, lng: 47.412961}],{color:'red'}).addTo(mymap)
     }

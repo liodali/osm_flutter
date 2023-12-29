@@ -210,17 +210,6 @@ external dynamic disableTracking(
   int mapId,
 );
 
-@JS("changeIconAdvPickerMarker")
-external dynamic changeIconAdvPickerMarker(
-  int mapId,
-  String? icon,
-  SizeJs sizeJs,
-);
-@JS("advSearchLocation")
-external dynamic advSearchLocation(int mapId);
-@JS("cancelAdvSearchLocation")
-external dynamic cancelAdvSearchLocation(int mapId);
-
 @JS('changeTileLayer')
 external dynamic changeTileLayer(
   int mapId,
@@ -259,6 +248,10 @@ external dynamic clearAllRoads(int mapId);
 
 @JS('removeRoad')
 external dynamic removeRoad(int mapId, String roadKey);
+
+
+@JS('toggleAlllayers')
+external dynamic toggleAlllayers(int mapId, bool toggle);
 
 @JS('setUpMap')
 external dynamic setUpMap(int mapId);
