@@ -270,4 +270,12 @@ abstract class IBaseOSMController {
   Future<void> removeMarkers(
     List<GeoPoint> markers,
   );
+
+  /// [toggleLayer]
+  ///
+  /// change visibility of all layers of the map
+  Future<void> toggleLayer({
+   required bool toggle,
+  });
+
 }

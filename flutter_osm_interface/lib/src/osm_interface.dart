@@ -264,4 +264,12 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   Future<List<GeoPoint>> getGeoPointMarkers(
     int idOSM,
   );
+
+  /// [toggleLayer]
+  ///
+  /// change visibility of all layers of the map
+  Future<void> toggleLayer(int idOSM,{
+   required bool toggle,
+  });
+  
 }

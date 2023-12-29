@@ -182,7 +182,6 @@ final class MobileOSMController extends IBaseOSMController {
   ) async {
     final userTrackOption =
         userPositionOption ?? _osmFlutterState.widget.userTrackingOption;
-    
 
     /// change user person Icon and arrow Icon
     if (_osmFlutterState.widget.userLocationMarker != null) {
@@ -210,7 +209,7 @@ final class MobileOSMController extends IBaseOSMController {
       initPosition = await myLocation();
       _checkBoundingBox(box, initPosition);
     }
-    if (box != null && !box.isWorld() && Platform.isAndroid) {
+    if (box != null && !box.isWorld()) {
       await limitAreaMap(box);
     }
     if (initPosition != null && !_osmFlutterState.setCache.value) {
@@ -312,10 +311,6 @@ final class MobileOSMController extends IBaseOSMController {
     await osmPlatform.removePosition(_idMap, p);
   }
 
-
-
-
-
   ///change  Marker of specific static points
   /// we need to global key to recuperate widget from tree element
   /// [id] : (String) id  of the static group geopoint
@@ -335,8 +330,6 @@ final class MobileOSMController extends IBaseOSMController {
       );
     });
   }
-
-
 
   /// change static position in runtime
   ///  [geoPoints] : list of static geoPoint
@@ -578,8 +571,6 @@ final class MobileOSMController extends IBaseOSMController {
     return await osmPlatform.removeAllShapes(_idMap);
   }
 
-
-
   Future<void> mapOrientation(double degree) async {
     var angle = degree;
     await osmPlatform.mapRotation(_idMap, angle);
@@ -696,6 +687,11 @@ final class MobileOSMController extends IBaseOSMController {
   @override
   Future<void> removeMarkers(List<GeoPoint> markers) async {
     await osmPlatform.removeMarkers(_idMap, markers);
+  }
+
+  @override
+  Future<void> toggleLayer({required bool toggle}) async {
+    await osmPlatform.toggleLayer(_idMap, toggle: toggle);
   }
 }
 

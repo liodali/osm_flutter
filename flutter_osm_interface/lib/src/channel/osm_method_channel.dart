@@ -83,10 +83,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Stream<RoadTapEvent> onRoadMapClickListener(int idMap) {
     return _events(idMap).whereType<RoadTapEvent>();
   }
+
   @override
   Stream<IosMapInit> onIosMapInit(int idMap) {
     return _events(idMap).whereType<IosMapInit>();
   }
+
   void setGeoPointHandler(int idMap) async {
     _channels[idMap]!.setMethodCallHandler((call) async {
       switch (call.method) {
@@ -126,8 +128,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
           break;
         case "map#init#ios":
           final result = call.arguments;
-          _streamController
-              .add(IosMapInit(idMap, result));
+          _streamController.add(IosMapInit(idMap, result));
           break;
       }
       return true;
@@ -351,8 +352,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
     return pngBytes;
   }
 
-
-
   @override
   Future<void> drawCircle(int idOSM, CircleOSM circleOSM) async {
     Map requestData = {
@@ -379,8 +378,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> removeCircle(int idOSM, String key) async {
     await _channels[idOSM]?.invokeMethod("remove#circle", key);
   }
-
-
 
   @override
   Future<void> drawRect(int idOSM, RectOSM rectOSM) async {
@@ -413,8 +410,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> removeAllShapes(int idOSM) async {
     await _channels[idOSM]?.invokeMethod("clear#shapes");
   }
-
-
 
   @override
   Future<void> goToPosition(int idOSM, GeoPoint p) async {
@@ -457,8 +452,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
       degree,
     );
   }
-
-
 
   @override
   Future<void> limitArea(int idOSM, BoundingBox box) async {
@@ -669,6 +662,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
     );
   }
 
+  @override
+  Future<void> toggleLayer(int idOSM, {required bool toggle}) async {
+    await _channels[idOSM]!.invokeMethod("toggle#Alllayer", toggle);
+  }
 }
 
 extension config on MethodChannelOSM {
@@ -691,7 +688,6 @@ extension config on MethodChannelOSM {
 
   Future<void> initIosMap(int idOSM) async {
     await _channels[idOSM]?.invokeMethod("init#ios#map");
-
   }
 }
 
