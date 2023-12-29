@@ -9,7 +9,6 @@ import org.osmdroid.util.GeoPoint
 class MapSnapShot {
     private var customPersonMarkerIcon: ByteArray? = null
     private var customArrowMarkerIcon: ByteArray? = null
-    private var customPickerMarkerIcon: ByteArray? = null
     private var staticPointsIcons = HashMap<String, ByteArray>()
     private var staticPoints: HashMap<String, Pair<List<GeoPoint>, List<Double>>> = HashMap()
     private var centerMap: GeoPoint? = null
@@ -104,11 +103,9 @@ class MapSnapShot {
     fun cache(
         geoPoint: GeoPoint,
         zoom: Double,
-        customPickerMarkerIcon: ByteArray?,
     ) {
         centerMap = geoPoint
         this.zoom = zoom
-        this.customPickerMarkerIcon = customPickerMarkerIcon
 
     }
 
@@ -153,7 +150,6 @@ class MapSnapShot {
         }
         customPersonMarkerIcon = null
         customArrowMarkerIcon = null
-        customPickerMarkerIcon = null
     }
 
 }
