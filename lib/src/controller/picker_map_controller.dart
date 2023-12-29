@@ -7,6 +7,7 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 /// you will cancel/get/finish advanced picker
 /// you can also draw road,change current location
 /// get also current searchable text
+@Deprecated("this Controller will be replaced with another controller or improved soon")
 class PickerMapController extends BaseMapController {
   late ValueNotifier<String> _searchableText = ValueNotifier("");
 
