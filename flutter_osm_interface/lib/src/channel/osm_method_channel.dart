@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -646,7 +647,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> changeTileLayer(int idOSM, CustomTile? tile) async {
-    await _channels[idOSM]!.invokeMethod("change#tile", tile?.toMap() ?? null);
+    //osmTileURL
+    final argTile =
+        tile?.toMap() ?? (Platform.isIOS ? CustomTile.osm().toMap() : null);
+    await _channels[idOSM]!.invokeMethod("change#tile", argTile);
   }
 
   @override
