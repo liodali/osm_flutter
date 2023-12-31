@@ -1,3 +1,7 @@
+### 1.0.0-dev.2:
+* fix bugs for angle/iconAnchor in web side
+* fix bug for iconAnchor in iOS side
+* fix customTile in ios when it's null
 ### 1.0.0-dev.1 : 
 * update readme
 ### 1.0.0-dev : 
