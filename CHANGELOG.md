@@ -1,3 +1,8 @@
+### 1.0.0-dev : 
+* switch iOS sdk
+* remove advPicker API
+* add toggleLayerVisibility
+* fix bugs
 ### 0.70.3 :
 * fix bug #480
 ### 0.70.2 :

@@ -250,15 +250,15 @@ class _MainExampleState extends State<OldMainExample>
 
     await controller.setStaticPosition(
       [
-        GeoPointWithOrientation(
+        GeoPointWithOrientation.radian(
           latitude: 47.4433594,
           longitude: 8.4680184,
-          angle: pi / 4,
+          radianAngle: pi / 4,
         ),
-        GeoPointWithOrientation(
+        GeoPointWithOrientation.radian(
           latitude: 47.4517782,
           longitude: 8.4716146,
-          angle: pi / 2,
+          radianAngle: pi / 2,
         ),
       ],
       "line 2",
@@ -303,11 +303,11 @@ class _MainExampleState extends State<OldMainExample>
       appBar: AppBar(
         title: const Text('OSM'),
         leading: IconButton(
-              onPressed: () async {
-                 Navigator.pop(context);//, '/home');
-              },
-              icon: Icon(Icons.arrow_back),
-            ),
+          onPressed: () async {
+            Navigator.pop(context); //, '/home');
+          },
+          icon: Icon(Icons.arrow_back),
+        ),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.layers),
@@ -356,6 +356,12 @@ class _MainExampleState extends State<OldMainExample>
               await Navigator.pushNamed(context, "/picker-result");
             },
             icon: Icon(Icons.search),
+          ),
+          IconButton(
+            onPressed: () async {
+              await controller.toggleLayersVisibility();
+            },
+            icon: Icon(Icons.location_on),
           ),
         ],
       ),
@@ -891,7 +897,7 @@ class OSMLayersChoiceWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-        canPop: false,
+      canPop: false,
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Container(

@@ -35,10 +35,11 @@ class _MainState extends State<Main> with OSMMixinObserver {
   void initState() {
     super.initState();
     controller = MapController(
-      initPosition: GeoPoint(
+      /*initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
-      ),
+      ),*/
+      initMapWithUserPosition: UserTrackingOption()
     );
     controller.addObserver(this);
   }
