@@ -1,3 +1,5 @@
+### 1.0.0-dev.1 : 
+* update readme
 ### 1.0.0-dev : 
 * switch iOS sdk
 * remove advPicker API

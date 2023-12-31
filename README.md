@@ -3,13 +3,13 @@
 </p>
 
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v0.70.3-orange)   
+![pub](https://img.shields.io/badge/pub-v1.0.0--dev-yellow)   
 
 
 ## Platform Support
 | Android | iOS | Web |
 |:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 12) | supported :heavy_check_mark: |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 13) | supported :heavy_check_mark: |
 
 
 <b>osm plugin for flutter apps </b>
@@ -21,7 +21,7 @@
 * customize Icon Marker (Android/iOS/web)
 * customize user Marker (Android/iOS/web)
 * assisted selection position (Android/iOS)
-* set BoundingBox (Android/Web)
+* set BoundingBox (Android/iOS/Web)
 * zoom into region (Android/iOS/web)
 * draw Road  (Android/iOS/web)
 * recuperate information (instruction/duration/distance) of the current road  (Android/iOS/web)
@@ -49,7 +49,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^0.70.3
+      flutter_osm_plugin: ^1.0.0-dev
 
 
 
