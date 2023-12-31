@@ -31,7 +31,7 @@ struct AnchorGeoPoint {
         self.offset = offset ?? (0.0,0.0)
     }
     init(anchorMap: [String:Any]) {
-        self.anchor = (x:anchorMap["x"] as! Double,y:anchorMap["x"] as! Double)
+        self.anchor = (x:anchorMap["x"] as! Double,y:anchorMap["y"] as! Double)
         if anchorMap.contains(where: { $0.key == "offset" }) {
             let offsetMap = anchorMap["offset"] as? [String:Double]
             self.offset = (x:offsetMap?["x"] ?? 0.0,y:offsetMap?["y"] ?? 0.0)

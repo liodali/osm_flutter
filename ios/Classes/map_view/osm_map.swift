@@ -98,7 +98,6 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             if let customTileArgs = args {
                 let tile = CustomTiles(customTileArgs)
                 self.mapOSM.setCustomTile(tile: tile)
-
             }
 
             result(200)
@@ -345,16 +344,16 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             let coordinate = point.toLocationCoordinate()
             let iconSizeArg = iconArg["size"] as? [Int]
             let sizeIcon = iconSizeArg!.toMarkerSize()
-            var angle = 0
+            var angle = Float(0.0)
             var anchor:AnchorGeoPoint? = nil
             if let _angle = point["angle"] {
-                angle = Int(CGFloat(_angle).toDegrees)
+                angle = Float(_angle)
             }
             if let _anchor = args["iconAnchor"]{
                 anchor = AnchorGeoPoint(anchorMap: _anchor as! [String:Any])
             }
            //GeoPointMap(icon: icon, coordinate: coordinate, angle: angle, anchor: anchor)
-            let configuration = MarkerConfiguration(icon: icon!,iconSize: sizeIcon , angle: Float(angle), anchor: anchor?.compute(),scaleType: MarkerScaleType.invariant)
+            let configuration = MarkerConfiguration(icon: icon!,iconSize: sizeIcon , angle: angle, anchor: anchor?.compute(),scaleType: MarkerScaleType.invariant)
             let marker = Marker(location: coordinate, markerConfiguration: configuration)
             self.mapOSM.markerManager.addMarker(marker: marker)
         }
@@ -365,19 +364,18 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         let coordinate_new = (args["new_location"] as! GeoPoint).toLocationCoordinate()
         var icon: UIImage? = nil
         var iconSize: MarkerIconSize? = nil
-        var angle = 0
+        var angle = Float(0.0)
         var anchor:AnchorGeoPoint? = nil
         if let iconStr = args["new_icon"] as? [String: Any] {
             icon =  convertImage(codeImage: iconStr["icon"] as! String)
             iconSize = (iconStr["size"] as? [Int])!.toMarkerSize()
         }
         if let _angle = args["angle"] as? Double {
-            angle = Int(CGFloat(_angle).toDegrees)
+            angle = Float(_angle)
         }
         if let _anchor = args["iconAnchor"]{
             anchor = AnchorGeoPoint(anchorMap: _anchor as! [String:Any])
         }
-        print("changePositionMarker:\(coordinate_old)")
         self.mapOSM.markerManager.updateMarker(oldlocation: coordinate_old, newlocation: coordinate_new,
                                                     icon: icon,
                                                     iconSize: iconSize,
@@ -470,13 +468,13 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         let id = args["id"] as! String
 
         let listPois: [MarkerIconPoi] = (args["point"] as! [GeoPoint]).map { point -> MarkerIconPoi in
-            var angle = 0
+            var angle = Float(0)
             if (point.keys.contains("angle")) {
-                angle = Int(CGFloat(point["angle"]! as Double).toDegrees)
+                angle = Float(point["angle"]! as Double)
             }
             let location = point.toLocationCoordinate()
 
-            return MarkerIconPoi(location: location, angle: Float(angle), anchor: nil)
+            return MarkerIconPoi(location: location, angle: angle, anchor: nil)
         }
 
         self.mapOSM.poisManager.setMarkersPoi(id: id, markers: listPois)
