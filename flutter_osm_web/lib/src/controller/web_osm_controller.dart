@@ -321,7 +321,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         newLocation.toGeoJS(),
         icon,
         iconSize,
-        angle != null ? (angle * (180 / pi)) : 0,
+        angle != null ? (angle * (180 / pi)) : null,
         iconAnchor?.toAnchorJS,
       );
     });
