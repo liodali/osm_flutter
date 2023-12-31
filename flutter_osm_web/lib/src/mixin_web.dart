@@ -115,9 +115,6 @@ mixin WebMixin {
     );
   }
 
- 
- 
-
   Future<void> goToPosition(GeoPoint p) async {
     await _addPosition(p, animate: true, showMarker: false);
   }
@@ -187,10 +184,8 @@ mixin WebMixin {
       );
     }
     if (listWithoutOrientation.length != geoPoints.length) {
-      List<GeoPointWithOrientation> listOrientation = geoPoints
-          .where((p) => p is GeoPointWithOrientation)
-          .map((e) => e as GeoPointWithOrientation)
-          .toList();
+      List<GeoPointWithOrientation> listOrientation =
+          geoPoints.whereType<GeoPointWithOrientation>().toList();
       if (listOrientation.isNotEmpty) {
         await interop.setStaticGeoPointsWithOrientation(
           mapIdMixin,
@@ -435,11 +430,8 @@ mixin WebMixin {
         .toList();
   }
 
-
   Future<void> toggleLayer({required bool toggle}) async {
-    await promiseToFuture(interop.toggleAlllayers(
-      mapIdMixin,toggle
-    ));
+    await promiseToFuture(interop.toggleAlllayers(mapIdMixin, toggle));
   }
 }
 

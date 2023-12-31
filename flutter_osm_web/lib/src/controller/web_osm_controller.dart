@@ -315,8 +315,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         final size = osmWebFlutterState.dynamicMarkerKey?.currentContext?.size;
         iconSize = size.toSizeJS();
       }
-      debugPrint(
-          "changedMarker:angle:${angle != null ? (angle * (180 / pi)) : 0}");
       await interop.changeMarker(
         mapIdMixin,
         oldLocation.toGeoJS(),
