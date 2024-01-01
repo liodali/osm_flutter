@@ -434,7 +434,8 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         }
     }
     func configZoomMap(call: FlutterMethodCall){
-        
+        let zoomArgs = (call.arguments as! [String:Double]).mapValues(Int.init)
+        self.zoomConfig = ZoomConfiguration(zoomArgs)
     }
     func getMapBounds(result: @escaping FlutterResult){
         let boundingBox = self.mapOSM.getBoundingBox()
@@ -528,9 +529,6 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
     }
     func onMove(center: CLLocationCoordinate2D, bounds: BoundingBox, zoom: Double) {
         let data: [String: Any] = ["center": center.toGeoPoint(), "bounding": bounds.toMap()]
-        print(center)
-        print(latestUserLocation ?? "")
-        print(isMovedToLocation)
         if self.mapOSM.locationManager.isTrackingEnabled() && !isMovedToLocation
             && latestUserLocation != nil && latestUserLocation! - center {
             isMovedToLocation = true
