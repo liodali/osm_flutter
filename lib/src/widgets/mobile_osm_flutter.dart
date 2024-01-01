@@ -323,9 +323,8 @@ class PlatformView extends StatelessWidget {
     if (userlocation) {
       params.putIfAbsent("userlocation", () => userlocation);
     }
-    if (initlocation != null) {
-      params.putIfAbsent("zoomOption", () => zoomOption.toMap);
-    }
+    params.putIfAbsent("zoomOption", () => zoomOption.toMap);
+    
     return params;
   }
 }
