@@ -18,12 +18,28 @@ const earthRadiusMeters = 6378137;
 const deg2rad = pi / 180.0;
 const rad2deg = 180.0 / pi;
 
+bool isEqual1eX(double value) {
+  final log10Value = log(value) / ln10;
+  final exponent = log10Value.toInt();
+  final calcularedV = double.parse(
+      pow(10, log10Value.round()).toStringAsFixed(log10Value.round().abs()));
+  return value == calcularedV && (exponent.abs() >= 2 && exponent.abs() <= 8);
+}
+
 extension ExtGeoPoint on GeoPoint {
   List<num> toListNum() {
     return [
       this.latitude,
       this.longitude,
     ];
+  }
+
+  bool isEqual(GeoPoint location, {double precision = 1e6}) {
+    assert(isEqual1eX(precision), "precision should be between 1e-2,1e-8");
+    final exponent = log(precision) ~/ log10e;
+    final nPrecision = exponent.isNegative ? precision : 1 / precision;
+    return (latitude - location.latitude).abs() <= nPrecision &&
+        (longitude - location.longitude).abs() <= nPrecision;
   }
 }
 
@@ -190,8 +206,6 @@ extension ExtTileUrls on TileURLs {
     throw UnsupportedError("platform not supported yet");
   }
 }
-
-
 
 extension ExtString on String {
   List<GeoPoint> stringToGeoPoints() {

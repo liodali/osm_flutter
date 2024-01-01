@@ -1,3 +1,4 @@
+import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_interface/src/types/types.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
@@ -74,7 +75,7 @@ void main() {
       ],
     );
     final urlsIOS = tileUrls.toMapiOS();
-    
+
     expect(urlsIOS["url"], "https://{s}.tile.opentopomap.org");
   });
   test('convert urls for web', () {
@@ -92,5 +93,25 @@ void main() {
       'abc',
     ];
     expect(urlsWeb, result);
+  });
+
+  test('test isEqual1eX', () {
+    expect(isEqual1eX(0.001), true);
+    expect(isEqual1eX(0.01), false);
+    expect(isEqual1eX(1e5), true);
+    expect(isEqual1eX(1e9), true);
+    expect(isEqual1eX(1e10), false);
+    expect(isEqual1eX(1e-3), true);
+    expect(isEqual1eX(1e-4), true);
+  });
+  test('test isEqual for geoPoint', () {
+    final p1 =
+        GeoPoint(latitude: 47.43751121525967, longitude: 8.473693728446962);
+    final p2 =
+        GeoPoint(latitude: 47.43751121525967, longitude: 8.473693728446962);
+        final p3 =
+        GeoPoint(latitude: 47.43751421525967, longitude: 8.473695728446962);
+    expect(p1.isEqual(p2), true);
+    expect(p1.isEqual(p3), false);
   });
 }

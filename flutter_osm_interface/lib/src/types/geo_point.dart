@@ -82,8 +82,8 @@ class GeoPoint {
       identical(this, other) ||
       other is GeoPoint &&
           runtimeType == other.runtimeType &&
-          longitude == other.longitude &&
-          latitude == other.latitude;
+          longitude - other.longitude <= 1e-6 &&
+          latitude - other.latitude<= 1e-6;
 
   @override
   int get hashCode => longitude.hashCode ^ latitude.hashCode;
