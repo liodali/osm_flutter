@@ -1,3 +1,7 @@
+### 1.0.0-dev.3:
+* Dix bug in init map with zoomOption in iOS side
+* Add `isEqual` method to `GeoPoint`
+* Improve/fix bug in ios sdk
 ### 1.0.0-dev.2:
 * fix bugs for angle/iconAnchor in web side
 * fix bug for iconAnchor in iOS side

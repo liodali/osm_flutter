@@ -35,12 +35,11 @@ class _MainState extends State<Main> with OSMMixinObserver {
   void initState() {
     super.initState();
     controller = MapController(
-      /*initPosition: GeoPoint(
+        /*initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
       ),*/
-      initMapWithUserPosition: UserTrackingOption()
-    );
+        initMapWithUserPosition: UserTrackingOption());
     controller.addObserver(this);
   }
 
@@ -126,7 +125,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
         ],
         if (!kIsWeb) ...[
           Positioned(
-            top: 102,
+            top: (MediaQuery.maybeOf(context)?.viewPadding.top ?? 26) + 48,
             right: 15,
             child: MapRotation(
               controller: controller,
@@ -150,6 +149,14 @@ class _MainState extends State<Main> with OSMMixinObserver {
             showFab: showFab,
             trackingNotifier: trackingNotifier,
             userLocationIcon: userLocationIcon,
+          ),
+        ),
+        Positioned(
+          top: kIsWeb ? 26 : MediaQuery.maybeOf(context)?.viewPadding.top,
+          left: 64,
+          right: 72,
+          child: SearchInMap(
+            controller: controller,
           ),
         )
       ],
@@ -500,6 +507,67 @@ class ActivationUserLocation extends StatelessWidget {
                 }
                 return Icon(Icons.near_me);
               },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SearchInMap extends StatefulWidget {
+  final MapController controller;
+
+  const SearchInMap({
+    super.key,
+    required this.controller,
+  });
+  @override
+  State<StatefulWidget> createState() => _SearchInMapState();
+}
+
+class _SearchInMapState extends State<SearchInMap> {
+  final textController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    textController.addListener(onTextChanged);
+  }
+
+  void onTextChanged() {}
+  @override
+  void dispose() {
+    textController.removeListener(onTextChanged);
+    textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: Card(
+        color: Colors.white,
+        elevation: 2,
+        shape: StadiumBorder(),
+        child: TextField(
+          controller: textController,
+          onTap: () {},
+          maxLines: 1,
+          keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.zero,
+            filled: false,
+            isDense: true,
+            hintText: "search",
+            prefixIcon: Icon(
+              Icons.search,
+              size: 22,
+            ),
+            border: OutlineInputBorder(
+              borderSide: BorderSide.none,
             ),
           ),
         ),
