@@ -107,7 +107,6 @@
         };
         onRegionChanged(box, centerP);
       }
-
     });
     mymap.on('mousedown', function (e) {
       if (isReady) {
@@ -237,7 +236,9 @@
       } else {
         mymap.flyTo(position, mymap.getZoom());
       }
-      setHomeMarker(point, args);
+      if(showMarker){
+        setHomeMarker(point, args);
+      }
       return 200;
     }
     

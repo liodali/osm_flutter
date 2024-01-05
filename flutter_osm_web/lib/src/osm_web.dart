@@ -10,6 +10,7 @@ class OsmWebWidget extends StatefulWidget {
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
+  final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
   final Widget? mapIsLoading;
   final List<GlobalKey> globalKeys;
@@ -31,6 +32,7 @@ class OsmWebWidget extends StatefulWidget {
     this.userTrackingOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
+    this.onMapMoved,
     required this.mapIsReadyListener,
     this.mapIsLoading,
     required this.globalKeys,

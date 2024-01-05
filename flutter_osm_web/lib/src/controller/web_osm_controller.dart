@@ -142,6 +142,9 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       }
     });
     webPlatform.onRegionIsChangingListener(mapIdMixin).listen((event) {
+      if (osmWebFlutterState.widget.onMapMoved != null) {
+        osmWebFlutterState.widget.onMapMoved!(event.value);
+      }
       osmWebFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
       osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
@@ -184,8 +187,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     if (osmWebFlutterState.widget.roadConfiguration != null) {
       defaultRoadOption = osmWebFlutterState.widget.roadConfiguration!;
     }
-
-   
 
     /// change user person Icon and arrow Icon
     if (osmWebFlutterState.widget.userLocationMarker != null) {
@@ -291,7 +292,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     });
   }
 
-
   @override
   Future<void> changeMarker({
     required GeoPoint oldLocation,
@@ -326,10 +326,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       );
     });
   }
-
-
-
-
 
   Future customUserLocationMarker(
       GlobalKey<State<StatefulWidget>> personIconMarkerKey) async {
