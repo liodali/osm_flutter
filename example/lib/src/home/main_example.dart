@@ -152,13 +152,20 @@ class _MainState extends State<Main> with OSMMixinObserver {
           ),
         ),
         Positioned(
+          bottom: 92,
+          right: 15,
+          child: DirectionRouteLocation(
+            controller: controller,
+          ),
+        ),
+        Positioned(
           top: kIsWeb ? 26 : MediaQuery.maybeOf(context)?.viewPadding.top,
           left: 64,
           right: 72,
           child: SearchInMap(
             controller: controller,
           ),
-        )
+        ),
       ],
     );
   }
@@ -509,6 +516,32 @@ class ActivationUserLocation extends StatelessWidget {
               },
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class DirectionRouteLocation extends StatelessWidget {
+  final MapController controller;
+
+  const DirectionRouteLocation({
+    super.key,
+    required this.controller,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return PointerInterceptor(
+      child: FloatingActionButton(
+        key: UniqueKey(),
+        onPressed: () async {},
+        mini: true,
+        heroTag: "directionFab",
+        backgroundColor: Colors.blue,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Icon(
+          Icons.directions,
+          color: Colors.white,
         ),
       ),
     );

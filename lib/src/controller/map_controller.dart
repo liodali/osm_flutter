@@ -496,7 +496,9 @@ class MapController extends BaseMapController {
   }
 
   Future<BoundingBox> get bounds async => await osmBaseController.getBounds();
-
+  /// centerMap
+  /// 
+  /// this attribute to retrieve center location of the map
   Future<GeoPoint> get centerMap async =>
       await osmBaseController.getMapCenter();
 

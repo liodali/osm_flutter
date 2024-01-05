@@ -99,7 +99,6 @@ final class MobileOSMController extends IBaseOSMController {
     osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
-
       _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
         osmMixin.onSingleTap(event.value);
       });
@@ -127,6 +126,10 @@ final class MobileOSMController extends IBaseOSMController {
     });
 
     osmPlatform.onRegionIsChangingListener(_idMap).listen((event) {
+      if (_osmFlutterState.widget.onMapMoved != null) {
+        _osmFlutterState.widget.onMapMoved!(event.value);
+      }
+
       _osmFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
       _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {

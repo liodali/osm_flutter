@@ -1,5 +1,5 @@
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_interface/src/types/types.dart';
+import 'package:flutter_osm_interface/src/common/utilities.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 
