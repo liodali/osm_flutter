@@ -11,6 +11,7 @@ Widget buildWidget({
   UserTrackingOption? userTrackingOption,
   OnGeoPointClicked? onGeoPointClicked,
   OnLocationChanged? onLocationChanged,
+  OnMapMoved? onMapMoved,
   required ValueNotifier<bool> mapIsReadyListener,
   required ValueNotifier<Widget?> dynamicMarkerWidgetNotifier,
   List<StaticPositionGeoPoint> staticPoints = const [],
@@ -41,6 +42,7 @@ Widget buildWidget({
       mapIsLoading: mapIsLoading,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
+      onMapMoved: onMapMoved,
       roadConfiguration: roadConfiguration,
       zoomOption: zoomOption,
       userLocationMarker: userLocationMarker,
@@ -57,6 +59,7 @@ class OSMMap extends StatefulWidget {
     this.userTrackingOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
+    this.onMapMoved,
     required this.mapIsReadyListener,
     required this.dynamicMarkerWidgetNotifier,
     this.onMapIsReady,
@@ -77,6 +80,7 @@ class OSMMap extends StatefulWidget {
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
+  final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
   final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
   final Function(bool)? onMapIsReady;
@@ -118,6 +122,7 @@ class _OSMMapState extends State<OSMMap> {
       mapIsLoading: widget.mapIsLoading,
       onGeoPointClicked: widget.onGeoPointClicked,
       onLocationChanged: widget.onLocationChanged,
+      onMapMoved: widget.onMapMoved,
       onMapIsReady: widget.onMapIsReady,
       roadConfiguration: widget.roadConfiguration,
       showContributorBadgeForOSM: widget.showContributorBadgeForOSM,

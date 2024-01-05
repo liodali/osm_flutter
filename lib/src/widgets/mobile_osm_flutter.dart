@@ -24,6 +24,7 @@ class MobileOsmFlutter extends StatefulWidget {
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
+  final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
   final Widget? mapIsLoading;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -45,6 +46,7 @@ class MobileOsmFlutter extends StatefulWidget {
     this.userTrackingOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
+    this.onMapMoved,
     required this.mapIsReadyListener,
     required this.dynamicMarkerWidgetNotifier,
     this.staticPoints = const [],

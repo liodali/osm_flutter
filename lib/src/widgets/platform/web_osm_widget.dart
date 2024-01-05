@@ -8,6 +8,7 @@ Widget getWidget({
   UserTrackingOption? userTrackingOption,
   OnGeoPointClicked? onGeoPointClicked,
   OnLocationChanged? onLocationChanged,
+  OnMapMoved? onMapMoved,
   required ValueNotifier<bool> mapIsReadyListener,
   required ValueNotifier<Widget?> dynamicMarkerWidgetNotifier,
   List<StaticPositionGeoPoint> staticPoints = const [],
@@ -32,6 +33,7 @@ Widget getWidget({
       staticPoints: staticPoints,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
+      onMapMoved: onMapMoved,
       mapIsReadyListener: mapIsReadyListener,
       mapIsLoading: mapIsLoading,
       staticIconGlobalKeys: staticIconGlobalKeys,
@@ -55,6 +57,7 @@ class OSMMapWidget extends StatelessWidget {
     this.userTrackingOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
+    this.onMapMoved,
     required this.mapIsReadyListener,
     required this.dynamicMarkerWidgetNotifier,
     this.onMapIsReady,
@@ -75,6 +78,7 @@ class OSMMapWidget extends StatelessWidget {
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
+  final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
   final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
   final Function(bool)? onMapIsReady;
@@ -100,6 +104,7 @@ class OSMMapWidget extends StatelessWidget {
       staticPoints: staticPoints,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
+      onMapMoved: onMapMoved,
       mapIsReadyListener: mapIsReadyListener,
       mapIsLoading: mapIsLoading,
       staticIconGlobalKeys: staticIconGlobalKeys,

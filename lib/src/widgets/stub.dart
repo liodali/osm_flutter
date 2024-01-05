@@ -7,6 +7,7 @@ Widget getWidget({
   UserTrackingOption? userTrackingOption,
   OnGeoPointClicked? onGeoPointClicked,
   OnLocationChanged? onLocationChanged,
+  OnMapMoved? onMapMoved,
   required ValueNotifier<bool> mapIsReadyListener,
   required ValueNotifier<Widget?> dynamicMarkerWidgetNotifier,
   Function(bool)? onMapIsReady,
@@ -33,6 +34,7 @@ class OSMMapWidget extends StatelessWidget {
     this.userTrackingOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
+    this.onMapMoved,
     required this.mapIsReadyListener,
     required this.dynamicMarkerWidgetNotifier,
     this.onMapIsReady,
@@ -54,6 +56,7 @@ class OSMMapWidget extends StatelessWidget {
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
+  final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
   final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
   final Function(bool)? onMapIsReady;
