@@ -12,12 +12,14 @@ import 'package:flutter_osm_interface/src/types/types.dart';
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
+typedef OnMapMoved = void Function(Region);
 
 const iosSizeIcon = [48.0, 48.0];
 const earthRadiusMeters = 6378137;
 const deg2rad = pi / 180.0;
 const rad2deg = 180.0 / pi;
 
+@visibleForTesting
 bool isEqual1eX(double value) {
   final log10Value = log(value) / ln10;
   final exponent = log10Value.toInt();

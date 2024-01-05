@@ -7,11 +7,12 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 /// you will cancel/get/finish advanced picker
 /// you can also draw road,change current location
 /// get also current searchable text
-@Deprecated("this Controller will be replaced with another controller or improved soon")
 class PickerMapController extends BaseMapController {
   late ValueNotifier<String> _searchableText = ValueNotifier("");
+  late ValueNotifier<bool> _isMovingNotifier = ValueNotifier(false);
 
   ValueListenable<String> get searchableText => _searchableText;
+  ValueListenable<bool> get isMapMovingNotifier => _isMovingNotifier;
 
   PickerMapController({
     UserTrackingOption? initMapWithUserPosition,
@@ -21,8 +22,11 @@ class PickerMapController extends BaseMapController {
           initPosition: initPosition,
         );
 
-  void setSearchableText(String value) {
-    _searchableText.value = value;
+  void setSearchableText(String text) {
+    _searchableText.value = text;
+  }
+  void setMapMoving(bool isMoving) {
+    _isMovingNotifier.value = isMoving;
   }
 
   ///animate  to specific position with out add marker into the map
@@ -32,22 +36,17 @@ class PickerMapController extends BaseMapController {
     await osmBaseController.goToPosition(p);
   }
 
-  Future<void> advancedPositionPicker() async {
-   
-  }
+  /// isMapMoving
+  ///
+  /// this method is to trieve is the map currently moving or not
+  bool isMapMoving() => _isMovingNotifier.value;
 
+  /// [selectAdvancedPositionPicker]
+  ///
   /// select current position and finish advanced picker
-  Future<GeoPoint> selectAdvancedPositionPicker() async {
-    throw Exception();
+  Future<GeoPoint> selectAdvancedPositionPicker() {
+    return osmBaseController.getMapCenter();
   }
-
-  /// get current position
-  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
-    throw Exception();
-  }
-
-  /// cancel advanced picker
-  Future<void> cancelAdvancedPositionPicker() async {}
 
   @override
   void dispose() {
