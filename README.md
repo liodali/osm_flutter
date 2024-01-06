@@ -3,7 +3,7 @@
 </p>
 
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v1.0.0--dev.3-yellow)   
+![pub](https://img.shields.io/badge/pub-v1.0.0--dev.4-yellow)   
 
 
 ## Platform Support
@@ -49,7 +49,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^1.0.0-dev.3
+      flutter_osm_plugin: ^1.0.0-dev.4
 
 
 
@@ -434,18 +434,6 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 ```
 * PS : static position cannot be removed by this method 
 
-<b>15.4 Assisted selection </b> (for more details see example) 
-
-```dart
- /// To Start assisted Selection
- await controller.advancedPositionPicker();
- /// To get location desired
-  GeoPoint p = await controller.getCurrentPositionAdvancedPositionPicker();
-  /// To get location desired and close picker
- GeoPoint p = await controller.selectAdvancedPositionPicker();
- /// To cancel assisted Selection
- await controller.cancelAdvancedPositionPicker();
-```
 
 <b>16) Draw road,recuperate instructions ,distance in km and duration in sec</b>
 
@@ -645,6 +633,7 @@ final configs = [
 | `onLongTap`                   | (callback) Called when map make long click on marker   |
 | `onRegionChanged`             | (callback) Notified when map is change regsion (on moves)    |
 | `onRoadTap`                   | (callback) Notified when user click on the poyline (road)   |
+| `onLocationChanged`           | (callback) Notified when user location changed  |
 
 
 ** example 
@@ -685,14 +674,17 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
   void onRegionChanged(Region region) {
     super.onRegionChanged();
     /// TODO
-
   }
 
   @override
   void onRoadTap(RoadInfo road) {
     super.onRoadTap();
     /// TODO
-
+  }
+  @override
+  void onLocationChanged(GeoPoint userLocation) {
+    super.onLocationChanged();
+    /// TODO
   }
 }
 ```
@@ -707,6 +699,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `osmOption`                   | (OSMOption) used to configure OSM Map such as zoom,road,userLocationMarker    |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
 | `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |
+| `onMapMoved`                  | (callback) it is each the map moved user handler or navigate to another location using APIs       |
 | `onMapIsReady`                | (callback) listener trigger to get map is initialized or not |
 
 ## `OSMOption` 

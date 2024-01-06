@@ -1,3 +1,6 @@
+### 1.0.0-dev.4:
+* improve picker_map_controller
+* improve picker dialog and widget
 ### 1.0.0-dev.3:
 * Dix bug in init map with zoomOption in iOS side
 * Add `isEqual` method to `GeoPoint`
