@@ -306,10 +306,10 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
                 self.mapOSM.hideAllLayers()
             }
         case "draw#rect":
-            drawRectShape(args:call.arguments, result: result)
+            drawShape(args:call.arguments, result: result,shapeType: ShapeTypes.Rect)
             break;
         case "draw#circle":
-            drawRectShape(args:call.arguments, result: result)
+            drawShape(args:call.arguments, result: result,shapeType: ShapeTypes.Circle)
             break;
         case "remove#cirlce":
             let key = call.arguments
@@ -538,12 +538,18 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         }
         result(list)
     }
-    func drawRectShape(args: Any?, result: @escaping FlutterResult){
+    func drawShape(args: Any?, result: @escaping FlutterResult,shapeType:ShapeTypes){
         let rectJson = args as! [String:Any]
         //print(pointInit)
         //let initZoom =
         let key = rectJson["key"] as! String
-        let shape = RectShapeOSM.fromMap(json: rectJson)
+        let shape:PShape
+        switch (shapeType)  {
+            case ShapeTypes.Rect:
+                shape =  RectShapeOSM.fromMap(json: rectJson)
+            case ShapeTypes.Circle:
+                shape = RectShapeOSM.fromMap(json: rectJson)
+        }
         mapOSM.shapeManager.drawShape(key: key, shape: shape)
         result(200)
     }
