@@ -25,9 +25,8 @@ protocol PRoadManager {
     func hasRoads() -> Bool
 }
 
-class RoadManager: PRoadManager {
+class OSMRoadManager: PRoadManager {
 
-    
     
 
     public let MANEUVERS: Dictionary<String, Int> = [

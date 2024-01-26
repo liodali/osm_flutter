@@ -12,12 +12,10 @@ import Flutter
 public class MapviewFactory : NSObject, FlutterPlatformViewFactory {
     let controller: FlutterViewController
     let messenger : FlutterBinaryMessenger
-    let dynamicOSMPath:String?
     let defaultPinPath:String?
-    init(controller: FlutterViewController,messenger:FlutterBinaryMessenger,dynamicOSM:String?,defaultPin:String?) {
+    init(controller: FlutterViewController,messenger:FlutterBinaryMessenger,defaultPin:String?) {
         self.controller = controller
         self.messenger = messenger
-        self.dynamicOSMPath = dynamicOSM
         self.defaultPinPath = defaultPin
     }
     

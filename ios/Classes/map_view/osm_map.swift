@@ -19,7 +19,7 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
     var boundingbox: BoundingBox? = nil
     let channel: FlutterMethodChannel
     var zoomConfig:ZoomConfiguration = ZoomConfiguration(initZoom: 8,minZoom: 2,maxZoom: 19,step: 1)
-    lazy var roadManager: RoadManager = RoadManager()
+    lazy var roadManager: OSMRoadManager = OSMRoadManager()
     let roadColor: String = "#ff0000ff"
     var lastRoadKey:String? = nil
     var resultFlutter:FlutterResult? = nil
@@ -305,6 +305,33 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             }else {
                 self.mapOSM.hideAllLayers()
             }
+        case "draw#rect":
+            drawRectShape(args:call.arguments, result: result)
+            break;
+        case "draw#circle":
+            drawRectShape(args:call.arguments, result: result)
+            break;
+        case "remove#cirlce":
+            let key = call.arguments
+            if key == nil {
+                self.mapOSM.shapeManager.deleteAllCircles()
+            }else{
+                self.mapOSM.shapeManager.deleteShape(ckey: key as! String)
+            }
+            result(200)
+            break;
+        case "remove#rect":
+            let key = call.arguments
+            if key == nil {
+                self.mapOSM.shapeManager.deleteAllRect()
+            }else{
+                self.mapOSM.shapeManager.deleteShape(ckey: key as! String)
+            }
+            result(200)
+            break;
+        case "clear#shapes":
+            self.mapOSM.shapeManager.deleteAllShapes()
+            break;
         default:
             result(nil)
             break;
@@ -510,6 +537,15 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             location.toGeoPoint()
         }
         result(list)
+    }
+    func drawRectShape(args: Any?, result: @escaping FlutterResult){
+        let rectJson = args as! [String:Any]
+        //print(pointInit)
+        //let initZoom =
+        let key = rectJson["key"] as! String
+        let shape = RectShapeOSM.fromMap(json: rectJson)
+        mapOSM.shapeManager.drawShape(key: key, shape: shape)
+        result(200)
     }
     func onTap(roadId: String) {
         let roadSelected = storedRoads[roadId]

@@ -16,7 +16,7 @@ func convertImage(codeImage: String) -> UIImage? {
 }
 
 
-extension RoadManager  {
+extension OSMRoadManager  {
 
     func hasPoylines() -> [RoadFolder] {
         return roads.filter({roadF in roadF.polyline.coordinates != nil })
@@ -518,7 +518,23 @@ extension Array where Element == CLLocationCoordinate2D {
     }
 }
 
-
+extension RectShapeOSM {
+    static func fromMap(json:[String:Any])->RectShapeOSM {
+       let center = CLLocationCoordinate2D(latitude: json["lat"] as! Double, longitude: json["lon"] as! Double)
+        let colorFilledJs = json["color"] as! [Any]
+        let filledCOlor = UIColor(absoluteRed: colorFilledJs[0] as! Int, green:  colorFilledJs[2] as! Int,
+                                blue:  colorFilledJs[1] as! Int, alpha:  colorFilledJs[3] as! Int)
+        var borderColor = filledCOlor
+        if json.keys.contains("colorBorder") {
+            let colorBorderJson = json["colorBorder"] as! [Any]
+            borderColor = UIColor(absoluteRed: colorBorderJson[0] as! Int, green:  colorBorderJson[2] as! Int,
+                                    blue:  colorBorderJson[1] as! Int, alpha:  colorBorderJson[3] as! Int)
+        }
+        let borderWidth = json["strokeWidth"] as! Double
+        let style = ShapeStyleConfiguration(filledColor: filledCOlor, borderColor: borderColor, borderWidth: borderWidth)
+        return RectShapeOSM(center: center, distanceInMeter: json["distance"] as! Double, style: style)
+    }
+}
 func getMaxLatitude() -> Double {
     85.0
 }
