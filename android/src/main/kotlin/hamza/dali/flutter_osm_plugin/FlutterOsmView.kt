@@ -93,7 +93,10 @@ import kotlin.collections.set
 
 
 typealias VoidCallback = () -> Unit
-
+enum class Shape{
+    rect,
+    circle
+}
 fun FlutterOsmView.configZoomMap(call: MethodCall, result: MethodChannel.Result) {
     val args = call.arguments as HashMap<*, *>
     this.map?.minZoomLevel = (args["minZoomLevel"] as Double)
@@ -524,7 +527,7 @@ class FlutterOsmView(
                 }
 
                 "draw#circle" -> {
-                    drawCircle(call, result)
+                    drawShape(call, result, shapeType = Shape.circle)
                 }
 
                 "remove#circle" -> {
@@ -532,7 +535,7 @@ class FlutterOsmView(
                 }
 
                 "draw#rect" -> {
-                    drawRect(call, result)
+                    drawShape(call, result, shapeType = Shape.rect)
                 }
 
                 "remove#rect" -> {
@@ -1201,29 +1204,51 @@ class FlutterOsmView(
     }
 
 
-    private fun drawRect(call: MethodCall, result: MethodChannel.Result) {
+    private fun drawShape(call: MethodCall, result: MethodChannel.Result,shapeType:Shape) {
         val args = call.arguments!! as HashMap<*, *>
         val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
         val key = args["key"] as String
-        val colors = args["color"] as List<*>
-        val distance = (args["distance"] as Double)
-        val stokeWidth = (args["stokeWidth"] as Double).toFloat()
-        val color = Color.rgb(
-            (colors[0] as Double).toInt(),
-            (colors[1] as Double).toInt(),
-            (colors[2] as Double).toInt()
+        val colorRgb = args["color"] as List<*>
+
+        val stokeWidth = (args["strokeWidth"] as Double).toFloat()
+        val colorBorder = when(args.contains("colorBorder")){
+            true -> {
+                val rgb = args["colorBorder"] as List<*>
+                Color.argb(
+                    Integer.parseInt(rgb[3].toString()),
+                    Integer.parseInt(rgb[0].toString()),
+                    Integer.parseInt(rgb[1].toString()),
+                    Integer.parseInt(rgb[2].toString()),
+                )
+            }
+            else -> null
+        }
+        val colorFillPaint = Color.argb(
+            Integer.parseInt(colorRgb[3].toString()),
+            Integer.parseInt(colorRgb[0].toString()),
+            Integer.parseInt(colorRgb[1].toString()),
+            Integer.parseInt(colorRgb[2].toString()),
         )
 
-        val region: List<GeoPoint> =
-            Polygon.pointsAsRect(geoPoint, distance, distance).toList() as List<GeoPoint>
+        val shapeGeos: List<GeoPoint> = when(shapeType){
+            Shape.rect -> {
+                val distance = (args["distance"] as Double)
+                Polygon.pointsAsRect(geoPoint, distance, distance).toList() as List<GeoPoint>
+            }
+            else -> {
+                val radius = (args["radius"] as Double)
+                Polygon.pointsAsCircle(geoPoint, radius)
+            }
+        }
+
         val p = Polygon(map!!)
         p.id = key
-        p.points = region
-        p.fillPaint.color = color
+        p.points = shapeGeos
+        p.fillPaint.color = colorFillPaint
         p.fillPaint.style = Paint.Style.FILL
-        p.fillPaint.alpha = 50
+        //p.fillPaint.alpha = 50
         p.outlinePaint.strokeWidth = stokeWidth
-        p.outlinePaint.color = color
+        p.outlinePaint.color = colorBorder ?: colorFillPaint
         p.setOnClickListener { polygon, _, _ ->
             polygon.closeInfoWindow()
             false
@@ -1268,42 +1293,7 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    private fun drawCircle(call: MethodCall, result: MethodChannel.Result) {
-        val args = call.arguments!! as HashMap<String, *>
-        val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
-        val key = args["key"] as String
-        val colors = args["color"] as List<Double>
-        val radius = (args["radius"] as Double)
-        val stokeWidth = (args["stokeWidth"] as Double).toFloat()
-        val color = Color.rgb(colors[0].toInt(), colors[2].toInt(), colors[1].toInt())
 
-        val circle: List<GeoPoint> = Polygon.pointsAsCircle(geoPoint, radius)
-        val p = Polygon(map!!)
-        p.id = key
-        p.points = circle
-        p.fillPaint.color = color
-        p.fillPaint.style = Paint.Style.FILL
-        p.fillPaint.alpha = 50
-        p.outlinePaint.strokeWidth = stokeWidth
-        p.outlinePaint.color = color
-        p.setOnClickListener { polygon, _, _ ->
-            polygon.closeInfoWindow()
-            false
-        }
-
-        folderCircles.items.removeAll {
-            it is Polygon && it.id == key
-        }
-        folderCircles.items.add(p)
-        if (!map!!.overlays.contains(folderShape)) {
-            map!!.overlays.add(folderShape)
-            if (!folderShape.items.contains(folderCircles)) {
-                folderShape.add(folderCircles)
-            }
-        }
-        map!!.invalidate()
-        result.success(null)
-    }
 
     private fun clearAllRoad(result: MethodChannel.Result) {
         folderRoad.items.clear()
