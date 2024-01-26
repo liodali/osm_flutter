@@ -355,19 +355,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> drawCircle(int idOSM, CircleOSM circleOSM) async {
-    Map requestData = {
-      "lon": circleOSM.centerPoint.longitude,
-      "lat": circleOSM.centerPoint.latitude,
-      "key": circleOSM.key,
-      "radius": circleOSM.radius,
-      "stokeWidth": circleOSM.strokeWidth,
-      "color": [
-        circleOSM.color.red,
-        circleOSM.color.blue,
-        circleOSM.color.green,
-      ],
-    };
-    await _channels[idOSM]?.invokeMethod("draw#circle", requestData);
+    await _channels[idOSM]?.invokeMethod("draw#circle", circleOSM.toMap());
   }
 
   @override
@@ -382,19 +370,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> drawRect(int idOSM, RectOSM rectOSM) async {
-    Map requestData = {
-      "lon": rectOSM.centerPoint.longitude,
-      "lat": rectOSM.centerPoint.latitude,
-      "key": rectOSM.key,
-      "distance": rectOSM.distance,
-      "stokeWidth": rectOSM.strokeWidth,
-      "color": [
-        rectOSM.color.red,
-        rectOSM.color.blue,
-        rectOSM.color.green,
-      ],
-    };
-    await _channels[idOSM]?.invokeMethod("draw#rect", requestData);
+    await _channels[idOSM]?.invokeMethod("draw#rect", rectOSM.toMap());
   }
 
   @override

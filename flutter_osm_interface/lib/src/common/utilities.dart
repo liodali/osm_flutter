@@ -104,6 +104,13 @@ extension ColorMap on Color {
     ];
   }
 
+  List<int> toARGBList() => [
+        red,
+        blue,
+        green,
+        alpha,
+      ];
+
   Map<String, List<int>> toMap(String key) {
     return {
       "$key": [
