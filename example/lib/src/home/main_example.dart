@@ -123,49 +123,66 @@ class _MainState extends State<Main> with OSMMixinObserver {
             ),
           )
         ],
-        if (!kIsWeb) ...[
-          Positioned(
-            top: (MediaQuery.maybeOf(context)?.viewPadding.top ?? 26) + 48,
-            right: 15,
-            child: MapRotation(
-              controller: controller,
-            ),
-          )
-        ],
-        Positioned(
-          top: kIsWeb
-              ? 26
-              : MediaQuery.maybeOf(context)?.viewPadding.top ?? 26.0,
-          left: 12,
-          child: PointerInterceptor(
-            child: MainNavigation(),
+        Positioned.fill(
+          child: ValueListenableBuilder(
+            valueListenable: showFab,
+            builder: (context, isVisible, child) {
+              if (!isVisible) {
+                return SizedBox.shrink();
+              }
+              return Stack(
+                children: [
+                  if (!kIsWeb) ...[
+                    Positioned(
+                      top:
+                          (MediaQuery.maybeOf(context)?.viewPadding.top ?? 26) +
+                              48,
+                      right: 15,
+                      child: MapRotation(
+                        controller: controller,
+                      ),
+                    )
+                  ],
+                  Positioned(
+                    top: kIsWeb
+                        ? 26
+                        : MediaQuery.maybeOf(context)?.viewPadding.top ?? 26.0,
+                    left: 12,
+                    child: PointerInterceptor(
+                      child: MainNavigation(),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 32,
+                    right: 15,
+                    child: ActivationUserLocation(
+                      controller: controller,
+                      trackingNotifier: trackingNotifier,
+                      userLocationIcon: userLocationIcon,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 92,
+                    right: 15,
+                    child: DirectionRouteLocation(
+                      controller: controller,
+                    ),
+                  ),
+                  Positioned(
+                    top: kIsWeb
+                        ? 26
+                        : MediaQuery.maybeOf(context)?.viewPadding.top,
+                    left: 64,
+                    right: 72,
+                    child: SearchInMap(
+                      controller: controller,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
-        ),
-        Positioned(
-          bottom: 32,
-          right: 15,
-          child: ActivationUserLocation(
-            controller: controller,
-            showFab: showFab,
-            trackingNotifier: trackingNotifier,
-            userLocationIcon: userLocationIcon,
-          ),
-        ),
-        Positioned(
-          bottom: 92,
-          right: 15,
-          child: DirectionRouteLocation(
-            controller: controller,
-          ),
-        ),
-        Positioned(
-          top: kIsWeb ? 26 : MediaQuery.maybeOf(context)?.viewPadding.top,
-          left: 64,
-          right: 72,
-          child: SearchInMap(
-            controller: controller,
-          ),
-        ),
+        )
       ],
     );
   }
@@ -445,76 +462,65 @@ class SearchLocation extends StatelessWidget {
 }
 
 class ActivationUserLocation extends StatelessWidget {
-  final ValueNotifier<bool> showFab;
   final ValueNotifier<bool> trackingNotifier;
   final MapController controller;
   final ValueNotifier<IconData> userLocationIcon;
 
   const ActivationUserLocation({
     super.key,
-    required this.showFab,
     required this.trackingNotifier,
     required this.controller,
     required this.userLocationIcon,
   });
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: showFab,
-      builder: (ctx, isShow, child) {
-        if (!isShow) {
-          return SizedBox.shrink();
-        }
-        return child!;
-      },
-      child: PointerInterceptor(
-        child: GestureDetector(
-          behavior: HitTestBehavior.deferToChild,
-          onLongPress: () async {
-            await controller.disabledTracking();
-            trackingNotifier.value = false;
-          },
-          child: FloatingActionButton(
-            key: UniqueKey(),
-            onPressed: () async {
-              if (!trackingNotifier.value) {
-                await controller.currentLocation();
-                await controller.enableTracking(
-                  enableStopFollow: true,
-                  disableUserMarkerRotation: true,
-                  anchor: Anchor.left,
-                );
-                trackingNotifier.value = true;
+    return PointerInterceptor(
+      child: GestureDetector(
+        behavior: HitTestBehavior.deferToChild,
+        onLongPress: () async {
+          await controller.disabledTracking();
+          trackingNotifier.value = false;
+        },
+        child: FloatingActionButton(
+          key: UniqueKey(),
+          onPressed: () async {
+            if (!trackingNotifier.value) {
+              await controller.currentLocation();
+              await controller.enableTracking(
+                enableStopFollow: true,
+                disableUserMarkerRotation: true,
+                anchor: Anchor.left,
+              );
+              trackingNotifier.value = true;
 
-                //await controller.zoom(5.0);
-              } else {
-                await controller.enableTracking(
-                  enableStopFollow: false,
-                  disableUserMarkerRotation: true,
-                  anchor: Anchor.left,
+              //await controller.zoom(5.0);
+            } else {
+              await controller.enableTracking(
+                enableStopFollow: false,
+                disableUserMarkerRotation: true,
+                anchor: Anchor.left,
+              );
+              // if (userLocationNotifier.value != null) {
+              //   await controller
+              //       .goToLocation(userLocationNotifier.value!);
+              // }
+            }
+          },
+          mini: true,
+          heroTag: "UserLocationFab",
+          child: ValueListenableBuilder<bool>(
+            valueListenable: trackingNotifier,
+            builder: (ctx, isTracking, _) {
+              if (isTracking) {
+                return ValueListenableBuilder<IconData>(
+                  valueListenable: userLocationIcon,
+                  builder: (context, icon, _) {
+                    return Icon(icon);
+                  },
                 );
-                // if (userLocationNotifier.value != null) {
-                //   await controller
-                //       .goToLocation(userLocationNotifier.value!);
-                // }
               }
+              return Icon(Icons.near_me);
             },
-            mini: true,
-            heroTag: "UserLocationFab",
-            child: ValueListenableBuilder<bool>(
-              valueListenable: trackingNotifier,
-              builder: (ctx, isTracking, _) {
-                if (isTracking) {
-                  return ValueListenableBuilder<IconData>(
-                    valueListenable: userLocationIcon,
-                    builder: (context, icon, _) {
-                      return Icon(icon);
-                    },
-                  );
-                }
-                return Icon(Icons.near_me);
-              },
-            ),
           ),
         ),
       ),

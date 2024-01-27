@@ -1,3 +1,5 @@
+### 1.0.0-rc:
+* add support draw shapes in iOS side
 ### 1.0.0-dev.4:
 * improve picker_map_controller
 * improve picker dialog and widget

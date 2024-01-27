@@ -3,7 +3,7 @@
 </p>
 
 # flutter_osm_plugin 
-![pub](https://img.shields.io/badge/pub-v1.0.0--dev.4-yellow)   
+![pub](https://img.shields.io/badge/pub-v1.0.0--rc-yellow)   
 
 
 ## Platform Support
@@ -31,7 +31,7 @@
 * ClickListener on Map (Android/iOS/web)
 * calculate distance between 2 points 
 * address suggestion
-* draw shapes (Android/web)
+* draw shapes (Android/iOS/web)
 * simple dialog location picker (Android/iOS)
 * listen to region change (Android/iOS/Web)
 * set custom tiles (Android/iOS/Web) 
@@ -49,7 +49,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^1.0.0-dev.4
+      flutter_osm_plugin: ^1.0.0-rc
 
 
 
@@ -584,8 +584,10 @@ final configs = [
               centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
               radius: 1200.0,
               color: Colors.red,
+              borderColor:Colors.green,
               strokeWidth: 0.3,
-            ));
+            )
+          );
  /// to remove Circle using Key
  await controller.removeCircle("circle0");
 
@@ -600,7 +602,8 @@ final configs = [
               key: "rect",
               centerPoint: GeoPoint(latitude: 47.4333594, longitude: 8.4680184),
               distance: 1200.0,
-              color: Colors.red,
+              color: Colors.red.withOpacity(0.4),
+              borderColor:Colors.green,
               strokeWidth: 0.3,
             ));
  /// to remove Rect using Key

@@ -98,7 +98,18 @@ class _MainExampleState extends State<OldMainExample>
         ),
       ),
     ); */
-
+    // controller = MapController.customLayer(
+    //   //initPosition: initPosition,
+    //   initMapWithUserPosition: UserTrackingOption(),
+    //   customTile: CustomTile(
+    //     urlsServers: [
+    //       TileURLs(url: "https://tile.openstreetmap.de/"),
+    //     ],
+    //     tileExtension: ".png",
+    //     sourceName: "osmGermany",
+    //     maxZoomLevel: 20,
+    //   ),
+    // );
     /* controller = MapController.customLayer(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
