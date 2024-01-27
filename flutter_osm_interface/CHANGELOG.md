@@ -1,3 +1,5 @@
+## 1.0.0-rc: 
+* improve shape api and method channel api
 ## 1.0.0-dev.3
 ## 1.0.0-dev.2
 ## 1.0.0-dev.1
@@ -14,9 +16,11 @@
 ## 0.2.3 :
 ## 0.2.2 :
 ## 0.2.1 :
-## 0.1.29 : add enableStopFollow to enableTracking
+## 0.1.29 : 
+* add enableStopFollow to enableTracking
 ## 0.1.30 : 
-## 0.1.29 : add changeTileLayer in osm_channel,osm_controller
+## 0.1.29 : 
+* add changeTileLayer in osm_channel,osm_controller
 ## 0.1.28 :
 ## 0.1.27 :
 ## 0.1.26 :
