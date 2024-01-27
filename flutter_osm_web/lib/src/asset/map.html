@@ -726,30 +726,41 @@
       nodeImg.style.width = size.height+" px";
     }
 
-    async function drawRect(key,bounds,color,strokeWidth){
-      var rectPoints = bounds.map(p => [p.lat,p.lon]);
+    async function drawRect(key,center,configuration){
+      var rectPoints = center.map(p => [p.lat,p.lon]);
+      var color = configuration.color
+      if(configuration.borderColor != undefined || configuration.borderColor != null){
+        color = configuration.borderColor
+      }
+      console.log(configuration.color)
+      console.log("opacity "+configuration.opacityFilled)
       var polygon = L.rectangle(
             rectPoints,
             {
               color: color, 
-              weight: strokeWidth,
+              weight: configuration.strokeWidth,
               fill:true,
-              fillOpacity:0.5
+              fillColor:configuration.color,
+              fillOpacity:configuration.opacityFilled
             }
       )
       polygon.addTo(mymap);
       shapesLayers.set(key,polygon);
     }
     async function drawCircle(configuration){
-      
+      var color = configuration.color
+      if(configuration.borderColor != undefined || configuration.borderColor != null){
+        color = configuration.borderColor
+      }
       var circle = L.circle(
         [configuration.center.lat,configuration.center.lon],
             {
-              color: configuration.color, 
+              color: color, 
               radius:configuration.radius,
               weight: configuration.strokeWidth,
               fill:true,
-              fillOpacity:0.5
+              fillColor:configuration.color,
+              fillOpacity:configuration.opacityFilled
             }
       )
       circle.addTo(mymap);
