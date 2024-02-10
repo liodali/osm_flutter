@@ -1,3 +1,5 @@
+### 1.0.0-rc.1: 
+* fix bug #500
 ### 1.0.0-rc:
 * add support draw shapes in iOS side
 ### 1.0.0-dev.4:
