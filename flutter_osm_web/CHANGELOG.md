@@ -1,3 +1,5 @@
+## 1.0.0-rc.1: fix bug
+* fix bug delete road #500
 ## 1.0.0-rc:
 * improve draw shape in web
 ## 1.0.0-dev.3
