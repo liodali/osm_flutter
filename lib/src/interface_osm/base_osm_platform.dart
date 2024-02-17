@@ -4,7 +4,7 @@ import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 
 import 'package:flutter_osm_plugin/src/widgets/stub.dart'
     if (dart.library.io) 'package:flutter_osm_plugin/src/widgets/platform/mobile_osm_widget.dart'
-    if (dart.library.html) 'package:flutter_osm_plugin/src/widgets/platform/web_osm_widget.dart';
+    if (dart.library.js_interop) 'package:flutter_osm_plugin/src/widgets/platform/web_osm_widget.dart';
 
 Widget buildWidget({
   required BaseMapController controller,
@@ -111,7 +111,7 @@ class _OSMMapState extends State<OSMMap> {
   @override
   Widget build(BuildContext context) {
     return OSMMapWidget(
-      key: key,
+      //key: key,
       controller: widget.controller,
       mapIsReadyListener: widget.mapIsReadyListener,
       dynamicMarkerWidgetNotifier: widget.dynamicMarkerWidgetNotifier,

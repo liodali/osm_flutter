@@ -1,4 +1,6 @@
-import 'dart:html' as html;
+//import 'dart:html' as html;
+//import 'dart:html';
+import 'package:web/web.dart' as web; // Add
 import 'dart:math';
 import 'dart:ui_web' as ui;
 
@@ -26,25 +28,27 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   WebOsmController() {
     //createHtml(id: );
     mapId++;
-    _div = html.DivElement()
-      ..style.width = '100%'
-      ..style.height = '100%';
+
     // ui.platformViewRegistry.registerViewFactory(
     //     FlutterOsmPluginWeb.getViewType(), (int viewId) => _div);
     mapIdMixin = mapId;
+    _div = web.document.createElement('div')
+        as web.HTMLDivElement; //web.HTMLDivElement(); //html.DivElement()
+    _div.style.width = '100%';
+    _div.style.height = '100%';
     ui.platformViewRegistry.registerViewFactory(
         FlutterOsmPluginWeb.getViewType(mapId), (int viewId) {
       debugPrint("viewId : $viewId");
       _div.id = 'osm_map_$mapIdMixin';
       final idFrame = "frame_map_$mapIdMixin";
       debugPrint(idFrame);
-      _frame = html.IFrameElement()
+      _frame = web.document.createElement("iframe") as web.HTMLIFrameElement
         ..id = idFrame
         ..src =
             "${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/map.html"
         ..style.width = '100%'
         ..style.height = '100%';
-      _div.append(_frame!);
+      _div.appendChild(_frame!);
       return _div;
     });
   }
@@ -59,37 +63,38 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   }
 
   void createHtml() {
-    final body = html.window.document.querySelector('body')!;
+    final body = web.window.document.querySelector('body')!;
 
     debugPrint("div added iframe");
-    if (html.window.document.getElementById("osm_interop") == null) {
-      body.append(html.ScriptElement()
-        ..id = "osm_interop"
-        ..src =
-            '${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/osm_interop.js'
-        ..type = 'text/javascript');
+    if (web.window.document.getElementById("osm_interop") == null) {
+      body.appendChild(
+          web.document.createElement('script') as web.HTMLScriptElement
+            ..id = "osm_interop"
+            ..src =
+                '${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/osm_interop.js'
+            ..type = 'text/javascript');
     }
-    if (html.window.document.getElementById("mapScript") == null) {
-      mapScript = html.ScriptElement()
+    if (web.window.document.getElementById("mapScript") == null) {
+      mapScript = web.document.createElement('script') as web.HTMLScriptElement
         ..id = "mapScript"
         ..src =
             '${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/map.js'
         ..type = 'text/javascript';
-      body.append(mapScript!);
+      body.appendChild(mapScript!);
     }
   }
 
   // The Flutter widget that contains the rendered Map.
   //HtmlElementView? _widget;
-  html.IFrameElement? _frame;
-  late html.DivElement _div;
-  html.ScriptElement? mapScript;
+  web.HTMLIFrameElement? _frame;
+  late web.HTMLDivElement _div;
+  web.HTMLScriptElement? mapScript;
 
   void dispose() {
     debugPrint("delete frame_map_$mapIdMixin");
     debugPrint("delete osm_map_$mapIdMixin");
-    html.window.document.getElementById("frame_map_$mapIdMixin")?.remove();
-    html.window.document.getElementById("osm_map_$mapIdMixin")?.remove();
+    web.window.document.getElementById("frame_map_$mapIdMixin")?.remove();
+    web.window.document.getElementById("osm_map_$mapIdMixin")?.remove();
     //_div.remove();
     _frame?.remove();
     _frame = null;
