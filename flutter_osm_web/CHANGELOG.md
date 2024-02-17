@@ -1,3 +1,4 @@
+## 1.0.0-rc.2: migrate to wasm
 ## 1.0.0-rc.1: fix bug
 * fix bug delete road #500
 ## 1.0.0-rc:
