@@ -1,3 +1,5 @@
+### 1.0.0-rc.2: update web dependency
+* migrate to wasm
 ### 1.0.0-rc.1: 
 * fix bug #500
 ### 1.0.0-rc:
