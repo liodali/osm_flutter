@@ -639,12 +639,12 @@ final configs = [
 
 | Methods                       | Description                         |
 | ----------------------------- | ----------------------------------- |
-| `mapIsReady`                  | (callback) Should be override this method, to get notified when map is ready to go or not,     |
-| `mapRestored`                 | (callback) Should be override this method, to get notified when map is restored you can also add you bakcup   |
-| `onSingleTap`                 | (callback) Notified when user make single click on marker   |
-| `onLongTap`                   | (callback) Called when map make long click on marker   |
-| `onRegionChanged`             | (callback) Notified when map is change regsion (on moves)    |
-| `onRoadTap`                   | (callback) Notified when user click on the poyline (road)   |
+| `mapIsReady`                  | (callback) Should be override this method, to get notified when map is ready to go or not |
+| `mapRestored`                 | (callback) Should be override this method, to get notified when map is restored you can also add you backup |
+| `onSingleTap`                 | (callback) Called when the user makes single click on map |
+| `onLongTap`                   | (callback) Called when the user makes long click on map |
+| `onRegionChanged`             | (callback) Notified when map is change region (on moves) |
+| `onRoadTap`                   | (callback) Notified when user click on the polyline (road) |
 
 
 ** example 
