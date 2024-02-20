@@ -1,7 +1,30 @@
+### 1.0.0-rc.2: update web dependency
+* migrate to wasm
+### 1.0.0-rc.1: 
+* fix bug #500
+### 1.0.0-rc:
+* add support draw shapes in iOS side
+### 1.0.0-dev.4:
+* improve picker_map_controller
+* improve picker dialog and widget
+### 1.0.0-dev.3:
+* Dix bug in init map with zoomOption in iOS side
+* Add `isEqual` method to `GeoPoint`
+* Improve/fix bug in ios sdk
+### 1.0.0-dev.2:
+* fix bugs for angle/iconAnchor in web side
+* fix bug for iconAnchor in iOS side
+* fix customTile in ios when it's null
+### 1.0.0-dev.1 : 
+* update readme
+### 1.0.0-dev : 
+* switch iOS sdk
+* remove advPicker API
+* add toggleLayerVisibility
+* fix bugs
 ### 0.70.4 : fix bugs
 * fix bug related to user location in android ( #482, thnx for @vargab95)
-* fix launchURl (thnx for @derklaro)
-### 0.70.3 :
+* fix launchURl (thnx for @derklaro)### 0.70.3 :
 * fix bug #480
 ### 0.70.2 :
 * fix bugs (thanks for @JobiJoba)

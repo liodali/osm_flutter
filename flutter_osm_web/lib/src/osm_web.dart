@@ -10,11 +10,11 @@ class OsmWebWidget extends StatefulWidget {
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
+  final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
   final Widget? mapIsLoading;
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
-  final MarkerOption? markerOption;
   final RoadOption? roadConfiguration;
   final bool showDefaultInfoWindow;
   final bool isPicker;
@@ -32,11 +32,11 @@ class OsmWebWidget extends StatefulWidget {
     this.userTrackingOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
+    this.onMapMoved,
     required this.mapIsReadyListener,
     this.mapIsLoading,
     required this.globalKeys,
     this.staticIconGlobalKeys = const {},
-    this.markerOption,
     this.roadConfiguration,
     this.showDefaultInfoWindow = false,
     this.isPicker = false,

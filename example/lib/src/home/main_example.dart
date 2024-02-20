@@ -35,11 +35,11 @@ class _MainState extends State<Main> with OSMMixinObserver {
   void initState() {
     super.initState();
     controller = MapController(
-      initPosition: GeoPoint(
+        /*initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
-      ),
-    );
+      ),*/
+        initMapWithUserPosition: UserTrackingOption());
     controller.addObserver(this);
   }
 
@@ -123,32 +123,64 @@ class _MainState extends State<Main> with OSMMixinObserver {
             ),
           )
         ],
-        if (!kIsWeb) ...[
-          Positioned(
-            top: 102,
-            right: 15,
-            child: MapRotation(
-              controller: controller,
-            ),
-          )
-        ],
-        Positioned(
-          top: kIsWeb
-              ? 26
-              : MediaQuery.maybeOf(context)?.viewPadding.top ?? 26.0,
-          left: 12,
-          child: PointerInterceptor(
-            child: MainNavigation(),
-          ),
-        ),
-        Positioned(
-          bottom: 32,
-          right: 15,
-          child: ActivationUserLocation(
-            controller: controller,
-            showFab: showFab,
-            trackingNotifier: trackingNotifier,
-            userLocationIcon: userLocationIcon,
+        Positioned.fill(
+          child: ValueListenableBuilder(
+            valueListenable: showFab,
+            builder: (context, isVisible, child) {
+              if (!isVisible) {
+                return SizedBox.shrink();
+              }
+              return Stack(
+                children: [
+                  if (!kIsWeb) ...[
+                    Positioned(
+                      top:
+                          (MediaQuery.maybeOf(context)?.viewPadding.top ?? 26) +
+                              48,
+                      right: 15,
+                      child: MapRotation(
+                        controller: controller,
+                      ),
+                    )
+                  ],
+                  Positioned(
+                    top: kIsWeb
+                        ? 26
+                        : MediaQuery.maybeOf(context)?.viewPadding.top ?? 26.0,
+                    left: 12,
+                    child: PointerInterceptor(
+                      child: MainNavigation(),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 32,
+                    right: 15,
+                    child: ActivationUserLocation(
+                      controller: controller,
+                      trackingNotifier: trackingNotifier,
+                      userLocationIcon: userLocationIcon,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 92,
+                    right: 15,
+                    child: DirectionRouteLocation(
+                      controller: controller,
+                    ),
+                  ),
+                  Positioned(
+                    top: kIsWeb
+                        ? 26
+                        : MediaQuery.maybeOf(context)?.viewPadding.top,
+                    left: 64,
+                    right: 72,
+                    child: SearchInMap(
+                      controller: controller,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         )
       ],
@@ -414,22 +446,6 @@ class Map extends StatelessWidget {
         roadConfiguration: RoadOption(
           roadColor: Colors.blueAccent,
         ),
-        markerOption: MarkerOption(
-          defaultMarker: MarkerIcon(
-            icon: Icon(
-              Icons.home,
-              color: Colors.orange,
-              size: 32,
-            ),
-          ),
-          advancedPickerMarker: MarkerIcon(
-            icon: Icon(
-              Icons.location_searching,
-              color: Colors.green,
-              size: 56,
-            ),
-          ),
-        ),
         showContributorBadgeForOSM: true,
         //trackMyPosition: trackingNotifier.value,
         showDefaultInfoWindow: false,
@@ -446,75 +462,151 @@ class SearchLocation extends StatelessWidget {
 }
 
 class ActivationUserLocation extends StatelessWidget {
-  final ValueNotifier<bool> showFab;
   final ValueNotifier<bool> trackingNotifier;
   final MapController controller;
   final ValueNotifier<IconData> userLocationIcon;
 
   const ActivationUserLocation({
     super.key,
-    required this.showFab,
     required this.trackingNotifier,
     required this.controller,
     required this.userLocationIcon,
   });
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: showFab,
-      builder: (ctx, isShow, child) {
-        if (!isShow) {
-          return SizedBox.shrink();
-        }
-        return child!;
-      },
-      child: PointerInterceptor(
-        child: GestureDetector(
-          behavior: HitTestBehavior.deferToChild,
-          onLongPress: () async {
-            await controller.disabledTracking();
-            trackingNotifier.value = false;
-          },
-          child: FloatingActionButton(
-            key: UniqueKey(),
-            onPressed: () async {
-              if (!trackingNotifier.value) {
-                await controller.currentLocation();
-                await controller.enableTracking(
-                  enableStopFollow: true,
-                  disableUserMarkerRotation: true,
-                  anchor: Anchor.left,
-                );
-                trackingNotifier.value = true;
+    return PointerInterceptor(
+      child: GestureDetector(
+        behavior: HitTestBehavior.deferToChild,
+        onLongPress: () async {
+          await controller.disabledTracking();
+          trackingNotifier.value = false;
+        },
+        child: FloatingActionButton(
+          key: UniqueKey(),
+          onPressed: () async {
+            if (!trackingNotifier.value) {
+              await controller.currentLocation();
+              await controller.enableTracking(
+                enableStopFollow: true,
+                disableUserMarkerRotation: true,
+                anchor: Anchor.left,
+              );
+              trackingNotifier.value = true;
 
-                //await controller.zoom(5.0);
-              } else {
-                await controller.enableTracking(
-                  enableStopFollow: false,
-                  disableUserMarkerRotation: true,
-                  anchor: Anchor.left,
+              //await controller.zoom(5.0);
+            } else {
+              await controller.enableTracking(
+                enableStopFollow: false,
+                disableUserMarkerRotation: true,
+                anchor: Anchor.left,
+              );
+              // if (userLocationNotifier.value != null) {
+              //   await controller
+              //       .goToLocation(userLocationNotifier.value!);
+              // }
+            }
+          },
+          mini: true,
+          heroTag: "UserLocationFab",
+          child: ValueListenableBuilder<bool>(
+            valueListenable: trackingNotifier,
+            builder: (ctx, isTracking, _) {
+              if (isTracking) {
+                return ValueListenableBuilder<IconData>(
+                  valueListenable: userLocationIcon,
+                  builder: (context, icon, _) {
+                    return Icon(icon);
+                  },
                 );
-                // if (userLocationNotifier.value != null) {
-                //   await controller
-                //       .goToLocation(userLocationNotifier.value!);
-                // }
               }
+              return Icon(Icons.near_me);
             },
-            mini: true,
-            heroTag: "UserLocationFab",
-            child: ValueListenableBuilder<bool>(
-              valueListenable: trackingNotifier,
-              builder: (ctx, isTracking, _) {
-                if (isTracking) {
-                  return ValueListenableBuilder<IconData>(
-                    valueListenable: userLocationIcon,
-                    builder: (context, icon, _) {
-                      return Icon(icon);
-                    },
-                  );
-                }
-                return Icon(Icons.near_me);
-              },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class DirectionRouteLocation extends StatelessWidget {
+  final MapController controller;
+
+  const DirectionRouteLocation({
+    super.key,
+    required this.controller,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return PointerInterceptor(
+      child: FloatingActionButton(
+        key: UniqueKey(),
+        onPressed: () async {},
+        mini: true,
+        heroTag: "directionFab",
+        backgroundColor: Colors.blue,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Icon(
+          Icons.directions,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+class SearchInMap extends StatefulWidget {
+  final MapController controller;
+
+  const SearchInMap({
+    super.key,
+    required this.controller,
+  });
+  @override
+  State<StatefulWidget> createState() => _SearchInMapState();
+}
+
+class _SearchInMapState extends State<SearchInMap> {
+  final textController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    textController.addListener(onTextChanged);
+  }
+
+  void onTextChanged() {}
+  @override
+  void dispose() {
+    textController.removeListener(onTextChanged);
+    textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: Card(
+        color: Colors.white,
+        elevation: 2,
+        shape: StadiumBorder(),
+        child: TextField(
+          controller: textController,
+          onTap: () {},
+          maxLines: 1,
+          keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.zero,
+            filled: false,
+            isDense: true,
+            hintText: "search",
+            prefixIcon: Icon(
+              Icons.search,
+              size: 22,
+            ),
+            border: OutlineInputBorder(
+              borderSide: BorderSide.none,
             ),
           ),
         ),

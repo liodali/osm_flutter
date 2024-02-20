@@ -72,11 +72,6 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idMap,
   );
 
-  Future<void> customMarker(
-    int idOSM,
-    GlobalKey? globalKey,
-  );
-
   Future<void> customUserLocationMarker(
     int idOSM,
     GlobalKey personGlobalKey,
@@ -238,26 +233,7 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idOSM,
   );
 
-  Future<void> visibilityInfoWindow(
-    int idOSM,
-    bool visible,
-  );
 
-  Future<void> advancedPositionPicker(
-    int idOSM,
-  );
-
-  Future<GeoPoint> getPositionOnlyAdvancedPositionPicker(
-    int idOSM,
-  );
-
-  Future<GeoPoint> selectAdvancedPositionPicker(
-    int idOSM,
-  );
-
-  Future<void> cancelAdvancedPositionPicker(
-    int idOSM,
-  );
 
   Future<void> drawRoadManually(
     int idOSM,
@@ -271,10 +247,6 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     double degree,
   );
 
-  Future<void> customAdvancedPickerMarker(
-    int idMap,
-    GlobalKey key,
-  );
 
   Future<void> limitArea(
     int idOSM,
@@ -292,4 +264,12 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   Future<List<GeoPoint>> getGeoPointMarkers(
     int idOSM,
   );
+
+  /// [toggleLayer]
+  ///
+  /// change visibility of all layers of the map
+  Future<void> toggleLayer(int idOSM,{
+   required bool toggle,
+  });
+  
 }

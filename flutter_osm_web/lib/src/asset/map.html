@@ -85,7 +85,7 @@
     //mymap.setView([0, 0], 2);
     mymap.on('click', function (event) {
       const geoP = event.latlng;
-      console.log(geoP)
+      //console.log(geoP)
       onMapSingleTapClicked(geoP.lng, geoP.lat);
     });
     mymap.on('zoom', function (event) {
@@ -107,7 +107,6 @@
         };
         onRegionChanged(box, centerP);
       }
-
     });
     mymap.on('mousedown', function (e) {
       if (isReady) {
@@ -118,9 +117,21 @@
       }
     });
 
+    async function toggleAlllayers(visible){
+      keysMainLayers.forEach((key)=>{
+          if(!visible){
+            mymap.removeLayer(mainLayers.get(key))
+          }else {
+            if(!mymap.hasLayer(mainLayers.get(key))){
+              mymap.addLayer(mainLayers.get(key))
+              //console.log(mainLayers.get("markers"))
+            }
+          }
+      })
+      return 200
+    }
+
     async function initMapLocation(point) {
-      console.log("zoom init map :" + zoom);
-      console.log(point.lon + ":" + point.lat)
       mymap.setView([point.lat, point.lon], zoom);
       isReady = true;
       isMapReady(isReady);
@@ -129,7 +140,6 @@
             mymap.removeLayer(mainLayers.get(key))
           }
           mymap.addLayer(mainLayers.get(key))
-
       })
       //L.polyline([{lat: 8.498037, lng: 47.489106},{lat: 8.537061, lng: 47.412961}],{color:'red'}).addTo(mymap)
     }
@@ -226,7 +236,9 @@
       } else {
         mymap.flyTo(position, mymap.getZoom());
       }
-      setHomeMarker(point, args);
+      if(showMarker){
+        setHomeMarker(point, args);
+      }
       return 200;
     }
     
@@ -238,9 +250,9 @@
       if (iconMarker != "") {
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
-      if (anchor != undefined && (anchor.x<=1 && anchor.y<=1)) {
+      if (anchor != undefined  && (anchor.x <= 1 && anchor.y <= 1)) {
         var anchorX = anchor.x * iconSize.width
-        var anchorY = anchor.y * iconSize.height
+        var anchorY = anchor.y * (iconSize.height - 1)
         if(anchor.offset != undefined){
           var offsetX = -anchor.offset.x
           var offsetY = anchor.offset.y
@@ -254,6 +266,8 @@
           anchorY += (offsetY) 
         }
         argsIcon["iconAnchor"] = [anchorX,anchorY]
+      }else {
+        argsIcon["iconAnchor"] = undefined //[iconSize.width, iconSize.height-1]
       }
 
       var args = {
@@ -275,50 +289,55 @@
 
       var latlng = L.latLng([point.lat, point.lon]);
       var oldLatlng = L.latLng([oldPoint.lat, oldPoint.lon]);
-      mymap.eachLayer(function (layer) {
-        if (layer instanceof L.Marker) {
-          var geoPoint = layer.getLatLng();
-          if (geoPoint.lat == oldLatlng.lat && geoPoint.lng == oldLatlng.lng) {
-            //layer.setLatLng(latlng)
-            var iconMarker = layer.getIcon();
-            var _iconSize = undefined
-            if(iconSize == undefined) {
-              _iconSize = {
-                width:iconMarker.options.iconSize[0],
-                height:iconMarker.options.iconSize[1]
+      if (mymap.hasLayer(mainLayers.get("markers"))) {
+        mymap.eachLayer(function (layer) {
+          if (layer instanceof L.Marker) {
+            var geoPoint = layer.getLatLng();
+            if (geoPoint.lat == oldLatlng.lat && geoPoint.lng == oldLatlng.lng) {
+              var iconMarker = layer.getIcon();
+              var _iconSize = undefined
+              if(iconSize == undefined) {
+                _iconSize = {
+                  width:iconMarker.options.iconSize[0],
+                  height:iconMarker.options.iconSize[1]
+                }
+              }else {
+                _iconSize = iconSize
               }
-            }else {
-              _iconSize = iconSize
+              if (icon != undefined && icon != null) {
+                iconMarker = L.icon({
+                  iconUrl: "data:image/png;base64," + icon,
+                  iconSize: [_iconSize.width,_iconSize.height] //[32, 32]
+                });
+                //layer.setIcon(iconMarker)
+              }
+              
+              const iconMarkerURL = iconMarker.options.iconUrl.split("data:image/png;base64,")[1];
+              var angleMarker = layer.options.rotationAngle;
+              if(angle != undefined && angleMarker!=angle) {
+                angleMarker = angle;
+              }
+              var iconAnchor = undefined
+              if(iconMarker.options.iconAnchor != undefined){
+                  iconAnchor = {
+                  x:iconMarker.options.iconAnchor[0],
+                  y:iconMarker.options.iconAnchor[1]
+                };
+                console.log(iconAnchor)
+                console.log("anchor param: "+anchor)
+              }
+              if((anchor != undefined && anchor != null) && anchor != iconAnchor) {
+                iconAnchor = anchor;
+              }
+              mainLayers.get("markers").removeLayer(layer);
+              console.log(iconAnchor)
+              addMarker(point,_iconSize,iconMarkerURL,angleMarker,iconAnchor)
+              return this;
             }
-            if (icon != undefined && icon != null) {
-               iconMarker = L.icon({
-                iconUrl: "data:image/png;base64," + icon,
-                iconSize: [_iconSize.width,_iconSize.height] //[32, 32]
-              });
-              //layer.setIcon(iconMarker)
-            }
-            
-            const iconMarkerURL = iconMarker.options.iconUrl.split("data:image/png;base64,")[1];
-            var angleMarker = layer.options.rotationAngle;
-            if(angle != undefined && angleMarker!=angle) {
-              angleMarker = angle;
-            }
-            var iconAnchor = undefined
-            if(iconMarker.options.iconAnchor != undefined){
-                iconAnchor = {
-                x:iconMarker.options.iconAnchor[0],
-                y:iconMarker.options.iconAnchor[1]
-              };
-            }
-            if((anchor != undefined && anchor != null) && anchor!=iconAnchor) {
-              iconAnchor = anchor;
-            }
-            mainLayers.get("markers").removeLayer(layer);
-            addMarker(point,_iconSize,iconMarkerURL,angleMarker,iconAnchor)
-            return this;
           }
-        }
-      })
+        })
+      }
+      
     }
 
     async function modifyMarker(point, icon) {
@@ -381,7 +400,7 @@
       points.forEach(function (ele) {
         removeMarker(ele);
         markers.push(L.marker([ele.lat, ele.lon], args)
-          .addTo(mainLayers.get("static"))
+          //.addTo(mainLayers.get("static"))
           .on("click", function (event) {
             const geoP = event.latlng;
             onGeoPointClicked(geoP.lng, geoP.lat)
@@ -412,7 +431,7 @@
           rotationAngle: ele.angle,
           rotationOrigin: "center"
         })
-          .addTo(mainLayers.get("static"))
+          //.addTo(mainLayers.get("static"))
           .on("click", function (event) {
             const geoP = event.latlng;
             onGeoPointClicked(geoP.lng, geoP.lat)
@@ -449,7 +468,6 @@
     async function setZoomLevel(zoom) {
       var nzoomlevel = zoom;
       if (nzoomlevel >= mymap.getMinZoom() && nzoomlevel <= mymap.getMaxZoom()) {
-        console.log(nzoomlevel)
         mymap.setZoom(nzoomlevel);
       }
       return 200;
@@ -577,19 +595,16 @@
       routesLayer.forEach((road)=>{
         road.remove();
       });
-      routesLayer = [];
+      routesLayer.clear();
       return 200;
     }
 
     function removeRoad(key){
       if(routesLayer.has(key)){
-      console.log("html remove road "+key)
    
           if(routesLayer[key]==lastRoad){
             lastRoad=undefined;
-            console.log("html roads "+routesLayer)
           }
-          console.log("html roads "+routesLayer.get(key))
           routesLayer.get(key).remove();
           routesLayer.delete(key);
       }
@@ -647,7 +662,6 @@
           var userPos = [position.coords.latitude, position.coords.longitude];
           onUserPositionListener(position.coords.latitude, position.coords.longitude)
           var icon = userPosition.icon
-          console.log("current user icon "+JSON.stringify(icon))
           userPosition.setLatLng(userPos);
           mymap.flyTo(userPos, mymap.getZoom());
         },function(err){},{
@@ -712,30 +726,41 @@
       nodeImg.style.width = size.height+" px";
     }
 
-    async function drawRect(key,bounds,color,strokeWidth){
-      var rectPoints = bounds.map(p => [p.lat,p.lon]);
+    async function drawRect(key,center,configuration){
+      var rectPoints = center.map(p => [p.lat,p.lon]);
+      var color = configuration.color
+      if(configuration.borderColor != undefined || configuration.borderColor != null){
+        color = configuration.borderColor
+      }
+      console.log(configuration.color)
+      console.log("opacity "+configuration.opacityFilled)
       var polygon = L.rectangle(
             rectPoints,
             {
               color: color, 
-              weight: strokeWidth,
+              weight: configuration.strokeWidth,
               fill:true,
-              fillOpacity:0.5
+              fillColor:configuration.color,
+              fillOpacity:configuration.opacityFilled
             }
       )
       polygon.addTo(mymap);
       shapesLayers.set(key,polygon);
     }
     async function drawCircle(configuration){
-      
+      var color = configuration.color
+      if(configuration.borderColor != undefined || configuration.borderColor != null){
+        color = configuration.borderColor
+      }
       var circle = L.circle(
         [configuration.center.lat,configuration.center.lon],
             {
-              color: configuration.color, 
+              color: color, 
               radius:configuration.radius,
               weight: configuration.strokeWidth,
               fill:true,
-              fillOpacity:0.5
+              fillColor:configuration.color,
+              fillOpacity:configuration.opacityFilled
             }
       )
       circle.addTo(mymap);

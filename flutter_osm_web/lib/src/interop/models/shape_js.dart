@@ -10,12 +10,15 @@ class RectShapeJS {
   external String get key;
   external String get color;
   external num get strokeWidth;
-
+  external String? get borderColor;
+  external num get opacityFilled;
   // Must have an unnamed factory constructor with named arguments.
   external factory RectShapeJS({
     String key,
     String color,
     num strokeWidth,
+    String? borderColor,
+    num opacityFilled,
   });
 }
 
@@ -24,6 +27,8 @@ class RectShapeJS {
 class CircleShapeJS {
   external String get key;
   external String get color;
+  external String? get borderColor;
+  external num get opacityFilled;
   external num get strokeWidth;
   external GeoPointJs get center;
   external num get radius;
@@ -34,6 +39,8 @@ class CircleShapeJS {
     GeoPointJs center,
     num radius,
     String color,
+    String? borderColor,
     num strokeWidth,
+    num opacityFilled,
   });
 }

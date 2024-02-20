@@ -17,7 +17,7 @@ abstract class BaseMapController extends IBaseMapController {
   final BoundingBox? areaLimit;
   final CustomTile? customTile;
   late Timer? _timer;
-
+  var _layerIsVisible = true;
   IBaseOSMController get osmBaseController => _osmBaseController;
 
   BaseMapController({
@@ -55,6 +55,15 @@ abstract class BaseMapController extends IBaseMapController {
       _timer?.cancel();
     });
   }
+  /// [toggleLayersVisibility]
+  /// 
+  /// this method hide/show all layer exist in the map
+  Future<void> toggleLayersVisibility() async {
+    _layerIsVisible = !_layerIsVisible;
+    await osmBaseController.toggleLayer(toggle: _layerIsVisible);
+  }
+
+  bool get isAllLayersVisible => _layerIsVisible;
 }
 
 extension OSMControllerOfBaseMapController on BaseMapController {

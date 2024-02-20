@@ -4,6 +4,7 @@ import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 
 import 'package:flutter_osm_plugin/src/controller/picker_map_controller.dart';
 import 'package:flutter_osm_plugin/src/osm_flutter.dart';
+import 'package:flutter_osm_plugin/src/widgets/picker_location.dart';
 
 class CustomPickerLocationConfig {
   final Widget? loadingWidget;
@@ -42,6 +43,7 @@ class CustomPickerLocation extends StatefulWidget {
   final Widget? bottomWidgetPicker;
   final CustomPickerLocationConfig pickerConfig;
   final Function(bool)? onMapReady;
+  final bool showDefaultMarkerPickWidget;
 
   CustomPickerLocation({
     required this.controller,
@@ -50,6 +52,7 @@ class CustomPickerLocation extends StatefulWidget {
     this.topWidgetPicker,
     this.pickerConfig = const CustomPickerLocationConfig(),
     this.onMapReady,
+    this.showDefaultMarkerPickWidget = false,
     Key? key,
   }) : super(key: key);
 
@@ -78,6 +81,8 @@ class CustomPickerLocation extends StatefulWidget {
 }
 
 class _CustomPickerLocationState extends State<CustomPickerLocation> {
+  GeoPoint? lastCenterMap = null;
+
   @override
   void initState() {
     super.initState();
@@ -101,20 +106,35 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
                 child: OSMFlutter(
                   controller: widget.controller,
                   mapIsLoading: widget.pickerConfig.loadingWidget,
+                  onMapMoved: (region) {
+                    if (lastCenterMap == null ||
+                        lastCenterMap != region.center) {
+                      widget.controller.setMapMoving(true);
+                    } else {
+                      widget.controller.setMapMoving(false);
+                    }
+                    setState(() {
+                      lastCenterMap = region.center;
+                    });
+                  },
                   osmOption: OSMOption(
-                    markerOption:
-                        widget.pickerConfig.advancedMarkerPicker != null
-                            ? MarkerOption(
-                                advancedPickerMarker:
-                                    widget.pickerConfig.advancedMarkerPicker,
-                              )
-                            : null,
                     isPicker: true,
                     zoomOption: widget.pickerConfig.zoomOption,
                   ),
                   onMapIsReady: widget.onMapReady,
                 ),
               ),
+              if (widget.showDefaultMarkerPickWidget) ...[
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: AnimatedCenterMarker(
+                    center: lastCenterMap,
+                  ),
+                ),
+              ],
               if (widget.topWidgetPicker != null) ...[
                 Positioned(
                   top: 0,

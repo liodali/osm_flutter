@@ -93,10 +93,11 @@ class GeoPointWithOrientation extends GeoPoint {
   final double angle;
 
   GeoPointWithOrientation({
-    this.angle = 0.0,
+    double angle = 0.0,
     required double latitude,
     required double longitude,
-  }) : super(
+  })  : this.angle = angle * pi / 180,
+        super(
           latitude: latitude,
           longitude: longitude,
         );
@@ -104,7 +105,7 @@ class GeoPointWithOrientation extends GeoPoint {
     double radianAngle = 0.0,
     required double latitude,
     required double longitude,
-  })  : angle = radianAngle * (180 / pi),
+  })  : angle = radianAngle, // * (180 / pi),
         super(
           latitude: latitude,
           longitude: longitude,

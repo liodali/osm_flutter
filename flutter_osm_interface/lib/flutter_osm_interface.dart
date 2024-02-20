@@ -5,7 +5,7 @@ export 'src/channel/osm_method_channel.dart'
 export 'src/osm_interface.dart';
 export 'src/map_controller/base_map_controller.dart';
 export 'src/types/types.dart';
-export 'src/common/utilities.dart';
+export 'src/common/utilities.dart' hide isEqual1eX;
 export 'src/common/osm_event.dart';
 export 'src/common/geo_point_exception.dart';
 export 'src/common/road_exception.dart';

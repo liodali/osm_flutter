@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/src/common/utilities.dart';
 import 'geo_point.dart';
@@ -30,33 +28,34 @@ class RoadOption {
   final double roadWidth;
   final bool zoomInto;
   final Color? roadBorderColor;
-  final double roadBorderWidth;
+  final double? roadBorderWidth;
 
   const RoadOption({
     required this.roadColor,
     this.roadWidth = 5,
-    this.roadBorderColor,
+    this.roadBorderColor = null,
     this.zoomInto = true,
-    this.roadBorderWidth = 0,
-  })  : assert(roadBorderWidth >= 0),
+    this.roadBorderWidth = null,
+  })  : assert(roadBorderWidth == null || roadBorderWidth > 0),
         assert(roadWidth > 0);
 
   const RoadOption.empty()
       : roadWidth = 5,
         roadColor = Colors.green,
         zoomInto = false,
-        roadBorderWidth = 0,
+        roadBorderWidth = null,
         roadBorderColor = null;
 
   Map toMap() {
     Map args = {};
 
     /// disable/show markers in start,middle,end points
-    args.putIfAbsent(
-      "roadBorderWidth",
-      () => Platform.isIOS ? "${roadBorderWidth}px" : roadBorderWidth,
-    );
-
+    if (roadBorderWidth != null && roadBorderWidth! > 0) {
+      args.putIfAbsent(
+        "roadBorderWidth",
+        () => roadBorderWidth,
+      );
+    }
     args.putIfAbsent(
       "zoomIntoRegion",
       () => zoomInto,
@@ -64,12 +63,14 @@ class RoadOption {
     args.addAll(roadColor.toMapPlatform("roadColor"));
     args.putIfAbsent(
       "roadWidth",
-      () => Platform.isIOS ? "${roadWidth}px" : roadWidth.toDouble(),
+      () => roadWidth.toDouble(),
     );
-    args.putIfAbsent(
-      "roadBorderColor",
-      () => (roadBorderColor ?? (roadColor).dark()).toPlatform(),
-    );
+    if (roadBorderColor != null) {
+      args.putIfAbsent(
+        "roadBorderColor",
+        () => (roadBorderColor!).toPlatform(),
+      );
+    }
 
     return args;
   }
@@ -87,13 +88,12 @@ class MultiRoadOption extends RoadOption {
     required Color roadColor,
     double roadWidth = 5,
     this.roadType = RoadType.car,
-    Color? roadBorderColor,
-    double? roadBorderWidth,
+    super.roadBorderColor = null,
+    super.roadBorderWidth = null,
   }) : super(
           roadColor: roadColor,
           roadWidth: roadWidth,
           zoomInto: false,
-          roadBorderColor: roadBorderColor,
         );
 
   const MultiRoadOption.empty()
@@ -101,6 +101,7 @@ class MultiRoadOption extends RoadOption {
         super(
           roadColor: Colors.green,
           zoomInto: false,
+
         );
 }
 

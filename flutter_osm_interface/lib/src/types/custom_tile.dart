@@ -45,7 +45,23 @@ class CustomTile {
           keyApi == null || (keyApi.key.isNotEmpty && keyApi.value.isNotEmpty),
           "if your own server use key access,you should provide the right key name and key api",
         );
-
+  CustomTile.osm({
+    this.maxZoomLevel = 19,
+    this.minZoomLevel = 2,
+  })  : urlsServers = [
+          TileURLs(
+            url: "https://{s}.tile.openstreetmap.org/",
+            subdomains: [
+              "a",
+              "b",
+              "c",
+            ],
+          ),
+        ],
+        tileExtension = ".png",
+        sourceName = "mapnik",
+        tileSize = 256,
+        keyApi = null;
   CustomTile.cycleOSM({
     this.maxZoomLevel = 19,
     this.minZoomLevel = 2,

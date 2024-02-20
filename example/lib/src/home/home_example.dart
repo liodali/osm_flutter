@@ -20,7 +20,6 @@ class _MainExampleState extends State<OldMainExample>
   Key mapGlobalkey = UniqueKey();
   ValueNotifier<bool> zoomNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> visibilityZoomNotifierActivation = ValueNotifier(false);
-  ValueNotifier<bool> advPickerNotifierActivation = ValueNotifier(false);
   ValueNotifier<bool> visibilityOSMLayers = ValueNotifier(false);
   ValueNotifier<double> positionOSMLayers = ValueNotifier(-200);
   ValueNotifier<GeoPoint?> centerMap = ValueNotifier(null);
@@ -99,7 +98,18 @@ class _MainExampleState extends State<OldMainExample>
         ),
       ),
     ); */
-
+    // controller = MapController.customLayer(
+    //   //initPosition: initPosition,
+    //   initMapWithUserPosition: UserTrackingOption(),
+    //   customTile: CustomTile(
+    //     urlsServers: [
+    //       TileURLs(url: "https://tile.openstreetmap.de/"),
+    //     ],
+    //     tileExtension: ".png",
+    //     sourceName: "osmGermany",
+    //     maxZoomLevel: 20,
+    //   ),
+    // );
     /* controller = MapController.customLayer(
       initMapWithUserPosition: false,
       initPosition: GeoPoint(
@@ -251,15 +261,15 @@ class _MainExampleState extends State<OldMainExample>
 
     await controller.setStaticPosition(
       [
-        GeoPointWithOrientation(
+        GeoPointWithOrientation.radian(
           latitude: 47.4433594,
           longitude: 8.4680184,
-          angle: pi / 4,
+          radianAngle: pi / 4,
         ),
-        GeoPointWithOrientation(
+        GeoPointWithOrientation.radian(
           latitude: 47.4517782,
           longitude: 8.4716146,
-          angle: pi / 2,
+          radianAngle: pi / 2,
         ),
       ],
       "line 2",
@@ -303,25 +313,11 @@ class _MainExampleState extends State<OldMainExample>
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('OSM'),
-        leading: ValueListenableBuilder<bool>(
-          valueListenable: advPickerNotifierActivation,
-          builder: (ctx, isAdvancedPicker, _) {
-            if (isAdvancedPicker) {
-              return IconButton(
-                onPressed: () {
-                  advPickerNotifierActivation.value = false;
-                  controller.cancelAdvancedPositionPicker();
-                },
-                icon: Icon(Icons.close),
-              );
-            }
-            return IconButton(
-              onPressed: () async {
-                 Navigator.pop(context);//, '/home');
-              },
-              icon: Icon(Icons.arrow_back),
-            );
+        leading: IconButton(
+          onPressed: () async {
+            Navigator.pop(context); //, '/home');
           },
+          icon: Icon(Icons.arrow_back),
         ),
         actions: <Widget>[
           IconButton(
@@ -373,13 +369,10 @@ class _MainExampleState extends State<OldMainExample>
             icon: Icon(Icons.search),
           ),
           IconButton(
-            icon: Icon(Icons.select_all),
             onPressed: () async {
-              if (advPickerNotifierActivation.value == false) {
-                advPickerNotifierActivation.value = true;
-                await controller.advancedPositionPicker();
-              }
+              await controller.toggleLayersVisibility();
             },
+            icon: Icon(Icons.location_on),
           ),
         ],
       ),
@@ -487,22 +480,6 @@ class _MainExampleState extends State<OldMainExample>
                 roadConfiguration: RoadOption(
                   roadColor: Colors.blueAccent,
                 ),
-                markerOption: MarkerOption(
-                  defaultMarker: MarkerIcon(
-                    icon: Icon(
-                      Icons.home,
-                      color: Colors.orange,
-                      size: 32,
-                    ),
-                  ),
-                  advancedPickerMarker: MarkerIcon(
-                    icon: Icon(
-                      Icons.location_searching,
-                      color: Colors.green,
-                      size: 56,
-                    ),
-                  ),
-                ),
                 showContributorBadgeForOSM: true,
                 //trackMyPosition: trackingNotifier.value,
                 showDefaultInfoWindow: false,
@@ -561,34 +538,6 @@ class _MainExampleState extends State<OldMainExample>
                   ),
                 );
               },
-            ),
-            Positioned(
-              bottom: 10,
-              left: 10,
-              child: ValueListenableBuilder<bool>(
-                valueListenable: advPickerNotifierActivation,
-                builder: (ctx, visible, child) {
-                  return Visibility(
-                    visible: visible,
-                    child: AnimatedOpacity(
-                      opacity: visible ? 1.0 : 0.0,
-                      duration: Duration(milliseconds: 500),
-                      child: child,
-                    ),
-                  );
-                },
-                child: FloatingActionButton(
-                  key: UniqueKey(),
-                  child: Icon(Icons.arrow_forward),
-                  heroTag: "confirmAdvPicker",
-                  onPressed: () async {
-                    advPickerNotifierActivation.value = false;
-                    GeoPoint p =
-                        await controller.selectAdvancedPositionPicker();
-                    print(p);
-                  },
-                ),
-              ),
             ),
             Positioned(
               bottom: 10,
@@ -763,11 +712,11 @@ class _MainExampleState extends State<OldMainExample>
           intersectPoint:
               pointsRoad.getRange(1, pointsRoad.length - 1).toList(),
           roadOption: RoadOption(
-            roadWidth: 10,
-            roadColor: Colors.blue,
+            roadWidth: 20,
+            roadColor: Colors.red,
             zoomInto: true,
-            // roadBorderWidth: 4,
-            // roadBorderColor: Colors.black,
+            roadBorderWidth: 4,
+            roadBorderColor: Colors.green,
           ),
         );
         pointsRoad.clear();
@@ -959,7 +908,7 @@ class OSMLayersChoiceWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-        canPop: false,
+      canPop: false,
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Container(
