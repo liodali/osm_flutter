@@ -24,7 +24,7 @@ class Main extends StatefulWidget {
 
 class _MainState extends State<Main> with OSMMixinObserver {
   late MapController controller;
-  ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
+  ValueNotifier<bool> trackingNotifier = ValueNotifier(true);
   ValueNotifier<bool> showFab = ValueNotifier(false);
   ValueNotifier<IconData> userLocationIcon = ValueNotifier(Icons.near_me);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
@@ -35,11 +35,14 @@ class _MainState extends State<Main> with OSMMixinObserver {
   void initState() {
     super.initState();
     controller = MapController(
-        /*initPosition: GeoPoint(
+      /*initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
       ),*/
-        initMapWithUserPosition: UserTrackingOption());
+      initMapWithUserPosition: UserTrackingOption(
+        enableTracking: trackingNotifier.value,
+      ),
+    );
     controller.addObserver(this);
   }
 
@@ -88,7 +91,11 @@ class _MainState extends State<Main> with OSMMixinObserver {
     super.onRegionChanged(region);
     if (trackingNotifier.value) {
       final userLocation = userLocationNotifier.value;
-      if (userLocation != region.center) {
+      if (userLocation == null ||
+          !region.center.isEqual(
+            userLocation,
+            precision: 1e4,
+          )) {
         userLocationIcon.value = Icons.gps_not_fixed;
       } else {
         userLocationIcon.value = Icons.gps_fixed;
@@ -347,6 +354,9 @@ class Map extends StatelessWidget {
       mapIsLoading: Center(
         child: CircularProgressIndicator(),
       ),
+      onLocationChanged: (location) {
+        debugPrint(location.toString());
+      },
       osmOption: OSMOption(
         enableRotationByGesture: true,
         zoomOption: ZoomOption(
@@ -428,7 +438,8 @@ class Map extends StatelessWidget {
               ),
             ],
           ),
-          /*StaticPositionGeoPoint(
+          /*
+           StaticPositionGeoPoint(
                       "line 2",
                       MarkerIcon(
                         icon: Icon(
@@ -441,7 +452,8 @@ class Map extends StatelessWidget {
                         GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
                         GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
                       ],
-            )*/
+            )
+          */
         ],
         roadConfiguration: RoadOption(
           roadColor: Colors.blueAccent,

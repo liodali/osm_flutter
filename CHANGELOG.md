@@ -1,3 +1,6 @@
+### 1.0.0-rc.3: fix bugs
+* fix bug related to user location in android #507
+* update docs(thanx to @vargab95)
 ### 1.0.0-rc.2: update web dependency
 * migrate to wasm
 ### 1.0.0-rc.1: 
