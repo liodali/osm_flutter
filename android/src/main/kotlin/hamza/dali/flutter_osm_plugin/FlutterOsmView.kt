@@ -93,10 +93,12 @@ import kotlin.collections.set
 
 
 typealias VoidCallback = () -> Unit
-enum class Shape{
+
+enum class Shape {
     rect,
     circle
 }
+
 fun FlutterOsmView.configZoomMap(call: MethodCall, result: MethodChannel.Result) {
     val args = call.arguments as HashMap<*, *>
     this.map?.minZoomLevel = (args["minZoomLevel"] as Double)
@@ -272,7 +274,7 @@ class FlutterOsmView(
     }
 
     init {
-        providerLifecycle.getLifecyle()?.addObserver(this)
+        providerLifecycle.getOSMLifecycle()?.addObserver(this)
 
     }
 
@@ -1102,8 +1104,6 @@ class FlutterOsmView(
     private fun enableUserLocation() {
 
 
-
-
         //locationNewOverlay!!.setPersonIcon()
         setMarkerTracking()/*if (!locationNewOverlay.isMyLocationEnabled) {
             isEnabled = true
@@ -1190,14 +1190,14 @@ class FlutterOsmView(
     }
 
 
-    private fun drawShape(call: MethodCall, result: MethodChannel.Result,shapeType:Shape) {
+    private fun drawShape(call: MethodCall, result: MethodChannel.Result, shapeType: Shape) {
         val args = call.arguments!! as HashMap<*, *>
         val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
         val key = args["key"] as String
         val colorRgb = args["color"] as List<*>
 
         val stokeWidth = (args["strokeWidth"] as Double).toFloat()
-        val colorBorder = when(args.contains("colorBorder")){
+        val colorBorder = when (args.contains("colorBorder")) {
             true -> {
                 val rgb = args["colorBorder"] as List<*>
                 Color.argb(
@@ -1207,6 +1207,7 @@ class FlutterOsmView(
                     Integer.parseInt(rgb[2].toString()),
                 )
             }
+
             else -> null
         }
         val colorFillPaint = Color.argb(
@@ -1216,11 +1217,12 @@ class FlutterOsmView(
             Integer.parseInt(colorRgb[2].toString()),
         )
 
-        val shapeGeos: List<GeoPoint> = when(shapeType){
+        val shapeGeos: List<GeoPoint> = when (shapeType) {
             Shape.rect -> {
                 val distance = (args["distance"] as Double)
                 Polygon.pointsAsRect(geoPoint, distance, distance).toList() as List<GeoPoint>
             }
+
             else -> {
                 val radius = (args["radius"] as Double)
                 Polygon.pointsAsCircle(geoPoint, radius)
@@ -1278,7 +1280,6 @@ class FlutterOsmView(
         map!!.invalidate()
         result.success(null)
     }
-
 
 
     private fun clearAllRoad(result: MethodChannel.Result) {
@@ -1770,7 +1771,7 @@ class FlutterOsmView(
             }
         }
         mainLinearLayout.removeAllViews()
-        providerLifecycle.getLifecyle()?.removeObserver(this)
+        providerLifecycle.getOSMLifecycle()?.removeObserver(this)
 
         //clearCacheMap()
         //map!!.onDetach()
