@@ -297,9 +297,12 @@ class MapController extends BaseMapController {
 
   /// [enableTracking]
   ///
-  /// this method will enabled tracking user location,[enableStopFollow] is true ,
-  /// the map will follow the user location when it change,
-  /// to disable rotation of user marker, change [disableUserMarkerRotation] to true (default : false)
+  /// this method will enable tracking the user location,
+  /// [enableStopFollow] is false ,the map will return follow the user location when it change
+  /// [enableStopFollow] is true ,the map will not follow the user location when it change if user change the location of the map
+  /// 
+  /// To disable the rotation of user marker, 
+  /// change [disableUserMarkerRotation] to true (default : false)
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableUserMarkerRotation = false,

@@ -255,15 +255,11 @@ class FlutterOsmView(
                 return true
             }
 
-            override fun onZoom(event: ZoomEvent?): Boolean {/*if (event!!.zoomLevel < Constants.zoomStaticPosition) {
-                    val rect = Rect()
-                    map?.getDrawingRect(rect)
-                    //map?.overlays?.remove(folderStaticPosition)
-                } else if (markerSelectionPicker == null) {
-                    if (map != null && !map!!.overlays.contains(folderStaticPosition)) {
-                        map!!.overlays.add(folderStaticPosition)
-                    }
-                }*/
+            override fun onZoom(event: ZoomEvent?): Boolean {
+                val hashMap = HashMap<String, Any?>()
+                hashMap["bounding"] = map?.boundingBox?.toHashMap()
+                hashMap["center"] = (map?.mapCenter as GeoPoint).toHashMap()
+                methodChannel.invokeMethod("receiveRegionIsChanging", hashMap)
                 return true
             }
         }
@@ -274,7 +270,6 @@ class FlutterOsmView(
         this.layoutParams =
             FrameLayout.LayoutParams(FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
     }
-    private var markerSelectionPicker: FlutterPickerViewOverlay? = null
 
     init {
         providerLifecycle.getLifecyle()?.addObserver(this)
@@ -1106,15 +1101,7 @@ class FlutterOsmView(
 
     private fun enableUserLocation() {
 
-        if (markerSelectionPicker != null) {
-            mainLinearLayout.removeView(markerSelectionPicker)
-            if (!map!!.overlays.contains(folderShape)) map!!.overlays.add(folderShape)
-            checkRoadFolderAboveUserOverlay()
-            if (!map!!.overlays.contains(folderStaticPosition)) map!!.overlays.add(
-                folderStaticPosition
-            )
-            markerSelectionPicker = null
-        }
+
 
 
         //locationNewOverlay!!.setPersonIcon()
@@ -1157,9 +1144,8 @@ class FlutterOsmView(
             }
             locationNewOverlay.toggleFollow(enableStopFollow)
             when {
-                !locationNewOverlay.isFollowLocationEnabled -> {
+                locationNewOverlay.isFollowLocationEnabled -> {
                     isTracking = true
-                    locationNewOverlay.enableFollowLocation()
                     locationNewOverlay.onChangedLocation { userLocation ->
                         scope?.launch {
                             withContext(Main) {

@@ -103,16 +103,16 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
 
     override fun onLocationChanged(location: Location?, source: IMyLocationProvider?) {
         //super.onLocationChanged(location, source)
+        val geoPMap = GeoPoint(location)
         if (isFollowLocationEnabled && location != null) {
-            val geoPMap = GeoPoint(location)
             if (mIsFollowing && !enableAutoStop) {
                 mMapView.controller.animateTo(geoPMap)
                 enableAutoStop = true
                 Log.d("osm user location", "enable auto animate to")
             }
-            if (onChangedLocation != null) {
-                this.onChangedLocation!!(geoPMap)
-            }
+        }
+        if (onChangedLocation != null) {
+            this.onChangedLocation!!(geoPMap)
         }
         currentLocation = location
         // These location updates can come in from different threads
