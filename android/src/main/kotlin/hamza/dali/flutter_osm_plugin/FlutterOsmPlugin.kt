@@ -26,8 +26,6 @@ class FlutterOsmPlugin :
     companion object {
         var mapSnapShots = ArrayMap<String, MapSnapShot>()
         var lastKeysRestarted: ArrayMap<String, Boolean>? = ArrayMap()
-
-
         var state = AtomicInteger(0)
         var pluginBinding: ActivityPluginBinding? = null
         var lifecycle: Lifecycle? = null
