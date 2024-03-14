@@ -1,3 +1,6 @@
+### 1.0.0-rc.4: fimx userlocation in ios
+* update ios sdk and fix bug related to userlocation 
+* fix draw border for road in ios side 
 ### 1.0.0-rc.3: fix bugs
 * fix bug related to user location in android #507
 * update docs(thanx to @vargab95)
