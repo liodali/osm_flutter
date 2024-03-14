@@ -88,7 +88,7 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         case "init#ios#map":
             
             //channel.invokeMethod("map#init", arguments: true)
-            self.mapOSM.initOSMMap(tile:customTiles)
+            //self.mapOSM.initOSMMap(tile:customTiles)
             channel.invokeMethod("map#init#ios", arguments: true)
             result(200)
             break
@@ -138,6 +138,8 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
                 self.mapOSM.locationManager.requestEnableLocation()
             }
             let disableRotation = args[1] as? Bool ?? false
+            let anchor = args[2] as? [Double] ?? [0.5,0.5]
+            let markerAnchor = AnchorGeoPoint(anchor: (x:anchor.first!,y:anchor.last!))
             self.mapOSM.enableRotation(enable: !disableRotation)
             if(!self.mapOSM.locationManager.isTrackingEnabled()) {
                 self.mapOSM.locationManager.toggleTracking(controlMapFromOutSide: true)
@@ -338,12 +340,12 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         }
     }
     
-    func initMap( result: @escaping FlutterResult){
-        self.mapOSM.initOSMMap(tile: customTiles)
+    /*func initMap( result: @escaping FlutterResult){
+        //self.mapOSM.initOSMMap(tile: customTiles)
         self.mapOSM.moveTo(location: CLLocationCoordinate2D(latitude: 0, longitude: 0), zoom: 2, animated: false)
 
         result(200)
-    }
+    }*/
     func initPosition(args: Any?, result: @escaping FlutterResult){
         let pointInit = args as! Dictionary<String, Double>
         //print(pointInit)
@@ -445,10 +447,10 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
             if (stepZ > 0) {
                 self.mapOSM.zoomIn(step: Int(stepZ))
             }else if (stepZ == 0) {
-                self.mapOSM.zoomIn(step: nil)
+                self.mapOSM.zoomIn(step: 1)
                 
             }else if stepZ == -1 {
-                self.mapOSM.zoomOut(step: nil)
+                self.mapOSM.zoomOut(step: 1)
             }else if stepZ < -1 {
                 self.mapOSM.zoomOut(step: Int(stepZ))
             }
@@ -545,10 +547,12 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         let key = rectJson["key"] as! String
         let shape:PShape
         switch (shapeType)  {
-            case ShapeTypes.Rect:
+            case .Rect:
                 shape =  RectShapeOSM.fromMap(json: rectJson)
-            case ShapeTypes.Circle:
+            case .Circle:
                 shape = RectShapeOSM.fromMap(json: rectJson)
+            default:
+                shape =  RectShapeOSM.fromMap(json: rectJson)
         }
         mapOSM.shapeManager.drawShape(key: key, shape: shape)
         result(200)
@@ -596,7 +600,7 @@ class MapCoreOSMView : UIView, FlutterPlatformView, CLLocationManagerDelegate,On
         latestUserLocation = userLocation
         channel.invokeMethod("receiveUserLocation", arguments: geoMap)
         if !isMovedToLocation || !canSkipFollow {
-            self.mapOSM.moveTo(location: userLocation, zoom: nil, animated: true)
+            self.mapOSM.locationManager.moveToUserLocation(animated: true)
         }
         
         if let result = resultFlutter {
