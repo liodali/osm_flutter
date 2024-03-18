@@ -2,13 +2,19 @@ package hamza.dali.flutter_osm_plugin.overlays
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.Point
+import android.graphics.PointF
 import android.location.Location
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.MotionEvent
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toBitmap
+import hamza.dali.flutter_osm_plugin.R
 import hamza.dali.flutter_osm_plugin.VoidCallback
+import hamza.dali.flutter_osm_plugin.utilities.toGeoPoint
 import hamza.dali.flutter_osm_plugin.utilities.toHashMap
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.CoroutineScope
@@ -18,31 +24,92 @@ import org.osmdroid.api.IMapView
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.Projection
+import org.osmdroid.views.overlay.Overlay
+import org.osmdroid.views.overlay.Overlay.Snappable
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.LinkedList
 
 typealias OnChangedLocation = (gp: GeoPoint) -> Unit
 
-class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
-    private var provider: GpsMyLocationProvider? = GpsMyLocationProvider(mapView.context)
+class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocationConsumer,
+    Snappable {
+    private var provider: GpsMyLocationProvider = GpsMyLocationProvider(mapView.context)
     var disableRotateDirection = false
     private var mDrawPixel: Point = Point()
-    private var customIcons = false
-    private var onChangedLocation: OnChangedLocation? = null
-    private var skipDraw = false
+    private var onChangedLocationCallback: OnChangedLocation? = null
     private val mRunOnFirstFix = LinkedList<Runnable>()
-    var currentLocation: Location? = null
-        private set(value) {
-            field = value
-        }
+    private var enableAutoStop = true
+    private val mPaint: Paint = Paint()
+    var mIsFollowing = false
+        private set
+    private var mPersonBitmap: Bitmap? = null
+    private var mDirectionArrowBitmap: Bitmap? = null
+    private val mPersonHotspot: PointF = PointF()
+
+    private var mDirectionArrowCenterX = 0f
+    private var mDirectionArrowCenterY = 0f
+    var mIsLocationEnabled = false
+        private set
+    private var currentLocation: Location? = null
+
+    private val mHandler: Handler = Handler(Looper.getMainLooper())
+    var mGeoPoint: GeoPoint = GeoPoint(0.0, 0.0)
+        private set
     private var mHandlerToken = Object()
     private var handler = Handler(Looper.getMainLooper())
 
     init {
-        setEnableAutoStop(true)
-        mMyLocationProvider = provider
+        mPaint.isFilterBitmap = true
+        mPersonBitmap = ResourcesCompat.getDrawable(
+            mapView.context.resources,
+            R.drawable.ic_location_on_red_24dp,
+            mapView.context.theme
+        )?.toBitmap()
+        mDirectionArrowBitmap = ResourcesCompat.getDrawable(
+            mapView.context.resources,
+            R.drawable.baseline_navigation_24,
+            mapView.context.theme
+        )?.toBitmap()
+
+    }
+
+    private fun setLocation(location: Location) {
+        currentLocation = location
+        mGeoPoint = location.toGeoPoint()
+        if (mIsFollowing) {
+            mapView.controller.animateTo(mGeoPoint)
+        } else {
+            mapView.postInvalidate()
+        }
+    }
+
+    fun enableMyLocation() {
+        val isSuccess = provider.startLocationProvider(this)
+
+        // set initial location when enabled
+        if (isSuccess) {
+            val location = provider.lastKnownLocation
+            location?.let { setLocation(it) }
+        }
+
+        // Update the screen to see changes take effect
+        mapView.postInvalidate()
+        mIsLocationEnabled = isSuccess
+    }
+
+    private fun enableFollowLocation() {
+        mIsFollowing = true
+
+        // set initial location when enabled
+        if (mIsLocationEnabled) {
+            val location: Location = provider.lastKnownLocation
+            setLocation(location)
+
+        }
+        mapView.postInvalidate()
+
     }
 
     fun onStart(isFollow: Boolean) {
@@ -58,13 +125,37 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
     }
 
     fun onStopLocation() {
-        this.onChangedLocation = null
+        this.onChangedLocationCallback = null
         disableFollowAndLocation()
-        mMyLocationProvider.stopLocationProvider()
+        provider.stopLocationProvider()
+        mHandler.removeCallbacksAndMessages(mHandlerToken)
+    }
+
+    private fun disableMyLocation() {
+        mIsLocationEnabled = false
+        stopLocationProvider()
+        mapView.postInvalidate()
+
+    }
+
+    private fun stopLocationProvider() {
+        provider.stopLocationProvider()
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (mIsFollowing) enableFollowLocation()
+        enableMyLocation()
+    }
+
+    override fun onPause() {
+        disableMyLocation()
+        super.onPause()
     }
 
     fun onDestroy() {
-        mMyLocationProvider.destroy()
+        provider.destroy()
     }
 
 
@@ -74,8 +165,7 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         scope: CoroutineScope,
 
         ) {
-        skipDraw = true
-        if (!isMyLocationEnabled) {
+        if (!mIsLocationEnabled) {
             enableMyLocation()
         }
         runOnFirstFix {
@@ -87,71 +177,79 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
                 scope.launch(Main) {
                     result.success(point.toHashMap())
                 }
-                if (!isFollowLocationEnabled) {
-                    disableMyLocation()
-                }
-                skipDraw = false
+                disableMyLocation()
+
                 if (afterGetLocation != null) {
                     afterGetLocation()
                 }
             } ?: result.error("400", "we cannot get the current position!", "")
-
-
         }
     }
 
 
     override fun onLocationChanged(location: Location?, source: IMyLocationProvider?) {
-        //super.onLocationChanged(location, source)
-        val geoPMap = GeoPoint(location)
-        if (isFollowLocationEnabled && location != null) {
-            if (mIsFollowing && !enableAutoStop) {
-                mMapView.controller.animateTo(geoPMap)
-                enableAutoStop = true
-                Log.d("osm user location", "enable auto animate to")
-            }
-        }
-        if (onChangedLocation != null) {
-            this.onChangedLocation!!(geoPMap)
-        }
+        // super.onLocationChanged(location, source)
+
         currentLocation = location
-        // These location updates can come in from different threads
-        handler.postAtTime(object : Runnable {
-            override fun run() {
-                for (runnable in mRunOnFirstFix) {
-                    val t = Thread(runnable)
-                    t.name = this.javaClass.name + "#onLocationChanged"
-                    t.start()
+        mGeoPoint = GeoPoint(location)
+        if (mIsFollowing && location != null && !enableAutoStop) {
+
+            mapView.controller.animateTo(mGeoPoint)
+            enableAutoStop = true
+            Log.d("osm user location", "enable auto animate to")
+
+        }
+        mapView.postInvalidate()
+        if (onChangedLocationCallback != null) {
+            onChangedLocationCallback!!(mGeoPoint)
+        }
+
+        if (location != null) {
+            // These location updates can come in from different threads
+
+            // These location updates can come in from different threads
+            mHandler.postAtTime(object : Runnable {
+                override fun run() {
+                    setLocation(location)
+                    for (runnable in mRunOnFirstFix) {
+                        val t = Thread(runnable)
+                        t.setName(this.javaClass.getName() + "#onLocationChanged")
+                        t.start()
+                    }
+                    mRunOnFirstFix.clear()
                 }
-                mRunOnFirstFix.clear()
-            }
-        }, mHandlerToken, 0)
+            }, mHandlerToken, 0)
+        }
     }
 
     fun toggleFollow(enableStop: Boolean) {
         enableAutoStop = enableStop
-        when (enableStop) {
+        enableFollowLocation()
+       /* when (enableStop) {
             true -> disableFollowLocation()
-            else -> enableFollowLocation()
-        }
+            else ->
+        }*/
     }
 
     fun followLocation(onChangedLocation: (gp: GeoPoint) -> Unit) {
         this.enableFollowLocation()
         runOnFirstFix {
-            val location = this.lastFix
+            val location = this.currentLocation!!
             val geoPMap = GeoPoint(location)
             onChangedLocation(geoPMap)
         }
     }
 
+    fun disableFollowLocation() {
+        if (mapView.controller != null) mapView.controller.stopAnimation(false)
+        mIsFollowing = false
+    }
+
     fun onChangedLocation(onChangedLocation: OnChangedLocation) {
-        this.onChangedLocation = onChangedLocation
-        runOnFirstFix {
-            val location = this.lastFix
-            val geoPMap = GeoPoint(location)
-            onChangedLocation(geoPMap)
-        }
+        this.onChangedLocationCallback = onChangedLocation
+        val location = this.currentLocation!!
+        val geoPMap = GeoPoint(location)
+        onChangedLocationCallback!!(geoPMap)
     }
 
     override fun onTouchEvent(event: MotionEvent?, mapView: MapView?): Boolean {
@@ -162,63 +260,44 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
             mapView?.animation?.cancel()
             disableFollowLocation()
             enableAutoStop = false
-            mIsFollowing = false
-            mapView?.controller?.setCenter(mapView.mapCenter)
+            //mapView?.controller?.setCenter(mapView.mapCenter)
             Log.d("osm user location", "stop animate to")
         }
         return false
     }
 
+
     override fun draw(canvas: Canvas, pProjection: Projection) {
-        mDrawAccuracyEnabled = false
-        if (!skipDraw) {
-            if (customIcons) {
-                setPersonAnchor(0.5f, 0.5f)
-                setDirectionAnchor(0.5f, 0.5f)
-            }
-            when {
-                disableRotateDirection && customIcons -> {
-                    if (lastFix != null && isMyLocationEnabled) {
-                        drawPerson(canvas, pProjection, lastFix)
-                    }
+        if (currentLocation != null && mIsLocationEnabled) {
+            pProjection.toPixels(mGeoPoint, mDrawPixel)
+            when (currentLocation!!.hasBearing()) {
+                true -> {
+                    val mapRotation = currentLocation!!.bearing
+                    drawDirection(canvas, mapRotation)
                 }
 
-                else -> {
-                    if (lastFix != null) {
-                        when (lastFix.hasBearing()) {
-                            true -> drawDirection(canvas, pProjection, lastFix)
-                            else -> drawPerson(canvas, pProjection, lastFix)
-                        }
-                    }
-                }
+                else -> drawPerson(canvas)
             }
         }
 
     }
 
-    override fun onSnapToItem(x: Int, y: Int, snapPoint: Point?, mapView: IMapView?): Boolean {
-        return false
-    }
 
     fun setMarkerIcon(personIcon: Bitmap?, directionIcon: Bitmap?) {
 
         when {
             personIcon != null && directionIcon != null -> {
-                customIcons = true
                 mPersonBitmap = personIcon
                 mDirectionArrowBitmap = directionIcon
-
                 setDirectionAnchor(.5f, .5f)
-
-//                mPersonHotspot.set(
-//                    mScale * (personIcon.width / 4f) + 0.5f,
-//                    mScale * (personIcon.width / 3f) + 0.5f,
-//                )
+                setPersonAnchor(
+                    .5f,
+                    .1f
+                )
             }
 
             personIcon != null -> {
-                customIcons = true
-                setPersonIcon(personIcon)
+                mPersonBitmap = personIcon
                 setPersonAnchor(
                     .5f,
                     .1f
@@ -227,35 +306,33 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         }
     }
 
-    private fun drawPerson(canvas: Canvas, pProjection: Projection, lastFix: Location) {
-        //val mGeoPoint = lastFix.toGeoPoint()
-        pProjection.toPixels(super.getMyLocation(), mDrawPixel)
+    private fun drawPerson(canvas: Canvas) {
+
         canvas.save()
-        // Unrotate the icon if the maps are rotated so the little man stays upright
-        // Unrotate the icon if the maps are rotated so the little man stays upright
         canvas.rotate(
-            -mMapView.mapOrientation, mDrawPixel.x.toFloat(),
+            -mapView.mapOrientation, mDrawPixel.x.toFloat(),
             mDrawPixel.y.toFloat()
         )
 
         canvas.drawBitmap(
-            mPersonBitmap, mDrawPixel.x.toFloat() - mPersonHotspot.x,
+            mPersonBitmap!!, mDrawPixel.x.toFloat() - mPersonHotspot.x,
             mDrawPixel.y.toFloat() - mPersonHotspot.y, mPaint
         )
         canvas.restore()
     }
 
-    private fun drawDirection(canvas: Canvas, pProjection: Projection, lastFix: Location) {
-        //val mGeoPoint = lastFix.toGeoPoint()
-        pProjection.toPixels(super.getMyLocation(), mDrawPixel)
+    private fun drawDirection(canvas: Canvas, mapRotation: Float) {
+
+        var rotation = mapRotation
+        if (rotation >= 360.0f) {
+            rotation -= 360f
+        }
         canvas.save()
-        var mapRotation = lastFix.bearing
-        if (mapRotation >= 360.0f) mapRotation -= 360f
-        canvas.rotate(mapRotation, mDrawPixel.x.toFloat(), mDrawPixel.y.toFloat())
+        canvas.rotate(rotation, mDrawPixel.x.toFloat(), mDrawPixel.y.toFloat())
 
 
         canvas.drawBitmap(
-            mDirectionArrowBitmap, mDrawPixel.x.toFloat() - mDirectionArrowCenterX,
+            mDirectionArrowBitmap!!, mDrawPixel.x.toFloat() - mDirectionArrowCenterX,
             mDrawPixel.y.toFloat() - mDirectionArrowCenterY, mPaint
         )
         canvas.restore()
@@ -270,15 +347,38 @@ class CustomLocationManager(mapView: MapView) : MyLocationNewOverlay(mapView) {
         handler.removeCallbacksAndMessages(mHandlerToken)
     }
 
-    override fun runOnFirstFix(runnable: Runnable?): Boolean {
-        return if (mMyLocationProvider != null && currentLocation != null) {
+
+    private fun setPersonAnchor(pHorizontal: Float, pVertical: Float) {
+        mPersonHotspot.set(
+            mPersonBitmap!!.getWidth() * pHorizontal,
+            mPersonBitmap!!.getHeight() * pVertical
+        )
+    }
+
+    /**
+     * Anchors for the direction icon
+     * Expected values between 0 and 1, 0 being top/left, .5 center and 1 bottom/right
+     * @since 6.2.0
+     */
+    private fun setDirectionAnchor(pHorizontal: Float, pVertical: Float) {
+        mDirectionArrowCenterX = mDirectionArrowBitmap!!.getWidth() * pHorizontal
+        mDirectionArrowCenterY = mDirectionArrowBitmap!!.getHeight() * pVertical
+    }
+
+    fun runOnFirstFix(runnable: Runnable?): Boolean {
+        return if (currentLocation != null) {
             val t = Thread(runnable)
-            t.name = this.javaClass.name + "#runOnFirstFix"
+            t.setName(this.javaClass.getName() + "#runOnFirstFix")
             t.start()
             true
         } else {
             mRunOnFirstFix.addLast(runnable)
             false
         }
+    }
+
+
+    override fun onSnapToItem(x: Int, y: Int, snapPoint: Point?, mapView: IMapView?): Boolean {
+        return false
     }
 }
