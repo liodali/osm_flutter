@@ -1,6 +1,7 @@
-### 1.0.0-rc.5: fimx userlocation in android
+### 1.0.0-rc.6: update dependencies
+### 1.0.0-rc.5: fix userlocation in android
 * fix user location tracking in android side (bug:#507)
-### 1.0.0-rc.4: fimx userlocation in ios
+### 1.0.0-rc.4: fix userlocation in ios
 * update ios sdk and fix bug related to userlocation 
 * fix draw border for road in ios side 
 ### 1.0.0-rc.3: fix bugs

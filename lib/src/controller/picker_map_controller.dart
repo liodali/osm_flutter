@@ -48,16 +48,6 @@ class PickerMapController extends BaseMapController {
     return osmBaseController.getMapCenter();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
-  void init() {
-    super.init();
-  }
-
   // void init() {
   //   //setBaseOSMController(controller);
   //   Future.delayed(Duration(milliseconds: 1250), () async {
