@@ -47,8 +47,8 @@ class RoadTapEvent extends EventOSM<RoadInfo> {
   RoadTapEvent(int mapId, RoadInfo road) : super(mapId, road);
 }
 
-class UserLocationEvent extends EventOSM<GeoPoint> {
-  UserLocationEvent(int mapId, GeoPoint position) : super(mapId, position);
+class UserLocationEvent extends EventOSM<UserLocation> {
+  UserLocationEvent(int mapId, UserLocation userLocation) : super(mapId, userLocation);
 }
 
 class RegionIsChangingEvent extends EventOSM<Region> {

@@ -10,12 +10,12 @@ import 'package:flutter/services.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:stream_transform/stream_transform.dart';
 
-import '../common/geo_point_exception.dart';
-import '../common/osm_event.dart';
-import '../common/road_exception.dart';
-import '../common/utilities.dart';
-import '../osm_interface.dart';
-import '../types/types.dart';
+import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
+import 'package:flutter_osm_interface/src/common/osm_event.dart';
+import 'package:flutter_osm_interface/src/common/road_exception.dart';
+import 'package:flutter_osm_interface/src/common/utilities.dart';
+import 'package:flutter_osm_interface/src/osm_interface.dart';
+import 'package:flutter_osm_interface/src/types/types.dart';
 
 class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, MethodChannel> _channels = {};
@@ -120,7 +120,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
         case "receiveUserLocation":
           final result = call.arguments;
           _streamController
-              .add(UserLocationEvent(idMap, GeoPoint.fromMap(result)));
+              .add(UserLocationEvent(idMap, UserLocation.fromMap(result)));
           break;
         case "receiveRegionIsChanging":
           final result = call.arguments;
@@ -269,12 +269,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
     bool stopFollowInDrag = false,
     bool disableMarkerRotation = false,
     Anchor anchor = Anchor.center,
+    bool useDirectionMarker = false,
   }) async {
     final args = <dynamic>[
       stopFollowInDrag,
       disableMarkerRotation,
+      useDirectionMarker,
+      anchor.toMap()
     ];
-    args.add(anchor.toMap());
     await _channels[idOSM]?.invokeMethod(
       'trackMe',
       args,
@@ -646,6 +648,18 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> toggleLayer(int idOSM, {required bool toggle}) async {
     await _channels[idOSM]!.invokeMethod("toggle#Alllayer", toggle);
   }
+
+  @override
+  Future<void> startLocationUpdating(
+    int idOSM,
+  ) =>
+      _channels[idOSM]!.invokeMethod("startLocationUpdating");
+
+  @override
+  Future<void> stopLocationUpdating(
+    int idOSM,
+  ) =>
+      _channels[idOSM]!.invokeMethod("stopLocationUpdating");
 }
 
 extension config on MethodChannelOSM {

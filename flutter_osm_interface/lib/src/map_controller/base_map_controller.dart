@@ -19,12 +19,13 @@ abstract class BaseMapController extends IBaseMapController {
   late Timer? _timer;
   var _layerIsVisible = true;
   IBaseOSMController get osmBaseController => _osmBaseController;
-
+  final bool useExternalTracking;
   BaseMapController({
     UserTrackingOption? initMapWithUserPosition,
     GeoPoint? initPosition,
     this.areaLimit = const BoundingBox.world(),
     this.customTile,
+    this.useExternalTracking = false,
   })  : assert((initMapWithUserPosition != null) ^ (initPosition != null)),
         super(
           initMapWithUserPosition: initMapWithUserPosition,
@@ -55,8 +56,9 @@ abstract class BaseMapController extends IBaseMapController {
       _timer?.cancel();
     });
   }
+
   /// [toggleLayersVisibility]
-  /// 
+  ///
   /// this method hide/show all layer exist in the map
   Future<void> toggleLayersVisibility() async {
     _layerIsVisible = !_layerIsVisible;

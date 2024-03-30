@@ -3,7 +3,7 @@ import 'package:flutter_osm_interface/src/types/types.dart';
 abstract class IBaseOSMController {
   Future<void> initPositionMap({
     GeoPoint? initPosition,
-    //bool initWithUserPosition = false,
+    bool useExternalTracking = false,
     UserTrackingOption? userPositionOption,
   });
 
@@ -79,7 +79,6 @@ abstract class IBaseOSMController {
     bool refresh = false,
   });
 
-
   /// change static position in runtime
   ///  [geoPoints] : list of static geoPoint
   ///  [id] : String of that list of static geoPoint
@@ -139,15 +138,32 @@ abstract class IBaseOSMController {
   /// [p] : (GeoPoint) desired location
   Future<void> goToPosition(GeoPoint p);
 
-  /// enabled tracking user location
+  /// [enableTracking]
+  /// 
+  /// to start tracking user location where we will show [personMarker] 
+  /// or [directionMarker] depend on heading value but we can configure the marker to be always
+  /// [directionMarker] by set [useDirectionMarker] to true (default:false)
+  /// 
+  /// we can also enable stop following user when the user move the map by set [enableStopFollow] to true
+  /// with [disableMarkerRotation] we can disable rotation of the marker
+  /// and [anchor] will change the position of the marker compared to center of the marker
+  /// 
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableMarkerRotation,
     Anchor anchor,
+    bool useDirectionMarker = false,
   });
 
   /// disabled tracking user location
   Future<void> disabledTracking();
+
+  /// [startLocationUpdating]
+  ///
+  Future<void> startLocationUpdating();
+  /// [stopLocationUpdating]
+  ///
+  Future<void> stopLocationUpdating();
 
   /// [drawRoad]
   /// this method will call ORSM api to get list of geopoint and
@@ -275,7 +291,6 @@ abstract class IBaseOSMController {
   ///
   /// change visibility of all layers of the map
   Future<void> toggleLayer({
-   required bool toggle,
+    required bool toggle,
   });
-
 }

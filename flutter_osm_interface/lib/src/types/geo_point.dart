@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter_osm_interface/src/common/utilities.dart';
 
+typedef UserLocation = GeoPointWithOrientation;
+
 ///[GeoPoint]
 ///
 /// illustrate geographique location thats contain longitude and latitude position
@@ -109,6 +111,12 @@ class GeoPointWithOrientation extends GeoPoint {
         super(
           latitude: latitude,
           longitude: longitude,
+        );
+  GeoPointWithOrientation.fromMap(Map json)
+      : angle = json["heading"],
+        super(
+          latitude: json["lat"],
+          longitude: json["lon"],
         );
 
   Map<String, double> toMap() {
