@@ -421,6 +421,9 @@ extension CLLocationCoordinate2D {
     func toGeoPoint() -> GeoPoint {
         ["lat": latitude, "lon": longitude]
     }
+    func toUserLocation(heading:Double = 0) -> GeoPoint {
+        ["lat": latitude, "lon": longitude,"heading":heading]
+    }
 }
 
 extension UIImage {
