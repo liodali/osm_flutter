@@ -15,6 +15,7 @@ class MapController extends BaseMapController {
     UserTrackingOption? initMapWithUserPosition,
     GeoPoint? initPosition,
     BoundingBox? areaLimit = const BoundingBox.world(),
+    super.useExternalTracking,
   })  : assert(
           (initMapWithUserPosition != null) ^ (initPosition != null),
         ),
@@ -37,6 +38,7 @@ class MapController extends BaseMapController {
 
   MapController.withUserPosition({
     BoundingBox? areaLimit = const BoundingBox.world(),
+    bool useExternalTracking = false,
     UserTrackingOption trackUserLocation = const UserTrackingOption(
       enableTracking: false,
       unFollowUser: false,
@@ -46,6 +48,7 @@ class MapController extends BaseMapController {
           initPosition: null,
           areaLimit: areaLimit,
           customTile: null,
+          useExternalTracking: useExternalTracking,
         );
 
   MapController.customLayer({
@@ -158,10 +161,20 @@ class MapController extends BaseMapController {
 
   /// [goToLocation]
   ///
-  ///animate  to specific position with out add marker into the map
+  /// animate to specific position with out add marker into the map
   ///
   /// [position] : (GeoPoint) position that will be go to map
+  @Deprecated("use moveTo")
   Future<void> goToLocation(GeoPoint position) async {
+    await osmBaseController.goToPosition(position);
+  }
+
+  /// [moveTo]
+  ///
+  /// move the camera of the map to specific position with out add marker into the map
+  ///
+  /// [position] : (GeoPoint) position that will be go to map
+  Future<void> moveTo(GeoPoint position, {bool animate = false}) async {
     await osmBaseController.goToPosition(position);
   }
 
@@ -179,7 +192,6 @@ class MapController extends BaseMapController {
   Future<void> removeMarkers(List<GeoPoint> geoPoints) async {
     osmBaseController.removeMarkers(geoPoints);
   }
-
 
   /// setMarkerIcon
   ///
@@ -299,20 +311,48 @@ class MapController extends BaseMapController {
   ///
   /// this method will enable tracking the user location,
   /// [enableStopFollow] is false ,the map will return follow the user location when it change
+  ///
   /// [enableStopFollow] is true ,the map will not follow the user location when it change if user change the location of the map
-  /// 
-  /// To disable the rotation of user marker, 
+  ///
+  /// To disable the rotation of user marker,
   /// change [disableUserMarkerRotation] to true (default : false)
+  ///
+  ///
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableUserMarkerRotation = false,
     Anchor anchor = Anchor.center,
+    bool useDirectionMarker = false,
   }) async {
     await osmBaseController.enableTracking(
-      enableStopFollow: enableStopFollow,
-      disableMarkerRotation: disableUserMarkerRotation,
-      anchor: anchor,
-    );
+        enableStopFollow: enableStopFollow,
+        disableMarkerRotation: disableUserMarkerRotation,
+        anchor: anchor,
+        useDirectionMarker: useDirectionMarker);
+  }
+
+  /// [startLocationUpdating]
+  ///
+  /// Starts receiving the user’s current location.
+  ///
+  /// use this method to start only receiving the user location without
+  /// controlling the map which you can do that manually
+  Future<void> startLocationUpdating({
+    bool enableStopFollow = false,
+    bool disableUserMarkerRotation = false,
+    Anchor anchor = Anchor.center,
+    bool useDirectionMarker = false,
+  }) async {
+    await osmBaseController.startLocationUpdating();
+  }
+
+  ///[stopLocationUpdating]
+  ///
+  /// Stops receive of location updates.
+  ///
+  /// use this method to stop receiving the user location events
+  Future<void> stopLocationUpdating() async {
+    await osmBaseController.stopLocationUpdating();
   }
 
   /// disabled tracking user location
@@ -432,8 +472,6 @@ class MapController extends BaseMapController {
     await osmBaseController.removeAllShapes();
   }
 
-
-
   /// [rotateMapCamera]
   ///
   /// rotate camera of osm map
@@ -499,8 +537,9 @@ class MapController extends BaseMapController {
   }
 
   Future<BoundingBox> get bounds async => await osmBaseController.getBounds();
+
   /// centerMap
-  /// 
+  ///
   /// this attribute to retrieve center location of the map
   Future<GeoPoint> get centerMap async =>
       await osmBaseController.getMapCenter();

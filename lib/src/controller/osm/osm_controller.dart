@@ -49,13 +49,22 @@ final class MobileOSMController extends IBaseOSMController {
     osmPlatform.close(_idMap);
   }
 
-  /// initMap: initialisation of osm map
+  /// [initMap]
+  ///
+  /// inner initialisation of osm map
+  ///
   /// [initPosition]          : (geoPoint) animate map to initPosition
+  ///
+  /// [useExternalTracking]   : (bool) to enable external control of user location only receive user location without control the map
+  ///
   /// [userPositionOption]    : set map in user position
+  ///
   /// [box]                   : (BoundingBox) area limit of the map
+
   Future<void> initPositionMap({
     GeoPoint? initPosition,
     UserTrackingOption? userPositionOption,
+    bool useExternalTracking = false,
     BoundingBox? box,
     double? initZoom,
   }) async {
@@ -67,7 +76,13 @@ final class MobileOSMController extends IBaseOSMController {
     if (Platform.isIOS) {
       osmPlatform.onIosMapInit(_idMap).listen((event) async {
         if (event.value) {
-          await initMap(initPosition, userPositionOption, box, initZoom);
+          await initMap(
+            initPosition,
+            userPositionOption,
+            useExternalTracking,
+            box,
+            initZoom,
+          );
         }
       });
       await (osmPlatform as MethodChannelOSM).initIosMap(
@@ -164,7 +179,13 @@ final class MobileOSMController extends IBaseOSMController {
     });
 
     if (Platform.isAndroid) {
-      await initMap(initPosition, userPositionOption, box, initZoom);
+      await initMap(
+        initPosition,
+        userPositionOption,
+        useExternalTracking,
+        box,
+        initZoom,
+      );
     }
   }
 
@@ -180,6 +201,7 @@ final class MobileOSMController extends IBaseOSMController {
   Future<void> initMap(
     GeoPoint? initPosition,
     UserTrackingOption? userPositionOption,
+    bool useExternalTracking,
     BoundingBox? box,
     double? initZoom,
   ) async {
@@ -220,6 +242,7 @@ final class MobileOSMController extends IBaseOSMController {
         _idMap,
         initPosition,
       );
+      await Future.delayed(Duration(milliseconds: 250));
     }
     if (_osmFlutterState.setCache.value && Platform.isAndroid) {
       await (osmPlatform as MethodChannelOSM).setCacheMap(
@@ -229,9 +252,16 @@ final class MobileOSMController extends IBaseOSMController {
     }
     if (userTrackOption != null && userTrackOption.enableTracking) {
       await currentLocation();
-      await enableTracking(
-        enableStopFollow: userTrackOption.unFollowUser,
-      );
+      switch (useExternalTracking) {
+        case true:
+          await startLocationUpdating();
+          break;
+        case false:
+          await enableTracking(
+            enableStopFollow: userTrackOption.unFollowUser,
+          );
+          break;
+      }
     }
 
     await _drawInitStaticPoints();
@@ -426,6 +456,7 @@ final class MobileOSMController extends IBaseOSMController {
     bool enableStopFollow = false,
     bool disableMarkerRotation = false,
     Anchor anchor = Anchor.center,
+    bool useDirectionMarker = false,
   }) async {
     /// make in native when is enabled ,nothing is happen
     await _osmFlutterState.requestPermission();
@@ -434,6 +465,7 @@ final class MobileOSMController extends IBaseOSMController {
       stopFollowInDrag: enableStopFollow,
       disableMarkerRotation: disableMarkerRotation,
       anchor: anchor,
+      useDirectionMarker: useDirectionMarker,
     );
   }
 
@@ -696,6 +728,14 @@ final class MobileOSMController extends IBaseOSMController {
   Future<void> toggleLayer({required bool toggle}) async {
     await osmPlatform.toggleLayer(_idMap, toggle: toggle);
   }
+
+  @override
+  Future<void> startLocationUpdating() =>
+      osmPlatform.startLocationUpdating(_idMap);
+
+  @override
+  Future<void> stopLocationUpdating() =>
+      osmPlatform.stopLocationUpdating(_idMap);
 }
 
 extension PrivateMethodOSMController on MobileOSMController {
