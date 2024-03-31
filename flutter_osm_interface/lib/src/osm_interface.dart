@@ -35,7 +35,6 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap);
 
-
   Future<void> init(
     int idOSM,
   );
@@ -44,9 +43,7 @@ abstract class OSMPlatform extends PlatformInterface {
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {
-
   Stream<IosMapInit> onIosMapInit(int idMap);
-
 
   Stream<MapRestoration> onMapRestored(int idMap);
 
@@ -83,8 +80,11 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     bool stopFollowInDrag = false,
     bool disableMarkerRotation = false,
     Anchor anchor = Anchor.center,
+    bool useDirectionMarker = false,
   });
 
+  Future<void> startLocationUpdating(int idOSM,);
+  Future<void> stopLocationUpdating(int idOSM,);
   Future<void> addPosition(
     int idOSM,
     GeoPoint p,
@@ -233,8 +233,6 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idOSM,
   );
 
-
-
   Future<void> drawRoadManually(
     int idOSM,
     String roadKey,
@@ -246,7 +244,6 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idOSM,
     double degree,
   );
-
 
   Future<void> limitArea(
     int idOSM,
@@ -268,8 +265,8 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   /// [toggleLayer]
   ///
   /// change visibility of all layers of the map
-  Future<void> toggleLayer(int idOSM,{
-   required bool toggle,
+  Future<void> toggleLayer(
+    int idOSM, {
+    required bool toggle,
   });
-  
 }

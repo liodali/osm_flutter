@@ -52,6 +52,7 @@ abstract class BaseMapController extends IBaseMapController {
       await osmBaseController.initPositionMap(
         initPosition: initPosition,
         userPositionOption: initMapWithUserPosition,
+        useExternalTracking: useExternalTracking,
       );
       _timer?.cancel();
     });
