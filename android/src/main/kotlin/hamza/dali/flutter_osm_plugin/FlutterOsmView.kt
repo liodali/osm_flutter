@@ -38,7 +38,6 @@ import hamza.dali.flutter_osm_plugin.models.toRoadInstruction
 import hamza.dali.flutter_osm_plugin.models.toRoadOption
 import hamza.dali.flutter_osm_plugin.overlays.CustomLocationManager
 import hamza.dali.flutter_osm_plugin.utilities.Constants
-import hamza.dali.flutter_osm_plugin.utilities.FlutterPickerViewOverlay
 import hamza.dali.flutter_osm_plugin.utilities.MapSnapShot
 import hamza.dali.flutter_osm_plugin.utilities.RoadSnapShot
 import hamza.dali.flutter_osm_plugin.utilities.eq
@@ -333,7 +332,17 @@ class FlutterOsmView(
         /// init LocationManager
         locationNewOverlay = CustomLocationManager(map!!)
 
-
+        locationNewOverlay.onChangedLocation { userLocation,heading ->
+            scope?.launch {
+                withContext(Main) {
+                    methodChannel.invokeMethod(
+                        "receiveUserLocation", userLocation.toHashMap().apply {
+                            put("heading",heading)
+                        }
+                    )
+                }
+            }
+        }
     }
 
 
@@ -448,15 +457,23 @@ class FlutterOsmView(
                     val args = call.arguments as List<*>
                     val enableStopFollow = args.first() as Boolean
                     val disableRotation = args[1] as Boolean
+                    val useDirectionMarker = args[2] as Boolean
                     val anchor = args.last() as List<Double>
                     locationNewOverlay.setAnchor(anchor)
-                    trackUserLocation(enableStopFollow, disableRotation, result)
+                    trackUserLocation(enableStopFollow,useDirectionMarker, disableRotation, result)
                 }
 
                 "deactivateTrackMe" -> {
                     deactivateTrackMe(result)
                 }
-
+                "startLocationUpdating" -> {
+                    locationNewOverlay.startLocationUpdating()
+                    result.success(null)
+                }
+                "stopLocationUpdating" -> {
+                    locationNewOverlay.stopLocationUpdating()
+                    result.success(null)
+                }
                 "map#center" -> {
                     result.success((map?.mapCenter as GeoPoint).toHashMap())
                 }
@@ -1134,6 +1151,7 @@ class FlutterOsmView(
 
     private fun trackUserLocation(
         enableStopFollow: Boolean = false,
+        useDirectionMarker: Boolean = false,
         disableRotation: Boolean = false,
         result: MethodChannel.Result
     ) {
@@ -1143,29 +1161,18 @@ class FlutterOsmView(
             }
 
             map?.invalidate()
-            /*if (locationNewOverlay.isMyLocationEnabled) {
-                 locationNewOverlay.disableMyLocation()
-             }*/
-
             locationNewOverlay.disableRotateDirection = disableRotation
             if (!locationNewOverlay.mIsLocationEnabled) {
                 isEnabled = true
                 locationNewOverlay.enableMyLocation()
                 mapSnapShot().setEnableMyLocation(isEnabled)
             }
+            locationNewOverlay.useDirectionMarker = useDirectionMarker
             locationNewOverlay.toggleFollow(enableStopFollow)
             when {
                 locationNewOverlay.mIsFollowing -> {
                     isTracking = true
-                    locationNewOverlay.onChangedLocation { userLocation ->
-                        scope?.launch {
-                            withContext(Main) {
-                                methodChannel.invokeMethod(
-                                    "receiveUserLocation", userLocation.toHashMap()
-                                )
-                            }
-                        }
-                    }
+
                     mapSnapShot().setTrackLocation(isTracking)
                     mapSnapShot().setEnableMyLocation(isEnabled)
                     result.success(true)
@@ -1185,6 +1192,7 @@ class FlutterOsmView(
         mapSnapShot().setTrackLocation(isTracking)
         mapSnapShot().setEnableMyLocation(isEnabled)
         try {
+            locationNewOverlay.useDirectionMarker = false
             locationNewOverlay.onStopLocation()
             result.success(true)
         } catch (e: Exception) {

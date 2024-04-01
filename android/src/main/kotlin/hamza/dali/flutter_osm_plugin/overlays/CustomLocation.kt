@@ -31,34 +31,39 @@ import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
 import java.util.LinkedList
 
-typealias OnChangedLocation = (gp: GeoPoint) -> Unit
+typealias OnChangedLocation = (userLocation: GeoPoint,heading:Double) -> Unit
 
 class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocationConsumer,
     Snappable {
     private var provider: GpsMyLocationProvider = GpsMyLocationProvider(mapView.context)
-    var disableRotateDirection = false
+
     private var mDrawPixel: Point = Point()
     private var onChangedLocationCallback: OnChangedLocation? = null
     private val mRunOnFirstFix = LinkedList<Runnable>()
-    private var enableAutoStop = true
+
     private val mPaint: Paint = Paint()
-    var mIsFollowing = false
-        private set
+
     private var mPersonBitmap: Bitmap? = null
     private var mDirectionArrowBitmap: Bitmap? = null
     private val mPersonHotspot: PointF = PointF()
 
     private var mDirectionArrowCenterX = 0f
     private var mDirectionArrowCenterY = 0f
+    var disableRotateDirection = false
+    private var enableAutoStop = true
+    var mIsFollowing = false
+        private set
     var mIsLocationEnabled = false
         private set
+    var useDirectionMarker = false
     private var currentLocation: Location? = null
 
     private val mHandler: Handler = Handler(Looper.getMainLooper())
     var mGeoPoint: GeoPoint = GeoPoint(0.0, 0.0)
         private set
     private var mHandlerToken = Object()
-    private var handler = Handler(Looper.getMainLooper())
+
+    private var controlMapFromOutSide = false
 
     init {
         mPaint.isFilterBitmap = true
@@ -72,9 +77,10 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
             R.drawable.baseline_navigation_24,
             mapView.context.theme
         )?.toBitmap()
+        provider.locationUpdateMinTime = 15000L
+        provider.locationUpdateMinDistance = 1.5f
 
     }
-
     private fun setLocation(location: Location) {
         currentLocation = location
         mGeoPoint = location.toGeoPoint()
@@ -87,7 +93,6 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
 
     fun enableMyLocation() {
         val isSuccess = provider.startLocationProvider(this)
-
         // set initial location when enabled
         if (isSuccess) {
             val location = provider.lastKnownLocation
@@ -111,6 +116,14 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
         mapView.postInvalidate()
 
     }
+    fun startLocationUpdating(){
+        enableMyLocation()
+        controlMapFromOutSide = true
+    }
+    fun stopLocationUpdating(){
+        controlMapFromOutSide = false
+        onStopLocation()
+    }
 
     fun onStart(isFollow: Boolean) {
         enableMyLocation()
@@ -125,7 +138,7 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
     }
 
     fun onStopLocation() {
-        this.onChangedLocationCallback = null
+        //this.onChangedLocationCallback = null
         disableFollowAndLocation()
         provider.stopLocationProvider()
         mHandler.removeCallbacksAndMessages(mHandlerToken)
@@ -192,25 +205,28 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
 
         currentLocation = location
         mGeoPoint = GeoPoint(location)
-        if (mIsFollowing && location != null && !enableAutoStop) {
+        /*if (mIsFollowing && location != null && !enableAutoStop) {
 
             mapView.controller.animateTo(mGeoPoint)
             enableAutoStop = true
             Log.d("osm user location", "enable auto animate to")
 
         }
-        mapView.postInvalidate()
+        //mapView.postInvalidate()*/
         if (onChangedLocationCallback != null) {
-            onChangedLocationCallback!!(mGeoPoint)
+            onChangedLocationCallback!!(mGeoPoint,currentLocation!!.bearing.toDouble())
         }
 
         if (location != null) {
-            // These location updates can come in from different threads
-
-            // These location updates can come in from different threads
             mHandler.postAtTime(object : Runnable {
                 override fun run() {
-                    setLocation(location)
+                    /*
+                     * if we call startLocationUpdating,we will not control map from here
+                     *
+                     */
+                    if(!controlMapFromOutSide){
+                        setLocation(location)
+                    }
                     for (runnable in mRunOnFirstFix) {
                         val t = Thread(runnable)
                         t.setName(this.javaClass.getName() + "#onLocationChanged")
@@ -222,13 +238,9 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
         }
     }
 
-    fun toggleFollow(enableStop: Boolean) {
+    fun toggleFollow(enableStop: Boolean,) {
         enableAutoStop = enableStop
         enableFollowLocation()
-       /* when (enableStop) {
-            true -> disableFollowLocation()
-            else ->
-        }*/
     }
 
     fun followLocation(onChangedLocation: (gp: GeoPoint) -> Unit) {
@@ -247,9 +259,9 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
 
     fun onChangedLocation(onChangedLocation: OnChangedLocation) {
         this.onChangedLocationCallback = onChangedLocation
-        val location = this.currentLocation!!
+        /*val location = this.currentLocation!!
         val geoPMap = GeoPoint(location)
-        onChangedLocationCallback!!(geoPMap)
+        onChangedLocationCallback!!(geoPMap,location.bearing.toDouble())*/
     }
 
     override fun onTouchEvent(event: MotionEvent?, mapView: MapView?): Boolean {
@@ -268,11 +280,14 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
 
 
     override fun draw(canvas: Canvas, pProjection: Projection) {
-        if (currentLocation != null && mIsLocationEnabled) {
+        if (currentLocation != null && mIsLocationEnabled && !controlMapFromOutSide) {
             pProjection.toPixels(mGeoPoint, mDrawPixel)
-            when (currentLocation!!.hasBearing()) {
+            when (currentLocation!!.hasBearing() || this.useDirectionMarker) {
                 true -> {
-                    val mapRotation = currentLocation!!.bearing
+                    val mapRotation = when {
+                        !disableRotateDirection -> currentLocation!!.bearing
+                        else -> 0f
+                    }
                     drawDirection(canvas, mapRotation)
                 }
 
@@ -344,7 +359,7 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
     }
 
     override fun onDetach(mapView: MapView?) {
-        handler.removeCallbacksAndMessages(mHandlerToken)
+        mHandler.removeCallbacksAndMessages(mHandlerToken)
     }
 
 
