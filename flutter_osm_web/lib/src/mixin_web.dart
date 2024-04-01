@@ -23,7 +23,7 @@ mixin WebMixin {
 
   Future<void> initLocationMap(GeoPoint p) async {
     await promiseToFuture(interop.initMapLocation(mapIdMixin, p.toGeoJS()));
-  }
+}
 
   Future<void> changeTileLayer({CustomTile? tileLayer}) async {
     final urls = tileLayer?.urlsServers.first.toWeb();
@@ -49,23 +49,33 @@ mixin WebMixin {
 
   Future<void> currentLocation() async {
     await interop.currentUserLocation(
-      mapIdMixin,
-    );
-  }
+        mapIdMixin,
+      );
+}
 
   Future<void> changeLocation(GeoPoint p) async {
     await _addPosition(
-      p,
-      showMarker: true,
-      animate: true,
-    );
-  }
+        p,
+        showMarker: true,
+        animate: true,
+      );
+}
 
   Future<void> disabledTracking() async {
     await interop.disableTracking(
-      mapIdMixin,
-    );
+        mapIdMixin,
+      );
+}
+  Future<void> startLocationUpdating() async {
+   await interop.startLocationUpdating(mapIdMixin);
   }
+      
+
+  Future<void> stopLocationUpdating()async {
+    await interop.stopLocationUpdating(mapIdMixin);
+  }
+     
+
 
   Future<void> drawCircle(CircleOSM circleOSM) async {
     final opacity = circleOSM.color.opacity;
@@ -111,10 +121,12 @@ mixin WebMixin {
     bool enableStopFollow = false,
     bool disableMarkerRotation = false,
     Anchor anchor = Anchor.center,
+    bool useDirectionMarker = false,
   }) async {
     await interop.enableTracking(
       mapIdMixin,
       enableStopFollow,
+      useDirectionMarker,
       IconAnchorJS(
         x: anchor.value.$1,
         y: anchor.value.$2,
@@ -123,9 +135,11 @@ mixin WebMixin {
     );
   }
 
-  Future<void> goToPosition(GeoPoint p) async {
-    await _addPosition(p, animate: true, showMarker: false);
-  }
+  Future<void> goToPosition(GeoPoint p) => _addPosition(
+        p,
+        animate: true,
+        showMarker: false,
+      );
 
   Future<void> mapOrientation(double? degree) async {
     debugPrint("not implemented in web side");

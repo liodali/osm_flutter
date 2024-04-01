@@ -108,6 +108,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   Future<void> initPositionMap({
     GeoPoint? initPosition,
     UserTrackingOption? userPositionOption,
+    bool useExternalTracking = false,
   }) async {
     interop.setUpMap(mapIdMixin);
     assert((initPosition != null) ^ (userPositionOption != null));
@@ -197,6 +198,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     if (osmWebFlutterState.widget.userLocationMarker != null) {
       await customUserLocationMarker(
         osmWebFlutterState.personIconMarkerKey,
+        osmWebFlutterState.arrowDirectionMarkerKey,
       );
     }
 
@@ -218,6 +220,19 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       osmWebFlutterState.widget.staticPoints.forEach((ele) {
         setStaticPosition(ele.geoPoints, ele.id);
       });
+    }
+    if (userPositionOption != null && userPositionOption.enableTracking) {
+      switch (useExternalTracking) {
+        case true:
+          await startLocationUpdating();
+          break;
+        case false:
+          await currentLocation();
+          await enableTracking(
+            enableStopFollow: userPositionOption.unFollowUser,
+          );
+          break;
+      }
     }
   }
 
@@ -333,11 +348,19 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   }
 
   Future customUserLocationMarker(
-      GlobalKey<State<StatefulWidget>> personIconMarkerKey) async {
+    GlobalKey<State<StatefulWidget>> personIconMarkerKey,
+    GlobalKey<State<StatefulWidget>> directionIconMarkerKey,
+  ) async {
     if (personIconMarkerKey.currentContext != null) {
       final iconPNG = (await capturePng(personIconMarkerKey)).convertToString();
       final size = personIconMarkerKey.toSizeJS();
       interop.setUserLocationIconMarker(mapIdMixin, iconPNG, size);
+    }
+    if (directionIconMarkerKey.currentContext != null) {
+      final iconPNG =
+          (await capturePng(directionIconMarkerKey)).convertToString();
+      final size = directionIconMarkerKey.toSizeJS();
+      interop.setUserLocationDirectionIconMarker(mapIdMixin, iconPNG, size);
     }
   }
 }

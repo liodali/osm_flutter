@@ -136,14 +136,25 @@ async function setUserLocationIconMarker(mapId,icon,size){
    var iframe = getIframe(mapId);
    return iframe.contentWindow.setUserLocationIconMarker(icon,size);
 }
-
-async function enableTracking(mapId,enableStopFollow,anchorJS){
+async function setUserLocationDirectionIconMarker(mapId,icon,size){
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.enableTracking(enableStopFollow,anchorJS);
+   return iframe.contentWindow.setUserLocationDirectionIconMarker(icon,size);
+}
+async function enableTracking(mapId,enableStopFollow,useDirectionMarker,anchorJS){
+   var iframe = getIframe(mapId);
+   return iframe.contentWindow.enableTracking(enableStopFollow,useDirectionMarker,anchorJS);
 }
 async function disableTracking(mapId) {
    var iframe = getIframe(mapId);
    return iframe.contentWindow.disableTracking();
+}
+async function startLocationUpdating(mapId) {
+   var iframe = getIframe(mapId);
+   return iframe.contentWindow.startLocationUpdating();
+}
+async function stopLocationUpdating(mapId) {
+   var iframe = getIframe(mapId);
+   return iframe.contentWindow.stopLocationUpdation();
 }
 async function changeIconAdvPickerMarker(mapId,icon,size) {
    var iframe = getIframe(mapId);

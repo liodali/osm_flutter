@@ -197,11 +197,18 @@ external dynamic setUserLocationIconMarker(
   String icon,
   SizeJs size,
 );
+@JS("setUserLocationDirectionIconMarker")
+external dynamic setUserLocationDirectionIconMarker(
+  int mapId,
+  String icon,
+  SizeJs size,
+);
 
 @JS("enableTracking")
 external dynamic enableTracking(
   int mapId,
   bool enableStopFollow,
+  bool useDirectionMarker,
   IconAnchorJS anchorJS,
 );
 
@@ -209,7 +216,14 @@ external dynamic enableTracking(
 external dynamic disableTracking(
   int mapId,
 );
-
+@JS("startLocationUpdating")
+external dynamic startLocationUpdating(
+  int mapId,
+);
+@JS("stopLocationUpdating")
+external dynamic stopLocationUpdating(
+  int mapId,
+);
 @JS('changeTileLayer')
 external dynamic changeTileLayer(
   int mapId,
