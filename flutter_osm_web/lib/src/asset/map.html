@@ -690,6 +690,12 @@
         idTracking = navigator.geolocation.watchPosition(function (position) {
           var userPos = [position.coords.latitude, position.coords.longitude];
           onUserPositionListener(position.coords.longitude, position.coords.latitude)
+        },function (err) { 
+          console.log(err);
+        }, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 600_000,
         })
       }
     }
@@ -698,7 +704,7 @@
       idTracking = undefined
     }
     function disableTracking() {
-      stopLocationUpdating()
+      stopLocationUpdating();
       mainLayers.get("userLocation").clearLayers();
       skipFollow = false;
       if (userPosition != undefined) {
