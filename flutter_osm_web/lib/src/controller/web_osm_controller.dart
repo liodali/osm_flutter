@@ -211,7 +211,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
 
     GeoPoint? initLocation = initPosition;
 
-    if (userPositionOption != null) {
+    if (userPositionOption != null && initLocation == null) {
       initLocation = await myLocation();
     }
     await initLocationMap(initLocation!);

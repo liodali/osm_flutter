@@ -113,7 +113,9 @@ class GeoPointWithOrientation extends GeoPoint {
           longitude: longitude,
         );
   GeoPointWithOrientation.fromMap(Map json)
-      : angle = json["heading"],
+      : angle = json.containsKey("heading")
+            ? double.tryParse(json["heading"].toString()) ?? 0
+            : 0,
         super(
           latitude: json["lat"],
           longitude: json["lon"],

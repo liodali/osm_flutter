@@ -171,14 +171,6 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       saveCache();
     }
     super.didUpdateWidget(oldWidget);
-    // if (this.widget != oldWidget &&
-    //     Platform.isAndroid &&
-    //     widget.androidHotReloadSupport &&
-    //     kDebugMode) {
-    //   setState(() {
-    //     androidKey = GlobalKey();
-    //   });
-    // }
   }
 
   @override
@@ -218,7 +210,8 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     );
   }
 
-  /// requestPermission
+  /// [requestPermission]
+  /// 
   /// this callback has role to request location permission in your phone in android Side
   /// for iOS it's done manually
   Future<bool> requestPermission() async {
@@ -269,7 +262,7 @@ class PlatformView extends StatelessWidget {
   Widget build(BuildContext context) {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       return UiKitView(
-        //  key: mobileKey,
+        key: mobileKey,
         viewType: 'plugins.dali.hamza/osmview',
         onPlatformViewCreated: onPlatformCreatedView,
         creationParams: getParams(

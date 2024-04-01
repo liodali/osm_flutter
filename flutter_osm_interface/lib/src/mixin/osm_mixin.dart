@@ -20,5 +20,5 @@ mixin OSMMixinObserver {
   void onRoadTap(RoadInfo road) {}
 
   @mustCallSuper
-  void onLocationChanged(GeoPoint userLocation) {}
+  void onLocationChanged(UserLocation userLocation) {}
 }
