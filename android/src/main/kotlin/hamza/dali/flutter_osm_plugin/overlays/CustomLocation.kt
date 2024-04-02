@@ -35,7 +35,9 @@ typealias OnChangedLocation = (userLocation: GeoPoint,heading:Double) -> Unit
 
 class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocationConsumer,
     Snappable {
-    private var provider: GpsMyLocationProvider = GpsMyLocationProvider(mapView.context)
+    private val provider: GpsMyLocationProvider  by lazy {
+        GpsMyLocationProvider(mapView.context)
+    }
 
     private var mDrawPixel: Point = Point()
     private var onChangedLocationCallback: OnChangedLocation? = null
@@ -53,6 +55,7 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
     private var enableAutoStop = true
     var mIsFollowing = false
         private set
+
     var mIsLocationEnabled = false
         private set
     var useDirectionMarker = false
@@ -77,9 +80,9 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
             R.drawable.baseline_navigation_24,
             mapView.context.theme
         )?.toBitmap()
+
         provider.locationUpdateMinTime = 15000L
         provider.locationUpdateMinDistance = 1.5f
-
     }
     private fun setLocation(location: Location) {
         currentLocation = location
@@ -92,11 +95,16 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
     }
 
     fun enableMyLocation() {
+
         val isSuccess = provider.startLocationProvider(this)
+
         // set initial location when enabled
         if (isSuccess) {
-            val location = provider.lastKnownLocation
-            location?.let { setLocation(it) }
+
+                provider.lastKnownLocation?.let {location->
+                    setLocation(location)
+                }
+
         }
 
         // Update the screen to see changes take effect
@@ -106,11 +114,11 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
 
     private fun enableFollowLocation() {
         mIsFollowing = true
-
         // set initial location when enabled
         if (mIsLocationEnabled) {
             val location: Location = provider.lastKnownLocation
-            setLocation(location)
+           setLocation(location)
+
 
         }
         mapView.postInvalidate()
@@ -158,12 +166,13 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
 
     override fun onResume() {
         super.onResume()
+        if (mIsLocationEnabled)  enableMyLocation()
         if (mIsFollowing) enableFollowLocation()
-        enableMyLocation()
+
     }
 
     override fun onPause() {
-        disableMyLocation()
+        stopLocationProvider()
         super.onPause()
     }
 

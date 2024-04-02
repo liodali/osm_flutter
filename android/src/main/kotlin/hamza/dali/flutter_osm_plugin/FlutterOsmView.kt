@@ -503,8 +503,8 @@ class FlutterOsmView(
                 /*"user#pickPosition" -> {
                     pickPosition(call, result)
                 }*/
-                "goto#position" -> {
-                    goToSpecificPosition(call, result)
+                "moveTo#position" -> {
+                    moveToSpecificPosition(call, result)
                 }
 
                 "user#removeMarkerPosition" -> {
@@ -1200,11 +1200,16 @@ class FlutterOsmView(
         }
     }
 
-    private fun goToSpecificPosition(call: MethodCall, result: MethodChannel.Result) {
+    private fun moveToSpecificPosition(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments!! as HashMap<String, *>
         val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
+        val animate = args["animate"] as Boolean? ?: false
         //map!!.controller.zoomTo(defaultZoom)
-        map!!.controller.animateTo(geoPoint)
+        when(animate){
+            true ->map!!.controller.animateTo(geoPoint)
+            false -> map!!.controller.setCenter(geoPoint)
+        }
+
         result.success(null)
     }
 
