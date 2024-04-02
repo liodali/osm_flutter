@@ -1,3 +1,4 @@
+## 1.0.0:
 ## 1.0.0-rc.4: update dependencies
 ## 1.0.0-rc.3: update dependencies
 ## 1.0.0-rc.2: migrate to wasm
