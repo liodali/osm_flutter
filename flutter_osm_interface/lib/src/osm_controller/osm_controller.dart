@@ -136,7 +136,8 @@ abstract class IBaseOSMController {
   /// to another specific position without create marker
   /// has attribute which is the desired location
   /// [p] : (GeoPoint) desired location
-  Future<void> goToPosition(GeoPoint p);
+  /// [animate] : (bool) animate the camera if true (default:false)
+  Future<void> goToPosition(GeoPoint p,{bool animate = false});
 
   /// [enableTracking]
   /// 
