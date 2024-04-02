@@ -221,7 +221,7 @@
       return { list: JSON.stringify(listGeoPoint) };
     }
 
-    async function changePosition(point, showMarker, animate) {
+    async function moveToPosition(point, showMarker, animate) {
       const position = [point.lat, point.lon];
       var args = {}
       if (showMarker && defaultIcon != "") {

@@ -23,7 +23,7 @@ mixin WebMixin {
 
   Future<void> initLocationMap(GeoPoint p) async {
     await promiseToFuture(interop.initMapLocation(mapIdMixin, p.toGeoJS()));
-}
+  }
 
   Future<void> changeTileLayer({CustomTile? tileLayer}) async {
     final urls = tileLayer?.urlsServers.first.toWeb();
@@ -49,33 +49,31 @@ mixin WebMixin {
 
   Future<void> currentLocation() async {
     await interop.currentUserLocation(
-        mapIdMixin,
-      );
-}
+      mapIdMixin,
+    );
+  }
 
   Future<void> changeLocation(GeoPoint p) async {
     await _addPosition(
-        p,
-        showMarker: true,
-        animate: true,
-      );
-}
+      p,
+      showMarker: true,
+      animate: true,
+    );
+  }
 
   Future<void> disabledTracking() async {
     await interop.disableTracking(
-        mapIdMixin,
-      );
-}
-  Future<void> startLocationUpdating() async {
-   await interop.startLocationUpdating(mapIdMixin);
+      mapIdMixin,
+    );
   }
-      
 
-  Future<void> stopLocationUpdating()async {
+  Future<void> startLocationUpdating() async {
+    await interop.startLocationUpdating(mapIdMixin);
+  }
+
+  Future<void> stopLocationUpdating() async {
     await interop.stopLocationUpdating(mapIdMixin);
   }
-     
-
 
   Future<void> drawCircle(CircleOSM circleOSM) async {
     final opacity = circleOSM.color.opacity;
@@ -135,9 +133,13 @@ mixin WebMixin {
     );
   }
 
-  Future<void> goToPosition(GeoPoint p) => _addPosition(
+  Future<void> goToPosition(
+    GeoPoint p, {
+    bool animate = false,
+  }) =>
+      _addPosition(
         p,
-        animate: true,
+        animate: animate,
         showMarker: false,
       );
 

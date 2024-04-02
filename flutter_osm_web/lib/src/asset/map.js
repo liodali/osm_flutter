@@ -18,7 +18,7 @@ async function changeTileLayer(mapId,tile) {
 
 async function addPosition(mapId,point, showMarker, animate) {
    var iframe = getIframe(mapId);
-   return await iframe.contentWindow.changePosition(point, showMarker, animate);
+   return await iframe.contentWindow.moveToPosition(point, showMarker, animate);
 }
 
 async function addMarker(mapId,point,iconSize, icon,angle,anchor) {
