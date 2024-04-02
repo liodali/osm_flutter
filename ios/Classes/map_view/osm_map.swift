@@ -146,8 +146,8 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
             self.mapOSM.locationManager.requestSingleLocation()
             resultFlutter = result
             break;
-        case "goto#position":
-            goToSpecificLocation(call: call, result: result)
+        case "moveTo#position":
+            moveToSpecificLocation(call: call, result: result)
             break;
         case "map#bounds":
             getMapBounds(result: result)
@@ -356,13 +356,15 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
         result(200)
         
     }
-     func goToSpecificLocation(call: FlutterMethodCall, result: FlutterResult) {
-        let point = (call.arguments as! GeoPoint).toLocationCoordinate()
+     func moveToSpecificLocation(call: FlutterMethodCall, result: FlutterResult) {
+         let args = call.arguments as! [String:Any]
+         let point = CLLocationCoordinate2D(latitude: args["lat"] as! Double, longitude: args["lon"] as! Double)
+        let animate = args["animate"] as! Bool? ?? false
         var currentZoom = self.mapOSM.zoom()
          if currentZoom == 0 || !mapInitialized {
              currentZoom = zoomConfig.initZoom
          }
-        self.mapOSM.moveTo(location: point, zoom: currentZoom, animated: true)
+        self.mapOSM.moveTo(location: point, zoom: currentZoom, animated: animate)
         result(200)
     }
     func rotateMap(call:FlutterMethodCall){
