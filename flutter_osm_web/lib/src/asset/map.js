@@ -154,7 +154,7 @@ async function startLocationUpdating(mapId) {
 }
 async function stopLocationUpdating(mapId) {
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.stopLocationUpdation();
+   return iframe.contentWindow.stopLocationUpdating();
 }
 async function changeIconAdvPickerMarker(mapId,icon,size) {
    var iframe = getIframe(mapId);

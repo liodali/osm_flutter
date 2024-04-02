@@ -82,6 +82,8 @@
       tileSize: 256,
     });
     OpenStreetMap_Mapnik.addTo(mymap);
+
+   
     //mymap.setView([0, 0], 2);
     mymap.on('click', function (event) {
       const geoP = event.latlng;
@@ -130,7 +132,7 @@
       })
       return 200
     }
-
+    
     async function initMapLocation(point) {
       mymap.setView([point.lat, point.lon], zoom);
       isReady = true;
@@ -141,6 +143,7 @@
         }
         mymap.addLayer(mainLayers.get(key))
       })
+      removeUnecessaryStaff()
       //L.polyline([{lat: 8.498037, lng: 47.489106},{lat: 8.537061, lng: 47.412961}],{color:'red'}).addTo(mymap)
     }
 
@@ -156,7 +159,7 @@
         customTile = L.tileLayer(tile.url + '{z}/{x}/{y}' + tile.tileExtension + tile.apiKey,//'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
           {
             subdomains: tile.subDomains,
-            //attribution: 'Leaflet | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            attribution: 'Leaflet | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: tile.maxZoom,
             minZoom: tile.minZoom,
             tileSize: tile.tileSize,
@@ -164,6 +167,7 @@
         customTile.addTo(mymap);
         OpenStreetMap_Mapnik.remove();
       }
+      removeUnecessaryStaff()
 
     }
 
@@ -839,7 +843,12 @@
       }
     }
 
-
+    function removeUnecessaryStaff(){
+      var parent = document.querySelector(".leaflet-control-attribution");
+      console.log(parent.firstElementChild)
+      parent.removeChild(parent.firstElementChild);
+      parent.removeChild(parent.firstElementChild);
+    }
 
 
 
