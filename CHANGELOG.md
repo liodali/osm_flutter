@@ -3,7 +3,7 @@
 * add `startLocationUpdating`,`stopLocationUpdating` for external control of user location
 * fix some bugs
 * migrate to wasm for web
-* add
+* replace gotoPosition by moveTo
 ### 1.0.0-rc.6: update dependencies
 ### 1.0.0-rc.5: fix userlocation in android
 * fix user location tracking in android side (bug:#507)

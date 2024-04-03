@@ -357,7 +357,7 @@ or
 > Change the location without create marker
 
 ```dart
- await controller.moveToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609),animate:true);
+ await controller.moveTo(GeoPoint(latitude: 47.35387, longitude: 8.43609),animate:true);
 ```
 
 
