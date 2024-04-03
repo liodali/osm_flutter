@@ -4,7 +4,7 @@
 
 # flutter_osm_plugin 
 
-![pub](https://img.shields.io/badge/pub-v1.0.0--rc.6-yellow)   
+![pub](https://img.shields.io/badge/pub-v1.0.0-blue)   
 
 
 ## Platform Support
@@ -50,7 +50,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^1.0.0-rc.6
+      flutter_osm_plugin: ^1.0.0
 
 
 
@@ -181,6 +181,15 @@ final controller = MapController.withUserPosition(
            unFollowUser: false,
         )
 )
+
+// init the position using the user location and control map from outside
+final controller = MapController.withUserPosition(
+        trackUserLocation: UserTrackingOption(
+           enableTracking: true,
+           unFollowUser: false,
+        ),
+         useExternalTracking: true
+)
 ```
 
 
@@ -202,6 +211,7 @@ final controller = MapController.withUserPosition(
 | `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
 | `areaLimit`                  | (Bounding) set area limit of the map (default BoundingBox.world())   |
 | `customLayer`                | (CustomTile) set customer layer  using different osm server , this attribute used only with named constructor `customLayer`  |
+| ` useExternalTracking`       | (bool) if true,we will disable our logic to show userlocation marker or to move to the user position |
 
 
 <b> 3.1) Custom Layers with  `MapController` </b>
@@ -322,24 +332,32 @@ without need to call `currentLocation`
 ```dart
  await controller.enableTracking(enableStopFollow:false,);
 ```
+or 
 
+> use this method below if you want to control the map(move to the user location and show the marker) while receiving the user location
+
+```dart
+ await controller.startLocationUpdating();
+```
 <b> 9) Disable tracking user position </b>
 
 ```dart
  await controller.disabledTracking();
 ```
+or 
+
+> use this method below if you already used `startLocationUpdating`
+
+```dart
+ await controller.stopLocationUpdating();
+```
 
 <b>10) update the location </b>
 
-> this method will create marker on that specific position
-
-```dart
- await controller.changeLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
-```
 > Change the location without create marker
 
 ```dart
- await controller.goToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609));
+ await controller.moveToLocation(GeoPoint(latitude: 47.35387, longitude: 8.43609),animate:true);
 ```
 
 

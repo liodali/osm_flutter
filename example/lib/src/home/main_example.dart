@@ -24,8 +24,9 @@ class Main extends StatefulWidget {
 
 class _MainState extends State<Main> with OSMMixinObserver {
   late MapController controller;
-  ValueNotifier<bool> trackingNotifier = ValueNotifier(true);
+  ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
   ValueNotifier<bool> showFab = ValueNotifier(false);
+  ValueNotifier<bool> disableMapControlUserTracking = ValueNotifier(true);
   ValueNotifier<IconData> userLocationIcon = ValueNotifier(Icons.near_me);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
   ValueNotifier<GeoPoint?> userLocationNotifier = ValueNotifier(null);
@@ -35,15 +36,22 @@ class _MainState extends State<Main> with OSMMixinObserver {
   void initState() {
     super.initState();
     controller = MapController(
-      /*initPosition: GeoPoint(
+      initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
-      ),*/
-      initMapWithUserPosition: UserTrackingOption(
-        enableTracking: trackingNotifier.value,
       ),
+      // initMapWithUserPosition: UserTrackingOption(
+      //   enableTracking: trackingNotifier.value,
+      // ),
+      useExternalTracking: disableMapControlUserTracking.value,
     );
     controller.addObserver(this);
+    trackingNotifier.addListener(() async {
+      if (userLocationNotifier.value != null && !trackingNotifier.value) {
+        await controller.removeMarker(userLocationNotifier.value!);
+        userLocationNotifier.value = null;
+      }
+    });
   }
 
   @override
@@ -56,8 +64,6 @@ class _MainState extends State<Main> with OSMMixinObserver {
   @override
   void onSingleTap(GeoPoint position) {
     super.onSingleTap(position);
-    debugPrint(position.toString());
-    debugPrint(lastGeoPoint.value.toString());
     Future.microtask(() async {
       if (lastGeoPoint.value != null) {
         await controller.changeLocationMarker(
@@ -82,6 +88,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
           //angle: -pi / 4,
         );
       }
+      await controller.moveTo(position, animate: true);
       lastGeoPoint.value = position;
     });
   }
@@ -104,9 +111,32 @@ class _MainState extends State<Main> with OSMMixinObserver {
   }
 
   @override
-  void onLocationChanged(GeoPoint userLocation) {
+  void onLocationChanged(UserLocation userLocation) async {
     super.onLocationChanged(userLocation);
-    userLocationNotifier.value = userLocation;
+    if (disableMapControlUserTracking.value && trackingNotifier.value) {
+      await controller.moveTo(userLocation);
+      if (userLocationNotifier.value == null) {
+        await controller.addMarker(
+          userLocation,
+          markerIcon: MarkerIcon(
+            icon: Icon(Icons.navigation),
+          ),
+          angle: userLocation.angle,
+        );
+      } else {
+        await controller.changeLocationMarker(
+          oldLocation: userLocationNotifier.value!,
+          newLocation: userLocation,
+          angle: userLocation.angle,
+        );
+      }
+      userLocationNotifier.value = userLocation;
+    } else {
+      if (userLocationNotifier.value != null && !trackingNotifier.value) {
+        await controller.removeMarker(userLocationNotifier.value!);
+        userLocationNotifier.value = null;
+      }
+    }
   }
 
   @override
@@ -116,6 +146,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.maybeOf(context)?.viewPadding.top;
     return Stack(
       children: [
         Map(
@@ -141,9 +172,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
                 children: [
                   if (!kIsWeb) ...[
                     Positioned(
-                      top:
-                          (MediaQuery.maybeOf(context)?.viewPadding.top ?? 26) +
-                              48,
+                      top: (topPadding ?? 26) + 48,
                       right: 15,
                       child: MapRotation(
                         controller: controller,
@@ -151,9 +180,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
                     )
                   ],
                   Positioned(
-                    top: kIsWeb
-                        ? 26
-                        : MediaQuery.maybeOf(context)?.viewPadding.top ?? 26.0,
+                    top: kIsWeb ? 26 : topPadding ?? 26.0,
                     left: 12,
                     child: PointerInterceptor(
                       child: MainNavigation(),
@@ -165,6 +192,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
                     child: ActivationUserLocation(
                       controller: controller,
                       trackingNotifier: trackingNotifier,
+                      userLocation: userLocationNotifier,
                       userLocationIcon: userLocationIcon,
                     ),
                   ),
@@ -176,9 +204,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
                     ),
                   ),
                   Positioned(
-                    top: kIsWeb
-                        ? 26
-                        : MediaQuery.maybeOf(context)?.viewPadding.top,
+                    top: kIsWeb ? 26 : topPadding,
                     left: 64,
                     right: 72,
                     child: SearchInMap(
@@ -360,7 +386,7 @@ class Map extends StatelessWidget {
       osmOption: OSMOption(
         enableRotationByGesture: true,
         zoomOption: ZoomOption(
-          initZoom: 14,
+          initZoom: 16,
           minZoomLevel: 3,
           maxZoomLevel: 19,
           stepZoom: 1.0,
@@ -395,18 +421,18 @@ class Map extends StatelessWidget {
               // ),
             ),
             directionArrowMarker: MarkerIcon(
-              // icon: Icon(
-              //   Icons.navigation_rounded,
-              //   size: 48,
-              // ),
-              iconWidget: SizedBox(
-                width: 32,
-                height: 64,
-                child: Image.asset(
-                  "asset/directionIcon.png",
-                  scale: .3,
-                ),
+              icon: Icon(
+                Icons.navigation_rounded,
+                size: 48,
               ),
+              // iconWidget: SizedBox(
+              //   width: 32,
+              //   height: 64,
+              //   child: Image.asset(
+              //     "asset/directionIcon.png",
+              //     scale: .3,
+              //   ),
+              // ),
             )
             // directionArrowMarker: MarkerIcon(
             //   assetMarker: AssetMarker(
@@ -477,12 +503,14 @@ class ActivationUserLocation extends StatelessWidget {
   final ValueNotifier<bool> trackingNotifier;
   final MapController controller;
   final ValueNotifier<IconData> userLocationIcon;
+  final ValueNotifier<GeoPoint?> userLocation;
 
   const ActivationUserLocation({
     super.key,
     required this.trackingNotifier,
     required this.controller,
     required this.userLocationIcon,
+    required this.userLocation,
   });
   @override
   Widget build(BuildContext context) {
@@ -490,28 +518,35 @@ class ActivationUserLocation extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.deferToChild,
         onLongPress: () async {
-          await controller.disabledTracking();
+          //await controller.disabledTracking();
+          await controller.stopLocationUpdating();
           trackingNotifier.value = false;
         },
         child: FloatingActionButton(
           key: UniqueKey(),
           onPressed: () async {
             if (!trackingNotifier.value) {
-              await controller.currentLocation();
+              /*await controller.currentLocation();
               await controller.enableTracking(
                 enableStopFollow: true,
-                disableUserMarkerRotation: true,
-                anchor: Anchor.left,
-              );
+                disableUserMarkerRotation: false,
+                anchor: Anchor.right,
+                useDirectionMarker: true,
+              );*/
+              await controller.startLocationUpdating();
               trackingNotifier.value = true;
 
               //await controller.zoom(5.0);
             } else {
-              await controller.enableTracking(
-                enableStopFollow: false,
-                disableUserMarkerRotation: true,
-                anchor: Anchor.left,
-              );
+              if (userLocation.value != null) {
+                await controller.moveTo(userLocation.value!);
+              }
+
+              /*await controller.enableTracking(
+                  enableStopFollow: false,
+                  disableUserMarkerRotation: true,
+                  anchor: Anchor.center,
+                  useDirectionMarker: true);*/
               // if (userLocationNotifier.value != null) {
               //   await controller
               //       .goToLocation(userLocationNotifier.value!);
