@@ -331,7 +331,7 @@ final class MobileOSMController extends IBaseOSMController {
     );
   }
 
-  ///initialise or change of position
+  /// initialise or change of position
   ///
   /// [p] : (GeoPoint) position that will be added to map
   Future<void> changeLocation(GeoPoint p) async {
@@ -410,8 +410,12 @@ final class MobileOSMController extends IBaseOSMController {
   /// go to specific position without create marker
   ///
   /// [p] : (GeoPoint) desired location
-  Future<void> goToPosition(GeoPoint p) async {
-    await osmPlatform.goToPosition(_idMap, p);
+  Future<void> goToPosition(GeoPoint p, {bool animate = false}) async {
+    await osmPlatform.goToPosition(
+      _idMap,
+      p,
+      animate: animate,
+    );
   }
 
   /// create marker int specific position without change map camera

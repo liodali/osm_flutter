@@ -150,11 +150,13 @@ class MapController extends BaseMapController {
     await osmBaseController.removeLimitArea();
   }
 
-  /// [changeLocation]
+  
+  // [changeLocation]
   ///
   /// initialise or change of position with creating marker in that specific position
   ///
   /// [p] : geoPoint
+  @Deprecated("we will remove this method in future release")
   Future<void> changeLocation(GeoPoint position) async {
     await osmBaseController.changeLocation(position);
   }
@@ -171,19 +173,21 @@ class MapController extends BaseMapController {
 
   /// [moveTo]
   ///
-  /// move the camera of the map to specific position with out add marker into the map
+  /// move the camera of the map to specific position with animation or without
+  /// using [animate] parameter (default: false)
   ///
   /// [position] : (GeoPoint) position that will be go to map
   Future<void> moveTo(GeoPoint position, {bool animate = false}) async {
-    await osmBaseController.goToPosition(position);
+    await osmBaseController.goToPosition(position,animate: animate);
   }
 
   /// [removeMarker]
   ///
-  ///remove marker from map of position
-  /// [position] : geoPoint
-  Future<void> removeMarker(GeoPoint p) async {
-    osmBaseController.removeMarker(p);
+  /// remove marker from map of position
+  ///
+  /// [position] : marker position that we want to remove from the map
+  Future<void> removeMarker(GeoPoint position) async {
+    osmBaseController.removeMarker(position);
   }
 
   /// [removeMarkers]
