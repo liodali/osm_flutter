@@ -26,6 +26,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
   late MapController controller;
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
   ValueNotifier<bool> showFab = ValueNotifier(false);
+  ValueNotifier<bool> disableMapControlUserTracking = ValueNotifier(true);
   ValueNotifier<IconData> userLocationIcon = ValueNotifier(Icons.near_me);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
   ValueNotifier<GeoPoint?> userLocationNotifier = ValueNotifier(null);
@@ -39,8 +40,18 @@ class _MainState extends State<Main> with OSMMixinObserver {
         latitude: 47.4358055,
         longitude: 8.4737324,
       ),
+      // initMapWithUserPosition: UserTrackingOption(
+      //   enableTracking: trackingNotifier.value,
+      // ),
+      useExternalTracking: disableMapControlUserTracking.value,
     );
     controller.addObserver(this);
+    trackingNotifier.addListener(() async {
+      if (userLocationNotifier.value != null && !trackingNotifier.value) {
+        await controller.removeMarker(userLocationNotifier.value!);
+        userLocationNotifier.value = null;
+      }
+    });
   }
 
   @override
@@ -53,8 +64,6 @@ class _MainState extends State<Main> with OSMMixinObserver {
   @override
   void onSingleTap(GeoPoint position) {
     super.onSingleTap(position);
-    debugPrint(position.toString());
-    debugPrint(lastGeoPoint.value.toString());
     Future.microtask(() async {
       if (lastGeoPoint.value != null) {
         await controller.changeLocationMarker(
@@ -79,6 +88,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
           //angle: -pi / 4,
         );
       }
+      await controller.moveTo(position, animate: true);
       lastGeoPoint.value = position;
     });
   }
@@ -88,7 +98,11 @@ class _MainState extends State<Main> with OSMMixinObserver {
     super.onRegionChanged(region);
     if (trackingNotifier.value) {
       final userLocation = userLocationNotifier.value;
-      if (userLocation != region.center) {
+      if (userLocation == null ||
+          !region.center.isEqual(
+            userLocation,
+            precision: 1e4,
+          )) {
         userLocationIcon.value = Icons.gps_not_fixed;
       } else {
         userLocationIcon.value = Icons.gps_fixed;
@@ -97,9 +111,32 @@ class _MainState extends State<Main> with OSMMixinObserver {
   }
 
   @override
-  void onLocationChanged(GeoPoint userLocation) {
+  void onLocationChanged(UserLocation userLocation) async {
     super.onLocationChanged(userLocation);
-    userLocationNotifier.value = userLocation;
+    if (disableMapControlUserTracking.value && trackingNotifier.value) {
+      await controller.moveTo(userLocation);
+      if (userLocationNotifier.value == null) {
+        await controller.addMarker(
+          userLocation,
+          markerIcon: MarkerIcon(
+            icon: Icon(Icons.navigation),
+          ),
+          angle: userLocation.angle,
+        );
+      } else {
+        await controller.changeLocationMarker(
+          oldLocation: userLocationNotifier.value!,
+          newLocation: userLocation,
+          angle: userLocation.angle,
+        );
+      }
+      userLocationNotifier.value = userLocation;
+    } else {
+      if (userLocationNotifier.value != null && !trackingNotifier.value) {
+        await controller.removeMarker(userLocationNotifier.value!);
+        userLocationNotifier.value = null;
+      }
+    }
   }
 
   @override
@@ -109,6 +146,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.maybeOf(context)?.viewPadding.top;
     return Stack(
       children: [
         Map(
@@ -123,32 +161,59 @@ class _MainState extends State<Main> with OSMMixinObserver {
             ),
           )
         ],
-        if (!kIsWeb) ...[
-          Positioned(
-            top: 102,
-            right: 15,
-            child: MapRotation(
-              controller: controller,
-            ),
-          )
-        ],
-        Positioned(
-          top: kIsWeb
-              ? 26
-              : MediaQuery.maybeOf(context)?.viewPadding.top ?? 26.0,
-          left: 12,
-          child: PointerInterceptor(
-            child: MainNavigation(),
-          ),
-        ),
-        Positioned(
-          bottom: 32,
-          right: 15,
-          child: ActivationUserLocation(
-            controller: controller,
-            showFab: showFab,
-            trackingNotifier: trackingNotifier,
-            userLocationIcon: userLocationIcon,
+        Positioned.fill(
+          child: ValueListenableBuilder(
+            valueListenable: showFab,
+            builder: (context, isVisible, child) {
+              if (!isVisible) {
+                return SizedBox.shrink();
+              }
+              return Stack(
+                children: [
+                  if (!kIsWeb) ...[
+                    Positioned(
+                      top: (topPadding ?? 26) + 48,
+                      right: 15,
+                      child: MapRotation(
+                        controller: controller,
+                      ),
+                    )
+                  ],
+                  Positioned(
+                    top: kIsWeb ? 26 : topPadding ?? 26.0,
+                    left: 12,
+                    child: PointerInterceptor(
+                      child: MainNavigation(),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 32,
+                    right: 15,
+                    child: ActivationUserLocation(
+                      controller: controller,
+                      trackingNotifier: trackingNotifier,
+                      userLocation: userLocationNotifier,
+                      userLocationIcon: userLocationIcon,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 92,
+                    right: 15,
+                    child: DirectionRouteLocation(
+                      controller: controller,
+                    ),
+                  ),
+                  Positioned(
+                    top: kIsWeb ? 26 : topPadding,
+                    left: 64,
+                    right: 72,
+                    child: SearchInMap(
+                      controller: controller,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         )
       ],
@@ -315,10 +380,13 @@ class Map extends StatelessWidget {
       mapIsLoading: Center(
         child: CircularProgressIndicator(),
       ),
+      onLocationChanged: (location) {
+        debugPrint(location.toString());
+      },
       osmOption: OSMOption(
         enableRotationByGesture: true,
         zoomOption: ZoomOption(
-          initZoom: 14,
+          initZoom: 16,
           minZoomLevel: 3,
           maxZoomLevel: 19,
           stepZoom: 1.0,
@@ -353,18 +421,18 @@ class Map extends StatelessWidget {
               // ),
             ),
             directionArrowMarker: MarkerIcon(
-              // icon: Icon(
-              //   Icons.navigation_rounded,
-              //   size: 48,
-              // ),
-              iconWidget: SizedBox(
-                width: 32,
-                height: 64,
-                child: Image.asset(
-                  "asset/directionIcon.png",
-                  scale: .3,
-                ),
+              icon: Icon(
+                Icons.navigation_rounded,
+                size: 48,
               ),
+              // iconWidget: SizedBox(
+              //   width: 32,
+              //   height: 64,
+              //   child: Image.asset(
+              //     "asset/directionIcon.png",
+              //     scale: .3,
+              //   ),
+              // ),
             )
             // directionArrowMarker: MarkerIcon(
             //   assetMarker: AssetMarker(
@@ -396,7 +464,8 @@ class Map extends StatelessWidget {
               ),
             ],
           ),
-          /*StaticPositionGeoPoint(
+          /*
+           StaticPositionGeoPoint(
                       "line 2",
                       MarkerIcon(
                         icon: Icon(
@@ -409,26 +478,11 @@ class Map extends StatelessWidget {
                         GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
                         GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
                       ],
-            )*/
+            )
+          */
         ],
         roadConfiguration: RoadOption(
           roadColor: Colors.blueAccent,
-        ),
-        markerOption: MarkerOption(
-          defaultMarker: MarkerIcon(
-            icon: Icon(
-              Icons.home,
-              color: Colors.orange,
-              size: 32,
-            ),
-          ),
-          advancedPickerMarker: MarkerIcon(
-            icon: Icon(
-              Icons.location_searching,
-              color: Colors.green,
-              size: 56,
-            ),
-          ),
         ),
         showContributorBadgeForOSM: true,
         //trackMyPosition: trackingNotifier.value,
@@ -446,75 +500,160 @@ class SearchLocation extends StatelessWidget {
 }
 
 class ActivationUserLocation extends StatelessWidget {
-  final ValueNotifier<bool> showFab;
   final ValueNotifier<bool> trackingNotifier;
   final MapController controller;
   final ValueNotifier<IconData> userLocationIcon;
+  final ValueNotifier<GeoPoint?> userLocation;
 
   const ActivationUserLocation({
     super.key,
-    required this.showFab,
     required this.trackingNotifier,
     required this.controller,
     required this.userLocationIcon,
+    required this.userLocation,
   });
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: showFab,
-      builder: (ctx, isShow, child) {
-        if (!isShow) {
-          return SizedBox.shrink();
-        }
-        return child!;
-      },
-      child: PointerInterceptor(
-        child: GestureDetector(
-          behavior: HitTestBehavior.deferToChild,
-          onLongPress: () async {
-            await controller.disabledTracking();
-            trackingNotifier.value = false;
-          },
-          child: FloatingActionButton(
-            key: UniqueKey(),
-            onPressed: () async {
-              if (!trackingNotifier.value) {
-                await controller.currentLocation();
-                await controller.enableTracking(
-                  enableStopFollow: true,
-                  disableUserMarkerRotation: true,
-                  anchor: Anchor.left,
-                );
-                trackingNotifier.value = true;
+    return PointerInterceptor(
+      child: GestureDetector(
+        behavior: HitTestBehavior.deferToChild,
+        onLongPress: () async {
+          //await controller.disabledTracking();
+          await controller.stopLocationUpdating();
+          trackingNotifier.value = false;
+        },
+        child: FloatingActionButton(
+          key: UniqueKey(),
+          onPressed: () async {
+            if (!trackingNotifier.value) {
+              /*await controller.currentLocation();
+              await controller.enableTracking(
+                enableStopFollow: true,
+                disableUserMarkerRotation: false,
+                anchor: Anchor.right,
+                useDirectionMarker: true,
+              );*/
+              await controller.startLocationUpdating();
+              trackingNotifier.value = true;
 
-                //await controller.zoom(5.0);
-              } else {
-                await controller.enableTracking(
+              //await controller.zoom(5.0);
+            } else {
+              if (userLocation.value != null) {
+                await controller.moveTo(userLocation.value!);
+              }
+
+              /*await controller.enableTracking(
                   enableStopFollow: false,
                   disableUserMarkerRotation: true,
-                  anchor: Anchor.left,
+                  anchor: Anchor.center,
+                  useDirectionMarker: true);*/
+              // if (userLocationNotifier.value != null) {
+              //   await controller
+              //       .goToLocation(userLocationNotifier.value!);
+              // }
+            }
+          },
+          mini: true,
+          heroTag: "UserLocationFab",
+          child: ValueListenableBuilder<bool>(
+            valueListenable: trackingNotifier,
+            builder: (ctx, isTracking, _) {
+              if (isTracking) {
+                return ValueListenableBuilder<IconData>(
+                  valueListenable: userLocationIcon,
+                  builder: (context, icon, _) {
+                    return Icon(icon);
+                  },
                 );
-                // if (userLocationNotifier.value != null) {
-                //   await controller
-                //       .goToLocation(userLocationNotifier.value!);
-                // }
               }
+              return Icon(Icons.near_me);
             },
-            mini: true,
-            heroTag: "UserLocationFab",
-            child: ValueListenableBuilder<bool>(
-              valueListenable: trackingNotifier,
-              builder: (ctx, isTracking, _) {
-                if (isTracking) {
-                  return ValueListenableBuilder<IconData>(
-                    valueListenable: userLocationIcon,
-                    builder: (context, icon, _) {
-                      return Icon(icon);
-                    },
-                  );
-                }
-                return Icon(Icons.near_me);
-              },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class DirectionRouteLocation extends StatelessWidget {
+  final MapController controller;
+
+  const DirectionRouteLocation({
+    super.key,
+    required this.controller,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return PointerInterceptor(
+      child: FloatingActionButton(
+        key: UniqueKey(),
+        onPressed: () async {},
+        mini: true,
+        heroTag: "directionFab",
+        backgroundColor: Colors.blue,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Icon(
+          Icons.directions,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+class SearchInMap extends StatefulWidget {
+  final MapController controller;
+
+  const SearchInMap({
+    super.key,
+    required this.controller,
+  });
+  @override
+  State<StatefulWidget> createState() => _SearchInMapState();
+}
+
+class _SearchInMapState extends State<SearchInMap> {
+  final textController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    textController.addListener(onTextChanged);
+  }
+
+  void onTextChanged() {}
+  @override
+  void dispose() {
+    textController.removeListener(onTextChanged);
+    textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: Card(
+        color: Colors.white,
+        elevation: 2,
+        shape: StadiumBorder(),
+        child: TextField(
+          controller: textController,
+          onTap: () {},
+          maxLines: 1,
+          keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.zero,
+            filled: false,
+            isDense: true,
+            hintText: "search",
+            prefixIcon: Icon(
+              Icons.search,
+              size: 22,
+            ),
+            border: OutlineInputBorder(
+              borderSide: BorderSide.none,
             ),
           ),
         ),

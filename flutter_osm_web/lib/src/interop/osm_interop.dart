@@ -197,11 +197,18 @@ external dynamic setUserLocationIconMarker(
   String icon,
   SizeJs size,
 );
+@JS("setUserLocationDirectionIconMarker")
+external dynamic setUserLocationDirectionIconMarker(
+  int mapId,
+  String icon,
+  SizeJs size,
+);
 
 @JS("enableTracking")
 external dynamic enableTracking(
   int mapId,
   bool enableStopFollow,
+  bool useDirectionMarker,
   IconAnchorJS anchorJS,
 );
 
@@ -209,18 +216,14 @@ external dynamic enableTracking(
 external dynamic disableTracking(
   int mapId,
 );
-
-@JS("changeIconAdvPickerMarker")
-external dynamic changeIconAdvPickerMarker(
+@JS("startLocationUpdating")
+external dynamic startLocationUpdating(
   int mapId,
-  String? icon,
-  SizeJs sizeJs,
 );
-@JS("advSearchLocation")
-external dynamic advSearchLocation(int mapId);
-@JS("cancelAdvSearchLocation")
-external dynamic cancelAdvSearchLocation(int mapId);
-
+@JS("stopLocationUpdating")
+external dynamic stopLocationUpdating(
+  int mapId,
+);
 @JS('changeTileLayer')
 external dynamic changeTileLayer(
   int mapId,
@@ -259,6 +262,10 @@ external dynamic clearAllRoads(int mapId);
 
 @JS('removeRoad')
 external dynamic removeRoad(int mapId, String roadKey);
+
+
+@JS('toggleAlllayers')
+external dynamic toggleAlllayers(int mapId, bool toggle);
 
 @JS('setUpMap')
 external dynamic setUpMap(int mapId);

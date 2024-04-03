@@ -3,164 +3,26 @@
 //
 
 import Foundation
-import TangramMap
+import OSMFlutterFramework
+import Polyline
+import MapKit
 
-
-extension GeoPointMap {
-    public func setupMarker(
-            on map: TGMapView
-    ) -> TGMarker {
-
-        self.marker = map.markerAdd()
-        self.marker?.icon = markerIcon.image!
-        self.marker?.stylingString = self.markerStyle.toString() //styleMarker
-        self.marker?.point = coordinate
-
-        self.marker?.visible = true
-        return self.marker!
+func convertImage(codeImage: String) -> UIImage? {
+    let dataImage = Data(base64Encoded: codeImage)
+    if dataImage == nil, #available(iOS 13.0, *){
+            return UIImage(systemName: "mappin")
     }
+    return UIImage(data: dataImage!)// Note it's optional. Don't force unwrap!!!
+}
 
-    public func changeIconMarker(on map: TGMapView) {
-        let indexToUpdate = map.markers.firstIndex { m in
-            m.point == self.coordinate
-        }
-        if indexToUpdate != nil {
-            map.markers[indexToUpdate!].icon = markerIcon.image!
-        }
-    }
 
-    public func changePositionMarker(on map: TGMapView, mPosition: CLLocationCoordinate2D) {
-        let indexToUpdate = map.markers.firstIndex { m in
-            return  m.point == self.coordinate
-        }
-        if indexToUpdate != nil {
-            let oldStyleMarker = map.markers[indexToUpdate!].stylingString
-            markerStyle.copyFromOldStyle(oldMarkerStyleStr: oldStyleMarker)
-            let markerStyleStr = markerStyle.toString()
-            map.markers[indexToUpdate!].stylingString = markerStyleStr
-            map.markers[indexToUpdate!].point = mPosition
-        }
-    }
+extension OSMRoadManager  {
 
-    public func toMap() -> GeoPoint {
-        ["lat": self.coordinate.latitude, "lon": coordinate.longitude]
+    func hasPoylines() -> [RoadFolder] {
+        return roads.filter({roadF in roadF.polyline.coordinates != nil })
     }
 }
 
-extension TGMapView {
-    func addUserLocation(for userLocation: CLLocationCoordinate2D, on map: TGMapView,
-                         personIcon: MarkerIconData?,
-                         arrowDirection: MarkerIconData?,
-                         anchor:String,
-                         userLocationMarkerType: UserLocationMarkerType = UserLocationMarkerType.person) -> MyLocationMarker {
-        let userLocationMarker = MyLocationMarker(coordinate: userLocation,
-                personIcon: personIcon, arrowDirectionIcon: arrowDirection,
-                userLocationMarkerType: userLocationMarkerType,
-                anchor: AnchorGeoPoint(anchor)
-            )
-
-        userLocationMarker.marker = map.markerAdd()
-        userLocationMarker.marker!.point = userLocationMarker.coordinate
-        userLocationMarker.setDirectionArrow(personIcon: personIcon, arrowDirection: arrowDirection)
-        userLocationMarker.marker!.visible = true
-        return userLocationMarker
-    }
-    
-    func flyToUserLocation(for location: CLLocationCoordinate2D, flyEnd: ((Bool) -> Void)? = nil) {
-        let cameraOption = TGCameraPosition(center: location, zoom: self.zoom, bearing: self.bearing, pitch: self.pitch)
-        self.fly(to: cameraOption!, withSpeed: CGFloat(3.5), callback: flyEnd)
-    }
-
-    func removeUserLocation(for marker: TGMarker) {
-        self.markerRemove(marker)
-    }
-
-    func removeMarkers(markers: [TGMarker]) {
-        for marker in markers {
-            self.markerRemove(marker)
-        }
-    }
-}
-extension RoadManager  {
-
-    func hasTGMarkerPoylines() -> [RoadFolder] {
-        return roads.filter({roadF in roadF.tgRouteLayer.tgMarkerPolyline != nil })
-    }
-    func hasTGGeoPolylinePoylines() -> [RoadFolder] {
-        return roads.filter({roadF in roadF.tgRouteLayer.tgPolyline != nil })
-    }
-}
-extension MyLocationMarker {
-    
-    func updateUserLocationStyle(for style: MarkerStyle) {
-        print("marker stringstyling : \(style.toString())")
-        self.marker!.stylingString = style.toString()
-    }
-    
-    
-    func setDirectionArrow(personIcon: MarkerIconData?, arrowDirection: MarkerIconData?) {
-        self.personIcon = personIcon
-        arrowDirectionIcon = arrowDirection
-        var iconM: MarkerIconData? = nil
-        lazy var size = defaultSizeMarker
-        if (arrowDirectionIcon == nil && personIcon == nil) {
-           /*
-            switch (self.userLocationMarkerType) {
-            case .person:
-                self.marker?.stylingString = "{ \(MyLocationMarker.personStyle) , size: [\(String(describing: size.first))px,\(String(describing: size.last))px] , angle: \(self.angle) } "
-                break;
-            case .arrow:
-                self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(String(describing: size.first))px,\(String(describing: size.last))px] , angle: \(angle)  } "
-                break;
-            }
-            */
-            self.marker?.stylingString = self.markerStyle.toString()
-        } else {
-            if (arrowDirectionIcon != nil && userLocationMarkerType == .arrow) {
-                iconM = arrowDirectionIcon
-            } else if (self.personIcon != nil && userLocationMarkerType == .person) {
-                iconM = self.personIcon
-            }
-            self.markerStyle.size = iconM!.size
-            self.markerStyle.style = StyleType.points
-            self.markerStyle.sprite = nil
-            /*
-             marker?.stylingString = " { style: 'points', interactive: false ,color: 'white',size: [\(iconM!.size.first ?? 48)px,\(iconM!.size.last ?? 48)px], order: 2000, collide: false , angle : \(angle) } "
-             */
-            marker?.stylingString = self.markerStyle.toString()
-            marker?.icon = iconM!.image!
-        }
-    }
-
-    func rotateMarker(angle: Int) {
-        userLocationMarkerType = UserLocationMarkerType.arrow
-        self.angle = angle
-        var size = defaultSizeMarker
-        self.markerStyle.angle = angle
-        if (arrowDirectionIcon == nil || personIcon == nil) {
-            self.markerStyle.size = size
-            /*switch (userLocationMarkerType) {
-                case .person:
-                    self.marker?.stylingString = "{ \(MyLocationMarker.personStyle), size: [\(size.first)px,\(size.last)px] , angle: \(self.angle) } "
-                    break;
-                case .arrow:
-                    self.marker?.stylingString = "{ \(MyLocationMarker.arrowStyle) , size: [\(size.first)px,\(size.last)px] , angle: \(self.angle)  } "
-                    break;
-                }
-            */
-            self.marker?.stylingString = self.markerStyle.toString()
-        } else {
-            self.markerStyle.style = StyleType.points
-            /*
-             self.marker?.stylingString = "{ style: 'points', interactive: \(interactive),color: 'white',size: [\(markerIcon.size.first ?? 48)px,\(markerIcon.size.last ?? 48)px], order: 1000, collide: false , angle: \(angle)  } "
-            */
-            self.marker?.stylingString = self.markerStyle.toString()
-            if (arrowDirectionIcon != nil) {
-                self.marker?.icon = arrowDirectionIcon!.image!
-            }
-        }
-    }
-}
 extension UIImage {
 
     func imageResize (sizeChange:CGSize)-> UIImage{
@@ -177,22 +39,7 @@ extension UIImage {
 
 }
 
-extension StaticGeoPMarker {
-    public func addStaticGeosToMapView(
-            for annotation: StaticGeoPMarker, on map: TGMapView
-    ) -> StaticGeoPMarker {
-        annotation.marker = map.markerAdd()
-        if (annotation.markerIcon.image != nil) {
-            annotation.marker?.icon = annotation.markerIcon.image!
-        }
-        annotation.marker?.stylingString =  annotation.markerStyle.toString() //annotation.styleMarker
-        annotation.marker?.point = annotation.coordinate
 
-        annotation.marker?.visible = true
-        return annotation
-
-    }
-}
 
 extension GeoPoint {
     func toLocationCoordinate() -> CLLocationCoordinate2D {
@@ -223,7 +70,7 @@ extension RoadInstruction {
 
 extension RoadInformation {
     func toMap(instructions: [RoadInstruction]) -> [String: Any] {
-        var args: [String: Any] = ["distance": self.distance, "duration": self.seconds, "routePoints": self.encodedRoute]
+        var args: [String: Any] = ["key":id,"distance": self.distance, "duration": self.seconds, "routePoints": self.encodedRoute]
         if (instructions.isEmpty) {
             args["instructions"] = [String: Any]()
         } else {
@@ -235,13 +82,11 @@ extension RoadInformation {
 
 extension RoadFolder {
     
-   
-    
     func toMap() -> [String: Any] {
         ["key": self.id, "distance": self.roadInformation?.distance ?? 0.0, "duration": self.roadInformation?.seconds ?? 0.0, "routePoints": self.roadInformation?.encodedRoute ?? ""]
     }
 }
-extension TGPolyline {
+extension Polyline {
     static let defaultToleranceInMeters = 0.1
     static let kGMSEarthRadius = 6371009.0
     
@@ -263,25 +108,25 @@ extension TGPolyline {
         let coordinates = self.coordinates
 
         // No points
-        guard let prev = coordinates.first else {
+        guard let prev = coordinates?.first else {
           return false
         }
 
         // Naming: the segment is latLng1 to latLng2 and the point is targetLatLng.
         var latLng1 = prev.latLngRadians
         let targetLatLng = coordinate.latLngRadians
-        let normalizedTolerance = tolerance / TGPolyline.kGMSEarthRadius
+        let normalizedTolerance = tolerance / Polyline.kGMSEarthRadius
         let havTolerance = Math.haversine(normalizedTolerance)
 
         // Single point
-        guard coordinates.count > 1 else {
+        guard coordinates!.count > 1 else {
           let distance = Math.haversineDistance(latLng1, targetLatLng)
           return distance < havTolerance
         }
 
         // Handle geodesic
         if (geodesic) {
-          for coord in coordinates {
+          for coord in coordinates! {
             let latLng2 = coord.latLngRadians
             if (isOnSegmentGreatCircle(latLng1: latLng1, latLng2: latLng2, latLng3: targetLatLng, havTolerance: havTolerance)) {
               return true
@@ -301,7 +146,7 @@ extension TGPolyline {
 
         var point1 = CartesianPoint(x: 0, y: Math.mercatorY(latitudeInRadians: latLng1.latitude))
 
-        for coord in coordinates {
+        for coord in coordinates! {
           let latLng2 = coord.latLngRadians
 
           guard max(latLng1.latitude, latLng2.latitude) >= minAcceptable &&
@@ -352,14 +197,14 @@ extension TGPolyline {
         let coordinates = self.coordinates
 
         // Naming: the segment is latLng1 to latLng2 and the point is latLng3
-        guard var latLng1 = coordinates.last?.latLngRadians else {
+        guard var latLng1 = coordinates!.last?.latLngRadians else {
           return false
         }
         let latLng3 = coordinate.latLngRadians
 
         var intersectionsCount = 0
 
-        for coord in coordinates {
+        for coord in coordinates! {
           let wrappedLng3 = Math.wrap(value: latLng3.longitude - latLng1.longitude, min: -.pi, max: .pi)
 
           // Special-case: coordinate equal to one of the vertices.
@@ -547,30 +392,7 @@ extension TGPolyline {
        return denominator <= 0 ? 1 : (a * d - b * c) / sqrt(denominator);
      }
 }
-extension TGRoute {
-    func toCoordinates()->[CLLocationCoordinate2D] {
-        var counter = 0
-        var coordinates = [CLLocationCoordinate2D]()
-        var len = tgPolyline!.tgPolyline.count
-        while counter < len  {
-            coordinates.append(tgPolyline!.tgPolyline.coordinates[counter])
-            counter+=1
-        }
-        return coordinates
-    }
-}
-extension Array where Element == RoadFolder {
-    func onlyTGMarkerPoylines() -> [TGMarker] {
-        let filerRoad =  self.filter({ roadF in
-           return roadF.tgRouteLayer.tgMarkerPolyline != nil
-       })
-       return filerRoad.map({roadF in return roadF.tgRouteLayer.tgMarkerPolyline! })
-    }
-    func onlyTGGeoPolylinePoylines() -> [TGPolyline] {
-        let filtered =  filter({roadF in roadF.tgRouteLayer.tgPolyline != nil })
-        return filtered.map({roadF in roadF.tgRouteLayer.tgPolyline! })
-    }
-}
+
 extension Array where Element == Int {
     func toUIColor() -> UIColor {
         UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
@@ -594,28 +416,13 @@ extension Array where Element == RoadInstruction {
         }
     }
 }
-extension Sizes: Decodable {
-
-    init(from array: [String]) throws {
-        let sizesStrs =  array.map({$0.replacingOccurrences(of: "px", with: "")})
-        var sizes = [Int]()
-        sizesStrs.forEach({
-            print($0)
-            sizes.append(Int($0)!)
-        })
-        self.init(sizes)
-        
-    }
-}
-extension CLLocationCoordinate2D: Equatable {
-    static public func ==(lhs: Self, rhs: Self) -> Bool {
-        lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
-    }
-}
 
 extension CLLocationCoordinate2D {
     func toGeoPoint() -> GeoPoint {
         ["lat": latitude, "lon": longitude]
+    }
+    func toUserLocation(heading:Double = 0) -> GeoPoint {
+        ["lat": latitude, "lon": longitude,"heading":heading]
     }
 }
 
@@ -693,49 +500,9 @@ extension UIColor {
     }
 }
 
-extension TGMapView {
-    func getBounds(width: CGFloat, height: CGFloat) -> [String: Double] {
-        let rect = bounds
-        let size = CGPoint(x: width - (rect.minX - rect.maxX), y: height - (rect.minY - rect.maxY))
-        if size == CGPoint(x: 0.0, y: 0.0) {
-            return ["north": 85.0, "east": 180.0, "south": -85.0, "west": 180.0]
-        }
-        var positions = [CLLocationCoordinate2D]()
-        positions.append(self.coordinate(fromViewPosition: CGPoint(x: rect.minX, y: rect.minY)))
-        positions.append(self.coordinate(fromViewPosition: CGPoint(x: rect.minX + size.x, y: rect.minY)))
-        positions.append(self.coordinate(fromViewPosition: CGPoint(x: rect.minX, y: rect.minY + size.y)))
-        positions.append(self.coordinate(fromViewPosition: CGPoint(x: rect.minX + size.x, y: rect.minY + size.y)))
-
-        var latMin: Double? = nil, latMax: Double? = nil, lonMin: Double? = nil, lonMax: Double? = nil
-        for item in positions {
-            let lat = Double(item.latitude)
-            let lon = Double(item.longitude)
-            if latMin == nil || latMin! < lat {
-                latMin = lat
-            }
-            if latMax == nil || latMax! > lat {
-                latMax = lat
-            }
-            if lonMin == nil || lonMin! < lon {
-                lonMin = lon
-            }
-            if lonMax == nil || lonMax! > lon {
-                lonMax = lon
-            }
-        }
-
-        return ["north": latMin ?? 0.0, "east": lonMin ?? 0.0, "south": latMax ?? 0.0, "west": lonMax ?? 0.0]
-    }
-
-    func toBounds() -> TGCoordinateBounds {
-        let locations: [String: Double] = getBounds(width: bounds.width, height: bounds.height)
-        return TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: locations["south"]!, longitude: locations["west"]!),
-                ne: CLLocationCoordinate2D(latitude: locations["north"]!, longitude: locations["east"]!))
-    }
-}
 
 extension Array where Element == CLLocationCoordinate2D {
-    func toBounds() -> TGCoordinateBounds {
+    func toBounds() -> BoundingBox {
         var maxLat = -85.0
         var maxLon = -180.0
         var minLat = 85.0
@@ -750,72 +517,42 @@ extension Array where Element == CLLocationCoordinate2D {
             maxLat = Swift.max(maxLat, lat)
             maxLon = Swift.max(maxLon, lon)
         }
-        return TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat, longitude: minLon),
-                ne: CLLocationCoordinate2D(latitude: maxLat, longitude: maxLon))
+        return BoundingBox(north:maxLat,west: minLon, east: maxLon,south: minLat)
     }
 }
 
-extension Array where Element == Double {
-    func toBounds() -> TGCoordinateBounds {
-        var maxLat = -85.0
-        var maxLon = -180.0
-        var minLat = 85.0
-        var minLon = 180.0
-        let locations = self
-        minLat = Swift.min(minLat, locations.first!)
-        minLon = Swift.min(minLon, locations[1])
-        maxLat = Swift.max(maxLat, locations[2])
-        maxLon = Swift.max(maxLon, locations.last!)
-        print("bounds " + locations.description)
-        return TGCoordinateBounds(sw: CLLocationCoordinate2D(latitude: minLat, longitude: minLon),
-                ne: CLLocationCoordinate2D(latitude: maxLat, longitude: maxLon))
+extension RectShapeOSM {
+    static func fromMap(json:[String:Any])->RectShapeOSM {
+       let center = CLLocationCoordinate2D(latitude: json["lat"] as! Double, longitude: json["lon"] as! Double)
+        let colorFilledJs = json["color"] as! [Any]
+        let filledCOlor = UIColor(absoluteRed: colorFilledJs[0] as! Int, green:  colorFilledJs[2] as! Int,
+                                blue:  colorFilledJs[1] as! Int, alpha:  colorFilledJs[3] as! Int)
+        var borderColor = filledCOlor
+        if json.keys.contains("colorBorder") {
+            let colorBorderJson = json["colorBorder"] as! [Any]
+            borderColor = UIColor(absoluteRed: colorBorderJson[0] as! Int, green:  colorBorderJson[2] as! Int,
+                                    blue:  colorBorderJson[1] as! Int, alpha:  colorBorderJson[3] as! Int)
+        }
+        let borderWidth = json["strokeWidth"] as! Double
+        let style = ShapeStyleConfiguration(filledColor: filledCOlor, borderColor: borderColor, borderWidth: borderWidth)
+        return RectShapeOSM(center: center, distanceInMeter: json["distance"] as! Double, style: style)
     }
 }
-
-
-extension TGCoordinateBounds {
-    func contains(location: CLLocationCoordinate2D) -> Bool {
-        var latMatch = false;
-        var lonMatch = false;
-        print(sw)
-        print(ne)
-        //FIXME there's still issues when there's multiple wrap arounds
-        if (ne.latitude < sw.latitude) {
-            //either more than one world/wrapping or the bounding box is wrongish
-            latMatch = true;
-        } else {
-            //normal case
-            latMatch = ((location.latitude < ne.latitude) && (location.latitude > sw.latitude));
+extension CircleOSM {
+    static func fromMap(json:[String:Any])->CircleOSM {
+       let center = CLLocationCoordinate2D(latitude: json["lat"] as! Double, longitude: json["lon"] as! Double)
+        let colorFilledJs = json["color"] as! [Any]
+        let filledCOlor = UIColor(absoluteRed: colorFilledJs[0] as! Int, green:  colorFilledJs[2] as! Int,
+                                blue:  colorFilledJs[1] as! Int, alpha:  colorFilledJs[3] as! Int)
+        var borderColor = filledCOlor
+        if json.keys.contains("colorBorder") {
+            let colorBorderJson = json["colorBorder"] as! [Any]
+            borderColor = UIColor(absoluteRed: colorBorderJson[0] as! Int, green:  colorBorderJson[2] as! Int,
+                                    blue:  colorBorderJson[1] as! Int, alpha:  colorBorderJson[3] as! Int)
         }
-
-
-        if (ne.longitude < sw.latitude) {
-            //check longitude bounds with consideration for date line with wrapping
-            lonMatch = location.longitude <= ne.longitude && location.longitude >= sw.longitude;
-            //lonMatch = (aLongitude >= mLonEast || aLongitude <= mLonWest);
-
-        } else {
-            lonMatch = ((location.longitude < ne.longitude) && (location.longitude > sw.longitude));
-        }
-
-        return latMatch && lonMatch;
-    }
-
-    func getBoundingBoxZoom(final pScreenWidth: Int, pScreenHeight: Int) -> Double {
-        let longitudeZoom = getLongitudeZoom(pEast: ne.longitude, pWest: sw.longitude, pScreenWidth: pScreenWidth);
-        let latitudeZoom = getLatitudeZoom(pNorth: ne.latitude, pSouth: sw.latitude, pScreenHeight: pScreenHeight);
-        if (longitudeZoom == Double.leastNonzeroMagnitude) {
-            return latitudeZoom;
-        }
-        if (latitudeZoom == Double.leastNonzeroMagnitude) {
-            return longitudeZoom;
-        }
-        return min(latitudeZoom, longitudeZoom);
-    }
-}
-extension AnchorType {
-   static func fromString(anchorStr:String) -> AnchorType {
-        AnchorType.allCasesValues.contains(where: {$0 == anchorStr}) ? self.init(rawValue:anchorStr)! : AnchorType.center
+        let borderWidth = json["strokeWidth"] as! Double
+        let style = ShapeStyleConfiguration(filledColor: filledCOlor, borderColor: borderColor, borderWidth: borderWidth)
+        return CircleOSM(center: center, distanceInMeter: json["radius"] as! Double, style: style)
     }
 }
 func getMaxLatitude() -> Double {
@@ -833,8 +570,9 @@ func getMaxLongitude() -> Double {
 func getMinLongitude() -> Double {
     -180.0
 }
-
-
+public func -(lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
+    return abs(lhs.latitude - rhs.latitude) >= 0.000001 && abs(lhs.longitude - rhs.longitude) >= 0.000001
+}
 func getLongitudeZoom(pEast: Double, pWest: Double, pScreenWidth: Int) -> Double {
     let x01West = getX01FromLongitude(longitude: pWest, true);
     let x01East = getX01FromLongitude(longitude: pEast, true);
@@ -892,4 +630,54 @@ func getY01FromLatitude(pX01: Double) -> Double {
 
 func Clip(n: Double, minValue: Double, maxValue: Double) -> Double {
     min(max(n, minValue), maxValue);
+}
+extension Optional where Wrapped == Double {
+    func toFloat()-> Float? {
+        if self == nil {
+            return nil
+        }
+        return Float(self!)
+    }
+ 
+}
+extension Double {
+    func toInt()-> Int {
+        Int(self)
+    }
+}
+extension Array where Element == Int {
+    func toMarkerSize()-> MarkerIconSize {
+        (x:Int(CGFloat(self.first!) * UIScreen.main.scale),y:Int(CGFloat(self.last!) * UIScreen.main.scale))
+    }
+}
+extension UIColor {
+    convenience init?(hexString: String?) {
+        if hexString == nil {
+            return nil
+        }
+        let r, g, b, a: CGFloat
+        
+        if hexString!.hasPrefix("#") {
+            var start = hexString!.index(hexString!.startIndex, offsetBy: 1)
+            var hexColor = String(hexString![start...])
+
+            if hexString!.count == 9 {
+                start = hexString!.index(hexString!.startIndex, offsetBy: 3)
+                hexColor = String(hexString![start...])
+            }
+            let scanner = Scanner(string: hexColor)
+            var hexNumber: UInt64 = 0
+            if scanner.scanHexInt64(&hexNumber) {
+                r = CGFloat((hexNumber & 0xff0000) >> 16) / 255
+                g = CGFloat((hexNumber & 0x00ff00) >> 8) / 255
+                b = CGFloat(hexNumber & 0x0000ff) / 255
+                a = 1.0
+
+                self.init(red: r, green: g, blue: b, alpha: a)
+                return
+            }
+        }
+        
+        return nil
+    }
 }

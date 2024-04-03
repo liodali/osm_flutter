@@ -136,8 +136,16 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
           break;
         case "receiveUserLocation":
           final result = call.arguments;
-          _streamController
-              .add(UserLocationEvent(idOSM, GeoPoint.fromString(result)));
+          final geoPt = GeoPoint.fromString(result);
+          _streamController.add(
+            UserLocationEvent(
+              idOSM,
+              UserLocation(
+                latitude: geoPt.latitude,
+                longitude: geoPt.latitude,
+              ),
+            ),
+          );
           break;
         default:
           throw PlatformException(

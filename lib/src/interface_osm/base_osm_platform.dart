@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 
 import 'package:flutter_osm_plugin/src/widgets/stub.dart'
     if (dart.library.io) 'package:flutter_osm_plugin/src/widgets/platform/mobile_osm_widget.dart'
-    if (dart.library.html) 'package:flutter_osm_plugin/src/widgets/platform/web_osm_widget.dart';
+    if (dart.library.js_interop) 'package:flutter_osm_plugin/src/widgets/platform/web_osm_widget.dart';
 
 Widget buildWidget({
   required BaseMapController controller,
   UserTrackingOption? userTrackingOption,
   OnGeoPointClicked? onGeoPointClicked,
   OnLocationChanged? onLocationChanged,
+  OnMapMoved? onMapMoved,
   required ValueNotifier<bool> mapIsReadyListener,
   required ValueNotifier<Widget?> dynamicMarkerWidgetNotifier,
   List<StaticPositionGeoPoint> staticPoints = const [],
@@ -17,16 +19,12 @@ Widget buildWidget({
   Function(bool)? onMapIsReady,
   required List<GlobalKey> globalKeys,
   required Map<String, GlobalKey> staticIconGlobalKeys,
-  MarkerOption? markerOption,
   RoadOption? roadConfiguration,
   bool showZoomController = false,
   bool showDefaultInfoWindow = false,
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
-  double stepZoom = 1,
-  double initZoom = 2,
-  double minZoomLevel = 2,
-  double maxZoomLevel = 18,
+  ZoomOption zoomOption = const ZoomOption(),
   UserLocationMaker? userLocationMarker,
   bool enableRotationByGesture = false,
 }) =>
@@ -42,14 +40,11 @@ Widget buildWidget({
       showContributorBadgeForOSM: showContributorBadgeForOSM,
       showDefaultInfoWindow: showDefaultInfoWindow,
       mapIsLoading: mapIsLoading,
-      markerOption: markerOption,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
+      onMapMoved: onMapMoved,
       roadConfiguration: roadConfiguration,
-      stepZoom: stepZoom,
-      maxZoomLevel: maxZoomLevel,
-      minZoomLevel: minZoomLevel,
-      initZoom: initZoom,
+      zoomOption: zoomOption,
       userLocationMarker: userLocationMarker,
       onMapIsReady: onMapIsReady,
       showZoomController: showZoomController,
@@ -64,6 +59,7 @@ class OSMMap extends StatefulWidget {
     this.userTrackingOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
+    this.onMapMoved,
     required this.mapIsReadyListener,
     required this.dynamicMarkerWidgetNotifier,
     this.onMapIsReady,
@@ -72,13 +68,9 @@ class OSMMap extends StatefulWidget {
     this.userLocationMarker,
     required this.globalKeys,
     required this.staticIconGlobalKeys,
-    this.markerOption,
     this.roadConfiguration,
     this.showZoomController = false,
-    this.stepZoom = 1,
-    this.initZoom = 2,
-    this.minZoomLevel = 2,
-    this.maxZoomLevel = 18,
+    this.zoomOption = const ZoomOption(),
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
@@ -88,6 +80,7 @@ class OSMMap extends StatefulWidget {
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
+  final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
   final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
   final Function(bool)? onMapIsReady;
@@ -96,13 +89,9 @@ class OSMMap extends StatefulWidget {
   final UserLocationMaker? userLocationMarker;
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
-  final MarkerOption? markerOption;
   final RoadOption? roadConfiguration;
   final bool showZoomController;
-  final double stepZoom;
-  final double initZoom;
-  final double minZoomLevel;
-  final double maxZoomLevel;
+  final ZoomOption zoomOption;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
@@ -122,21 +111,18 @@ class _OSMMapState extends State<OSMMap> {
   @override
   Widget build(BuildContext context) {
     return OSMMapWidget(
-      key: key,
+      //key: key,
       controller: widget.controller,
       mapIsReadyListener: widget.mapIsReadyListener,
       dynamicMarkerWidgetNotifier: widget.dynamicMarkerWidgetNotifier,
       globalKeys: widget.globalKeys,
       staticIconGlobalKeys: widget.staticIconGlobalKeys,
-      initZoom: widget.initZoom,
-      stepZoom: widget.stepZoom,
-      maxZoomLevel: widget.maxZoomLevel,
-      minZoomLevel: widget.minZoomLevel,
+      zoomOption: widget.zoomOption,
       isPicker: widget.isPicker,
       mapIsLoading: widget.mapIsLoading,
-      markerOption: widget.markerOption,
       onGeoPointClicked: widget.onGeoPointClicked,
       onLocationChanged: widget.onLocationChanged,
+      onMapMoved: widget.onMapMoved,
       onMapIsReady: widget.onMapIsReady,
       roadConfiguration: widget.roadConfiguration,
       showContributorBadgeForOSM: widget.showContributorBadgeForOSM,

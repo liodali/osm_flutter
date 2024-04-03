@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 
 Widget getWidget({
@@ -7,23 +8,20 @@ Widget getWidget({
   UserTrackingOption? userTrackingOption,
   OnGeoPointClicked? onGeoPointClicked,
   OnLocationChanged? onLocationChanged,
+  OnMapMoved? onMapMoved,
   required ValueNotifier<bool> mapIsReadyListener,
   required ValueNotifier<Widget?> dynamicMarkerWidgetNotifier,
   List<StaticPositionGeoPoint> staticPoints = const [],
   Widget? mapIsLoading,
   required List<GlobalKey> globalKeys,
   required Map<String, GlobalKey> staticIconGlobalKeys,
-  MarkerOption? markerOption,
   RoadOption? roadConfiguration,
   bool showZoomController = false,
   bool showDefaultInfoWindow = false,
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
   bool androidHotReloadSupport = false,
-  double stepZoom = 1,
-  double initZoom = 2,
-  double minZoomLevel = 2,
-  double maxZoomLevel = 18,
+  ZoomOption zoomOption = const ZoomOption(),
   UserLocationMaker? userLocationMarker,
   Function(bool)? onMapIsReady,
   bool enableRotationByGesture = false,
@@ -35,21 +33,21 @@ Widget getWidget({
       staticPoints: staticPoints,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
+      onMapMoved: onMapMoved,
       mapIsReadyListener: mapIsReadyListener,
       mapIsLoading: mapIsLoading,
       staticIconGlobalKeys: staticIconGlobalKeys,
       globalKeys: globalKeys,
       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
       isPicker: isPicker,
-      markerOption: markerOption,
       roadConfiguration: roadConfiguration ?? RoadOption.empty(),
       showDefaultInfoWindow: showDefaultInfoWindow,
       onMapIsReady: onMapIsReady,
       userLocationMarker: userLocationMarker,
-      initZoom: initZoom,
-      minZoomLevel: minZoomLevel,
-      maxZoomLevel: maxZoomLevel,
-      stepZoom: stepZoom,
+      initZoom: zoomOption.initZoom,
+      minZoomLevel: zoomOption.minZoomLevel,
+      maxZoomLevel: zoomOption.maxZoomLevel,
+      stepZoom: zoomOption.stepZoom,
     );
 
 class OSMMapWidget extends StatelessWidget {
@@ -59,6 +57,7 @@ class OSMMapWidget extends StatelessWidget {
     this.userTrackingOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
+    this.onMapMoved,
     required this.mapIsReadyListener,
     required this.dynamicMarkerWidgetNotifier,
     this.onMapIsReady,
@@ -67,13 +66,9 @@ class OSMMapWidget extends StatelessWidget {
     this.userLocationMarker,
     required this.globalKeys,
     required this.staticIconGlobalKeys,
-    this.markerOption,
     this.roadConfiguration,
     this.showZoomController = false,
-    this.stepZoom = 1,
-    this.initZoom = 2,
-    this.minZoomLevel = 2,
-    this.maxZoomLevel = 18,
+    this.zoomOption = const ZoomOption(),
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
@@ -83,6 +78,7 @@ class OSMMapWidget extends StatelessWidget {
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
+  final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
   final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
   final Function(bool)? onMapIsReady;
@@ -91,13 +87,9 @@ class OSMMapWidget extends StatelessWidget {
   final UserLocationMaker? userLocationMarker;
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
-  final MarkerOption? markerOption;
   final RoadOption? roadConfiguration;
   final bool showZoomController;
-  final double stepZoom;
-  final double initZoom;
-  final double minZoomLevel;
-  final double maxZoomLevel;
+  final ZoomOption zoomOption;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
@@ -112,21 +104,21 @@ class OSMMapWidget extends StatelessWidget {
       staticPoints: staticPoints,
       onGeoPointClicked: onGeoPointClicked,
       onLocationChanged: onLocationChanged,
+      onMapMoved: onMapMoved,
       mapIsReadyListener: mapIsReadyListener,
       mapIsLoading: mapIsLoading,
       staticIconGlobalKeys: staticIconGlobalKeys,
       globalKeys: globalKeys,
       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
       isPicker: isPicker,
-      markerOption: markerOption,
       roadConfiguration: roadConfiguration ?? RoadOption.empty(),
       showDefaultInfoWindow: showDefaultInfoWindow,
       onMapIsReady: onMapIsReady,
       userLocationMarker: userLocationMarker,
-      initZoom: initZoom,
-      minZoomLevel: minZoomLevel,
-      maxZoomLevel: maxZoomLevel,
-      stepZoom: stepZoom,
+      initZoom: zoomOption.initZoom,
+      minZoomLevel: zoomOption.minZoomLevel,
+      maxZoomLevel: zoomOption.maxZoomLevel,
+      stepZoom: zoomOption.stepZoom,
     );
   }
 }

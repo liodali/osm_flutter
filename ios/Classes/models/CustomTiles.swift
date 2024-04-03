@@ -4,7 +4,7 @@
 
 import Foundation
 
-class CustomTiles {
+class MyCustomTiles {
     var tileURL: String
     var subDomains: String
     var tileSize: String

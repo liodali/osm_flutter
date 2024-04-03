@@ -18,7 +18,7 @@ async function changeTileLayer(mapId,tile) {
 
 async function addPosition(mapId,point, showMarker, animate) {
    var iframe = getIframe(mapId);
-   return await iframe.contentWindow.changePosition(point, showMarker, animate);
+   return await iframe.contentWindow.moveToPosition(point, showMarker, animate);
 }
 
 async function addMarker(mapId,point,iconSize, icon,angle,anchor) {
@@ -136,14 +136,25 @@ async function setUserLocationIconMarker(mapId,icon,size){
    var iframe = getIframe(mapId);
    return iframe.contentWindow.setUserLocationIconMarker(icon,size);
 }
-
-async function enableTracking(mapId,enableStopFollow,anchorJS){
+async function setUserLocationDirectionIconMarker(mapId,icon,size){
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.enableTracking(enableStopFollow,anchorJS);
+   return iframe.contentWindow.setUserLocationDirectionIconMarker(icon,size);
+}
+async function enableTracking(mapId,enableStopFollow,useDirectionMarker,anchorJS){
+   var iframe = getIframe(mapId);
+   return iframe.contentWindow.enableTracking(enableStopFollow,useDirectionMarker,anchorJS);
 }
 async function disableTracking(mapId) {
    var iframe = getIframe(mapId);
    return iframe.contentWindow.disableTracking();
+}
+async function startLocationUpdating(mapId) {
+   var iframe = getIframe(mapId);
+   return iframe.contentWindow.startLocationUpdating();
+}
+async function stopLocationUpdating(mapId) {
+   var iframe = getIframe(mapId);
+   return iframe.contentWindow.stopLocationUpdating();
 }
 async function changeIconAdvPickerMarker(mapId,icon,size) {
    var iframe = getIframe(mapId);
@@ -157,9 +168,9 @@ async function cancelAdvSearchLocation(mapId) {
    var iframe = getIframe(mapId);
    return await iframe.contentWindow.cancelAdvSearchLocation();
 }
-async function drawRect(mapId,config,bounds){
+async function drawRect(mapId,config,center){
    var iframe = getIframe(mapId);
-   return await iframe.contentWindow.drawRect(config.key,bounds,config.color,config.strokeWidth);
+   return await iframe.contentWindow.drawRect(config.key,center,config);
 }
 async function drawCircle(mapId,config){
    var iframe = getIframe(mapId);
@@ -193,6 +204,10 @@ async function clearAllRoads(mapId){
 async function removeRoad(mapId,roadKey){
    var iframe = getIframe(mapId);
    return await iframe.contentWindow.removeRoad(roadKey);
+}
+async function toggleAlllayers(mapId,isVisible){
+   var iframe = getIframe(mapId);
+   return await iframe.contentWindow.toggleAlllayers(isVisible);
 }
 function setUpMap(mapId){
    const osmJS = new OSMJS(mapId);

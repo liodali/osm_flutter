@@ -12,11 +12,21 @@ import 'package:flutter_osm_interface/src/types/types.dart';
 
 typedef OnGeoPointClicked = void Function(GeoPoint);
 typedef OnLocationChanged = void Function(GeoPoint);
+typedef OnMapMoved = void Function(Region);
 
 const iosSizeIcon = [48.0, 48.0];
 const earthRadiusMeters = 6378137;
 const deg2rad = pi / 180.0;
 const rad2deg = 180.0 / pi;
+
+@visibleForTesting
+bool isEqual1eX(double value) {
+  final log10Value = log(value) / ln10;
+  final exponent = log10Value.toInt();
+  final calcularedV = double.parse(
+      pow(10, log10Value.round()).toStringAsFixed(log10Value.round().abs()));
+  return value == calcularedV && (exponent.abs() >= 2 && exponent.abs() <= 8);
+}
 
 extension ExtGeoPoint on GeoPoint {
   List<num> toListNum() {
@@ -24,6 +34,14 @@ extension ExtGeoPoint on GeoPoint {
       this.latitude,
       this.longitude,
     ];
+  }
+
+  bool isEqual(GeoPoint location, {double precision = 1e6}) {
+    assert(isEqual1eX(precision), "precision should be between 1e-2,1e-8");
+    final exponent = log(precision) ~/ log10e;
+    final nPrecision = exponent.isNegative ? precision : 1 / precision;
+    return (latitude - location.latitude).abs() <= nPrecision &&
+        (longitude - location.longitude).abs() <= nPrecision;
   }
 }
 
@@ -85,6 +103,13 @@ extension ColorMap on Color {
       this.green,
     ];
   }
+
+  List<int> toARGBList() => [
+        red,
+        blue,
+        green,
+        alpha,
+      ];
 
   Map<String, List<int>> toMap(String key) {
     return {
@@ -188,13 +213,6 @@ extension ExtTileUrls on TileURLs {
       return toWeb();
     }
     throw UnsupportedError("platform not supported yet");
-  }
-}
-
-extension ExtAnchor on Anchor {
-  dynamic toPlatformMap() {
-    if (Platform.isIOS) return toMapIOS();
-    return toMapAndroid();
   }
 }
 

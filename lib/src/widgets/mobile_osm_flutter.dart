@@ -4,58 +4,61 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
+
+typedef MobileInitConfiguration = ({
+  CustomTile? customTile,
+  List<double>? bounds,
+  bool enableRotationGesture,
+  GeoPoint? initlocation,
+  bool userlocation,
+  ZoomOption zoomOption
+});
 
 class MobileOsmFlutter extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
   final OnLocationChanged? onLocationChanged;
+  final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
   final Widget? mapIsLoading;
   final List<StaticPositionGeoPoint> staticPoints;
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
-  final MarkerOption? markerOption;
   final RoadOption? roadConfig;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final bool showZoomController;
   final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
-  final double stepZoom;
-  final double initZoom;
-  final double minZoomLevel;
-  final double maxZoomLevel;
   final Function(bool)? onMapIsReady;
   final UserLocationMaker? userLocationMarker;
   final bool enableRotationByGesture;
-
+  final ZoomOption zoomOption;
   MobileOsmFlutter({
     Key? key,
     required this.controller,
     this.userTrackingOption,
     this.onGeoPointClicked,
     this.onLocationChanged,
+    this.onMapMoved,
     required this.mapIsReadyListener,
     required this.dynamicMarkerWidgetNotifier,
     this.staticPoints = const [],
     this.mapIsLoading,
     required this.globalKeys,
     required this.staticIconGlobalKeys,
-    this.markerOption,
     this.roadConfig,
     this.showZoomController = false,
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
-    this.stepZoom = 1.0,
-    this.initZoom = 2,
-    this.minZoomLevel = 2,
-    this.maxZoomLevel = 18,
+    this.zoomOption = const ZoomOption(),
     this.onMapIsReady,
     this.userLocationMarker,
     this.enableRotationByGesture = false,
@@ -168,14 +171,6 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       saveCache();
     }
     super.didUpdateWidget(oldWidget);
-    // if (this.widget != oldWidget &&
-    //     Platform.isAndroid &&
-    //     widget.androidHotReloadSupport &&
-    //     kDebugMode) {
-    //   setState(() {
-    //     androidKey = GlobalKey();
-    //   });
-    // }
   }
 
   @override
@@ -204,13 +199,19 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       androidKey: androidKey,
       onPlatformCreatedView: _onPlatformViewCreated,
       uuidMapCache: keyUUID,
-      customTile: widget.controller.customTile,
-      bounds: widget.controller.areaLimit?.toIOSList() ?? null,
-      enableRotationGesture: widget.enableRotationByGesture,
+      configuration: (
+        customTile: widget.controller.customTile,
+        bounds: widget.controller.areaLimit?.toIOSList() ?? null,
+        zoomOption: widget.zoomOption,
+        enableRotationGesture: widget.enableRotationByGesture,
+        initlocation: widget.controller.initPosition,
+        userlocation: widget.userTrackingOption?.initWithUserPosition ?? false,
+      ),
     );
   }
 
-  /// requestPermission
+  /// [requestPermission]
+  /// 
   /// this callback has role to request location permission in your phone in android Side
   /// for iOS it's done manually
   Future<bool> requestPermission() async {
@@ -248,30 +249,29 @@ class PlatformView extends StatelessWidget {
   final Key? mobileKey;
   final Key? androidKey;
   final String uuidMapCache;
-  final CustomTile? customTile;
-  final List<double>? bounds;
-  final bool enableRotationGesture;
+  final MobileInitConfiguration configuration;
   const PlatformView({
     this.mobileKey,
     this.androidKey,
     required this.onPlatformCreatedView,
     required this.uuidMapCache,
-    this.customTile,
-    this.bounds,
-    this.enableRotationGesture = false,
+    required this.configuration,
   }) : super(key: mobileKey);
 
   @override
   Widget build(BuildContext context) {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       return UiKitView(
-        //  key: mobileKey,
+        key: mobileKey,
         viewType: 'plugins.dali.hamza/osmview',
         onPlatformViewCreated: onPlatformCreatedView,
         creationParams: getParams(
-          customTile,
-          bounds: bounds,
-          enableRotationGesture: enableRotationGesture,
+          configuration.customTile,
+          bounds: configuration.bounds,
+          enableRotationGesture: configuration.enableRotationGesture,
+          initlocation: configuration.initlocation,
+          userlocation: configuration.userlocation,
+          zoomOption: configuration.zoomOption,
         ),
         creationParamsCodec: StandardMethodCodec().messageCodec,
       );
@@ -281,8 +281,12 @@ class PlatformView extends StatelessWidget {
       viewType: 'plugins.dali.hamza/osmview',
       onPlatformViewCreated: onPlatformCreatedView,
       creationParams: getParams(
-        customTile,
-        enableRotationGesture: enableRotationGesture,
+        configuration.customTile,
+        bounds: configuration.bounds,
+        enableRotationGesture: configuration.enableRotationGesture,
+        initlocation: configuration.initlocation,
+        userlocation: configuration.userlocation,
+        zoomOption: configuration.zoomOption,
       ),
       //creationParamsCodec: null,
       creationParamsCodec: StandardMethodCodec().messageCodec,
@@ -293,6 +297,9 @@ class PlatformView extends StatelessWidget {
     CustomTile? customTile, {
     List<double>? bounds,
     bool enableRotationGesture = false,
+    GeoPoint? initlocation,
+    bool userlocation = false,
+    ZoomOption zoomOption = const ZoomOption(),
   }) {
     final Map<String, dynamic> params = {
       "uuid": uuidMapCache,
@@ -305,7 +312,14 @@ class PlatformView extends StatelessWidget {
       params.putIfAbsent("bounds", () => bounds);
     }
     params.putIfAbsent("enableRotationGesture", () => enableRotationGesture);
-
+    if (initlocation != null) {
+      params.putIfAbsent("location", () => initlocation.toMap());
+    }
+    if (userlocation) {
+      params.putIfAbsent("userlocation", () => userlocation);
+    }
+    params.putIfAbsent("zoomOption", () => zoomOption.toMap);
+    
     return params;
   }
 }

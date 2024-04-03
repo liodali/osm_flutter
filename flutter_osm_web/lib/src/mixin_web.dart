@@ -53,12 +53,6 @@ mixin WebMixin {
     );
   }
 
-  @protected
-  Future changeHomeIconMarker(GlobalKey<State<StatefulWidget>>? key) async {
-    final base64 = (await capturePng(key!)).convertToString();
-    await interop.setDefaultIcon(mapIdMixin, base64);
-  }
-
   Future<void> changeLocation(GeoPoint p) async {
     await _addPosition(
       p,
@@ -73,17 +67,29 @@ mixin WebMixin {
     );
   }
 
+  Future<void> startLocationUpdating() async {
+    await interop.startLocationUpdating(mapIdMixin);
+  }
+
+  Future<void> stopLocationUpdating() async {
+    await interop.stopLocationUpdating(mapIdMixin);
+  }
+
   Future<void> drawCircle(CircleOSM circleOSM) async {
+    final opacity = circleOSM.color.opacity;
+    final shapeConfig = CircleShapeJS(
+      key: circleOSM.key,
+      center: circleOSM.centerPoint.toGeoJS(),
+      radius: circleOSM.radius,
+      color: circleOSM.color.withOpacity(1).toHexColor(),
+      borderColor: circleOSM.borderColor?.toHexColor(),
+      opacityFilled: opacity,
+      strokeWidth: circleOSM.strokeWidth,
+    );
     await promiseToFuture(
       interop.drawCircle(
         mapIdMixin,
-        CircleShapeJS(
-          key: circleOSM.key,
-          center: circleOSM.centerPoint.toGeoJS(),
-          radius: circleOSM.radius,
-          color: circleOSM.color.toHexColor(),
-          strokeWidth: circleOSM.strokeWidth,
-        ),
+        shapeConfig,
       ),
     );
   }
@@ -94,13 +100,17 @@ mixin WebMixin {
       lengthInMeters: rectOSM.distance,
       widthInMeters: rectOSM.distance,
     );
+    final opacity = rectOSM.color.opacity;
+    final shapeConfig = RectShapeJS(
+      key: rectOSM.key,
+      color: rectOSM.color.withOpacity(1).toHexColor(),
+      strokeWidth: rectOSM.strokeWidth,
+      opacityFilled: opacity,
+      borderColor: rectOSM.borderColor?.toHexColor(),
+    );
     await promiseToFuture(interop.drawRect(
       mapIdMixin,
-      RectShapeJS(
-        key: rectOSM.key,
-        color: rectOSM.color.toHexColor(),
-        strokeWidth: rectOSM.strokeWidth,
-      ),
+      shapeConfig,
       rect.map((e) => e.toGeoJS()).toList(),
     ));
   }
@@ -109,10 +119,12 @@ mixin WebMixin {
     bool enableStopFollow = false,
     bool disableMarkerRotation = false,
     Anchor anchor = Anchor.center,
+    bool useDirectionMarker = false,
   }) async {
     await interop.enableTracking(
       mapIdMixin,
       enableStopFollow,
+      useDirectionMarker,
       IconAnchorJS(
         x: anchor.value.$1,
         y: anchor.value.$2,
@@ -121,13 +133,15 @@ mixin WebMixin {
     );
   }
 
-  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker() async {
-    return await getMapCenter();
-  }
-
-  Future<void> goToPosition(GeoPoint p) async {
-    await _addPosition(p, animate: true, showMarker: false);
-  }
+  Future<void> goToPosition(
+    GeoPoint p, {
+    bool animate = false,
+  }) =>
+      _addPosition(
+        p,
+        animate: animate,
+        showMarker: false,
+      );
 
   Future<void> mapOrientation(double? degree) async {
     debugPrint("not implemented in web side");
@@ -194,10 +208,8 @@ mixin WebMixin {
       );
     }
     if (listWithoutOrientation.length != geoPoints.length) {
-      List<GeoPointWithOrientation> listOrientation = geoPoints
-          .where((p) => p is GeoPointWithOrientation)
-          .map((e) => e as GeoPointWithOrientation)
-          .toList();
+      List<GeoPointWithOrientation> listOrientation =
+          geoPoints.whereType<GeoPointWithOrientation>().toList();
       if (listOrientation.isNotEmpty) {
         await interop.setStaticGeoPointsWithOrientation(
           mapIdMixin,
@@ -320,7 +332,7 @@ mixin WebMixin {
       roadOption.roadWidth.toDouble(),
       roadOption.zoomInto,
       (roadOption.roadBorderColor ?? Colors.green).toHexColor(),
-      roadOption.roadBorderWidth.toDouble(),
+      roadOption.roadBorderWidth?.toDouble() ?? 0,
       [],
       null,
     );
@@ -440,6 +452,10 @@ mixin WebMixin {
     return (List.castFrom(mapGeoPoints))
         .map((elem) => GeoPoint.fromMap(Map<String, double>.from(elem)))
         .toList();
+  }
+
+  Future<void> toggleLayer({required bool toggle}) async {
+    await promiseToFuture(interop.toggleAlllayers(mapIdMixin, toggle));
   }
 }
 

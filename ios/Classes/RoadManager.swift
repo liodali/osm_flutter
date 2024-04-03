@@ -6,7 +6,6 @@ import Foundation
 import Alamofire
 import MapKit
 import Polyline
-import TangramMap
 
 typealias ParserJson = ([String: Any?]?) -> Road
 typealias RoadHandler = (Road?) -> Void
@@ -21,20 +20,14 @@ enum RoadType: String {
 
 protocol PRoadManager {
 
-
     func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler)
-
-    func drawRoadOnMap(roadKey: String, on road: Road, for map: TGMapView, roadInfo: RoadInformation?, polyLine: Polyline?) -> TGRoute
-    
-    func roadContainCLLocationCoordinate2D(location:CLLocationCoordinate2D) -> RoadFolder?
-    func hasPolylineAsDatalayer() -> Bool
-    func hasPolylineAsMarker() -> Bool
+    //func roadContainCLLocationCoordinate2D(location:CLLocationCoordinate2D) -> RoadFolder?
     func hasRoads() -> Bool
 }
 
-class RoadManager: PRoadManager {
-   
-  
+class OSMRoadManager: PRoadManager {
+
+    
 
     public let MANEUVERS: Dictionary<String, Int> = [
         "new name": 2,
@@ -104,149 +97,27 @@ class RoadManager: PRoadManager {
     init() {}
 
 
-    public func clearRoads(for map: TGMapView) {
-        if (lastMarkerRoad != nil) {
-            //map.markerRemove(lastMarkerRoad!.tgRouteMarker)
-            if lastMarkerRoad!.tgRouteLayer.tgPolyline != nil {
-                lastMarkerRoad!.tgRouteLayer.tgPolyline?.dataLayer!.remove()
-            }else if lastMarkerRoad!.tgRouteLayer.tgMarkerPolyline != nil {
-                map.markerRemove(lastMarkerRoad!.tgRouteLayer.tgMarkerPolyline!)
-            }
-           
-        }
-        if !roads.isEmpty && roads.count > 1 {
-            roads.forEach { folder in
-                if folder !=  lastMarkerRoad {
-                    //map.markerRemove(folder.tgRouteMarker)
-                    removeRoadFolder(folder: folder, for: map,deleteFromRoads: false)
-                }
-            }
-        }
-        roads.removeAll()
-        lastMarkerRoad = nil
-    }
 
-    func removeLastRoad(for map: TGMapView) {
-        if let lastRoad = lastMarkerRoad {
-            removeRoadFolder(folder: lastRoad, for: map)
-            lastMarkerRoad = nil
-        }
-    }
-
-    func removeRoadByKey(key: String, for map: TGMapView) {
-        let folderRoad = roads.first { folder in
-            folder.id == key
-        }
-        if let road = folderRoad {
-            removeRoadFolder(folder: road, for: map)
-        }
-    }
-
-    func removeRoadFolder(folder: RoadFolder, for map: TGMapView,deleteFromRoads:Bool = true) {
-        //map.markerRemove(folder.tgRouteMarker)
-        if folder.tgRouteLayer.tgPolyline != nil {
-            folder.tgRouteLayer.tgPolyline?.dataLayer!.remove()
-        }else if folder.tgRouteLayer.tgMarkerPolyline != nil {
-            map.markerRemove(folder.tgRouteLayer.tgMarkerPolyline!)
-        }
-        if deleteFromRoads {
-            let index = roads.firstIndex(of: folder)
-            if index != nil {
-                roads.remove(at: index!)
-            }
-        }
-    }
-    
     func hasRoads() -> Bool {
         !roads.isEmpty
     }
     
-    func hasPolylineAsDatalayer() -> Bool {
-        return roads.onlyTGGeoPolylinePoylines().count > 0
-    }
     
-    func hasPolylineAsMarker() -> Bool {
-        return roads.onlyTGMarkerPoylines().count == roads.count
-    }
+    /*func roadContainCLLocationCoordinate2D(location: CLLocationCoordinate2D) -> RoadFolder? {
+     
+        return  roads.filter { road in
+            road.polyline.coordinates != nil
+        }.first { folder in
+            let contain = folder.polyline!.coordinates!.contains(coordinate: location, geodesic: false)
+            if !contain {
+               return folder.polyline.isOnPath(coordinate: location, geodesic: false,tolerance: 3.0)
+            }
+            return contain
+        }
+    }*/
     
-    func roadContainCLLocationCoordinate2D(location: CLLocationCoordinate2D) -> RoadFolder? {
-        var road:RoadFolder? = nil
-        if hasPolylineAsDatalayer() {
-            let roadFolder =  roads.filter({road in
-                road.tgRouteLayer.tgPolyline != nil
-            })
-            let roadPoyline = roadFolder.first(where: {road in
-                let contain = road.tgRouteLayer.tgPolyline!.contains(coordinate: location, geodesic: false)
-                if !contain {
-                   return road.tgRouteLayer.tgPolyline!.isOnPath(coordinate: location, geodesic: false,tolerance: 3.0)
-                }
-                return contain
-            })
-            road = roadPoyline
-        }
-        return road
-    }
-    
-    public func drawRoadOnMap(roadKey: String, on road: Road, for map: TGMapView, roadInfo: RoadInformation?, polyLine: Polyline? = nil) -> TGRoute {
-        var routeLayer = createRouteLayer(road: road,polyLine: polyLine, for: map)
-        let folder = RoadFolder(id: roadKey, tgRouteLayer: routeLayer, roadInformation: roadInfo)
-        self.roads.append(folder)
-        lastMarkerRoad = folder
-        return routeLayer
-    }
-
-    public func drawMultiRoadsOnMap(on roads: [(String, Road)], for map: TGMapView) {
-        clearRoads(for: map)
-        for (key, road) in roads {
-            let routeLayer = createRouteLayer(road: road, for: map)
-            self.roads.append(RoadFolder(id: key, tgRouteLayer: routeLayer, roadInformation: nil))
-        }
-    }
-    /// createTGMarkerPoyline
-    private func createTGMarkerPoyline(road: Road,polyLine: Polyline? = nil ,for map: TGMapView)->TGMarker {
-        var route = polyLine
-        if (route == nil) {
-            route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
-        }
-        let marker = map.markerAdd()
-         marker.stylingString = "{ style: 'lines',interactive: true, color: '\(road.roadData.roadColor)', width: \(road.roadData.roadWidth), outline : { color: '\(road.roadData.roadBorderColor)', width: '\(road.roadData.roadBorderWidth)' } , order: 900 }"
-         
-         let tgPolyline = TGGeoPolyline(coordinates: route!.coordinates!, count: UInt(route!.coordinates!.count))
-         marker.polyline = tgPolyline
-        return marker
-    }
-    /// createTGPolylineLayer
-    private func createTGPolylineLayer(road: Road,polyLine: Polyline? = nil ,for map: TGMapView)->TGPolyline {
-        var route = polyLine
-        if (route == nil) {
-            route = Polyline(encodedPolyline: road.mRouteHigh, precision: 1e5)
-        }
-        var tgGeoPolyline = TGGeoPolyline(coordinates: route!.coordinates!, count: UInt(route!.coordinates!.count))
-        var properties = [
-            "type": "lines",
-            "color": road.roadData.roadColor,
-            "width": road.roadData.roadWidth,
-            "outlineColor": road.roadData.roadBorderColor,
-            "outlineWidth": road.roadData.roadBorderWidth,
-        ]
-        
-        var feature = TGMapFeature(polyline: tgGeoPolyline, properties: properties)
-        var mapData = map.addDataLayer("route_line", generateCentroid: false)
-        mapData?.setFeatures([feature])
-        return TGPolyline(dataLayer: mapData,tgPolyline: tgGeoPolyline,coordinates: route!.coordinates!)
-    }
-    /// createRouteLayer
-    private func createRouteLayer(road: Road,polyLine: Polyline? = nil ,for map: TGMapView)->TGRoute {
-        var tgPolyline:TGPolyline?
-        var tgMarker:TGMarker?
-        if road.distance > 9.9 {
-            tgPolyline = createTGPolylineLayer(road: road,polyLine: polyLine,for: map)
-        }else {
-            tgMarker = createTGMarkerPoyline(road: road,polyLine: polyLine, for: map)
-        }
-        return TGRoute(tgPolyline: tgPolyline, tgMarkerPolyline: tgMarker)
-    }
-
+  
+ 
     func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler) {
         let serverURL = buildURL(wayPoints, typeRoad.rawValue)
         guard let url = Bundle(for: type(of: self)).url(forResource: "en", withExtension: "json") else {

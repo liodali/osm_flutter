@@ -47,14 +47,13 @@ enum Anchor {
   final String name;
   final (double, double) value;
 
-  dynamic toMapAndroid() {
+  dynamic toMap() {
     return [
       value.$1,
       value.$2,
     ];
   }
 
-  String toMapIOS() => name;
 }
 
 class IconAnchor {
@@ -84,20 +83,16 @@ class IconAnchor {
 
 class MarkerOption {
   final MarkerIcon? defaultMarker;
-  final MarkerIcon? advancedPickerMarker;
 
   MarkerOption({
     this.defaultMarker,
-    this.advancedPickerMarker,
   });
 
   MarkerOption copyWith({
     MarkerIcon? defaultMarker,
-    MarkerIcon? advancedPickerMarker,
   }) {
     return MarkerOption(
       defaultMarker: defaultMarker ?? this.defaultMarker,
-      advancedPickerMarker: advancedPickerMarker ?? this.advancedPickerMarker,
     );
   }
 }

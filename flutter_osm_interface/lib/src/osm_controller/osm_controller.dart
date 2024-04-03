@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-
 import 'package:flutter_osm_interface/src/types/types.dart';
 
 abstract class IBaseOSMController {
   Future<void> initPositionMap({
     GeoPoint? initPosition,
-    //bool initWithUserPosition = false,
+    bool useExternalTracking = false,
     UserTrackingOption? userPositionOption,
   });
 
@@ -71,11 +69,6 @@ abstract class IBaseOSMController {
   /// [markerIcon] : (MarkerIcon) the new icon marker that will replace old icon
   Future<void> setIconMarker(GeoPoint point, MarkerIcon markerIcon);
 
-  /// change Home Icon Marker
-  /// we need to global key to recuperate widget from tree element
-  /// [homeMarker] : (MarkerIcon) key of widget that represent the new marker
-  Future changeDefaultIconMarker(MarkerIcon homeMarker);
-
   ///change  Marker of specific static points
   /// we need to global key to recuperate widget from tree element
   /// [id] : (String) id  of the static group geopoint
@@ -85,11 +78,6 @@ abstract class IBaseOSMController {
     MarkerIcon markerIcon, {
     bool refresh = false,
   });
-
-  ///change Icon  of advanced picker Marker
-  /// we need to global key to recuperate widget from tree element
-  /// [key] : (GlobalKey) key of widget that represent the new marker
-  Future changeIconAdvPickerMarker(GlobalKey key);
 
   /// change static position in runtime
   ///  [geoPoints] : list of static geoPoint
@@ -148,17 +136,35 @@ abstract class IBaseOSMController {
   /// to another specific position without create marker
   /// has attribute which is the desired location
   /// [p] : (GeoPoint) desired location
-  Future<void> goToPosition(GeoPoint p);
+  /// [animate] : (bool) animate the camera if true (default:false)
+  Future<void> goToPosition(GeoPoint p,{bool animate = false});
 
-  /// enabled tracking user location
+  /// [enableTracking]
+  /// 
+  /// to start tracking user location where we will show [personMarker] 
+  /// or [directionMarker] depend on heading value but we can configure the marker to be always
+  /// [directionMarker] by set [useDirectionMarker] to true (default:false)
+  /// 
+  /// we can also enable stop following user when the user move the map by set [enableStopFollow] to true
+  /// with [disableMarkerRotation] we can disable rotation of the marker
+  /// and [anchor] will change the position of the marker compared to center of the marker
+  /// 
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableMarkerRotation,
     Anchor anchor,
+    bool useDirectionMarker = false,
   });
 
   /// disabled tracking user location
   Future<void> disabledTracking();
+
+  /// [startLocationUpdating]
+  ///
+  Future<void> startLocationUpdating();
+  /// [stopLocationUpdating]
+  ///
+  Future<void> stopLocationUpdating();
 
   /// [drawRoad]
   /// this method will call ORSM api to get list of geopoint and
@@ -253,18 +259,6 @@ abstract class IBaseOSMController {
   /// remove all shapes from map
   Future<void> removeAllShapes();
 
-  /// to start assisted selection in the map
-  Future<void> advancedPositionPicker();
-
-  /// to retrieve location desired
-  Future<GeoPoint> selectAdvancedPositionPicker();
-
-  /// to retrieve current location without finish picker
-  Future<GeoPoint> getCurrentPositionAdvancedPositionPicker();
-
-  /// to cancel the assisted selection in tge map
-  Future<void> cancelAdvancedPositionPicker();
-
   Future<void> mapOrientation(double degree);
 
   Future<BoundingBox> getBounds();
@@ -293,4 +287,11 @@ abstract class IBaseOSMController {
   Future<void> removeMarkers(
     List<GeoPoint> markers,
   );
+
+  /// [toggleLayer]
+  ///
+  /// change visibility of all layers of the map
+  Future<void> toggleLayer({
+    required bool toggle,
+  });
 }
