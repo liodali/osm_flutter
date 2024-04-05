@@ -1,3 +1,5 @@
+### 1.0.1: 
+* fix bug #518
 ### 1.0.0: Update iOS SDK, Stablize APIs
 * replace Tangram es with another ios sdk
 * add `startLocationUpdating`,`stopLocationUpdating` for external control of user location
