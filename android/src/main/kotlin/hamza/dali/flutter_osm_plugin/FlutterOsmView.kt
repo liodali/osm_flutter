@@ -1547,7 +1547,7 @@ class FlutterOsmView(
         val roadColor = (args["roadColor"] as List<Int>).toRGB()
         val roadWidth = (args["roadWidth"] as Double).toFloat()
         val roadBorderWidth = (args["roadBorderWidth"] as Double? ?: 0).toFloat()
-        val roadBorderColor = (args["roadBorderColor"] as List<Int>).toRGB()
+        val roadBorderColor = (args["roadBorderColor"] as List<Int>?)?.toRGB() ?: 0
         val zoomToRegion = args["zoomIntoRegion"] as Boolean
 
         checkRoadFolderAboveUserOverlay()
