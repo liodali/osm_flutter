@@ -242,7 +242,7 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
                     roads.forEach { road in
                         let roadData = road.1.roadData
                         let polyline = Polyline(encodedPolyline: road.1.mRouteHigh,precision: 1e5)
-                        let roadConfig = RoadConfiguration(width: roadData.roadBorderWidth.toFloat()!,
+                        let roadConfig = RoadConfiguration(width: roadData.roadWidth.toFloat(),
                                                            color: UIColor(hexString: roadData.roadColor) ?? .green,
                                                            borderWidth: roadData.roadBorderWidth.toFloat(),
                                                            borderColor: UIColor(hexString: roadData.roadBorderColor)

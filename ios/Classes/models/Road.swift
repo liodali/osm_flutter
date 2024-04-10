@@ -255,7 +255,7 @@ extension RoadStep {
 
         var modifierInstruction = ""
         if let modifier = maneuver.modifier {
-            modifierInstruction = ((instructionsV5["constants"] as! [String: Any])["modifier"] as! [String: String])[modifier] as! String
+            modifierInstruction = ((instructionsV5["constants"] as! [String: Any])["modifier"] as! [String: String])[modifier]!
         }
         var nthWaypoint = ""
         if options["legIndex"]! >= 0 && options["legIndex"]! != options["legCount"]! {
