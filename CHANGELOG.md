@@ -1,3 +1,5 @@
+### 1.0.2:
+* fix bug #519 
 ### 1.0.1: 
 * fix bug #518
 ### 1.0.0: Update iOS SDK, Stablize APIs
