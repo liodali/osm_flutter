@@ -436,9 +436,7 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
         let geoPoints = (call.arguments as! [GeoPoint]).map { point -> CLLocationCoordinate2D in
             point.toLocationCoordinate()
         }
-        geoPoints.forEach { location in
-            self.mapOSM.markerManager.removeMarker(location: location)
-        }
+        self.mapOSM.markerManager.removeMarkers(locations: geoPoints)
     }
     func deleteMarker(call:FlutterMethodCall){
         let location = (call.arguments as! GeoPoint).toLocationCoordinate()
