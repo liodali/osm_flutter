@@ -83,7 +83,7 @@
     });
     OpenStreetMap_Mapnik.addTo(mymap);
 
-   
+
     //mymap.setView([0, 0], 2);
     mymap.on('click', function (event) {
       const geoP = event.latlng;
@@ -132,7 +132,7 @@
       })
       return 200
     }
-    
+
     async function initMapLocation(point) {
       mymap.setView([point.lat, point.lon], zoom);
       isReady = true;
@@ -694,7 +694,7 @@
         idTracking = navigator.geolocation.watchPosition(function (position) {
           var userPos = [position.coords.latitude, position.coords.longitude];
           onUserPositionListener(position.coords.longitude, position.coords.latitude)
-        },function (err) { 
+        }, function (err) {
           console.log(err);
         }, {
           enableHighAccuracy: true,
@@ -843,14 +843,19 @@
       }
     }
 
-    function removeUnecessaryStaff(){
-      var parent = document.querySelector(".leaflet-control-attribution");
-      console.log(parent.firstElementChild)
-      parent.removeChild(parent.firstElementChild);
-      parent.removeChild(parent.firstElementChild);
+    function removeUnecessaryStaff() {
+      try {
+        var parent = document.querySelector(".leaflet-control-attribution");
+        console.log(parent.firstElementChild)
+        parent.removeChild(parent.firstElementChild);
+        parent.removeChild(parent.firstElementChild);
+      } catch (error) {
+        console.error(error);
+        // Expected output: ReferenceError: nonExistentFunction is not defined
+        // (Note: the exact output may be browser-dependent)
+      }
+
     }
-
-
 
   </script>
 
