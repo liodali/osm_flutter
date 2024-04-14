@@ -1,3 +1,6 @@
+### 1.0.3:
+* fix bug #521
+* fix bug related to removeMarker,removeMarker in iOS #508
 ### 1.0.2:
 * fix bug #519 
 ### 1.0.1: 
