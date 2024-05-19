@@ -115,7 +115,7 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
     private fun enableFollowLocation() {
         mIsFollowing = true
         // set initial location when enabled
-        if (mIsLocationEnabled) {
+        if (mIsLocationEnabled && provider.lastKnownLocation != null) {
             val location: Location = provider.lastKnownLocation
            setLocation(location)
 
