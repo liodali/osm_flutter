@@ -12,8 +12,6 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 ///
 /// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
 ///
-/// [markerOption] :  contain marker of geoPoint and customisation of advanced picker marker
-///
 /// [userLocationMarker] : change user marker or direction marker icon in tracking location
 ///
 /// [roadConfiguration] : (RoadConfiguration) set color and icons marker of road
