@@ -592,7 +592,7 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
             case .Rect:
                 shape =  RectShapeOSM.fromMap(json: rectJson)
             case .Circle:
-                shape = RectShapeOSM.fromMap(json: rectJson)
+                shape =  CircleOSM.fromMap(json: rectJson)
             default:
                 shape =  RectShapeOSM.fromMap(json: rectJson)
         }
