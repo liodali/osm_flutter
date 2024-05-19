@@ -644,6 +644,9 @@ extension Double {
     func toInt()-> Int {
         Int(self)
     }
+    func toFloat()-> Float {
+        return Float(self)
+    }
 }
 extension Array where Element == Int {
     func toMarkerSize()-> MarkerIconSize {

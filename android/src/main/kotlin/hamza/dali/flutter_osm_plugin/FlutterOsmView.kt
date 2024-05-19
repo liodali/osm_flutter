@@ -1488,13 +1488,13 @@ class FlutterOsmView(
                     if (road.mRouteHigh.size > 2) {
                         routePointsEncoded = PolylineEncoder.encode(road.mRouteHigh, 10)
                         val polyLine = Polyline(map!!, false, false).apply {
-                            this.setStyle(
+                            setStyle(
                                 borderColor = roadConfig.roadOption.roadBorderColor,
                                 borderWidth = roadConfig.roadOption.roadBorderWidth,
                                 color = roadConfig.roadOption.roadColor ?: Color.GREEN,
                                 width = roadConfig.roadOption.roadWidth,
                             )
-                            this.setPoints(RoadManager.buildRoadOverlay(road).actualPoints)
+                            setPoints(RoadManager.buildRoadOverlay(road).actualPoints)
 
                         }
                         flutterRoad = createRoad(
@@ -1546,8 +1546,8 @@ class FlutterOsmView(
         val encodedWayPoints = (args["road"] as String)
         val roadColor = (args["roadColor"] as List<Int>).toRGB()
         val roadWidth = (args["roadWidth"] as Double).toFloat()
-        val roadBorderWidth = (args["roadBorderWidth"] as Double).toFloat()
-        val roadBorderColor = (args["roadBorderColor"] as List<Int>).toRGB()
+        val roadBorderWidth = (args["roadBorderWidth"] as Double? ?: 0).toFloat()
+        val roadBorderColor = (args["roadBorderColor"] as List<Int>?)?.toRGB() ?: 0
         val zoomToRegion = args["zoomIntoRegion"] as Boolean
 
         checkRoadFolderAboveUserOverlay()

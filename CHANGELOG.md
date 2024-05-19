@@ -1,3 +1,12 @@
+### 1.0.4:
+* fix bug #527
+### 1.0.3:
+* fix bug #521
+* fix bug related to removeMarker,removeMarker in iOS #508
+### 1.0.2:
+* fix bug #519 
+### 1.0.1: 
+* fix bug #518
 ### 1.0.0: Update iOS SDK, Stablize APIs
 * replace Tangram es with another ios sdk
 * add `startLocationUpdating`,`stopLocationUpdating` for external control of user location

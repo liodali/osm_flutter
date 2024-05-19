@@ -242,7 +242,7 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
                     roads.forEach { road in
                         let roadData = road.1.roadData
                         let polyline = Polyline(encodedPolyline: road.1.mRouteHigh,precision: 1e5)
-                        let roadConfig = RoadConfiguration(width: roadData.roadBorderWidth.toFloat()!,
+                        let roadConfig = RoadConfiguration(width: roadData.roadWidth.toFloat(),
                                                            color: UIColor(hexString: roadData.roadColor) ?? .green,
                                                            borderWidth: roadData.roadBorderWidth.toFloat(),
                                                            borderColor: UIColor(hexString: roadData.roadBorderColor)
@@ -436,9 +436,7 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
         let geoPoints = (call.arguments as! [GeoPoint]).map { point -> CLLocationCoordinate2D in
             point.toLocationCoordinate()
         }
-        geoPoints.forEach { location in
-            self.mapOSM.markerManager.removeMarker(location: location)
-        }
+        self.mapOSM.markerManager.removeMarkers(locations: geoPoints)
     }
     func deleteMarker(call:FlutterMethodCall){
         let location = (call.arguments as! GeoPoint).toLocationCoordinate()
@@ -594,7 +592,7 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
             case .Rect:
                 shape =  RectShapeOSM.fromMap(json: rectJson)
             case .Circle:
-                shape = RectShapeOSM.fromMap(json: rectJson)
+                shape =  CircleOSM.fromMap(json: rectJson)
             default:
                 shape =  RectShapeOSM.fromMap(json: rectJson)
         }
