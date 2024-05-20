@@ -150,7 +150,6 @@ class MapController extends BaseMapController {
     await osmBaseController.removeLimitArea();
   }
 
-  
   // [changeLocation]
   ///
   /// initialise or change of position with creating marker in that specific position
@@ -178,7 +177,7 @@ class MapController extends BaseMapController {
   ///
   /// [position] : (GeoPoint) position that will be go to map
   Future<void> moveTo(GeoPoint position, {bool animate = false}) async {
-    await osmBaseController.goToPosition(position,animate: animate);
+    await osmBaseController.goToPosition(position, animate: animate);
   }
 
   /// [removeMarker]
@@ -235,10 +234,12 @@ class MapController extends BaseMapController {
   Future<void> setMarkerOfStaticPoint({
     required String id,
     required MarkerIcon markerIcon,
-  }) async {
-    await osmBaseController.setIconStaticPositions(id, markerIcon,
-        refresh: true);
-  }
+  }) =>
+      osmBaseController.setIconStaticPositions(
+        id,
+        markerIcon,
+        refresh: true,
+      );
 
   /// [getZoom]
   ///
