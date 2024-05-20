@@ -110,20 +110,6 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   }
 
 
-
-  @override
-  bool get mounted => super.mounted;
-
-
-
-  @override
-  void didUpdateWidget(covariant MobileOsmFlutter oldWidget) {
-
-    super.didUpdateWidget(oldWidget);
-  }
-
-
-
   @override
   void mapIsReady(bool isReady) async {
     Future.delayed(Duration(milliseconds: 300), () async {
