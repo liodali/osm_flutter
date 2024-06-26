@@ -18,8 +18,7 @@ dependencies:
   url_launcher: ^6.2.1
   dio: ^5.3.3
   uuid: ^4.2.1
-  flutter_osm_interface:
-    path: ./flutter_osm_interface
+  flutter_osm_interface: ^1.0.2
   flutter_osm_web:
     path: ./flutter_osm_web
 dev_dependencies:

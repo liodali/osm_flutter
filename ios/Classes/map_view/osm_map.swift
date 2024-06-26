@@ -789,7 +789,7 @@ extension MapCoreOSMView {
             }
             var roadWidth = 5.0
             if (item.keys.contains("roadWidth")) {
-                roadWidth = item["roadWidth"] as! Double
+         //       roadWidth = item["roadWidth"] as! Double
             }
             let conf = RoadConfig(wayPoints: (item["wayPoints"] as! [GeoPoint]),
                     intersectPoints: item["middlePoints"] as! [GeoPoint]?,
