@@ -9,13 +9,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.preference.PreferenceManager
-import hamza.dali.flutter_osm_plugin.utilities.MapSnapShot
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.embedding.engine.plugins.lifecycle.FlutterLifecycleAdapter
-import io.flutter.plugin.common.PluginRegistry
 import org.osmdroid.config.Configuration
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -24,7 +22,7 @@ class FlutterOsmPlugin :
     FlutterPlugin, ActivityAware {
     private var factory: OsmFactory? = null
     companion object {
-        var mapSnapShots = ArrayMap<String, MapSnapShot>()
+
         var lastKeysRestarted: ArrayMap<String, Boolean>? = ArrayMap()
         var state = AtomicInteger(0)
         var pluginBinding: ActivityPluginBinding? = null
@@ -105,7 +103,6 @@ class FlutterOsmPlugin :
         //lifecycle?.removeObserver(this)
         lifecycle = null
         pluginBinding = null
-        mapSnapShots.clear()
     }
 
 }

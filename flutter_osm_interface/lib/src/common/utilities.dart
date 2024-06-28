@@ -175,7 +175,7 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
         map.addAll(color.toHexMap("roadColor"));
 
         map["roadWidth"] =
-            "${roadConf.roadOptionConfiguration?.roadWidth ?? commonRoadOption.roadWidth}px";
+            roadConf.roadOptionConfiguration?.roadWidth ?? commonRoadOption.roadWidth;
       } else {
         map.addAll(color.toMap("roadColor"));
 

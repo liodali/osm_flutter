@@ -1,3 +1,6 @@
+### 1.0.5:
+* remove unnecessary internal APIs
+* fix lastknownLocation in android
 ### 1.0.4:
 * fix bug #527
 ### 1.0.3:
