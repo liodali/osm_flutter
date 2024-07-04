@@ -35,6 +35,7 @@ fun GeoPoint.toHashMap(): HashMap<String, Double> {
 fun GeoPoint.eq(other: GeoPoint): Boolean {
     return this.latitude == other.latitude && this.longitude == other.longitude
 }
+
 fun MapView.scaleDensity() = this.context.resources.displayMetrics.density
 fun HashMap<String, Double>.toGeoPoint(): GeoPoint {
     if (this.keys.contains("lat") && this.keys.contains("lon")) {
@@ -43,7 +44,8 @@ fun HashMap<String, Double>.toGeoPoint(): GeoPoint {
     throw IllegalArgumentException("cannot map this hashMap to GeoPoint")
 
 }
-fun Location.toGeoPoint():GeoPoint = GeoPoint(latitude,longitude)
+
+fun Location.toGeoPoint(): GeoPoint = GeoPoint(latitude, longitude)
 
 fun List<GeoPoint>.containGeoPoint(point: GeoPoint): Boolean {
     return this.firstOrNull { p ->
@@ -92,9 +94,29 @@ fun MapView.setCustomTile(
         baseURLs
     ) {
         override fun getTileURLString(pMapTileIndex: Long): String {
-            val url = baseUrl + MapTileIndex.getZoom(pMapTileIndex) + "/" + MapTileIndex.getX(
-                pMapTileIndex
-            ) + "/" + MapTileIndex.getY(pMapTileIndex) + mImageFilenameEnding
+            val url = when {
+                baseUrl.contains("{x}") && baseUrl.contains("{y}") && baseUrl.contains("{z}") -> {
+
+                    val serverURL = baseUrl.replace(
+                        "{x}",
+                        MapTileIndex.getX(pMapTileIndex).toString(),
+                        true
+                    ).replace(
+                        "{y}",
+                        MapTileIndex.getY(pMapTileIndex).toString(),
+                        true
+                    ).replace(
+                        "{z}",
+                        MapTileIndex.getZoom(pMapTileIndex).toString(),
+                        true
+                    )
+                    serverURL + mImageFilenameEnding
+                }
+
+                else -> baseUrl + MapTileIndex.getZoom(pMapTileIndex) + "/" + MapTileIndex.getX(
+                    pMapTileIndex
+                ) + "/" + MapTileIndex.getY(pMapTileIndex) + mImageFilenameEnding
+            }
             val key = when {
                 api != null -> "?${api.first}=${api.second}"
                 else -> ""
@@ -155,7 +177,7 @@ fun Road.toMap(
         this["routePoints"] = routePointsEncoded
         this["key"] = key
         this["instructions"] = when {
-            instructions.isNotEmpty() ->instructions.toMap()
+            instructions.isNotEmpty() -> instructions.toMap()
             else -> emptyList()
         }
     }
@@ -163,7 +185,7 @@ fun Road.toMap(
 
 fun ByteArray.toBitmap(): Bitmap = BitmapFactory.decodeByteArray(this, 0, this.size)
 fun Bitmap?.toByteArray(): ByteArray? {
-    if (this == null){
+    if (this == null) {
         return null
     }
     val stream = ByteArrayOutputStream()
