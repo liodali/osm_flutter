@@ -156,7 +156,12 @@
         if (customTile != undefined) {
           customTile.remove();
         }
-        customTile = L.tileLayer(tile.url + '{z}/{x}/{y}' + tile.tileExtension + tile.apiKey,//'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
+        var serverURL = tile.url
+        if(!serverURL.includes("{z}") && !serverURL.includes("{x}") && !serverURL.includes("{y}")){
+          serverURL = tile.url + '{z}/{x}/{y}'
+        }
+        console.log(serverURL)
+        customTile = L.tileLayer(tile.url + tile.tileExtension + tile.apiKey,//'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
           {
             subdomains: tile.subDomains,
             attribution: 'Leaflet | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
