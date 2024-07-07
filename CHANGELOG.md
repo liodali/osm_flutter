@@ -1,3 +1,7 @@
+### 1.1.6:
+* fix bug in drawMultiRoad #530
+* improve customTile where we added the support for full url
+* improve lints
 ### 1.0.5:
 * remove unnecessary internal APIs
 * fix lastknownLocation in android
