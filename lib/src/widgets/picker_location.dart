@@ -51,8 +51,8 @@ Future<GeoPoint?> showSimplePickerLocation({
     initMapWithUserPosition: initCurrentUserPosition,
     initPosition: initPosition,
   );
-  GeoPoint? center = null;
-  GeoPoint? old = null;
+  GeoPoint? center;
+  GeoPoint? old;
   GeoPoint? point = await showDialog(
     context: context,
     builder: (ctx) {
@@ -127,6 +127,7 @@ Future<GeoPoint?> showSimplePickerLocation({
               ElevatedButton(
                 onPressed: () async {
                   final center = await controller.centerMap;
+                  if (!ctx.mounted) return;
                   Navigator.pop(ctx, center);
                 },
                 child: Text(
@@ -157,9 +158,9 @@ class AnimatedCenterMarker extends StatefulWidget {
 class _AnimatedCenterMarker extends State<AnimatedCenterMarker> {
   late GeoPoint? _center = widget.center;
   bool isMoving = false;
-  late Timer? timer = null;
+  late Timer? timer;
 
-  Timer createTimer() => Timer(Duration(seconds: 2), () {
+  Timer createTimer() => Timer(const Duration(seconds: 2), () {
         setState(() {
           isMoving = false;
         });
@@ -193,7 +194,7 @@ class _AnimatedCenterMarker extends State<AnimatedCenterMarker> {
       children: [
         Center(
           child: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.black,
               shape: BoxShape.circle,
             ),
@@ -217,8 +218,8 @@ class _AnimatedCenterMarker extends State<AnimatedCenterMarker> {
           bottom: isMoving ? 42 : 26,
           left: 0,
           right: 0,
-          duration: Duration(milliseconds: 300),
-          child: Icon(
+          duration: const Duration(milliseconds: 300),
+          child: const Icon(
             Icons.location_on_rounded,
             size: 32,
             color: Colors.red,

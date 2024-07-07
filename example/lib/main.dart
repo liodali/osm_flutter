@@ -14,10 +14,12 @@ void main() async {
   //   await dotenv.load(fileName: ".env");
   //    runApp(MyApp());
   // }
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -25,9 +27,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light(useMaterial3: true),
       initialRoute: "/home",
       routes: {
-        "/home": (context) => MainPageExample(),
-        "/old-home": (context) => OldMainExample(),
-        "/hook": (context) => SimpleHookExample(),
+        "/home": (context) => const MainPageExample(),
+        "/old-home": (context) => const OldMainExample(),
+        "/hook": (context) => const SimpleHookExample(),
         //"/adv-home": (ctx) => AdvandedMainExample(),
         // "/nav": (ctx) => MyHomeNavigationPage(
         //       map: Container(),
@@ -38,12 +40,12 @@ class MyApp extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushNamed(context, "/old-home");
                   },
-                  child: Text("another page"),
+                  child: const Text("another page"),
                 ),
               ),
             ),
-        "/picker-result": (context) => LocationAppExample(),
-        "/search": (context) => SearchPage(),
+        "/picker-result": (context) => const LocationAppExample(),
+        "/search": (context) => const SearchPage(),
       },
     );
   }

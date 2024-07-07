@@ -5,12 +5,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
+import 'package:routing_client_dart/routing_client_dart.dart' as routing;
 
 class OldMainExample extends StatefulWidget {
-  OldMainExample({Key? key}) : super(key: key);
+  const OldMainExample({super.key});
 
   @override
-  _MainExampleState createState() => _MainExampleState();
+  State<OldMainExample> createState() => _MainExampleState();
 }
 
 class _MainExampleState extends State<OldMainExample>
@@ -28,6 +29,7 @@ class _MainExampleState extends State<OldMainExample>
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
   ValueNotifier<bool> beginDrawRoad = ValueNotifier(false);
   List<GeoPoint> pointsRoad = [];
+  late final manager = routing.OSRMManager();
   Timer? timer;
   int x = 0;
   late AnimationController animationController;
@@ -55,18 +57,18 @@ class _MainExampleState extends State<OldMainExample>
       // ),
     );
     //  controller = MapController.cyclOSMLayer(
-    //   initMapWithUserPosition: false,
+
     //   initPosition: GeoPoint(
     //     latitude: 47.4358055,
     //     longitude: 8.4737324,
     //   ),
-    //   // areaLimit: BoundingBox(
-    //   //   east: 10.4922941,
-    //   //   north: 47.8084648,
-    //   //   south: 45.817995,
-    //   //   west: 5.9559113,
-    //   // ),
-    // );
+    // areaLimit: BoundingBox(
+    //   east: 10.4922941,
+    //   north: 47.8084648,
+    //   south: 45.817995,
+    //   west: 5.9559113,
+    // ),
+    //);
     //  controller = MapController.publicTransportationLayer(
     //   initMapWithUserPosition: false,
     //   initPosition: GeoPoint(
@@ -133,11 +135,7 @@ class _MainExampleState extends State<OldMainExample>
     scaffoldKey = GlobalKey<ScaffoldState>();
     controller.listenerMapLongTapping.addListener(() async {
       if (controller.listenerMapLongTapping.value != null) {
-        print(controller.listenerMapLongTapping.value);
-        final randNum = Random.secure().nextInt(100).toString();
-        print(randNum);
-        await controller
-            .changeLocation(controller.listenerMapLongTapping.value!);
+        await controller.moveTo(controller.listenerMapLongTapping.value!);
         /* await controller.addMarker(
           controller.listenerMapLongTapping.value!,
           markerIcon: MarkerIcon(
@@ -164,12 +162,13 @@ class _MainExampleState extends State<OldMainExample>
     });
     controller.listenerMapSingleTapping.addListener(() async {
       if (controller.listenerMapSingleTapping.value != null) {
-        print(controller.listenerMapSingleTapping.value);
+        debugPrint(controller.listenerMapSingleTapping.value.toString());
         if (beginDrawRoad.value) {
           pointsRoad.add(controller.listenerMapSingleTapping.value!);
+
           await controller.addMarker(
             controller.listenerMapSingleTapping.value!,
-            markerIcon: MarkerIcon(
+            markerIcon: const MarkerIcon(
               icon: Icon(
                 Icons.person_pin_circle,
                 color: Colors.amber,
@@ -177,7 +176,7 @@ class _MainExampleState extends State<OldMainExample>
               ),
             ),
           );
-          if (pointsRoad.length >= 2 && showFab.value) {
+          if (pointsRoad.length >= 2 && showFab.value && mounted) {
             roadActionBt(context);
           }
         } else if (lastGeoPoint.value != null) {
@@ -197,7 +196,7 @@ class _MainExampleState extends State<OldMainExample>
         } else {
           await controller.addMarker(
             controller.listenerMapSingleTapping.value!,
-            markerIcon: MarkerIcon(
+            markerIcon: const MarkerIcon(
               icon: Icon(
                 Icons.person_pin,
                 color: Colors.red,
@@ -223,13 +222,12 @@ class _MainExampleState extends State<OldMainExample>
     });
     controller.listenerRegionIsChanging.addListener(() async {
       if (controller.listenerRegionIsChanging.value != null) {
-        print(controller.listenerRegionIsChanging.value);
         centerMap.value = controller.listenerRegionIsChanging.value!.center;
       }
     });
     animationController = AnimationController(
       vsync: this,
-      duration: Duration(
+      duration: const Duration(
         milliseconds: 500,
       ),
     );
@@ -250,7 +248,7 @@ class _MainExampleState extends State<OldMainExample>
     // );
     await controller.setMarkerOfStaticPoint(
       id: "line 2",
-      markerIcon: MarkerIcon(
+      markerIcon: const MarkerIcon(
         icon: Icon(
           Icons.train,
           color: Colors.orange,
@@ -274,8 +272,7 @@ class _MainExampleState extends State<OldMainExample>
       ],
       "line 2",
     );
-    final bounds = await controller.bounds;
-    print(bounds.toString());
+
     // Future.delayed(Duration(seconds: 5), () {
     //   controller.changeTileLayer(tileLayer: CustomTile.cycleOSM());
     // });
@@ -291,7 +288,7 @@ class _MainExampleState extends State<OldMainExample>
   @override
   void onRoadTap(RoadInfo road) {
     super.onRoadTap(road);
-    debugPrint("road:" + road.toString());
+    debugPrint("road:$road");
     Future.microtask(() => controller.removeRoad(roadKey: road.key));
   }
 
@@ -317,19 +314,19 @@ class _MainExampleState extends State<OldMainExample>
           onPressed: () async {
             Navigator.pop(context); //, '/home');
           },
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
         ),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.layers),
+            icon: const Icon(Icons.layers),
             onPressed: () async {
               if (visibilityOSMLayers.value) {
                 positionOSMLayers.value = -200;
-                await Future.delayed(Duration(milliseconds: 700));
+                await Future.delayed(const Duration(milliseconds: 700));
               }
               visibilityOSMLayers.value = !visibilityOSMLayers.value;
               showFab.value = !visibilityOSMLayers.value;
-              Future.delayed(Duration(milliseconds: 500), () {
+              Future.delayed(const Duration(milliseconds: 500), () {
                 positionOSMLayers.value = visibilityOSMLayers.value ? 32 : -200;
               });
             },
@@ -344,7 +341,7 @@ class _MainExampleState extends State<OldMainExample>
                 onPressed: () {
                   beginDrawRoad.value = true;
                 },
-                icon: Icon(Icons.route),
+                icon: const Icon(Icons.route),
               ),
             );
           }),
@@ -352,7 +349,7 @@ class _MainExampleState extends State<OldMainExample>
             onPressed: () async {
               await drawRoadManually();
             },
-            icon: Icon(Icons.alt_route),
+            icon: const Icon(Icons.alt_route),
           ),
           IconButton(
             onPressed: () async {
@@ -360,109 +357,108 @@ class _MainExampleState extends State<OldMainExample>
                   !visibilityZoomNotifierActivation.value;
               zoomNotifierActivation.value = !zoomNotifierActivation.value;
             },
-            icon: Icon(Icons.zoom_out_map),
+            icon: const Icon(Icons.zoom_out_map),
           ),
           IconButton(
             onPressed: () async {
               await Navigator.pushNamed(context, "/picker-result");
             },
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
           ),
           IconButton(
             onPressed: () async {
               await controller.toggleLayersVisibility();
             },
-            icon: Icon(Icons.location_on),
+            icon: const Icon(Icons.location_on),
           ),
         ],
       ),
-      body: Container(
-        child: Stack(
-          children: [
-            OSMFlutter(
-              controller: controller,
-              osmOption: OSMOption(
-                enableRotationByGesture: true,
-                zoomOption: ZoomOption(
-                  initZoom: 8,
-                  minZoomLevel: 3,
-                  maxZoomLevel: 19,
-                  stepZoom: 1.0,
-                ),
-                userLocationMarker: UserLocationMaker(
-                    personMarker: MarkerIcon(
-                      // icon: Icon(
-                      //   Icons.car_crash_sharp,
-                      //   color: Colors.red,
-                      //   size: 48,
-                      // ),
-                      // iconWidget: SizedBox.square(
-                      //   dimension: 56,
-                      //   child: Image.asset(
-                      //     "asset/taxi.png",
-                      //     scale: .3,
-                      //   ),
-                      // ),
-                      iconWidget: SizedBox(
-                        width: 32,
-                        height: 64,
-                        child: Image.asset(
-                          "asset/directionIcon.png",
-                          scale: .3,
-                        ),
-                      ),
-                      // assetMarker: AssetMarker(
-                      //   image: AssetImage(
-                      //     "asset/taxi.png",
-                      //   ),
-                      //   scaleAssetImage: 0.3,
-                      // ),
-                    ),
-                    directionArrowMarker: MarkerIcon(
-                      // icon: Icon(
-                      //   Icons.navigation_rounded,
-                      //   size: 48,
-                      // ),
-                      iconWidget: SizedBox(
-                        width: 32,
-                        height: 64,
-                        child: Image.asset(
-                          "asset/directionIcon.png",
-                          scale: .3,
-                        ),
-                      ),
-                    )
-                    // directionArrowMarker: MarkerIcon(
-                    //   assetMarker: AssetMarker(
-                    //     image: AssetImage(
-                    //       "asset/taxi.png",
-                    //     ),
-                    //     scaleAssetImage: 0.25,
+      body: Stack(
+        children: [
+          OSMFlutter(
+            controller: controller,
+            osmOption: OSMOption(
+              enableRotationByGesture: true,
+              zoomOption: const ZoomOption(
+                initZoom: 8,
+                minZoomLevel: 3,
+                maxZoomLevel: 19,
+                stepZoom: 1.0,
+              ),
+              userLocationMarker: UserLocationMaker(
+                  personMarker: MarkerIcon(
+                    // icon: Icon(
+                    //   Icons.car_crash_sharp,
+                    //   color: Colors.red,
+                    //   size: 48,
+                    // ),
+                    // iconWidget: SizedBox.square(
+                    //   dimension: 56,
+                    //   child: Image.asset(
+                    //     "asset/taxi.png",
+                    //     scale: .3,
                     //   ),
                     // ),
-                    ),
-                staticPoints: [
-                  StaticPositionGeoPoint(
-                    "line 1",
-                    MarkerIcon(
-                      icon: Icon(
-                        Icons.train,
-                        color: Colors.green,
-                        size: 32,
+                    iconWidget: SizedBox(
+                      width: 32,
+                      height: 64,
+                      child: Image.asset(
+                        "asset/directionIcon.png",
+                        scale: .3,
                       ),
                     ),
-                    [
-                      GeoPoint(
-                        latitude: 47.4333594,
-                        longitude: 8.4680184,
-                      ),
-                      GeoPoint(
-                        latitude: 47.4317782,
-                        longitude: 8.4716146,
-                      ),
-                    ],
+                    // assetMarker: AssetMarker(
+                    //   image: AssetImage(
+                    //     "asset/taxi.png",
+                    //   ),
+                    //   scaleAssetImage: 0.3,
+                    // ),
                   ),
-                  /*StaticPositionGeoPoint(
+                  directionArrowMarker: MarkerIcon(
+                    // icon: Icon(
+                    //   Icons.navigation_rounded,
+                    //   size: 48,
+                    // ),
+                    iconWidget: SizedBox(
+                      width: 32,
+                      height: 64,
+                      child: Image.asset(
+                        "asset/directionIcon.png",
+                        scale: .3,
+                      ),
+                    ),
+                  )
+                  // directionArrowMarker: MarkerIcon(
+                  //   assetMarker: AssetMarker(
+                  //     image: AssetImage(
+                  //       "asset/taxi.png",
+                  //     ),
+                  //     scaleAssetImage: 0.25,
+                  //   ),
+                  // ),
+                  ),
+              staticPoints: [
+                StaticPositionGeoPoint(
+                  "line 1",
+                  const MarkerIcon(
+                    icon: Icon(
+                      Icons.train,
+                      color: Colors.green,
+                      size: 32,
+                    ),
+                  ),
+                  [
+                    GeoPoint(
+                      latitude: 47.4333594,
+                      longitude: 8.4680184,
+                    ),
+                    GeoPoint(
+                      latitude: 47.4317782,
+                      longitude: 8.4716146,
+                    ),
+                  ],
+                ),
+                /*StaticPositionGeoPoint(
                       "line 2",
                       MarkerIcon(
                         icon: Icon(
@@ -476,176 +472,175 @@ class _MainExampleState extends State<OldMainExample>
                         GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
                       ],
                     )*/
-                ],
-                roadConfiguration: RoadOption(
-                  roadColor: Colors.blueAccent,
-                ),
-                showContributorBadgeForOSM: true,
-                //trackMyPosition: trackingNotifier.value,
-                showDefaultInfoWindow: false,
+              ],
+              roadConfiguration: const RoadOption(
+                roadColor: Colors.blueAccent,
               ),
-              mapIsLoading: Center(
+              showContributorBadgeForOSM: true,
+              //trackMyPosition: trackingNotifier.value,
+              showDefaultInfoWindow: false,
+            ),
+            mapIsLoading: const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  Text("Map is Loading.."),
+                ],
+              ),
+            ),
+            onMapIsReady: (isReady) {
+              if (isReady) {
+                debugPrint("map is ready");
+              }
+            },
+            onLocationChanged: (myLocation) {
+              debugPrint('user location :$myLocation');
+            },
+            onGeoPointClicked: (geoPoint) async {
+              if (geoPoint ==
+                  GeoPoint(
+                    latitude: 47.442475,
+                    longitude: 8.4680389,
+                  )) {
+                final newGeoPoint = GeoPoint(
+                  latitude: 47.4517782,
+                  longitude: 8.4716146,
+                );
+                await controller.changeLocationMarker(
+                  oldLocation: geoPoint,
+                  newLocation: newGeoPoint,
+                  markerIcon: const MarkerIcon(
+                    icon: Icon(
+                      Icons.bus_alert,
+                      color: Colors.blue,
+                      size: 24,
+                    ),
+                  ),
+                );
+              }
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    geoPoint.toMap().toString(),
+                  ),
+                  action: SnackBarAction(
+                    onPressed: () =>
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                    label: "hide",
+                  ),
+                ),
+              );
+            },
+          ),
+          Positioned(
+            bottom: 10,
+            left: 10,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: visibilityZoomNotifierActivation,
+              builder: (ctx, visibility, child) {
+                return Visibility(
+                  visible: visibility,
+                  child: child!,
+                );
+              },
+              child: ValueListenableBuilder<bool>(
+                valueListenable: zoomNotifierActivation,
+                builder: (ctx, isVisible, child) {
+                  return AnimatedOpacity(
+                    opacity: isVisible ? 1.0 : 0.0,
+                    onEnd: () {
+                      visibilityZoomNotifierActivation.value = isVisible;
+                    },
+                    duration: const Duration(milliseconds: 500),
+                    child: child,
+                  );
+                },
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(),
-                    Text("Map is Loading.."),
+                    ElevatedButton(
+                      child: const Icon(Icons.add),
+                      onPressed: () async {
+                        controller.zoomIn();
+                      },
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    ElevatedButton(
+                      child: const Icon(Icons.remove),
+                      onPressed: () async {
+                        controller.zoomOut();
+                      },
+                    ),
                   ],
                 ),
               ),
-              onMapIsReady: (isReady) {
-                if (isReady) {
-                  print("map is ready");
-                }
-              },
-              onLocationChanged: (myLocation) {
-                print('user location :$myLocation');
-              },
-              onGeoPointClicked: (geoPoint) async {
-                if (geoPoint ==
-                    GeoPoint(
-                      latitude: 47.442475,
-                      longitude: 8.4680389,
-                    )) {
-                  final newGeoPoint = GeoPoint(
-                    latitude: 47.4517782,
-                    longitude: 8.4716146,
-                  );
-                  await controller.changeLocationMarker(
-                    oldLocation: geoPoint,
-                    newLocation: newGeoPoint,
-                    markerIcon: MarkerIcon(
-                      icon: Icon(
-                        Icons.bus_alert,
-                        color: Colors.blue,
-                        size: 24,
-                      ),
-                    ),
-                  );
-                }
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      "${geoPoint.toMap().toString()}",
-                    ),
-                    action: SnackBarAction(
-                      onPressed: () =>
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-                      label: "hide",
-                    ),
+            ),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: visibilityOSMLayers,
+            builder: (ctx, isVisible, child) {
+              if (!isVisible) {
+                return const SizedBox.shrink();
+              }
+              return child!;
+            },
+            child: ValueListenableBuilder<double>(
+              valueListenable: positionOSMLayers,
+              builder: (ctx, position, child) {
+                return AnimatedPositioned(
+                  bottom: position,
+                  left: 24,
+                  right: 24,
+                  duration: const Duration(milliseconds: 500),
+                  child: OSMLayersChoiceWidget(
+                    centerPoint: centerMap.value!,
+                    setLayerCallback: (tile) async {
+                      await controller.changeTileLayer(tileLayer: tile);
+                    },
                   ),
                 );
               },
             ),
+          ),
+          if (!kIsWeb) ...[
             Positioned(
-              bottom: 10,
-              left: 10,
-              child: ValueListenableBuilder<bool>(
-                valueListenable: visibilityZoomNotifierActivation,
-                builder: (ctx, visibility, child) {
-                  return Visibility(
-                    visible: visibility,
-                    child: child!,
-                  );
+              top: 5,
+              right: 12,
+              child: FloatingActionButton(
+                key: UniqueKey(),
+                heroTag: "rotateCamera",
+                onPressed: () async {
+                  animationController.forward().then((value) {
+                    animationController.reset();
+                  });
+                  mapRotate.value = 0;
+                  await controller.rotateMapCamera(mapRotate.value.toDouble());
                 },
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: zoomNotifierActivation,
-                  builder: (ctx, isVisible, child) {
-                    return AnimatedOpacity(
-                      opacity: isVisible ? 1.0 : 0.0,
-                      onEnd: () {
-                        visibilityZoomNotifierActivation.value = isVisible;
-                      },
-                      duration: Duration(milliseconds: 500),
-                      child: child,
+                child: AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, child) {
+                    return Transform.rotate(
+                      angle: animation.value,
+                      child: child!,
                     );
                   },
-                  child: Column(
-                    children: [
-                      ElevatedButton(
-                        child: Icon(Icons.add),
-                        onPressed: () async {
-                          controller.zoomIn();
-                        },
-                      ),
-                      SizedBox(
-                        height: 16,
-                      ),
-                      ElevatedButton(
-                        child: Icon(Icons.remove),
-                        onPressed: () async {
-                          controller.zoomOut();
-                        },
-                      ),
-                    ],
-                  ),
+                  child: const Icon(Icons.screen_rotation_alt_outlined),
                 ),
               ),
             ),
-            ValueListenableBuilder<bool>(
-              valueListenable: visibilityOSMLayers,
-              builder: (ctx, isVisible, child) {
-                if (!isVisible) {
-                  return SizedBox.shrink();
-                }
-                return child!;
-              },
-              child: ValueListenableBuilder<double>(
-                valueListenable: positionOSMLayers,
-                builder: (ctx, position, child) {
-                  return AnimatedPositioned(
-                    bottom: position,
-                    left: 24,
-                    right: 24,
-                    duration: Duration(milliseconds: 500),
-                    child: OSMLayersChoiceWidget(
-                      centerPoint: centerMap.value!,
-                      setLayerCallback: (tile) async {
-                        await controller.changeTileLayer(tileLayer: tile);
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-            if (!kIsWeb) ...[
-              Positioned(
-                top: 5,
-                right: 12,
-                child: FloatingActionButton(
-                  key: UniqueKey(),
-                  heroTag: "rotateCamera",
-                  onPressed: () async {
-                    animationController.forward().then((value) {
-                      animationController.reset();
-                    });
-                    mapRotate.value = 0;
-                    await controller
-                        .rotateMapCamera(mapRotate.value.toDouble());
-                  },
-                  child: AnimatedBuilder(
-                    animation: animation,
-                    builder: (context, child) {
-                      return Transform.rotate(
-                        angle: animation.value,
-                        child: child!,
-                      );
-                    },
-                    child: Icon(Icons.screen_rotation_alt_outlined),
-                  ),
-                ),
-              ),
-            ],
           ],
-        ),
+        ],
       ),
       floatingActionButton: ValueListenableBuilder<bool>(
         valueListenable: showFab,
         builder: (ctx, isShow, child) {
           if (!isShow) {
-            return SizedBox.shrink();
+            return const SizedBox.shrink();
           }
           return child!;
         },
@@ -671,9 +666,9 @@ class _MainExampleState extends State<OldMainExample>
               valueListenable: trackingNotifier,
               builder: (ctx, isTracking, _) {
                 if (isTracking) {
-                  return Icon(Icons.gps_off_sharp);
+                  return const Icon(Icons.gps_off_sharp);
                 }
-                return Icon(Icons.my_location);
+                return const Icon(Icons.my_location);
               },
             ),
           ),
@@ -705,13 +700,41 @@ class _MainExampleState extends State<OldMainExample>
       await bottomPersistant.closed.then((roadType) async {
         showFab.value = true;
         beginDrawRoad.value = false;
+        /* final road = await manager.getRoad(
+            waypoints: [pointsRoad.first, pointsRoad.last]
+                .map(
+                  (e) => routing.LngLat(
+                    lat: e.latitude,
+                    lng: e.longitude,
+                  ),
+                )
+                .toList());
+        final lnglats = road.polyline
+                ?.map(
+                  (e) => GeoPoint(
+                    latitude: e.lat,
+                    longitude: e.lng,
+                  ),
+                )
+                .toList() ??
+            <GeoPoint>[];
+        await controller.drawRoadManually(
+          lnglats,
+          RoadOption(
+            roadWidth: 20,
+            roadColor: Colors.red,
+            zoomInto: true,
+            roadBorderWidth: 30,
+            roadBorderColor: Colors.green,
+          ),
+        );*/
         RoadInfo roadInformation = await controller.drawRoad(
           pointsRoad.first,
           pointsRoad.last,
           roadType: notifierRoadType.value,
           intersectPoint:
               pointsRoad.getRange(1, pointsRoad.length - 1).toList(),
-          roadOption: RoadOption(
+          roadOption: const RoadOption(
             roadWidth: 20,
             roadColor: Colors.red,
             zoomInto: true,
@@ -723,7 +746,7 @@ class _MainExampleState extends State<OldMainExample>
         debugPrint(
             "app duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         debugPrint("app distance:${roadInformation.distance}Km");
-        debugPrint("app road:" + roadInformation.toString());
+        debugPrint("app road:$roadInformation");
         final console = roadInformation.instructions
             .map((e) => e.toString())
             .reduce(
@@ -741,6 +764,7 @@ class _MainExampleState extends State<OldMainExample>
         // );
       });
     } on RoadException catch (e) {
+       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -754,7 +778,7 @@ class _MainExampleState extends State<OldMainExample>
   @override
   Future<void> mapRestored() async {
     super.mapRestored();
-    print("log map restored");
+    debugPrint("log map restored");
   }
 
   void drawMultiRoads() async {
@@ -784,7 +808,7 @@ class _MainExampleState extends State<OldMainExample>
             latitude: 47.3982152237,
             longitude: 8.4129691189,
           ),
-          roadOptionConfiguration: MultiRoadOption(
+          roadOptionConfiguration: const MultiRoadOption(
             roadColor: Colors.orange,
           )),
       MultiRoadConfiguration(
@@ -800,20 +824,20 @@ class _MainExampleState extends State<OldMainExample>
     ];
     final listRoadInfo = await controller.drawMultipleRoad(
       configs,
-      commonRoadOption: MultiRoadOption(
+      commonRoadOption: const MultiRoadOption(
         roadColor: Colors.red,
       ),
     );
-    print(listRoadInfo);
+    debugPrint(listRoadInfo.toString());
   }
 
   Future<void> drawRoadManually() async {
-    final encoded =
+    const encoded =
         "mfp_I__vpAqJ`@wUrCa\\dCgGig@{DwWq@cf@lG{m@bDiQrCkGqImHu@cY`CcP@sDb@e@hD_LjKkRt@InHpCD`F";
     final list = await encoded.toListGeo();
     await controller.drawRoadManually(
       list,
-      RoadOption(
+      const RoadOption(
         zoomInto: true,
         roadColor: Colors.blueAccent,
       ),
@@ -824,13 +848,14 @@ class _MainExampleState extends State<OldMainExample>
 class RoadTypeChoiceWidget extends StatelessWidget {
   final Function(RoadType road) setValueCallback;
 
-  RoadTypeChoiceWidget({
+  const RoadTypeChoiceWidget({
+    super.key,
     required this.setValueCallback,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: 96,
       child: PopScope(
         canPop: false,
@@ -854,9 +879,9 @@ class RoadTypeChoiceWidget extends StatelessWidget {
                     setValueCallback(RoadType.car);
                     Navigator.pop(context, RoadType.car);
                   },
-                  child: Column(
+                  child: const Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
+                    children: [
                       Icon(Icons.directions_car),
                       Text("Car"),
                     ],
@@ -867,9 +892,9 @@ class RoadTypeChoiceWidget extends StatelessWidget {
                     setValueCallback(RoadType.bike);
                     Navigator.pop(context);
                   },
-                  child: Column(
+                  child: const Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
+                    children: [
                       Icon(Icons.directions_bike),
                       Text("Bike"),
                     ],
@@ -880,9 +905,9 @@ class RoadTypeChoiceWidget extends StatelessWidget {
                     setValueCallback(RoadType.foot);
                     Navigator.pop(context);
                   },
-                  child: Column(
+                  child: const Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
+                    children: [
                       Icon(Icons.directions_walk),
                       Text("Foot"),
                     ],
@@ -900,7 +925,8 @@ class RoadTypeChoiceWidget extends StatelessWidget {
 class OSMLayersChoiceWidget extends StatelessWidget {
   final Function(CustomTile? layer) setLayerCallback;
   final GeoPoint centerPoint;
-  OSMLayersChoiceWidget({
+  const OSMLayersChoiceWidget({
+    super.key,
     required this.setLayerCallback,
     required this.centerPoint,
   });
@@ -939,7 +965,7 @@ class OSMLayersChoiceWidget extends StatelessWidget {
                           fit: BoxFit.fill,
                         ),
                       ),
-                      Text("Transportation"),
+                      const Text("Transportation"),
                     ],
                   ),
                 ),
@@ -957,7 +983,7 @@ class OSMLayersChoiceWidget extends StatelessWidget {
                           fit: BoxFit.fill,
                         ),
                       ),
-                      Text("CycleOSM"),
+                      const Text("CycleOSM"),
                     ],
                   ),
                 ),
@@ -975,7 +1001,7 @@ class OSMLayersChoiceWidget extends StatelessWidget {
                           fit: BoxFit.fill,
                         ),
                       ),
-                      Text("OSM"),
+                      const Text("OSM"),
                     ],
                   ),
                 ),

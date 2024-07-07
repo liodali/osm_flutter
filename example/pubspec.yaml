@@ -3,8 +3,8 @@ description: Demonstrates how to use the flutter_osm_plugin plugin.
 publish_to: 'none'
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
-
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
 dependencies:
   flutter:
     sdk: flutter
@@ -16,9 +16,14 @@ dependencies:
   flutter_hooks: ^0.18.5+1
   #osm_flutter_hooks: ^1.4.0
   pointer_interceptor: ^0.9.3+3
+  routing_client_dart: ^0.5.5
+  flutter_bloc: ^8.1.5
+  equatable: ^2.0.5
 dev_dependencies:
+  flutter_lints: ^4.0.0
   flutter_test:
     sdk: flutter
+
 dependency_overrides:
   flutter_osm_plugin: #^0.70.3
     path: ../
@@ -29,6 +34,7 @@ dependency_overrides:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter.
+  flutter_osm_interface: any
 flutter:
 
   # The following line ensures that the Material Icons font is

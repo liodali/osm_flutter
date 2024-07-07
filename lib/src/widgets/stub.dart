@@ -28,7 +28,7 @@ Widget getWidget({
     throw UnsupportedError("");
 
 class OSMMapWidget extends StatelessWidget {
-  OSMMapWidget({
+  const OSMMapWidget({
     super.key,
     required this.controller,
     this.userTrackingOption,

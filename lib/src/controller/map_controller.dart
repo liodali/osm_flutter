@@ -12,33 +12,29 @@ import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 class MapController extends BaseMapController {
   MapController({
-    UserTrackingOption? initMapWithUserPosition,
-    GeoPoint? initPosition,
-    BoundingBox? areaLimit = const BoundingBox.world(),
+    super.initMapWithUserPosition,
+    super.initPosition,
+    super.areaLimit = const BoundingBox.world(),
     super.useExternalTracking,
   })  : assert(
           (initMapWithUserPosition != null) ^ (initPosition != null),
         ),
         super(
-          initMapWithUserPosition: initMapWithUserPosition,
-          initPosition: initPosition,
-          areaLimit: areaLimit,
           customTile: null,
         );
 
   MapController.withPosition({
     required GeoPoint initPosition,
-    BoundingBox? areaLimit = const BoundingBox.world(),
+    super.areaLimit = const BoundingBox.world(),
   }) : super(
           initMapWithUserPosition: null,
           initPosition: initPosition,
-          areaLimit: areaLimit,
           customTile: null,
         );
 
   MapController.withUserPosition({
-    BoundingBox? areaLimit = const BoundingBox.world(),
-    bool useExternalTracking = false,
+    super.areaLimit = const BoundingBox.world(),
+    super. useExternalTracking = false,
     UserTrackingOption trackUserLocation = const UserTrackingOption(
       enableTracking: false,
       unFollowUser: false,
@@ -46,37 +42,29 @@ class MapController extends BaseMapController {
   }) : super(
           initMapWithUserPosition: trackUserLocation,
           initPosition: null,
-          areaLimit: areaLimit,
           customTile: null,
-          useExternalTracking: useExternalTracking,
         );
 
   MapController.customLayer({
-    UserTrackingOption? initMapWithUserPosition,
-    GeoPoint? initPosition,
-    BoundingBox? areaLimit = const BoundingBox.world(),
+    super.initMapWithUserPosition,
+    super.initPosition,
+    super.areaLimit = const BoundingBox.world(),
     required CustomTile customTile,
   })  : assert(
           (initMapWithUserPosition != null) || initPosition != null,
         ),
         super(
-          initMapWithUserPosition: initMapWithUserPosition,
-          initPosition: initPosition,
-          areaLimit: areaLimit,
           customTile: customTile,
         );
 
   MapController.cyclOSMLayer({
-    UserTrackingOption? initMapWithUserPosition,
-    GeoPoint? initPosition,
-    BoundingBox? areaLimit = const BoundingBox.world(),
+    super.initMapWithUserPosition,
+  super.initPosition,
+   super.areaLimit = const BoundingBox.world(),
   })  : assert(
           (initMapWithUserPosition != null) || initPosition != null,
         ),
         super(
-          initMapWithUserPosition: initMapWithUserPosition,
-          initPosition: initPosition,
-          areaLimit: areaLimit,
           customTile: CustomTile(
             urlsServers: [
               TileURLs(
@@ -94,16 +82,13 @@ class MapController extends BaseMapController {
           ),
         );
   MapController.publicTransportationLayer({
-    UserTrackingOption? initMapWithUserPosition,
-    GeoPoint? initPosition,
-    BoundingBox? areaLimit = const BoundingBox.world(),
+    super.initMapWithUserPosition,
+  super.initPosition,
+    super.areaLimit = const BoundingBox.world(),
   })  : assert(
           (initMapWithUserPosition != null) || initPosition != null,
         ),
         super(
-          initMapWithUserPosition: initMapWithUserPosition,
-          initPosition: initPosition,
-          areaLimit: areaLimit,
           customTile: CustomTile(
             urlsServers: [
               TileURLs(url: "https://tile.memomaps.de/tilegen/"),
@@ -117,6 +102,7 @@ class MapController extends BaseMapController {
   /// [dispose]
   ///
   /// this method used to dispose controller in the map
+  @override
   void dispose() {
     if (!kIsWeb) {
       (osmBaseController as MobileOSMController).dispose();
@@ -529,7 +515,7 @@ class MapController extends BaseMapController {
     required GeoPoint oldLocation,
     required GeoPoint newLocation,
     MarkerIcon? markerIcon,
-    double? angle = null,
+    double? angle,
     IconAnchor? iconAnchor,
   }) async {
     await osmBaseController.changeMarker(

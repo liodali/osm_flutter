@@ -40,8 +40,8 @@ class MobileOsmFlutter extends StatefulWidget {
   final UserLocationMaker? userLocationMarker;
   final bool enableRotationByGesture;
   final ZoomOption zoomOption;
-  MobileOsmFlutter({
-    Key? key,
+  const MobileOsmFlutter({
+    super.key,
     required this.controller,
     this.userTrackingOption,
     this.onGeoPointClicked,
@@ -62,7 +62,7 @@ class MobileOsmFlutter extends StatefulWidget {
     this.onMapIsReady,
     this.userLocationMarker,
     this.enableRotationByGesture = false,
-  }) : super(key: key);
+  });
 
   @override
   MobileOsmFlutterState createState() => MobileOsmFlutterState();
@@ -95,7 +95,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   @override
   void initState() {
     super.initState();
-    keyUUID = Uuid().v4();
+    keyUUID = const Uuid().v4();
     isFirstLaunched = ValueNotifier(false);
     WidgetsBinding.instance.addObserver(this);
 
@@ -112,7 +112,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
 
   @override
   void mapIsReady(bool isReady) async {
-    Future.delayed(Duration(milliseconds: 300), () async {
+    Future.delayed(const Duration(milliseconds: 300), () async {
         widget.controller.osMMixins.forEach((osm) async {
           await osm.mapIsReady(isReady);
         });
@@ -126,7 +126,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       uuidMapCache: keyUUID,
       configuration: (
         customTile: widget.controller.customTile,
-        bounds: widget.controller.areaLimit?.toIOSList() ?? null,
+        bounds: widget.controller.areaLimit?.toIOSList(),
         zoomOption: widget.zoomOption,
         enableRotationGesture: widget.enableRotationByGesture,
         initlocation: widget.controller.initPosition,
@@ -156,9 +156,9 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   // }
 
   void _onPlatformViewCreated(int id) async {
-    this._osmController = await MobileOSMController.init(id, this);
+    _osmController = await MobileOSMController.init(id, this);
     _osmController!.addObserver(this);
-    widget.controller.setBaseOSMController(this._osmController!);
+    widget.controller.setBaseOSMController(_osmController!);
     if ((widget.controller).initMapWithUserPosition != null) {
       await requestPermission();
     }
@@ -194,7 +194,7 @@ class PlatformView extends StatelessWidget {
           userlocation: configuration.userlocation,
           zoomOption: configuration.zoomOption,
         ),
-        creationParamsCodec: StandardMethodCodec().messageCodec,
+        creationParamsCodec: const StandardMethodCodec().messageCodec,
       );
     }
     return AndroidView(
@@ -210,7 +210,7 @@ class PlatformView extends StatelessWidget {
         zoomOption: configuration.zoomOption,
       ),
       //creationParamsCodec: null,
-      creationParamsCodec: StandardMethodCodec().messageCodec,
+      creationParamsCodec: const StandardMethodCodec().messageCodec,
     );
   }
 

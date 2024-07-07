@@ -4,10 +4,10 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 //import 'package:osm_flutter_hooks/osm_flutter_hooks.dart';
 
 class SimpleHookExample extends StatefulWidget {
-  SimpleHookExample({Key? key}) : super(key: key);
+  const SimpleHookExample({super.key});
 
   @override
-  _SimpleExampleState createState() => _SimpleExampleState();
+  State<SimpleHookExample> createState() => _SimpleExampleState();
 }
 
 class _SimpleExampleState extends State<SimpleHookExample> {
@@ -25,14 +25,16 @@ class _SimpleExampleState extends State<SimpleHookExample> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("osm simple hook"),
+        title: const Text("osm simple hook"),
       ),
-      body: SimpleOSM(),
+      body: const SimpleOSM(),
     );
   }
 }
 
 class SimpleOSM extends HookWidget {
+  const SimpleOSM({super.key});
+
   @override
   Widget build(BuildContext context) {
    /* final controller = useMapController(
@@ -48,7 +50,7 @@ class SimpleOSM extends HookWidget {
     );*/
     return OSMFlutter(
       controller: MapController.withUserPosition(),
-      osmOption: OSMOption(),
+      osmOption: const OSMOption(),
     );
   }
 }

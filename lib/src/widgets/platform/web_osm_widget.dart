@@ -40,7 +40,7 @@ Widget getWidget({
       globalKeys: globalKeys,
       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
       isPicker: isPicker,
-      roadConfiguration: roadConfiguration ?? RoadOption.empty(),
+      roadConfiguration: roadConfiguration ?? const RoadOption.empty(),
       showDefaultInfoWindow: showDefaultInfoWindow,
       onMapIsReady: onMapIsReady,
       userLocationMarker: userLocationMarker,
@@ -51,7 +51,7 @@ Widget getWidget({
     );
 
 class OSMMapWidget extends StatelessWidget {
-  OSMMapWidget({
+  const OSMMapWidget({
     super.key,
     required this.controller,
     this.userTrackingOption,
@@ -111,7 +111,7 @@ class OSMMapWidget extends StatelessWidget {
       globalKeys: globalKeys,
       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
       isPicker: isPicker,
-      roadConfiguration: roadConfiguration ?? RoadOption.empty(),
+      roadConfiguration: roadConfiguration ?? const RoadOption.empty(),
       showDefaultInfoWindow: showDefaultInfoWindow,
       onMapIsReady: onMapIsReady,
       userLocationMarker: userLocationMarker,
