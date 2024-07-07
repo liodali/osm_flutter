@@ -158,7 +158,7 @@ class AnimatedCenterMarker extends StatefulWidget {
 class _AnimatedCenterMarker extends State<AnimatedCenterMarker> {
   late GeoPoint? _center = widget.center;
   bool isMoving = false;
-  late Timer? timer;
+   Timer? timer;
 
   Timer createTimer() => Timer(const Duration(seconds: 2), () {
         setState(() {
