@@ -1,5 +1,6 @@
 package hamza.dali.flutter_osm_plugin
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -12,6 +13,7 @@ import android.location.LocationManager.GPS_PROVIDER
 import android.location.LocationManager.NETWORK_PROVIDER
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
@@ -37,6 +39,7 @@ import hamza.dali.flutter_osm_plugin.models.toRoadInstruction
 import hamza.dali.flutter_osm_plugin.models.toRoadOption
 import hamza.dali.flutter_osm_plugin.overlays.CustomLocationManager
 import hamza.dali.flutter_osm_plugin.utilities.Constants
+import hamza.dali.flutter_osm_plugin.utilities.StaticOverlayManager
 import hamza.dali.flutter_osm_plugin.utilities.eq
 import hamza.dali.flutter_osm_plugin.utilities.openSettingLocation
 import hamza.dali.flutter_osm_plugin.utilities.resetTileSource
@@ -121,7 +124,8 @@ class FlutterOsmView(
     private val providerLifecycle: ProviderLifecycle,
     private val keyArgMapSnapShot: String,
     private val customTile: CustomTile?,
-    private val isEnabledRotationGesture: Boolean = false
+    private val isEnabledRotationGesture: Boolean = false,
+    private val isStaticMap: Boolean = false
 ) : OnSaveInstanceStateListener, PlatformView, MethodCallHandler,
     PluginRegistry.ActivityResultListener, DefaultLifecycleObserver {
 
@@ -172,7 +176,7 @@ class FlutterOsmView(
     private lateinit var methodChannel: MethodChannel
     private val mRotationGestureOverlay: RotationGestureOverlay by lazy {
         RotationGestureOverlay(map!!).apply {
-            this.isEnabled = isEnabledRotationGesture
+            this.isEnabled = isEnabledRotationGesture && !isStaticMap
         }
     }
     private lateinit var activity: Activity
@@ -237,7 +241,7 @@ class FlutterOsmView(
                 hashMap["center"] = (map?.mapCenter as GeoPoint).toHashMap()
                 methodChannel.invokeMethod("receiveRegionIsChanging", hashMap)
 
-                return true
+                return !isStaticMap
             }
 
             override fun onZoom(event: ZoomEvent?): Boolean {
@@ -245,7 +249,7 @@ class FlutterOsmView(
                 hashMap["bounding"] = map?.boundingBox?.toHashMap()
                 hashMap["center"] = (map?.mapCenter as GeoPoint).toHashMap()
                 methodChannel.invokeMethod("receiveRegionIsChanging", hashMap)
-                return true
+                return !isStaticMap
             }
         }
     }
@@ -261,6 +265,7 @@ class FlutterOsmView(
 
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun initMap() {
 
 
@@ -270,7 +275,7 @@ class FlutterOsmView(
             LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
         )
         map!!.isTilesScaledToDpi = true
-        map!!.setMultiTouchControls(true)
+        map!!.setMultiTouchControls(!isStaticMap)
         when {
             customTile != null -> {
                 map!!.setCustomTile(
@@ -290,7 +295,9 @@ class FlutterOsmView(
         map!!.isVerticalMapRepetitionEnabled = false
         map!!.isHorizontalMapRepetitionEnabled = false
         map!!.setScrollableAreaLimitLatitude(
-            MapView.getTileSystem().maxLatitude, MapView.getTileSystem().minLatitude, 0
+            MapView.getTileSystem().maxLatitude,
+            MapView.getTileSystem().minLatitude,
+            0
         )
         map!!.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         //
@@ -301,10 +308,18 @@ class FlutterOsmView(
 
 
         map!!.addMapListener(mapListener)
+        if(isStaticMap){
+            map!!.isFlingEnabled = false
+            map!!.overlayManager = StaticOverlayManager(map!!.mapOverlay)
+        }
+
+
+
         map!!.overlayManager.add(0, staticOverlayListener)
         map!!.overlayManager.add(folderMarkers)
         map!!.overlayManager.add(mRotationGestureOverlay)
         mainLinearLayout.addView(map)
+        mainLinearLayout.setOnTouchListener { _, _ -> !isStaticMap }
         /// init LocationManager
         locationNewOverlay = CustomLocationManager(map!!)
 
@@ -320,7 +335,6 @@ class FlutterOsmView(
             }
         }
     }
-
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
@@ -1549,7 +1563,7 @@ class FlutterOsmView(
             overlay.add(marker)
         }
         folderStaticPosition.add(overlay)
-        if(!map!!.overlays.contains(folderStaticPosition)){
+        if (!map!!.overlays.contains(folderStaticPosition)) {
             map!!.overlays.add(folderStaticPosition)
         }
         map!!.invalidate()
