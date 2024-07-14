@@ -60,6 +60,11 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     this.setWidgetState(osmWebFlutterState);
     channel = MethodChannel('${FlutterOsmPluginWeb.getViewType(mapIdMixin)}');
     debugPrint("in init _mapId $mapIdMixin");
+    if (osmWebFlutterState.widget.isStatic) {
+      Future.delayed(Duration(seconds: 1), () async {
+        await removeMapControls();
+      });
+    }
   }
 
   void createHtml() {

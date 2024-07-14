@@ -118,7 +118,28 @@
         }
       }
     });
-
+    
+    async function removeControls(){
+      //  mymap = L.map('mapid', {
+      //   renderer: L.canvas(),
+      //   zoomControl: false,
+      //   touchZoom: false,
+      //   dragging: false,
+      //   scrollWheelZoom: false,
+      //   boxZoom: false,
+      //   tap: false
+      // });
+      // mymap.dragging = false
+      // mymap.scrollWheelZoom = false
+      // mymap.dragging = false
+      // mymap.touchZoom = false
+      // mymap.dragging = false
+      mymap._handlers.forEach(function(handler) {
+          handler.disable();
+      });
+      console.log(mymap);
+      return 200
+    }
     async function toggleAlllayers(visible) {
       keysMainLayers.forEach((key) => {
         if (!visible) {
@@ -850,7 +871,6 @@
     function removeUnecessaryStaff() {
       try {
         var parent = document.querySelector(".leaflet-control-attribution");
-        console.log(parent.firstElementChild)
         parent.removeChild(parent.firstElementChild);
         parent.removeChild(parent.firstElementChild);
       } catch (error) {
