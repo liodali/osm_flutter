@@ -10,6 +10,11 @@ import 'package:js/js.dart';
 import 'models/bounding_box_js.dart';
 import 'models/geo_point_js.dart';
 
+@JS('removeControls')
+external dynamic removeControls(
+  int mapId,
+);
+
 @JS('centerMap')
 external Map<String, double> centerMap(
   int mapId,
@@ -263,7 +268,6 @@ external dynamic clearAllRoads(int mapId);
 @JS('removeRoad')
 external dynamic removeRoad(int mapId, String roadKey);
 
-
 @JS('toggleAlllayers')
 external dynamic toggleAlllayers(int mapId, bool toggle);
 
@@ -272,29 +276,30 @@ external dynamic setUpMap(int mapId);
 
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')
-external set initMapFinish(void Function(int,bool) f);
+external set initMapFinish(void Function(int, bool) f);
 
 /// Allows assigning a function to be callable from `window.onGeoPointClicked(lat,lon)`
 @JS('onStaticGeoPointClicked')
-external set onStaticGeoPointClicked(void Function(int,double, double) f);
+external set onStaticGeoPointClicked(void Function(int, double, double) f);
 
 /// Allows assigning a function to be callable from `window.onMapSingleTapClicked(lat,lon)`
 @JS('onMapSingleTapListener')
-external set onMapSingleTapListener(void Function(int,double, double) f);
+external set onMapSingleTapListener(void Function(int, double, double) f);
 
 /// Allows assigning a function to be callable from `window.onRegionChangedListener(region)`
 @JS('onRegionChangedListener')
 external set onRegionChangedListener(
-    void Function(int,double, double, double, double, double, double) f);
+    void Function(int, double, double, double, double, double, double) f);
 
 /// Allows assigning a function to be callable from `window.onRoadListener(road)`
 @JS('onRoadListener')
 external set onRoadListener(
   void Function(
-   int, String,
+    int,
+    String,
   ) f,
 );
 
 /// Allows assigning a function to be callable from `window.onUserPositionListener(lat,lon)`
 @JS('onUserPositionListener')
-external set onUserPositionListener(void Function(int,double, double) f);
+external set onUserPositionListener(void Function(int, double, double) f);

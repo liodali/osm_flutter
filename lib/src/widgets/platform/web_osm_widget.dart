@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_plugin/src/common/osm_option.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 
 Widget getWidget({
@@ -119,6 +118,7 @@ class OSMMapWidget extends StatelessWidget {
       minZoomLevel: zoomOption.minZoomLevel,
       maxZoomLevel: zoomOption.maxZoomLevel,
       stepZoom: zoomOption.stepZoom,
+      isStatic: controller is SimpleMapController,
     );
   }
 }

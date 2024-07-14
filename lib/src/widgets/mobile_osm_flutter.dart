@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/common/osm_option.dart';
+import 'package:flutter_osm_plugin/src/controller/simple_map_controller.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
@@ -16,7 +17,8 @@ typedef MobileInitConfiguration = ({
   bool enableRotationGesture,
   GeoPoint? initlocation,
   bool userlocation,
-  ZoomOption zoomOption
+  ZoomOption zoomOption,
+  bool isStaticMap,
 });
 
 class MobileOsmFlutter extends StatefulWidget {
@@ -98,10 +100,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     keyUUID = const Uuid().v4();
     isFirstLaunched = ValueNotifier(false);
     WidgetsBinding.instance.addObserver(this);
-
   }
-
-
 
   @override
   void dispose() {
@@ -109,14 +108,13 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     super.dispose();
   }
 
-
   @override
   void mapIsReady(bool isReady) async {
     Future.delayed(const Duration(milliseconds: 300), () async {
-        widget.controller.osMMixins.forEach((osm) async {
-          await osm.mapIsReady(isReady);
-        });
+      widget.controller.osMMixins.forEach((osm) async {
+        await osm.mapIsReady(isReady);
       });
+    });
   }
 
   @override
@@ -131,6 +129,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
         enableRotationGesture: widget.enableRotationByGesture,
         initlocation: widget.controller.initPosition,
         userlocation: widget.userTrackingOption?.initWithUserPosition ?? false,
+        isStaticMap: widget.controller is SimpleMapController,
       ),
     );
   }
@@ -178,7 +177,7 @@ class PlatformView extends StatelessWidget {
     required this.onPlatformCreatedView,
     required this.uuidMapCache,
     required this.configuration,
-  }) ;//: super(key: mobileKey);
+  }); //: super(key: mobileKey);
 
   @override
   Widget build(BuildContext context) {
@@ -193,6 +192,7 @@ class PlatformView extends StatelessWidget {
           initlocation: configuration.initlocation,
           userlocation: configuration.userlocation,
           zoomOption: configuration.zoomOption,
+          isStaticMap: configuration.isStaticMap,
         ),
         creationParamsCodec: const StandardMethodCodec().messageCodec,
       );
@@ -208,6 +208,7 @@ class PlatformView extends StatelessWidget {
         initlocation: configuration.initlocation,
         userlocation: configuration.userlocation,
         zoomOption: configuration.zoomOption,
+        isStaticMap: configuration.isStaticMap,
       ),
       //creationParamsCodec: null,
       creationParamsCodec: const StandardMethodCodec().messageCodec,
@@ -217,6 +218,7 @@ class PlatformView extends StatelessWidget {
   Map getParams(
     CustomTile? customTile, {
     List<double>? bounds,
+    bool isStaticMap = false,
     bool enableRotationGesture = false,
     GeoPoint? initlocation,
     bool userlocation = false,
@@ -240,6 +242,8 @@ class PlatformView extends StatelessWidget {
       params.putIfAbsent("userlocation", () => userlocation);
     }
     params.putIfAbsent("zoomOption", () => zoomOption.toMap);
+
+    params.putIfAbsent("isStaticMap", () => isStaticMap);
 
     return params;
   }
