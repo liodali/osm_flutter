@@ -494,22 +494,6 @@ class Map extends StatelessWidget {
               ),
             ],
           ),
-          /*
-           StaticPositionGeoPoint(
-                      "line 2",
-                      MarkerIcon(
-                        icon: Icon(
-                          Icons.train,
-                          color: Colors.red,
-                          size: 48,
-                        ),
-                      ),
-                      [
-                        GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
-                        GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
-                      ],
-            )
-          */
         ],
         roadConfiguration: const RoadOption(
           roadColor: Colors.blueAccent,

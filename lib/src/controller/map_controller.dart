@@ -34,7 +34,7 @@ class MapController extends BaseMapController {
 
   MapController.withUserPosition({
     super.areaLimit = const BoundingBox.world(),
-    super. useExternalTracking = false,
+    super.useExternalTracking = false,
     UserTrackingOption trackUserLocation = const UserTrackingOption(
       enableTracking: false,
       unFollowUser: false,
@@ -59,8 +59,8 @@ class MapController extends BaseMapController {
 
   MapController.cyclOSMLayer({
     super.initMapWithUserPosition,
-  super.initPosition,
-   super.areaLimit = const BoundingBox.world(),
+    super.initPosition,
+    super.areaLimit = const BoundingBox.world(),
   })  : assert(
           (initMapWithUserPosition != null) || initPosition != null,
         ),
@@ -83,7 +83,7 @@ class MapController extends BaseMapController {
         );
   MapController.publicTransportationLayer({
     super.initMapWithUserPosition,
-  super.initPosition,
+    super.initPosition,
     super.areaLimit = const BoundingBox.world(),
   })  : assert(
           (initMapWithUserPosition != null) || initPosition != null,

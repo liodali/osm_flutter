@@ -774,7 +774,28 @@ class CustomMapController extends BaseMapController {
   }
 }
 ```
+### STATIC Map: 
 
+> using `OSMViewer` we can show static map that contain on location
+
+
+```dart
+OSMViewer(
+        controller: SimpleMapController(
+          initPosition: GeoPoint(
+              latitude: 47.4358055,
+              longitude: 8.4737324,
+          ),
+        markerHome: const MarkerIcon(
+            icon: Icon(Icons.home),
+          ),
+        ),
+        zoomOption: const ZoomOption(
+        initZoom: 16,
+        minZoomLevel: 11,
+    )
+
+```
 
 
 ## STATIC METHODS:

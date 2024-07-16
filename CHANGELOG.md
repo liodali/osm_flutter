@@ -1,4 +1,8 @@
-### 1.1.6:
+### 1.2.0:
+* Create new widget `OSMViewer` as static map
+* Add `SimpleMapController` as controller to manipulate `OSMViewer`
+* Improve BoundingBox API
+### 1.1.0:
 * fix bug in drawMultiRoad #530
 * improve customTile where we added the support for full url
 * improve lints
