@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_plugin/src/common/osm_option.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 
 Widget getWidget({
@@ -40,7 +39,7 @@ Widget getWidget({
       globalKeys: globalKeys,
       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
       isPicker: isPicker,
-      roadConfiguration: roadConfiguration ?? RoadOption.empty(),
+      roadConfiguration: roadConfiguration ?? const RoadOption.empty(),
       showDefaultInfoWindow: showDefaultInfoWindow,
       onMapIsReady: onMapIsReady,
       userLocationMarker: userLocationMarker,
@@ -51,7 +50,7 @@ Widget getWidget({
     );
 
 class OSMMapWidget extends StatelessWidget {
-  OSMMapWidget({
+  const OSMMapWidget({
     super.key,
     required this.controller,
     this.userTrackingOption,
@@ -111,7 +110,7 @@ class OSMMapWidget extends StatelessWidget {
       globalKeys: globalKeys,
       dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
       isPicker: isPicker,
-      roadConfiguration: roadConfiguration ?? RoadOption.empty(),
+      roadConfiguration: roadConfiguration ?? const RoadOption.empty(),
       showDefaultInfoWindow: showDefaultInfoWindow,
       onMapIsReady: onMapIsReady,
       userLocationMarker: userLocationMarker,
@@ -119,6 +118,7 @@ class OSMMapWidget extends StatelessWidget {
       minZoomLevel: zoomOption.minZoomLevel,
       maxZoomLevel: zoomOption.maxZoomLevel,
       stepZoom: zoomOption.stepZoom,
+      isStatic: controller is SimpleMapController,
     );
   }
 }

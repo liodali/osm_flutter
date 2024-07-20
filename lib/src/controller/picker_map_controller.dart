@@ -8,19 +8,16 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 /// you can also draw road,change current location
 /// get also current searchable text
 class PickerMapController extends BaseMapController {
-  late ValueNotifier<String> _searchableText = ValueNotifier("");
-  late ValueNotifier<bool> _isMovingNotifier = ValueNotifier(false);
+  late final ValueNotifier<String> _searchableText = ValueNotifier("");
+  late final ValueNotifier<bool> _isMovingNotifier = ValueNotifier(false);
 
   ValueListenable<String> get searchableText => _searchableText;
   ValueListenable<bool> get isMapMovingNotifier => _isMovingNotifier;
 
   PickerMapController({
-    UserTrackingOption? initMapWithUserPosition,
-    GeoPoint? initPosition,
-  }) : super(
-          initMapWithUserPosition: initMapWithUserPosition,
-          initPosition: initPosition,
-        );
+    super.initMapWithUserPosition,
+    super.initPosition,
+  });
 
   void setSearchableText(String text) {
     _searchableText.value = text;

@@ -10,7 +10,7 @@ class BoundingBox {
   final double south;
   final double west;
 
-  BoundingBox({
+  const BoundingBox({
     required this.north,
     required this.east,
     required this.south,
@@ -55,6 +55,40 @@ class BoundingBox {
     return await compute(
       (List<GeoPoint> list) async => BoundingBox.fromGeoPoints(list),
       geoPoints,
+    );
+  }
+
+  factory BoundingBox.fromCenter(GeoPoint center, double distanceKm) {
+    // Earth's radius in kilometers
+    const double R = 6371;
+
+    // Convert latitude and longitude to radians
+    double lat = center.latitude * pi / 180;
+    double lon = center.longitude * pi / 180;
+
+    // Angular distance in radians on a great circle
+    double angularDistance = distanceKm / R;
+
+    // Calculate min and max latitudes
+    double minLat = lat - angularDistance;
+    double maxLat = lat + angularDistance;
+
+    // Calculate min and max longitudes
+    double deltaLon = asin(sin(angularDistance) / cos(lat));
+    double minLon = lon - deltaLon;
+    double maxLon = lon + deltaLon;
+
+    // Convert back to degrees
+    minLat = minLat * 180 / pi;
+    maxLat = maxLat * 180 / pi;
+    minLon = minLon * 180 / pi;
+    maxLon = maxLon * 180 / pi;
+
+    return BoundingBox(
+      north: maxLat,
+      east: maxLon,
+      south: minLat,
+      west: minLon,
     );
   }
 

@@ -14,6 +14,7 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
    
     
     let mapOSM: OSMView
+    var isStaticMap: Bool = false
     var homeMarker:UIImage? = nil
     var customTiles: CustomTiles? = nil
     var boundingbox: BoundingBox? = nil
@@ -56,6 +57,8 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
                 
             }
         }
+        isStaticMap = (args as! [String: Any])["isStaticMap"] as? Bool ?? false
+       
         let configuration = OSMMapConfiguration(zoomLevelScaleFactor:0.65,adaptScaleToScreen: true)
         self.mapOSM = OSMView(rect: frame, location: initLocation,zoomConfig: self.zoomConfig,mapTileConfiguration: configuration)
         self.channel = channel
@@ -76,6 +79,9 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
         self.mapOSM.roadTapHandlerDelegate = self
         self.mapOSM.onMapMove = self
         self.mapOSM.enableRotation(enable: enableRotationGesture)
+        if(self.isStaticMap){
+            self.mapOSM.disableTouch()
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -482,7 +488,8 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
     }
     func setCameraAreaLimit(call: FlutterMethodCall){
         let bbox = call.arguments as! [Double]
-        self.mapOSM.setBoundingBox(bounds: BoundingBox(boundingBoxs: bbox))
+        let bounds = BoundingBox(boundingBoxs: bbox)
+        self.mapOSM.setBoundingBox(bounds: bounds)
     }
     func removeCameraAreaLimit(result: @escaping FlutterResult){
         self.mapOSM.setBoundingBox(bounds: BoundingBox())
@@ -789,7 +796,7 @@ extension MapCoreOSMView {
             }
             var roadWidth = 5.0
             if (item.keys.contains("roadWidth")) {
-                roadWidth = item["roadWidth"] as! Double
+               roadWidth = item["roadWidth"] as! Double
             }
             let conf = RoadConfig(wayPoints: (item["wayPoints"] as! [GeoPoint]),
                     intersectPoints: item["middlePoints"] as! [GeoPoint]?,

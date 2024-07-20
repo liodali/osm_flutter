@@ -29,8 +29,8 @@ class OSMFlutter extends StatefulWidget {
   final OnMapMoved? onMapMoved;
   final Function(bool)? onMapIsReady;
   final OSMOption osmOption;
-  OSMFlutter({
-    Key? key,
+  const OSMFlutter({
+    super.key,
     required this.controller,
     required this.osmOption,
     this.mapIsLoading,
@@ -38,10 +38,10 @@ class OSMFlutter extends StatefulWidget {
     this.onLocationChanged,
     this.onMapMoved,
     this.onMapIsReady,
-  }) : super(key: key);
+  }) ;
 
   @override
-  _OSMFlutterState createState() => _OSMFlutterState();
+  State<OSMFlutter> createState() => _OSMFlutterState();
 }
 
 class _OSMFlutterState extends State<OSMFlutter> {
@@ -70,7 +70,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
       }
 
       ids.asMap().forEach((i, id) {
-        var count = ids.where((_id) => id == _id).length;
+        var count = ids.where((eid) => id == eid).length;
         if (count > 1) {
           assert(false, "you have duplicated ids for static points");
         }
@@ -85,9 +85,9 @@ class _OSMFlutterState extends State<OSMFlutter> {
     personIconMarkerKey = GlobalKey();
     arrowDirectionMarkerKey = GlobalKey();
     staticMarkersKeys = {};
-    widget.osmOption.staticPoints.forEach((gs) {
+    for (var gs in widget.osmOption.staticPoints) {
       staticMarkersKeys.putIfAbsent(gs.id, () => GlobalKey());
-    });
+    }
   }
 
   @override
@@ -215,7 +215,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                 ),
         ),
         if (widget.osmOption.showContributorBadgeForOSM && !kIsWeb) ...[
-          Positioned(
+          const Positioned(
             bottom: 0,
             right: 5,
             child: CopyrightOSMWidget(),
@@ -243,7 +243,7 @@ class MapConfiguration extends StatelessWidget {
   final UserLocationMaker? userLocationMarker;
 
   const MapConfiguration({
-    Key? key,
+    super.key,
     required this.dynamicMarkerWidgetNotifier,
     this.markerOption,
     this.userLocationMarker,
@@ -257,7 +257,7 @@ class MapConfiguration extends StatelessWidget {
     required this.personIconMarkerKey,
     required this.arrowDirectionMarkerKey,
     required this.staticMarkersKeys,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

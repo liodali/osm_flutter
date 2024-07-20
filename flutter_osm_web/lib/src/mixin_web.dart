@@ -465,4 +465,8 @@ extension PrivateAccessMixinWeb on WebMixin {
   void setWidgetState(OsmWebWidgetState osmWebFlutterState) {
     _osmWebFlutterState = osmWebFlutterState;
   }
+
+  Future<void> removeMapControls() async {
+    await html.promiseToFutureAsMap(interop.removeControls(mapIdMixin));
+  }
 }

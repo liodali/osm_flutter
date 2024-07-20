@@ -7,7 +7,6 @@ async function centerMap(mapId) {
 async function locateMe(mapId) {
    var iframe = getIframe(mapId);
    var geoAsync = await iframe.contentWindow.getMyLocation();
-   console.log(geoAsync);
    return geoAsync;
 }
 
@@ -208,6 +207,10 @@ async function removeRoad(mapId,roadKey){
 async function toggleAlllayers(mapId,isVisible){
    var iframe = getIframe(mapId);
    return await iframe.contentWindow.toggleAlllayers(isVisible);
+}
+async function removeControls(mapId) {
+   var iframe = getIframe(mapId);
+   return await iframe.contentWindow.removeControls();
 }
 function setUpMap(mapId){
    const osmJS = new OSMJS(mapId);

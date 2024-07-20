@@ -50,3 +50,5 @@ build/
 /example/pubspec.lock
 pubspec.lock
 .vscode/**
+
+**/ios/Frameworks/**

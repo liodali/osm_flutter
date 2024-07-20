@@ -26,6 +26,10 @@ open class OsmFactory(
         val keyUUID = (args as HashMap<*, *>)["uuid"] as String
         var customTile: CustomTile? = null
         var enableRotationGesture = false
+        val staticMap = when {
+            args.containsKey("isStaticMap")-> args["isStaticMap"] as Boolean
+            else -> false
+        }
         if ((args).containsKey("customTile")) {
             customTile = CustomTile.fromMap(args["customTile"] as HashMap<String, Any>)
         }
@@ -39,7 +43,8 @@ open class OsmFactory(
             provider,
             keyUUID,
             customTile = customTile,
-            isEnabledRotationGesture = enableRotationGesture
+            isEnabledRotationGesture = enableRotationGesture,
+            isStaticMap = staticMap
         )
         return osmFlutterView
     }

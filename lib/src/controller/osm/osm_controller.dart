@@ -12,7 +12,7 @@ final class MobileOSMController extends IBaseOSMController {
 
   static MobileOSMPlatform osmPlatform =
       OSMPlatform.instance as MobileOSMPlatform;
-  final duration = Duration(milliseconds: 300);
+  final duration = const Duration(milliseconds: 300);
   Timer? _timer;
 
   late double stepZoom = 1;
@@ -24,8 +24,8 @@ final class MobileOSMController extends IBaseOSMController {
   MobileOSMController();
 
   MobileOSMController._(this._idMap, this._osmFlutterState) {
-    minZoomLevel = this._osmFlutterState.widget.zoomOption.minZoomLevel;
-    maxZoomLevel = this._osmFlutterState.widget.zoomOption.maxZoomLevel;
+    minZoomLevel = _osmFlutterState.widget.zoomOption.minZoomLevel;
+    maxZoomLevel = _osmFlutterState.widget.zoomOption.maxZoomLevel;
   }
 
   static Future<MobileOSMController> init(
@@ -61,6 +61,7 @@ final class MobileOSMController extends IBaseOSMController {
   ///
   /// [box]                   : (BoundingBox) area limit of the map
 
+  @override
   Future<void> initPositionMap({
     GeoPoint? initPosition,
     UserTrackingOption? userPositionOption,
@@ -106,30 +107,29 @@ final class MobileOSMController extends IBaseOSMController {
     osmPlatform.onLongPressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapLongTapping(event.value);
-      _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+      for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onLongTap(event.value);
-      });
+      }
     });
 
     osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
-      _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+      for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onSingleTap(event.value);
-      });
+      }
     });
 
     osmPlatform.onRoadMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapRoadTapping(event.value);
-      _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+      for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onRoadTap(event.value);
-      });
+      }
     });
     osmPlatform.onMapIsReady(_idMap).listen((event) async {
       if (_androidOSMLifecycle != null &&
-          _osmFlutterState.widget.mapIsReadyListener.value != event.value &&
-          !_osmFlutterState.setCache.value) {
+          _osmFlutterState.widget.mapIsReadyListener.value != event.value ) {
         _androidOSMLifecycle!.mapIsReady(event.value);
       }
       _osmFlutterState.widget.mapIsReadyListener.value = event.value;
@@ -147,9 +147,9 @@ final class MobileOSMController extends IBaseOSMController {
 
       _osmFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
-      _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+      for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onRegionChanged(event.value);
-      });
+      }
     });
 
     osmPlatform.onMapRestored(_idMap).listen((event) {
@@ -157,9 +157,9 @@ final class MobileOSMController extends IBaseOSMController {
         if (!_osmFlutterState.widget.mapIsReadyListener.value) {
           _osmFlutterState.widget.mapIsReadyListener.value = true;
         }
-        _osmFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+        for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
           osmMixin.mapRestored();
-        });
+        }
       });
     });
 
@@ -173,9 +173,9 @@ final class MobileOSMController extends IBaseOSMController {
       if (_osmFlutterState.widget.onLocationChanged != null) {
         _osmFlutterState.widget.onLocationChanged!(event.value);
       }
-      _osmFlutterState.widget.controller.osMMixins.forEach((mixin) {
+      for (var mixin in _osmFlutterState.widget.controller.osMMixins) {
         mixin.onLocationChanged(event.value);
-      });
+      }
     });
 
     if (Platform.isAndroid) {
@@ -237,18 +237,12 @@ final class MobileOSMController extends IBaseOSMController {
     if (box != null && !box.isWorld()) {
       await limitAreaMap(box);
     }
-    if (initPosition != null && !_osmFlutterState.setCache.value) {
+    if (initPosition != null ) {
       await osmPlatform.initPositionMap(
         _idMap,
         initPosition,
       );
-      await Future.delayed(Duration(milliseconds: 250));
-    }
-    if (_osmFlutterState.setCache.value && Platform.isAndroid) {
-      await (osmPlatform as MethodChannelOSM).setCacheMap(
-        _idMap,
-      );
-      _osmFlutterState.setCache.value = false;
+      await Future.delayed(const Duration(milliseconds: 250));
     }
     if (userTrackOption != null && userTrackOption.enableTracking) {
       await currentLocation();
@@ -269,8 +263,7 @@ final class MobileOSMController extends IBaseOSMController {
 
   Future<void> _drawInitStaticPoints() async {
     /// draw static position
-    if (_osmFlutterState.widget.staticPoints.isNotEmpty &&
-        !_osmFlutterState.setCache.value) {
+    if (_osmFlutterState.widget.staticPoints.isNotEmpty ) {
       await Future.microtask(() {
         _osmFlutterState.widget.staticPoints.forEach((points) async {
           if (points.markerIcon != null) {
@@ -334,12 +327,14 @@ final class MobileOSMController extends IBaseOSMController {
   /// initialise or change of position
   ///
   /// [p] : (GeoPoint) position that will be added to map
+  @override
   Future<void> changeLocation(GeoPoint p) async {
     await osmPlatform.addPosition(_idMap, p);
   }
 
   ///remove marker from map of position
   /// [p] : geoPoint
+  @override
   Future<void> removeMarker(GeoPoint p) async {
     await osmPlatform.removePosition(_idMap, p);
   }
@@ -348,6 +343,7 @@ final class MobileOSMController extends IBaseOSMController {
   /// we need to global key to recuperate widget from tree element
   /// [id] : (String) id  of the static group geopoint
   /// [markerIcon] : (MarkerIcon) new marker that will set to the static group geopoint
+  @override
   Future<void> setIconStaticPositions(
     String id,
     MarkerIcon markerIcon, {
@@ -367,6 +363,7 @@ final class MobileOSMController extends IBaseOSMController {
   /// change static position in runtime
   ///  [geoPoints] : list of static geoPoint
   ///  [id] : String of that list of static geoPoint
+  @override
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
     // List<StaticPositionGeoPoint?> staticGeoPosition =
     //     _osmFlutterState.widget.staticPoints;
@@ -378,16 +375,19 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   /// zoomIn use stepZoom
+  @override
   Future<void> zoomIn() async {
     await osmPlatform.setZoom(_idMap, stepZoom: 0);
   }
 
   /// zoomOut use stepZoom
+  @override
   Future<void> zoomOut() async {
     await osmPlatform.setZoom(_idMap, stepZoom: -1);
   }
 
   /// activate current location position
+  @override
   Future<void> currentLocation() async {
     if (Platform.isAndroid) {
       bool granted = await _osmFlutterState.requestPermission();
@@ -403,6 +403,7 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   /// recuperation of user current position
+  @override
   Future<GeoPoint> myLocation() async {
     return await osmPlatform.myLocation(_idMap);
   }
@@ -410,6 +411,7 @@ final class MobileOSMController extends IBaseOSMController {
   /// go to specific position without create marker
   ///
   /// [p] : (GeoPoint) desired location
+  @override
   Future<void> goToPosition(GeoPoint p, {bool animate = false}) async {
     await osmPlatform.goToPosition(
       _idMap,
@@ -423,6 +425,7 @@ final class MobileOSMController extends IBaseOSMController {
   /// [p] : (GeoPoint) desired location
   ///
   /// [markerIcon] : (MarkerIcon) set icon of the marker
+  @override
   Future<void> addMarker(
     GeoPoint p, {
     MarkerIcon? markerIcon,
@@ -456,6 +459,7 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   /// enabled tracking user location
+  @override
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableMarkerRotation = false,
@@ -474,10 +478,12 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   /// disabled tracking user location
+  @override
   Future<void> disabledTracking() async {
     await osmPlatform.disableTracking(_idMap);
   }
 
+  @override
   Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
     if (zoomLevel != null &&
         (zoomLevel < minZoomLevel || zoomLevel > maxZoomLevel)) {
@@ -491,6 +497,7 @@ final class MobileOSMController extends IBaseOSMController {
     );
   }
 
+  @override
   Future<double> getZoom() async {
     return await osmPlatform.getZoom(_idMap);
   }
@@ -503,6 +510,7 @@ final class MobileOSMController extends IBaseOSMController {
   ///  [interestPoints] : middle point that you want to be passed by your route
   ///
   ///  [roadOption] : (RoadOption) runtime configuration of the road
+  @override
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
@@ -525,6 +533,7 @@ final class MobileOSMController extends IBaseOSMController {
 
   /// draw road
   ///  [path] : (list) path of the road
+  @override
   Future<String> drawRoadManually(
     String roadKey,
     List<GeoPoint> path,
@@ -549,6 +558,7 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   ///delete last road draw in the map
+  @override
   Future<void> removeLastRoad() async {
     return await osmPlatform.removeLastRoad(_idMap);
   }
@@ -573,43 +583,51 @@ final class MobileOSMController extends IBaseOSMController {
   /// draw circle shape in the map
   ///
   /// [circleOSM] : (CircleOSM) represent circle in osm map
+  @override
   Future<void> drawCircle(CircleOSM circleOSM) async {
     return await osmPlatform.drawCircle(_idMap, circleOSM);
   }
 
   /// remove circle shape from map
   /// [key] : (String) key of the circle
+  @override
   Future<void> removeCircle(String key) async {
     return await osmPlatform.removeCircle(_idMap, key);
   }
 
   /// draw rect shape in the map
   /// [regionOSM] : (RegionOSM) represent region in osm map
+  @override
   Future<void> drawRect(RectOSM rectOSM) async {
     return await osmPlatform.drawRect(_idMap, rectOSM);
   }
 
   /// remove region shape from map
   /// [key] : (String) key of the region
+  @override
   Future<void> removeRect(String key) async {
     return await osmPlatform.removeRect(_idMap, key);
   }
 
   /// remove all rect shape from map
+  @override
   Future<void> removeAllRect() async {
     return await osmPlatform.removeAllRect(_idMap);
   }
 
   /// remove all circle shapes from map
+  @override
   Future<void> removeAllCircle() async {
     return await osmPlatform.removeAllCircle(_idMap);
   }
 
   /// remove all shapes from map
+  @override
   Future<void> removeAllShapes() async {
     return await osmPlatform.removeAllShapes(_idMap);
   }
 
+  @override
   Future<void> mapOrientation(double degree) async {
     var angle = degree;
     await osmPlatform.mapRotation(_idMap, angle);
@@ -702,7 +720,7 @@ final class MobileOSMController extends IBaseOSMController {
     required GeoPoint oldLocation,
     required GeoPoint newLocation,
     MarkerIcon? newMarkerIcon,
-    double? angle = null,
+    double? angle,
     IconAnchor? iconAnchor,
   }) async {
     var durationMilliSecond = 0;
@@ -743,25 +761,5 @@ final class MobileOSMController extends IBaseOSMController {
 }
 
 extension PrivateMethodOSMController on MobileOSMController {
-  Future<void> saveCacheMap() async {
-    await (MobileOSMController.osmPlatform as MethodChannelOSM)
-        .saveCacheMap(_idMap);
-  }
-
-  Future<void> setCacheMap() async {
-    await (MobileOSMController.osmPlatform as MethodChannelOSM)
-        .setCacheMap(_idMap);
-  }
-
-  Future<void> clearCacheMap() async {
-    await (MobileOSMController.osmPlatform as MethodChannelOSM)
-        .clearCacheMap(_idMap);
-  }
-
-  Future<void> removeCacheMap() async {
-    await (MobileOSMController.osmPlatform as MethodChannelOSM)
-        .removeCache(_idMap);
-  }
-
   AndroidLifecycleMixin? get androidMixinObserver => _androidOSMLifecycle;
 }

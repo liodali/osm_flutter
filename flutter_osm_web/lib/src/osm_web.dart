@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 import 'package:flutter_osm_web/src/controller/web_osm_controller.dart';
+import 'package:flutter_osm_web/src/mixin_web.dart';
 
 class OsmWebWidget extends StatefulWidget {
   final BaseMapController controller;
@@ -25,7 +26,7 @@ class OsmWebWidget extends StatefulWidget {
   final double maxZoomLevel;
   final Function(bool)? onMapIsReady;
   final UserLocationMaker? userLocationMarker;
-
+  final bool isStatic;
   OsmWebWidget({
     Key? key,
     required this.controller,
@@ -48,6 +49,7 @@ class OsmWebWidget extends StatefulWidget {
     this.maxZoomLevel = 18,
     this.onMapIsReady,
     this.userLocationMarker,
+    this.isStatic = false,
   }) : super(key: key);
 
   @override

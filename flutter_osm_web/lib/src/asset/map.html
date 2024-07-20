@@ -118,7 +118,28 @@
         }
       }
     });
-
+    
+    async function removeControls(){
+      //  mymap = L.map('mapid', {
+      //   renderer: L.canvas(),
+      //   zoomControl: false,
+      //   touchZoom: false,
+      //   dragging: false,
+      //   scrollWheelZoom: false,
+      //   boxZoom: false,
+      //   tap: false
+      // });
+      // mymap.dragging = false
+      // mymap.scrollWheelZoom = false
+      // mymap.dragging = false
+      // mymap.touchZoom = false
+      // mymap.dragging = false
+      mymap._handlers.forEach(function(handler) {
+          handler.disable();
+      });
+      console.log(mymap);
+      return 200
+    }
     async function toggleAlllayers(visible) {
       keysMainLayers.forEach((key) => {
         if (!visible) {
@@ -156,7 +177,11 @@
         if (customTile != undefined) {
           customTile.remove();
         }
-        customTile = L.tileLayer(tile.url + '{z}/{x}/{y}' + tile.tileExtension + tile.apiKey,//'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
+        var serverURL = tile.url
+        if(!serverURL.includes("{z}") && !serverURL.includes("{x}") && !serverURL.includes("{y}")){
+          serverURL = tile.url + '{z}/{x}/{y}'
+        }
+        customTile = L.tileLayer(serverURL + tile.tileExtension + tile.apiKey,//'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
           {
             subdomains: tile.subDomains,
             attribution: 'Leaflet | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -846,7 +871,6 @@
     function removeUnecessaryStaff() {
       try {
         var parent = document.querySelector(".leaflet-control-attribution");
-        console.log(parent.firstElementChild)
         parent.removeChild(parent.firstElementChild);
         parent.removeChild(parent.firstElementChild);
       } catch (error) {

@@ -81,3 +81,4 @@ ios/Podfile.lock
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 .env
 pubspec.lock
+analysis_options.yaml

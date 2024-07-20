@@ -4,7 +4,7 @@
 
 # flutter_osm_plugin 
 
-![pub](https://img.shields.io/badge/pub-v1.0.4-blue)   
+![pub](https://img.shields.io/badge/pub-v1.1.0-blue)   
 
 
 ## Platform Support
@@ -50,7 +50,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^1.0.4
+      flutter_osm_plugin: ^1.1.0
 
 
 
@@ -232,6 +232,7 @@ controller = MapController.customLayer(
         maxZoomLevel: 19,
         urlsServers: [
          TileURLs(
+            //"https://tile.opentopomap.org/{z}/{x}/{y}"
             url: "https://tile.opentopomap.org/",
             subdomains: [],
           )
@@ -245,6 +246,7 @@ controller = MapController.customLayer(
 * also,you can use our predefined custom tiles like 
 * `cyclOSMLayer` constructor for cycling tiles
 * `publicTransportationLayer` constructor for transport tiles ,it's public osm server
+* we support full server path like `("https://tile.opentopomap.org/{z}/{x}/{y}")`
 
 For more example see our example in `home_example.dart`
 <br>
@@ -772,7 +774,28 @@ class CustomMapController extends BaseMapController {
   }
 }
 ```
+### STATIC Map: 
 
+> using `OSMViewer` we can show static map that contain on location
+
+
+```dart
+OSMViewer(
+        controller: SimpleMapController(
+          initPosition: GeoPoint(
+              latitude: 47.4358055,
+              longitude: 8.4737324,
+          ),
+        markerHome: const MarkerIcon(
+            icon: Icon(Icons.home),
+          ),
+        ),
+        zoomOption: const ZoomOption(
+        initZoom: 16,
+        minZoomLevel: 11,
+    )
+
+```
 
 
 ## STATIC METHODS:

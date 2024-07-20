@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 
 class SimpleExample extends StatefulWidget {
-  SimpleExample({Key? key}) : super(key: key);
+  const SimpleExample({super.key});
 
   @override
-  _SimpleExampleState createState() => _SimpleExampleState();
+  State<SimpleExample> createState() => _SimpleExampleState();
 }
 
 class _SimpleExampleState extends State<SimpleExample> {
@@ -23,29 +23,29 @@ class _SimpleExampleState extends State<SimpleExample> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("osm"),
+        title: const Text("osm"),
       ),
       body: PageView(
-        children: <Widget>[
-          Center(
-            child: Text("page n1"),
-          ),
-          SimpleOSM(),
-        ],
         controller: controller,
         onPageChanged: (p) {
           setState(() {
             indexPage = p;
           });
         },
+        children: const <Widget>[
+          Center(
+            child: Text("page n1"),
+          ),
+          SimpleOSM(),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: indexPage,
         onTap: (p) {
           controller.animateToPage(p,
-              duration: Duration(milliseconds: 500), curve: Curves.linear);
+              duration: const Duration(milliseconds: 500), curve: Curves.linear);
         },
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.info),
             label: "information",
@@ -61,6 +61,8 @@ class _SimpleExampleState extends State<SimpleExample> {
 }
 
 class SimpleOSM extends StatefulWidget {
+  const SimpleOSM({super.key});
+
   @override
   State<StatefulWidget> createState() => SimpleOSMState();
 }
@@ -73,7 +75,7 @@ class SimpleOSMState extends State<SimpleOSM>
   void initState() {
     super.initState();
     controller = MapController(
-      initMapWithUserPosition: UserTrackingOption(),
+      initMapWithUserPosition: const UserTrackingOption(),
     );
   }
 
@@ -83,7 +85,7 @@ class SimpleOSMState extends State<SimpleOSM>
     super.build(context);
     return OSMFlutter(
       controller: controller,
-      osmOption: OSMOption(),
+      osmOption: const OSMOption(),
     );
   }
 

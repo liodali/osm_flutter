@@ -5,6 +5,8 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 class LocationAppExample extends StatefulWidget {
+  const LocationAppExample({super.key});
+
   @override
   State<StatefulWidget> createState() => _LocationAppExampleState();
 }
@@ -16,7 +18,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("search picker example"),
+        title: const Text("search picker example"),
       ),
       body: Center(
         child: Column(
@@ -29,7 +31,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
               builder: (ctx, p, child) {
                 return Center(
                   child: Text(
-                    "${p?.toString() ?? ""}",
+                    p?.toString() ?? "",
                     textAlign: TextAlign.center,
                   ),
                 );
@@ -44,7 +46,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                       notifier.value = p as GeoPoint;
                     }
                   },
-                  child: Text("pick address"),
+                  child: const Text("pick address"),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -53,7 +55,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                       isDismissible: true,
                       title: "location picker",
                       textConfirmPicker: "pick",
-                      zoomOption: ZoomOption(
+                      zoomOption: const ZoomOption(
                         initZoom: 8,
                       ),
                       initPosition: GeoPoint(
@@ -66,7 +68,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                       notifier.value = p;
                     }
                   },
-                  child: Text("show picker address"),
+                  child: const Text("show picker address"),
                 )
               ],
             ),
@@ -78,6 +80,8 @@ class _LocationAppExampleState extends State<LocationAppExample> {
 }
 
 class SearchPage extends StatefulWidget {
+  const SearchPage({super.key});
+
   @override
   State<StatefulWidget> createState() => _SearchPageState();
 }
@@ -85,7 +89,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   late TextEditingController textEditingController = TextEditingController();
   late PickerMapController controller = PickerMapController(
-    initMapWithUserPosition: UserTrackingOption(),
+    initMapWithUserPosition: const UserTrackingOption(),
   );
 
   @override
@@ -123,7 +127,7 @@ class _SearchPageState extends State<SearchPage> {
                   child: TextButton(
                     style: TextButton.styleFrom(),
                     onPressed: () => Navigator.of(context).pop(),
-                    child: Icon(
+                    child: const Icon(
                       Icons.arrow_back_ios,
                     ),
                   ),
@@ -133,10 +137,10 @@ class _SearchPageState extends State<SearchPage> {
                     child: TextField(
                       controller: textEditingController,
                       onEditingComplete: () async {
-                        FocusScope.of(context).requestFocus(new FocusNode());
+                        FocusScope.of(context).requestFocus(FocusNode());
                       },
                       decoration: InputDecoration(
-                        prefixIcon: Icon(
+                        prefixIcon: const Icon(
                           Icons.search,
                           color: Colors.black,
                         ),
@@ -146,7 +150,7 @@ class _SearchPageState extends State<SearchPage> {
                             if (text.text.isNotEmpty) {
                               return child!;
                             }
-                            return SizedBox.shrink();
+                            return const SizedBox.shrink();
                           },
                           child: InkWell(
                             focusNode: FocusNode(),
@@ -154,9 +158,9 @@ class _SearchPageState extends State<SearchPage> {
                               textEditingController.clear();
                               controller.setSearchableText("");
                               FocusScope.of(context)
-                                  .requestFocus(new FocusNode());
+                                  .requestFocus(FocusNode());
                             },
-                            child: Icon(
+                            child: const Icon(
                               Icons.close,
                               size: 16,
                               color: Colors.black,
@@ -169,7 +173,7 @@ class _SearchPageState extends State<SearchPage> {
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         fillColor: Colors.grey[300],
-                        errorBorder: OutlineInputBorder(
+                        errorBorder: const OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.red),
                         ),
                       ),
@@ -178,10 +182,10 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
-            TopSearchWidget()
+            const TopSearchWidget()
           ],
         ),
       ),
@@ -192,13 +196,14 @@ class _SearchPageState extends State<SearchPage> {
           child: FloatingActionButton(
             onPressed: () async {
               GeoPoint p = await controller.selectAdvancedPositionPicker();
+               if (!context.mounted) return;
               Navigator.pop(context, p);
             },
-            child: Icon(Icons.arrow_forward),
+            child: const Icon(Icons.arrow_forward),
           ),
         ),
       ),
-      pickerConfig: CustomPickerLocationConfig(
+      pickerConfig: const CustomPickerLocationConfig(
         zoomOption: ZoomOption(
           initZoom: 8,
         ),
@@ -208,6 +213,8 @@ class _SearchPageState extends State<SearchPage> {
 }
 
 class TopSearchWidget extends StatefulWidget {
+  const TopSearchWidget({super.key});
+
   @override
   State<StatefulWidget> createState() => _TopSearchWidgetState();
 }
@@ -221,7 +228,7 @@ class _TopSearchWidgetState extends State<TopSearchWidget> {
   late Future<List<SearchInfo>> _futureSuggestionAddress;
   String oldText = "";
   Timer? _timerToStartSuggestionReq;
-  final Key streamKey = Key("streamAddressSug");
+  final Key streamKey = const Key("streamAddressSug");
 
   @override
   void initState() {
@@ -239,7 +246,7 @@ class _TopSearchWidgetState extends State<TopSearchWidget> {
         _timerToStartSuggestionReq!.cancel();
       }
       _timerToStartSuggestionReq =
-          Timer.periodic(Duration(seconds: 3), (timer) async {
+          Timer.periodic(const Duration(seconds: 3), (timer) async {
         await suggestionProcessing(v);
         timer.cancel();
       });
@@ -280,7 +287,7 @@ class _TopSearchWidgetState extends State<TopSearchWidget> {
       valueListenable: notifierAutoCompletion,
       builder: (ctx, isVisible, child) {
         return AnimatedContainer(
-          duration: Duration(
+          duration: const Duration(
             milliseconds: 500,
           ),
           height: isVisible ? MediaQuery.of(context).size.height / 4 : 0,
@@ -313,8 +320,9 @@ class _TopSearchWidgetState extends State<TopSearchWidget> {
                       /// hide suggestion card
                       notifierAutoCompletion.value = false;
                       await reInitStream();
+                       if (!context.mounted) return;
                       FocusScope.of(context).requestFocus(
-                        new FocusNode(),
+                        FocusNode(),
                       );
                     },
                   ),
@@ -324,13 +332,13 @@ class _TopSearchWidgetState extends State<TopSearchWidget> {
             );
           }
           if (snap.connectionState == ConnectionState.waiting) {
-            return Card(
+            return const Card(
               child: Center(
                 child: CircularProgressIndicator(),
               ),
             );
           }
-          return SizedBox();
+          return const SizedBox();
         },
       ),
     );

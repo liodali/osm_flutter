@@ -45,7 +45,7 @@ class CustomPickerLocation extends StatefulWidget {
   final Function(bool)? onMapReady;
   final bool showDefaultMarkerPickWidget;
 
-  CustomPickerLocation({
+  const CustomPickerLocation({
     required this.controller,
     this.appBarPicker,
     this.bottomWidgetPicker,
@@ -53,8 +53,8 @@ class CustomPickerLocation extends StatefulWidget {
     this.pickerConfig = const CustomPickerLocationConfig(),
     this.onMapReady,
     this.showDefaultMarkerPickWidget = false,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   static PickerMapController of<T>(
     BuildContext context, {
@@ -77,11 +77,11 @@ class CustomPickerLocation extends StatefulWidget {
   }
 
   @override
-  _CustomPickerLocationState createState() => _CustomPickerLocationState();
+  State<CustomPickerLocation> createState() => _CustomPickerLocationState();
 }
 
 class _CustomPickerLocationState extends State<CustomPickerLocation> {
-  GeoPoint? lastCenterMap = null;
+  GeoPoint? lastCenterMap;
 
   @override
   void initState() {

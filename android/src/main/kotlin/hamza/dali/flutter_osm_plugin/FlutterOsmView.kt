@@ -1,5 +1,6 @@
 package hamza.dali.flutter_osm_plugin
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -12,6 +13,7 @@ import android.location.LocationManager.GPS_PROVIDER
 import android.location.LocationManager.NETWORK_PROVIDER
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
@@ -25,7 +27,6 @@ import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.DESTROYED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.PAUSED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STARTED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STOPPED
-import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.mapSnapShots
 import hamza.dali.flutter_osm_plugin.models.Anchor
 import hamza.dali.flutter_osm_plugin.models.CustomTile
 import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
@@ -38,8 +39,7 @@ import hamza.dali.flutter_osm_plugin.models.toRoadInstruction
 import hamza.dali.flutter_osm_plugin.models.toRoadOption
 import hamza.dali.flutter_osm_plugin.overlays.CustomLocationManager
 import hamza.dali.flutter_osm_plugin.utilities.Constants
-import hamza.dali.flutter_osm_plugin.utilities.MapSnapShot
-import hamza.dali.flutter_osm_plugin.utilities.RoadSnapShot
+import hamza.dali.flutter_osm_plugin.utilities.StaticOverlayManager
 import hamza.dali.flutter_osm_plugin.utilities.eq
 import hamza.dali.flutter_osm_plugin.utilities.openSettingLocation
 import hamza.dali.flutter_osm_plugin.utilities.resetTileSource
@@ -86,8 +86,6 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.collections.set
 
 
@@ -126,7 +124,8 @@ class FlutterOsmView(
     private val providerLifecycle: ProviderLifecycle,
     private val keyArgMapSnapShot: String,
     private val customTile: CustomTile?,
-    private val isEnabledRotationGesture: Boolean = false
+    private val isEnabledRotationGesture: Boolean = false,
+    private val isStaticMap: Boolean = false
 ) : OnSaveInstanceStateListener, PlatformView, MethodCallHandler,
     PluginRegistry.ActivityResultListener, DefaultLifecycleObserver {
 
@@ -138,7 +137,7 @@ class FlutterOsmView(
     private var customPersonMarkerIcon: Bitmap? = null
     private var customArrowMarkerIcon: Bitmap? = null
     private var staticMarkerIcon: HashMap<String, Bitmap> = HashMap()
-    private val staticPoints: HashMap<String, MutableList<GeoPoint>> = HashMap()
+    private val staticPoints: HashMap<String, MutableList<FlutterGeoPoint>> = HashMap()
     private var homeMarker: FlutterMarker? = null
     private val folderStaticPosition: FolderOverlay by lazy {
         FolderOverlay()
@@ -177,7 +176,7 @@ class FlutterOsmView(
     private lateinit var methodChannel: MethodChannel
     private val mRotationGestureOverlay: RotationGestureOverlay by lazy {
         RotationGestureOverlay(map!!).apply {
-            this.isEnabled = isEnabledRotationGesture
+            this.isEnabled = isEnabledRotationGesture && !isStaticMap
         }
     }
     private lateinit var activity: Activity
@@ -193,6 +192,8 @@ class FlutterOsmView(
     private var isTracking = false
     private var isEnabled = false
     private var visibilityInfoWindow = false
+    private val markerIconsCache: MutableMap<GeoPoint, ByteArray?> =
+        emptyMap<GeoPoint, ByteArray>().toMutableMap()
 
     companion object {
         val boundingWorldBox: BoundingBox = BoundingBox(
@@ -210,19 +211,6 @@ class FlutterOsmView(
         this.activity = activity
     }
 
-    private fun mapSnapShot(): MapSnapShot {
-        if (keyMapSnapshot.isEmpty()) {
-            return MapSnapShot()
-        }
-        if (!mapSnapShots.containsKey(keyMapSnapshot)) {
-            mapSnapShots[keyMapSnapshot] = MapSnapShot()
-        }
-        return mapSnapShots[keyMapSnapshot]!!
-    }
-
-    private fun removeCurrentCache() {
-        mapSnapShots.remove(keyMapSnapshot)
-    }
 
     private val staticOverlayListener by lazy {
         MapEventsOverlay(object : MapEventsReceiver {
@@ -253,7 +241,7 @@ class FlutterOsmView(
                 hashMap["center"] = (map?.mapCenter as GeoPoint).toHashMap()
                 methodChannel.invokeMethod("receiveRegionIsChanging", hashMap)
 
-                return true
+                return !isStaticMap
             }
 
             override fun onZoom(event: ZoomEvent?): Boolean {
@@ -261,7 +249,7 @@ class FlutterOsmView(
                 hashMap["bounding"] = map?.boundingBox?.toHashMap()
                 hashMap["center"] = (map?.mapCenter as GeoPoint).toHashMap()
                 methodChannel.invokeMethod("receiveRegionIsChanging", hashMap)
-                return true
+                return !isStaticMap
             }
         }
     }
@@ -277,6 +265,7 @@ class FlutterOsmView(
 
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun initMap() {
 
 
@@ -286,7 +275,7 @@ class FlutterOsmView(
             LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
         )
         map!!.isTilesScaledToDpi = true
-        map!!.setMultiTouchControls(true)
+        map!!.setMultiTouchControls(!isStaticMap)
         when {
             customTile != null -> {
                 map!!.setCustomTile(
@@ -305,46 +294,47 @@ class FlutterOsmView(
 
         map!!.isVerticalMapRepetitionEnabled = false
         map!!.isHorizontalMapRepetitionEnabled = false
-        map!!.setScrollableAreaLimitDouble(mapSnapShot().boundingWorld())
         map!!.setScrollableAreaLimitLatitude(
-            MapView.getTileSystem().maxLatitude, MapView.getTileSystem().minLatitude, 0
+            MapView.getTileSystem().maxLatitude,
+            MapView.getTileSystem().minLatitude,
+            0
         )
         map!!.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         //
         map!!.minZoomLevel = 2.0
-        when (mapSnapShots.containsKey(keyMapSnapshot)) {
-            true -> {
-                map!!.setExpectedCenter(mapSnapShot().centerGeoPoint())
-                map!!.controller.setZoom(mapSnapShot().zoomLevel(2.0))
-            }
 
-            else -> {
-                map!!.setExpectedCenter(GeoPoint(0.0, 0.0))
-                map!!.controller.setZoom(2.0)
-            }
-        }
+        map!!.setExpectedCenter(GeoPoint(0.0, 0.0))
+        map!!.controller.setZoom(2.0)
+
 
         map!!.addMapListener(mapListener)
+        if(isStaticMap){
+            map!!.isFlingEnabled = false
+            map!!.overlayManager = StaticOverlayManager(map!!.mapOverlay)
+        }
+
+
+
         map!!.overlayManager.add(0, staticOverlayListener)
         map!!.overlayManager.add(folderMarkers)
         map!!.overlayManager.add(mRotationGestureOverlay)
         mainLinearLayout.addView(map)
+        mainLinearLayout.setOnTouchListener { _, _ -> !isStaticMap }
         /// init LocationManager
         locationNewOverlay = CustomLocationManager(map!!)
 
-        locationNewOverlay.onChangedLocation { userLocation,heading ->
+        locationNewOverlay.onChangedLocation { userLocation, heading ->
             scope?.launch {
                 withContext(Main) {
                     methodChannel.invokeMethod(
                         "receiveUserLocation", userLocation.toHashMap().apply {
-                            put("heading",heading)
+                            put("heading", heading)
                         }
                     )
                 }
             }
         }
     }
-
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
@@ -367,25 +357,6 @@ class FlutterOsmView(
                     }
                 }
 
-                "map#setCache" -> {
-                    setCacheMap()
-                    result.success(null)
-                }
-
-                "map#clearCache#view" -> {
-                    mapSnapShot().reset(all = true)
-                    result.success(null)
-                }
-
-                "map#saveCache#view" -> {
-                    saveCacheMap()
-                    result.success(null)
-                }
-
-                "removeCache" -> {
-                    removeCurrentCache()
-                    result.success(null)
-                }
 
                 "use#visiblityInfoWindow" -> {
                     visibilityInfoWindow = call.arguments as Boolean
@@ -460,20 +431,23 @@ class FlutterOsmView(
                     val useDirectionMarker = args[2] as Boolean
                     val anchor = args.last() as List<Double>
                     locationNewOverlay.setAnchor(anchor)
-                    trackUserLocation(enableStopFollow,useDirectionMarker, disableRotation, result)
+                    trackUserLocation(enableStopFollow, useDirectionMarker, disableRotation, result)
                 }
 
                 "deactivateTrackMe" -> {
                     deactivateTrackMe(result)
                 }
+
                 "startLocationUpdating" -> {
                     locationNewOverlay.startLocationUpdating()
                     result.success(null)
                 }
+
                 "stopLocationUpdating" -> {
                     locationNewOverlay.stopLocationUpdating()
                     result.success(null)
                 }
+
                 "map#center" -> {
                     result.success((map?.mapCenter as GeoPoint).toHashMap())
                 }
@@ -634,7 +608,7 @@ class FlutterOsmView(
     }
 
     private fun getGeoPoints(result: MethodChannel.Result) {
-        val list = folderMarkers.items.filterIsInstance(Marker::class.java)
+        val list = folderMarkers.items.filterIsInstance<Marker>()
         val geoPoints = emptyList<HashMap<String, Double>>().toMutableList()
         geoPoints.addAll(
             list.map {
@@ -659,9 +633,7 @@ class FlutterOsmView(
             customPersonMarkerIcon = personIcon.toBitmap()
             customArrowMarkerIcon = arrowIcon.toBitmap()
             setMarkerTracking()
-            mapSnapShot().setUserTrackMarker(
-                personMarker = personIcon, arrowMarker = arrowIcon
-            )
+
             result.success(null)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -697,111 +669,6 @@ class FlutterOsmView(
     }
 
 
-    private fun setCacheMap() {
-        val mapSnapShot = mapSnapShot()
-        // set last location and zoom level and orientation 
-        if (mapSnapShot.centerGeoPoint() != null && !mapSnapShot.centerGeoPoint()!!
-                .eq(GeoPoint(0.0, 0.0))
-        ) {
-            if (mapSnapShot.mapOrientation() != 0f) {
-                map!!.mapOrientation = mapSnapShot.mapOrientation()
-            }
-            map!!.controller.setCenter(mapSnapShot.centerGeoPoint())
-            map!!.controller.setZoom(mapSnapShot.zoomLevel(initZoom))
-        }
-        /**
-         * show  cached markers
-         */
-        scope?.launch {
-            mapSnapShot.markers().forEach { point ->
-                val icon = point.icon?.toBitmap()
-                //val drawable = getDefaultIconDrawable(icon = icon, color = null)
-                withContext(Main) {
-                    addMarker(
-                        point.geoPoint,
-                        dynamicMarkerBitmap = icon,
-                        animateTo = false,
-                        angle = point.angle,
-                        anchor = point.anchor,
-                        zoom = mapSnapShot.zoomLevel(initZoom)
-                    )
-                }
-            }
-        }
-        // set geo marker drawable 
-        if (mapSnapShot.staticGeoPointsIcons().isNotEmpty()) {
-            scope?.launch {
-                mapSnapShot.staticGeoPointsIcons().forEach { (key, icon) ->
-                    staticMarkerIcon[key] = icon.toBitmap()
-                }
-            }
-        }
-        // set static geo marker position in the map
-        if (mapSnapShot.staticGeoPoints().isNotEmpty()) {
-            resetLastGeoPointPosition(mapSnapShot)
-        }
-        mapSnapShot.lastCachedRoad()?.let { lastRoad ->
-            if (lastRoad.roadPoints.isNotEmpty()) {
-                checkRoadFolderAboveUserOverlay()
-                val polyLine = Polyline(map!!)
-                polyLine.setPoints(lastRoad.roadPoints)
-                polyLine.setStyle(
-                    color = lastRoad.roadColor ?: Color.GREEN,
-                    width = lastRoad.roadWidth,
-                    borderColor = lastRoad.roadBorderColor,
-                    borderWidth = lastRoad.roadBorderWidth
-                )
-                flutterRoad = createRoad(
-                    roadID = lastRoad.roadID,
-                    polyLine = polyLine,
-                    roadDuration = lastRoad.duration,
-                    roadDistance = lastRoad.distance
-                )
-
-                map!!.invalidate()
-            }
-
-        }
-        mapSnapShot.cachedRoads().forEach { road ->
-            if (road.roadPoints.isNotEmpty()) {
-                checkRoadFolderAboveUserOverlay()
-                val polyLine = Polyline(map!!)
-                polyLine.setPoints(road.roadPoints)
-
-                val borderPolyline = Polyline(map!!)
-                borderPolyline.setPoints(road.roadPoints)
-                //customRoadMarkerIcon.p
-                polyLine.setStyle(
-                    borderColor = road.roadBorderColor,
-                    borderWidth = road.roadBorderWidth,
-                    color = road.roadColor ?: Color.GREEN,
-                    width = road.roadWidth,
-                )
-                flutterRoad = createRoad(
-                    polyLine = polyLine,
-                    roadID = road.roadID,
-                    roadDuration = road.duration,
-                    roadDistance = road.distance
-                )
-            }
-        }
-        map!!.invalidate()
-        clearCacheMap()
-        methodChannel.invokeMethod("map#restored", null)
-    }
-
-
-    private fun saveCacheMap() {
-        mapSnapShot().cache(
-            geoPoint = map!!.mapCenter as GeoPoint,
-            zoom = map!!.zoomLevelDouble,
-        )
-    }
-
-    private fun clearCacheMap() {
-        mapSnapShot().reset()
-    }
-
     private fun setZoom(methodCall: MethodCall, result: MethodChannel.Result) {
         val args = methodCall.arguments as HashMap<String, Any>
         when (args.containsKey("stepZoom")) {
@@ -832,12 +699,10 @@ class FlutterOsmView(
         @Suppress("UNCHECKED_CAST") val args = methodCall.arguments!! as HashMap<String, Double>
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
         val zoom = initZoom
-        map!!.controller.setZoom(mapSnapShot().zoomLevel(zoom))
-        map!!.controller.setCenter(mapSnapShot().centerGeoPoint() ?: geoPoint)
+        map!!.controller.setZoom(zoom)
+        map!!.controller.setCenter(geoPoint)
         methodChannel.invokeMethod("map#init", true)
-        scope?.launch {
-            mapSnapShot().cacheLocation(geoPoint, zoom)
-        }
+
         result.success(null)
     }
 
@@ -875,16 +740,7 @@ class FlutterOsmView(
             true -> Anchor(args["iconAnchor"] as HashMap<String, Any>)
             else -> null
         }
-        scope?.launch {
-            mapSnapShot().overlaySnapShotMarker(
-                point = FlutterGeoPoint(
-                    point,
-                    icon = bitmap.toByteArray(), //args["icon"] as ByteArray,
-                    angle = angle,
-                    anchor = anchor,
-                )
-            )
-        }
+        markerIconsCache[point] = bitmap.toByteArray() ?: customMarkerIcon?.toByteArray()
         addMarker(
             point,
             dynamicMarkerBitmap = bitmap,
@@ -907,13 +763,10 @@ class FlutterOsmView(
             bitmap = (args["icon"] as ByteArray).toBitmap()
             scope?.launch {
                 val oldFlutterGeoPoint =
-                    mapSnapShot().markers().firstOrNull { fGeoPoint -> fGeoPoint.geoPoint == point }
-                mapSnapShot().overlaySnapShotMarker(
-                    point = oldFlutterGeoPoint!!.copy(
-                        geoPoint = point,
-                        icon = args["icon"] as ByteArray
-                    )
-                )
+                    markerIconsCache.asSequence()
+                        .firstOrNull { fGeoPoint -> fGeoPoint.key == point }
+                markerIconsCache[point] = args["icon"] as ByteArray
+
             }
         }
         val marker: FlutterMarker? =
@@ -970,21 +823,15 @@ class FlutterOsmView(
         }
         val icon = when (args.containsKey("new_icon")) {
             true -> args["new_icon"] as ByteArray
-            else -> mapSnapShot().markers()
-                .first { p -> p.geoPoint == oldLocation }.icon as ByteArray
+            else -> markerIconsCache.asSequence().first {
+                it.key == oldLocation
+            }.value
         }.let { byteArray ->
             scope?.launch {
-                mapSnapShot().overlaySnapShotMarker(
-                    point = FlutterGeoPoint(
-                        geoPoint = newLocation,
-                        icon = byteArray,
-                        angle = angle,
-                        anchor = anchor
-                    ),
-                    oldPoint = oldLocation,
-                )
+                markerIconsCache[newLocation] = byteArray
+                markerIconsCache.remove(oldLocation)
             }
-            val bitmap = byteArray.toBitmap()
+            val bitmap = byteArray?.toBitmap()
             bitmap
         }
 
@@ -1093,7 +940,6 @@ class FlutterOsmView(
 
     private fun removeLimitCameraArea(result: MethodChannel.Result) {
         map!!.setScrollableAreaLimitDouble(boundingWorldBox)
-        mapSnapShot().setBoundingWorld(boundingWorldBox)
         result.success(200)
     }
 
@@ -1103,9 +949,7 @@ class FlutterOsmView(
             list[0], list[1], list[2], list[3]
         )
         map!!.setScrollableAreaLimitDouble(box)
-        mapSnapShot().setBoundingWorld(
-            box = box
-        )
+
         result.success(200)
     }
 
@@ -1117,7 +961,7 @@ class FlutterOsmView(
             null,
             (call.arguments as Double?)?.toFloat() ?: 0f
         )
-        mapSnapShot().saveMapOrientation(map!!.mapOrientation)
+
         map!!.invalidate()
         result.success(null)
     }
@@ -1165,16 +1009,13 @@ class FlutterOsmView(
             if (!locationNewOverlay.mIsLocationEnabled) {
                 isEnabled = true
                 locationNewOverlay.enableMyLocation()
-                mapSnapShot().setEnableMyLocation(isEnabled)
+
             }
             locationNewOverlay.useDirectionMarker = useDirectionMarker
             locationNewOverlay.toggleFollow(enableStopFollow)
             when {
                 locationNewOverlay.mIsFollowing -> {
                     isTracking = true
-
-                    mapSnapShot().setTrackLocation(isTracking)
-                    mapSnapShot().setEnableMyLocation(isEnabled)
                     result.success(true)
                 }
 
@@ -1189,8 +1030,6 @@ class FlutterOsmView(
     private fun deactivateTrackMe(result: MethodChannel.Result) {
         isTracking = false
         isEnabled = false
-        mapSnapShot().setTrackLocation(isTracking)
-        mapSnapShot().setEnableMyLocation(isEnabled)
         try {
             locationNewOverlay.useDirectionMarker = false
             locationNewOverlay.onStopLocation()
@@ -1205,8 +1044,8 @@ class FlutterOsmView(
         val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
         val animate = args["animate"] as Boolean? ?: false
         //map!!.controller.zoomTo(defaultZoom)
-        when(animate){
-            true ->map!!.controller.animateTo(geoPoint)
+        when (animate) {
+            true -> map!!.controller.animateTo(geoPoint)
             false -> map!!.controller.setCenter(geoPoint)
         }
 
@@ -1360,7 +1199,6 @@ class FlutterOsmView(
                                     it.position
                                 ))
                             }
-                            mapSnapShot().removeMarkersFromSnapShot(config.wayPoints)
                         }
                         val roadPoints = ArrayList(config.wayPoints)
                         if (config.interestPoints.isNotEmpty()) {
@@ -1384,19 +1222,7 @@ class FlutterOsmView(
                                     roadDistance = road.mLength
                                 )
                                 val instructions = road.mNodes.toRoadInstruction()
-                                mapSnapShot().cacheListRoad(
-                                    RoadSnapShot(
-                                        roadPoints = road.mRouteHigh,
-                                        roadColor = config.roadOption.roadColor,
-                                        roadWidth = config.roadOption.roadWidth,
-                                        roadBorderColor = config.roadOption.roadBorderColor,
-                                        roadBorderWidth = config.roadOption.roadBorderWidth,
-                                        roadID = config.roadID,
-                                        duration = road.mDuration,
-                                        distance = road.mLength,
-                                        instructions = instructions
-                                    )
-                                )
+
                                 resultRoads.add(
                                     road.toMap(
                                         config.roadID, routePointsEncoded, instructions
@@ -1434,7 +1260,6 @@ class FlutterOsmView(
                     road.idRoad == roadKey
                 }
                 if (flutterRoad?.idRoad == roadKey) {
-                    mapSnapShot().clearCachedRoad()
                     flutterRoad = null
                 }
                 folderRoad.items.remove(road)
@@ -1445,7 +1270,6 @@ class FlutterOsmView(
 
             else -> {
                 if (folderRoad.items.isNotEmpty()) {
-                    mapSnapShot().clearCachedRoad()
                     folderRoad.items.clear()
                     map?.invalidate()
                     flutterRoad = null
@@ -1505,19 +1329,7 @@ class FlutterOsmView(
 
                         )
                         instructions = road.mNodes.toRoadInstruction()
-                        mapSnapShot().cacheRoad(
-                            RoadSnapShot(
-                                roadPoints = road.mRouteHigh,
-                                roadColor = roadConfig.roadOption.roadColor ?: Color.GREEN,
-                                roadWidth = roadConfig.roadOption.roadWidth,
-                                roadBorderWidth = roadConfig.roadOption.roadBorderWidth,
-                                roadBorderColor = roadConfig.roadOption.roadBorderColor,
-                                roadID = roadConfig.roadID,
-                                duration = road.mDuration,
-                                distance = road.mLength,
-                                instructions = instructions
-                            )
-                        )
+
                         if (zoomToRegion) {
                             map!!.zoomToBoundingBox(
                                 BoundingBox.fromGeoPoints(road.mRouteHigh),
@@ -1570,19 +1382,7 @@ class FlutterOsmView(
             polyLine = polyLine,
         )
 
-        mapSnapShot().cacheRoad(
-            RoadSnapShot(
-                roadID = roadId,
-                roadPoints = route,
-                roadColor = roadColor,
-                roadBorderColor = roadColor,
-                roadWidth = roadWidth,
-                roadBorderWidth = roadWidth,
-                duration = 0.0,
-                distance = 0.0,
-                instructions = emptyList()
-            )
-        )
+
         if (zoomToRegion) {
             map!!.zoomToBoundingBox(
                 BoundingBox.fromGeoPoints(polyLine.actualPoints),
@@ -1640,11 +1440,11 @@ class FlutterOsmView(
             val bitmap = bytes.toBitmap()
             val refresh = hashMap["refresh"] as Boolean
             staticMarkerIcon[key] = bitmap
-            mapSnapShot().addToIconsStaticGeoPoints(key, bytes)
+
             scope?.launch {
                 if (staticPoints.containsKey(key) && refresh) {
                     showStaticPosition(
-                        key, mapSnapShot().staticGeoPoints()[key]!!.second
+                        key,
                     )
                 }
             }
@@ -1661,14 +1461,14 @@ class FlutterOsmView(
         val args = call.arguments as HashMap<String, Any>
         val id = args["id"] as String?
         val points = args["point"] as MutableList<HashMap<String, Double>>?
-        val geoPoints: MutableList<GeoPoint> = emptyList<GeoPoint>().toMutableList()
-        val angleGeoPoints: MutableList<Double> = emptyList<Double>().toMutableList()
-        for (hashMap in points!!) {
-            geoPoints.add(GeoPoint(hashMap["lat"]!!, hashMap["lon"]!!))
-            when (hashMap.containsKey("angle")) {
-                true -> angleGeoPoints.add(hashMap["angle"] ?: 0.0)
-                else -> angleGeoPoints.add(0.0)
+        val geoPoints: MutableList<FlutterGeoPoint> = mutableListOf()
+        for (geoPointMap in points!!) {
+            val geoPoint = GeoPoint(geoPointMap["lat"]!!, geoPointMap["lon"]!!)
+            val angle = when (geoPointMap.containsKey("angle")) {
+                true -> geoPointMap["angle"] ?: 0.0
+                else -> 0.0
             }
+            geoPoints.add(FlutterGeoPoint(geoPoint, angle))
         }
         if (staticPoints.containsKey(id)) {
             Log.e(id, "" + points.size)
@@ -1681,15 +1481,8 @@ class FlutterOsmView(
         } else {
             staticPoints[id!!] = geoPoints
         }
-        showStaticPosition(id!!, angleGeoPoints.toList())
-        scope?.launch {
-            mapSnapShot().addToStaticGeoPoints(
-                id, Pair(
-                    geoPoints.toList(),
-                    angleGeoPoints.toList(),
-                )
-            )
-        }
+        showStaticPosition(id!!)
+
         result.success(null)
     }
 
@@ -1720,9 +1513,9 @@ class FlutterOsmView(
         if (geoMarkers.isNotEmpty()) {
             folderMarkers.items.removeAll(geoMarkers)
             scope?.launch {
-                mapSnapShot().removeMarkersFromSnapShot(removedPoints = geoMarkers.map {
-                    it.position
-                })
+                geoMarkers.forEach {
+                    markerIconsCache.remove(it.position)
+                }
             }
             map!!.overlays.remove(folderMarkers)
             map!!.overlays.add(folderMarkers)
@@ -1731,7 +1524,7 @@ class FlutterOsmView(
 
     }
 
-    private fun showStaticPosition(idStaticPosition: String, angles: List<Double> = emptyList()) {
+    private fun showStaticPosition(idStaticPosition: String) {
 
         var overlay: FolderOverlay? = folderStaticPosition.items.firstOrNull {
             (it as FolderOverlay).name?.equals(idStaticPosition) == true
@@ -1749,7 +1542,7 @@ class FlutterOsmView(
 
         staticPoints[idStaticPosition]?.forEachIndexed { index, geoPoint ->
             val marker = FlutterMarker(context, map!!, scope)
-            marker.position = geoPoint
+            marker.position = geoPoint.geoPoint
 
             marker.defaultInfoWindow()
             marker.visibilityInfoWindow(visibilityInfoWindow)
@@ -1762,10 +1555,7 @@ class FlutterOsmView(
             }
             if (staticMarkerIcon.isNotEmpty() && staticMarkerIcon.containsKey(idStaticPosition)) {
                 marker.setIconMaker(
-                    null, staticMarkerIcon[idStaticPosition], angle = when (angles.isNotEmpty()) {
-                        true -> angles[index]
-                        else -> 0.0
-                    }
+                    null, staticMarkerIcon[idStaticPosition], angle = geoPoint.angle
                 )
             } else {
                 marker.setIconMaker(null, null)
@@ -1773,8 +1563,7 @@ class FlutterOsmView(
             overlay.add(marker)
         }
         folderStaticPosition.add(overlay)
-        if (!mapSnapShot().advancedPicker()) {
-            map!!.overlays.remove(folderStaticPosition)
+        if (!map!!.overlays.contains(folderStaticPosition)) {
             map!!.overlays.add(folderStaticPosition)
         }
         map!!.invalidate()
@@ -1910,9 +1699,6 @@ class FlutterOsmView(
         locationNewOverlay.onDestroy()
         FlutterOsmPlugin.pluginBinding!!.removeActivityResultListener(this)
         mainLinearLayout.removeAllViews()
-
-        removeCurrentCache()
-
         //map!!.onDetach()
         methodChannel.setMethodCallHandler(null)
 
@@ -1924,24 +1710,6 @@ class FlutterOsmView(
 
     }
 
-
-    private fun resetLastGeoPointPosition(mapSnapShot: MapSnapShot) {
-        scope?.launch {
-            withContext(Default) {
-                mapSnapShot.staticGeoPointsIcons().forEach { (key, icon) ->
-                    staticMarkerIcon[key] = icon.toBitmap()
-                }
-            }
-            mapSnapShot.staticGeoPoints().forEach { staticPoint ->
-                staticPoints[staticPoint.key] = staticPoint.value.first.toMutableList()
-                withContext(Main) {
-                    showStaticPosition(
-                        staticPoint.key, staticPoint.value.second.toList()
-                    )
-                }
-            }
-        }
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         when (requestCode) {

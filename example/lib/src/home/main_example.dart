@@ -9,15 +9,17 @@ class MainPageExample extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Main(),
+      body: const Main(),
       drawer: PointerInterceptor(
-        child: DrawerMain(),
+        child: const DrawerMain(),
       ),
     );
   }
 }
 
 class Main extends StatefulWidget {
+  const Main({super.key});
+
   @override
   State<StatefulWidget> createState() => _MainState();
 }
@@ -29,6 +31,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
   ValueNotifier<bool> disableMapControlUserTracking = ValueNotifier(true);
   ValueNotifier<IconData> userLocationIcon = ValueNotifier(Icons.near_me);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
+  List<GeoPoint> geos = [];
   ValueNotifier<GeoPoint?> userLocationNotifier = ValueNotifier(null);
   final mapKey = GlobalKey();
 
@@ -36,7 +39,8 @@ class _MainState extends State<Main> with OSMMixinObserver {
   void initState() {
     super.initState();
     controller = MapController(
-      initPosition: GeoPoint(
+      initPosition: 
+      GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
       ),
@@ -66,15 +70,27 @@ class _MainState extends State<Main> with OSMMixinObserver {
     super.onSingleTap(position);
     Future.microtask(() async {
       if (lastGeoPoint.value != null) {
-        await controller.changeLocationMarker(
-          oldLocation: lastGeoPoint.value!,
-          newLocation: position,
-          //iconAnchor: IconAnchor(anchor: Anchor.top),
+        // await controller.changeLocationMarker(
+        //   oldLocation: lastGeoPoint.value!,
+        //   newLocation: position,
+        //   //iconAnchor: IconAnchor(anchor: Anchor.top),
+        // );
+        //controller.removeMarker(lastGeoPoint.value!);
+        await controller.addMarker(
+          position,
+          markerIcon: const MarkerIcon(
+            icon: Icon(
+              Icons.person_pin,
+              color: Colors.red,
+              size: 32,
+            ),
+          ),
+          //angle: userLocation.angle,
         );
       } else {
         await controller.addMarker(
           position,
-          markerIcon: MarkerIcon(
+          markerIcon: const MarkerIcon(
             icon: Icon(
               Icons.person_pin,
               color: Colors.red,
@@ -88,8 +104,9 @@ class _MainState extends State<Main> with OSMMixinObserver {
           //angle: -pi / 4,
         );
       }
-      await controller.moveTo(position, animate: true);
+      //await controller.moveTo(position, animate: true);
       lastGeoPoint.value = position;
+      geos.add(position);
     });
   }
 
@@ -118,7 +135,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
       if (userLocationNotifier.value == null) {
         await controller.addMarker(
           userLocation,
-          markerIcon: MarkerIcon(
+          markerIcon: const MarkerIcon(
             icon: Icon(Icons.navigation),
           ),
           angle: userLocation.angle,
@@ -139,10 +156,6 @@ class _MainState extends State<Main> with OSMMixinObserver {
     }
   }
 
-  @override
-  void onRoadTap(RoadInfo road) {
-    super.onRoadTap(road);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +179,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
             valueListenable: showFab,
             builder: (context, isVisible, child) {
               if (!isVisible) {
-                return SizedBox.shrink();
+                return const SizedBox.shrink();
               }
               return Stack(
                 children: [
@@ -183,7 +196,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
                     top: kIsWeb ? 26 : topPadding ?? 26.0,
                     left: 12,
                     child: PointerInterceptor(
-                      child: MainNavigation(),
+                      child: const MainNavigation(),
                     ),
                   ),
                   Positioned(
@@ -194,6 +207,19 @@ class _MainState extends State<Main> with OSMMixinObserver {
                       trackingNotifier: trackingNotifier,
                       userLocation: userLocationNotifier,
                       userLocationIcon: userLocationIcon,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 148,
+                    right: 15,
+                    child: IconButton(
+                      onPressed: () async {
+                        Future.forEach(geos, (element) async {
+                          await controller.removeMarker(element);
+                          await Future.delayed(const Duration(milliseconds: 100));
+                        });
+                      },
+                      icon: const Icon(Icons.clear_all),
                     ),
                   ),
                   Positioned(
@@ -235,15 +261,15 @@ class ZoomNavigation extends StatelessWidget {
         PointerInterceptor(
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              maximumSize: Size(48, 48),
-              minimumSize: Size(24, 32),
+              maximumSize: const Size(48, 48),
+              minimumSize: const Size(24, 32),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               backgroundColor: Colors.white,
               padding: EdgeInsets.zero,
             ),
-            child: Center(
+            child: const Center(
               child: Icon(Icons.add),
             ),
             onPressed: () async {
@@ -251,21 +277,21 @@ class ZoomNavigation extends StatelessWidget {
             },
           ),
         ),
-        SizedBox(
+        const SizedBox(
           height: 16,
         ),
         PointerInterceptor(
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              maximumSize: Size(48, 48),
-              minimumSize: Size(24, 32),
+              maximumSize: const Size(48, 48),
+              minimumSize: const Size(24, 32),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               backgroundColor: Colors.white,
               padding: EdgeInsets.zero,
             ),
-            child: Center(
+            child: const Center(
               child: Icon(Icons.remove),
             ),
             onPressed: () async {
@@ -299,6 +325,7 @@ class MapRotation extends HookWidget {
       heroTag: "RotationMapFab",
       elevation: 1,
       mini: true,
+      backgroundColor: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: ValueListenableBuilder(
@@ -306,19 +333,20 @@ class MapRotation extends HookWidget {
           builder: (ctx, angle, child) {
             return AnimatedRotation(
               turns: angle == 0 ? 0 : 360 / angle,
-              duration: Duration(milliseconds: 250),
+              duration: const Duration(milliseconds: 250),
               child: child!,
             );
           },
           child: Image.asset("asset/compass.png"),
         ),
       ),
-      backgroundColor: Colors.white,
     );
   }
 }
 
 class MainNavigation extends StatelessWidget {
+  const MainNavigation({super.key});
+
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
@@ -328,13 +356,15 @@ class MainNavigation extends StatelessWidget {
       },
       heroTag: "MainMenuFab",
       mini: true,
-      child: Icon(Icons.menu),
       backgroundColor: Colors.white,
+      child: const Icon(Icons.menu),
     );
   }
 }
 
 class DrawerMain extends StatelessWidget {
+  const DrawerMain({super.key});
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -347,18 +377,18 @@ class DrawerMain extends StatelessWidget {
             SizedBox(height: MediaQuery.viewPaddingOf(context).top),
             ListTile(
               onTap: () {},
-              title: Text("search example"),
+              title: const Text("search example"),
             ),
             ListTile(
               onTap: () {},
-              title: Text("map with hook example"),
+              title: const Text("map with hook example"),
             ),
             ListTile(
               onTap: () async {
                 Scaffold.of(context).closeDrawer();
                 await Navigator.pushNamed(context, '/old-home');
               },
-              title: Text("old home example"),
+              title: const Text("old home example"),
             )
           ],
         ),
@@ -377,15 +407,15 @@ class Map extends StatelessWidget {
   Widget build(BuildContext context) {
     return OSMFlutter(
       controller: controller,
-      mapIsLoading: Center(
-        child: CircularProgressIndicator(),
-      ),
+      // mapIsLoading: Center(
+      //   child: CircularProgressIndicator(),
+      // ),
       onLocationChanged: (location) {
         debugPrint(location.toString());
       },
       osmOption: OSMOption(
         enableRotationByGesture: true,
-        zoomOption: ZoomOption(
+        zoomOption: const ZoomOption(
           initZoom: 16,
           minZoomLevel: 3,
           maxZoomLevel: 19,
@@ -420,7 +450,7 @@ class Map extends StatelessWidget {
               //   scaleAssetImage: 0.3,
               // ),
             ),
-            directionArrowMarker: MarkerIcon(
+            directionArrowMarker: const MarkerIcon(
               icon: Icon(
                 Icons.navigation_rounded,
                 size: 48,
@@ -446,7 +476,7 @@ class Map extends StatelessWidget {
         staticPoints: [
           StaticPositionGeoPoint(
             "line 1",
-            MarkerIcon(
+            const MarkerIcon(
               icon: Icon(
                 Icons.train,
                 color: Colors.green,
@@ -464,24 +494,8 @@ class Map extends StatelessWidget {
               ),
             ],
           ),
-          /*
-           StaticPositionGeoPoint(
-                      "line 2",
-                      MarkerIcon(
-                        icon: Icon(
-                          Icons.train,
-                          color: Colors.red,
-                          size: 48,
-                        ),
-                      ),
-                      [
-                        GeoPoint(latitude: 47.4433594, longitude: 8.4680184),
-                        GeoPoint(latitude: 47.4517782, longitude: 8.4716146),
-                      ],
-            )
-          */
         ],
-        roadConfiguration: RoadOption(
+        roadConfiguration: const RoadOption(
           roadColor: Colors.blueAccent,
         ),
         showContributorBadgeForOSM: true,
@@ -493,9 +507,11 @@ class Map extends StatelessWidget {
 }
 
 class SearchLocation extends StatelessWidget {
+  const SearchLocation({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return TextField();
+    return const TextField();
   }
 }
 
@@ -566,7 +582,7 @@ class ActivationUserLocation extends StatelessWidget {
                   },
                 );
               }
-              return Icon(Icons.near_me);
+              return const Icon(Icons.near_me);
             },
           ),
         ),
@@ -592,7 +608,7 @@ class DirectionRouteLocation extends StatelessWidget {
         heroTag: "directionFab",
         backgroundColor: Colors.blue,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Icon(
+        child: const Icon(
           Icons.directions,
           color: Colors.white,
         ),
@@ -636,14 +652,14 @@ class _SearchInMapState extends State<SearchInMap> {
       child: Card(
         color: Colors.white,
         elevation: 2,
-        shape: StadiumBorder(),
+        shape: const StadiumBorder(),
         child: TextField(
           controller: textController,
           onTap: () {},
           maxLines: 1,
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             contentPadding: EdgeInsets.zero,
             filled: false,
             isDense: true,

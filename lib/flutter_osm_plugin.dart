@@ -17,3 +17,5 @@ export 'src/widgets/copyright_osm_widget.dart';
 export 'src/widgets/custom_picker_location.dart';
 export 'src/widgets/picker_location.dart';
 export 'src/common/osm_option.dart';
+export 'src/widgets/static_osm.dart';
+export 'src/controller/simple_map_controller.dart';
