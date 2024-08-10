@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 import 'package:flutter_osm_web/src/controller/web_osm_controller.dart';
-import 'package:flutter_osm_web/src/mixin_web.dart';
 
 class OsmWebWidget extends StatefulWidget {
   final BaseMapController controller;
@@ -27,8 +26,8 @@ class OsmWebWidget extends StatefulWidget {
   final Function(bool)? onMapIsReady;
   final UserLocationMaker? userLocationMarker;
   final bool isStatic;
-  OsmWebWidget({
-    Key? key,
+  const OsmWebWidget({
+    super.key,
     required this.controller,
     this.userTrackingOption,
     this.onGeoPointClicked,
@@ -50,7 +49,7 @@ class OsmWebWidget extends StatefulWidget {
     this.onMapIsReady,
     this.userLocationMarker,
     this.isStatic = false,
-  }) : super(key: key);
+  });
 
   @override
   OsmWebWidgetState createState() => OsmWebWidgetState();

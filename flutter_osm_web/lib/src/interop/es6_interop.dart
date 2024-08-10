@@ -1,7 +1,7 @@
 @JS()
 library es6_interop;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
 @JS('Promise')
 class PromiseJsImpl<T> {

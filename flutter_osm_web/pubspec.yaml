@@ -4,7 +4,7 @@ version: 1.1.0
 homepage: https://github.com/liodali/osm_flutter
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.5.0 <4.0.0"
   flutter: ">=1.20.0"
 
 dependencies:
@@ -12,12 +12,12 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
-  js: ^0.7.1
-  web: ^0.5.1
+  #js: ^0.7.1
+  web: ^1.0.0
   stream_transform: ^2.1.0
   routing_client_dart: ^0.5.5
-  flutter_osm_interface: ^1.1.0
-    #path: ../flutter_osm_interface/
+  flutter_osm_interface: #^1.1.0
+    path: ../flutter_osm_interface/
 dev_dependencies:
   flutter_test:
     sdk: flutter

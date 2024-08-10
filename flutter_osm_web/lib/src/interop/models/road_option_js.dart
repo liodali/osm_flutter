@@ -1,16 +1,16 @@
 @JS()
 library osm_interop;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
 @JS()
 @anonymous
-class RoadOptionJS {
-  external String get roadColor;
-  external int get roadWidth;
-  external bool get zoomInto;
-  external String? get roadBorderColor;
-  external double get roadBorderWidth;
+extension type RoadOptionJS._(JSObject _) implements JSObject {
+  external String roadColor;
+  external int roadWidth;
+  external bool zoomInto;
+  external String? roadBorderColor;
+  external double roadBorderWidth;
 
   external factory RoadOptionJS({
     required String roadColor,

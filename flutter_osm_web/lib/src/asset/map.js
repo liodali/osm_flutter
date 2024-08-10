@@ -36,8 +36,10 @@ async function modifyMarker(mapId,point, icon) {
 
 async function initMapLocation(mapId,point) {
    console.log(point.lon + ":" + point.lat)
+   console.log(mapId)
    var iframe = getIframe(mapId);
    await iframe.contentWindow.initMapLocation(point);
+   return 200;
 }
 
 async function setDefaultIcon(mapId,icon) {
@@ -213,8 +215,10 @@ async function removeControls(mapId) {
    return await iframe.contentWindow.removeControls();
 }
 function setUpMap(mapId){
+
    const osmJS = new OSMJS(mapId);
    osmLinks.set(mapId,osmJS);
+   console.log("setUpMap in js"+ mapId)
    console.log("getIframe")
    var innerWindow = getIframe(mapId).contentWindow;
    innerWindow.isMapReady = (isReady)=>{

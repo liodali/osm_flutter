@@ -1,16 +1,14 @@
 import 'dart:convert';
-import 'dart:html' as html;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
 import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
 import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
-import 'package:js/js_util.dart';
+import 'dart:js_interop';
 import 'package:routing_client_dart/routing_client_dart.dart' as routing;
 
 import 'common/extensions.dart';
-import 'interop/osm_interop.dart' as interop hide initMapFinish;
+import 'interop/osm_interop.dart' as interop;
 import 'osm_web.dart';
 
 mixin WebMixin {
@@ -22,35 +20,37 @@ mixin WebMixin {
   Map<String, RoadInfo> roadsWebCache = {};
 
   Future<void> initLocationMap(GeoPoint p) async {
-    await promiseToFuture(interop.initMapLocation(mapIdMixin, p.toGeoJS()));
+    await interop.initMapLocation(mapIdMixin.toJS, p.toGeoJS()).toDart;
   }
 
   Future<void> changeTileLayer({CustomTile? tileLayer}) async {
     final urls = tileLayer?.urlsServers.first.toWeb();
-    await promiseToFuture(
-      interop.changeTileLayer(
-        mapIdMixin,
-        tileLayer != null && urls != null && urls.isNotEmpty
-            ? CustomTileJs(
-                url: urls.first,
-                subDomains: urls.last,
-                apiKey: tileLayer.keyApi != null
-                    ? '?${tileLayer.keyApi!.key}=${tileLayer.keyApi!.value}'
-                    : '',
-                maxZoom: tileLayer.maxZoomLevel,
-                minZoom: tileLayer.minZoomLevel,
-                tileExtension: tileLayer.tileExtension,
-                tileSize: tileLayer.tileSize,
-              )
-            : null,
-      ),
-    );
+    await interop
+        .changeTileLayer(
+          mapIdMixin.toJS,
+          tileLayer != null && urls != null && urls.isNotEmpty
+              ? CustomTileJs(
+                  url: urls.first,
+                  subDomains: urls.last,
+                  apiKey: tileLayer.keyApi != null
+                      ? '?${tileLayer.keyApi!.key}=${tileLayer.keyApi!.value}'
+                      : '',
+                  maxZoom: tileLayer.maxZoomLevel,
+                  minZoom: tileLayer.minZoomLevel,
+                  tileExtension: tileLayer.tileExtension,
+                  tileSize: tileLayer.tileSize,
+                )
+              : null,
+        )
+        .toDart;
   }
 
   Future<void> currentLocation() async {
-    await interop.currentUserLocation(
-      mapIdMixin,
-    );
+    await interop
+        .currentUserLocation(
+          mapIdMixin.toJS,
+        )
+        .toDart;
   }
 
   Future<void> changeLocation(GeoPoint p) async {
@@ -62,17 +62,19 @@ mixin WebMixin {
   }
 
   Future<void> disabledTracking() async {
-    await interop.disableTracking(
-      mapIdMixin,
-    );
+    await interop
+        .disableTracking(
+          mapIdMixin.toJS,
+        )
+        .toDart;
   }
 
   Future<void> startLocationUpdating() async {
-    await interop.startLocationUpdating(mapIdMixin);
+    await interop.startLocationUpdating(mapIdMixin.toJS).toDart;
   }
 
   Future<void> stopLocationUpdating() async {
-    await interop.stopLocationUpdating(mapIdMixin);
+    await interop.stopLocationUpdating(mapIdMixin.toJS).toDart;
   }
 
   Future<void> drawCircle(CircleOSM circleOSM) async {
@@ -86,12 +88,12 @@ mixin WebMixin {
       opacityFilled: opacity,
       strokeWidth: circleOSM.strokeWidth,
     );
-    await promiseToFuture(
-      interop.drawCircle(
-        mapIdMixin,
-        shapeConfig,
-      ),
-    );
+    await interop
+        .drawCircle(
+          mapIdMixin.toJS,
+          shapeConfig,
+        )
+        .toDart;
   }
 
   Future<void> drawRect(RectOSM rectOSM) async {
@@ -108,11 +110,13 @@ mixin WebMixin {
       opacityFilled: opacity,
       borderColor: rectOSM.borderColor?.toHexColor(),
     );
-    await promiseToFuture(interop.drawRect(
-      mapIdMixin,
-      shapeConfig,
-      rect.map((e) => e.toGeoJS()).toList(),
-    ));
+    await interop
+        .drawRect(
+          mapIdMixin.toJS,
+          shapeConfig,
+          rect.map((e) => e.toGeoJS()).toList().toJS,
+        )
+        .toDart;
   }
 
   Future<void> enableTracking({
@@ -121,16 +125,18 @@ mixin WebMixin {
     Anchor anchor = Anchor.center,
     bool useDirectionMarker = false,
   }) async {
-    await interop.enableTracking(
-      mapIdMixin,
-      enableStopFollow,
-      useDirectionMarker,
-      IconAnchorJS(
-        x: anchor.value.$1,
-        y: anchor.value.$2,
-      ),
-      //anchor.toPlatformMap(),
-    );
+    await interop
+        .enableTracking(
+          mapIdMixin.toJS,
+          enableStopFollow.toJS,
+          useDirectionMarker.toJS,
+          IconAnchorJS(
+            x: anchor.value.$1,
+            y: anchor.value.$2,
+          ),
+          //anchor.toPlatformMap(),
+        )
+        .toDart;
   }
 
   Future<void> goToPosition(
@@ -148,10 +154,8 @@ mixin WebMixin {
   }
 
   Future<GeoPoint> myLocation() async {
-    Map<String, dynamic>? value =
-        await html.promiseToFutureAsMap(interop.locateMe(
-      mapIdMixin,
-    ));
+    final locateResp = await interop.locateMe(mapIdMixin.toJS).toDart;
+    Map<String, dynamic>? value = locateResp.dartify() as Map<String, dynamic>?;
     if (value!.containsKey("error")) {
       throw Exception(value["message"]);
     }
@@ -159,28 +163,28 @@ mixin WebMixin {
   }
 
   Future<void> removeAllCircle() async {
-    promiseToFuture(interop.removeAllCircle(mapIdMixin));
+    interop.removeAllCircle(mapIdMixin.toJS).toDart;
   }
 
   Future<void> removeAllRect() async {
-    promiseToFuture(interop.removeAllRect(mapIdMixin));
+    interop.removeAllRect(mapIdMixin.toJS).toDart;
   }
 
   Future<void> removeAllShapes() async {
-    promiseToFuture(interop.removeAllShapes(mapIdMixin));
+    interop.removeAllShapes(mapIdMixin.toJS).toDart;
   }
 
   Future<void> removeCircle(String key) async {
-    await promiseToFuture(interop.removePath(mapIdMixin, key));
+    await interop.removePath(mapIdMixin.toJS, key.toJS).toDart;
   }
 
   Future<void> removeLastRoad() async {
-    await promiseToFuture(interop.removeLastRoad(mapIdMixin));
+    await interop.removeLastRoad(mapIdMixin.toJS).toDart;
     roadsWebCache.remove(roadsWebCache.keys.last);
   }
 
   Future<void> removeMarker(GeoPoint p) async {
-    interop.removeMarker(mapIdMixin, p.toGeoJS());
+    interop.removeMarker(mapIdMixin.toJS, p.toGeoJS());
   }
 
   Future<void> removeMarkers(
@@ -194,74 +198,90 @@ mixin WebMixin {
   }
 
   Future<void> removeRect(String key) async {
-    await promiseToFuture(interop.removePath(mapIdMixin, key));
+    await interop.removePath(mapIdMixin.toJS, key.toJS).toDart;
   }
 
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
     var listWithoutOrientation =
         geoPoints.skipWhile((p) => p is GeoPointWithOrientation).toList();
     if (listWithoutOrientation.isNotEmpty) {
-      await interop.setStaticGeoPoints(
-        mapIdMixin,
-        id,
-        listWithoutOrientation.map((point) => point.toGeoJS()).toList(),
-      );
+      await interop
+          .setStaticGeoPoints(
+            mapIdMixin.toJS,
+            id.toJS,
+            listWithoutOrientation
+                .map((point) => point.toGeoJS())
+                .toList()
+                .toJS,
+          )
+          .toDart;
     }
     if (listWithoutOrientation.length != geoPoints.length) {
       List<GeoPointWithOrientation> listOrientation =
           geoPoints.whereType<GeoPointWithOrientation>().toList();
       if (listOrientation.isNotEmpty) {
-        await interop.setStaticGeoPointsWithOrientation(
-          mapIdMixin,
-          id,
-          listOrientation.map((point) => point.toGeoJS()).toList(),
-        );
+        await interop
+            .setStaticGeoPointsWithOrientation(
+              mapIdMixin.toJS,
+              id.toJS,
+              listOrientation.map((point) => point.toGeoJS()).toList().toJS,
+            )
+            .toDart;
       }
     }
   }
 
   Future<void> zoomIn() async {
-    await interop.zoomIn(
-      mapIdMixin,
-    );
+    await interop
+        .zoomIn(
+          mapIdMixin.toJS,
+        )
+        .toDart;
   }
 
   Future<void> zoomOut() async {
-    await interop.zoomOut(
-      mapIdMixin,
-    );
+    await interop
+        .zoomOut(
+          mapIdMixin.toJS,
+        )
+        .toDart;
   }
 
   Future<double> getZoom() async {
-    return await promiseToFuture(interop.getZoom());
+    return (await interop.getZoom().toDart).toDartDouble;
   }
 
   Future<void> limitArea(BoundingBox box) async {
-    await interop.limitArea(mapIdMixin, box.toBoundsJS());
+    await interop.limitArea(mapIdMixin.toJS, box.toBoundsJS()).toDart;
   }
 
   Future<void> removeLimitArea() async {
-    await interop.limitArea(mapIdMixin, BoundingBox.world().toBoundsJS());
+    await interop
+        .limitArea(
+          mapIdMixin.toJS,
+          const BoundingBox.world().toBoundsJS(),
+        )
+        .toDart;
   }
 
   Future<void> setMaximumZoomLevel(double maxZoom) async {
-    await interop.setMaxZoomLevel(mapIdMixin, maxZoom);
+    await interop.setMaxZoomLevel(mapIdMixin.toJS, maxZoom.toJS).toDart;
   }
 
   Future<void> setMinimumZoomLevel(double minZoom) async {
-    await interop.setMinZoomLevel(mapIdMixin, minZoom);
+    await interop.setMinZoomLevel(mapIdMixin.toJS, minZoom.toJS).toDart;
   }
 
   Future<void> setStepZoom(int stepZoom) async {
-    await interop.setZoomStep(mapIdMixin, stepZoom.toDouble());
+    await interop.setZoomStep(mapIdMixin.toJS, stepZoom.toDouble().toJS).toDart;
   }
 
   Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
     assert(zoomLevel != null || stepZoom != null);
     if (zoomLevel != null) {
-      await interop.setZoom(mapIdMixin, zoomLevel);
+      await interop.setZoom(mapIdMixin.toJS, zoomLevel.toJS).toDart;
     } else if (stepZoom != null) {
-      await interop.setZoomStep(mapIdMixin, stepZoom);
+      await interop.setZoomStep(mapIdMixin.toJS, stepZoom.toJS).toDart;
     }
   }
 
@@ -288,17 +308,19 @@ mixin WebMixin {
     debugPrint((roadOption?.roadBorderColor ?? Colors.green).toHexColor());
     var roadInfo = RoadInfo();
     interop.drawRoad(
-      mapIdMixin,
-      roadInfo.key,
-      routeJs,
+      mapIdMixin.toJS,
+      roadInfo.key.toJS,
+      routeJs.toJS,
       ((roadOption ?? defaultRoadOption)?.roadColor ?? Colors.green)
-          .toHexColor(),
-      ((roadOption ?? defaultRoadOption)?.roadWidth ?? 5.0).toDouble(),
-      (roadOption ?? defaultRoadOption)?.zoomInto ?? true,
+          .toHexColor()
+          .toJS,
+      ((roadOption ?? defaultRoadOption)?.roadWidth ?? 5.0).toDouble().toJS,
+      ((roadOption ?? defaultRoadOption)?.zoomInto ?? true).toJS,
       ((roadOption ?? defaultRoadOption)?.roadBorderColor ?? Colors.green)
-          .toHexColor(),
-      (roadOption ?? defaultRoadOption)?.roadBorderWidth ?? 0,
-      interestPoints?.toListGeoPointJs() ?? [],
+          .toHexColor()
+          .toJS,
+      ((roadOption ?? defaultRoadOption)?.roadBorderWidth ?? 0).toJS,
+      (interestPoints?.toListGeoPointJs() ?? []).toJS,
       null,
     );
     final instructions = await manager.buildInstructions(road);
@@ -325,15 +347,15 @@ mixin WebMixin {
     final routeJs = path.toListGeoPointJs();
 
     interop.drawRoad(
-      mapIdMixin,
-      roadKey,
-      routeJs,
-      roadOption.roadColor.toHexColor(),
-      roadOption.roadWidth.toDouble(),
-      roadOption.zoomInto,
-      (roadOption.roadBorderColor ?? Colors.green).toHexColor(),
-      roadOption.roadBorderWidth?.toDouble() ?? 0,
-      [],
+      mapIdMixin.toJS,
+      roadKey.toJS,
+      routeJs.toJS,
+      roadOption.roadColor.toHexColor().toJS,
+      roadOption.roadWidth.toDouble().toJS,
+      roadOption.zoomInto.toJS,
+      (roadOption.roadBorderColor ?? Colors.green).toHexColor().toJS,
+      (roadOption.roadBorderWidth?.toDouble() ?? 0).toJS,
+      <GeoPointJs>[].toJS,
       null,
     );
 
@@ -344,12 +366,12 @@ mixin WebMixin {
   }
 
   Future<void> clearAllRoads() async {
-    await promiseToFuture(interop.clearAllRoads(mapIdMixin));
+    await interop.clearAllRoads(mapIdMixin.toJS).toDart;
     roadsWebCache.clear();
   }
 
   Future<void> removeRoad({required String roadKey}) async {
-    await promiseToFuture(interop.removeRoad(mapIdMixin, roadKey));
+    await interop.removeRoad(mapIdMixin.toJS, roadKey.toJS).toDart;
     roadsWebCache.remove(roadKey);
   }
 
@@ -381,13 +403,15 @@ mixin WebMixin {
     double stepZoom,
     double initZoom,
   ) async {
-    await interop.configZoom(
-      mapIdMixin,
-      stepZoom,
-      initZoom,
-      minZoomLevel,
-      maxZoomLevel,
-    );
+    await interop
+        .configZoom(
+          mapIdMixin.toJS,
+          stepZoom.toJS,
+          initZoom.toJS,
+          minZoomLevel.toJS,
+          maxZoomLevel.toJS,
+        )
+        .toDart;
   }
 
   Future<void> _addPosition(
@@ -396,12 +420,14 @@ mixin WebMixin {
     bool animate = false,
   }) async {
     //await promiseToFuture();
-    await interop.addPosition(
-      mapIdMixin,
-      point.toGeoJS(),
-      showMarker,
-      animate,
-    );
+    await interop
+        .addPosition(
+          mapIdMixin.toJS,
+          point.toGeoJS(),
+          showMarker.toJS,
+          animate.toJS,
+        )
+        .toDart;
   }
 
   Future<GeoPoint> selectPosition({
@@ -412,9 +438,12 @@ mixin WebMixin {
   }
 
   Future<GeoPoint> getMapCenter() async {
-    final mapCenterPoint = await html.promiseToFutureAsMap(interop.centerMap(
-      mapIdMixin,
-    ));
+    final mapCenterPoint = (await interop
+            .centerMap(
+              mapIdMixin.toJS,
+            )
+            .toDart)
+        .dartify() as Map<String, double>?;
     if (mapCenterPoint == null) {
       throw Exception("web osm : error to get center geopoint");
     }
@@ -422,40 +451,41 @@ mixin WebMixin {
   }
 
   Future<BoundingBox> getBounds() async {
-    final boundingBoxMap = await html.promiseToFutureAsMap(interop.getBounds(
-      mapIdMixin,
-    ));
+    final boundingBoxMap = (await interop.getBounds(mapIdMixin.toJS).toDart)
+        .dartify() as Map<String, double>?;
     if (boundingBoxMap == null) {
       throw Exception("web osm : error to get bounds");
     }
     return BoundingBox.fromMap(Map<String, double>.from(boundingBoxMap));
   }
 
-  Future<void> zoomToBoundingBox(BoundingBox box,
-      {int paddinInPixel = 0}) async {
-    await promiseToFuture(interop.flyToBounds(
-      mapIdMixin,
-      box.toBoundsJS(),
-      paddinInPixel,
-    ));
+  Future<void> zoomToBoundingBox(
+    BoundingBox box, {
+    int paddinInPixel = 0,
+  }) async {
+    await interop
+        .flyToBounds(
+          mapIdMixin.toJS,
+          box.toBoundsJS(),
+          paddinInPixel.toJS,
+        )
+        .toDart;
   }
 
   Future<List<GeoPoint>> geoPoints() async {
-    var map = await html.promiseToFutureAsMap(interop.getGeoPoints(
-      mapIdMixin,
-    ));
-    if (map == null || map["list"] == null) {
-      return [];
-    }
-    map = Map.from(map);
-    final mapGeoPoints = json.decode(map["list"]);
+    var mapJsonJS = await interop
+        .getGeoPoints(
+          mapIdMixin.toJS,
+        )
+        .toDart;
+    final mapGeoPoints = json.decode(mapJsonJS.toDart);
     return (List.castFrom(mapGeoPoints))
         .map((elem) => GeoPoint.fromMap(Map<String, double>.from(elem)))
         .toList();
   }
 
   Future<void> toggleLayer({required bool toggle}) async {
-    await promiseToFuture(interop.toggleAlllayers(mapIdMixin, toggle));
+    await interop.toggleAlllayers(mapIdMixin.toJS, toggle.toJS).toDart;
   }
 }
 
@@ -467,6 +497,6 @@ extension PrivateAccessMixinWeb on WebMixin {
   }
 
   Future<void> removeMapControls() async {
-    await html.promiseToFutureAsMap(interop.removeControls(mapIdMixin));
+    await interop.removeControls(mapIdMixin.toJS).toDart;
   }
 }
