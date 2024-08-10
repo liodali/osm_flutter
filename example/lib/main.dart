@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.light(useMaterial3: true),
-      initialRoute: "/simple",
+      initialRoute: "/home",
       routes: {
         "/home": (context) => const MainPageExample(),
         "/simple": (context) => Scaffold(
