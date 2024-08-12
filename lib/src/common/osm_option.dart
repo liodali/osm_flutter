@@ -12,6 +12,8 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 ///
 /// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
 ///
+/// [markerOption] :  contain marker of geoPoint and customisation of advanced picker marker
+///
 /// [userLocationMarker] : change user marker or direction marker icon in tracking location
 ///
 /// [roadConfiguration] : (RoadConfiguration) set color and icons marker of road
@@ -32,6 +34,7 @@ class OSMOption {
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
     this.userTrackingOption,
+    this.markerOption,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -43,6 +46,7 @@ class OSMOption {
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final UserTrackingOption? userTrackingOption;
+  final MarkerOption? markerOption;
 }
 
 /// [ZoomOption]
@@ -79,9 +83,9 @@ class ZoomOption {
   final double maxZoomLevel;
 
   Map<String, int> get toMap => {
-    "stepZoom":stepZoom.toInt(),
-    "initZoom":initZoom.toInt(),
-    "minZoom":minZoomLevel.toInt(),
-    "maxZoom":maxZoomLevel.toInt(),
-  };
+        "stepZoom": stepZoom.toInt(),
+        "initZoom": initZoom.toInt(),
+        "minZoom": minZoomLevel.toInt(),
+        "maxZoom": maxZoomLevel.toInt(),
+      };
 }
