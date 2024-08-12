@@ -83,9 +83,9 @@ class ZoomOption {
   final double maxZoomLevel;
 
   Map<String, int> get toMap => {
-        "stepZoom": stepZoom.toInt(),
-        "initZoom": initZoom.toInt(),
-        "minZoom": minZoomLevel.toInt(),
-        "maxZoom": maxZoomLevel.toInt(),
-      };
+    "stepZoom":stepZoom.toInt(),
+    "initZoom":initZoom.toInt(),
+    "minZoom":minZoomLevel.toInt(),
+    "maxZoom":maxZoomLevel.toInt(),
+  };
 }
