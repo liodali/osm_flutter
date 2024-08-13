@@ -4,6 +4,7 @@ class Address {
   final String? postcode;
   final String? name;
   final String? street;
+  final String? housenumber;
   final String? city;
   final String? state;
   final String? country;
@@ -11,6 +12,7 @@ class Address {
   Address({
     this.postcode,
     this.street,
+    this.housenumber,
     this.city,
     this.name,
     this.state,
@@ -21,6 +23,7 @@ class Address {
       : this.postcode = data["postcode"],
         this.name = data["name"],
         this.street = data["street"],
+        this.housenumber = data["housenumber"],
         this.city = data["city"],
         this.state = data["state"],
         this.country = data["country"];
