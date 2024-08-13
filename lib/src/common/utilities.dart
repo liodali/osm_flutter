@@ -44,12 +44,13 @@ Future<double> distance2point(GeoPoint p1, GeoPoint p2) async {
 }
 
 Future<List<SearchInfo>> addressSuggestion(String searchText,
-    {int limitInformation = 5}) async {
+    {int limitInformation = 5, String locale = ""}) async {
   Response response = await Dio().get(
     "https://photon.komoot.io/api/",
     queryParameters: {
       "q": searchText,
-      "limit": limitInformation == 0 ? "" : "$limitInformation"
+      "limit": limitInformation == 0 ? "" : "$limitInformation",
+      "lang": locale
     },
   );
   final json = response.data;
