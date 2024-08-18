@@ -1,18 +1,18 @@
 @JS()
 library osm_interop;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
 @JS()
 @anonymous
-class BoundingBoxJs {
-  external double get north;
+extension type BoundingBoxJs._(JSObject _) implements JSObject {
+  external double north;
 
-  external double get east;
+  external double east;
 
-  external double get south;
+  external double south;
 
-  external double get west;
+  external double west;
 
   // Must have an unnamed factory constructor with named arguments.
   external factory BoundingBoxJs({

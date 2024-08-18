@@ -75,7 +75,7 @@
       renderer: L.canvas(),
       zoomControl: false,
     });
-    var OpenStreetMap_Mapnik = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    var OpenStreetMap_Mapnik = L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', {
       attribution: 'Leaflet | Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
       minZoom: 2,
@@ -165,6 +165,7 @@
         mymap.addLayer(mainLayers.get(key))
       })
       removeUnecessaryStaff()
+      return 200;
       //L.polyline([{lat: 8.498037, lng: 47.489106},{lat: 8.537061, lng: 47.412961}],{color:'red'}).addTo(mymap)
     }
 
@@ -243,7 +244,7 @@
           })
         }
       });
-      return { list: JSON.stringify(listGeoPoint) };
+      return JSON.stringify(listGeoPoint);
     }
 
     async function moveToPosition(point, showMarker, animate) {

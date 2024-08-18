@@ -1,5 +1,7 @@
 //import 'dart:html' as html;
 //import 'dart:html';
+import 'dart:js_interop';
+
 import 'package:web/web.dart' as web; // Add
 import 'dart:math';
 import 'dart:ui_web' as ui;
@@ -21,7 +23,7 @@ int mapId = 0;
 final class WebOsmController with WebMixin implements IBaseOSMController {
   late MethodChannel? channel;
   AndroidLifecycleMixin? _androidOSMLifecycle;
-  final Duration duration = Duration(milliseconds: 300);
+  final Duration duration = const Duration(milliseconds: 300);
   FlutterOsmPluginWeb get webPlatform =>
       OSMPlatform.instance as FlutterOsmPluginWeb;
 
@@ -46,6 +48,8 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         ..id = idFrame
         ..src =
             "${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/map.html"
+        ..allow = "cross-origin-anonymous"
+        //..crossOrigin = "anonymous"
         ..style.width = '100%'
         ..style.height = '100%';
       _div.appendChild(_frame!);
@@ -58,10 +62,10 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     OSMPlatform.instance.init(mapIdMixin);
     //mapIdMixin = idMap;
     this.setWidgetState(osmWebFlutterState);
-    channel = MethodChannel('${FlutterOsmPluginWeb.getViewType(mapIdMixin)}');
+    channel = MethodChannel(FlutterOsmPluginWeb.getViewType(mapIdMixin));
     debugPrint("in init _mapId $mapIdMixin");
     if (osmWebFlutterState.widget.isStatic) {
-      Future.delayed(Duration(seconds: 1), () async {
+      Future.delayed(const Duration(seconds: 1), () async {
         await removeMapControls();
       });
     }
@@ -115,7 +119,8 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     UserTrackingOption? userPositionOption,
     bool useExternalTracking = false,
   }) async {
-    interop.setUpMap(mapIdMixin);
+    
+    interop.setUpMap(mapIdMixin.toJS);
     assert((initPosition != null) ^ (userPositionOption != null));
     if (osmWebFlutterState.widget.controller.customTile != null) {
       await changeTileLayer(
@@ -253,11 +258,13 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       final base64Icon =
           (await capturePng(osmWebFlutterState.dynamicMarkerKey!))
               .convertToString();
-      await interop.setIconStaticGeoPoints(
-        mapIdMixin,
-        id,
-        base64Icon,
-      );
+      await interop
+          .setIconStaticGeoPoints(
+            mapIdMixin.toJS,
+            id.toJS,
+            base64Icon.toJS,
+          )
+          .toDart;
     });
   }
 
@@ -268,28 +275,26 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     double? angle,
     IconAnchor? iconAnchor,
   }) async {
-    Widget? icon = markerIcon;
-    if (icon == null) {
-      icon = Icon(
-        Icons.location_on,
-        size: 32,
-        color: Colors.red,
-      );
-    }
+    Widget? icon = markerIcon ??
+        const Icon(
+          Icons.location_on,
+          size: 32,
+          color: Colors.red,
+        );
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
     await Future.delayed(duration, () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
       var sizeIcon = osmWebFlutterState.dynamicMarkerKey!.currentContext?.size;
-      var anchor = null;
+      IconAnchorJS? anchor;
       if (iconAnchor != null) {
         anchor = iconAnchor.toAnchorJS;
       }
       interop.addMarker(
-        mapIdMixin,
+        mapIdMixin.toJS,
         p.toGeoJS(),
         sizeIcon.toSizeJS(),
-        icon.convertToString(),
-        angle != null ? (angle * (180 / pi)) : 0,
+        icon.convertToString().toJS,
+        (angle != null ? (angle * (180 / pi)) : 0).toJS,
         anchor,
       );
     });
@@ -300,11 +305,13 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     GlobalKey key,
   ) async {
     final base64Icon = (await capturePng(key)).convertToString();
-    await interop.setIconStaticGeoPoints(
-      mapIdMixin,
-      id,
-      base64Icon,
-    );
+    await interop
+        .setIconStaticGeoPoints(
+          mapIdMixin.toJS,
+          id.toJS,
+          base64Icon.toJS,
+        )
+        .toDart;
   }
 
   @override
@@ -313,7 +320,9 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     await Future.delayed(duration, () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
       final jsP = point.toGeoJS();
-      await interop.modifyMarker(mapIdMixin, jsP, icon.convertToString());
+      await interop
+          .modifyMarker(mapIdMixin.toJS, jsP, icon.convertToString().toJS)
+          .toDart;
     });
   }
 
@@ -322,7 +331,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     required GeoPoint oldLocation,
     required GeoPoint newLocation,
     MarkerIcon? newMarkerIcon,
-    double? angle = null,
+    double? angle,
     IconAnchor? iconAnchor,
   }) async {
     var duration = 0;
@@ -332,7 +341,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
           newMarkerIcon;
     }
     await Future.delayed(Duration(milliseconds: duration), () async {
-      var icon = null;
+      String? icon;
       SizeJs? iconSize;
       if (newMarkerIcon != null) {
         final iconPNG = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
@@ -340,15 +349,17 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         final size = osmWebFlutterState.dynamicMarkerKey?.currentContext?.size;
         iconSize = size.toSizeJS();
       }
-      await interop.changeMarker(
-        mapIdMixin,
-        oldLocation.toGeoJS(),
-        newLocation.toGeoJS(),
-        icon,
-        iconSize,
-        angle != null ? (angle * (180 / pi)) : null,
-        iconAnchor?.toAnchorJS,
-      );
+      await interop
+          .changeMarker(
+            mapIdMixin.toJS,
+            oldLocation.toGeoJS(),
+            newLocation.toGeoJS(),
+            icon?.toJS,
+            iconSize,
+            (angle != null ? (angle * (180 / pi)).toJS : null),
+            iconAnchor?.toAnchorJS,
+          )
+          .toDart;
     });
   }
 
@@ -359,13 +370,17 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     if (personIconMarkerKey.currentContext != null) {
       final iconPNG = (await capturePng(personIconMarkerKey)).convertToString();
       final size = personIconMarkerKey.toSizeJS();
-      interop.setUserLocationIconMarker(mapIdMixin, iconPNG, size);
+      interop.setUserLocationIconMarker(mapIdMixin.toJS, iconPNG, size);
     }
     if (directionIconMarkerKey.currentContext != null) {
       final iconPNG =
           (await capturePng(directionIconMarkerKey)).convertToString();
       final size = directionIconMarkerKey.toSizeJS();
-      interop.setUserLocationDirectionIconMarker(mapIdMixin, iconPNG, size);
+      interop.setUserLocationDirectionIconMarker(
+        mapIdMixin.toJS,
+        iconPNG.toJS,
+        size,
+      );
     }
   }
 }

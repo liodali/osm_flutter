@@ -5,301 +5,297 @@ library osm_interop;
 
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
 import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
 import 'models/bounding_box_js.dart';
 import 'models/geo_point_js.dart';
 
 @JS('removeControls')
-external dynamic removeControls(
-  int mapId,
+external JSPromise removeControls(
+  JSNumber mapId,
 );
 
 @JS('centerMap')
-external Map<String, double> centerMap(
-  int mapId,
+external JSPromise centerMap(
+  JSNumber mapId,
 );
 
 @JS('getBounds')
-external Map<String, double> getBounds(
-  int mapId,
+external JSPromise getBounds(
+  JSNumber mapId,
 );
 
 @JS('locateMe')
-external Map<String, double> locateMe(
-  int mapId,
+external JSPromise locateMe(
+  JSNumber mapId,
 );
 
 @JS('initMapLocation')
-external dynamic initMapLocation(int mapId, GeoPointJs point);
+external JSPromise initMapLocation(JSNumber mapId, GeoPointJs point);
 
 @JS('setZoomControl')
-external dynamic setZoomControl(int mapId, bool showZoomControl);
+external JSPromise setZoomControl(JSNumber mapId, JSBoolean showZoomControl);
 
 @JS('configZoom')
-external dynamic configZoom(
-  int mapId,
-  double stepZoom,
-  double initZoom,
-  double minZoomLevel,
-  double maxZoomLevel,
+external JSPromise configZoom(
+  JSNumber mapId,
+  JSNumber stepZoom,
+  JSNumber initZoom,
+  JSNumber minZoomLevel,
+  JSNumber maxZoomLevel,
 );
 
 @JS('setZoomStep')
-external dynamic setZoomStep(
-  int mapId,
-  double stepZoom,
+external JSPromise setZoomStep(
+  JSNumber mapId,
+  JSNumber stepZoom,
 );
 
 @JS('zoomIn')
-external dynamic zoomIn(
-  int mapId,
+external JSPromise zoomIn(
+  JSNumber mapId,
 );
 
 @JS('zoomOut')
-external dynamic zoomOut(
-  int mapId,
+external JSPromise zoomOut(
+  JSNumber mapId,
 );
 
 @JS('setZoom')
-external dynamic setZoom(
-  int mapId,
-  double zoom,
+external JSPromise setZoom(
+  JSNumber mapId,
+  JSNumber zoom,
 );
 
 @JS('setZoomStep')
-external dynamic setZoomWithStep(
-  int mapId,
-  double stepZoom,
+external JSPromise setZoomWithStep(
+  JSNumber mapId,
+  JSNumber stepZoom,
 );
 
 @JS('getZoom')
-external dynamic getZoom();
+external JSPromise<JSNumber> getZoom();
 
 @JS('setMaxZoomLevel')
-external dynamic setMaxZoomLevel(
-  int mapId,
-  double maxZoomLvl,
+external JSPromise setMaxZoomLevel(
+  JSNumber mapId,
+  JSNumber maxZoomLvl,
 );
 
 @JS('setMinZoomLevel')
-external dynamic setMinZoomLevel(
-  int mapId,
-  double minZoomLvl,
+external JSPromise setMinZoomLevel(
+  JSNumber mapId,
+  JSNumber minZoomLvl,
 );
 
 @JS('setDefaultIcon')
-external dynamic setDefaultIcon(
-  int mapId,
-  String base64,
+external JSPromise setDefaultIcon(
+  JSNumber mapId,
+  JSString base64,
 );
 
 @JS('addMarker')
-external dynamic addMarker(
-  int mapId,
+external JSPromise addMarker(
+  JSNumber mapId,
   GeoPointJs p,
   SizeJs size,
-  String icon,
-  double? angle,
+  JSString icon,
+  JSNumber? angle,
   IconAnchorJS? iconAnchor,
 );
 
 @JS('changeMarker')
-external dynamic changeMarker(
-  int mapId,
+external JSPromise changeMarker(
+  JSNumber mapId,
   GeoPointJs oldP,
   GeoPointJs newP,
-  String? icon,
+  JSString? icon,
   SizeJs? iconSize,
-  double? angle,
+  JSNumber? angle,
   IconAnchorJS? iconAnchor,
 );
 
 @JS('modifyMarker')
-external dynamic modifyMarker(
-  int mapId,
+external JSPromise modifyMarker(
+  JSNumber mapId,
   GeoPointJs p,
-  String icon,
+  JSString icon,
 );
 
 @JS('addPosition')
-external dynamic addPosition(
-  int mapId,
+external JSPromise addPosition(
+  JSNumber mapId,
   GeoPointJs p,
-  bool showMarker,
-  bool animate,
+  JSBoolean showMarker,
+  JSBoolean animate,
 );
 
 @JS('removeMarker')
-external dynamic removeMarker(int mapId, GeoPointJs p);
+external JSPromise removeMarker(JSNumber mapId, GeoPointJs p);
 
 @JS('currentUserLocation')
-external dynamic currentUserLocation(
-  int mapId,
+external JSPromise currentUserLocation(
+  JSNumber mapId,
 );
 
 @JS('setStaticGeoPoints')
-external dynamic setStaticGeoPoints(
-  int mapId,
-  String id,
-  List<GeoPointJs> points,
+external JSPromise setStaticGeoPoints(
+  JSNumber mapId,
+  JSString id,
+  JSArray<GeoPointJs> points,
 );
 
 @JS('setStaticGeoPointsWithOrientation')
-external dynamic setStaticGeoPointsWithOrientation(
-  int mapId,
-  String id,
-  List<GeoPointWithOrientationJs> points,
+external JSPromise setStaticGeoPointsWithOrientation(
+  JSNumber mapId,
+  JSString id,
+  JSArray<GeoPointWithOrientationJs> points,
 );
 
 @JS('setIconStaticGeoPoints')
-external dynamic setIconStaticGeoPoints(
-  int mapId,
-  String id,
-  String icons,
+external JSPromise setIconStaticGeoPoints(
+  JSNumber mapId,
+  JSString id,
+  JSString icons,
 );
 
 @JS('limitArea')
-external dynamic limitArea(
-  int mapId,
+external JSPromise limitArea(
+  JSNumber mapId,
   BoundingBoxJs box,
 );
 
 @JS('flyToBounds')
-external dynamic flyToBounds(
-  int mapId,
+external JSPromise flyToBounds(
+  JSNumber mapId,
   BoundingBoxJs box,
-  int padding,
+  JSNumber padding,
 );
 
 @JS('drawRoad')
-external dynamic drawRoad(
-  int mapId,
-  String key,
-  List<GeoPointJs> route,
-  String color,
-  double roadWidth,
-  bool zoomInto,
-  String roadBorderColor,
-  double roadBorderWidth,
-  List<GeoPointJs> interestPoints,
-  String? iconInterestPoints,
+external JSPromise drawRoad(
+  JSNumber mapId,
+  JSString key,
+  JSArray<GeoPointJs> route,
+  JSString color,
+  JSNumber roadWidth,
+  JSBoolean zoomInto,
+  JSString roadBorderColor,
+  JSNumber roadBorderWidth,
+  JSArray<GeoPointJs> interestPoints,
+  JSString? iconInterestPoints,
 );
 
 @JS('removeLastRoad')
-external dynamic removeLastRoad(
-  int mapId,
+external JSPromise removeLastRoad(
+  JSNumber mapId,
 );
 
 @JS("getGeoPoints")
-external Map<String, String> getGeoPoints(
-  int mapId,
+external JSPromise<JSString> getGeoPoints(
+  JSNumber mapId,
 );
 
 @JS("setUserLocationIconMarker")
-external dynamic setUserLocationIconMarker(
-  int mapId,
+external JSPromise setUserLocationIconMarker(
+  JSNumber mapId,
   String icon,
   SizeJs size,
 );
 @JS("setUserLocationDirectionIconMarker")
-external dynamic setUserLocationDirectionIconMarker(
-  int mapId,
-  String icon,
+external JSPromise setUserLocationDirectionIconMarker(
+  JSNumber mapId,
+  JSString icon,
   SizeJs size,
 );
 
 @JS("enableTracking")
-external dynamic enableTracking(
-  int mapId,
-  bool enableStopFollow,
-  bool useDirectionMarker,
+external JSPromise enableTracking(
+  JSNumber mapId,
+  JSBoolean enableStopFollow,
+  JSBoolean useDirectionMarker,
   IconAnchorJS anchorJS,
 );
 
 @JS("disableTracking")
-external dynamic disableTracking(
-  int mapId,
+external JSPromise disableTracking(
+  JSNumber mapId,
 );
 @JS("startLocationUpdating")
-external dynamic startLocationUpdating(
-  int mapId,
+external JSPromise startLocationUpdating(
+  JSNumber mapId,
 );
 @JS("stopLocationUpdating")
-external dynamic stopLocationUpdating(
-  int mapId,
+external JSPromise stopLocationUpdating(
+  JSNumber mapId,
 );
 @JS('changeTileLayer')
-external dynamic changeTileLayer(
-  int mapId,
+external JSPromise changeTileLayer(
+  JSNumber mapId,
   CustomTileJs? tile,
 );
 
 @JS('drawRect')
-external dynamic drawRect(
-  int mapId,
+external JSPromise drawRect(
+  JSNumber mapId,
   RectShapeJS rectShapeJS,
-  List<GeoPointJs> bounds,
+  JSArray<GeoPointJs> bounds,
 );
 
 @JS('drawCircle')
-external dynamic drawCircle(
-  int mapId,
+external JSPromise drawCircle(
+  JSNumber mapId,
   CircleShapeJS circle,
 );
 
 @JS('removePath')
-external dynamic removePath(
-  int mapId,
-  String rectKey,
+external JSPromise removePath(
+  JSNumber mapId,
+  JSString rectKey,
 );
 @JS('removeAllCircle')
-external dynamic removeAllCircle(int mapId);
+external JSPromise removeAllCircle(JSNumber mapId);
 
 @JS('removeAllRect')
-external dynamic removeAllRect(int mapId);
+external JSPromise removeAllRect(JSNumber mapId);
 
 @JS('removeAllShapes')
-external dynamic removeAllShapes(int mapId);
+external JSPromise removeAllShapes(JSNumber mapId);
 
 @JS('clearAllRoads')
-external dynamic clearAllRoads(int mapId);
+external JSPromise clearAllRoads(JSNumber mapId);
 
 @JS('removeRoad')
-external dynamic removeRoad(int mapId, String roadKey);
+external JSPromise removeRoad(JSNumber mapId, JSString roadKey);
 
 @JS('toggleAlllayers')
-external dynamic toggleAlllayers(int mapId, bool toggle);
+external JSPromise toggleAlllayers(JSNumber mapId, JSBoolean toggle);
 
 @JS('setUpMap')
-external dynamic setUpMap(int mapId);
+external JSNumber setUpMap(JSNumber mapId);
 
 /// Allows assigning a function to be callable from `window.initMapFinish()`
 @JS('initMapFinish')
-external set initMapFinish(void Function(int, bool) f);
+external set initMapFinish(JSFunction f);
 
 /// Allows assigning a function to be callable from `window.onGeoPointClicked(lat,lon)`
 @JS('onStaticGeoPointClicked')
-external set onStaticGeoPointClicked(void Function(int, double, double) f);
+external set onStaticGeoPointClicked(JSFunction f);
 
 /// Allows assigning a function to be callable from `window.onMapSingleTapClicked(lat,lon)`
 @JS('onMapSingleTapListener')
-external set onMapSingleTapListener(void Function(int, double, double) f);
+external set onMapSingleTapListener(JSFunction f);
 
 /// Allows assigning a function to be callable from `window.onRegionChangedListener(region)`
 @JS('onRegionChangedListener')
-external set onRegionChangedListener(
-    void Function(int, double, double, double, double, double, double) f);
+external set onRegionChangedListener(JSFunction f);
 
 /// Allows assigning a function to be callable from `window.onRoadListener(road)`
 @JS('onRoadListener')
 external set onRoadListener(
-  void Function(
-    int,
-    String,
-  ) f,
+  JSFunction f,
 );
 
 /// Allows assigning a function to be callable from `window.onUserPositionListener(lat,lon)`
 @JS('onUserPositionListener')
-external set onUserPositionListener(void Function(int, double, double) f);
+external set onUserPositionListener(JSFunction f);

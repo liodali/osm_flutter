@@ -35,7 +35,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   static void registerWith(Registrar registrar) {
     final messenger = registrar;
     OSMPlatform.instance = FlutterOsmPluginWeb(messenger: messenger);
-    BindingWebOSM();
+    bindingWebOSM();
   }
 
   @override

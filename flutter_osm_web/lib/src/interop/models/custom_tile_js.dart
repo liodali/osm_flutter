@@ -1,18 +1,18 @@
 @JS()
 library osm_interop;
 
-import 'package:js/js.dart';
+import 'dart:js_interop';
 
 @JS()
 @anonymous
-class CustomTileJs {
-  external String get url;
-  external String get subDomains;
-  external String get tileExtension;
-  external String get apiKey;
-  external num get tileSize;
-  external num get maxZoom;
-  external num get minZoom;
+extension type CustomTileJs._(JSObject _) implements JSObject {
+  external String url;
+  external String subDomains;
+  external String tileExtension;
+  external String apiKey;
+  external num tileSize;
+  external num maxZoom;
+  external num minZoom;
 
   // Must have an unnamed factory constructor with named arguments.
   external factory CustomTileJs({
