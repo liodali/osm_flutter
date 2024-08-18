@@ -4,6 +4,7 @@ class Address {
   final String? postcode;
   final String? name;
   final String? street;
+  final String? housenumber;
   final String? city;
   final String? state;
   final String? country;
@@ -11,6 +12,7 @@ class Address {
   Address({
     this.postcode,
     this.street,
+    this.housenumber,
     this.city,
     this.name,
     this.state,
@@ -21,33 +23,38 @@ class Address {
       : this.postcode = data["postcode"],
         this.name = data["name"],
         this.street = data["street"],
+        this.housenumber = data["housenumber"],
         this.city = data["city"],
         this.state = data["state"],
         this.country = data["country"];
 
   @override
-  String toString() {
-    String addr = "";
+  String toString({String separator = ","}) {
+    List<String> addr = [];
     if (name != null && name!.isNotEmpty) {
-      addr = addr + "$name,";
+      addr.add(name!);
     }
     if (street != null && street!.isNotEmpty) {
-      addr = addr + "$street,";
+      if (housenumber != null && housenumber!.isNotEmpty) {
+        addr.add("$street $housenumber");
+      } else {
+        addr.add(street!);
+      }
     }
     if (postcode != null && postcode!.isNotEmpty) {
-      addr = addr + "$postcode,";
+      addr.add(postcode!);
     }
     if (city != null && city!.isNotEmpty) {
-      addr = addr + "$city,";
+      addr.add(city!);
     }
     if (state != null && state!.isNotEmpty) {
-      addr = addr + "$state,";
+      addr.add(state!);
     }
     if (country != null && country!.isNotEmpty) {
-      addr = addr + "$country";
+      addr.add(country!);
     }
 
-    return addr;
+    return addr.join(separator);
   }
 }
 
