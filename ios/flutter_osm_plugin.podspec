@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'flutter_osm_plugin/Sources/flutter_osm_plugin/**/*.{h,m,swift}' #'Classes/**/*'
   s.resources = ['Assets/**.json']
   s.dependency 'Flutter'
   s.dependency 'Alamofire'
