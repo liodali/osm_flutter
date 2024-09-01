@@ -33,6 +33,36 @@ struct RoadData {
     var roadWidth: Double = 5.0
     var roadBorderWidth: Double?
     var roadBorderColor: String? = nil
+    var isDotted = false
+    
+    init(){
+        
+    }
+    init(roadColor: String, roadWidth: Double, roadBorderWidth: Double? = nil, roadBorderColor: String? = nil, isDotted: Bool = false) {
+        self.roadColor = roadColor
+        self.roadWidth = roadWidth
+        self.roadBorderWidth = roadBorderWidth
+        self.roadBorderColor = roadBorderColor
+        self.isDotted = isDotted
+    }
+    init(json: [String:Any] ){
+      
+        if (json.keys.contains("roadColor")) {
+            roadColor = json["roadColor"] as! String
+        }
+        if (json.keys.contains("roadBorderColor")) {
+            roadBorderColor = json["roadBorderColor"] as! String?
+        }
+        if (json.keys.contains("roadWidth")) {
+            roadWidth = json["roadWidth"] as! Double
+        }
+        if (json.keys.contains("roadBorderWidth")) {
+            roadBorderWidth = json["roadBorderWidth"] as? Double
+        }
+        if (json.keys.contains("isDotted")) {
+            isDotted = json["isDotted"] as! Bool
+        }
+    }
 }
 
 struct Road {

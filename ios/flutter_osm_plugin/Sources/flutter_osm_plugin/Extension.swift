@@ -46,7 +46,20 @@ extension GeoPoint {
         CLLocationCoordinate2D(latitude: self["lat"]!, longitude: self["lon"]!)
     }
 }
-
+extension RoadData {
+    func toRoadConfiguration() -> RoadConfiguration {
+        RoadConfiguration(width: Float(roadWidth ),
+                          color: UIColor(hexString: roadColor) ?? .green,
+                          borderWidth: roadBorderWidth.toFloat(),
+                          borderColor: UIColor(hexString: roadBorderColor),
+                          lineCap: LineCapType.ROUND,
+                          polylineType: getPolylineType()
+        )
+    }
+    func getPolylineType()-> PolylineType {
+        return isDotted ? .DOT : .LINE
+    }
+}
 extension Road {
     func toInstruction() -> [RoadInstruction] {
         steps.map { node -> RoadInstruction in

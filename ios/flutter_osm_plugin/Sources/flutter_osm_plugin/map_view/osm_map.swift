@@ -210,13 +210,14 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
                     result(FlutterError(code: "400", message: "error to draw road", details: nil))
                 } else {
                     lastRoadKey = roadInfo?.id
-                    let roadConfiguration = RoadConfiguration(width: Float(roadData?.roadWidth ?? 5),
+                    let roadConfiguration = roadData.toRoadConfiguration()
+                    /*RoadConfiguration(width: Float(roadData?.roadWidth ?? 5),
                                                               color: UIColor(hexString: roadData?.roadColor ?? roadColor) ?? .green,
                                                               borderWidth: roadData?.roadBorderWidth.toFloat(),
                                                               borderColor: UIColor(hexString: roadData?.roadBorderColor),
                                                               lineCap: LineCapType.ROUND
                                                               
-                    )
+                    )*/
                     let coordinates = polyline?.coordinates
                     self.mapOSM.roadManager.addRoad(id: lastRoadKey!, polylines: coordinates!, configuration: roadConfiguration)
 
@@ -684,7 +685,7 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
     }
 }
 extension MapCoreOSMView {
-    func drawRoadMCOSM(call: FlutterMethodCall, completion: @escaping (_ roadInfo: RoadInformation?, _ road: Road?, _ roadData: RoadData?, _ boundingBox: BoundingBox?,_ polyline: Polyline?, _ error: Error?) -> ()) {
+    func drawRoadMCOSM(call: FlutterMethodCall, completion: @escaping (_ roadInfo: RoadInformation?, _ road: Road?, _ roadData: RoadData , _ boundingBox: BoundingBox?,_ polyline: Polyline?, _ error: Error?) -> ()) {
         let args = call.arguments as! [String: Any]
         var points = args["wayPoints"] as! [GeoPoint]
         var roadType = RoadType.car
@@ -709,23 +710,8 @@ extension MapCoreOSMView {
             intersectPoint = args["middlePoints"] as! [GeoPoint]
             points.insert(contentsOf: intersectPoint, at: 1)
         }
-         var roadColor = self.roadColor
-        if (args.keys.contains("roadColor")) {
-            roadColor = args["roadColor"] as! String
-        }
-        var roadBorderColor:String? = nil
-        if (args.keys.contains("roadBorderColor")) {
-            roadBorderColor = args["roadBorderColor"] as! String?
-        }
-         var roadWidth = 5.0
-        if (args.keys.contains("roadWidth")) {
-            roadWidth = args["roadWidth"] as! Double
-        }
-         var roadBorderWidth = 0.0
-        if (args.keys.contains("roadBorderWidth")) {
-            roadBorderWidth = args["roadBorderWidth"] as! Double
-        }
-
+        let roadData = RoadData(json: args)
+        
         let waysPoint = points.map { point -> String in
             let wayP = String(format: "%F,%F", point["lon"]!, point["lat"]!)
             return wayP
@@ -737,7 +723,7 @@ extension MapCoreOSMView {
             var error: Error? = nil
             if road == nil {
                 error = NSError()
-                completion(nil, nil, nil, nil,nil, error)
+                completion(nil, nil, RoadData(), nil,nil, error)
 
             }
             let roadInfo = RoadInformation(id:key!,distance: road!.distance, seconds: road!.duration, encodedRoute: road!.mRouteHigh)
@@ -747,8 +733,7 @@ extension MapCoreOSMView {
             if (zoomInto) {
                 box = route.coordinates?.toBounds()
             }
-            let roadData = RoadData(roadColor: roadColor, roadWidth: roadWidth, 
-                                    roadBorderWidth: roadBorderWidth, roadBorderColor: roadBorderColor)
+          
             completion(roadInfo, road,roadData , box,route, nil)
 
         }
