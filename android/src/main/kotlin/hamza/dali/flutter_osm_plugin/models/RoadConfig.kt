@@ -19,30 +19,36 @@ data class RoadOption(
     val roadWidth: Float = 5f,
     val roadBorderWidth: Float = 5f,
     val roadBorderColor: Int? = null,
+    val isDotted: Boolean = false,
 )
 
 fun HashMap<String, Any>.toRoadOption(): RoadOption {
-    val roadColor = when(this.containsKey("roadColor")){
-        true -> (this["roadColor"] as List<Int>).toRGB()
-        else ->  Color.BLUE
+    val roadColor = when (this.containsKey("roadColor")) {
+        true -> (this["roadColor"] as List<*>).map { it as Int }.toRGB()
+        else -> Color.BLUE
     }
-    val roadWidth = when ( this.containsKey("roadWidth")){
+    val roadWidth = when (this.containsKey("roadWidth")) {
         true -> (this["roadWidth"] as Double).toFloat()
-        else ->  5f
+        else -> 5f
     }
-    val roadBorderWidth = when ( this.containsKey("roadBorderWidth")){
+    val roadBorderWidth = when (this.containsKey("roadBorderWidth")) {
         true -> (this["roadBorderWidth"] as Double).toFloat()
         else -> 0f
     }
-    val roadBorderColor = when ( this.containsKey("roadBorderColor")){
-        true -> (this["roadBorderColor"] as List<Int>).toRGB()
+    val roadBorderColor = when (this.containsKey("roadBorderColor")) {
+        true -> (this["roadBorderColor"] as List<*>).filterIsInstance<Int>().toRGB()
         else -> null
+    }
+    val isDotted: Boolean = when (this.containsKey("isDotted")) {
+        true -> this["isDotted"] as Boolean
+        else -> false
     }
     return RoadOption(
         roadColor = roadColor,
         roadWidth = roadWidth,
         roadBorderWidth = roadBorderWidth,
         roadBorderColor = roadBorderColor,
+        isDotted = isDotted,
     )
 }
 
@@ -59,11 +65,13 @@ fun HashMap<String, Any>.toRoadConfig(): RoadConfig {
                 .map { g ->
                     GeoPoint(g["lat"]!!, g["lon"]!!)
                 }.toList()
+
             this.containsKey("road") -> PolylineEncoder.decode(
                 (this["road"] as String),
                 10,
                 false
             )
+
             else -> emptyList()
         },
         interestPoints = when {
@@ -71,6 +79,7 @@ fun HashMap<String, Any>.toRoadConfig(): RoadConfig {
                 .map { g ->
                     GeoPoint(g["lat"]!!, g["lon"]!!)
                 }.toList()
+
             else -> emptyList()
         },
     )

@@ -1317,6 +1317,7 @@ class FlutterOsmView(
                                 borderWidth = roadConfig.roadOption.roadBorderWidth,
                                 color = roadConfig.roadOption.roadColor ?: Color.GREEN,
                                 width = roadConfig.roadOption.roadWidth,
+                                isDottedPolyline = roadConfig.roadOption.isDotted
                             )
                             setPoints(RoadManager.buildRoadOverlay(road).actualPoints)
 

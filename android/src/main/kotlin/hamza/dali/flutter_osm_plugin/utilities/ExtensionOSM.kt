@@ -5,7 +5,9 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.DashPathEffect
 import android.graphics.Paint
+import android.graphics.PathEffect
 import android.location.Location
 import android.provider.Settings
 import hamza.dali.flutter_osm_plugin.FlutterOsmView
@@ -141,22 +143,36 @@ fun Polyline.setStyle(
     width: Float,
     borderColor: Int?,
     borderWidth: Float,
+    isDottedPolyline:Boolean = false
 ) {
     outlinePaint.strokeWidth = width
     outlinePaint.style = Paint.Style.FILL_AND_STROKE
     outlinePaint.color = color
     outlinePaint.strokeCap = Paint.Cap.ROUND
+    var pathEffect:PathEffect? = null
+    if(isDottedPolyline){
+        pathEffect =  DashPathEffect(arrayOf(10f,20f).toFloatArray(),0f)
+    }
+
 
     if (borderWidth > 0) {
         val paintBorder = createPaintPolyline(
             color = borderColor ?: Color.BLACK,
             width = borderWidth + width,
-            style = Paint.Style.FILL_AND_STROKE
+            style = Paint.Style.FILL_AND_STROKE,
+            pathEffect = when {
+                isDottedPolyline -> pathEffect
+                else -> null
+            }
         )
         val insideBorder = createPaintPolyline(
             color = color,
             width = width,
-            style = Paint.Style.FILL
+            style = Paint.Style.FILL,
+            pathEffect = when {
+                isDottedPolyline -> pathEffect
+                else -> null
+            }
         )
         this.outlinePaintLists.add(MonochromaticPaintList(paintBorder))
         this.outlinePaintLists.add(MonochromaticPaintList(insideBorder))
@@ -196,7 +212,8 @@ fun Bitmap?.toByteArray(): ByteArray? {
 fun createPaintPolyline(
     color: Int,
     width: Float,
-    style: Paint.Style
+    style: Paint.Style,
+    pathEffect: PathEffect? = null
 ): Paint {
     val paint = Paint()
     paint.isAntiAlias = true
@@ -206,5 +223,9 @@ fun createPaintPolyline(
     paint.strokeCap = Paint.Cap.ROUND
     paint.strokeJoin = Paint.Join.ROUND
     paint.isAntiAlias = true
+    if(pathEffect != null){
+        paint.pathEffect = pathEffect
+    }
+
     return paint
 }
