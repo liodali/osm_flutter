@@ -29,13 +29,15 @@ class RoadOption {
   final bool zoomInto;
   final Color? roadBorderColor;
   final double? roadBorderWidth;
+  final bool isDotted;
 
   const RoadOption({
     required this.roadColor,
     this.roadWidth = 5,
-    this.roadBorderColor = null,
+    this.roadBorderColor,
     this.zoomInto = true,
-    this.roadBorderWidth = null,
+    this.isDotted = false,
+    this.roadBorderWidth,
   })  : assert(roadBorderWidth == null || roadBorderWidth > 0),
         assert(roadWidth > 0);
 
@@ -43,6 +45,7 @@ class RoadOption {
       : roadWidth = 5,
         roadColor = Colors.green,
         zoomInto = false,
+        isDotted = false,
         roadBorderWidth = null,
         roadBorderColor = null;
 
@@ -60,10 +63,14 @@ class RoadOption {
       "zoomIntoRegion",
       () => zoomInto,
     );
+    args.putIfAbsent(
+      "zoomIntoRegion",
+      () => zoomInto,
+    );
     args.addAll(roadColor.toMapPlatform("roadColor"));
     args.putIfAbsent(
-      "roadWidth",
-      () => roadWidth.toDouble(),
+      "isDotted",
+      () => isDotted,
     );
     if (roadBorderColor != null) {
       args.putIfAbsent(
@@ -85,23 +92,20 @@ class MultiRoadOption extends RoadOption {
   final RoadType roadType;
 
   const MultiRoadOption({
-    required Color roadColor,
-    double roadWidth = 5,
+    required super.roadColor,
+    super.roadWidth,
     this.roadType = RoadType.car,
-    super.roadBorderColor = null,
-    super.roadBorderWidth = null,
+    super.roadBorderColor,
+    super.roadBorderWidth,
   }) : super(
-          roadColor: roadColor,
-          roadWidth: roadWidth,
           zoomInto: false,
         );
 
   const MultiRoadOption.empty()
-      : this.roadType = RoadType.car,
+      : roadType = RoadType.car,
         super(
           roadColor: Colors.green,
           zoomInto: false,
-
         );
 }
 
@@ -153,14 +157,14 @@ class RoadInfo {
 
   RoadInfo.fromMap(Map map)
       : _key = map["key"] ?? UniqueKey().toString(),
-        this.duration = map["duration"],
-        this.distance = map["distance"],
-        this.instructions = map.containsKey("instructions")
+        duration = map["duration"],
+        distance = map["distance"],
+        instructions = map.containsKey("instructions")
             ? (map["instructions"] as List)
                 .map((e) => Instruction.fromMap(e))
                 .toList()
             : [],
-        this.route = map.containsKey('routePoints')
+        route = map.containsKey('routePoints')
             ? (map["routePoints"] as String).stringToGeoPoints()
             : [];
   RoadInfo copyWith({
@@ -175,19 +179,19 @@ class RoadInfo {
       duration: duration ?? this.duration,
       route: route ?? this.route,
       instructions: instructions ?? this.instructions,
-    )..setKey(roadKey ?? this._key);
+    )..setKey(roadKey ?? _key);
   }
 
   RoadInfo copyFromMap({
     required Map map,
   }) {
     return RoadInfo(
-      distance: map["duration"] ?? this.distance,
-      duration: map["distance"] ?? this.duration,
+      distance: map["duration"] ?? distance,
+      duration: map["distance"] ?? duration,
       route: map.containsKey(map)
           ? (map["routePoints"] as String).stringToGeoPoints()
-          : this.route,
-    )..setKey(this._key);
+          : route,
+    )..setKey(_key);
   }
 
   String get key => _key;
@@ -224,7 +228,7 @@ class Instruction {
 
   @override
   String toString() {
-    return "$instruction";
+    return instruction;
   }
 }
 
