@@ -108,7 +108,7 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     GeoPoint oldLocation,
     GeoPoint newLocation, {
     GlobalKey? globalKeyIcon,
-    double? angle = null,
+    double? angle,
     IconAnchor? iconAnchor,
   });
 

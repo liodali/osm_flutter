@@ -80,7 +80,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
     }
     if (!_channels.containsKey(idOSM)) {
       _channels[idOSM] = MethodChannel(
-        '${getViewType(idOSM)}',
+        getViewType(idOSM),
         const StandardMethodCodec(),
         messenger,
       );

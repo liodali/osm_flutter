@@ -61,7 +61,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     debugPrint("idMap $idMap");
     OSMPlatform.instance.init(mapIdMixin);
     //mapIdMixin = idMap;
-    this.setWidgetState(osmWebFlutterState);
+    setWidgetState(osmWebFlutterState);
     channel = MethodChannel(FlutterOsmPluginWeb.getViewType(mapIdMixin));
     debugPrint("in init _mapId $mapIdMixin");
     if (osmWebFlutterState.widget.isStatic) {
@@ -130,16 +130,16 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     webPlatform.onLongPressMapClickListener(mapIdMixin).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapLongTapping(event.value);
-      osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
         osmMixin.onLongTap(event.value);
-      });
+      }
     });
     webPlatform.onSinglePressMapClickListener(mapIdMixin).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
-      osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
         osmMixin.onSingleTap(event.value);
-      });
+      }
     });
     webPlatform.onMapIsReady(mapIdMixin).listen((event) async {
       osmWebFlutterState.widget.mapIsReadyListener.value = event.value;
@@ -163,16 +163,16 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       }
       osmWebFlutterState.widget.controller
           .setValueListenerRegionIsChanging(event.value);
-      osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
         osmMixin.onRegionChanged(event.value);
-      });
+      }
     });
     webPlatform.onRoadMapClickListener(mapIdMixin).listen((event) {
       osmWebFlutterState.widget.controller
           .setValueListenerMapRoadTapping(event.value);
-      osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
         osmMixin.onRoadTap(event.value);
-      });
+      }
     });
 
     if (osmWebFlutterState.widget.onGeoPointClicked != null) {
@@ -184,9 +184,9 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       if (osmWebFlutterState.widget.onLocationChanged != null) {
         osmWebFlutterState.widget.onLocationChanged!(event.value);
       }
-      osmWebFlutterState.widget.controller.osMMixins.forEach((osmMixin) {
+      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
         osmMixin.onLocationChanged(event.value);
-      });
+      }
     });
 
     if (osmWebFlutterState.widget.staticIconGlobalKeys.isNotEmpty) {
@@ -227,9 +227,9 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     await initLocationMap(initLocation!);
 
     if (osmWebFlutterState.widget.staticPoints.isNotEmpty) {
-      osmWebFlutterState.widget.staticPoints.forEach((ele) {
+      for (var ele in osmWebFlutterState.widget.staticPoints) {
         setStaticPosition(ele.geoPoints, ele.id);
-      });
+      }
     }
     if (userPositionOption != null && userPositionOption.enableTracking) {
       switch (useExternalTracking) {

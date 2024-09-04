@@ -20,13 +20,13 @@ class Address {
   });
 
   Address.fromPhotonAPI(Map data)
-      : this.postcode = data["postcode"],
-        this.name = data["name"],
-        this.street = data["street"],
-        this.housenumber = data["housenumber"],
-        this.city = data["city"],
-        this.state = data["state"],
-        this.country = data["country"];
+      : postcode = data["postcode"],
+        name = data["name"],
+        street = data["street"],
+        housenumber = data["housenumber"],
+        city = data["city"],
+        state = data["state"],
+        country = data["country"];
 
   @override
   String toString({String separator = ","}) {
@@ -68,8 +68,8 @@ class SearchInfo {
   });
 
   SearchInfo.fromPhotonAPI(Map data)
-      : this.point = GeoPoint(
+      : point = GeoPoint(
             latitude: data["geometry"]["coordinates"][1],
             longitude: data["geometry"]["coordinates"][0]),
-        this.address = Address.fromPhotonAPI(data["properties"]);
+        address = Address.fromPhotonAPI(data["properties"]);
 }

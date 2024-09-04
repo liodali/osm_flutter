@@ -14,6 +14,7 @@ import 'package:flutter_osm_interface/src/map_controller/i_base_map_controller.d
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 abstract class BaseMapController extends IBaseMapController {
   late IBaseOSMController _osmBaseController;
+  @override
   final BoundingBox? areaLimit;
   final CustomTile? customTile;
   late Timer? _timer;
@@ -21,15 +22,13 @@ abstract class BaseMapController extends IBaseMapController {
   IBaseOSMController get osmBaseController => _osmBaseController;
   final bool useExternalTracking;
   BaseMapController({
-    UserTrackingOption? initMapWithUserPosition,
-    GeoPoint? initPosition,
+    super.initMapWithUserPosition,
+    super.initPosition,
     this.areaLimit = const BoundingBox.world(),
     this.customTile,
     this.useExternalTracking = false,
   })  : assert((initMapWithUserPosition != null) ^ (initPosition != null)),
         super(
-          initMapWithUserPosition: initMapWithUserPosition,
-          initPosition: initPosition,
           areaLimit: areaLimit,
         );
 
@@ -48,7 +47,7 @@ abstract class BaseMapController extends IBaseMapController {
   @mustCallSuper
   @override
   void init() {
-    _timer = Timer(Duration(milliseconds: 1250), () async {
+    _timer = Timer(const Duration(milliseconds: 1250), () async {
       await osmBaseController.initPositionMap(
         initPosition: initPosition,
         userPositionOption: initMapWithUserPosition,

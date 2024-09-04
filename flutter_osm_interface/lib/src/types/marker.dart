@@ -128,15 +128,14 @@ class MarkerIcon extends StatelessWidget {
     this.icon,
     this.assetMarker,
     this.iconWidget,
-    Key? key,
+    super.key,
   })  : assert((icon != null && assetMarker == null && iconWidget == null) ||
             (iconWidget != null && assetMarker == null && icon == null) ||
-            (assetMarker != null && icon == null && iconWidget == null)),
-        super(key: key);
+            (assetMarker != null && icon == null && iconWidget == null));
 
   @override
   Widget build(BuildContext context) {
-    Widget? child = SizedBox.shrink();
+    Widget? child = const SizedBox.shrink();
     if (icon != null) {
       child = icon;
     } else if (assetMarker != null) {

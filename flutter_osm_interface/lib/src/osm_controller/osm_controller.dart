@@ -48,7 +48,7 @@ abstract class IBaseOSMController {
     required GeoPoint oldLocation,
     required GeoPoint newLocation,
     MarkerIcon? newMarkerIcon,
-    double? angle = null,
+    double? angle,
     IconAnchor? iconAnchor,
   });
 

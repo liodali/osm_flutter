@@ -7,8 +7,9 @@ import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
 import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
 import 'dart:js_interop';
 
-import 'models/bounding_box_js.dart';
-import 'models/geo_point_js.dart';
+import 'package:flutter_osm_web/src/interop/models/bounding_box_js.dart';
+import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
+import 'package:flutter_osm_web/src/interop/models/road_option_js.dart';
 
 @JS('removeControls')
 external JSPromise removeControls(
@@ -173,17 +174,18 @@ external JSPromise flyToBounds(
 );
 
 @JS('drawRoad')
-external JSPromise drawRoad(
+external JSNumber drawRoad(
   JSNumber mapId,
   JSString key,
   JSArray<GeoPointJs> route,
-  JSString color,
-  JSNumber roadWidth,
-  JSBoolean zoomInto,
-  JSString roadBorderColor,
-  JSNumber roadBorderWidth,
   JSArray<GeoPointJs> interestPoints,
-  JSString? iconInterestPoints,
+  RoadOptionJS roadOptionJS,
+  // JSString color,
+  // JSNumber roadWidth,
+  // JSBoolean zoomInto,
+  // JSString roadBorderColor,
+  // JSNumber roadBorderWidth,
+  // JSString? iconInterestPoints,
 );
 
 @JS('removeLastRoad')

@@ -21,10 +21,10 @@ class BoundingBox {
         assert(west >= -180.0);
 
   const BoundingBox.world()
-      : this.north = 85.0,
-        this.east = 180.0,
-        this.south = -85.0,
-        this.west = -180.0;
+      : north = 85.0,
+        east = 180.0,
+        south = -85.0,
+        west = -180.0;
 
   static BoundingBox fromGeoPoints(List<GeoPoint> geoPoints) {
     if (geoPoints.isEmpty) {
@@ -93,10 +93,10 @@ class BoundingBox {
   }
 
   BoundingBox.fromMap(Map map)
-      : this.north = map["north"],
-        this.east = map["east"],
-        this.south = map["south"],
-        this.west = map["west"];
+      : north = map["north"],
+        east = map["east"],
+        south = map["south"],
+        west = map["west"];
 
   @override
   String toString() {

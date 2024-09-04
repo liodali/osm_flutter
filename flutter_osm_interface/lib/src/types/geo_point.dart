@@ -96,22 +96,14 @@ class GeoPointWithOrientation extends GeoPoint {
 
   GeoPointWithOrientation({
     double angle = 0.0,
-    required double latitude,
-    required double longitude,
-  })  : this.angle = angle * pi / 180,
-        super(
-          latitude: latitude,
-          longitude: longitude,
-        );
+    required super.latitude,
+    required super.longitude,
+  })  : angle = angle * pi / 180;
   GeoPointWithOrientation.radian({
     double radianAngle = 0.0,
-    required double latitude,
-    required double longitude,
-  })  : angle = radianAngle, // * (180 / pi),
-        super(
-          latitude: latitude,
-          longitude: longitude,
-        );
+    required super.latitude,
+    required super.longitude,
+  })  : angle = radianAngle;
   GeoPointWithOrientation.fromMap(Map json)
       : angle = json.containsKey("heading")
             ? double.tryParse(json["heading"].toString()) ?? 0
@@ -121,6 +113,7 @@ class GeoPointWithOrientation extends GeoPoint {
           longitude: json["lon"],
         );
 
+  @override
   Map<String, double> toMap() {
     return super.toMap()..putIfAbsent("angle", () => angle);
   }

@@ -16,7 +16,7 @@ let package = Package(
     .library(name: "image-flutter_osm_plugin-ios", targets: ["flutter_osm_plugin"])
   ],
   dependencies: [
-    .package(url:"https://github.com/liodali/OSMMapCoreIOSFramework.git",from: "0.7.3")
+    .package(url:"https://github.com/liodali/OSMMapCoreIOSFramework.git",from: "0.7.4")
   ],
   targets: [
     .target(

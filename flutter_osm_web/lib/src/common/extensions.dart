@@ -6,6 +6,7 @@ import 'package:routing_client_dart/routing_client_dart.dart';
 
 import 'package:flutter_osm_web/src/interop/models/bounding_box_js.dart';
 import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
+import 'package:flutter_osm_web/src/interop/models/road_option_js.dart';
 
 extension ExtGeoPoint on GeoPoint {
   GeoPointJs toGeoJS() {
@@ -51,11 +52,11 @@ extension ExtLngLat on LngLat {
 
 extension ExtListLngLat on List<LngLat> {
   List<GeoPointJs> mapToListGeoJS() {
-    return this.map((e) => e.toGeoJS()).toList();
+    return map((e) => e.toGeoJS()).toList();
   }
 
   List<GeoPoint> mapToListGeoPoints() {
-    return this.map((e) => e.toGeoPoint()).toList();
+    return map((e) => e.toGeoPoint()).toList();
   }
 }
 
@@ -92,7 +93,7 @@ extension ExtListGeoPoints on List<GeoPoint> {
   }
 
   List<GeoPointJs> toListGeoPointJs() {
-    return this.map((e) => e.toGeoJS()).toList();
+    return map((e) => e.toGeoJS()).toList();
   }
 }
 
@@ -108,4 +109,15 @@ extension ExtAnchor on IconAnchor {
             )
           : null,
     );
+}
+extension ExtRoadOption on RoadOption {
+
+  RoadOptionJS get toRoadOptionJS => RoadOptionJS(
+    color: roadColor.toHexColor(),
+    roadWidth: roadWidth.toDouble(),
+    zoomInto: zoomInto,
+    roadBorderColor: roadBorderColor?.toHexColor(),
+    roadBorderWidth: roadBorderWidth?.toDouble() ?? 0.0,
+    isDotted: isDotted
+  );
 }

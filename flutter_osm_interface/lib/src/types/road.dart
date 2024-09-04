@@ -46,7 +46,7 @@ class RoadOption {
         roadColor = Colors.green,
         zoomInto = false,
         isDotted = false,
-        roadBorderWidth = null,
+        roadBorderWidth = 0,
         roadBorderColor = null;
 
   Map toMap() {

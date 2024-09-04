@@ -129,7 +129,7 @@ final class MobileOSMController extends IBaseOSMController {
     });
     osmPlatform.onMapIsReady(_idMap).listen((event) async {
       if (_androidOSMLifecycle != null &&
-          _osmFlutterState.widget.mapIsReadyListener.value != event.value ) {
+          _osmFlutterState.widget.mapIsReadyListener.value != event.value) {
         _androidOSMLifecycle!.mapIsReady(event.value);
       }
       _osmFlutterState.widget.mapIsReadyListener.value = event.value;
@@ -237,7 +237,7 @@ final class MobileOSMController extends IBaseOSMController {
     if (box != null && !box.isWorld()) {
       await limitAreaMap(box);
     }
-    if (initPosition != null ) {
+    if (initPosition != null) {
       await osmPlatform.initPositionMap(
         _idMap,
         initPosition,
@@ -263,24 +263,23 @@ final class MobileOSMController extends IBaseOSMController {
 
   Future<void> _drawInitStaticPoints() async {
     /// draw static position
-    if (_osmFlutterState.widget.staticPoints.isNotEmpty ) {
-      await Future.microtask(() {
-        _osmFlutterState.widget.staticPoints.forEach((points) async {
-          if (points.markerIcon != null) {
-            await osmPlatform.customMarkerStaticPosition(
-              _idMap,
-              _osmFlutterState.widget.staticIconGlobalKeys[points.id],
-              points.id,
-            );
-          }
-          if (points.geoPoints.isNotEmpty) {
-            await osmPlatform.staticPosition(
-              _idMap,
-              points.geoPoints,
-              points.id,
-            );
-          }
-        });
+    if (_osmFlutterState.widget.staticPoints.isNotEmpty) {
+      await Future.forEach(_osmFlutterState.widget.staticPoints,
+          (points) async {
+        if (points.markerIcon != null) {
+          await osmPlatform.customMarkerStaticPosition(
+            _idMap,
+            _osmFlutterState.widget.staticIconGlobalKeys[points.id],
+            points.id,
+          );
+        }
+        if (points.geoPoints.isNotEmpty) {
+          await osmPlatform.staticPosition(
+            _idMap,
+            points.geoPoints,
+            points.id,
+          );
+        }
       });
     }
   }

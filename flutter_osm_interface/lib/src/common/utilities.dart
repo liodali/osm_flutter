@@ -31,8 +31,8 @@ bool isEqual1eX(double value) {
 extension ExtGeoPoint on GeoPoint {
   List<num> toListNum() {
     return [
-      this.latitude,
-      this.longitude,
+      latitude,
+      longitude,
     ];
   }
 
@@ -98,9 +98,9 @@ extension ColorMap on Color {
       return toHexColor();
     }
     return [
-      this.red,
-      this.blue,
-      this.green,
+      red,
+      blue,
+      green,
     ];
   }
 
@@ -113,35 +113,35 @@ extension ColorMap on Color {
 
   Map<String, List<int>> toMap(String key) {
     return {
-      "$key": [
-        this.red,
-        this.blue,
-        this.green,
+      key: [
+        red,
+        blue,
+        green,
       ]
     };
   }
 
   List<int> toList() {
     return [
-      this.red,
-      this.blue,
-      this.green,
+      red,
+      blue,
+      green,
     ];
   }
 
   Map<String, String> toHexMap(String key) {
-    return {"$key": "#${this.value.toRadixString(16)}"};
+    return {key: "#${value.toRadixString(16)}"};
   }
 
   String toHexColor() {
     if (kIsWeb) {
       return toHexColorWeb();
     }
-    return "#${this.value.toRadixString(16)}";
+    return "#${value.toRadixString(16)}";
   }
 
   String toHexColorWeb() {
-    return "#${this.value.toRadixString(16)}".replaceFirst("ff", "");
+    return "#${value.toRadixString(16)}".replaceFirst("ff", "");
   }
 }
 

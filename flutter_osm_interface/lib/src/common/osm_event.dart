@@ -15,7 +15,7 @@ abstract class EventOSM<T> {
 }
 
 class MapInitialization extends EventOSM<bool> {
-  MapInitialization(int mapId, bool isMapReady) : super(mapId, isMapReady);
+  MapInitialization(super.mapId, super.isMapReady);
 }
 
 class MapRestoration extends EventOSM<void> {
@@ -28,32 +28,32 @@ class MapRestoration extends EventOSM<void> {
 }
 
 class TapEvent extends EventOSM<GeoPoint> {
-  TapEvent(int mapId, GeoPoint position) : super(mapId, position);
+  TapEvent(super.mapId, super.position);
 }
 
 class SingleTapEvent extends TapEvent {
-  SingleTapEvent(int mapId, GeoPoint position) : super(mapId, position);
+  SingleTapEvent(super.mapId, super.position);
 }
 
 class LongTapEvent extends TapEvent {
-  LongTapEvent(int mapId, GeoPoint position) : super(mapId, position);
+  LongTapEvent(super.mapId, super.position);
 }
 
 class GeoPointEvent extends EventOSM<GeoPoint> {
-  GeoPointEvent(int mapId, GeoPoint position) : super(mapId, position);
+  GeoPointEvent(super.mapId, super.position);
 }
 
 class RoadTapEvent extends EventOSM<RoadInfo> {
-  RoadTapEvent(int mapId, RoadInfo road) : super(mapId, road);
+  RoadTapEvent(super.mapId, super.road);
 }
 
 class UserLocationEvent extends EventOSM<UserLocation> {
-  UserLocationEvent(int mapId, UserLocation userLocation) : super(mapId, userLocation);
+  UserLocationEvent(super.mapId, super.userLocation);
 }
 
 class RegionIsChangingEvent extends EventOSM<Region> {
-  RegionIsChangingEvent(int mapId, Region region) : super(mapId, region);
+  RegionIsChangingEvent(super.mapId, super.region);
 }
 class IosMapInit extends EventOSM<bool> {
-  IosMapInit(int mapId, bool loaded) : super(mapId, loaded);
+  IosMapInit(super.mapId, super.loaded);
 }

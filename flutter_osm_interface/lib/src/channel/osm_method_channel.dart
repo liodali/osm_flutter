@@ -28,19 +28,19 @@ class MethodChannelOSM extends MobileOSMPlatform {
       _streamController.stream.where((event) => event.mapId == mapId);
 
   @override
-  Future<void> init(int idOSMMap) async {
-    if (!_channels.containsKey(idOSMMap)) {
+  Future<void> init(int idOSM) async {
+    if (!_channels.containsKey(idOSM)) {
       if (_streamController.isClosed) {
         _streamController = StreamController<EventOSM>.broadcast();
       }
-      _channels[idOSMMap] =
-          MethodChannel('plugins.dali.hamza/osmview_$idOSMMap');
-      setGeoPointHandler(idOSMMap);
+      _channels[idOSM] =
+          MethodChannel('plugins.dali.hamza/osmview_$idOSM');
+      setGeoPointHandler(idOSM);
     }
-    /*if (!_eventsChannels.containsKey(idOSMMap)) {
-      _eventsChannels[idOSMMap] = [
-       // EventChannel("plugins.dali.hamza/osmview_stream_$idOSMMap"),
-        EventChannel("plugins.dali.hamza/osmview_stream_location_$idOSMMap"),
+    /*if (!_eventsChannels.containsKey(idOSM)) {
+      _eventsChannels[idOSM] = [
+       // EventChannel("plugins.dali.hamza/osmview_stream_$idOSM"),
+        EventChannel("plugins.dali.hamza/osmview_stream_location_$idOSM"),
       ];
     }*/
   }
@@ -295,11 +295,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
-  Future<void> setStepZoom(int idOSM, int defaultZoom) async {
+  Future<void> setStepZoom(int idOSM, int stepZoom) async {
     try {
-      await _channels[idOSM]?.invokeMethod("change#stepZoom", defaultZoom);
+      await _channels[idOSM]?.invokeMethod("change#stepZoom", stepZoom);
     } on PlatformException catch (e) {
-      print(e.message);
+      debugPrint(e.message);
     }
   }
 
@@ -319,7 +319,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
         "point": listGeos,
       });
     } on PlatformException catch (e) {
-      print(e.message);
+     debugPrint(e.message);
     }
   }
 
@@ -508,6 +508,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     return await _channels[idOSM]?.invokeMethod('get#Zoom');
   }
 
+  @override
   Future<void> setZoom(
     int idOSM, {
     double? zoomLevel,
@@ -613,7 +614,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GeoPoint oldLocation,
     GeoPoint newLocation, {
     GlobalKey? globalKeyIcon,
-    double? angle = null,
+    double? angle,
     IconAnchor? iconAnchor,
   }) async {
     Map<String, dynamic> args = {
@@ -670,7 +671,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       _channels[idOSM]!.invokeMethod("stopLocationUpdating");
 }
 
-extension config on MethodChannelOSM {
+extension ConfigExt on MethodChannelOSM {
   Future<void> configureZoomMap(
     int idOSM,
     double initZoom,

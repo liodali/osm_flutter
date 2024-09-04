@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_interface/src/common/utilities.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,7 +10,7 @@ void main() {
       "exo`Hc_vr@Q\\@d@JFb@|@LTVj@HPJRLXd@jAXv@HVLf@Ld@OJeAbBi@x@gC|DaAlBO`@M\\IVs@|AyBrF{@|By@nBO^CFUl@s@dBM^o@xAg@pAEJMZUh@OPSNa@ZOSQOWKiAc@}Aw@cAg@q@_@]S]Yc@a@u@}@]g@OUBG@G?IAEAACECCEAG?G@EBQQa@]a@]{@o@KIQMMKEEIIa@]]_@KIa@m@g@w@MG@w@?SAa@Aa@C]Eq@KkBG}@Am@@a@Fc@FSJS|AiBxA_BLQNWf@gA",
     );
 
-    print(list);
+    debugPrint(list.toString());
   });
 
   test("eq geoP", () {
@@ -23,9 +24,9 @@ void main() {
     expect(p1.toString() == p2.toString(), false);
   });
   test("test bounding box is world", () {
-    final box = BoundingBox(north: 85.05, east: 180, south: -85.06, west: -180);
+    const box = BoundingBox(north: 85.05, east: 180, south: -85.06, west: -180);
     expect(box.isWorld(), true);
-    final box2 =
+    const box2 =
         BoundingBox(north: 84.05, east: 170, south: -85.06, west: -180);
     expect(box2.isWorld(), false);
   });
@@ -109,7 +110,7 @@ void main() {
         GeoPoint(latitude: 47.43751121525967, longitude: 8.473693728446962);
     final p2 =
         GeoPoint(latitude: 47.43751121525967, longitude: 8.473693728446962);
-        final p3 =
+    final p3 =
         GeoPoint(latitude: 47.43751421525967, longitude: 8.473695728446962);
     expect(p1.isEqual(p2), true);
     expect(p1.isEqual(p3), false);

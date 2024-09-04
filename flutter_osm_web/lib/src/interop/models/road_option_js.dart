@@ -4,19 +4,26 @@ library osm_interop;
 import 'dart:js_interop';
 
 @JS()
+@staticInterop
 @anonymous
 extension type RoadOptionJS._(JSObject _) implements JSObject {
-  external String roadColor;
-  external int roadWidth;
+  external String color;
+  external double roadWidth;
   external bool zoomInto;
-  external String? roadBorderColor;
+  external String roadBorderColor;
   external double roadBorderWidth;
+  external bool isDotted;
+  external String? iconInterestPoints;
 
   external factory RoadOptionJS({
-    required String roadColor,
-    num roadWidth = 5.0,
+    required String color,
+    double roadWidth = 5.0,
     bool zoomInto = true,
     String? roadBorderColor,
-    num roadBorderWidth = 0.0,
+    double roadBorderWidth = 0.0,
+    bool isDotted = false,
+    String? iconInterestPoints,
   });
+
+
 }
