@@ -115,10 +115,11 @@ async function flyToBounds(mapId,box, padding) {
    var iframe = getIframe(mapId);
    return await iframe.contentWindow.flyToBoundingBox(box, padding);
 }
-function drawRoad(mapId,key,route, color, roadWidth, zoomInto, roadBorderColor,roadBorderWidth, interestPoints, iconInteretPoint) {
+function drawRoad(mapId,key,route,interestPoints, roadOption/* color, roadWidth, zoomInto, roadBorderColor,roadBorderWidth, iconInteretPoint*/) {
    console.log(route);
+   console.log("option: "+JSON.stringify(roadOption));
    var iframe = getIframe(mapId);
-   return iframe.contentWindow.drawRoad(key,route, color, roadWidth, zoomInto, roadBorderColor,roadBorderWidth, interestPoints, iconInteretPoint);
+   return iframe.contentWindow.drawRoad(key,route,interestPoints,roadOption /* color, roadWidth, zoomInto, roadBorderColor,roadBorderWidth, , iconInteretPoint*/);
 }
 async function removeLastRoad(mapId){
    var iframe = getIframe(mapId);

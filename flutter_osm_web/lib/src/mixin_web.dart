@@ -191,9 +191,9 @@ mixin WebMixin {
     List<GeoPoint> markers,
   ) async {
     final futures = <Future>[];
-    markers.forEach((geoPoint) {
+    for (var geoPoint in markers) {
       futures.add(removeMarker(geoPoint));
-    });
+    }
     await Future.wait(futures);
   }
 
@@ -305,23 +305,17 @@ mixin WebMixin {
     );
     final routeJs = road.polyline!.mapToListGeoJS();
 
-    debugPrint((roadOption?.roadBorderColor ?? Colors.green).toHexColor());
     var roadInfo = RoadInfo();
+    final roadConfig =
+        roadOption ?? defaultRoadOption ?? const RoadOption.empty();
+    debugPrint(roadOption?.toString());
+
     interop.drawRoad(
       mapIdMixin.toJS,
       roadInfo.key.toJS,
       routeJs.toJS,
-      ((roadOption ?? defaultRoadOption)?.roadColor ?? Colors.green)
-          .toHexColor()
-          .toJS,
-      ((roadOption ?? defaultRoadOption)?.roadWidth ?? 5.0).toDouble().toJS,
-      ((roadOption ?? defaultRoadOption)?.zoomInto ?? true).toJS,
-      ((roadOption ?? defaultRoadOption)?.roadBorderColor ?? Colors.green)
-          .toHexColor()
-          .toJS,
-      ((roadOption ?? defaultRoadOption)?.roadBorderWidth ?? 0).toJS,
       (interestPoints?.toListGeoPointJs() ?? []).toJS,
-      null,
+      roadConfig.toRoadOptionJS,
     );
     final instructions = await manager.buildInstructions(road);
     roadInfo = roadInfo.copyWith(
@@ -350,13 +344,8 @@ mixin WebMixin {
       mapIdMixin.toJS,
       roadKey.toJS,
       routeJs.toJS,
-      roadOption.roadColor.toHexColor().toJS,
-      roadOption.roadWidth.toDouble().toJS,
-      roadOption.zoomInto.toJS,
-      (roadOption.roadBorderColor ?? Colors.green).toHexColor().toJS,
-      (roadOption.roadBorderWidth?.toDouble() ?? 0).toJS,
       <GeoPointJs>[].toJS,
-      null,
+      roadOption.toRoadOptionJS,
     );
 
     roadsWebCache[roadKey] = RoadInfo(route: path).copyWith(
@@ -380,7 +369,7 @@ mixin WebMixin {
     MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
   }) async {
     List<Future<RoadInfo>> futureRoads = [];
-    configs.forEach((config) {
+    for (var config in configs) {
       futureRoads.add(
         drawRoad(
           config.startPoint,
@@ -389,11 +378,11 @@ mixin WebMixin {
           roadOption: config.roadOptionConfiguration ?? commonRoadOption,
         ),
       );
-    });
+    }
     final infos = await Future.wait(futureRoads);
-    infos.forEach((roadInfo) {
+    for (var roadInfo in infos) {
       roadsWebCache[roadInfo.key] = roadInfo;
-    });
+    }
     return infos;
   }
 
