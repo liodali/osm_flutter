@@ -735,11 +735,12 @@ class _MainExampleState extends State<OldMainExample>
           intersectPoint:
               pointsRoad.getRange(1, pointsRoad.length - 1).toList(),
           roadOption: const RoadOption(
-            roadWidth: 20,
+            roadWidth: 15,
             roadColor: Colors.red,
             zoomInto: true,
-            roadBorderWidth: 4,
+            roadBorderWidth: 10.0,
             roadBorderColor: Colors.green,
+            isDotted: true,
           ),
         );
         pointsRoad.clear();
@@ -764,7 +765,7 @@ class _MainExampleState extends State<OldMainExample>
         // );
       });
     } on RoadException catch (e) {
-       if (!mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
