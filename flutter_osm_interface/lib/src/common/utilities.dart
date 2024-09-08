@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 
@@ -84,7 +83,7 @@ extension ColorMap on Color {
   }
 
   Map<String, dynamic> toMapPlatform(String key) {
-    if (Platform.isIOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       return toHexMap(key);
     }
     return toMap(key);
@@ -94,7 +93,7 @@ extension ColorMap on Color {
     if (kIsWeb) {
       return toHexColorWeb();
     }
-    if (Platform.isIOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       return toHexColor();
     }
     return [
@@ -171,7 +170,7 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
           commonRoadOption.roadType.toString();
       final color = roadConf.roadOptionConfiguration?.roadColor ??
           commonRoadOption.roadColor;
-      if (Platform.isIOS) {
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
         map.addAll(color.toHexMap("roadColor"));
 
         map["roadWidth"] =
@@ -203,10 +202,10 @@ Future<Uint8List> capturePng(GlobalKey globalKey) async {
 
 extension ExtTileUrls on TileURLs {
   dynamic toMapPlatform() {
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       return toMapAndroid();
     }
-    if (Platform.isIOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       return toMapiOS();
     }
     if (kIsWeb) {

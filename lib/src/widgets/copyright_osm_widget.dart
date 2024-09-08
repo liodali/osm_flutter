@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 class CopyrightOSMWidget extends StatelessWidget {
   final String internationalContributorName;
 
- const CopyrightOSMWidget({
+  const CopyrightOSMWidget({
     this.internationalContributorName = "contributors",
     super.key,
   });
@@ -34,7 +34,10 @@ class CopyrightOSMWidget extends StatelessWidget {
                       'https://www.openstreetmap.org/copyright',
                       mode: LaunchMode.externalApplication,
                     );
-                  } on PlatformException {}
+                  } on PlatformException catch (e, trace) {
+                    debugPrint(e.toString());
+                    debugPrint(trace.toString());
+                  }
                 },
               children: [
                 TextSpan(

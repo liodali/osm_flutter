@@ -58,7 +58,7 @@ abstract class IBaseMapController {
   }
 }
 
-extension setLiteners on IBaseMapController {
+extension SetLiteners on IBaseMapController {
   void setValueListenerMapLongTapping(GeoPoint p) {
     _listenerMapLongTapping.value = p;
   }

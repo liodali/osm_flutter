@@ -198,7 +198,7 @@ abstract class IBaseOSMController {
   ///
   ///  [roadOption] : (RoadOption) contain style of road such as color,width,borderColor,zoomInto
   Future<String> drawRoadManually(
-    String Key,
+    String key,
     List<GeoPoint> path,
     RoadOption roadOption,
   );

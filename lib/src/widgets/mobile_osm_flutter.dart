@@ -111,8 +111,8 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   @override
   void mapIsReady(bool isReady) async {
     Future.delayed(const Duration(milliseconds: 300), () async {
-      widget.controller.osMMixins.forEach((osm) async {
-        await osm.mapIsReady(isReady);
+      Future.forEach(widget.controller.osMMixins, (osmMixin) async {
+        await osmMixin.mapIsReady(isReady);
       });
     });
   }
