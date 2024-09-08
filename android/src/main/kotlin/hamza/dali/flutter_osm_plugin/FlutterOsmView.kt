@@ -32,8 +32,10 @@ import hamza.dali.flutter_osm_plugin.models.CustomTile
 import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
 import hamza.dali.flutter_osm_plugin.models.FlutterMarker
 import hamza.dali.flutter_osm_plugin.models.FlutterRoad
+import hamza.dali.flutter_osm_plugin.models.OSMShape
 import hamza.dali.flutter_osm_plugin.models.RoadConfig
 import hamza.dali.flutter_osm_plugin.models.RoadGeoPointInstruction
+import hamza.dali.flutter_osm_plugin.models.Shape
 import hamza.dali.flutter_osm_plugin.models.toRoadConfig
 import hamza.dali.flutter_osm_plugin.models.toRoadInstruction
 import hamza.dali.flutter_osm_plugin.models.toRoadOption
@@ -91,10 +93,6 @@ import kotlin.collections.set
 
 typealias VoidCallback = () -> Unit
 
-enum class Shape {
-    rect,
-    circle
-}
 
 fun FlutterOsmView.configZoomMap(call: MethodCall, result: MethodChannel.Result) {
     val args = call.arguments as HashMap<*, *>
@@ -145,16 +143,6 @@ class FlutterOsmView(
     private val folderShape: FolderOverlay by lazy {
         FolderOverlay().apply {
             name = Constants.shapesNames
-        }
-    }
-    private val folderCircles: FolderOverlay by lazy {
-        FolderOverlay().apply {
-            name = Constants.circlesNames
-        }
-    }
-    private val folderRect: FolderOverlay by lazy {
-        FolderOverlay().apply {
-            name = Constants.regionNames
         }
     }
     private val folderRoad: FolderOverlay by lazy {
@@ -308,7 +296,7 @@ class FlutterOsmView(
 
 
         map!!.addMapListener(mapListener)
-        if(isStaticMap){
+        if (isStaticMap) {
             map!!.isFlingEnabled = false
             map!!.overlayManager = StaticOverlayManager(map!!.mapOverlay)
         }
@@ -518,7 +506,7 @@ class FlutterOsmView(
                 }
 
                 "draw#circle" -> {
-                    drawShape(call, result, shapeType = Shape.circle)
+                    drawShape(call, result)
                 }
 
                 "remove#circle" -> {
@@ -526,7 +514,7 @@ class FlutterOsmView(
                 }
 
                 "draw#rect" -> {
-                    drawShape(call, result, shapeType = Shape.rect)
+                    drawShape(call, result, )
                 }
 
                 "remove#rect" -> {
@@ -534,8 +522,7 @@ class FlutterOsmView(
                 }
 
                 "clear#shapes" -> {
-                    folderCircles.items.clear()
-                    folderRect.items.clear()
+                    folderShape.items.clear()
                     map?.invalidate()
                     result.success(null)
 
@@ -1053,67 +1040,16 @@ class FlutterOsmView(
     }
 
 
-    private fun drawShape(call: MethodCall, result: MethodChannel.Result, shapeType: Shape) {
+    private fun drawShape(call: MethodCall, result: MethodChannel.Result,) {
         val args = call.arguments!! as HashMap<*, *>
-        val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
         val key = args["key"] as String
-        val colorRgb = args["color"] as List<*>
-
-        val stokeWidth = (args["strokeWidth"] as Double).toFloat()
-        val colorBorder = when (args.contains("colorBorder")) {
-            true -> {
-                val rgb = args["colorBorder"] as List<*>
-                Color.argb(
-                    Integer.parseInt(rgb[3].toString()),
-                    Integer.parseInt(rgb[0].toString()),
-                    Integer.parseInt(rgb[1].toString()),
-                    Integer.parseInt(rgb[2].toString()),
-                )
-            }
-
-            else -> null
+        val shape = OSMShape(args, map!!)
+        folderShape.items.removeAll {
+            it is OSMShape && it.id == key
         }
-        val colorFillPaint = Color.argb(
-            Integer.parseInt(colorRgb[3].toString()),
-            Integer.parseInt(colorRgb[0].toString()),
-            Integer.parseInt(colorRgb[1].toString()),
-            Integer.parseInt(colorRgb[2].toString()),
-        )
-
-        val shapeGeos: List<GeoPoint> = when (shapeType) {
-            Shape.rect -> {
-                val distance = (args["distance"] as Double)
-                Polygon.pointsAsRect(geoPoint, distance, distance).toList() as List<GeoPoint>
-            }
-
-            else -> {
-                val radius = (args["radius"] as Double)
-                Polygon.pointsAsCircle(geoPoint, radius)
-            }
-        }
-
-        val p = Polygon(map!!)
-        p.id = key
-        p.points = shapeGeos
-        p.fillPaint.color = colorFillPaint
-        p.fillPaint.style = Paint.Style.FILL
-        //p.fillPaint.alpha = 50
-        p.outlinePaint.strokeWidth = stokeWidth
-        p.outlinePaint.color = colorBorder ?: colorFillPaint
-        p.setOnClickListener { polygon, _, _ ->
-            polygon.closeInfoWindow()
-            false
-        }
-
-        folderRect.items.removeAll {
-            it is Polygon && it.id == key
-        }
-        folderRect.items.add(p)
+        folderShape.items.add(shape)
         if (!map!!.overlays.contains(folderShape)) {
-            map!!.overlays.add(folderShape)
-            if (!folderShape.items.contains(folderRect)) {
-                folderShape.add(folderRect)
-            }
+            map!!.overlays.add(1,folderShape)
         }
         map!!.invalidate()
         result.success(null)
@@ -1121,11 +1057,14 @@ class FlutterOsmView(
 
     private fun removeRect(call: MethodCall, result: MethodChannel.Result) {
         val id = call.arguments as String?
-        if (id != null) folderRect.items.removeAll {
-            (it as Polygon).id == id
-        }
-        else {
-            folderRect.items.clear()
+        when {
+            id != null -> folderShape.items.removeAll {
+                (it as Polygon).id == id
+            }
+
+            else -> folderShape.items.removeAll { shape ->
+                shape is OSMShape && shape.shape == Shape.POLYGON
+            }
         }
         map!!.invalidate()
         result.success(null)
@@ -1134,11 +1073,14 @@ class FlutterOsmView(
 
     private fun removeCircle(call: MethodCall, result: MethodChannel.Result) {
         val id = call.arguments as String?
-        if (id != null) folderCircles.items.removeAll {
-            (it as Polygon).id == id
-        }
-        else {
-            folderCircles.items.clear()
+        when {
+            id != null -> folderShape.items.removeAll {
+                (it as Polygon).id == id
+            }
+
+            else -> folderShape.items.removeAll { shape ->
+               shape is OSMShape && shape.shape == Shape.CIRCLE
+            }
         }
         map!!.invalidate()
         result.success(null)
