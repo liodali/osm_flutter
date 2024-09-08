@@ -96,255 +96,255 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
     private func onListenMethodChannel(call: FlutterMethodCall, result: @escaping FlutterResult) {
         print(call.method)
         switch call.method {
-        case "init#ios#map":
-            
-            //channel.invokeMethod("map#init", arguments: true)
-            //self.mapOSM.initOSMMap(tile:customTiles)
-            mapOSM.setZoom(zoom: 1)
-            channel.invokeMethod("map#init#ios", arguments: true)
-            result(200)
-            break
-        case "change#tile":
-            let args = call.arguments as! [String: Any]?
-            
-            if let customTileArgs = args {
-                let tile = CustomTiles(customTileArgs)
-                self.mapOSM.setCustomTile(tile: tile)
-            }
-
-            result(200)
-            break;
-        case "initMap":
-            initPosition(args: call.arguments, result: result)
-            mapInitialized = true
-            break;
-        case "config#Zoom":
-            configZoomMap(call: call)
-            result(200)
-            break;
-        case "limitArea":
-            setCameraAreaLimit(call: call)
-            result(200)
-            break;
-        case "remove#limitArea":
-            removeCameraAreaLimit(result: result)
-            result(200)
-            break;
-        case "changePosition":
-            // @deprecated
-           // changePosition(args: call.arguments, result: result)
-            result(200)
-            break;
-        case "currentLocation":
-            self.mapOSM.locationManager.requestEnableLocation()
-            result(200)
-            break;
-        case "map#center":
-            result(self.mapOSM.center().toGeoPoint())
-            result(200)
-            break;
-        case "trackMe":
-            let args = call.arguments as! [Any]
-            startTrackUser(args:args)
-            result(200)
-            break;
-        case "user#position":
-            self.mapOSM.locationManager.requestSingleLocation()
-            resultFlutter = result
-            break;
-        case "moveTo#position":
-            moveToSpecificLocation(call: call, result: result)
-            break;
-        case "map#bounds":
-            getMapBounds(result: result)
-            break;
-        case "user#removeMarkerPosition":
-            deleteMarker(call: call)
-            result(200)
-            break;
-        case "deactivateTrackMe":
-            stopTracking()
-            result(200)
-            break;
-        case "startLocationUpdating":
-            userLocationWithoutControl = true
-            self.mapOSM.locationManager.toggleTracking(configuration: TrackConfiguration(moveMap: false,controlUserMarker: false))
-            result(200)
-            break;
-        case "stopLocationUpdating":
-            userLocationWithoutControl = false
-            stopTracking()
-            result(200)
-            break;
-        case "Zoom":
-            changeMapZoom(call.arguments)
-            result(200)
-            break;
-        case "get#Zoom":
-            result(self.mapOSM.zoom())
-            break;
-        case "change#stepZoom":
-            
-            result(200)
-            break;
-        case "zoomToRegion":
-           zoomMapToBoundingBox(call: call)
-            result(200)
-            break;
-        case "marker#icon":
-            let args = call.arguments as! [String: Any]
-            homeMarker = convertImage(codeImage: args["icon"] as! String)
-            result(200)
-            break;
-        case "staticPosition#IconMarker":
-            setMarkerStaticGeoPIcon(call: call)
-            result(200)
-            break;
-        case "staticPosition":
-            setStaticGeoPoint(call: call)
-            result(200)
-            break;
-        case "road":
-            drawRoadMCOSM(call: call) { [unowned self] roadInfo, road, roadData, boundingbox,polyline, error in
-                if (error != nil) {
-                    result(FlutterError(code: "400", message: "error to draw road", details: nil))
-                } else {
-                    lastRoadKey = roadInfo?.id
-                    let roadConfiguration = roadData.toRoadConfiguration()
-                    /*RoadConfiguration(width: Float(roadData?.roadWidth ?? 5),
-                                                              color: UIColor(hexString: roadData?.roadColor ?? roadColor) ?? .green,
-                                                              borderWidth: roadData?.roadBorderWidth.toFloat(),
-                                                              borderColor: UIColor(hexString: roadData?.roadBorderColor),
-                                                              lineCap: LineCapType.ROUND
-                                                              
-                    )*/
-                    let coordinates = polyline?.coordinates
-                    self.mapOSM.roadManager.addRoad(id: lastRoadKey!, polylines: coordinates!, configuration: roadConfiguration)
-
-                    if let bounding = boundingbox {
-                        self.mapOSM.moveToByBoundingBox(bounds: bounding, animated: true)
-                    }
-                    let instructions = road?.toInstruction() ?? [RoadInstruction]()
-                    storedRoads[roadInfo!.id] = StoredRoad(id: roadInfo!.id, roadInformation: roadInfo, instructions: instructions)
-                    result(roadInfo!.toMap(instructions: instructions))
+            case "init#ios#map":
+                
+                //channel.invokeMethod("map#init", arguments: true)
+                //self.mapOSM.initOSMMap(tile:customTiles)
+                mapOSM.setZoom(zoom: 1)
+                channel.invokeMethod("map#init#ios", arguments: true)
+                result(200)
+                break
+            case "change#tile":
+                let args = call.arguments as! [String: Any]?
+                
+                if let customTileArgs = args {
+                    let tile = CustomTiles(customTileArgs)
+                    self.mapOSM.setCustomTile(tile: tile)
                 }
 
-            }
-            //result(["distance": 0, "duration": 0])
-            break;
-        case "draw#multi#road":
-            drawMultiRoad(call: call) { [unowned self] roadInfos, roadsAndRoadData, error in
-                if (roadInfos.isEmpty && roadsAndRoadData.isEmpty) {
-                    result(FlutterError(code: "400", message: "error to draw multiple road", details: nil))
-                } else {
-                    let roads = roadsAndRoadData.filter { road in
-                                road != nil
-                            }
-                            .map { roadAndRoadData -> (String, Road) in
+                result(200)
+                break;
+            case "initMap":
+                initPosition(args: call.arguments, result: result)
+                mapInitialized = true
+                break;
+            case "config#Zoom":
+                configZoomMap(call: call)
+                result(200)
+                break;
+            case "limitArea":
+                setCameraAreaLimit(call: call)
+                result(200)
+                break;
+            case "remove#limitArea":
+                removeCameraAreaLimit(result: result)
+                result(200)
+                break;
+            case "changePosition":
+                // @deprecated
+               // changePosition(args: call.arguments, result: result)
+                result(200)
+                break;
+            case "currentLocation":
+                self.mapOSM.locationManager.requestEnableLocation()
+                result(200)
+                break;
+            case "map#center":
+                result(self.mapOSM.center().toGeoPoint())
+                result(200)
+                break;
+            case "trackMe":
+                let args = call.arguments as! [Any]
+                startTrackUser(args:args)
+                result(200)
+                break;
+            case "user#position":
+                self.mapOSM.locationManager.requestSingleLocation()
+                resultFlutter = result
+                break;
+            case "moveTo#position":
+                moveToSpecificLocation(call: call, result: result)
+                break;
+            case "map#bounds":
+                getMapBounds(result: result)
+                break;
+            case "user#removeMarkerPosition":
+                deleteMarker(call: call)
+                result(200)
+                break;
+            case "deactivateTrackMe":
+                stopTracking()
+                result(200)
+                break;
+            case "startLocationUpdating":
+                userLocationWithoutControl = true
+                self.mapOSM.locationManager.toggleTracking(configuration: TrackConfiguration(moveMap: false,controlUserMarker: false))
+                result(200)
+                break;
+            case "stopLocationUpdating":
+                userLocationWithoutControl = false
+                stopTracking()
+                result(200)
+                break;
+            case "Zoom":
+                changeMapZoom(call.arguments)
+                result(200)
+                break;
+            case "get#Zoom":
+                result(self.mapOSM.zoom())
+                break;
+            case "change#stepZoom":
+                
+                result(200)
+                break;
+            case "zoomToRegion":
+               zoomMapToBoundingBox(call: call)
+                result(200)
+                break;
+            case "marker#icon":
+                let args = call.arguments as! [String: Any]
+                homeMarker = convertImage(codeImage: args["icon"] as! String)
+                result(200)
+                break;
+            case "staticPosition#IconMarker":
+                setMarkerStaticGeoPIcon(call: call)
+                result(200)
+                break;
+            case "staticPosition":
+                setStaticGeoPoint(call: call)
+                result(200)
+                break;
+            case "road":
+                drawRoadMCOSM(call: call) { [unowned self] roadInfo, road, roadData, boundingbox,polyline, error in
+                    if (error != nil) {
+                        result(FlutterError(code: "400", message: "error to draw road", details: nil))
+                    } else {
+                        lastRoadKey = roadInfo?.id
+                        let roadConfiguration = roadData.toRoadConfiguration()
+                        /*RoadConfiguration(width: Float(roadData?.roadWidth ?? 5),
+                                                                  color: UIColor(hexString: roadData?.roadColor ?? roadColor) ?? .green,
+                                                                  borderWidth: roadData?.roadBorderWidth.toFloat(),
+                                                                  borderColor: UIColor(hexString: roadData?.roadBorderColor),
+                                                                  lineCap: LineCapType.ROUND
+                                                                  
+                        )*/
+                        let coordinates = polyline?.coordinates
+                        self.mapOSM.roadManager.addRoad(id: lastRoadKey!, polylines: coordinates!, configuration: roadConfiguration)
 
-                                var road = roadAndRoadData!.1
-                                road.roadData = roadAndRoadData!.2
-                                return (roadAndRoadData!.0, road)
-                            }
-                    roads.forEach { road in
-                        let roadData = road.1.roadData
-                        let polyline = Polyline(encodedPolyline: road.1.mRouteHigh,precision: 1e5)
-                        let roadConfig = RoadConfiguration(width: roadData.roadWidth.toFloat(),
-                                                           color: UIColor(hexString: roadData.roadColor) ?? .green,
-                                                           borderWidth: roadData.roadBorderWidth.toFloat(),
-                                                           borderColor: UIColor(hexString: roadData.roadBorderColor)
-                        )
-                        self.mapOSM.roadManager.addRoad(id: road.0, polylines: polyline.coordinates!, configuration: roadConfig)
+                        if let bounding = boundingbox {
+                            self.mapOSM.moveToByBoundingBox(bounds: bounding, animated: true)
+                        }
+                        let instructions = road?.toInstruction() ?? [RoadInstruction]()
+                        storedRoads[roadInfo!.id] = StoredRoad(id: roadInfo!.id, roadInformation: roadInfo, instructions: instructions)
+                        result(roadInfo!.toMap(instructions: instructions))
                     }
-                    let infos = roadInfos.filter { info in
-                                info != nil
-                            }
-                            .enumerated()
-                            .map { (index, info) -> [String: Any] in
-                                let instructions = roads[index].1.toInstruction()
-                                return  info!.toMap(instructions: instructions)
-                            }
-                    result(infos)
-                }
 
+                }
+                //result(["distance": 0, "duration": 0])
+                break;
+            case "draw#multi#road":
+                drawMultiRoad(call: call) { [unowned self] roadInfos, roadsAndRoadData, error in
+                    if (roadInfos.isEmpty && roadsAndRoadData.isEmpty) {
+                        result(FlutterError(code: "400", message: "error to draw multiple road", details: nil))
+                    } else {
+                        let roads = roadsAndRoadData.filter { road in
+                                    road != nil
+                                }
+                                .map { roadAndRoadData -> (String, Road) in
+
+                                    var road = roadAndRoadData!.1
+                                    road.roadData = roadAndRoadData!.2
+                                    return (roadAndRoadData!.0, road)
+                                }
+                        roads.forEach { road in
+                            let roadData = road.1.roadData
+                            let polyline = Polyline(encodedPolyline: road.1.mRouteHigh,precision: 1e5)
+                            let roadConfig = RoadConfiguration(width: roadData.roadWidth.toFloat(),
+                                                               color: UIColor(hexString: roadData.roadColor) ?? .green,
+                                                               borderWidth: roadData.roadBorderWidth.toFloat(),
+                                                               borderColor: UIColor(hexString: roadData.roadBorderColor)
+                            )
+                            self.mapOSM.roadManager.addRoad(id: road.0, polylines: polyline.coordinates!, configuration: roadConfig)
+                        }
+                        let infos = roadInfos.filter { info in
+                                    info != nil
+                                }
+                                .enumerated()
+                                .map { (index, info) -> [String: Any] in
+                                    let instructions = roads[index].1.toInstruction()
+                                    return  info!.toMap(instructions: instructions)
+                                }
+                        result(infos)
+                    }
+
+                }
+              
+                break;
+            case "drawRoad#manually":
+                drawRoadManually(call: call, result: result)
+                break;
+            case "delete#road":
+                deleteRoad(call: call, result: result)
+                break;
+            case "clear#roads":
+                self.mapOSM.roadManager.removeAllRoads()
+                result(200)
+                break;
+            case "map#orientation":
+                rotateMap(call: call)
+                result(200)
+                break;
+            case "user#locationMarkers":
+                configureUserLocation(call:call)
+                result(200)
+                break;
+            case "add#Marker":
+                addMarkerManually(call: call)
+                result(200)
+                break;
+            case "update#Marker":
+                updateMarkerIcon(call: call)
+                result(200)
+                break;
+            case "change#Marker":
+                changePositionMarker(call: call)
+                result(200)
+                break;
+            case "delete#markers":
+                deleteMarkers(call: call)
+                result(200)
+                break;
+            case "get#geopoints":
+                getGeoPoints(result)
+                break;
+            case "toggle#Alllayer":
+                let isVisible = call.arguments as! Bool
+                if isVisible {
+                    self.mapOSM.showAllLayers()
+                }else {
+                    self.mapOSM.hideAllLayers()
+                }
+            case "draw#rect":
+                drawShape(args:call.arguments, result: result,shapeType: ShapeTypes.Rect)
+                break;
+            case "draw#circle":
+                drawShape(args:call.arguments, result: result,shapeType: ShapeTypes.Circle)
+                break;
+            case "remove#circle":
+                let key = call.arguments
+                if key == nil {
+                    self.mapOSM.shapeManager.deleteAllCircles()
+                }else{
+                    self.mapOSM.shapeManager.deleteShape(ckey: key as! String)
+                }
+                result(200)
+                break;
+            case "remove#rect":
+                let key = call.arguments
+                if key == nil {
+                    self.mapOSM.shapeManager.deleteAllRect()
+                }else{
+                    self.mapOSM.shapeManager.deleteShape(ckey: key as! String)
+                }
+                result(200)
+                break;
+            case "clear#shapes":
+                self.mapOSM.shapeManager.deleteAllShapes()
+                break;
+            default:
+                result(nil)
+                break;
             }
-          
-            break;
-        case "drawRoad#manually":
-            drawRoadManually(call: call, result: result)
-            break;
-        case "delete#road": 
-            deleteRoad(call: call, result: result)
-            break;
-        case "clear#roads":
-            self.mapOSM.roadManager.removeAllRoads()
-            result(200)
-            break;
-        case "map#orientation":
-            rotateMap(call: call)
-            result(200)
-            break;
-        case "user#locationMarkers":
-            configureUserLocation(call:call)
-            result(200)
-            break;
-        case "add#Marker":
-            addMarkerManually(call: call)
-            result(200)
-            break;
-        case "update#Marker":
-            updateMarkerIcon(call: call)
-            result(200)
-            break;
-        case "change#Marker":
-            changePositionMarker(call: call)
-            result(200)
-            break;
-        case "delete#markers":
-            deleteMarkers(call: call)
-            result(200)
-            break;
-        case "get#geopoints":
-            getGeoPoints(result)
-            break;
-        case "toggle#Alllayer":
-            let isVisible = call.arguments as! Bool
-            if isVisible {
-                self.mapOSM.showAllLayers()
-            }else {
-                self.mapOSM.hideAllLayers()
-            }
-        case "draw#rect":
-            drawShape(args:call.arguments, result: result,shapeType: ShapeTypes.Rect)
-            break;
-        case "draw#circle":
-            drawShape(args:call.arguments, result: result,shapeType: ShapeTypes.Circle)
-            break;
-        case "remove#cirlce":
-            let key = call.arguments
-            if key == nil {
-                self.mapOSM.shapeManager.deleteAllCircles()
-            }else{
-                self.mapOSM.shapeManager.deleteShape(ckey: key as! String)
-            }
-            result(200)
-            break;
-        case "remove#rect":
-            let key = call.arguments
-            if key == nil {
-                self.mapOSM.shapeManager.deleteAllRect()
-            }else{
-                self.mapOSM.shapeManager.deleteShape(ckey: key as! String)
-            }
-            result(200)
-            break;
-        case "clear#shapes":
-            self.mapOSM.shapeManager.deleteAllShapes()
-            break;
-        default:
-            result(nil)
-            break;
-        }
     }
     
     /*func initMap( result: @escaping FlutterResult){
