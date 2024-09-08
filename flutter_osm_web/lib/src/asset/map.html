@@ -601,10 +601,6 @@
             outlineWidth: roadOption.roadBorderWidth,
             smoothFactor: 0
           }
-          if(roadOption.isDotted){
-            argsPolylineWithBorder["dashArray"] = "15"
-            argsPolylineWithBorder["dashOffset"] = 15
-          }
           console.log("argsPolylineWithBorder: "+JSON.stringify(argsPolylineWithBorder))
         lastRoad = L.hotline(routePolyline,
         argsPolylineWithBorder
