@@ -1,3 +1,4 @@
+## 1.3.0:
 ## 1.2.0-wasm:
 * add wasm support (migrate from package:js to dart:js_interop)
 ## 1.1.0:
