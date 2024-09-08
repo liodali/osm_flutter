@@ -1,3 +1,6 @@
+### 1.3.0:
+* add new attribute `isDotted` to `RoadOption`  to draw dotted line
+* fix bug related to draw shapes in mobile side
 ### 1.2.0:
 * Create new widget `OSMViewer` as static map
 * Add `SimpleMapController` as controller to manipulate `OSMViewer`

@@ -4,7 +4,7 @@
 
 # flutter_osm_plugin 
 
-![pub](https://img.shields.io/badge/pub-v1.2.0-blue)   
+![pub](https://img.shields.io/badge/pub-v1.3.0-blue)   
 
 
 ## Platform Support
@@ -25,6 +25,7 @@
 * set BoundingBox (Android/iOS/Web)
 * zoom into region (Android/iOS/web)
 * draw Road  (Android/iOS/web)
+* draw dotted Road (Android/iOS/web)
 * recuperate information (instruction/duration/distance) of the current road  (Android/iOS/web)
 * draw Road manually (Android/iOS/web)
 * draw multiple Roads  (Android/iOS/web)
@@ -50,7 +51,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^1.1.0
+      flutter_osm_plugin: ^1.3.0
 
 
 
@@ -491,7 +492,9 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 | `roadBorderColor`        | (Color?) set color of border polyline       |
 | `roadBorderWidth`        | (double?) set border width of polyline, if width null or 0,polyline will drawed without border |
 | `zoomInto`               | (bool)  change zoom level to make the all the road visible (default:true)    |
+| `isDotted`               | (bool)  to draw dotted polyline   (default: false)    |
 
+**Note** drawing dotted polyline has limitation on web where we cannot draw dotted poyline with borderWidth > 0 
 
 <b> 16.b) draw road manually </b>
 ```dart
