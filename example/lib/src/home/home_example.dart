@@ -183,15 +183,8 @@ class _MainExampleState extends State<OldMainExample>
           await controller.changeLocationMarker(
             oldLocation: lastGeoPoint.value!,
             newLocation: controller.listenerMapSingleTapping.value!,
-            //angle: Random.secure().nextDouble() * (2 * pi),
-            // iconAnchor: IconAnchor(
-            //   anchor: Anchor.center,
-            //   offset: (
-            //     x: 32,
-            //     y: 16,
-            //   ),
-            // ),
           );
+
           lastGeoPoint.value = controller.listenerMapSingleTapping.value;
         } else {
           await controller.addMarker(
