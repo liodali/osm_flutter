@@ -1,3 +1,6 @@
+## 1.3.1: fix bug 
+* fix bug in setIconMarker
+* improve changeMarker API in JS
 ## 1.3.0:
 ## 1.2.0-wasm:
 * add wasm support (migrate from package:js to dart:js_interop)
