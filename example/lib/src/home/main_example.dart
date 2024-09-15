@@ -39,8 +39,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
   void initState() {
     super.initState();
     controller = MapController(
-      initPosition: 
-      GeoPoint(
+      initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
       ),
@@ -156,7 +155,6 @@ class _MainState extends State<Main> with OSMMixinObserver {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.maybeOf(context)?.viewPadding.top;
@@ -216,7 +214,8 @@ class _MainState extends State<Main> with OSMMixinObserver {
                       onPressed: () async {
                         Future.forEach(geos, (element) async {
                           await controller.removeMarker(element);
-                          await Future.delayed(const Duration(milliseconds: 100));
+                          await Future.delayed(
+                              const Duration(milliseconds: 100));
                         });
                       },
                       icon: const Icon(Icons.clear_all),
@@ -367,30 +366,36 @@ class DrawerMain extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onHorizontalDragEnd: (_) {
-        Scaffold.of(context).closeDrawer();
-      },
-      child: Drawer(
-        child: Column(
-          children: [
-            SizedBox(height: MediaQuery.viewPaddingOf(context).top),
-            ListTile(
-              onTap: () {},
-              title: const Text("search example"),
+    return PointerInterceptor(
+      child: GestureDetector(
+        onHorizontalDragEnd: (_) {
+          Scaffold.of(context).closeDrawer();
+        },
+        child: PointerInterceptor(
+          child: Drawer(
+            child: Column(
+              children: [
+                SizedBox(height: MediaQuery.viewPaddingOf(context).top),
+                ListTile(
+                  onTap: () {},
+                  title: const Text("search example"),
+                ),
+                ListTile(
+                  onTap: () {},
+                  title: const Text("map with hook example"),
+                ),
+                PointerInterceptor(
+                  child: ListTile(
+                    onTap: () async {
+                      Scaffold.of(context).closeDrawer();
+                      await Navigator.pushNamed(context, '/old-home');
+                    },
+                    title: const Text("old home example"),
+                  ),
+                )
+              ],
             ),
-            ListTile(
-              onTap: () {},
-              title: const Text("map with hook example"),
-            ),
-            ListTile(
-              onTap: () async {
-                Scaffold.of(context).closeDrawer();
-                await Navigator.pushNamed(context, '/old-home');
-              },
-              title: const Text("old home example"),
-            )
-          ],
+          ),
         ),
       ),
     );

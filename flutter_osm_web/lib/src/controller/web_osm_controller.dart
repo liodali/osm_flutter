@@ -119,7 +119,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     UserTrackingOption? userPositionOption,
     bool useExternalTracking = false,
   }) async {
-    
     interop.setUpMap(mapIdMixin.toJS);
     assert((initPosition != null) ^ (userPositionOption != null));
     if (osmWebFlutterState.widget.controller.customTile != null) {
@@ -149,8 +148,9 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         osmWebFlutterState.widget.onMapIsReady!(event.value);
       }
       if (osmWebFlutterState.widget.controller.osMMixins.isNotEmpty) {
-        osmWebFlutterState.widget.controller.osMMixins.forEach((element) async {
-          await element.mapIsReady(event.value);
+        await Future.forEach(osmWebFlutterState.widget.controller.osMMixins,
+            (osmMixin) async {
+          await osmMixin.mapIsReady(event.value);
         });
       }
       if (_androidOSMLifecycle != null) {
@@ -319,9 +319,21 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
     await Future.delayed(duration, () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
+      final size = osmWebFlutterState.dynamicMarkerKey?.currentContext?.size;
+      final iconSize = size.toSizeJS();
       final jsP = point.toGeoJS();
+      debugPrint("setIconMarker");
       await interop
-          .modifyMarker(mapIdMixin.toJS, jsP, icon.convertToString().toJS)
+          .changeMarker(
+            mapIdMixin.toJS,
+            jsP,
+            null,
+            icon.convertToString().toJS,
+            iconSize,
+            null,
+            null,
+          )
+          //.modifyMarker(mapIdMixin.toJS, jsP, icon.convertToString().toJS)
           .toDart;
     });
   }
