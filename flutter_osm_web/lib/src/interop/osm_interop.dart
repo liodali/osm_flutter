@@ -108,8 +108,8 @@ external JSPromise addMarker(
 @JS('changeMarker')
 external JSPromise changeMarker(
   JSNumber mapId,
-  GeoPointJs oldP,
-  GeoPointJs newP,
+  GeoPointJs currentPoint,
+  GeoPointJs? newP,
   JSString? icon,
   SizeJs? iconSize,
   JSNumber? angle,

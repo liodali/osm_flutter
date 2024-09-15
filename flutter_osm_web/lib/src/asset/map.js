@@ -29,9 +29,9 @@ async function changeMarker(mapId,oldPoint, point, icon,iconSize,angle,anchor) {
    return iframe.contentWindow.changeMarker(oldPoint, point, icon,iconSize,angle,anchor);
 }
 
-async function modifyMarker(mapId,point, icon) {
+async function modifyMarker(mapId,point, icon,size) {
    var iframe = getIframe(mapId);
-   return await iframe.contentWindow.modifyMarker(point, icon);
+   return await iframe.contentWindow.modifyMarker(point, icon,size);
 }
 
 async function initMapLocation(mapId,point) {

@@ -281,21 +281,8 @@
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
       if (anchor != undefined && (anchor.x <= 1 && anchor.y <= 1)) {
-        var anchorX = anchor.x * iconSize.width
-        var anchorY = anchor.y * (iconSize.height - 1)
-        if (anchor.offset != undefined) {
-          var offsetX = -anchor.offset.x
-          var offsetY = anchor.offset.y
-          /* if(anchor.offset.x > 1 ){
-             offsetX = anchor.offset.x / 32
-           }
-           if(anchor.offset.y > 1 ){
-             offsetY = anchor.offset.y / 32
-           }*/
-          anchorX += (offsetX)
-          anchorY += (offsetY)
-        }
-        argsIcon["iconAnchor"] = [anchorX, anchorY]
+       
+        argsIcon["iconAnchor"] = anchorCalculate(anchor, iconSize)
       } else {
         argsIcon["iconAnchor"] = undefined //[iconSize.width, iconSize.height-1]
       }
@@ -317,51 +304,38 @@
     }
     async function changeMarker(oldPoint, point, icon, iconSize, angle, anchor) {
 
-      var latlng = L.latLng([point.lat, point.lon]);
       var oldLatlng = L.latLng([oldPoint.lat, oldPoint.lon]);
       if (mymap.hasLayer(mainLayers.get("markers"))) {
         mymap.eachLayer(function (layer) {
           if (layer instanceof L.Marker) {
             var geoPoint = layer.getLatLng();
             if (geoPoint.lat == oldLatlng.lat && geoPoint.lng == oldLatlng.lng) {
-              var iconMarker = layer.getIcon();
-              var _iconSize = undefined
-              if (iconSize == undefined) {
-                _iconSize = {
-                  width: iconMarker.options.iconSize[0],
-                  height: iconMarker.options.iconSize[1]
-                }
-              } else {
-                _iconSize = iconSize
-              }
-              if (icon != undefined && icon != null) {
-                iconMarker = L.icon({
-                  iconUrl: "data:image/png;base64," + icon,
-                  iconSize: [_iconSize.width, _iconSize.height] //[32, 32]
-                });
-                //layer.setIcon(iconMarker)
-              }
+              var iconMarker = updateIcon(layer.getIcon(),icon,iconSize, anchor); // ;              
+              layer.setIcon(iconMarker)
 
               const iconMarkerURL = iconMarker.options.iconUrl.split("data:image/png;base64,")[1];
               var angleMarker = layer.options.rotationAngle;
               if (angle != undefined && angleMarker != angle) {
                 angleMarker = angle;
+                layer.setRotationAngle(angleMarker)
+                
               }
-              var iconAnchor = undefined
-              if (iconMarker.options.iconAnchor != undefined) {
-                iconAnchor = {
-                  x: iconMarker.options.iconAnchor[0],
-                  y: iconMarker.options.iconAnchor[1]
-                };
-                console.log(iconAnchor)
-                console.log("anchor param: " + anchor)
+              if(point != undefined){
+                layer.setLatLng([point.lat, point.lon]);
               }
-              if ((anchor != undefined && anchor != null) && anchor != iconAnchor) {
-                iconAnchor = anchor;
-              }
-              mainLayers.get("markers").removeLayer(layer);
-              console.log(iconAnchor)
-              addMarker(point, _iconSize, iconMarkerURL, angleMarker, iconAnchor)
+              
+              // if(point != undefined){
+              //   mainLayers.get("markers").removeLayer(layer);
+              //   console.log(iconAnchor)
+              //   addMarker(point, _iconSize, iconMarkerURL, angleMarker, iconAnchor)
+              // }else {
+              //   layer.setIcon(iconMarker)
+              //   layer.setRotationAngle(angleMarker)
+              //   if (iconAnchor != undefined) {
+              //     layer.setIconOffset([iconAnchor.x, iconAnchor.y])
+              //   }
+              // }
+              
               return this;
             }
           }
@@ -373,7 +347,7 @@
     async function modifyMarker(point, icon) {
       const position = [point.lat, point.lon];
       var latlng = L.latLng(position);
-      mymap.eachLayer(function (layer) {
+      mainLayers.get("markers").eachLayer(function (layer) {
         if (layer instanceof L.Marker) {
           var geoPoint = layer.getLatLng();
           if (geoPoint.lat == latlng.lat && geoPoint.lng == latlng.lng) {
@@ -891,7 +865,50 @@
       }
 
     }
+    function updateIcon(iconLayer,icon,iconSize,anchor) {
+        var _iconSize = iconSize
+        var iconMarker = iconLayer
+        if (iconSize == undefined || iconSize == null) {
+              _iconSize = {
+              width: iconMarker.options.iconSize[0],
+              height: iconMarker.options.iconSize[1]
+          }
+        }
+        var iconAnchor = undefined
+        if (iconMarker.options.iconAnchor != undefined) {
+            iconAnchor = {
+                x: iconMarker.options.iconAnchor[0],
+                y: iconMarker.options.iconAnchor[1]
+            };
+        }
+             
+        if ((anchor != undefined && anchor != null) && anchor != iconAnchor) {
+            iconAnchor = anchor;
+        }
+        if (icon != undefined && icon != null) {
+            iconMarker = L.icon({
+                iconUrl: "data:image/png;base64," + icon,
+                iconSize: [_iconSize.width, _iconSize.height], //[32, 32]
+                iconAnchor:iconAnchor,
+           });
+        }
+        iconMarker["iconAnchor"] = anchorCalculate(iconAnchor, _iconSize)
+        return iconMarker
+    }
 
+    function anchorCalculate(anchor,iconSize) {
+      console.log(iconSize)
+      console.log(anchor)
+      var anchorX = anchor.x * iconSize.width
+      var anchorY = anchor.y * (iconSize.height - 1)
+      if (anchor.offset != undefined) {
+          var offsetX = -anchor.offset.x
+          var offsetY = anchor.offset.y
+          anchorX += (offsetX)
+          anchorY += (offsetY)
+      }
+      return [anchorX,anchorY]
+    }
   </script>
 
 

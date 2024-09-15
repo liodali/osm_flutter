@@ -319,9 +319,21 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
     await Future.delayed(duration, () async {
       final icon = await capturePng(osmWebFlutterState.dynamicMarkerKey!);
+      final size = osmWebFlutterState.dynamicMarkerKey?.currentContext?.size;
+      final iconSize = size.toSizeJS();
       final jsP = point.toGeoJS();
+      debugPrint("setIconMarker");
       await interop
-          .modifyMarker(mapIdMixin.toJS, jsP, icon.convertToString().toJS)
+          .changeMarker(
+            mapIdMixin.toJS,
+            jsP,
+            null,
+            icon.convertToString().toJS,
+            iconSize,
+            null,
+            null,
+          )
+          //.modifyMarker(mapIdMixin.toJS, jsP, icon.convertToString().toJS)
           .toDart;
     });
   }
