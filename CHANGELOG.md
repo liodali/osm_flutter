@@ -1,3 +1,5 @@
+### 1.3.1:
+* fix bug in setIconMarker In web side (#560)
 ### 1.3.0:
 * add new attribute `isDotted` to `RoadOption`  to draw dotted line
 * fix bug related to draw shapes in mobile side
