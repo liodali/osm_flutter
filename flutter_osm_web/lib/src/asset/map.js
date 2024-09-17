@@ -7,7 +7,7 @@ async function centerMap(mapId) {
 async function locateMe(mapId) {
    var iframe = getIframe(mapId);
    var geoAsync = await iframe.contentWindow.getMyLocation();
-   return geoAsync;
+   return JSON.stringify(geoAsync);
 }
 
 async function changeTileLayer(mapId,tile) {

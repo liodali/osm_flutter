@@ -154,8 +154,8 @@ mixin WebMixin {
   }
 
   Future<GeoPoint> myLocation() async {
-    final locateResp = await interop.locateMe(mapIdMixin.toJS).toDart;
-    Map<String, dynamic>? value = locateResp.dartify() as Map<String, dynamic>?;
+    final locateResp = (await interop.locateMe(mapIdMixin.toJS).toDart).toDart;
+    Map<String, dynamic>? value = json.decode(locateResp);
     if (value!.containsKey("error")) {
       throw Exception(value["message"]);
     }

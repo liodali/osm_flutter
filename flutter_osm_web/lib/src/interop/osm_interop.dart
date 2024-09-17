@@ -27,7 +27,7 @@ external JSPromise getBounds(
 );
 
 @JS('locateMe')
-external JSPromise locateMe(
+external JSPromise<JSString> locateMe(
   JSNumber mapId,
 );
 
