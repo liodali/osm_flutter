@@ -1,3 +1,5 @@
+## 1.3.2: fix bug 
+* fix mylocation api
 ## 1.3.1: fix bug 
 * fix bug in setIconMarker
 * improve changeMarker API in JS
