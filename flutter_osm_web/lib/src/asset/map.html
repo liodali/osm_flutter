@@ -893,17 +893,18 @@
         if (icon != undefined && icon != null) {
             iconMarker = L.icon({
                 iconUrl: "data:image/png;base64," + icon,
-                iconSize: [_iconSize.width, _iconSize.height], //[32, 32]
-                iconAnchor:iconAnchor,
+                iconSize: [_iconSize.width, _iconSize.height],
+                //iconAnchor:iconAnchor,
            });
         }
-        iconMarker["iconAnchor"] = anchorCalculate(iconAnchor, _iconSize)
+        if(anchor != undefined && anchor != null) {
+          iconMarker["iconAnchor"] = anchorCalculate(iconAnchor, _iconSize)
+        }
+      
         return iconMarker
     }
 
     function anchorCalculate(anchor,iconSize) {
-      console.log(iconSize)
-      console.log(anchor)
       var anchorX = anchor.x * iconSize.width
       var anchorY = anchor.y * (iconSize.height - 1)
       if (anchor.offset != undefined) {
