@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -33,8 +32,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       if (_streamController.isClosed) {
         _streamController = StreamController<EventOSM>.broadcast();
       }
-      _channels[idOSM] =
-          MethodChannel('plugins.dali.hamza/osmview_$idOSM');
+      _channels[idOSM] = MethodChannel('plugins.dali.hamza/osmview_$idOSM');
       setGeoPointHandler(idOSM);
     }
     /*if (!_eventsChannels.containsKey(idOSM)) {
@@ -319,7 +317,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
         "point": listGeos,
       });
     } on PlatformException catch (e) {
-     debugPrint(e.message);
+      debugPrint(e.message);
     }
   }
 
@@ -635,8 +633,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @override
   Future<void> changeTileLayer(int idOSM, CustomTile? tile) async {
     //osmTileURL
-    final argTile =
-        tile?.toMap() ?? (Platform.isIOS ? CustomTile.osm().toMap() : null);
+    final argTile = tile?.toMap() ??
+        (defaultTargetPlatform == TargetPlatform.iOS
+            ? CustomTile.osm().toMap()
+            : null);
     await _channels[idOSM]!.invokeMethod("change#tile", argTile);
   }
 
