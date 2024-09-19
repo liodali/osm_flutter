@@ -1,5 +1,7 @@
+### 1.3.3:
+* fix bug in web side
 ### 1.3.2:
-*fix bug in mylocation on web side
+* fix bug in mylocation on web side
 ### 1.3.1:
 * fix bug in setIconMarker In web side (#560)
 ### 1.3.0:
