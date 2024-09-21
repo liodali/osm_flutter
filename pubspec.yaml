@@ -27,7 +27,11 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-# dependency_overrides:
+dependency_overrides:
+      permission_handler_android: ^12.0.12
+      url_launcher_android: ^6.3.10
+      url_launcher_ios: ^6.3.1
+      url_launcher_web: ^2.3.3
 #     permission_handler_html: 0.1.2
 #     url_launcher_web: 2.3.3
 #     web: ^1.0.0

@@ -36,7 +36,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 19
+        //minSdkVersion 19
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -68,9 +68,7 @@ dependencies {
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    //implementation 'androidx.core:core-ktx:1.9.0'
-    //implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+
     // Retrofit and relevant converters
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-moshi:2.9.0'
