@@ -1,3 +1,4 @@
+### 1.3.4: fix bug
 ### 1.3.3+1:
 * remove unnecessary gradle dependency that cause issue
 ### 1.3.3:
