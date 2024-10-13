@@ -162,6 +162,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       await requestPermission();
     }
     widget.controller.init();
+    _osmController!.onListenChannel();
     if (!isFirstLaunched.value) {
       isFirstLaunched.value = true;
     }

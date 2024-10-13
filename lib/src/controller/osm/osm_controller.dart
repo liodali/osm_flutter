@@ -102,8 +102,19 @@ final class MobileOSMController extends IBaseOSMController {
       initZoom ?? _osmFlutterState.widget.zoomOption.initZoom,
     );
 
-    /// listen to data send from native map
+    if (Platform.isAndroid) {
+      await initMap(
+        initPosition,
+        userPositionOption,
+        useExternalTracking,
+        box,
+        initZoom,
+      );
+    }
+  }
 
+  /// listen to data send from native map
+  void onListenChannel() {
     osmPlatform.onLongPressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapLongTapping(event.value);
@@ -111,7 +122,6 @@ final class MobileOSMController extends IBaseOSMController {
         osmMixin.onLongTap(event.value);
       }
     });
-
     osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
@@ -135,6 +145,12 @@ final class MobileOSMController extends IBaseOSMController {
       _osmFlutterState.widget.mapIsReadyListener.value = event.value;
       if (_osmFlutterState.widget.onMapIsReady != null) {
         _osmFlutterState.widget.onMapIsReady!(event.value);
+      }
+      if (_osmFlutterState.widget.controller.osMMixins.isNotEmpty) {
+        Future.forEach(_osmFlutterState.widget.controller.osMMixins,
+            (osmMixin) async {
+          osmMixin.mapIsReady(event.value);
+        });
       }
       _osmFlutterState.widget.controller
           .setValueListenerMapIsReady(event.value);
@@ -177,16 +193,6 @@ final class MobileOSMController extends IBaseOSMController {
         mixin.onLocationChanged(event.value);
       }
     });
-
-    if (Platform.isAndroid) {
-      await initMap(
-        initPosition,
-        userPositionOption,
-        useExternalTracking,
-        box,
-        initZoom,
-      );
-    }
   }
 
   void _checkBoundingBox(BoundingBox? box, GeoPoint? initPosition) {
