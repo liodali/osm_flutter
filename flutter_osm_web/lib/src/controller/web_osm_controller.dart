@@ -126,68 +126,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         tileLayer: osmWebFlutterState.widget.controller.customTile,
       );
     }
-    webPlatform.onLongPressMapClickListener(mapIdMixin).listen((event) {
-      osmWebFlutterState.widget.controller
-          .setValueListenerMapLongTapping(event.value);
-      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
-        osmMixin.onLongTap(event.value);
-      }
-    });
-    webPlatform.onSinglePressMapClickListener(mapIdMixin).listen((event) {
-      osmWebFlutterState.widget.controller
-          .setValueListenerMapSingleTapping(event.value);
-      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
-        osmMixin.onSingleTap(event.value);
-      }
-    });
-    webPlatform.onMapIsReady(mapIdMixin).listen((event) async {
-      osmWebFlutterState.widget.mapIsReadyListener.value = event.value;
-      osmWebFlutterState.widget.controller
-          .setValueListenerMapIsReady(event.value);
-      if (osmWebFlutterState.widget.onMapIsReady != null) {
-        osmWebFlutterState.widget.onMapIsReady!(event.value);
-      }
-      if (osmWebFlutterState.widget.controller.osMMixins.isNotEmpty) {
-        await Future.forEach(osmWebFlutterState.widget.controller.osMMixins,
-            (osmMixin) async {
-          await osmMixin.mapIsReady(event.value);
-        });
-      }
-      if (_androidOSMLifecycle != null) {
-        _androidOSMLifecycle!.mapIsReady(event.value);
-      }
-    });
-    webPlatform.onRegionIsChangingListener(mapIdMixin).listen((event) {
-      if (osmWebFlutterState.widget.onMapMoved != null) {
-        osmWebFlutterState.widget.onMapMoved!(event.value);
-      }
-      osmWebFlutterState.widget.controller
-          .setValueListenerRegionIsChanging(event.value);
-      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
-        osmMixin.onRegionChanged(event.value);
-      }
-    });
-    webPlatform.onRoadMapClickListener(mapIdMixin).listen((event) {
-      osmWebFlutterState.widget.controller
-          .setValueListenerMapRoadTapping(event.value);
-      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
-        osmMixin.onRoadTap(event.value);
-      }
-    });
-
-    if (osmWebFlutterState.widget.onGeoPointClicked != null) {
-      webPlatform.onGeoPointClickListener(mapIdMixin).listen((event) {
-        osmWebFlutterState.widget.onGeoPointClicked!(event.value);
-      });
-    }
-    webPlatform.onUserPositionListener(mapIdMixin).listen((event) {
-      if (osmWebFlutterState.widget.onLocationChanged != null) {
-        osmWebFlutterState.widget.onLocationChanged!(event.value);
-      }
-      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
-        osmMixin.onLocationChanged(event.value);
-      }
-    });
 
     if (osmWebFlutterState.widget.staticIconGlobalKeys.isNotEmpty) {
       var keys = osmWebFlutterState.widget.staticIconGlobalKeys;
@@ -246,6 +184,71 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     }
   }
 
+  void onListenToNativeChannel() {
+    webPlatform.onLongPressMapClickListener(mapIdMixin).listen((event) {
+      osmWebFlutterState.widget.controller
+          .setValueListenerMapLongTapping(event.value);
+      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
+        osmMixin.onLongTap(event.value);
+      }
+    });
+    webPlatform.onSinglePressMapClickListener(mapIdMixin).listen((event) {
+      osmWebFlutterState.widget.controller
+          .setValueListenerMapSingleTapping(event.value);
+      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
+        osmMixin.onSingleTap(event.value);
+      }
+    });
+    webPlatform.onMapIsReady(mapIdMixin).listen((event) async {
+      osmWebFlutterState.widget.mapIsReadyListener.value = event.value;
+      osmWebFlutterState.widget.controller
+          .setValueListenerMapIsReady(event.value);
+      if (osmWebFlutterState.widget.onMapIsReady != null) {
+        osmWebFlutterState.widget.onMapIsReady!(event.value);
+      }
+      if (osmWebFlutterState.widget.controller.osMMixins.isNotEmpty) {
+        Future.forEach(osmWebFlutterState.widget.controller.osMMixins,
+            (osmMixin) async {
+          osmMixin.mapIsReady(event.value);
+        });
+      }
+      if (_androidOSMLifecycle != null) {
+        _androidOSMLifecycle!.mapIsReady(event.value);
+      }
+    });
+    webPlatform.onRegionIsChangingListener(mapIdMixin).listen((event) {
+      if (osmWebFlutterState.widget.onMapMoved != null) {
+        osmWebFlutterState.widget.onMapMoved!(event.value);
+      }
+      osmWebFlutterState.widget.controller
+          .setValueListenerRegionIsChanging(event.value);
+      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
+        osmMixin.onRegionChanged(event.value);
+      }
+    });
+    webPlatform.onRoadMapClickListener(mapIdMixin).listen((event) {
+      osmWebFlutterState.widget.controller
+          .setValueListenerMapRoadTapping(event.value);
+      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
+        osmMixin.onRoadTap(event.value);
+      }
+    });
+
+    if (osmWebFlutterState.widget.onGeoPointClicked != null) {
+      webPlatform.onGeoPointClickListener(mapIdMixin).listen((event) {
+        osmWebFlutterState.widget.onGeoPointClicked!(event.value);
+      });
+    }
+    webPlatform.onUserPositionListener(mapIdMixin).listen((event) {
+      if (osmWebFlutterState.widget.onLocationChanged != null) {
+        osmWebFlutterState.widget.onLocationChanged!(event.value);
+      }
+      for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
+        osmMixin.onLocationChanged(event.value);
+      }
+    });
+  }
+
   @override
   Future<void> setIconStaticPositions(
     String id,
@@ -272,6 +275,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   Future<void> addMarker(
     GeoPoint p, {
     MarkerIcon? markerIcon,
+    String? assetAnimatedIconMarker,
     double? angle,
     IconAnchor? iconAnchor,
   }) async {

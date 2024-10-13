@@ -101,6 +101,7 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
 
   Future<void> onPlatformViewCreated(int id) async {
     controller.init(this, id);
+    controller.onListenToNativeChannel();
     controller.createHtml();
     //controller.addObserver(this);
     (OSMPlatform.instance as FlutterOsmPluginWeb).setWebMapController(
