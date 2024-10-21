@@ -1,6 +1,6 @@
-async function centerMap(mapId) {
+function centerMap(mapId) {
    var iframe = getIframe(mapId);
-   var geoAsync = await iframe.contentWindow.centerMap();
+   var geoAsync =  iframe.contentWindow.centerMap();
    return geoAsync;
 }
 
@@ -103,13 +103,13 @@ async function setMinZoomLevel(mapId,zoomLevel) {
    var iframe = getIframe(mapId);
    return await iframe.contentWindow.setMinZoomLevel(zoomLevel);
 }
-async function limitArea(mapId,box) {
+ function limitArea(mapId,box) {
    var iframe = getIframe(mapId);
-   return await iframe.contentWindow.limitBoundingBox(box);
+   return  iframe.contentWindow.limitBoundingBox(box);
 }
-async function getBounds(mapId) {
+ function getBounds(mapId) {
    var iframe = getIframe(mapId);
-   return await iframe.contentWindow.getBounds();
+   return  iframe.contentWindow.getBounds();
 }
 async function flyToBounds(mapId,box, padding) {
    var iframe = getIframe(mapId);

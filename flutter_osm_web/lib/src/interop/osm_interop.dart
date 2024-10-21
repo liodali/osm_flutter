@@ -17,12 +17,12 @@ external JSPromise removeControls(
 );
 
 @JS('centerMap')
-external JSPromise centerMap(
+external GeoPointJs centerMap(
   JSNumber mapId,
 );
 
 @JS('getBounds')
-external JSPromise getBounds(
+external BoundingBoxJs getBounds(
   JSNumber mapId,
 );
 
@@ -161,7 +161,7 @@ external JSPromise setIconStaticGeoPoints(
 );
 
 @JS('limitArea')
-external JSPromise limitArea(
+external JSAny limitArea(
   JSNumber mapId,
   BoundingBoxJs box,
 );

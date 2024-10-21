@@ -204,7 +204,7 @@
 
       return 200;
     }
-    async function centerMap() {
+    function centerMap() {
       var center = mymap.getCenter();
       return {
         lat: center.lat,
@@ -503,7 +503,7 @@
     async function setMinZoomLevel(zoomLevel) {
       mymap.setMinZoom(zoomLevel);
     }
-    async function limitBoundingBox(box) {
+    function limitBoundingBox(box) {
       var bounds = L.latLngBounds(
         L.latLng(box.north, box.east),
         L.latLng(box.south, box.west)
@@ -511,7 +511,7 @@
       mymap.setMaxBounds(bounds);
       return 200;
     }
-    async function getBounds() {
+     function getBounds() {
       var box = mymap.getBounds();
       return {
         south: box.getSouth(),

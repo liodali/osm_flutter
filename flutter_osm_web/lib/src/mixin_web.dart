@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_web/src/interop/models/bounding_box_js.dart';
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
 import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
 import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
@@ -252,16 +253,14 @@ mixin WebMixin {
   }
 
   Future<void> limitArea(BoundingBox box) async {
-    await interop.limitArea(mapIdMixin.toJS, box.toBoundsJS()).toDart;
+    interop.limitArea(mapIdMixin.toJS, box.toBoundsJS());
   }
 
   Future<void> removeLimitArea() async {
-    await interop
-        .limitArea(
-          mapIdMixin.toJS,
-          const BoundingBox.world().toBoundsJS(),
-        )
-        .toDart;
+    interop.limitArea(
+      mapIdMixin.toJS,
+      const BoundingBox.world().toBoundsJS(),
+    );
   }
 
   Future<void> setMaximumZoomLevel(double maxZoom) async {
@@ -427,24 +426,18 @@ mixin WebMixin {
   }
 
   Future<GeoPoint> getMapCenter() async {
-    final mapCenterPoint = (await interop
-            .centerMap(
-              mapIdMixin.toJS,
-            )
-            .toDart)
-        .dartify() as Map<String, double>?;
-    if (mapCenterPoint == null) {
-      throw Exception("web osm : error to get center geopoint");
-    }
+    final mapCenterPoint = interop
+        .centerMap(
+          mapIdMixin.toJS,
+        )
+        .toMap();
+
     return GeoPoint.fromMap(Map<String, double>.from(mapCenterPoint));
   }
 
   Future<BoundingBox> getBounds() async {
-    final boundingBoxMap = (await interop.getBounds(mapIdMixin.toJS).toDart)
-        .dartify() as Map<String, double>?;
-    if (boundingBoxMap == null) {
-      throw Exception("web osm : error to get bounds");
-    }
+    final boundingBoxMap = interop.getBounds(mapIdMixin.toJS).toDart();
+
     return BoundingBox.fromMap(Map<String, double>.from(boundingBoxMap));
   }
 
