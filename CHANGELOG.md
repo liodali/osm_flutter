@@ -1,3 +1,5 @@
+### 1.3.5: fix bug
+* fix issue in convert js object to dart for web side
 ### 1.3.4: fix bug
 ### 1.3.3+1:
 * remove unnecessary gradle dependency that cause issue
