@@ -1,4 +1,4 @@
-package hamza.dali.flutter_osm_plugin
+package hamza.dali.flutter_osm_plugin.map
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -7,13 +7,11 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.Paint
 import android.location.LocationManager
 import android.location.LocationManager.GPS_PROVIDER
 import android.location.LocationManager.NETWORK_PROVIDER
 import android.os.Bundle
 import android.util.Log
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
@@ -22,11 +20,13 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import androidx.preference.PreferenceManager
+import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.CREATED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.DESTROYED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.PAUSED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STARTED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STOPPED
+import hamza.dali.flutter_osm_plugin.ProviderLifecycle
 import hamza.dali.flutter_osm_plugin.models.Anchor
 import hamza.dali.flutter_osm_plugin.models.CustomTile
 import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
@@ -36,6 +36,7 @@ import hamza.dali.flutter_osm_plugin.models.OSMShape
 import hamza.dali.flutter_osm_plugin.models.RoadConfig
 import hamza.dali.flutter_osm_plugin.models.RoadGeoPointInstruction
 import hamza.dali.flutter_osm_plugin.models.Shape
+import hamza.dali.flutter_osm_plugin.models.VoidCallback
 import hamza.dali.flutter_osm_plugin.models.toRoadConfig
 import hamza.dali.flutter_osm_plugin.models.toRoadInstruction
 import hamza.dali.flutter_osm_plugin.models.toRoadOption
@@ -58,8 +59,6 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import io.flutter.plugin.common.PluginRegistry
-import io.flutter.plugin.platform.PlatformView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
@@ -88,10 +87,11 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
+import kotlin.collections.get
 import kotlin.collections.set
 
 
-typealias VoidCallback = () -> Unit
+
 
 
 fun FlutterOsmView.configZoomMap(call: MethodCall, result: MethodChannel.Result) {
@@ -124,12 +124,11 @@ class FlutterOsmView(
     private val customTile: CustomTile?,
     private val isEnabledRotationGesture: Boolean = false,
     private val isStaticMap: Boolean = false
-) : OnSaveInstanceStateListener, PlatformView, MethodCallHandler,
-    PluginRegistry.ActivityResultListener, DefaultLifecycleObserver {
+) : OnSaveInstanceStateListener, MethodCallHandler,
+     DefaultLifecycleObserver,OSM {
 
 
     internal var map: MapView? = null
-    private var keyMapSnapshot: String = keyArgMapSnapShot
     private lateinit var locationNewOverlay: CustomLocationManager
     private var customMarkerIcon: Bitmap? = null
     private var customPersonMarkerIcon: Bitmap? = null
@@ -195,7 +194,7 @@ class FlutterOsmView(
 
     }
 
-    fun setActivity(activity: Activity) {
+   override fun setActivity(activity: Activity) {
         this.activity = activity
     }
 
@@ -330,6 +329,7 @@ class FlutterOsmView(
                 "initMap" -> {
                     initPosition(call, result)
                 }
+
                 "change#tile" -> {
                     val args = call.arguments as HashMap<String, Any>?
                     when (!args.isNullOrEmpty()) {
@@ -437,7 +437,7 @@ class FlutterOsmView(
                 }
 
                 "map#center" -> {
-                    result.success((map?.mapCenter as GeoPoint).toHashMap())
+                    result.success(map?.mapCenter?.toHashMap())
                 }
 
                 "map#bounds" -> {
@@ -682,8 +682,9 @@ class FlutterOsmView(
         result.success(null)
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun initPosition(methodCall: MethodCall, result: MethodChannel.Result) {
-        @Suppress("UNCHECKED_CAST") val args = methodCall.arguments!! as HashMap<String, Double>
+        val args = methodCall.arguments!! as HashMap<String, Double>
         val geoPoint = GeoPoint(args["lat"]!!, args["lon"]!!)
         val zoom = initZoom
         map!!.controller.setZoom(zoom)
@@ -1565,7 +1566,7 @@ class FlutterOsmView(
 
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
-        FlutterOsmPlugin.state.set(CREATED)
+        FlutterOsmPlugin.Companion.state.set(CREATED)
         methodChannel = MethodChannel(binaryMessenger, "plugins.dali.hamza/osmview_${id}")
         methodChannel.setMethodCallHandler(this)
         //eventChannel = EventChannel(binaryMessenger, "plugins.dali.hamza/osmview_stream_${id}")
@@ -1587,10 +1588,10 @@ class FlutterOsmView(
 
     override fun onStart(owner: LifecycleOwner) {
         super.onStart(owner)
-        FlutterOsmPlugin.state.set(STARTED)
+        FlutterOsmPlugin.Companion.state.set(STARTED)
         Log.e("osm", "osm flutter plugin start")
-        activity = FlutterOsmPlugin.pluginBinding!!.activity
-        FlutterOsmPlugin.pluginBinding!!.addActivityResultListener(this)
+        activity = FlutterOsmPlugin.Companion.pluginBinding!!.activity
+        FlutterOsmPlugin.Companion.pluginBinding!!.addActivityResultListener(this)
 //        context.applicationContext.registerReceiver(
 //            checkGPSServiceBroadcast,
 //            IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION)
@@ -1601,7 +1602,7 @@ class FlutterOsmView(
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
-        FlutterOsmPlugin.state.set(FlutterOsmPlugin.RESUMED)
+        FlutterOsmPlugin.Companion.state.set(FlutterOsmPlugin.Companion.RESUMED)
         Log.e("osm", "osm flutter plugin resume")
         if (map == null) {
             initMap()
@@ -1612,7 +1613,7 @@ class FlutterOsmView(
 
     override fun onPause(owner: LifecycleOwner) {
         super.onPause(owner)
-        FlutterOsmPlugin.state.set(PAUSED)
+        FlutterOsmPlugin.Companion.state.set(PAUSED)
         map?.let {
             locationNewOverlay.disableFollowLocation()
             locationNewOverlay.onPause()
@@ -1625,7 +1626,7 @@ class FlutterOsmView(
 
     override fun onStop(owner: LifecycleOwner) {
         super.onStop(owner)
-        FlutterOsmPlugin.state.set(STOPPED)
+        FlutterOsmPlugin.Companion.state.set(STOPPED)
         Log.e("osm", "osm flutter plugin stopped")
         //context.applicationContext.unregisterReceiver(checkGPSServiceBroadcast)
         job?.let {
@@ -1640,7 +1641,7 @@ class FlutterOsmView(
     override fun onDestroy(owner: LifecycleOwner) {
         super.onDestroy(owner)
         locationNewOverlay.onDestroy()
-        FlutterOsmPlugin.pluginBinding!!.removeActivityResultListener(this)
+        FlutterOsmPlugin.Companion.pluginBinding!!.removeActivityResultListener(this)
         mainLinearLayout.removeAllViews()
         //map!!.onDetach()
         methodChannel.setMethodCallHandler(null)
@@ -1649,7 +1650,7 @@ class FlutterOsmView(
         //configuration = null
         //eventChannel.setStreamHandler(null)
         map = null
-        FlutterOsmPlugin.state.set(DESTROYED)
+        FlutterOsmPlugin.Companion.state.set(DESTROYED)
 
     }
 

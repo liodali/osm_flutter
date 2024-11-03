@@ -1,11 +1,17 @@
-package hamza.dali.flutter_osm_plugin.models
+package hamza.dali.flutter_osm_plugin.map
 
-import android.graphics.drawable.Drawable
+import android.graphics.Bitmap
+import hamza.dali.flutter_osm_plugin.models.Anchor
+import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
+import hamza.dali.flutter_osm_plugin.models.OSMTile
+import hamza.dali.flutter_osm_plugin.models.Shape
 import hamza.dali.flutter_osm_plugin.models.VectorOSMTile
+import hamza.dali.flutter_osm_plugin.utilities.toByteArray
 import hamza.dali.flutter_osm_plugin.utilities.toGeoPoint
 import org.osmdroid.api.IGeoPoint
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
+import kotlin.collections.get
 
 
 data class OSMInitConfiguration(
@@ -77,6 +83,13 @@ data class OSMInitConfiguration(
     }
 }
 
+data class OSMZoomConfiguration(
+    val minZoom: Double = 3.0,
+    val maxZoom: Double = 19.0,
+    val zoomStep: Double = 1.0,
+    val initZoom: Double = 10.0,
+)
+
 data class OSMShapeConfiguration(
     val point: List<GeoPoint>,
     val radius: Double,
@@ -91,14 +104,47 @@ data class MarkerConfiguration(
     val markerRotate: Double,
     val markerAnchor: Anchor,
     val size: Double,
-)
+) {
+    companion object {
+        fun fromArgs(args: HashMap<*, *>, defaultIcon: Bitmap?): MarkerConfiguration {
 
-interface OSMBase {
+            var iconBytes = defaultIcon.toByteArray()
+            if (args.containsKey("icon")) {
+                iconBytes = args["icon"] as ByteArray
+
+            }
+            val angle = when ((args["point"] as HashMap<*, *>).containsKey("angle")) {
+                true -> (args["point"] as HashMap<*, *>)["angle"] as Double
+                else -> 0.0
+            }
+            val anchor = when (args.containsKey("iconAnchor")) {
+                true -> Anchor(args["iconAnchor"] as HashMap<String, Any>)
+                else -> null
+            }
+            return MarkerConfiguration(
+                markerIcon = iconBytes!!, angle, Anchor(0.5f, 0.5f), 48.0
+            )
+        }
+    }
+}
+
+
+
+interface OSMBase : OSM {
+    var customMarkerIcon: Bitmap?
+    var customPersonMarkerIcon: Bitmap?
+    var customArrowMarkerIcon: Bitmap?
+    var staticMarkerIcon: HashMap<String, Bitmap>
+    val staticPoints: HashMap<String, MutableList<FlutterGeoPoint>>
     fun init(configuration: OSMInitConfiguration)
+    fun zoomConfig(zoomConfig: OSMZoomConfiguration)
+    fun setBoundingBox(bounds: BoundingBox)
     fun moveTo(point: IGeoPoint, animate: Boolean)
     fun moveToBounds(bounds: BoundingBox, animate: Boolean)
     fun addMarker(point: IGeoPoint, markerConfiguration: MarkerConfiguration)
     fun removeMarker(point: IGeoPoint)
+    fun setStaticMarkerIcons(id: String, icon: ByteArray)
+    fun setStaticMarkers(id: String, markers: List<FlutterGeoPoint>)
     fun drawPolyline(polyline: List<IGeoPoint>, animate: Boolean): String
     fun removePolyline(id: String)
     fun drawEncodedPolyline(polylineEncoded: String): String
@@ -107,8 +153,10 @@ interface OSMBase {
     fun removeShape(id: String)
     fun zoomIn(step: Int, animate: Boolean)
     fun zoomOut(step: Int, animate: Boolean)
+    fun setZoomLevel(zoomLevel: Double, animate: Boolean)
     fun zoom(): Double
     fun center(): IGeoPoint
+    fun markers(): List<IGeoPoint>
     fun bounds(): BoundingBox
     fun startLocation()
     fun stopLocation()

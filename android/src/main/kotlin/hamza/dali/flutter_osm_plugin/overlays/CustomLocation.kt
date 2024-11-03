@@ -13,7 +13,7 @@ import android.view.MotionEvent
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import hamza.dali.flutter_osm_plugin.R
-import hamza.dali.flutter_osm_plugin.VoidCallback
+import hamza.dali.flutter_osm_plugin.models.VoidCallback
 import hamza.dali.flutter_osm_plugin.utilities.toGeoPoint
 import hamza.dali.flutter_osm_plugin.utilities.toHashMap
 import io.flutter.plugin.common.MethodChannel

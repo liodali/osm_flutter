@@ -1,4 +1,4 @@
-package hamza.dali.flutter_osm_plugin
+package hamza.dali.flutter_osm_plugin.models
 
 import io.flutter.plugin.common.MethodCall
 

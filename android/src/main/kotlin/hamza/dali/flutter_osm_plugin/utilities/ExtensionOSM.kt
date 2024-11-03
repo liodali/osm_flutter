@@ -10,9 +10,10 @@ import android.graphics.Paint
 import android.graphics.PathEffect
 import android.location.Location
 import android.provider.Settings
-import hamza.dali.flutter_osm_plugin.FlutterOsmView
+import hamza.dali.flutter_osm_plugin.map.FlutterOsmView
 import hamza.dali.flutter_osm_plugin.models.RoadGeoPointInstruction
 import hamza.dali.flutter_osm_plugin.models.toMap
+import org.osmdroid.api.IGeoPoint
 import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.tileprovider.tilesource.ITileSource
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
@@ -26,7 +27,7 @@ import org.osmdroid.views.overlay.advancedpolyline.MonochromaticPaintList
 import java.io.ByteArrayOutputStream
 
 
-fun GeoPoint.toHashMap(): HashMap<String, Double> {
+fun IGeoPoint.toHashMap(): HashMap<String, Double> {
     return HashMap<String, Double>().apply {
         this[Constants.latLabel] = latitude
         this[Constants.lonLabel] = longitude
