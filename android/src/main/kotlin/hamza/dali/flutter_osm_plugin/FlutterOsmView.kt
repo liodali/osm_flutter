@@ -327,6 +327,9 @@ class FlutterOsmView(
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
+                "initMap" -> {
+                    initPosition(call, result)
+                }
                 "change#tile" -> {
                     val args = call.arguments as HashMap<String, Any>?
                     when (!args.isNullOrEmpty()) {
@@ -395,9 +398,6 @@ class FlutterOsmView(
                     result.success(isEnabled)
                 }
 
-                "initMap" -> {
-                    initPosition(call, result)
-                }
 
                 "limitArea" -> {
                     limitCameraArea(call, result)
@@ -514,7 +514,7 @@ class FlutterOsmView(
                 }
 
                 "draw#rect" -> {
-                    drawShape(call, result, )
+                    drawShape(call, result)
                 }
 
                 "remove#rect" -> {
@@ -1040,7 +1040,7 @@ class FlutterOsmView(
     }
 
 
-    private fun drawShape(call: MethodCall, result: MethodChannel.Result,) {
+    private fun drawShape(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments!! as HashMap<*, *>
         val key = args["key"] as String
         val shape = OSMShape(args, map!!)
@@ -1049,7 +1049,7 @@ class FlutterOsmView(
         }
         folderShape.items.add(shape)
         if (!map!!.overlays.contains(folderShape)) {
-            map!!.overlays.add(1,folderShape)
+            map!!.overlays.add(1, folderShape)
         }
         map!!.invalidate()
         result.success(null)
@@ -1079,7 +1079,7 @@ class FlutterOsmView(
             }
 
             else -> folderShape.items.removeAll { shape ->
-               shape is OSMShape && shape.shape == Shape.CIRCLE
+                shape is OSMShape && shape.shape == Shape.CIRCLE
             }
         }
         map!!.invalidate()

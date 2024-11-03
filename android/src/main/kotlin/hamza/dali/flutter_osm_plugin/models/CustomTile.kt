@@ -1,5 +1,7 @@
 package hamza.dali.flutter_osm_plugin.models
 
+sealed class OSMTile
+
 data class CustomTile(
     val urls: List<String>,
     val tileFileExtension: String,
@@ -8,13 +10,16 @@ data class CustomTile(
     val minZoomLevel: Int,
     val maxZoomLevel: Int,
     val api: Pair<String, String>?
-) {
+): OSMTile() {
     companion object {
         fun fromMap(map: HashMap<String, Any>):CustomTile{
             return  fromMapToCustomTile(map)
         }
     }
 }
+data class VectorOSMTile(
+    val style: String,
+): OSMTile()
 
 fun fromMapToCustomTile(map: HashMap<String, Any>): CustomTile = CustomTile(
     urls = (map["urls"] as List<Any>).first() as List<String>,
