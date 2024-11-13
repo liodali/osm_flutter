@@ -6,13 +6,7 @@ import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.utils.PolylineEncoder
 import org.osmdroid.util.GeoPoint
 
-data class RoadConfig(
-    val wayPoints: List<GeoPoint>,
-    val interestPoints: List<GeoPoint>,
-    val meanUrl: String = OSRMRoadManager.MEAN_BY_CAR,
-    val roadOption: RoadOption,
-    val roadID: String,
-)
+
 
 data class RoadOption(
     val roadColor: Int? = null,
@@ -22,24 +16,24 @@ data class RoadOption(
     val isDotted: Boolean = false,
 )
 
-fun HashMap<String, Any>.toRoadOption(): RoadOption {
-    val roadColor = when (this.containsKey("roadColor")) {
+fun HashMap<*, *>.toRoadOption(): RoadOption {
+    val roadColor = when (containsKey("roadColor")) {
         true -> (this["roadColor"] as List<*>).map { it as Int }.toRGB()
         else -> Color.BLUE
     }
-    val roadWidth = when (this.containsKey("roadWidth")) {
+    val roadWidth = when (containsKey("roadWidth")) {
         true -> (this["roadWidth"] as Double).toFloat()
         else -> 5f
     }
-    val roadBorderWidth = when (this.containsKey("roadBorderWidth")) {
+    val roadBorderWidth = when (containsKey("roadBorderWidth")) {
         true -> (this["roadBorderWidth"] as Double).toFloat()
         else -> 0f
     }
-    val roadBorderColor = when (this.containsKey("roadBorderColor")) {
+    val roadBorderColor = when (containsKey("roadBorderColor")) {
         true -> (this["roadBorderColor"] as List<*>).filterIsInstance<Int>().toRGB()
         else -> null
     }
-    val isDotted: Boolean = when (this.containsKey("isDotted")) {
+    val isDotted: Boolean = when (containsKey("isDotted")) {
         true -> this["isDotted"] as Boolean
         else -> false
     }
@@ -52,35 +46,4 @@ fun HashMap<String, Any>.toRoadOption(): RoadOption {
     )
 }
 
-fun HashMap<String, Any>.toRoadConfig(): RoadConfig {
-    val roadId = when (this.containsKey("key")) {
-        true -> this["key"] as String
-        else -> ""
-    }
-    return RoadConfig(
-        roadID = roadId,
-        roadOption = toRoadOption(),
-        wayPoints = when {
-            this.containsKey("wayPoints") -> (this["wayPoints"] as List<HashMap<String, Double>>)
-                .map { g ->
-                    GeoPoint(g["lat"]!!, g["lon"]!!)
-                }.toList()
 
-            this.containsKey("road") -> PolylineEncoder.decode(
-                (this["road"] as String),
-                10,
-                false
-            )
-
-            else -> emptyList()
-        },
-        interestPoints = when {
-            this.containsKey("middlePoints") -> (this["middlePoints"] as List<HashMap<String, Double>>)
-                .map { g ->
-                    GeoPoint(g["lat"]!!, g["lon"]!!)
-                }.toList()
-
-            else -> emptyList()
-        },
-    )
-}

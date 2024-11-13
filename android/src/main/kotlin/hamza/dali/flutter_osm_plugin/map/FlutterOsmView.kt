@@ -31,14 +31,12 @@ import hamza.dali.flutter_osm_plugin.models.Anchor
 import hamza.dali.flutter_osm_plugin.models.CustomTile
 import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
 import hamza.dali.flutter_osm_plugin.models.FlutterMarker
+import hamza.dali.flutter_osm_plugin.models.FlutterOSMRoad
+import hamza.dali.flutter_osm_plugin.models.FlutterOSMRoadFolder
 import hamza.dali.flutter_osm_plugin.models.FlutterRoad
 import hamza.dali.flutter_osm_plugin.models.OSMShape
-import hamza.dali.flutter_osm_plugin.models.RoadConfig
-import hamza.dali.flutter_osm_plugin.models.RoadGeoPointInstruction
 import hamza.dali.flutter_osm_plugin.models.Shape
 import hamza.dali.flutter_osm_plugin.models.VoidCallback
-import hamza.dali.flutter_osm_plugin.models.toRoadConfig
-import hamza.dali.flutter_osm_plugin.models.toRoadInstruction
 import hamza.dali.flutter_osm_plugin.models.toRoadOption
 import hamza.dali.flutter_osm_plugin.overlays.CustomLocationManager
 import hamza.dali.flutter_osm_plugin.utilities.Constants
@@ -91,9 +89,6 @@ import kotlin.collections.get
 import kotlin.collections.set
 
 
-
-
-
 fun FlutterOsmView.configZoomMap(call: MethodCall, result: MethodChannel.Result) {
     val args = call.arguments as HashMap<*, *>
     this.map?.minZoomLevel = (args["minZoomLevel"] as Double)
@@ -125,7 +120,7 @@ class FlutterOsmView(
     private val isEnabledRotationGesture: Boolean = false,
     private val isStaticMap: Boolean = false
 ) : OnSaveInstanceStateListener, MethodCallHandler,
-     DefaultLifecycleObserver,OSM {
+    DefaultLifecycleObserver, OSM {
 
 
     internal var map: MapView? = null
@@ -155,7 +150,7 @@ class FlutterOsmView(
         }
     }
 
-    private var flutterRoad: FlutterRoad? = null
+    private var flutterRoad: FlutterOSMRoadFolder? = null
     private var job: Job? = null
     private var scope: CoroutineScope? = null
     private var skipCheckLocation: Boolean = false
@@ -173,7 +168,6 @@ class FlutterOsmView(
     }
 
 
-    private var roadManager: OSRMRoadManager? = null
     internal var stepZoom = Constants.stepZoom
     internal var initZoom = 10.0
     private var isTracking = false
@@ -194,7 +188,7 @@ class FlutterOsmView(
 
     }
 
-   override fun setActivity(activity: Activity) {
+    override fun setActivity(activity: Activity) {
         this.activity = activity
     }
 
@@ -482,7 +476,7 @@ class FlutterOsmView(
                 }
 
                 "draw#multi#road" -> {
-                    drawMultiRoad(call, result)
+//                    drawMultiRoad(call, result)
                 }
 
                 "clear#roads" -> {
@@ -494,7 +488,7 @@ class FlutterOsmView(
                 }
 
                 "drawRoad#manually" -> {
-                    drawRoadManually(call, result)
+                    // drawRoadManually(call, result)
                 }
 
                 "staticPosition" -> {
@@ -1095,97 +1089,6 @@ class FlutterOsmView(
         result.success(200)
     }
 
-    private fun drawMultiRoad(call: MethodCall, result: MethodChannel.Result) {
-        val args = call.arguments!! as List<HashMap<String, Any>>
-        val listConfigRoad = emptyList<RoadConfig>().toMutableList()
-
-        for (arg in args) {
-            val waypoints = (arg["wayPoints"] as List<HashMap<String, Double>>).map { map ->
-                GeoPoint(map["lat"]!!, map["lon"]!!)
-            }.toList()
-            listConfigRoad.add(
-                RoadConfig(
-                    meanUrl = when (arg["roadType"] as String) {
-                        "car" -> OSRMRoadManager.MEAN_BY_CAR
-                        "bike" -> OSRMRoadManager.MEAN_BY_BIKE
-                        "foot" -> OSRMRoadManager.MEAN_BY_FOOT
-                        else -> OSRMRoadManager.MEAN_BY_CAR
-                    }, roadOption = arg.toRoadOption(),
-
-                    wayPoints = waypoints, interestPoints = when (arg.containsKey("middlePoints")) {
-                        true -> arg["middlePoints"] as List<HashMap<String, Double>>
-                        false -> emptyList()
-                    }.map { g ->
-                        GeoPoint(g["lat"]!!, g["lon"]!!)
-                    }.toList(), roadID = arg["key"] as String
-                )
-            )
-        }
-
-        checkRoadFolderAboveUserOverlay()
-
-        map!!.invalidate()
-
-        val resultRoads = emptyList<HashMap<String, Any>>().toMutableList()
-        job = scope?.launch(Default) {
-            withContext(IO) {
-                for (config in listConfigRoad) {
-                    if (roadManager == null) roadManager =
-                        OSRMRoadManager(context, "json/application")
-                    roadManager?.let { manager ->
-                        manager.setMean(config.meanUrl)
-                        var routePointsEncoded: String
-                        // this part to remove marker of interest points
-                        withContext(Main) {
-                            folderMarkers.items.removeAll {
-                                (it is FlutterMarker && config.wayPoints.contains(it.position)) || (it is FlutterMarker && config.interestPoints.contains(
-                                    it.position
-                                ))
-                            }
-                        }
-                        val roadPoints = ArrayList(config.wayPoints)
-                        if (config.interestPoints.isNotEmpty()) {
-                            roadPoints.addAll(1, config.interestPoints)
-                        }
-                        val road = manager.getRoad(roadPoints)
-                        withContext(Main) {
-                            if (road.mRouteHigh.size > 2) {
-                                routePointsEncoded = PolylineEncoder.encode(road.mRouteHigh, 10)
-                                val polyLine = RoadManager.buildRoadOverlay(road)
-                                polyLine.setStyle(
-                                    borderColor = config.roadOption.roadBorderColor,
-                                    borderWidth = config.roadOption.roadBorderWidth,
-                                    color = config.roadOption.roadColor ?: Color.GREEN,
-                                    width = config.roadOption.roadWidth,
-                                )
-                                createRoad(
-                                    polyLine = polyLine,
-                                    roadID = config.roadID,
-                                    roadDuration = road.mDuration,
-                                    roadDistance = road.mLength
-                                )
-                                val instructions = road.mNodes.toRoadInstruction()
-
-                                resultRoads.add(
-                                    road.toMap(
-                                        config.roadID, routePointsEncoded, instructions
-                                    )
-                                )
-                            }
-                        }
-                        delay(100)
-
-                    }
-                }
-
-            }
-            withContext(Main) {
-                map!!.invalidate()
-                result.success(resultRoads.toList())
-            }
-        }
-
-    }
 
     private fun checkRoadFolderAboveUserOverlay() {
         if (!map!!.overlays.contains(folderRoad)) {
@@ -1198,7 +1101,7 @@ class FlutterOsmView(
         when (roadKey != null) {
             true -> {
                 val road = folderRoad.items.map {
-                    it as FlutterRoad
+                    it as FlutterOSMRoad
                 }.first { road ->
                     road.idRoad == roadKey
                 }
@@ -1228,146 +1131,122 @@ class FlutterOsmView(
         val args = call.arguments!! as HashMap<String, Any>
 
 
-        val meanUrl = when (args["roadType"] as String) {
-            "car" -> OSRMRoadManager.MEAN_BY_CAR
-            "bike" -> OSRMRoadManager.MEAN_BY_BIKE
-            "foot" -> OSRMRoadManager.MEAN_BY_FOOT
-            else -> OSRMRoadManager.MEAN_BY_CAR
-        }
+        val roadId = args["key"] as String
+        val linesMap = args["segments"] as List<HashMap<*, *>>
+        var lines = mutableListOf<Polyline>()
         val zoomToRegion = args["zoomIntoRegion"] as Boolean
-        val roadConfig = args.toRoadConfig()
-        checkRoadFolderAboveUserOverlay()
 
-        var instructions = emptyList<RoadGeoPointInstruction>()
-        if (roadManager == null) roadManager = OSRMRoadManager(context, "json/application")
-        roadManager?.let { manager ->
-            manager.setMean(meanUrl)
-            var routePointsEncoded = ""
-            job = scope?.launch(Default) {
+        for (arg in linesMap) {
+            val encoded = arg["polylineEncoded"] as String
+            val roadOption = (arg["option"] as HashMap<*, *>).toRoadOption()
+            checkRoadFolderAboveUserOverlay()
 
 
-                val roadPoints = ArrayList(roadConfig.wayPoints)
-                if (roadConfig.interestPoints.isNotEmpty()) {
-                    roadPoints.addAll(1, roadConfig.interestPoints)
-                }
-                val road = manager.getRoad(roadPoints)
-                withContext(Main) {
-                    if (road.mRouteHigh.size > 2) {
-                        routePointsEncoded = PolylineEncoder.encode(road.mRouteHigh, 10)
-                        val polyLine = Polyline(map!!, false, false).apply {
-                            setStyle(
-                                borderColor = roadConfig.roadOption.roadBorderColor,
-                                borderWidth = roadConfig.roadOption.roadBorderWidth,
-                                color = roadConfig.roadOption.roadColor ?: Color.GREEN,
-                                width = roadConfig.roadOption.roadWidth,
-                                isDottedPolyline = roadConfig.roadOption.isDotted
-                            )
-                            setPoints(RoadManager.buildRoadOverlay(road).actualPoints)
-
-                        }
-                        flutterRoad = createRoad(
-                            polyLine = polyLine,
-                            roadID = roadConfig.roadID,
-                            roadDuration = road.mDuration,
-                            roadDistance = road.mLength
-
-                        )
-                        instructions = road.mNodes.toRoadInstruction()
-
-                        if (zoomToRegion) {
-                            map!!.zoomToBoundingBox(
-                                BoundingBox.fromGeoPoints(road.mRouteHigh),
-                                true,
-                                64,
-                            )
-                        }
-
-                        map!!.invalidate()
-                    }
-                    result.success(
-                        road.toMap(
-                            roadConfig.roadID, routePointsEncoded, instructions
-                        )
-                    )
-                }
+            val routePointsEncoded = PolylineEncoder.decode(encoded, 5, false)
+            val polyLine = Polyline(map!!, false, false).apply {
+                setStyle(
+                    borderColor = roadOption.roadBorderColor,
+                    borderWidth = roadOption.roadBorderWidth,
+                    color = roadOption.roadColor ?: Color.GREEN,
+                    width = roadOption.roadWidth,
+                    isDottedPolyline = roadOption.isDotted
+                )
+                setPoints(routePointsEncoded)
 
             }
+            lines.add(polyLine)
         }
-    }
-
-
-    private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
-        val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
-        val roadId = args["key"] as String
-        val encodedWayPoints = (args["road"] as String)
-        val roadColor = (args["roadColor"] as List<Int>).toRGB()
-        val roadWidth = (args["roadWidth"] as Double).toFloat()
-        val roadBorderWidth = (args["roadBorderWidth"] as Double? ?: 0).toFloat()
-        val roadBorderColor = (args["roadBorderColor"] as List<Int>?)?.toRGB() ?: 0
-        val zoomToRegion = args["zoomIntoRegion"] as Boolean
-
-        checkRoadFolderAboveUserOverlay()
-
-
-        val route = PolylineEncoder.decode(encodedWayPoints, 10, false)
-
-
-        val polyLine = Polyline(map!!)
-        polyLine.setPoints(route)
-        polyLine.setStyle(
-            borderWidth = roadBorderWidth,
-            borderColor = roadBorderColor,
-            color = roadColor,
-            width = roadWidth
-        )
-
-        createRoad(
+        flutterRoad = createRoad(
+            polyLines = lines,
             roadID = roadId,
-            polyLine = polyLine,
         )
-
-
         if (zoomToRegion) {
             map!!.zoomToBoundingBox(
-                BoundingBox.fromGeoPoints(polyLine.actualPoints),
+                BoundingBox.fromGeoPoints(lines.map { it.actualPoints }.reduce { a, b -> a + b }
+                    .toList()),
                 true,
                 64,
             )
         }
+
         map!!.invalidate()
-        result.success(null)
+
+        result.success(
+            mapOf(
+                "key" to roadId
+            )
+        )
     }
+
+
+//    private fun drawRoadManually(call: MethodCall, result: MethodChannel.Result) {
+//        val args: HashMap<String, Any> = call.arguments as HashMap<String, Any>
+//        val roadId = args["key"] as String
+//        val encodedWayPoints = (args["road"] as String)
+//        val roadColor = (args["roadColor"] as List<Int>).toRGB()
+//        val roadWidth = (args["roadWidth"] as Double).toFloat()
+//        val roadBorderWidth = (args["roadBorderWidth"] as Double? ?: 0).toFloat()
+//        val roadBorderColor = (args["roadBorderColor"] as List<Int>?)?.toRGB() ?: 0
+//        val zoomToRegion = args["zoomIntoRegion"] as Boolean
+//
+//        checkRoadFolderAboveUserOverlay()
+//
+//
+//        val route = PolylineEncoder.decode(encodedWayPoints, 10, false)
+//
+//
+//        val polyLine = Polyline(map!!)
+//        polyLine.setPoints(route)
+//        polyLine.setStyle(
+//            borderWidth = roadBorderWidth,
+//            borderColor = roadBorderColor,
+//            color = roadColor,
+//            width = roadWidth
+//        )
+//
+//        createRoad(
+//            roadID = roadId,
+//            polyLine = polyLine,
+//        )
+//
+//
+//        if (zoomToRegion) {
+//            map!!.zoomToBoundingBox(
+//                BoundingBox.fromGeoPoints(polyLine.actualPoints),
+//                true,
+//                64,
+//            )
+//        }
+//        map!!.invalidate()
+//        result.success(null)
+//    }
 
     private fun createRoad(
         roadID: String,
-        polyLine: Polyline,
-        roadDuration: Double = 0.0,
-        roadDistance: Double = 0.0,
+        polyLines: List<Polyline>,
 
-        ): FlutterRoad {
+        ): FlutterOSMRoadFolder {
 
 
-        val flutterRoad = FlutterRoad(
+        val flutterRoad = FlutterOSMRoad(
             roadID,
-            roadDistance = roadDistance,
-            roadDuration = roadDuration,
+//            roadDistance = roadDistance,
+//            roadDuration = roadDuration,
         )
         flutterRoad.let { roadF ->
-            roadF.road = polyLine
-            //roadF.road.setOnClickListener { polyline, mapView, eventPos ->  }
-            roadF.onRoadClickListener = object : FlutterRoad.OnRoadClickListener {
-                override fun onClick(road: FlutterRoad, geoPointClicked: GeoPoint) {
-                    val map = HashMap<String, Any>()
-                    map["roadPoints"] = road.road?.actualPoints?.map {
-                        it.toHashMap()
-                    } ?: emptyList<Any>()
-                    map["distance"] = road.roadDistance
-                    map["duration"] = road.roadDuration
-                    map["key"] = road.idRoad
-                    methodChannel.invokeMethod("receiveRoad", map)
+            for (polyline in polyLines) {
+                roadF.addSegment(polyline)
+                //roadF.road.setOnClickListener { polyline, mapView, eventPos ->  }
+                roadF.onRoadClickListener = object : FlutterRoad.OnRoadClickListener {
+                    override fun onClick(idRoad: String, polyineId: String,polyEncoded:String) {
+                        val map = HashMap<String, Any?>()
+                        map["key"] = idRoad
+                        map["segId"] = polyineId
+                        methodChannel.invokeMethod("receiveRoad", map)
+
+                    }
 
                 }
-
             }
             folderRoad.items.add(roadF)
         }

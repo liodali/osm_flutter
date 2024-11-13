@@ -12,7 +12,11 @@ import android.widget.FrameLayout
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import hamza.dali.flutter_osm_plugin.ProviderLifecycle
+import hamza.dali.flutter_osm_plugin.models.Anchor
 import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
+import hamza.dali.flutter_osm_plugin.models.FlutterMapLibreOSMRoad
+import hamza.dali.flutter_osm_plugin.models.FlutterMarker
+import hamza.dali.flutter_osm_plugin.models.FlutterRoad
 import hamza.dali.flutter_osm_plugin.models.MapMethodChannelCall
 import hamza.dali.flutter_osm_plugin.models.OSMTile
 import hamza.dali.flutter_osm_plugin.models.OnClickSymbols
@@ -29,6 +33,7 @@ import hamza.dali.flutter_osm_plugin.models.where
 import hamza.dali.flutter_osm_plugin.utilities.toBitmap
 import hamza.dali.flutter_osm_plugin.utilities.toGeoPoint
 import hamza.dali.flutter_osm_plugin.utilities.toHashMap
+import hamza.dali.flutter_osm_plugin.utilities.toPolyline
 import org.maplibre.android.plugins.annotation.*
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding.OnSaveInstanceStateListener
 import io.flutter.plugin.common.BinaryMessenger
@@ -37,6 +42,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.PluginRegistry
 import io.flutter.plugin.platform.PlatformView
+import kotlinx.coroutines.launch
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdate
@@ -44,8 +50,10 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.osmdroid.api.IGeoPoint
+import org.osmdroid.bonuspack.utils.PolylineEncoder
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
+import java.util.ArrayList
 
 
 class FlutterMapLibreView(
@@ -73,8 +81,9 @@ class FlutterMapLibreView(
     private var mapClick: OnClickSymbols? = null
     private var mapMove: OnMapMove? = null
     private var userLocationChanged: OnClickSymbols? = null
-
+    private val roads: MutableList<FlutterMapLibreOSMRoad> = mutableListOf<FlutterMapLibreOSMRoad>()
     private var zoomStep = 1.0
+    private var initZoom = 3.0
 
     private var mainLinearLayout: FrameLayout = FrameLayout(context).apply {
         this.layoutParams =
@@ -102,7 +111,13 @@ class FlutterMapLibreView(
 
         methodChannel = MethodChannel(binaryMessenger, "plugins.dali.hamza/osmview_$idView")
         methodChannel.setMethodCallHandler(this)
-        init(OSMInitConfiguration(GeoPoint(0.0, 0.0)))
+        init(
+            OSMInitConfiguration(
+                GeoPoint(0.0, 0.0),
+                customTile = customTile,
+                initZoom = 3.0
+            )
+        )
         mapView?.onCreate(null)
     }
 
@@ -138,7 +153,7 @@ class FlutterMapLibreView(
                 mapView?.getMapAsync {
                     val args = call.arguments!! as HashMap<*, *>
                     val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
-                    moveTo(geoPoint, true)
+                    moveTo(geoPoint, initZoom, true)
                     methodChannel.invokeMethod("map#init", true)
                     result.success(200)
                 }
@@ -154,7 +169,12 @@ class FlutterMapLibreView(
             }
 
             MapMethodChannelCall.LocationMarkers -> {
+                val args = call.arguments!! as HashMap<*, *>
                 // update user marker and direction marker
+                val personIcon = (args["personIcon"] as ByteArray)
+                val arrowIcon = (args["arrowDirectionIcon"] as ByteArray)
+                customPersonMarkerIcon = personIcon.toBitmap()
+                customArrowMarkerIcon = arrowIcon.toBitmap()
                 result.success(200)
             }
 
@@ -175,11 +195,61 @@ class FlutterMapLibreView(
             }
 
             MapMethodChannelCall.ChangeMarker -> {
+                val args = call.arguments as HashMap<*, *>
+                val oldLocation = (args["old_location"] as HashMap<String, Double>).toGeoPoint()
+                val newLocation = (args["new_location"] as HashMap<String, Double>).toGeoPoint()
+                val oldSymbol =
+                    markerManager?.annotations?.where { it.latLng.toGeoPoint() == oldLocation }
+                val oldIconKey = oldSymbol?.iconImage
+                val angle = when (args.containsKey("angle") && args["angle"] != null) {
+                    true -> args["angle"] as Double
+                    else -> oldSymbol?.iconRotate?.toDouble() ?: 0.0
+                }
+                val anchor = when (args.containsKey("iconAnchor")) {
+                    true ->
+                        Anchor(args["iconAnchor"] as HashMap<String, Any>)
+
+                    else ->
+                        Anchor(0.5f, 0.5f, "center")
+                }
+                val icon = when (args.containsKey("new_icon")) {
+                    true -> args["new_icon"] as ByteArray
+                    else -> null
+                }.let { byteArray ->
+                    val bitmap = byteArray?.toBitmap()
+                    bitmap
+                }
+                val factorSize = when (args.containsKey("new_factorSize")) {
+                    true -> args["new_factorSize"] as Double
+                    else -> 48.0
+                }
+                markerManager?.delete(oldSymbol)
+                addMarker(
+                    newLocation, MarkerConfiguration(
+                        markerIcon = icon ?: when {
+                            oldIconKey != null -> mapLibre?.style?.getImage(oldIconKey)
+                                ?: customMarkerIcon!!
+
+                            else -> customMarkerIcon!!
+                        },
+                        markerRotate = angle,
+                        markerAnchor = anchor,
+                        factorSize = factorSize
+                    )
+                )
                 result.success(200)
             }
 
             MapMethodChannelCall.ChangeTile -> {
                 result.success(200)
+            }
+
+            MapMethodChannelCall.DrawRoad -> {
+                val roadConfig = OSMRoadConfiguration.fromArgs(call.arguments as HashMap<*, *>)
+                val id = drawPolyline(roadConfig, true)
+                result.success(mapOf(
+                    "id" to id
+                ))
             }
 
             MapMethodChannelCall.ClearRoads -> {
@@ -266,7 +336,7 @@ class FlutterMapLibreView(
                 val args = call.arguments!! as HashMap<*, *>
                 val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
                 val animate = args["animate"] as Boolean? == true
-                moveTo(geoPoint, animate)
+                moveTo(geoPoint, null, animate)
                 result.success(200)
             }
 
@@ -347,8 +417,9 @@ class FlutterMapLibreView(
 
                 try {
                     val key = (hashMap["id"] as String)
+                    val size = (hashMap["factorSize"] as Double)
                     val bytes = (hashMap["bitmap"] as ByteArray)
-                    setStaticMarkerIcons(key, bytes)
+                    setStaticMarkerIcons(key, bytes, size)
 
                 } catch (e: java.lang.Exception) {
                     Log.e("id", hashMap["id"].toString())
@@ -372,6 +443,17 @@ class FlutterMapLibreView(
             }
 
             MapMethodChannelCall.UpdateMarker -> {
+                val args = call.arguments as HashMap<*, *>
+                val point = (args["point"] as HashMap<String, Double>).toGeoPoint()
+                var bitmap = customMarkerIcon
+                if (args.containsKey("icon")) {
+                    bitmap = (args["icon"] as ByteArray).toBitmap()
+                    mapLibre?.style?.removeImage(point.toString())
+                    mapLibre?.style?.addImage(point.toString(), bitmap)
+                    markerManager?.updateSource()
+                    mapLibre?.triggerRepaint()
+                }
+
                 result.success(200)
             }
 
@@ -380,7 +462,16 @@ class FlutterMapLibreView(
             }
 
             MapMethodChannelCall.ZoomConfiguration -> {
+                val args = call.arguments as HashMap<*, *>
 
+                zoomConfig(
+                    OSMZoomConfiguration(
+                        minZoom = args["minZoomLevel"] as Double,
+                        maxZoom = args["maxZoomLevel"] as Double,
+                        zoomStep = args["stepZoom"] as Double,
+                        initZoom = args["initZoom"] as Double
+                    )
+                )
                 result.success(200)
             }
 
@@ -421,7 +512,6 @@ class FlutterMapLibreView(
                 mapLibre!!.setLatLngBoundsForCameraTarget(configuration.bounds.toBoundsLibre())
             }
             val styleURL = when (configuration.customTile) {
-
                 is VectorOSMTile -> configuration.customTile.style
                 else -> "https://tiles.openfreemap.org/styles/liberty"
             }
@@ -486,16 +576,18 @@ class FlutterMapLibreView(
         zoomStep = zoomConfig.zoomStep
         mapLibre?.setMinZoomPreference(zoomConfig.minZoom)
         mapLibre?.setMaxZoomPreference(zoomConfig.maxZoom)
+        initZoom = zoomConfig.initZoom
     }
 
     override fun setBoundingBox(bounds: BoundingBox) {
         mapLibre?.setLatLngBoundsForCameraTarget(bounds.toBoundsLibre())
     }
 
-    override fun moveTo(point: IGeoPoint, animate: Boolean) {
+    override fun moveTo(point: IGeoPoint, zoom: Double?, animate: Boolean) {
         mapView?.getMapAsync { map ->
             val cameraPosition =
-                CameraPosition.Builder().target(point.toLngLat()).zoom(map.cameraPosition.zoom)
+                CameraPosition.Builder().target(point.toLngLat())
+                    .zoom(zoom ?: map.cameraPosition.zoom)
                     .build()
             when (animate) {
                 true -> map.animateCamera(object : CameraUpdate {
@@ -524,9 +616,14 @@ class FlutterMapLibreView(
     }
 
     override fun addMarker(point: IGeoPoint, markerConfiguration: MarkerConfiguration) {
-        mapLibre!!.style!!.addImage(point.toString(), markerConfiguration.markerIcon.toBitmap())
+        mapLibre!!.style!!.addImage(point.toString(), markerConfiguration.markerIcon)
         val symbolOp = SymbolOptions().withLatLng(point.toLngLat()).withIconImage(point.toString())
-            .withIconAnchor("center")
+            .withIconAnchor(markerConfiguration.markerAnchor.name)
+            .withIconSize(
+                markerConfiguration.factorSize
+                    .toFloat()
+            )
+
         markerManager?.create(symbolOp)
         markerManager?.addClickListener(object : OnSymbolClickListener {
             override fun onAnnotationClick(t: Symbol?): Boolean {
@@ -539,7 +636,7 @@ class FlutterMapLibreView(
         markerManager?.addLongClickListener(object : OnSymbolLongClickListener {
             override fun onAnnotationLongClick(t: Symbol?): Boolean {
                 if (t != null) {
-                    singleClickMarker?.invoke(t.latLng.toGeoPoint())
+                    longClickMarker?.invoke(t.latLng.toGeoPoint())
                 }
                 return true
             }
@@ -556,8 +653,9 @@ class FlutterMapLibreView(
         markerManager?.delete(symbol)
     }
 
-    override fun setStaticMarkerIcons(id: String, icon: ByteArray) {
-        val bitmapIcon = icon.toBitmap()
+    override fun setStaticMarkerIcons(id: String, icon: ByteArray, factorSize: Double?) {
+        var bitmapIcon = icon.toBitmap()//.resize(factorSize?:1.0)
+
         mapLibre?.style?.addImage(id, bitmapIcon)
         staticMarkerIcon[id] = bitmapIcon
         if (staticPoints.containsKey(id)) {
@@ -581,13 +679,37 @@ class FlutterMapLibreView(
     }
 
     override fun drawPolyline(
-        polyline: List<IGeoPoint>, animate: Boolean,
+        roadConfig: OSMRoadConfiguration, animate: Boolean,
     ): String {
-        TODO("Not yet implemented")
+        val road = FlutterMapLibreOSMRoad(idRoad = roadConfig.id, lineManager!!)
+        for ((i,line) in roadConfig.linesConfig.withIndex()) {
+            val linePoints = line.encodedPolyline.toPolyline()
+            road.addSegment("${road.idRoad}-seg-$i",linePoints,line.roadOption)
+        }
+        road.onRoadClickListener = object : FlutterRoad.OnRoadClickListener {
+            override fun onClick(
+                idRoad: String,
+                lineId: String,
+                lineDecoded: String
+            ) {
+
+            }
+
+        }
+        roads.add(road)
+//        val bounds = BoundingBox.fromGeoPoints(roadConfig.linesConfig.map {
+//            it.encodedPolyline.toPolyline()
+//        }.reduce { a, b -> (a + b) as ArrayList<GeoPoint> })
+//        moveToBounds(bounds, roadConfig.zoomInto)
+        return road.idRoad
     }
 
     override fun removePolyline(id: String) {
-        TODO("Not yet implemented")
+        val road = roads.first {
+            it.idRoad == id
+        }
+        road.remove()
+        roads.remove(road)
     }
 
     override fun drawEncodedPolyline(polylineEncoded: String): String {

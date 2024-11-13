@@ -25,6 +25,7 @@ sealed class MapMethodChannelCall(val methodName: String) {
     object UserPosition : MapMethodChannelCall("user#position")
     object MoveTo : MapMethodChannelCall("moveTo#position")
     object RemoveMarkerPosition : MapMethodChannelCall("user#removeMarkerPosition")
+    object DrawRoad : MapMethodChannelCall("road")
     object DeleteRoad : MapMethodChannelCall("delete#road")
     object DrawMultiRoad : MapMethodChannelCall("draw#multi#road")
     object ClearRoads : MapMethodChannelCall("clear#roads")
@@ -70,6 +71,7 @@ sealed class MapMethodChannelCall(val methodName: String) {
                 Bounds.methodName -> Bounds
                 UserPosition.methodName -> UserPosition
                 MoveTo.methodName -> MoveTo
+                DrawRoad.methodName -> DrawRoad
                 DeleteRoad.methodName -> DeleteRoad
                 DrawMultiRoad.methodName -> DrawMultiRoad
                 DefaultMarkerIcon.methodName -> DefaultMarkerIcon
@@ -93,7 +95,6 @@ sealed class MapMethodChannelCall(val methodName: String) {
                 GetMarkers.methodName -> GetMarkers
                 DeleteMakers.methodName -> DeleteMakers
                 ToggleLayers.methodName -> ToggleLayers
-
                 else -> null
             }
         }

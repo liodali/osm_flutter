@@ -268,12 +268,12 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
 
 }
 
-data class Anchor(val x: Float, val y: Float) {
+data class Anchor(val x: Float, val y: Float,var name: String = "center") {
     private var offset: Pair<Double, Double>? = null
 
     constructor(map: HashMap<String, Any>) : this(
         (map["x"]!! as Double).toFloat(),
-        (map["y"]!! as Double).toFloat()
+        (map["y"]!! as Double).toFloat(),map["anchor"]!! as String
     ) {
         if (map.containsKey("offset")) {
             val offsetMap = map["offset"]!! as HashMap<String, Double>

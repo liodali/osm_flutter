@@ -64,7 +64,7 @@ open class OsmFactory(
                 viewId,
                 provider,
                 keyUUID,
-                customTile = customTile as CustomTile,
+                customTile = customTile as CustomTile?,
                 isEnabledRotationGesture = enableRotationGesture,
                 isStaticMap = staticMap
             )

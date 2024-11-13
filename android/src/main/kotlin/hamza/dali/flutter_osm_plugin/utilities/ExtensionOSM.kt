@@ -12,9 +12,12 @@ import android.location.Location
 import android.provider.Settings
 import hamza.dali.flutter_osm_plugin.map.FlutterOsmView
 import hamza.dali.flutter_osm_plugin.models.RoadGeoPointInstruction
+import hamza.dali.flutter_osm_plugin.models.toGeoPoints
 import hamza.dali.flutter_osm_plugin.models.toMap
+import org.maplibre.android.geometry.LatLng
 import org.osmdroid.api.IGeoPoint
 import org.osmdroid.bonuspack.routing.Road
+import org.osmdroid.bonuspack.utils.PolylineEncoder
 import org.osmdroid.tileprovider.tilesource.ITileSource
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -144,15 +147,15 @@ fun Polyline.setStyle(
     width: Float,
     borderColor: Int?,
     borderWidth: Float,
-    isDottedPolyline:Boolean = false
+    isDottedPolyline: Boolean = false
 ) {
     outlinePaint.strokeWidth = width
     outlinePaint.style = Paint.Style.FILL_AND_STROKE
     outlinePaint.color = color
     outlinePaint.strokeCap = Paint.Cap.ROUND
-    var pathEffect:PathEffect? = null
-    if(isDottedPolyline){
-        pathEffect =  DashPathEffect(arrayOf(10f,20f).toFloatArray(),0f)
+    var pathEffect: PathEffect? = null
+    if (isDottedPolyline) {
+        pathEffect = DashPathEffect(arrayOf(10f, 20f).toFloatArray(), 0f)
     }
 
 
@@ -201,6 +204,13 @@ fun Road.toMap(
 }
 
 fun ByteArray.toBitmap(): Bitmap = BitmapFactory.decodeByteArray(this, 0, this.size)
+fun Bitmap.resize(scale: Double): Bitmap = Bitmap.createScaledBitmap(
+    this,
+    (width * scale).toInt(),
+    (height * scale).toInt(),
+    false
+)
+
 fun Bitmap?.toByteArray(): ByteArray? {
     if (this == null) {
         return null
@@ -224,9 +234,20 @@ fun createPaintPolyline(
     paint.strokeCap = Paint.Cap.ROUND
     paint.strokeJoin = Paint.Join.ROUND
     paint.isAntiAlias = true
-    if(pathEffect != null){
+    if (pathEffect != null) {
         paint.pathEffect = pathEffect
     }
 
     return paint
+}
+
+fun String.toPolyline(): ArrayList<GeoPoint> {
+    return PolylineEncoder.decode(this, 10, false)
+}
+
+fun List<GeoPoint>.toPolylineEncode(): String {
+    return PolylineEncoder.encode(this.toCollection(ArrayList()), 10)
+}
+fun List<LatLng>.encodePolyline(): String {
+    return PolylineEncoder.encode(this.toGeoPoints().toCollection(ArrayList()), 10)
 }
