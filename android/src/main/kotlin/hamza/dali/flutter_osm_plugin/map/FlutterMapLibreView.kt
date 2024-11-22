@@ -12,10 +12,10 @@ import android.widget.FrameLayout
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import hamza.dali.flutter_osm_plugin.ProviderLifecycle
+import hamza.dali.flutter_osm_plugin.location.OSMVectorLocationManager
 import hamza.dali.flutter_osm_plugin.models.Anchor
 import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
 import hamza.dali.flutter_osm_plugin.models.FlutterMapLibreOSMRoad
-import hamza.dali.flutter_osm_plugin.models.FlutterMarker
 import hamza.dali.flutter_osm_plugin.models.FlutterRoad
 import hamza.dali.flutter_osm_plugin.models.MapMethodChannelCall
 import hamza.dali.flutter_osm_plugin.models.OSMTile
@@ -34,7 +34,6 @@ import hamza.dali.flutter_osm_plugin.utilities.toBitmap
 import hamza.dali.flutter_osm_plugin.utilities.toGeoPoint
 import hamza.dali.flutter_osm_plugin.utilities.toHashMap
 import hamza.dali.flutter_osm_plugin.utilities.toPolyline
-import org.maplibre.android.plugins.annotation.*
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding.OnSaveInstanceStateListener
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
@@ -42,15 +41,16 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.PluginRegistry
 import io.flutter.plugin.platform.PlatformView
-import kotlinx.coroutines.launch
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdate
+import org.maplibre.android.gestures.AndroidGesturesManager
+import org.maplibre.android.gestures.MoveGestureDetector
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
+import org.maplibre.android.plugins.annotation.*
 import org.osmdroid.api.IGeoPoint
-import org.osmdroid.bonuspack.utils.PolylineEncoder
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import java.util.ArrayList
@@ -72,7 +72,7 @@ class FlutterMapLibreView(
     private var mapView: MapView? = null
     private var mapLibre: MapLibreMap? = null
     private var markerManager: SymbolManager? = null
-    private var userLocationManager: SymbolManager? = null
+
     private var markerStaticManager: SymbolManager? = null
     private var shapeManager: FillManager? = null
     private var lineManager: LineManager? = null
@@ -84,7 +84,7 @@ class FlutterMapLibreView(
     private val roads: MutableList<FlutterMapLibreOSMRoad> = mutableListOf<FlutterMapLibreOSMRoad>()
     private var zoomStep = 1.0
     private var initZoom = 3.0
-
+    private var locationManager: OSMVectorLocationManager? = null
     private var mainLinearLayout: FrameLayout = FrameLayout(context).apply {
         this.layoutParams =
             FrameLayout.LayoutParams(FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
@@ -119,6 +119,13 @@ class FlutterMapLibreView(
             )
         )
         mapView?.onCreate(null)
+
+    }
+
+    override fun onStart(owner: LifecycleOwner) {
+        super.onStart(owner)
+        locationManager?.onStart()
+        mapView?.onStart()
     }
 
     override fun onResume(owner: LifecycleOwner) {
@@ -128,14 +135,18 @@ class FlutterMapLibreView(
 
     override fun onStop(owner: LifecycleOwner) {
         super.onStop(owner)
+        locationManager?.onStop()
         mapView?.onStop()
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
         super.onDestroy(owner)
+
+        locationManager?.onDestroy()
         mapView?.onDestroy()
         mapView = null
         mapLibre = null
+        locationManager = null
     }
 
     override fun dispose() {
@@ -175,6 +186,7 @@ class FlutterMapLibreView(
                 val arrowIcon = (args["arrowDirectionIcon"] as ByteArray)
                 customPersonMarkerIcon = personIcon.toBitmap()
                 customArrowMarkerIcon = arrowIcon.toBitmap()
+                locationManager?.setMarkerIcon(customPersonMarkerIcon, customArrowMarkerIcon)
                 result.success(200)
             }
 
@@ -247,9 +259,11 @@ class FlutterMapLibreView(
             MapMethodChannelCall.DrawRoad -> {
                 val roadConfig = OSMRoadConfiguration.fromArgs(call.arguments as HashMap<*, *>)
                 val id = drawPolyline(roadConfig, true)
-                result.success(mapOf(
-                    "id" to id
-                ))
+                result.success(
+                    mapOf(
+                        "id" to id
+                    )
+                )
             }
 
             MapMethodChannelCall.ClearRoads -> {
@@ -260,13 +274,6 @@ class FlutterMapLibreView(
                 result.success(200)
             }
 
-            MapMethodChannelCall.CurrentLocation -> {
-                result.success(200)
-            }
-
-            MapMethodChannelCall.DeactivateTrackMe -> {
-                result.success(200)
-            }
 
             MapMethodChannelCall.DefaultMarkerIcon -> {
                 customMarkerIcon = (call.arguments as ByteArray).toBitmap()
@@ -390,6 +397,12 @@ class FlutterMapLibreView(
             }
 
             MapMethodChannelCall.StartLocationUpdating -> {
+                locationManager?.startLocationUpdating()
+                result.success(200)
+            }
+
+            MapMethodChannelCall.StopLocationUpdating -> {
+                locationManager?.stopLocationUpdating()
                 result.success(200)
             }
 
@@ -430,16 +443,39 @@ class FlutterMapLibreView(
                 result.success(200)
             }
 
-            MapMethodChannelCall.StopLocationUpdating -> {
-                result.success(200)
-            }
 
             MapMethodChannelCall.ToggleLayers -> {
                 result.success(200)
             }
 
             MapMethodChannelCall.TrackMe -> {
+                val args = call.arguments as List<*>
+                val enableStopFollow = args.first() as Boolean
+                val disableRotation = args[1] as Boolean
+                val useDirectionMarker = args[2] as Boolean
+                mapView?.getMapAsync { map ->
+                    map.uiSettings.isRotateGesturesEnabled = disableRotation
+                }
+                locationManager?.toggleFollow(enableStopFollow)
                 result.success(200)
+            }
+
+            MapMethodChannelCall.DeactivateTrackMe -> {
+
+                locationManager?.disableFollowLocation()
+                mapView?.getMapAsync { map ->
+                    map.uiSettings.isRotateGesturesEnabled = true
+                }
+                result.success(200)
+            }
+
+            MapMethodChannelCall.CurrentLocation -> {
+                locationManager?.currentUserPosition({ gp ->
+                    result.success(gp?.toHashMap())
+                }, {
+                    result.error("userLocationFailed", "userLocationFailed", "userLocationFailed")
+                })
+
             }
 
             MapMethodChannelCall.UpdateMarker -> {
@@ -534,16 +570,14 @@ class FlutterMapLibreView(
                     lineManager?.layerId
                 )
 
-                userLocationManager = SymbolManager(
-                    mapView!!, mapLibre!!, mapLibre!!.style!!, null, markerManager?.layerId
-                )
                 shapeManager = FillManager(
                     mapView!!, mapLibre!!, mapLibre!!.style!!,
                     lineManager?.layerId, null,
                 )
 
             }
-
+            locationManager =
+                OSMVectorLocationManager(context, map, methodChannel, "receiveUserLocation")
             map.cameraPosition = CameraPosition.Builder().target(configuration.point.toLngLat())
                 .zoom(configuration.initZoom).build()
             map.addOnMapClickListener { lng ->
@@ -567,6 +601,37 @@ class FlutterMapLibreView(
                 methodChannel.invokeMethod("receiveRegionIsChanging", hashMap)
 
             }
+            map.setGesturesManager(
+                AndroidGesturesManager(context).apply {
+                    this.setMoveGestureListener(object : MoveGestureDetector.OnMoveGestureListener {
+                        override fun onMoveBegin(p0: MoveGestureDetector): Boolean {
+                            return true
+                        }
+
+                        override fun onMove(
+                            gesture: MoveGestureDetector,
+                            p1: Float,
+                            p2: Float
+                        ): Boolean {
+                            Log.d("onMove", gesture.toString())
+                            if (locationManager != null && locationManager!!.mIsFollowing && locationManager!!.enableAutoStop) {
+                                locationManager?.stopCamera()
+                                map.cancelTransitions()
+                            }
+                            return true
+                        }
+
+                        override fun onMoveEnd(
+                            p0: MoveGestureDetector,
+                            p1: Float,
+                            p2: Float
+                        ) {
+                        }
+                    })
+                },
+                true,
+                true
+            )
 
         }
 
@@ -601,12 +666,15 @@ class FlutterMapLibreView(
         }
     }
 
-    override fun moveToBounds(bounds: BoundingBox, animate: Boolean) {
+    override fun moveToBounds(bounds: BoundingBox, padding: Int, animate: Boolean) {
         mapView?.getMapAsync { map ->
             when (animate) {
                 true -> map.animateCamera(object : CameraUpdate {
                     override fun getCameraPosition(maplibreMap: MapLibreMap): CameraPosition? {
-                        return map.getCameraForLatLngBounds(bounds.toBoundsLibre())
+                        return map.getCameraForLatLngBounds(
+                            bounds.toBoundsLibre(),
+                            intArrayOf(padding, padding, padding, padding)
+                        )
                     }
                 })
 
@@ -629,6 +697,10 @@ class FlutterMapLibreView(
             override fun onAnnotationClick(t: Symbol?): Boolean {
                 if (t != null) {
                     singleClickMarker?.invoke(t.latLng.toGeoPoint())
+                    val hashMap = HashMap<String, Double>()
+                    hashMap["lon"] = t.latLng.longitude
+                    hashMap["lat"] = t.latLng.latitude
+                    methodChannel.invokeMethod("receiveGeoPoint", hashMap)
                 }
                 return true
             }
@@ -637,6 +709,10 @@ class FlutterMapLibreView(
             override fun onAnnotationLongClick(t: Symbol?): Boolean {
                 if (t != null) {
                     longClickMarker?.invoke(t.latLng.toGeoPoint())
+                    val hashMap = HashMap<String, Double>()
+                    hashMap["lon"] = t.latLng.longitude
+                    hashMap["lat"] = t.latLng.latitude
+                    methodChannel.invokeMethod("receiveLongPressGeoPoint", hashMap)
                 }
                 return true
             }
@@ -682,9 +758,9 @@ class FlutterMapLibreView(
         roadConfig: OSMRoadConfiguration, animate: Boolean,
     ): String {
         val road = FlutterMapLibreOSMRoad(idRoad = roadConfig.id, lineManager!!)
-        for ((i,line) in roadConfig.linesConfig.withIndex()) {
+        for ((i, line) in roadConfig.linesConfig.withIndex()) {
             val linePoints = line.encodedPolyline.toPolyline()
-            road.addSegment("${road.idRoad}-seg-$i",linePoints,line.roadOption)
+            road.addSegment("${road.idRoad}-seg-$i", linePoints, line.roadOption)
         }
         road.onRoadClickListener = object : FlutterRoad.OnRoadClickListener {
             override fun onClick(
@@ -692,16 +768,24 @@ class FlutterMapLibreView(
                 lineId: String,
                 lineDecoded: String
             ) {
-
+                val map = HashMap<String, Any?>()
+                map["key"] = idRoad
+                map["segId"] = lineId
+                map["encoded"] = lineDecoded
+                methodChannel.invokeMethod("receiveRoad", map)
             }
 
         }
         roads.add(road)
-//        val bounds = BoundingBox.fromGeoPoints(roadConfig.linesConfig.map {
-//            it.encodedPolyline.toPolyline()
-//        }.reduce { a, b -> (a + b) as ArrayList<GeoPoint> })
-//        moveToBounds(bounds, roadConfig.zoomInto)
+        val bounds = BoundingBox.fromGeoPoints(roadConfig.linesConfig.map {
+            it.encodedPolyline.toPolyline()
+        }.reduce { a, b -> (a + b) as ArrayList<GeoPoint> })
+        moveToBounds(bounds, 64, roadConfig.zoomInto)
         return road.idRoad
+    }
+
+    override fun updatePolyline(road: OSMRoadConfiguration) {
+        TODO("Not yet implemented")
     }
 
     override fun removePolyline(id: String) {
@@ -710,14 +794,6 @@ class FlutterMapLibreView(
         }
         road.remove()
         roads.remove(road)
-    }
-
-    override fun drawEncodedPolyline(polylineEncoded: String): String {
-        TODO("Not yet implemented")
-    }
-
-    override fun removeEncodedPolyline(id: String) {
-        TODO("Not yet implemented")
     }
 
     override fun addShape(shapeConfiguration: OSMShapeConfiguration): String {

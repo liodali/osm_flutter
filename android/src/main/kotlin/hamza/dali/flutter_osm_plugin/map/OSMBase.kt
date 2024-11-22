@@ -191,15 +191,14 @@ interface OSMBase : OSM {
     fun zoomConfig(zoomConfig: OSMZoomConfiguration)
     fun setBoundingBox(bounds: BoundingBox)
     fun moveTo(point: IGeoPoint, zoom: Double? = null, animate: Boolean)
-    fun moveToBounds(bounds: BoundingBox, animate: Boolean)
+    fun moveToBounds(bounds: BoundingBox, padding:Int, animate: Boolean)
     fun addMarker(point: IGeoPoint, markerConfiguration: MarkerConfiguration)
     fun removeMarker(point: IGeoPoint)
     fun setStaticMarkerIcons(id: String, icon: ByteArray, factorSize: Double?)
     fun setStaticMarkers(id: String, markers: List<FlutterGeoPoint>)
     fun drawPolyline(road: OSMRoadConfiguration, animate: Boolean): String
+    fun updatePolyline(road: OSMRoadConfiguration)
     fun removePolyline(id: String)
-    fun drawEncodedPolyline(polylineEncoded: String): String
-    fun removeEncodedPolyline(id: String)
     fun addShape(shapeConfiguration: OSMShapeConfiguration): String
     fun removeShape(id: String)
     fun zoomIn(step: Int, animate: Boolean)

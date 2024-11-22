@@ -38,7 +38,7 @@ import hamza.dali.flutter_osm_plugin.models.OSMShape
 import hamza.dali.flutter_osm_plugin.models.Shape
 import hamza.dali.flutter_osm_plugin.models.VoidCallback
 import hamza.dali.flutter_osm_plugin.models.toRoadOption
-import hamza.dali.flutter_osm_plugin.overlays.CustomLocationManager
+import hamza.dali.flutter_osm_plugin.location.OSMLocationManager
 import hamza.dali.flutter_osm_plugin.utilities.Constants
 import hamza.dali.flutter_osm_plugin.utilities.StaticOverlayManager
 import hamza.dali.flutter_osm_plugin.utilities.eq
@@ -50,23 +50,15 @@ import hamza.dali.flutter_osm_plugin.utilities.toBitmap
 import hamza.dali.flutter_osm_plugin.utilities.toByteArray
 import hamza.dali.flutter_osm_plugin.utilities.toGeoPoint
 import hamza.dali.flutter_osm_plugin.utilities.toHashMap
-import hamza.dali.flutter_osm_plugin.utilities.toMap
-import hamza.dali.flutter_osm_plugin.utilities.toRGB
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding.OnSaveInstanceStateListener
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.osmdroid.bonuspack.routing.OSRMRoadManager
-import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.bonuspack.utils.PolylineEncoder
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -124,7 +116,7 @@ class FlutterOsmView(
 
 
     internal var map: MapView? = null
-    private lateinit var locationNewOverlay: CustomLocationManager
+    private lateinit var locationNewOverlay: OSMLocationManager
     private var customMarkerIcon: Bitmap? = null
     private var customPersonMarkerIcon: Bitmap? = null
     private var customArrowMarkerIcon: Bitmap? = null
@@ -301,20 +293,7 @@ class FlutterOsmView(
         map!!.overlayManager.add(mRotationGestureOverlay)
         mainLinearLayout.addView(map)
         mainLinearLayout.setOnTouchListener { _, _ -> !isStaticMap }
-        /// init LocationManager
-        locationNewOverlay = CustomLocationManager(map!!)
 
-        locationNewOverlay.onChangedLocation { userLocation, heading ->
-            scope?.launch {
-                withContext(Main) {
-                    methodChannel.invokeMethod(
-                        "receiveUserLocation", userLocation.toHashMap().apply {
-                            put("heading", heading)
-                        }
-                    )
-                }
-            }
-        }
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -854,13 +833,13 @@ class FlutterOsmView(
             methodChannel.invokeMethod("receiveGeoPoint", hashMap)
             true
         }
-        /*marker.longPress = { GeoPoint ->
+        marker.longPress = { GeoPoint ->
             val hashMap = HashMap<String, Double>()
             hashMap["lon"] = GeoPoint.position.longitude
             hashMap["lat"] = GeoPoint.position.latitude
             methodChannel.invokeMethod("receiveLongPressGeoPoint", hashMap)
             true
-        }*/
+        }
         when {
             dynamicMarkerBitmap != null -> {
                 marker.setIconMaker(null, bitmap = dynamicMarkerBitmap, angle)
@@ -1150,6 +1129,7 @@ class FlutterOsmView(
                     color = roadOption.roadColor ?: Color.GREEN,
                     width = roadOption.roadWidth,
                     isDottedPolyline = roadOption.isDotted
+
                 )
                 setPoints(routePointsEncoded)
 
@@ -1248,6 +1228,7 @@ class FlutterOsmView(
 
                 }
             }
+            roadF.items.addAll(roadF.roadSegments)
             folderRoad.items.add(roadF)
         }
 
@@ -1459,6 +1440,9 @@ class FlutterOsmView(
             context, PreferenceManager.getDefaultSharedPreferences(context)
         )
         initMap()
+        /// init LocationManager
+        locationNewOverlay = OSMLocationManager(map!!,methodChannel,"receiveUserLocation")
+
         // map!!.forceLayout()
         Log.e("osm", "osm flutter plugin create")
 
