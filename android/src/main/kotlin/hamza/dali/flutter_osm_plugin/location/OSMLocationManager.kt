@@ -37,6 +37,8 @@ abstract class CustomOSMLocationManager(
 
 ) : Overlay(), Snappable, CustomLocationManager {
 
+    abstract var mIsFollowing: Boolean
+    abstract var controlMapFromOutSide: Boolean
     abstract val onMove: (IGeoPoint) -> Unit
     abstract val onUpdate: () -> Unit
     override val provider: GpsMyLocationProvider by lazy {
@@ -70,14 +72,14 @@ class OSMLocationManager(
 
     private var mDirectionArrowCenterX = 0f
     private var mDirectionArrowCenterY = 0f
-    var disableRotateDirection = false
+     var disableRotateDirection = false
     override var enableAutoStop = true
 
     override var mIsFollowing: Boolean = false
 
 
     override var mIsLocationEnabled: Boolean = false
-    var useDirectionMarker = false
+    override var useDirectionMarker = false
     override var currentLocation: Location? = null
 
     override var mGeoPoint: GeoPoint? = GeoPoint(0.0, 0.0)
@@ -165,6 +167,8 @@ class OSMLocationManager(
         mHandler.removeCallbacksAndMessages(mHandlerToken)
     }
 
+
+
     private fun disableMyLocation() {
         mIsLocationEnabled = false
         stopLocationProvider()
@@ -251,9 +255,18 @@ class OSMLocationManager(
             }, mHandlerToken, 0)
         }
     }
-
-    override fun toggleFollow(enableStop: Boolean) {
-        enableAutoStop = enableStop
+    override fun configurationFollow(
+        enableStop: Boolean?,
+        useDirectionIcon: Boolean?
+    ) {
+       if(enableStop!= null){
+           this.enableAutoStop = enableStop
+       }
+        if(useDirectionIcon!= null){
+            this.useDirectionMarker = useDirectionIcon
+        }
+    }
+    override fun toggleFollow() {
         enableFollowLocation()
     }
 
@@ -312,7 +325,7 @@ class OSMLocationManager(
         }
     }
 
-    override fun setMarkerIcon(personIcon: Bitmap?, directionIcon: Bitmap?) {
+     fun setMarkerIcon(personIcon: Bitmap?, directionIcon: Bitmap?) {
 
         when {
             personIcon != null && directionIcon != null -> {

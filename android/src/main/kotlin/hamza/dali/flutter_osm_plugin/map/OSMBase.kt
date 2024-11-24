@@ -183,8 +183,6 @@ data class OSMLineConfiguration(
 
 interface OSMBase : OSM {
     var customMarkerIcon: Bitmap?
-    var customPersonMarkerIcon: Bitmap?
-    var customArrowMarkerIcon: Bitmap?
     var staticMarkerIcon: HashMap<String, Bitmap>
     val staticPoints: HashMap<String, MutableList<FlutterGeoPoint>>
     fun init(configuration: OSMInitConfiguration)

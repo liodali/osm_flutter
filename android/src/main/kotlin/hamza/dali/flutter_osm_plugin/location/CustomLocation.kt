@@ -42,22 +42,30 @@ import java.util.LinkedList
 import kotlin.lazy
 
 typealias OnChangedLocation = (userLocation: GeoPoint, heading: Double) -> Unit
+enum class LocationMode {
+    LocationOnly,
+    UserPositionOnly,
+    GPSOnly,
+    GPSBearing,
+    NONE,
+}
+fun Enum<LocationMode>.isFollowing()= this == LocationMode.GPSBearing || this == LocationMode.GPSOnly
 
 interface CustomLocationManager : IMyLocationConsumer {
     val context: Context
     val provider: GpsMyLocationProvider
     var currentLocation: Location?
     var mGeoPoint: GeoPoint?
-    var mIsFollowing: Boolean
-    var controlMapFromOutSide: Boolean
     var enableAutoStop: Boolean
     var mIsLocationEnabled: Boolean
-    fun setMarkerIcon(personIcon: Bitmap?, directionIcon: Bitmap?)
+    var useDirectionMarker: Boolean
+
     fun startLocationUpdating()
     fun stopLocationUpdating()
     fun enableMyLocation()
     fun onStopLocation()
-    fun toggleFollow(enableStop: Boolean)
+    fun configurationFollow(enableStop: Boolean?,useDirectionIcon: Boolean? )
+    fun toggleFollow()
     fun disableFollowLocation()
     fun sendLocation()
 }

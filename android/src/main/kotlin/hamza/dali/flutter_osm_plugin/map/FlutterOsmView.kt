@@ -972,8 +972,8 @@ class FlutterOsmView(
                 locationNewOverlay.enableMyLocation()
 
             }
-            locationNewOverlay.useDirectionMarker = useDirectionMarker
-            locationNewOverlay.toggleFollow(enableStopFollow)
+            locationNewOverlay.configurationFollow(enableStopFollow,useDirectionMarker)
+            locationNewOverlay.toggleFollow()
             when {
                 locationNewOverlay.mIsFollowing -> {
                     isTracking = true

@@ -1,26 +1,32 @@
 package hamza.dali.flutter_osm_plugin.location
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.location.Location
 import android.util.Log
+import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toDrawable
 import hamza.dali.flutter_osm_plugin.R
+import hamza.dali.flutter_osm_plugin.map.MarkerConfiguration
+import hamza.dali.flutter_osm_plugin.models.toLngLat
 import hamza.dali.flutter_osm_plugin.utilities.toGeoPoint
 import hamza.dali.flutter_osm_plugin.utilities.toHashMap
 import io.flutter.plugin.common.MethodChannel
+import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.camera.CameraUpdate
+import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.location.LocationComponentActivationOptions
 import org.maplibre.android.location.LocationComponentOptions
-import org.maplibre.android.location.engine.AndroidLocationEngineImpl
 import org.maplibre.android.location.engine.LocationEngineCallback
-import org.maplibre.android.location.engine.LocationEngineProxy
-import org.maplibre.android.location.engine.LocationEngineRequest
 import org.maplibre.android.location.engine.LocationEngineResult
 import org.maplibre.android.location.modes.CameraMode
-import org.maplibre.android.location.modes.RenderMode
 import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.plugins.annotation.Symbol
+import org.maplibre.android.plugins.annotation.SymbolManager
+import org.maplibre.android.plugins.annotation.SymbolOptions
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
@@ -28,76 +34,73 @@ import java.lang.Exception
 
 class OSMVectorLocationManager(
     override val context: Context,
-    private val mapView: MapLibreMap,
+    private val mapLibre: MapLibreMap,
+    private val locationMarkerManager: SymbolManager,
     private val methodChannel: MethodChannel,
     private val methodName: String,
 ) : CustomLocationManager {
-    private val listenerLocation = object : LocationEngineCallback<LocationEngineResult> {
-        override fun onSuccess(result: LocationEngineResult?) {
-            setLocation(result?.lastLocation)
-            sendLocation()
-        }
 
-        override fun onFailure(e: Exception) {
-            Log.e("listenerLocation", e.stackTraceToString())
-        }
-
-    }
+    private var locationMarker: Symbol? = null
+    private var personIconSymbolOption: SymbolOptions? = null
+    private var directionIconSymbolOption: Pair<Bitmap, Float>? = null
     override val provider: GpsMyLocationProvider by lazy {
-        GpsMyLocationProvider(context)
+       val gps = GpsMyLocationProvider(context)
+        gps.locationUpdateMinTime = 2000L
+        gps.locationUpdateMinDistance = 10f
+        gps
     }
-    val locationProxy by lazy {
-        val andEnginImpl = AndroidLocationEngineImpl(context)
-        andEnginImpl.createListener(listenerLocation)
-        LocationEngineProxy(andEnginImpl)
-    }
-//    init {
-//        mapView.locationComponent.isLocationComponentEnabled = false
-//    }
+
 
     override var currentLocation: Location? = null
 
     override var mGeoPoint: GeoPoint? = null
-    override var mIsFollowing: Boolean = false
-    override var controlMapFromOutSide: Boolean = false
     override var enableAutoStop: Boolean = false
+    override var useDirectionMarker: Boolean = true
+    private var locationMode: LocationMode = LocationMode.NONE
+    private var locationModeCache: LocationMode? = null
     override var mIsLocationEnabled: Boolean = false
-
     fun onStart() {
-        mapView.locationComponent.onStart()
-        if (mIsFollowing) {
+        if (locationModeCache != null && locationModeCache!!.isFollowing()) {
+            mIsLocationEnabled = provider.startLocationProvider(this)
             enableFollowLocation()
+            locationModeCache = null
         }
     }
 
     fun onStop() {
-        if (mIsFollowing) {
+        locationModeCache = locationMode
+        if (isFollowing()) {
             disableFollowLocation()
         }
-        mapView.locationComponent.onStop()
+        provider.stopLocationProvider()
     }
 
     fun onDestroy() {
         disableFollowLocation()
-        mapView.locationComponent.onDestroy()
+        locationModeCache = null
+        mapLibre.locationComponent.onDestroy()
     }
 
-    override fun setMarkerIcon(
-        personIcon: Bitmap?, directionIcon: Bitmap?
+     fun setMarkerIcon(
+        personIcon: MarkerConfiguration?, directionIcon: Pair<Bitmap, Float>?
     ) {
-        mapView.style?.removeImage("personIcon")
-        mapView.style?.removeImage("directionIcon")
-        mapView.style?.addImage(
-            "personIcon", personIcon?.toDrawable(context.resources) ?: ResourcesCompat.getDrawable(
+        mapLibre.style?.removeImage("personIcon")
+        mapLibre.style?.removeImage("directionIcon")
+        mapLibre.style?.addImage(
+            "personIcon", personIcon?.markerIcon?.toDrawable(context.resources) ?: ResourcesCompat.getDrawable(
                 context.resources, R.drawable.ic_location_on_red_24dp, context.theme
             )!!
         )
-        mapView.style?.addImage(
+        mapLibre.style?.addImage(
             "directionIcon",
-            directionIcon?.toDrawable(context.resources) ?: ResourcesCompat.getDrawable(
+            directionIcon?.first?.toDrawable(context.resources) ?: ResourcesCompat.getDrawable(
                 context.resources, R.drawable.baseline_navigation_24, context.theme
             )!!
         )
+         personIconSymbolOption = SymbolOptions().withIconImage("personIcon")
+             .withIconSize(personIcon?.factorSize?.toFloat() ?:1f)
+
+         directionIconSymbolOption = directionIcon
 
 
     }
@@ -105,99 +108,86 @@ class OSMVectorLocationManager(
 
     override fun startLocationUpdating() {
         enableMyLocation()
-        controlMapFromOutSide = true
+        locationMode = LocationMode.LocationOnly
     }
 
     override fun stopLocationUpdating() {
-        controlMapFromOutSide = false
+        locationMode = LocationMode.NONE
         onStopLocation()
     }
 
     override fun enableMyLocation() {
-        mIsLocationEnabled = provider.startLocationProvider(this)
+        if(!mIsLocationEnabled){
+            mIsLocationEnabled = provider.startLocationProvider(this)
 
-        // set initial location when enabled
-        if (mIsLocationEnabled) {
-            provider.lastKnownLocation?.let { location ->
-                setLocation(location)
+            // set initial location when enabled
+            if (mIsLocationEnabled) {
+                provider.lastKnownLocation?.let { location ->
+                    setLocation(location)
+                }
             }
         }
+
     }
 
     override fun onStopLocation() {
         provider.stopLocationProvider()
     }
 
-    override fun toggleFollow(enableStop: Boolean) {
-        if (enableStop == false) {
+    override fun toggleFollow() {
+        if (!enableAutoStop ) {
             resetCameraToFollow()
+            enableAutoStop = !enableAutoStop
+            locationMode = LocationMode.GPSBearing
         }
-        enableAutoStop = enableStop
-        enableFollowLocation()
+
+        if(!isFollowing() && !mIsLocationEnabled) {
+            enableFollowLocation()
+        }
     }
 
 
     override fun disableFollowLocation() {
-        mIsFollowing = false
-        mapView.locationComponent.cameraMode = CameraMode.NONE
-        mapView.locationComponent.isLocationComponentEnabled = false
-        mapView.locationComponent.locationEngine = null
-        mapView.locationComponent.cancelZoomWhileTrackingAnimation()
-        mapView.cancelTransitions()
-        mapView.locationComponent.activateLocationComponent(
-            LocationComponentActivationOptions
-                .builder(context, mapView.style!!)
-                .useDefaultLocationEngine(false)
-                .locationComponentOptions(
-                    LocationComponentOptions.builder(context).build()
-                )
-                .build()
-        )
-        mapView.resetNorth()
-        mapView.triggerRepaint()
+        provider.stopLocationProvider()
+        locationMode = LocationMode.NONE
+        locationMarkerManager.deleteAll()
+        locationMarker = null
+        mIsLocationEnabled = false
+
+        mapLibre.resetNorth()
     }
 
     fun resetCameraToFollow() {
-        mapView.locationComponent.cameraMode = CameraMode.TRACKING
-        mapView.locationComponent.forceLocationUpdate(currentLocation)
-    }
+        if(currentLocation != null){
+            locationMarker?.latLng = currentLocation!!.toGeoPoint().toLngLat()
+            animateCamera()
+        }
 
+    }
+    private fun animateCamera(){
+        mapLibre.animateCamera(object:CameraUpdate {
+            override fun getCameraPosition(maplibreMap: MapLibreMap): CameraPosition? {
+                return CameraPosition.Builder().target(locationMarker?.latLng)
+                    .zoom(maplibreMap.cameraPosition.zoom)
+                    .build()
+            }
+        })
+    }
     fun stopCamera() {
-        mapView.locationComponent.cameraMode = CameraMode.NONE
+        locationModeNone()
     }
 
     private fun enableFollowLocation() {
-        mapView.resetNorth()
-        mIsFollowing = true
+        if(!mIsLocationEnabled){
+            mIsLocationEnabled = provider.startLocationProvider(this)
+        }
 
-        mapView.locationComponent.locationEngine = locationProxy
-        mapView.locationComponent.activateLocationComponent(
-            LocationComponentActivationOptions
-                .builder(context, mapView.style!!)
-                .useDefaultLocationEngine(true)
-                .locationEngineRequest(
-                    LocationEngineRequest.Builder(1250)
-                        .setFastestInterval(1250)
-                        .setPriority(LocationEngineRequest.PRIORITY_HIGH_ACCURACY)
-                        .build()
-                )
-                .locationComponentOptions(
-                    LocationComponentOptions.builder(context)
-                        .elevation(0f)
-                        .bearingName("directionIcon")
-                        .backgroundName("personIcon")
-                        .foregroundName("personIcon").build()
-                )
-                .build()
-        )
-        mapView.locationComponent.isLocationComponentEnabled = mIsFollowing
-        mapView.locationComponent.cameraMode = CameraMode.TRACKING
-        mapView.locationComponent.renderMode = RenderMode.NORMAL
-
+        setFollowing()
         // set initial location when enabled
         if (mIsLocationEnabled && provider.lastKnownLocation != null) {
             val location: Location = provider.lastKnownLocation
             setLocation(location)
+            mapLibre.resetNorth()
         }
 
     }
@@ -217,7 +207,24 @@ class OSMVectorLocationManager(
         if (location != null) {
             setLocation(location)
             sendLocation()
+            if (isFollowing()) {
+                if(locationMarker == null){
+                    createMarker(location.toGeoPoint().toLngLat())
+                }
+                locationMarker?.latLng = location.toGeoPoint().toLngLat()
+                if(location.hasBearing() && location.bearing != 0f){
+                    locationMarker?.iconRotate = location.bearing
+                    locationMarker?.iconImage = "directionIcon"
+                    locationMarker?.iconSize = directionIconSymbolOption?.second ?:1f
+                }else if( locationMarker?.iconImage != "personIcon") {
+                    locationMarker?.iconImage = "personIcon"
+                    locationMarker?.iconRotate = 0f
+                    locationMarker?.iconSize = personIconSymbolOption?.iconSize ?:1f
+                }
+                animateCamera()
+            }
         }
+
 
     }
 
@@ -233,18 +240,22 @@ class OSMVectorLocationManager(
         onUserLocationReady: (GeoPoint?) -> Unit,
         onUserLocationFailed: () -> Unit
     ) {
-        mapView.locationComponent.activateLocationComponent(
+        mapLibre.locationComponent.onStart()
+        mapLibre.locationComponent.activateLocationComponent(
             LocationComponentActivationOptions
-                .builder(context, mapView.style!!)
+                .builder(context, mapLibre.style!!)
                 .useDefaultLocationEngine(true)
                 .build()
         )
-        mapView.locationComponent.isLocationComponentEnabled = true
-        mapView.locationComponent.cameraMode = CameraMode.NONE
-        mapView.locationComponent.locationEngine?.getLastLocation(object :
+        checkPermission()
+        mapLibre.locationComponent.isLocationComponentEnabled = true
+        mapLibre.locationComponent.cameraMode = CameraMode.NONE
+        mapLibre.locationComponent.locationEngine?.getLastLocation(object :
             LocationEngineCallback<LocationEngineResult> {
             override fun onSuccess(p0: LocationEngineResult?) {
-                mapView.locationComponent.isLocationComponentEnabled = false
+                checkPermission()
+                mapLibre.locationComponent.isLocationComponentEnabled = false
+                mapLibre.locationComponent.onStop()
                 onUserLocationReady(p0?.lastLocation?.toGeoPoint())
             }
 
@@ -255,4 +266,40 @@ class OSMVectorLocationManager(
 
         })
     }
+   override  fun configurationFollow(enableStop: Boolean?,useDirectionIcon: Boolean? ) {
+        if(enableStop!= null){
+            this.enableAutoStop = enableStop
+        }
+        if(useDirectionIcon!= null){
+            this.useDirectionMarker = useDirectionIcon
+        }
+    }
+    private fun createMarker(latLng: LatLng){
+        locationMarker = locationMarkerManager.create(personIconSymbolOption?.withLatLng(latLng))
+
+    }
+    private fun checkPermission() {
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+    }
+    private fun locationModeNone(){
+        locationMode = LocationMode.NONE
+    }
+    private fun setFollowing() {
+        locationMode = when {
+            useDirectionMarker -> LocationMode.GPSBearing
+            else -> LocationMode.GPSOnly
+        }
+
+    }
+     fun isFollowing() = locationMode == LocationMode.GPSBearing || locationMode == LocationMode.GPSOnly
+
 }

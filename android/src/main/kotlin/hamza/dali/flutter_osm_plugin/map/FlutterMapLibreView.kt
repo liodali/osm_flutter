@@ -72,7 +72,6 @@ class FlutterMapLibreView(
     private var mapView: MapView? = null
     private var mapLibre: MapLibreMap? = null
     private var markerManager: SymbolManager? = null
-
     private var markerStaticManager: SymbolManager? = null
     private var shapeManager: FillManager? = null
     private var lineManager: LineManager? = null
@@ -133,6 +132,10 @@ class FlutterMapLibreView(
         mapView?.onResume()
     }
 
+    override fun onPause(owner: LifecycleOwner) {
+        super.onPause(owner)
+        mapView?.onPause()
+    }
     override fun onStop(owner: LifecycleOwner) {
         super.onStop(owner)
         locationManager?.onStop()
@@ -179,16 +182,6 @@ class FlutterMapLibreView(
                 result.success(200)
             }
 
-            MapMethodChannelCall.LocationMarkers -> {
-                val args = call.arguments!! as HashMap<*, *>
-                // update user marker and direction marker
-                val personIcon = (args["personIcon"] as ByteArray)
-                val arrowIcon = (args["arrowDirectionIcon"] as ByteArray)
-                customPersonMarkerIcon = personIcon.toBitmap()
-                customArrowMarkerIcon = arrowIcon.toBitmap()
-                locationManager?.setMarkerIcon(customPersonMarkerIcon, customArrowMarkerIcon)
-                result.success(200)
-            }
 
             MapMethodChannelCall.AddMarker -> {
                 val args = call.arguments as HashMap<*, *>
@@ -396,15 +389,6 @@ class FlutterMapLibreView(
                 result.success(200)
             }
 
-            MapMethodChannelCall.StartLocationUpdating -> {
-                locationManager?.startLocationUpdating()
-                result.success(200)
-            }
-
-            MapMethodChannelCall.StopLocationUpdating -> {
-                locationManager?.stopLocationUpdating()
-                result.success(200)
-            }
 
             MapMethodChannelCall.StaticPosition -> {
                 val args = call.arguments as HashMap<*, *>
@@ -447,6 +431,31 @@ class FlutterMapLibreView(
             MapMethodChannelCall.ToggleLayers -> {
                 result.success(200)
             }
+            MapMethodChannelCall.LocationMarkers -> {
+                val args = call.arguments!! as HashMap<*, *>
+                // update user marker and direction marker
+                val personIcon = (args["personIcon"] as ByteArray)
+                val arrowIcon = (args["arrowDirectionIcon"] as ByteArray)
+                val factorPerson = args["personIconFactorSize"] as Double? ?:1.0
+                val factorArrow = args["arrowDirectionIconFactorSize"] as Double? ?:1.0
+                customPersonMarkerIcon = MarkerConfiguration(
+                    markerIcon = personIcon.toBitmap(),
+                    markerRotate = 0.0,
+                    markerAnchor = Anchor(0.5f, 0.5f),
+                    factorSize = factorPerson
+                )
+                locationManager?.setMarkerIcon(customPersonMarkerIcon, Pair(arrowIcon.toBitmap(),factorArrow.toFloat()))
+                result.success(200)
+            }
+            MapMethodChannelCall.StartLocationUpdating -> {
+                locationManager?.startLocationUpdating()
+                result.success(200)
+            }
+
+            MapMethodChannelCall.StopLocationUpdating -> {
+                locationManager?.stopLocationUpdating()
+                result.success(200)
+            }
 
             MapMethodChannelCall.TrackMe -> {
                 val args = call.arguments as List<*>
@@ -456,7 +465,8 @@ class FlutterMapLibreView(
                 mapView?.getMapAsync { map ->
                     map.uiSettings.isRotateGesturesEnabled = disableRotation
                 }
-                locationManager?.toggleFollow(enableStopFollow)
+                locationManager?.configurationFollow(enableStopFollow,useDirectionMarker)
+                locationManager?.toggleFollow()
                 result.success(200)
             }
 
@@ -470,8 +480,11 @@ class FlutterMapLibreView(
             }
 
             MapMethodChannelCall.CurrentLocation -> {
-                locationManager?.currentUserPosition({ gp ->
-                    result.success(gp?.toHashMap())
+                locationManager?.currentUserPosition({ geoPoint ->
+                    if(geoPoint != null){
+                        moveTo(geoPoint,mapLibre?.cameraPosition?.zoom,true)
+                    }
+                    result.success(200)
                 }, {
                     result.error("userLocationFailed", "userLocationFailed", "userLocationFailed")
                 })
@@ -529,10 +542,8 @@ class FlutterMapLibreView(
     override var customMarkerIcon: Bitmap? = null
 
 
-    override var customPersonMarkerIcon: Bitmap? = null
-
-
-    override var customArrowMarkerIcon: Bitmap? = null
+    var customPersonMarkerIcon: MarkerConfiguration? = null
+    var customArrowMarkerIcon: MarkerConfiguration? = null
     override var staticMarkerIcon: HashMap<String, Bitmap> = HashMap<String, Bitmap>()
     override val staticPoints: HashMap<String, MutableList<FlutterGeoPoint>> =
         HashMap<String, MutableList<FlutterGeoPoint>>()
@@ -553,19 +564,19 @@ class FlutterMapLibreView(
             }
             val style = Style.Builder().fromUri(styleURL)
             map.setStyle(style) { styleLoaded ->
-                markerManager = SymbolManager(mapView!!, mapLibre!!, map.style!!)
+                markerManager = SymbolManager(mapView!!, mapLibre!!, styleLoaded)
 
                 lineManager = LineManager(
                     mapView!!,
                     mapLibre!!,
-                    map.style!!,
+                    styleLoaded,
                     markerManager?.layerId,
                     null,
                 )
                 markerStaticManager = SymbolManager(
                     mapView!!,
                     mapLibre!!,
-                    mapLibre!!.style!!,
+                    styleLoaded,
                     null,
                     lineManager?.layerId
                 )
@@ -574,10 +585,22 @@ class FlutterMapLibreView(
                     mapView!!, mapLibre!!, mapLibre!!.style!!,
                     lineManager?.layerId, null,
                 )
-
+                locationManager =
+                    OSMVectorLocationManager(
+                        context,
+                        mapLibre!!,
+                        SymbolManager(
+                            mapView!!,
+                            mapLibre!!,
+                            styleLoaded,
+                            null,
+                            markerManager?.layerId
+                        ),
+                        methodChannel,
+                        "receiveUserLocation"
+                    )
             }
-            locationManager =
-                OSMVectorLocationManager(context, map, methodChannel, "receiveUserLocation")
+
             map.cameraPosition = CameraPosition.Builder().target(configuration.point.toLngLat())
                 .zoom(configuration.initZoom).build()
             map.addOnMapClickListener { lng ->
@@ -601,37 +624,14 @@ class FlutterMapLibreView(
                 methodChannel.invokeMethod("receiveRegionIsChanging", hashMap)
 
             }
-            map.setGesturesManager(
-                AndroidGesturesManager(context).apply {
-                    this.setMoveGestureListener(object : MoveGestureDetector.OnMoveGestureListener {
-                        override fun onMoveBegin(p0: MoveGestureDetector): Boolean {
-                            return true
-                        }
-
-                        override fun onMove(
-                            gesture: MoveGestureDetector,
-                            p1: Float,
-                            p2: Float
-                        ): Boolean {
-                            Log.d("onMove", gesture.toString())
-                            if (locationManager != null && locationManager!!.mIsFollowing && locationManager!!.enableAutoStop) {
-                                locationManager?.stopCamera()
-                                map.cancelTransitions()
-                            }
-                            return true
-                        }
-
-                        override fun onMoveEnd(
-                            p0: MoveGestureDetector,
-                            p1: Float,
-                            p2: Float
-                        ) {
-                        }
-                    })
-                },
-                true,
-                true
-            )
+            map.addOnCameraMoveStartedListener { reason ->
+                if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE){
+                    if (locationManager != null && locationManager!!.isFollowing() && locationManager!!.enableAutoStop) {
+                        locationManager?.stopCamera()
+                        map.cancelTransitions()
+                    }
+                }
+            }
 
         }
 
