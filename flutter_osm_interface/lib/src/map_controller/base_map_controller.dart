@@ -14,7 +14,7 @@ import 'package:flutter_osm_interface/src/map_controller/i_base_map_controller.d
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 abstract class BaseMapController extends IBaseMapController {
   late IBaseOSMController _osmBaseController;
-  final CustomTile? customTile;
+  final OSMTile? customTile;
   late Timer? _timer;
   var _layerIsVisible = true;
   IBaseOSMController get osmBaseController => _osmBaseController;

@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_plugin/src/common/utilities.dart';
 
 import 'package:flutter_osm_plugin/src/widgets/mobile_osm_flutter.dart';
+import 'package:routing_client_dart/routing_client_dart.dart' as osrmClient;
+import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 
 MobileOSMController getOSMMap() => MobileOSMController();
 
@@ -14,11 +17,11 @@ final class MobileOSMController extends IBaseOSMController {
       OSMPlatform.instance as MobileOSMPlatform;
   final duration = const Duration(milliseconds: 300);
   Timer? _timer;
-
+  late final osrmManager = osrmClient.OSRMManager();
   late double stepZoom = 1;
   late double minZoomLevel = 2;
   late double maxZoomLevel = 18;
-  RoadOption? defaultRoadOption;
+  PolylineOption defaultRoadOption = const PolylineOption.empty();
   AndroidLifecycleMixin? _androidOSMLifecycle;
 
   MobileOSMController();
@@ -224,8 +227,8 @@ final class MobileOSMController extends IBaseOSMController {
     }
 
     /// road configuration
-    if (_osmFlutterState.widget.roadConfig != null) {
-      defaultRoadOption = _osmFlutterState.widget.roadConfig!;
+    if (_osmFlutterState.widget.polylineOption != null) {
+      defaultRoadOption = _osmFlutterState.widget.polylineOption!;
     }
 
     /// init location in map
@@ -514,52 +517,89 @@ final class MobileOSMController extends IBaseOSMController {
   ///
   ///  [interestPoints] : middle point that you want to be passed by your route
   ///
-  ///  [roadOption] : (RoadOption) runtime configuration of the road
+  ///  [polylineOption] : ((RoadType, PolylineOption)) runtime configuration of the road
   @override
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
-    RoadType roadType = RoadType.car,
     List<GeoPoint>? interestPoints,
-    RoadOption? roadOption,
+    (RoadType, PolylineOption)? polylineOption,
+    bool zoomInto = true,
   }) async {
     assert(start.latitude != end.latitude || start.longitude != end.longitude,
         "you cannot make road with same geoPoint");
-
-    return await osmPlatform.drawRoad(
-      _idMap,
-      start,
-      end,
-      roadType: roadType,
-      interestPoints: interestPoints,
-      roadOption: roadOption ?? defaultRoadOption ?? const RoadOption.empty(),
+    final waypoints = [start, end];
+    if (interestPoints != null && interestPoints.isNotEmpty) {
+      waypoints.insertAll(1, interestPoints);
+    }
+    final polyOption = polylineOption?.$2 ?? defaultRoadOption;
+    final roadType = polylineOption?.$1 ?? RoadType.car;
+    final road = await osrmManager.getRoad(
+      waypoints: waypoints.toLngLatList(),
+      roadType: roadType != RoadType.mixed
+          ? osrmClient.RoadType.values[roadType.index]
+          : osrmClient.RoadType.car,
     );
+    final instructions = await osrmManager.buildInstructions(road);
+    final roadInfo = RoadInfo(
+      distance: road.distance,
+      duration: road.duration,
+      segments: [
+        RoadSegment(
+          distance: road.distance,
+          duration: road.duration,
+          route: road.polyline?.toGeoPointList() ?? [],
+          instructions: instructions
+              .map(
+                (instruction) => instruction.toInstruction(),
+              )
+              .toList(),
+        )
+      ],
+    );
+    await osmPlatform.drawRoad(
+      _idMap,
+      Road(
+        id: roadInfo.key,
+        polylines: [
+          Polyline(
+            id: 'seg-id',
+            encodedPolyline: road.polylineEncoded ??
+                encodePolyline(
+                  road.polyline
+                          ?.map(
+                            (e) => e.toGeoPoint().toListNum(),
+                          )
+                          .toList() ??
+                      <List<num>>[],
+                ),
+            polylineOption: polyOption,
+          )
+        ],
+      ),
+      zoomInto: zoomInto,
+    );
+
+    return roadInfo;
   }
 
   /// draw road
   ///  [path] : (list) path of the road
   @override
   Future<String> drawRoadManually(
-    String roadKey,
-    List<GeoPoint> path,
-    RoadOption roadOption,
-  ) async {
-    if (path.isEmpty) {
-      throw Exception("you cannot make road with empty list of  geoPoint");
-    }
-    if (path.first.latitude == path.last.latitude &&
-        path.first.longitude == path.last.longitude &&
-        path.length < 3) {
-      throw Exception("you cannot make line with same geoPoint");
+    Road road, {
+    bool zoomInto = true,
+  }) async {
+    if (road.polylines.isEmpty) {
+      throw Exception("you cannot make road with empty list of  polylines");
     }
 
-    await osmPlatform.drawRoadManually(
+    await osmPlatform.drawRoad(
       _idMap,
-      roadKey,
-      path,
-      roadOption,
+      road,
+      zoomInto: true,
     );
-    return roadKey;
+    return road.id;
   }
 
   ///delete last road draw in the map
@@ -704,18 +744,6 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<List<RoadInfo>> drawMultipleRoad(
-    List<MultiRoadConfiguration> configs, {
-    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
-  }) async {
-    return await osmPlatform.drawMultipleRoad(
-      _idMap,
-      configs,
-      commonRoadOption: commonRoadOption,
-    );
-  }
-
-  @override
   Future<List<GeoPoint>> geoPoints() async {
     return await osmPlatform.getGeoPointMarkers(_idMap);
   }
@@ -757,8 +785,12 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<void> startLocationUpdating() =>
-      osmPlatform.startLocationUpdating(_idMap);
+  Future<void> startLocationUpdating() async {
+    final isGrant = await _osmFlutterState.requestPermission();
+    if (isGrant) {
+      await osmPlatform.startLocationUpdating(_idMap);
+    }
+  }
 
   @override
   Future<void> stopLocationUpdating() =>

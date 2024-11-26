@@ -12,7 +12,7 @@ import 'package:uuid/uuid.dart';
 import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
 
 typedef MobileInitConfiguration = ({
-  CustomTile? customTile,
+  OSMTile? customTile,
   List<double>? bounds,
   bool enableRotationGesture,
   GeoPoint? initlocation,
@@ -32,7 +32,7 @@ class MobileOsmFlutter extends StatefulWidget {
   final List<StaticPositionGeoPoint> staticPoints;
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
-  final RoadOption? roadConfig;
+  final PolylineOption? polylineOption;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final bool showContributorBadgeForOSM;
@@ -55,7 +55,7 @@ class MobileOsmFlutter extends StatefulWidget {
     this.mapIsLoading,
     required this.globalKeys,
     required this.staticIconGlobalKeys,
-    this.roadConfig,
+    this.polylineOption,
     this.showZoomController = false,
     this.showDefaultInfoWindow = false,
     this.isPicker = false,
@@ -217,7 +217,7 @@ class PlatformView extends StatelessWidget {
   }
 
   Map getParams(
-    CustomTile? customTile, {
+    OSMTile? customTile, {
     List<double>? bounds,
     bool isStaticMap = false,
     bool enableRotationGesture = false,
@@ -230,6 +230,7 @@ class PlatformView extends StatelessWidget {
     };
     if (customTile != null) {
       params.putIfAbsent("customTile", () => customTile.toMap());
+      params.putIfAbsent("isVectorTile", () => customTile is VectorTile);
     }
 
     if (bounds != null) {

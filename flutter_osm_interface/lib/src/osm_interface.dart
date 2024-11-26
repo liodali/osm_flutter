@@ -83,18 +83,18 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     bool useDirectionMarker = false,
   });
 
-  Future<void> startLocationUpdating(int idOSM,);
-  Future<void> stopLocationUpdating(int idOSM,);
+  Future<void> startLocationUpdating(
+    int idOSM,
+  );
+  Future<void> stopLocationUpdating(
+    int idOSM,
+  );
   Future<void> addPosition(
     int idOSM,
     GeoPoint p,
   );
 
-  Future<void> goToPosition(
-    int idOSM,
-    GeoPoint p,
-    {bool animate = false}
-  );
+  Future<void> goToPosition(int idOSM, GeoPoint p, {bool animate = false});
 
   Future<void> addMarker(
     int idOSM,
@@ -135,19 +135,10 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idOSM,
     String roadKey,
   );
-  Future<RoadInfo> drawRoad(
+  Future<void> drawRoad(
     int idOSM,
-    GeoPoint start,
-    GeoPoint end, {
-    RoadType roadType = RoadType.car,
-    List<GeoPoint>? interestPoints,
-    RoadOption roadOption,
-  });
-
-  Future<List<RoadInfo>> drawMultipleRoad(
-    int idOSM,
-    List<MultiRoadConfiguration> configs, {
-    MultiRoadOption commonRoadOption,
+    Road road, {
+    bool zoomInto = false,
   });
 
   Future<void> clearAllRoads(
@@ -238,7 +229,7 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     int idOSM,
     String roadKey,
     List<GeoPoint> road,
-    RoadOption roadOption,
+    PolylineOption roadOption,
   );
 
   Future<void> mapRotation(

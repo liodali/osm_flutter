@@ -17,7 +17,7 @@ mixin WebMixin {
   final manager = routing.OSRMManager();
 
   late OsmWebWidgetState _osmWebFlutterState;
-  RoadOption? defaultRoadOption;
+  PolylineOption defaultRoadOption = const PolylineOption.empty();
   Map<String, RoadInfo> roadsWebCache = {};
 
   Future<void> initLocationMap(GeoPoint p) async {
@@ -287,27 +287,30 @@ mixin WebMixin {
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
-    RoadType roadType = RoadType.car,
     List<GeoPoint>? interestPoints,
-    RoadOption? roadOption,
+    (RoadType, PolylineOption)? polylineOption,
+    bool zoomInto = true,
   }) async {
     final geoPoints = [start, end];
     if (interestPoints != null && interestPoints.isNotEmpty) {
       geoPoints.insertAll(1, interestPoints);
     }
     final waypoints = geoPoints.toLngLatList();
+    final roadType = polylineOption?.$1 ?? RoadType.car;
+    final roadOption = polylineOption?.$2 ?? defaultRoadOption;
     final road = await manager.getRoad(
       waypoints: waypoints,
-      roadType: routing.RoadType.values[roadType.index],
+      roadType: roadType != RoadType.mixed
+          ? routing.RoadType.values[roadType.index]
+          : routing.RoadType.car,
       alternative: false,
       geometries: routing.Geometries.geojson,
     );
     final routeJs = road.polyline!.mapToListGeoJS();
 
     var roadInfo = RoadInfo();
-    final roadConfig =
-        roadOption ?? defaultRoadOption ?? const RoadOption.empty();
-    debugPrint(roadOption?.toString());
+    final roadConfig = roadOption;
+    debugPrint(roadOption.toString());
 
     interop.drawRoad(
       mapIdMixin.toJS,
@@ -320,37 +323,55 @@ mixin WebMixin {
     roadInfo = roadInfo.copyWith(
       duration: road.duration,
       distance: road.distance,
-      instructions: instructions
-          .map((e) => Instruction(
-                instruction: e.instruction,
-                geoPoint: e.location.toGeoPoint(),
-              ))
-          .toList(),
-      route: road.polyline!.mapToListGeoPoints(),
+      segments: [
+        RoadSegment(
+          distance: road.distance,
+          duration: road.duration,
+          instructions: instructions
+              .map(
+                (e) => Instruction(
+                  distance: e.distance,
+                  duration: e.duration,
+                  instruction: e.instruction,
+                  geoPoint: e.location.toGeoPoint(),
+                ),
+              )
+              .toList(),
+          route: road.polyline!.mapToListGeoPoints(),
+        ),
+      ],
     );
     roadsWebCache[roadInfo.key] = roadInfo;
     return roadInfo;
   }
 
   Future<String> drawRoadManually(
-    String roadKey,
-    List<GeoPoint> path,
-    RoadOption roadOption,
-  ) async {
-    final routeJs = path.toListGeoPointJs();
+    Road road, {
+    bool zoomInto = true,
+  }) async {
+    //TODO : implement drawRoadManually
+    
+    // final routeJs = path.toListGeoPointJs();
 
-    interop.drawRoad(
-      mapIdMixin.toJS,
-      roadKey.toJS,
-      routeJs.toJS,
-      <GeoPointJs>[].toJS,
-      roadOption.toRoadOptionJS,
-    );
+    // interop.drawRoad(
+    //   mapIdMixin.toJS,
+    //   roadKey.toJS,
+    //   routeJs.toJS,
+    //   <GeoPointJs>[].toJS,
+    //   roadOption.toRoadOptionJS,
+    // );
 
-    roadsWebCache[roadKey] = RoadInfo(route: path).copyWith(
-      roadKey: roadKey,
-    );
-    return roadKey;
+    // roadsWebCache[roadKey] = RoadInfo(segments: [
+    //   RoadSegment(
+    //     distance: 0,
+    //     duration: 0,
+    //     route: path,
+    //     instructions: [],
+    //   ),
+    // ]).copyWith(
+    //   roadKey: roadKey,
+    // );
+    return 'roadKey';
   }
 
   Future<void> clearAllRoads() async {
@@ -361,28 +382,6 @@ mixin WebMixin {
   Future<void> removeRoad({required String roadKey}) async {
     await interop.removeRoad(mapIdMixin.toJS, roadKey.toJS).toDart;
     roadsWebCache.remove(roadKey);
-  }
-
-  Future<List<RoadInfo>> drawMultipleRoad(
-    List<MultiRoadConfiguration> configs, {
-    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
-  }) async {
-    List<Future<RoadInfo>> futureRoads = [];
-    for (var config in configs) {
-      futureRoads.add(
-        drawRoad(
-          config.startPoint,
-          config.destinationPoint,
-          interestPoints: config.intersectPoints,
-          roadOption: config.roadOptionConfiguration ?? commonRoadOption,
-        ),
-      );
-    }
-    final infos = await Future.wait(futureRoads);
-    for (var roadInfo in infos) {
-      roadsWebCache[roadInfo.key] = roadInfo;
-    }
-    return infos;
   }
 
   Future<void> configureZoomMap(

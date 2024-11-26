@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:routing_client_dart/routing_client_dart.dart';
 
 const earthRadius = 6371e3; //metre
 
@@ -58,4 +59,46 @@ Future<List<SearchInfo>> addressSuggestion(String searchText,
   return (json["features"] as List)
       .map((d) => SearchInfo.fromPhotonAPI(d))
       .toList();
+}
+
+extension ExtGeoPoint2 on GeoPoint {
+  LngLat toLngLat() {
+    return LngLat(
+      lng: longitude,
+      lat: latitude,
+    );
+  }
+}
+
+extension ExtLatLng on LngLat {
+  GeoPoint toGeoPoint() {
+    return GeoPoint(
+      longitude: lng,
+      latitude: lat,
+    );
+  }
+}
+
+extension ExtListLatLng on List<LngLat> {
+
+  List<GeoPoint> toGeoPointList() {
+    return map((lngLat) => lngLat.toGeoPoint()).toList();
+  }
+}
+
+extension ExtListGeoPoints on List<GeoPoint> {
+  List<LngLat> toLngLatList() {
+    return map((e) => e.toLngLat()).toList();
+  }
+}
+
+extension ExtRoadInstruction on RoadInstruction {
+  Instruction toInstruction() {
+    return Instruction(
+      distance: distance,
+      duration: duration,
+      instruction: instruction,
+      geoPoint: location.toGeoPoint(),
+    );
+  }
 }

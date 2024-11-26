@@ -137,18 +137,18 @@ abstract class IBaseOSMController {
   /// has attribute which is the desired location
   /// [p] : (GeoPoint) desired location
   /// [animate] : (bool) animate the camera if true (default:false)
-  Future<void> goToPosition(GeoPoint p,{bool animate = false});
+  Future<void> goToPosition(GeoPoint p, {bool animate = false});
 
   /// [enableTracking]
-  /// 
-  /// to start tracking user location where we will show [personMarker] 
+  ///
+  /// to start tracking user location where we will show [personMarker]
   /// or [directionMarker] depend on heading value but we can configure the marker to be always
   /// [directionMarker] by set [useDirectionMarker] to true (default:false)
-  /// 
+  ///
   /// we can also enable stop following user when the user move the map by set [enableStopFollow] to true
   /// with [disableMarkerRotation] we can disable rotation of the marker
   /// and [anchor] will change the position of the marker compared to center of the marker
-  /// 
+  ///
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableMarkerRotation,
@@ -162,6 +162,7 @@ abstract class IBaseOSMController {
   /// [startLocationUpdating]
   ///
   Future<void> startLocationUpdating();
+
   /// [stopLocationUpdating]
   ///
   Future<void> stopLocationUpdating();
@@ -183,9 +184,9 @@ abstract class IBaseOSMController {
   Future<RoadInfo> drawRoad(
     GeoPoint start,
     GeoPoint end, {
-    RoadType roadType = RoadType.car,
     List<GeoPoint>? interestPoints,
-    RoadOption? roadOption,
+    (RoadType, PolylineOption)? polylineOption,
+    bool zoomInto = true,
   });
 
   /// [drawRoadManually]
@@ -198,24 +199,8 @@ abstract class IBaseOSMController {
   ///
   ///  [roadOption] : (RoadOption) contain style of road such as color,width,borderColor,zoomInto
   Future<String> drawRoadManually(
-    String key,
-    List<GeoPoint> path,
-    RoadOption roadOption,
-  );
-
-  /// [drawMultipleRoad]
-  /// this method will call draw list of roads in sametime with making  api continually
-  /// to get list of GeoPoint for each configuration and you can define common configuration for all roads that share the same
-  /// color,width,roadType using [commonRoadOption]
-  /// this method return list of [RoadInfo] with the same order for each config
-  ///
-  ///  parameters :
-  ///  [configs]        : (List) list of road configuration
-  ///
-  /// [commonRoadOption]  : (MultiRoadOption) common road config that can apply to all roads that doesn't define any inner roadOption
-  Future<List<RoadInfo>> drawMultipleRoad(
-    List<MultiRoadConfiguration> configs, {
-    MultiRoadOption commonRoadOption,
+    Road road, {
+    bool zoomInto = true,
   });
 
   /// [clearAllRoads]

@@ -1,5 +1,20 @@
 import 'package:flutter_osm_interface/src/common/utilities.dart';
 
+sealed class OSMTile {
+  Map<String, dynamic> toMap();
+}
+
+class VectorTile extends OSMTile {
+  final String serverStyleUrl;
+
+  VectorTile({required this.serverStyleUrl});
+
+  @override
+  Map<String, dynamic> toMap() => {
+        "serverStyleUrl": serverStyleUrl,
+      };
+}
+
 /// [CustomTile]
 ///
 /// this class used to set custom tile for osm mapview (android,ios,web)
@@ -18,7 +33,7 @@ import 'package:flutter_osm_interface/src/common/utilities.dart';
 /// [maxZoomLevel]   :  (int) maximum zoom level for custom tile source
 ///
 /// [keyApi]         : (MapEntry) should contain key name and api key value for tile server that need api key access
-class CustomTile {
+class CustomTile extends OSMTile {
   final List<TileURLs> urlsServers;
   final String tileExtension;
   final String sourceName;
@@ -90,12 +105,11 @@ class CustomTile {
         tileSize = 256,
         keyApi = null;
 
-  Map toMap() {
+  @override
+  Map<String, dynamic> toMap() {
     final map = {
       "name": sourceName,
-      "urls": urlsServers
-          .map((e) => e.toMapPlatform())
-          .toList(),
+      "urls": urlsServers.map((e) => e.toMapPlatform()).toList(),
       "tileSize": tileSize,
       "tileExtension": tileExtension,
       "maxZoomLevel": maxZoomLevel,

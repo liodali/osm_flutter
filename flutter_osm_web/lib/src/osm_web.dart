@@ -15,7 +15,7 @@ class OsmWebWidget extends StatefulWidget {
   final Widget? mapIsLoading;
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
-  final RoadOption? roadConfiguration;
+  final PolylineOption? roadConfiguration;
   final bool showDefaultInfoWindow;
   final bool isPicker;
   final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;

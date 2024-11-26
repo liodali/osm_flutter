@@ -98,26 +98,23 @@ extension ExtListGeoPoints on List<GeoPoint> {
 }
 
 extension ExtAnchor on IconAnchor {
-  
-  IconAnchorJS get toAnchorJS =>IconAnchorJS(
-      x:  anchor.value.$1,
-      y: anchor.value.$2,
-      offset: offset != null
-          ? IconOffsetAnchorJS(
-              x: offset!.x,
-              y: offset!.y,
-            )
-          : null,
-    );
+  IconAnchorJS get toAnchorJS => IconAnchorJS(
+        x: anchor.value.$1,
+        y: anchor.value.$2,
+        offset: offset != null
+            ? IconOffsetAnchorJS(
+                x: offset!.x,
+                y: offset!.y,
+              )
+            : null,
+      );
 }
-extension ExtRoadOption on RoadOption {
 
+extension ExtRoadOption on PolylineOption {
   RoadOptionJS get toRoadOptionJS => RoadOptionJS(
-    color: roadColor.toHexColor(),
-    roadWidth: roadWidth.toDouble(),
-    zoomInto: zoomInto,
-    roadBorderColor: roadBorderColor?.toHexColor(),
-    roadBorderWidth: roadBorderWidth?.toDouble() ?? 0.0,
-    isDotted: isDotted
-  );
+      color: roadColor.toHexColor(),
+      roadWidth: roadWidth.toDouble(),
+      roadBorderColor: roadBorderColor?.toHexColor(),
+      roadBorderWidth: roadBorderWidth?.toDouble() ?? 0.0,
+      isDotted: isDotted);
 }

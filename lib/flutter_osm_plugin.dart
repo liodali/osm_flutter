@@ -1,7 +1,7 @@
 library osm_flutter;
 
 export 'package:flutter_osm_interface/src/common/utilities.dart'
-    hide Uint8ListConvert, ListMultiRoadConf, ColorMap, capturePng;
+    hide Uint8ListConvert, ColorMap, capturePng;
 export 'package:flutter_osm_interface/src/map_controller/base_map_controller.dart'
     hide OSMControllerOfBaseMapController;
 export 'package:flutter_osm_interface/src/mixin/interface_mixin.dart';

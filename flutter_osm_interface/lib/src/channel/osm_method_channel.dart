@@ -199,6 +199,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       var args = {
         "id": id,
         "bitmap": icon,
+        "factorSize": _factorSizeOfWidget(globalKey),
         "refresh": refresh,
       };
 
@@ -215,47 +216,23 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
-  Future<RoadInfo> drawRoad(
+  Future<void> drawRoad(
     int idOSM,
-    GeoPoint start,
-    GeoPoint end, {
-    RoadType roadType = RoadType.car,
-    List<GeoPoint>? interestPoints,
-    RoadOption roadOption = const RoadOption.empty(),
+    Road road, {
+    bool zoomInto = true,
   }) async {
-    final roadInfo = RoadInfo();
-
     /// add point of the road
-    final Map args = {
-      'key': roadInfo.key,
-      "wayPoints": [
-        start.toMap(),
-        end.toMap(),
-      ]
-    };
-
-    /// add road type that will change api call to get route
-    args.addAll({
-      "roadType": roadType.toString().split(".").last,
-    });
-
-    /// add middle point that will pass through it
-    if (interestPoints != null && interestPoints.isNotEmpty) {
-      args.addAll(
-        {
-          "middlePoints": interestPoints.map((e) => e.toMap()).toList(),
-        },
-      );
-    }
-
-    args.addAll(roadOption.toMap());
-
+    final Map args = road.toMap();
+    args.putIfAbsent(
+      "zoomIntoRegion",
+      () => zoomInto,
+    );
+    debugPrint("roadArgs:$args");
     try {
-      Map? map = await _channels[idOSM]?.invokeMapMethod(
+      await _channels[idOSM]?.invokeMethod(
         "road",
         args,
       );
-      return RoadInfo.fromMap(map!);
     } on PlatformException catch (e) {
       throw RoadException(msg: e.message);
     }
@@ -353,6 +330,16 @@ class MethodChannelOSM extends MobileOSMPlatform {
     return pngBytes;
   }
 
+  double _factorSizeOfWidget(GlobalKey globalKey) {
+    if (globalKey.currentContext == null ||
+        !globalKey.currentContext!.mounted) {
+      throw Exception("Error to draw you custom icon");
+    }
+    final pixelRatio =
+        MediaQuery.maybeDevicePixelRatioOf(globalKey.currentContext!);
+    return pixelRatio ?? 1.8;
+  }
+
   @override
   Future<void> drawCircle(int idOSM, CircleOSM circleOSM) async {
     await _channels[idOSM]?.invokeMethod("draw#circle", circleOSM.toMap());
@@ -410,7 +397,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     int idOSM,
     String roadKey,
     List<GeoPoint> road,
-    RoadOption roadOption,
+    PolylineOption roadOption,
   ) async {
     final coordinates = road.map((e) => e.toListNum()).toList();
     final encodedCoordinates = encodePolyline(coordinates);
@@ -464,7 +451,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
     HashMap<String, dynamic> args = HashMap();
 
     args["personIcon"] = iconPerson;
+    args["personIconFactorSize"] = _factorSizeOfWidget(personGlobalKey);
+
     args["arrowDirectionIcon"] = iconArrowDirection;
+    args["arrowDirectionIconFactorSize"] =
+        _factorSizeOfWidget(directionArrowGlobalKey);
 
     await _channels[idOSM]?.invokeMethod("user#locationMarkers", args);
   }
@@ -483,6 +474,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
       var icon = await _capturePng(globalKeyIcon);
 
       args["icon"] = icon;
+      args["factorSize"] = _factorSizeOfWidget(globalKeyIcon);
     }
     if (iconAnchor != null) {
       args["iconAnchor"] = iconAnchor.toMap();
@@ -557,6 +549,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     Map<String, dynamic> args = {"point": point.toMap()};
 
     args["icon"] = await _capturePng(globalKeyIcon);
+    args["factorSize"] = _factorSizeOfWidget(globalKeyIcon);
 
     try {
       await _channels[idOSM]?.invokeMethod("update#Marker", args);
@@ -570,34 +563,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
     int idOSM,
   ) async {
     await _channels[idOSM]?.invokeMethod("clear#roads");
-  }
-
-  @override
-  Future<List<RoadInfo>> drawMultipleRoad(
-    int idOSM,
-    List<MultiRoadConfiguration> configs, {
-    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
-  }) async {
-    final len = configs.length;
-    final roadInfos = <RoadInfo>[];
-    final args = configs.toListMap(
-      commonRoadOption: commonRoadOption,
-    );
-    for (var i = 0; i < len; i++) {
-      final roadInfo = RoadInfo();
-      roadInfos.add(roadInfo);
-      args[i]['key'] = roadInfo.key;
-    }
-
-    final List result =
-        (await _channels[idOSM]?.invokeListMethod("draw#multi#road", args))!;
-    final List<Map<String, dynamic>> mapRoadInfo =
-        result.map((e) => Map<String, dynamic>.from(e)).toList();
-    return mapRoadInfo
-        .asMap()
-        .entries
-        .map((entry) => roadInfos[entry.key].copyFromMap(map: entry.value))
-        .toList();
   }
 
   @override
@@ -623,6 +588,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     if (globalKeyIcon != null) {
       final icon = await _capturePng(globalKeyIcon);
       args["new_icon"] = icon;
+      args["new_factorSize"] = _factorSizeOfWidget(globalKeyIcon);
     }
     if (iconAnchor != null) {
       args["iconAnchor"] = iconAnchor.toMap();

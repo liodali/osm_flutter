@@ -52,6 +52,10 @@ extension ExtListGeoPoint on List<GeoPoint> {
       return encodePolyline(coordinates);
     }, listGeos);
   }
+
+  List<List<num>> toListNums() {
+    return map((gp) => gp.toListNum()).toList();
+  }
 }
 
 extension TransformEncodedPolyLineToListGeo on String {
@@ -147,46 +151,6 @@ extension ColorMap on Color {
 extension Uint8ListConvert on Uint8List {
   String convertToString() {
     return base64.encode(this);
-  }
-}
-
-extension ListMultiRoadConf on List<MultiRoadConfiguration> {
-  List<Map<String, dynamic>> toListMap({
-    MultiRoadOption commonRoadOption = const MultiRoadOption(
-      roadColor: Colors.green,
-      roadType: RoadType.car,
-    ),
-  }) {
-    final List<Map<String, dynamic>> listMap = [];
-
-    for (MultiRoadConfiguration roadConf in this) {
-      final map = <String, dynamic>{};
-
-      map["wayPoints"] = [
-        roadConf.startPoint.toMap(),
-        roadConf.destinationPoint.toMap(),
-      ];
-      map["roadType"] = roadConf.roadOptionConfiguration?.roadType.toString() ??
-          commonRoadOption.roadType.toString();
-      final color = roadConf.roadOptionConfiguration?.roadColor ??
-          commonRoadOption.roadColor;
-      if (defaultTargetPlatform == TargetPlatform.iOS) {
-        map.addAll(color.toHexMap("roadColor"));
-
-        map["roadWidth"] =
-            roadConf.roadOptionConfiguration?.roadWidth ?? commonRoadOption.roadWidth;
-      } else {
-        map.addAll(color.toMap("roadColor"));
-
-        map["roadWidth"] = roadConf.roadOptionConfiguration?.roadWidth ??
-            commonRoadOption.roadWidth;
-      }
-
-      map["middlePoints"] =
-          roadConf.intersectPoints.map((e) => e.toMap()).toList();
-      listMap.add(map);
-    }
-    return listMap;
   }
 }
 

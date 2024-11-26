@@ -123,7 +123,8 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     assert((initPosition != null) ^ (userPositionOption != null));
     if (osmWebFlutterState.widget.controller.customTile != null) {
       await changeTileLayer(
-        tileLayer: osmWebFlutterState.widget.controller.customTile,
+        tileLayer:
+            osmWebFlutterState.widget.controller.customTile as CustomTile,
       );
     }
 

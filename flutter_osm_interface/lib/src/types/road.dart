@@ -6,6 +6,40 @@ enum RoadType {
   car,
   foot,
   bike,
+  mixed,
+}
+
+class Road {
+  final String id;
+  final List<Polyline> polylines;
+
+  Road({
+    required this.id,
+    required this.polylines,
+  });
+  Map toMap() => {
+        'key': id,
+        "segments": polylines.map((p) {
+          return p.toMap();
+        }).toList(),
+      };
+}
+
+class Polyline {
+  final String id;
+  final String encodedPolyline;
+  final PolylineOption polylineOption;
+
+  Polyline({
+    required this.id,
+    required this.encodedPolyline,
+    required this.polylineOption,
+  });
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'polylineEncoded': encodedPolyline,
+        'option': polylineOption.toMap(),
+      };
 }
 
 /// [RoadOption]
@@ -23,28 +57,25 @@ enum RoadType {
 /// [roadBorderWidth]      : (double) if null the road will be without border,else we will show border but if [roadBorderColor] null road border color will be the same as [roadColor]
 ///
 /// [zoomInto]             : (bool) to zoomIn/Out that will make all the road visible in the map (default false)
-class RoadOption {
+class PolylineOption {
   final Color roadColor;
   final double roadWidth;
-  final bool zoomInto;
   final Color? roadBorderColor;
   final double? roadBorderWidth;
   final bool isDotted;
 
-  const RoadOption({
+  const PolylineOption({
     required this.roadColor,
     this.roadWidth = 5,
     this.roadBorderColor,
-    this.zoomInto = true,
     this.isDotted = false,
     this.roadBorderWidth,
   })  : assert(roadBorderWidth == null || roadBorderWidth > 0),
         assert(roadWidth > 0);
 
-  const RoadOption.empty()
+  const PolylineOption.empty()
       : roadWidth = 5,
         roadColor = Colors.green,
-        zoomInto = false,
         isDotted = false,
         roadBorderWidth = 0,
         roadBorderColor = null;
@@ -60,12 +91,8 @@ class RoadOption {
       );
     }
     args.putIfAbsent(
-      "zoomIntoRegion",
-      () => zoomInto,
-    );
-    args.putIfAbsent(
-      "zoomIntoRegion",
-      () => zoomInto,
+      "roadWidth",
+      () => roadWidth,
     );
     args.addAll(roadColor.toMapPlatform("roadColor"));
     args.putIfAbsent(
@@ -78,56 +105,8 @@ class RoadOption {
         () => (roadBorderColor!).toPlatform(),
       );
     }
-
     return args;
   }
-}
-
-/// [MultiRoadOption]
-///
-/// this class used to configure road in Multiple Drawing Road by change default color [roadColor]
-/// that can be null or width [roadWidth] that also can be null for that specific road
-///
-class MultiRoadOption extends RoadOption {
-  final RoadType roadType;
-
-  const MultiRoadOption({
-    required super.roadColor,
-    super.roadWidth,
-    this.roadType = RoadType.car,
-    super.roadBorderColor,
-    super.roadBorderWidth,
-  }) : super(
-          zoomInto: false,
-        );
-
-  const MultiRoadOption.empty()
-      : roadType = RoadType.car,
-        super(
-          roadColor: Colors.green,
-          zoomInto: false,
-        );
-}
-
-/// [MultiRoadConfiguration]
-///
-/// this class used to set configuration to draw  multiple roads in the sametime
-/// it required to set [startPoint] and [destinationPoint]
-/// and setting [intersectPoints] is optional and the same for [roadOptionConfiguration]
-/// that responsible to configure color and width of the road
-///
-class MultiRoadConfiguration {
-  final GeoPoint startPoint;
-  final GeoPoint destinationPoint;
-  final List<GeoPoint> intersectPoints;
-  final MultiRoadOption? roadOptionConfiguration;
-
-  const MultiRoadConfiguration({
-    required this.startPoint,
-    required this.destinationPoint,
-    this.intersectPoints = const [],
-    this.roadOptionConfiguration,
-  });
 }
 
 /// [RoadInfo]
@@ -141,57 +120,38 @@ class MultiRoadConfiguration {
 ///
 /// [duration] : (double) duration of the road in seconds,can be null
 ///
-/// [route]   :  (List of GeoPoint) the point route of the road can be empty
+/// [segments]   :  (List of RoadSegment) the segment of the road
 class RoadInfo {
   final double? distance;
   final double? duration;
-  final List<GeoPoint> route;
-  final List<Instruction> instructions;
+  final List<RoadSegment> segments;
   late String _key;
   RoadInfo({
     this.distance,
     this.duration,
-    this.route = const [],
-    this.instructions = const [],
+    this.segments = const [],
   }) : _key = UniqueKey().toString();
 
   RoadInfo.fromMap(Map map)
       : _key = map["key"] ?? UniqueKey().toString(),
         duration = map["duration"],
         distance = map["distance"],
-        instructions = map.containsKey("instructions")
+        segments = map.containsKey("segments")
             ? (map["instructions"] as List)
-                .map((e) => Instruction.fromMap(e))
+                .map((e) => RoadSegment.fromMap(e))
                 .toList()
-            : [],
-        route = map.containsKey('routePoints')
-            ? (map["routePoints"] as String).stringToGeoPoints()
             : [];
   RoadInfo copyWith({
     String? roadKey,
     double? distance,
     double? duration,
-    List<Instruction>? instructions = const [],
-    List<GeoPoint>? route = const [],
+    List<RoadSegment>? segments = const [],
   }) {
     return RoadInfo(
       distance: distance ?? this.distance,
       duration: duration ?? this.duration,
-      route: route ?? this.route,
-      instructions: instructions ?? this.instructions,
+      segments: segments ?? this.segments,
     )..setKey(roadKey ?? _key);
-  }
-
-  RoadInfo copyFromMap({
-    required Map map,
-  }) {
-    return RoadInfo(
-      distance: map["duration"] ?? distance,
-      duration: map["distance"] ?? duration,
-      route: map.containsKey(map)
-          ? (map["routePoints"] as String).stringToGeoPoints()
-          : route,
-    )..setKey(_key);
   }
 
   String get key => _key;
@@ -203,10 +163,10 @@ class RoadInfo {
           _key == other._key &&
           distance == other.distance &&
           duration == other.duration &&
-          route == other.route;
+          segments == other.segments;
 
   @override
-  int get hashCode => distance.hashCode ^ duration.hashCode ^ route.hashCode;
+  int get hashCode => distance.hashCode ^ duration.hashCode ^ segments.hashCode;
 
   @override
   String toString() {
@@ -214,16 +174,77 @@ class RoadInfo {
   }
 }
 
+class RoadSegment {
+  final double? distance;
+  final double? duration;
+  final List<GeoPoint> route;
+  final List<Instruction> instructions;
+
+  RoadSegment({
+    required this.distance,
+    required this.duration,
+    required this.route,
+    required this.instructions,
+  });
+  RoadSegment.fromMap(Map map)
+      : duration = map["duration"],
+        distance = map["distance"],
+        instructions = map.containsKey("instructions")
+            ? (map["instructions"] as List)
+                .map((e) => Instruction.fromMap(e))
+                .toList()
+            : [],
+        route = map.containsKey('routePoints')
+            ? (map["routePoints"] as String).stringToGeoPoints()
+            : [];
+  RoadSegment copyFromMap({
+    required Map map,
+  }) {
+    return RoadSegment(
+        distance: map["duration"] ?? distance,
+        duration: map["distance"] ?? duration,
+        route: map.containsKey(map)
+            ? (map["route"] as String).stringToGeoPoints()
+            : route,
+        instructions: map.containsKey("instructions")
+            ? (map["instructions"] as List)
+                .map((e) => Instruction.fromMap(e))
+                .toList()
+            : []);
+  }
+
+  RoadSegment copyWith({
+    String? roadKey,
+    double? distance,
+    double? duration,
+    List<GeoPoint>? route = const [],
+    List<Instruction>? instructions = const [],
+  }) {
+    return RoadSegment(
+      distance: distance ?? this.distance,
+      duration: duration ?? this.duration,
+      route: route ?? this.route,
+      instructions: instructions ?? this.instructions,
+    );
+  }
+}
+
 class Instruction {
   final String instruction;
   final GeoPoint geoPoint;
+  final double distance;
+  final double duration;
 
   Instruction({
     required this.instruction,
     required this.geoPoint,
+    required this.distance,
+    required this.duration,
   });
   Instruction.fromMap(Map map)
       : instruction = map["instruction"],
+        distance = map["distance"],
+        duration = map["duration"],
         geoPoint = GeoPoint.fromMap(map["geoPoint"]);
 
   @override

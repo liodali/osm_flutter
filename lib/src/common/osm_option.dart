@@ -36,7 +36,7 @@ class OSMOption {
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
   final UserLocationMaker? userLocationMarker;
-  final RoadOption? roadConfiguration;
+  final PolylineOption? roadConfiguration;
   final ZoomOption zoomOption;
   final bool enableRotationByGesture;
   final bool showDefaultInfoWindow;

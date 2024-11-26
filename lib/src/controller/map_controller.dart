@@ -22,7 +22,21 @@ class MapController extends BaseMapController {
         super(
           customTile: null,
         );
-
+  MapController.vectorTile({
+    super.initMapWithUserPosition,
+    super.initPosition,
+    super.areaLimit = const BoundingBox.world(),
+    super.useExternalTracking,
+    VectorTile? customTile,
+  })  : assert(
+          (initMapWithUserPosition != null) ^ (initPosition != null),
+        ),
+        super(
+          customTile: customTile ??
+              VectorTile(
+                serverStyleUrl: 'https://tiles.openfreemap.org/styles/liberty',
+              ),
+        );
   MapController.withPosition({
     required GeoPoint initPosition,
     super.areaLimit = const BoundingBox.world(),
@@ -328,14 +342,8 @@ class MapController extends BaseMapController {
   ///
   /// use this method to start only receiving the user location without
   /// controlling the map which you can do that manually
-  Future<void> startLocationUpdating({
-    bool enableStopFollow = false,
-    bool disableUserMarkerRotation = false,
-    Anchor anchor = Anchor.center,
-    bool useDirectionMarker = false,
-  }) async {
-    await osmBaseController.startLocationUpdating();
-  }
+  Future<void> startLocationUpdating() =>
+      osmBaseController.startLocationUpdating();
 
   ///[stopLocationUpdating]
   ///
@@ -374,37 +382,14 @@ class MapController extends BaseMapController {
     GeoPoint end, {
     RoadType roadType = RoadType.car,
     List<GeoPoint>? intersectPoint,
-    RoadOption? roadOption,
+    bool zoomInto = true,
+    PolylineOption polylineOption = const PolylineOption.empty(),
   }) async {
     return await osmBaseController.drawRoad(
       start,
       end,
-      roadType: roadType,
       interestPoints: intersectPoint,
-      roadOption: roadOption,
-    );
-  }
-
-  /// [drawMultipleRoad]
-  ///
-  /// will draw list of roads in sametime with making api calls continually
-  /// to get list of GeoPoint for each configuration
-  /// and you can define common configuration for all roads that share the same
-  /// color,width,roadType using [commonRoadOption]
-  /// this method return list of [RoadInfo] with the same order for each config
-  ///
-  /// parameters :
-  ///
-  ///  [configs]        : (List) list of road configuration
-  ///
-  /// [commonRoadOption]  : (MultiRoadOption) common road config that can apply to all roads that doesn't define any inner roadOption
-  Future<List<RoadInfo>> drawMultipleRoad(
-    List<MultiRoadConfiguration> configs, {
-    MultiRoadOption commonRoadOption = const MultiRoadOption.empty(),
-  }) async {
-    return await osmBaseController.drawMultipleRoad(
-      configs,
-      commonRoadOption: commonRoadOption,
+      polylineOption: (roadType, polylineOption),
     );
   }
 
@@ -483,13 +468,15 @@ class MapController extends BaseMapController {
   ///
   ///  [roadOption] : (RoadOption) define styles of the road
   Future<String> drawRoadManually(
-    List<GeoPoint> path,
-    RoadOption roadOption,
-  ) async {
+    //   List<GeoPoint> path,
+    //   PolylineOption roadOption,
+
+    Road road, {
+    bool zoomInto = true,
+  }) async {
     return await osmBaseController.drawRoadManually(
-      UniqueKey().toString(),
-      path,
-      roadOption,
+      road,
+      zoomInto: zoomInto,
     );
   }
 
