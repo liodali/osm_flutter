@@ -3,51 +3,6 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 import 'package:flutter_osm_plugin/src/widgets/mobile_osm_flutter.dart';
 
-Widget getWidget({
-  required BaseMapController controller,
-  UserTrackingOption? userTrackingOption,
-  OnGeoPointClicked? onGeoPointClicked,
-  OnLocationChanged? onLocationChanged,
-  OnMapMoved? onMapMoved,
-  required ValueNotifier<bool> mapIsReadyListener,
-  required ValueNotifier<Widget?> dynamicMarkerWidgetNotifier,
-  List<StaticPositionGeoPoint> staticPoints = const [],
-  Widget? mapIsLoading,
-  required List<GlobalKey> globalKeys,
-  required Map<String, GlobalKey> staticIconGlobalKeys,
-  RoadOption? roadConfiguration,
-  bool showZoomController = false,
-  bool showDefaultInfoWindow = false,
-  bool isPicker = false,
-  bool showContributorBadgeForOSM = false,
-  ZoomOption zoomOption = const ZoomOption(),
-  UserLocationMaker? userLocationMarker,
-  Function(bool)? onMapIsReady,
-  bool enableRotationByGesture = false,
-}) =>
-    MobileOsmFlutter(
-      controller: controller,
-      userTrackingOption:
-          userTrackingOption ?? controller.initMapWithUserPosition,
-      onGeoPointClicked: onGeoPointClicked,
-      onLocationChanged: onLocationChanged,
-      onMapMoved: onMapMoved,
-      mapIsReadyListener: mapIsReadyListener,
-      mapIsLoading: mapIsLoading,
-      staticIconGlobalKeys: staticIconGlobalKeys,
-      dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
-      showZoomController: showZoomController,
-      showDefaultInfoWindow: showDefaultInfoWindow,
-      showContributorBadgeForOSM: showContributorBadgeForOSM,
-      isPicker: isPicker,
-      roadConfig: roadConfiguration ?? const RoadOption.empty(),
-      staticPoints: staticPoints,
-      globalKeys: globalKeys,
-      onMapIsReady: onMapIsReady,
-      userLocationMarker: userLocationMarker,
-      zoomOption: zoomOption,
-      enableRotationByGesture: enableRotationByGesture,
-    );
 
 class OSMMapWidget extends StatelessWidget {
  const OSMMapWidget({
@@ -86,7 +41,7 @@ class OSMMapWidget extends StatelessWidget {
   final UserLocationMaker? userLocationMarker;
   final List<GlobalKey> globalKeys;
   final Map<String, GlobalKey> staticIconGlobalKeys;
-  final RoadOption? roadConfiguration;
+  final PolylineOption? roadConfiguration;
   final bool showZoomController;
   final ZoomOption zoomOption;
   final bool showDefaultInfoWindow;
@@ -110,7 +65,7 @@ class OSMMapWidget extends StatelessWidget {
       showDefaultInfoWindow: showDefaultInfoWindow,
       showContributorBadgeForOSM: showContributorBadgeForOSM,
       isPicker: isPicker,
-      roadConfig: roadConfiguration ?? const RoadOption.empty(),
+      polylineOption: roadConfiguration ?? const PolylineOption.empty(),
       staticPoints: staticPoints,
       globalKeys: globalKeys,
       onMapIsReady: onMapIsReady,
