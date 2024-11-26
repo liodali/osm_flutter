@@ -28,7 +28,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
   late MapController controller;
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
   ValueNotifier<bool> showFab = ValueNotifier(false);
-  ValueNotifier<bool> disableMapControlUserTracking = ValueNotifier(true);
+  ValueNotifier<bool> disableMapControlUserTracking = ValueNotifier(false);
   ValueNotifier<IconData> userLocationIcon = ValueNotifier(Icons.near_me);
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
   List<GeoPoint> geos = [];
@@ -38,11 +38,12 @@ class _MainState extends State<Main> with OSMMixinObserver {
   @override
   void initState() {
     super.initState();
-    controller = MapController(
+    controller = MapController.vectorTile(
       initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
       ),
+      //customTile: VectorTile(serverStyleUrl: "https://tiles.openfreemap.org/styles/positron"),
       // initMapWithUserPosition: UserTrackingOption(
       //   enableTracking: trackingNotifier.value,
       // ),
@@ -106,6 +107,10 @@ class _MainState extends State<Main> with OSMMixinObserver {
       //await controller.moveTo(position, animate: true);
       lastGeoPoint.value = position;
       geos.add(position);
+      if (geos.length >= 2) {
+        await controller.drawRoad(geos.first, geos.last);
+        geos.clear();
+      }
     });
   }
 
@@ -215,7 +220,8 @@ class _MainState extends State<Main> with OSMMixinObserver {
                         Future.forEach(geos, (element) async {
                           await controller.removeMarker(element);
                           await Future.delayed(
-                              const Duration(milliseconds: 100));
+                            const Duration(milliseconds: 100),
+                          );
                         });
                       },
                       icon: const Icon(Icons.clear_all),
@@ -421,7 +427,7 @@ class Map extends StatelessWidget {
       osmOption: OSMOption(
         enableRotationByGesture: true,
         zoomOption: const ZoomOption(
-          initZoom: 16,
+          initZoom: 10,
           minZoomLevel: 3,
           maxZoomLevel: 19,
           stepZoom: 1.0,
@@ -500,7 +506,7 @@ class Map extends StatelessWidget {
             ],
           ),
         ],
-        roadConfiguration: const RoadOption(
+        roadConfiguration: const PolylineOption(
           roadColor: Colors.blueAccent,
         ),
         showContributorBadgeForOSM: true,
@@ -539,35 +545,36 @@ class ActivationUserLocation extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.deferToChild,
         onLongPress: () async {
-          //await controller.disabledTracking();
-          await controller.stopLocationUpdating();
+          await controller.disabledTracking();
+          //await controller.stopLocationUpdating();
           trackingNotifier.value = false;
         },
         child: FloatingActionButton(
           key: UniqueKey(),
           onPressed: () async {
             if (!trackingNotifier.value) {
-              /*await controller.currentLocation();
+              await controller.currentLocation();
               await controller.enableTracking(
                 enableStopFollow: true,
                 disableUserMarkerRotation: false,
                 anchor: Anchor.right,
                 useDirectionMarker: true,
-              );*/
-              await controller.startLocationUpdating();
+              );
+              // await controller.startLocationUpdating();
               trackingNotifier.value = true;
 
               //await controller.zoom(5.0);
             } else {
-              if (userLocation.value != null) {
-                await controller.moveTo(userLocation.value!);
-              }
+              // if (userLocation.value != null) {
+              //   await controller.moveTo(userLocation.value!);
+              // }
 
-              /*await controller.enableTracking(
-                  enableStopFollow: false,
-                  disableUserMarkerRotation: true,
-                  anchor: Anchor.center,
-                  useDirectionMarker: true);*/
+              await controller.enableTracking(
+                enableStopFollow: false,
+                disableUserMarkerRotation: true,
+                anchor: Anchor.center,
+                useDirectionMarker: true,
+              );
               // if (userLocationNotifier.value != null) {
               //   await controller
               //       .goToLocation(userLocationNotifier.value!);

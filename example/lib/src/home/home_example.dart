@@ -326,7 +326,6 @@ class _MainExampleState extends State<OldMainExample>
           ),
           Builder(builder: (ctx) {
             return GestureDetector(
-              onLongPress: () => drawMultiRoads(),
               onDoubleTap: () async {
                 await controller.clearAllRoads();
               },
@@ -466,7 +465,7 @@ class _MainExampleState extends State<OldMainExample>
                       ],
                     )*/
               ],
-              roadConfiguration: const RoadOption(
+              roadConfiguration: const PolylineOption(
                 roadColor: Colors.blueAccent,
               ),
               showContributorBadgeForOSM: true,
@@ -727,22 +726,22 @@ class _MainExampleState extends State<OldMainExample>
           roadType: notifierRoadType.value,
           intersectPoint:
               pointsRoad.getRange(1, pointsRoad.length - 1).toList(),
-          roadOption: const RoadOption(
+          polylineOption: const PolylineOption(
             roadWidth: 15,
             roadColor: Colors.red,
-            zoomInto: true,
             roadBorderWidth: 10.0,
             roadBorderColor: Colors.green,
             isDotted: true,
           ),
+          zoomInto: true,
         );
         pointsRoad.clear();
         debugPrint(
             "app duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
         debugPrint("app distance:${roadInformation.distance}Km");
         debugPrint("app road:$roadInformation");
-        final console = roadInformation.instructions
-            .map((e) => e.toString())
+        final console = roadInformation.segments
+            .map((e) => e.instructions.toString())
             .reduce(
               (value, element) => "$value -> \n $element",
             )
@@ -775,67 +774,24 @@ class _MainExampleState extends State<OldMainExample>
     debugPrint("log map restored");
   }
 
-  void drawMultiRoads() async {
-    /*
-      8.4638911095,47.4834379430|8.5046595453,47.4046149269
-      8.5244329867,47.4814981476|8.4129691189,47.3982152237
-      8.4371175094,47.4519015578|8.5147623089,47.4321999727
-     */
-
-    final configs = [
-      MultiRoadConfiguration(
-        startPoint: GeoPoint(
-          latitude: 47.4834379430,
-          longitude: 8.4638911095,
-        ),
-        destinationPoint: GeoPoint(
-          latitude: 47.4046149269,
-          longitude: 8.5046595453,
-        ),
-      ),
-      MultiRoadConfiguration(
-          startPoint: GeoPoint(
-            latitude: 47.4814981476,
-            longitude: 8.5244329867,
-          ),
-          destinationPoint: GeoPoint(
-            latitude: 47.3982152237,
-            longitude: 8.4129691189,
-          ),
-          roadOptionConfiguration: const MultiRoadOption(
-            roadColor: Colors.orange,
-          )),
-      MultiRoadConfiguration(
-        startPoint: GeoPoint(
-          latitude: 47.4519015578,
-          longitude: 8.4371175094,
-        ),
-        destinationPoint: GeoPoint(
-          latitude: 47.4321999727,
-          longitude: 8.5147623089,
-        ),
-      ),
-    ];
-    final listRoadInfo = await controller.drawMultipleRoad(
-      configs,
-      commonRoadOption: const MultiRoadOption(
-        roadColor: Colors.red,
-      ),
-    );
-    debugPrint(listRoadInfo.toString());
-  }
-
   Future<void> drawRoadManually() async {
     const encoded =
         "mfp_I__vpAqJ`@wUrCa\\dCgGig@{DwWq@cf@lG{m@bDiQrCkGqImHu@cY`CcP@sDb@e@hD_LjKkRt@InHpCD`F";
-    final list = await encoded.toListGeo();
+
     await controller.drawRoadManually(
-      list,
-      const RoadOption(
-        zoomInto: true,
-        roadColor: Colors.blueAccent,
-      ),
-    );
+        Road(
+          id: "road1",
+          polylines: [
+            Polyline(
+              id: 'seg-0',
+              encodedPolyline: encoded,
+              polylineOption: const PolylineOption(
+                roadColor: Colors.blueAccent,
+              ),
+            ),
+          ],
+        ),
+        zoomInto: true);
   }
 }
 
