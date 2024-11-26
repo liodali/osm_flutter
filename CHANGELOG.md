@@ -1,3 +1,5 @@
+### 1.3.5+1: fix bug
+* fix android build by remove unnecessary dependency in gradle file
 ### 1.3.5: fix bug
 * fix issue in convert js object to dart for web side
 ### 1.3.4: fix bug
