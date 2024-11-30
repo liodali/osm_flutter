@@ -1384,12 +1384,10 @@ class FlutterOsmView(
             val refresh = hashMap["refresh"] as Boolean
             staticMarkerIcon[key] = bitmap
 
-            scope?.launch {
-                if (staticPoints.containsKey(key) && refresh) {
-                    showStaticPosition(
-                        key,
-                    )
-                }
+            if (staticPoints.containsKey(key) && refresh) {
+                showStaticPosition(
+                    key,
+                )
             }
             result.success(null)
         } catch (e: java.lang.Exception) {
