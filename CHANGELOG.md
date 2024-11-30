@@ -1,3 +1,5 @@
+### 1.3.6: fix bug
+* fix set multiple static marker icon (#575)
 ### 1.3.5+1: fix bug
 * fix android build by remove unnecessary dependency in gradle file
 ### 1.3.5: fix bug
