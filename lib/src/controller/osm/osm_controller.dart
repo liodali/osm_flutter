@@ -358,14 +358,13 @@ final class MobileOSMController extends IBaseOSMController {
     bool refresh = false,
   }) async {
     _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
-    await Future.delayed(duration, () async {
-      await osmPlatform.customMarkerStaticPosition(
-        _idMap,
-        _osmFlutterState.dynamicMarkerKey,
-        id,
-        refresh: refresh,
-      );
-    });
+    await osmPlatform.customMarkerStaticPosition(
+      _idMap,
+      _osmFlutterState.dynamicMarkerKey,
+      id,
+      refresh: refresh,
+    );
+    await Future.delayed(duration);
   }
 
   /// change static position in runtime
