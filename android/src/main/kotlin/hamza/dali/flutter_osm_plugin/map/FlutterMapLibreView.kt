@@ -18,10 +18,13 @@ import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
 import hamza.dali.flutter_osm_plugin.models.FlutterMapLibreOSMRoad
 import hamza.dali.flutter_osm_plugin.models.FlutterRoad
 import hamza.dali.flutter_osm_plugin.models.MapMethodChannelCall
+import hamza.dali.flutter_osm_plugin.models.OSMShape
 import hamza.dali.flutter_osm_plugin.models.OSMTile
 import hamza.dali.flutter_osm_plugin.models.OnClickSymbols
 import hamza.dali.flutter_osm_plugin.models.OnMapMove
+import hamza.dali.flutter_osm_plugin.models.Shape
 import hamza.dali.flutter_osm_plugin.models.VectorOSMTile
+import hamza.dali.flutter_osm_plugin.models.toArrayLatLng
 import hamza.dali.flutter_osm_plugin.models.toBoundingBox
 import hamza.dali.flutter_osm_plugin.models.toBoundsLibre
 import hamza.dali.flutter_osm_plugin.models.toGeoPoint
@@ -44,12 +47,12 @@ import io.flutter.plugin.platform.PlatformView
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdate
-import org.maplibre.android.gestures.AndroidGesturesManager
-import org.maplibre.android.gestures.MoveGestureDetector
+import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.plugins.annotation.*
+import org.maplibre.android.utils.ColorUtils
 import org.osmdroid.api.IGeoPoint
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -80,6 +83,8 @@ class FlutterMapLibreView(
     private var mapClick: OnClickSymbols? = null
     private var mapMove: OnMapMove? = null
     private var userLocationChanged: OnClickSymbols? = null
+    private val idsShapes: MutableList<Triple<Fill, String, Shape>> =
+        emptyList<Triple<Fill, String,Shape>>().toMutableList()
     private val roads: MutableList<FlutterMapLibreOSMRoad> = mutableListOf<FlutterMapLibreOSMRoad>()
     private var zoomStep = 1.0
     private var initZoom = 3.0
@@ -136,6 +141,7 @@ class FlutterMapLibreView(
         super.onPause(owner)
         mapView?.onPause()
     }
+
     override fun onStop(owner: LifecycleOwner) {
         super.onStop(owner)
         locationManager?.onStop()
@@ -260,10 +266,14 @@ class FlutterMapLibreView(
             }
 
             MapMethodChannelCall.ClearRoads -> {
+                clearAllPolylines()
                 result.success(200)
             }
 
             MapMethodChannelCall.ClearShapes -> {
+                shapeManager?.deleteAll()
+                mapLibre?.triggerRepaint()
+                idsShapes.clear()
                 result.success(200)
             }
 
@@ -285,18 +295,31 @@ class FlutterMapLibreView(
             }
 
             MapMethodChannelCall.DeleteRoad -> {
+                val roadKey = call.arguments as String?
+                if (roadKey != null) {
+                    removePolyline(roadKey)
+                }
                 result.success(200)
             }
 
-            MapMethodChannelCall.DrawCircle -> {
+            MapMethodChannelCall.DrawShape -> {
+                addShape(OSMShapeConfiguration.fromArgs(call.arguments as HashMap<*, *>))
+                result.success(200)
+            }
+
+
+            MapMethodChannelCall.RemoveShape -> {
+                val args = call.arguments
+                when {
+                    args is String? && args!= null-> {
+                        removeShape(args)
+                    }
+                    args is HashMap<*,*> ->removeShapesByType(args["shape"] as String)
+                }
                 result.success(200)
             }
 
             MapMethodChannelCall.DrawMultiRoad -> {
-                result.success(200)
-            }
-
-            MapMethodChannelCall.DrawRect -> {
                 result.success(200)
             }
 
@@ -340,19 +363,12 @@ class FlutterMapLibreView(
                 result.success(200)
             }
 
-            MapMethodChannelCall.RemoveCircle -> {
-                result.success(200)
-            }
-
             MapMethodChannelCall.RemoveLimitArea -> {
+                mapLibre?.setLatLngBoundsForCameraTarget(LatLngBounds.world())
                 result.success(200)
             }
 
             MapMethodChannelCall.RemoveMarkerPosition -> {
-                result.success(200)
-            }
-
-            MapMethodChannelCall.RemoveRect -> {
                 result.success(200)
             }
 
@@ -431,22 +447,27 @@ class FlutterMapLibreView(
             MapMethodChannelCall.ToggleLayers -> {
                 result.success(200)
             }
+
             MapMethodChannelCall.LocationMarkers -> {
                 val args = call.arguments!! as HashMap<*, *>
                 // update user marker and direction marker
                 val personIcon = (args["personIcon"] as ByteArray)
                 val arrowIcon = (args["arrowDirectionIcon"] as ByteArray)
-                val factorPerson = args["personIconFactorSize"] as Double? ?:1.0
-                val factorArrow = args["arrowDirectionIconFactorSize"] as Double? ?:1.0
+                val factorPerson = args["personIconFactorSize"] as Double? ?: 1.0
+                val factorArrow = args["arrowDirectionIconFactorSize"] as Double? ?: 1.0
                 customPersonMarkerIcon = MarkerConfiguration(
                     markerIcon = personIcon.toBitmap(),
                     markerRotate = 0.0,
                     markerAnchor = Anchor(0.5f, 0.5f),
                     factorSize = factorPerson
                 )
-                locationManager?.setMarkerIcon(customPersonMarkerIcon, Pair(arrowIcon.toBitmap(),factorArrow.toFloat()))
+                locationManager?.setMarkerIcon(
+                    customPersonMarkerIcon,
+                    Pair(arrowIcon.toBitmap(), factorArrow.toFloat())
+                )
                 result.success(200)
             }
+
             MapMethodChannelCall.StartLocationUpdating -> {
                 locationManager?.startLocationUpdating()
                 result.success(200)
@@ -465,7 +486,7 @@ class FlutterMapLibreView(
                 mapView?.getMapAsync { map ->
                     map.uiSettings.isRotateGesturesEnabled = disableRotation
                 }
-                locationManager?.configurationFollow(enableStopFollow,useDirectionMarker)
+                locationManager?.configurationFollow(enableStopFollow, useDirectionMarker)
                 locationManager?.toggleFollow()
                 result.success(200)
             }
@@ -481,8 +502,8 @@ class FlutterMapLibreView(
 
             MapMethodChannelCall.CurrentLocation -> {
                 locationManager?.currentUserPosition({ geoPoint ->
-                    if(geoPoint != null){
-                        moveTo(geoPoint,mapLibre?.cameraPosition?.zoom,true)
+                    if (geoPoint != null) {
+                        moveTo(geoPoint, mapLibre?.cameraPosition?.zoom, true)
                     }
                     result.success(200)
                 }, {
@@ -625,7 +646,7 @@ class FlutterMapLibreView(
 
             }
             map.addOnCameraMoveStartedListener { reason ->
-                if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE){
+                if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) {
                     if (locationManager != null && locationManager!!.isFollowing() && locationManager!!.enableAutoStop) {
                         locationManager?.stopCamera()
                         map.cancelTransitions()
@@ -789,19 +810,53 @@ class FlutterMapLibreView(
     }
 
     override fun removePolyline(id: String) {
-        val road = roads.first {
+        val road = roads.firstOrNull {
             it.idRoad == id
         }
-        road.remove()
+        road?.remove()
         roads.remove(road)
     }
 
-    override fun addShape(shapeConfiguration: OSMShapeConfiguration): String {
-        TODO("Not yet implemented")
+    override fun clearAllPolylines() {
+        lineManager!!.deleteAll()
+        roads.clear()
+    }
+
+    override fun addShape(shapeConfiguration: OSMShapeConfiguration) {
+        val option = FillOptions()
+
+            .withLatLngs(listOf(shapeConfiguration.point.toArrayLatLng()))
+            .withFillColor(ColorUtils.colorToRgbaString(shapeConfiguration.color))
+            .withFillOutlineColor(ColorUtils.colorToRgbaString(shapeConfiguration.colorBorder))
+        val fill = shapeManager?.create(option)
+        if (fill != null) {
+            idsShapes.add(Triple(fill, shapeConfiguration.key,shapeConfiguration.shape))
+        }
     }
 
     override fun removeShape(id: String) {
-        TODO("Not yet implemented")
+      val shape =  idsShapes.firstOrNull {
+            it.second == id
+        }
+        if(shape!= null){
+            shapeManager?.delete(shape.first)
+            idsShapes.remove(shape)
+        }
+
+    }
+
+    private fun removeShapesByType(shape:String){
+      val shapes =  when (shape) {
+            "rect" -> idsShapes.filter { shape ->
+                shape.third == Shape.POLYGON
+            }
+            "circle" -> idsShapes.filter { shape ->
+                shape.third == Shape.CIRCLE
+            }
+            else -> return
+        }
+        shapeManager?.delete(shapes.map { it.first })
+        idsShapes.retainAll(shapes)
     }
 
 

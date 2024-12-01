@@ -33,10 +33,8 @@ sealed class MapMethodChannelCall(val methodName: String) {
     object DrawRoadManually : MapMethodChannelCall("drawRoad#manually")
     object StaticPosition : MapMethodChannelCall("staticPosition")
     object StaticPositionIconMarker : MapMethodChannelCall("staticPosition#IconMarker")
-    object DrawCircle : MapMethodChannelCall("draw#circle")
-    object RemoveCircle : MapMethodChannelCall("remove#circle")
-    object DrawRect : MapMethodChannelCall("draw#rect")
-    object RemoveRect : MapMethodChannelCall("remove#rect")
+    object DrawShape : MapMethodChannelCall("draw#shape")
+    object RemoveShape : MapMethodChannelCall("remove#shape")
     object ClearShapes : MapMethodChannelCall("clear#shapes")
     object MapOrientation : MapMethodChannelCall("map#orientation")
     object LocationMarkers : MapMethodChannelCall("user#locationMarkers")
@@ -80,10 +78,8 @@ sealed class MapMethodChannelCall(val methodName: String) {
                 DrawRoadManually.methodName -> DrawRoadManually
                 StaticPosition.methodName -> StaticPosition
                 StaticPositionIconMarker.methodName -> StaticPositionIconMarker
-                DrawCircle.methodName -> DrawCircle
-                RemoveCircle.methodName -> RemoveCircle
-                DrawRect.methodName -> DrawRect
-                RemoveRect.methodName -> RemoveRect
+                DrawShape.methodName -> DrawShape
+                RemoveShape.methodName -> RemoveShape
                 ClearShapes.methodName -> ClearShapes
                 MapOrientation.methodName -> MapOrientation
                 AddMarker.methodName -> AddMarker

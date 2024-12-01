@@ -47,6 +47,9 @@ fun Collection<LatLng>.toArrayGeoPoints(): java.util.ArrayList<GeoPoint> {
         it.toGeoPoint() as GeoPoint
     }.toList().toCollection(java.util.ArrayList())
 }
+fun Collection<GeoPoint>.toArrayLatLng(): java.util.ArrayList<LatLng> {
+    return toList().toLngLats().toCollection(java.util.ArrayList())
+}
 fun List<FlutterGeoPoint>.toSymbols(iconId: String): List<SymbolOptions> {
     return map { fGp ->
         SymbolOptions().withLatLng(fGp.geoPoint.toLngLat())

@@ -27,6 +27,7 @@ import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.PAUSED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STARTED
 import hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.Companion.STOPPED
 import hamza.dali.flutter_osm_plugin.ProviderLifecycle
+import hamza.dali.flutter_osm_plugin.location.OSMLocationManager
 import hamza.dali.flutter_osm_plugin.models.Anchor
 import hamza.dali.flutter_osm_plugin.models.CustomTile
 import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
@@ -38,7 +39,6 @@ import hamza.dali.flutter_osm_plugin.models.OSMShape
 import hamza.dali.flutter_osm_plugin.models.Shape
 import hamza.dali.flutter_osm_plugin.models.VoidCallback
 import hamza.dali.flutter_osm_plugin.models.toRoadOption
-import hamza.dali.flutter_osm_plugin.location.OSMLocationManager
 import hamza.dali.flutter_osm_plugin.utilities.Constants
 import hamza.dali.flutter_osm_plugin.utilities.StaticOverlayManager
 import hamza.dali.flutter_osm_plugin.utilities.eq
@@ -478,20 +478,13 @@ class FlutterOsmView(
                     staticPositionIconMaker(call, result)
                 }
 
-                "draw#circle" -> {
+
+                "draw#shape" -> {
                     drawShape(call, result)
                 }
 
-                "remove#circle" -> {
-                    removeCircle(call, result)
-                }
-
-                "draw#rect" -> {
-                    drawShape(call, result)
-                }
-
-                "remove#rect" -> {
-                    removeRect(call, result)
+                "remove#shape" -> {
+                    removeShape(call, result)
                 }
 
                 "clear#shapes" -> {
@@ -972,7 +965,7 @@ class FlutterOsmView(
                 locationNewOverlay.enableMyLocation()
 
             }
-            locationNewOverlay.configurationFollow(enableStopFollow,useDirectionMarker)
+            locationNewOverlay.configurationFollow(enableStopFollow, useDirectionMarker)
             locationNewOverlay.toggleFollow()
             when {
                 locationNewOverlay.mIsFollowing -> {
@@ -1029,37 +1022,32 @@ class FlutterOsmView(
         result.success(null)
     }
 
-    private fun removeRect(call: MethodCall, result: MethodChannel.Result) {
-        val id = call.arguments as String?
+    private fun removeShape(call: MethodCall, result: MethodChannel.Result) {
+        val arg = call.arguments
         when {
-            id != null -> folderShape.items.removeAll {
-                (it as Polygon).id == id
+            arg is String? && arg != null -> folderShape.items.removeAll {
+                (it as Polygon).id == arg
             }
 
-            else -> folderShape.items.removeAll { shape ->
+            arg is HashMap<*, *> -> {
+                clearShapeByType(arg["shape"] as String)
+            }
+        }
+        map!!.invalidate()
+        result.success(null)
+    }
+
+    private fun clearShapeByType(typeShape: String) {
+        when (typeShape) {
+            "rect" -> folderShape.items.removeAll { shape ->
                 shape is OSMShape && shape.shape == Shape.POLYGON
             }
-        }
-        map!!.invalidate()
-        result.success(null)
-    }
-
-
-    private fun removeCircle(call: MethodCall, result: MethodChannel.Result) {
-        val id = call.arguments as String?
-        when {
-            id != null -> folderShape.items.removeAll {
-                (it as Polygon).id == id
-            }
-
-            else -> folderShape.items.removeAll { shape ->
+            "circle" -> folderShape.items.removeAll { shape ->
                 shape is OSMShape && shape.shape == Shape.CIRCLE
             }
+            else -> return
         }
-        map!!.invalidate()
-        result.success(null)
     }
-
 
     private fun clearAllRoad(result: MethodChannel.Result) {
         folderRoad.items.clear()
@@ -1218,7 +1206,7 @@ class FlutterOsmView(
                 roadF.addSegment(polyline)
                 //roadF.road.setOnClickListener { polyline, mapView, eventPos ->  }
                 roadF.onRoadClickListener = object : FlutterRoad.OnRoadClickListener {
-                    override fun onClick(idRoad: String, polyineId: String,polyEncoded:String) {
+                    override fun onClick(idRoad: String, polyineId: String, polyEncoded: String) {
                         val map = HashMap<String, Any?>()
                         map["key"] = idRoad
                         map["segId"] = polyineId
@@ -1439,7 +1427,7 @@ class FlutterOsmView(
         )
         initMap()
         /// init LocationManager
-        locationNewOverlay = OSMLocationManager(map!!,methodChannel,"receiveUserLocation")
+        locationNewOverlay = OSMLocationManager(map!!, methodChannel, "receiveUserLocation")
 
         // map!!.forceLayout()
         Log.e("osm", "osm flutter plugin create")

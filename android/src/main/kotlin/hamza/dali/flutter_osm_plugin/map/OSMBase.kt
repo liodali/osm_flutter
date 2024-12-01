@@ -1,6 +1,7 @@
 package hamza.dali.flutter_osm_plugin.map
 
 import android.graphics.Bitmap
+import android.graphics.Color
 import hamza.dali.flutter_osm_plugin.models.Anchor
 import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
 import hamza.dali.flutter_osm_plugin.models.OSMTile
@@ -13,6 +14,8 @@ import hamza.dali.flutter_osm_plugin.utilities.toGeoPoint
 import org.osmdroid.api.IGeoPoint
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.overlay.Polygon.pointsAsCircle
+import org.osmdroid.views.overlay.Polygon.pointsAsRect
 import kotlin.collections.get
 
 
@@ -93,13 +96,71 @@ data class OSMZoomConfiguration(
 )
 
 data class OSMShapeConfiguration(
+    val key: String,
     val point: List<GeoPoint>,
-    val radius: Double,
+    val distance: Double,
     val shape: Shape,
-    val color: String,
-    val colorBorder: String,
+    val color: Int,
+    val colorBorder: Int,
     val strokeWidth: Double
-)
+) {
+    companion object {
+        fun fromArgs(args: HashMap<*, *>): OSMShapeConfiguration {
+            val geoPoint = GeoPoint(args["lat"]!! as Double, args["lon"]!! as Double)
+            val key = args["key"] as String
+            val colorRgb = args["color"] as List<*>
+            val shape: Shape = when {
+                args.containsKey("radius") -> Shape.CIRCLE
+                else -> Shape.POLYGON
+            }
+            val distance: Double = when {
+                args.containsKey("radius") -> (args["radius"] as Double)
+                else -> (args["distance"] as Double)
+            }
+            val shapeGeos: List<GeoPoint> = when (shape) {
+                Shape.POLYGON -> {
+                    val distance = (args["distance"] as Double)
+                    pointsAsRect(geoPoint, distance, distance).toList() as List<GeoPoint>
+                }
+
+                else -> {
+                    val radius = (args["radius"] as Double)
+                    pointsAsCircle(geoPoint, radius)
+                }
+            }
+            val stokeWidth = args["strokeWidth"] as Double
+            val colorBorder = when (args.contains("colorBorder")) {
+                true -> {
+                    val rgb = args["colorBorder"] as List<*>
+                    Color.argb(
+                        Integer.parseInt(rgb[3].toString()),
+                        Integer.parseInt(rgb[0].toString()),
+                        Integer.parseInt(rgb[1].toString()),
+                        Integer.parseInt(rgb[2].toString()),
+                    )
+                }
+
+                else -> null
+            }
+            val colorFillPaint = Color.argb(
+                Integer.parseInt(colorRgb[3].toString()),
+                Integer.parseInt(colorRgb[0].toString()),
+                Integer.parseInt(colorRgb[1].toString()),
+                Integer.parseInt(colorRgb[2].toString()),
+            )
+            return OSMShapeConfiguration(
+                key,
+                shapeGeos,
+                distance,
+                shape,
+                colorFillPaint,
+                colorBorder ?:colorFillPaint,
+                stokeWidth,
+            )
+        }
+
+    }
+}
 
 @Suppress("UNCHECKED_CAST")
 data class MarkerConfiguration(
@@ -189,7 +250,7 @@ interface OSMBase : OSM {
     fun zoomConfig(zoomConfig: OSMZoomConfiguration)
     fun setBoundingBox(bounds: BoundingBox)
     fun moveTo(point: IGeoPoint, zoom: Double? = null, animate: Boolean)
-    fun moveToBounds(bounds: BoundingBox, padding:Int, animate: Boolean)
+    fun moveToBounds(bounds: BoundingBox, padding: Int, animate: Boolean)
     fun addMarker(point: IGeoPoint, markerConfiguration: MarkerConfiguration)
     fun removeMarker(point: IGeoPoint)
     fun setStaticMarkerIcons(id: String, icon: ByteArray, factorSize: Double?)
@@ -197,7 +258,8 @@ interface OSMBase : OSM {
     fun drawPolyline(road: OSMRoadConfiguration, animate: Boolean): String
     fun updatePolyline(road: OSMRoadConfiguration)
     fun removePolyline(id: String)
-    fun addShape(shapeConfiguration: OSMShapeConfiguration): String
+    fun clearAllPolylines()
+    fun addShape(shapeConfiguration: OSMShapeConfiguration)
     fun removeShape(id: String)
     fun zoomIn(step: Int, animate: Boolean)
     fun zoomOut(step: Int, animate: Boolean)
