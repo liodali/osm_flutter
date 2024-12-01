@@ -342,32 +342,32 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> drawCircle(int idOSM, CircleOSM circleOSM) async {
-    await _channels[idOSM]?.invokeMethod("draw#circle", circleOSM.toMap());
+    await _channels[idOSM]?.invokeMethod("draw#shape", circleOSM.toMap());
   }
 
   @override
   Future<void> removeAllCircle(int idOSM) async {
-    await _channels[idOSM]?.invokeMethod("remove#circle", null);
+    await _channels[idOSM]?.invokeMethod("remove#shape", {'shape': 'circle'});
   }
 
   @override
   Future<void> removeCircle(int idOSM, String key) async {
-    await _channels[idOSM]?.invokeMethod("remove#circle", key);
+    await _channels[idOSM]?.invokeMethod("remove#shape", key);
   }
 
   @override
   Future<void> drawRect(int idOSM, RectOSM rectOSM) async {
-    await _channels[idOSM]?.invokeMethod("draw#rect", rectOSM.toMap());
+    await _channels[idOSM]?.invokeMethod("draw#shape", rectOSM.toMap());
   }
 
   @override
   Future<void> removeRect(int idOSM, String key) async {
-    await _channels[idOSM]?.invokeMethod("remove#rect", key);
+    await _channels[idOSM]?.invokeMethod("remove#shape", key);
   }
 
   @override
   Future<void> removeAllRect(int idOSM) async {
-    await _channels[idOSM]?.invokeMethod("remove#rect", null);
+    await _channels[idOSM]?.invokeMethod("remove#shape", {'shape': 'rect'});
   }
 
   @override
