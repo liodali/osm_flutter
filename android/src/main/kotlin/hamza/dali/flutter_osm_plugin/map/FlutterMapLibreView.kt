@@ -18,7 +18,6 @@ import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
 import hamza.dali.flutter_osm_plugin.models.FlutterMapLibreOSMRoad
 import hamza.dali.flutter_osm_plugin.models.FlutterRoad
 import hamza.dali.flutter_osm_plugin.models.MapMethodChannelCall
-import hamza.dali.flutter_osm_plugin.models.OSMShape
 import hamza.dali.flutter_osm_plugin.models.OSMTile
 import hamza.dali.flutter_osm_plugin.models.OnClickSymbols
 import hamza.dali.flutter_osm_plugin.models.OnMapMove
@@ -52,6 +51,7 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.plugins.annotation.*
+import org.maplibre.android.plugins.annotation.Annotation
 import org.maplibre.android.utils.ColorUtils
 import org.osmdroid.api.IGeoPoint
 import org.osmdroid.util.BoundingBox
@@ -76,15 +76,16 @@ class FlutterMapLibreView(
     private var mapLibre: MapLibreMap? = null
     private var markerManager: SymbolManager? = null
     private var markerStaticManager: SymbolManager? = null
-    private var shapeManager: FillManager? = null
+    private var fillShapeManager: FillManager? = null
+    private var circleShapeManager: CircleManager? = null
     private var lineManager: LineManager? = null
     private var singleClickMarker: OnClickSymbols? = null
     private var longClickMarker: OnClickSymbols? = null
     private var mapClick: OnClickSymbols? = null
     private var mapMove: OnMapMove? = null
     private var userLocationChanged: OnClickSymbols? = null
-    private val idsShapes: MutableList<Triple<Fill, String, Shape>> =
-        emptyList<Triple<Fill, String,Shape>>().toMutableList()
+    private val idsShapes: MutableList<Triple<Annotation<*>, String, Shape>> =
+        emptyList<Triple<Annotation<*>, String, Shape>>().toMutableList()
     private val roads: MutableList<FlutterMapLibreOSMRoad> = mutableListOf<FlutterMapLibreOSMRoad>()
     private var zoomStep = 1.0
     private var initZoom = 3.0
@@ -270,13 +271,6 @@ class FlutterMapLibreView(
                 result.success(200)
             }
 
-            MapMethodChannelCall.ClearShapes -> {
-                shapeManager?.deleteAll()
-                mapLibre?.triggerRepaint()
-                idsShapes.clear()
-                result.success(200)
-            }
-
 
             MapMethodChannelCall.DefaultMarkerIcon -> {
                 customMarkerIcon = (call.arguments as ByteArray).toBitmap()
@@ -302,6 +296,14 @@ class FlutterMapLibreView(
                 result.success(200)
             }
 
+            MapMethodChannelCall.DrawMultiRoad -> {
+                result.success(200)
+            }
+
+            MapMethodChannelCall.DrawRoadManually -> {
+                result.success(200)
+            }
+
             MapMethodChannelCall.DrawShape -> {
                 addShape(OSMShapeConfiguration.fromArgs(call.arguments as HashMap<*, *>))
                 result.success(200)
@@ -311,19 +313,20 @@ class FlutterMapLibreView(
             MapMethodChannelCall.RemoveShape -> {
                 val args = call.arguments
                 when {
-                    args is String? && args!= null-> {
+                    args is String? && args != null -> {
                         removeShape(args)
                     }
-                    args is HashMap<*,*> ->removeShapesByType(args["shape"] as String)
+
+                    args is HashMap<*, *> -> removeShapesByType(args["shape"] as String)
                 }
                 result.success(200)
             }
 
-            MapMethodChannelCall.DrawMultiRoad -> {
-                result.success(200)
-            }
-
-            MapMethodChannelCall.DrawRoadManually -> {
+            MapMethodChannelCall.ClearShapes -> {
+                fillShapeManager?.deleteAll()
+                circleShapeManager?.deleteAll()
+                mapLibre?.triggerRepaint()
+                idsShapes.clear()
                 result.success(200)
             }
 
@@ -602,7 +605,11 @@ class FlutterMapLibreView(
                     lineManager?.layerId
                 )
 
-                shapeManager = FillManager(
+                fillShapeManager = FillManager(
+                    mapView!!, mapLibre!!, mapLibre!!.style!!,
+                    lineManager?.layerId, null,
+                )
+                circleShapeManager = CircleManager(
                     mapView!!, mapLibre!!, mapLibre!!.style!!,
                     lineManager?.layerId, null,
                 )
@@ -823,39 +830,66 @@ class FlutterMapLibreView(
     }
 
     override fun addShape(shapeConfiguration: OSMShapeConfiguration) {
-        val option = FillOptions()
 
-            .withLatLngs(listOf(shapeConfiguration.point.toArrayLatLng()))
-            .withFillColor(ColorUtils.colorToRgbaString(shapeConfiguration.color))
-            .withFillOutlineColor(ColorUtils.colorToRgbaString(shapeConfiguration.colorBorder))
-        val fill = shapeManager?.create(option)
-        if (fill != null) {
-            idsShapes.add(Triple(fill, shapeConfiguration.key,shapeConfiguration.shape))
+        val shape = when (shapeConfiguration.shape) {
+            Shape.CIRCLE -> {
+                circleShapeManager?.create(
+                    CircleOptions()
+                        .withLatLng(shapeConfiguration.center)
+                        .withCircleColor(ColorUtils.colorToRgbaString(shapeConfiguration.color))
+                        .withCircleStrokeColor(ColorUtils.colorToRgbaString(shapeConfiguration.colorBorder))
+                        .withCircleRadius(shapeConfiguration.distance.toFloat())
+                        .withCircleStrokeWidth(shapeConfiguration.strokeWidth.toFloat())
+                )
+
+            }
+
+            Shape.POLYGON -> {
+                fillShapeManager?.create(
+                    FillOptions()
+                        .withLatLngs(listOf(shapeConfiguration.points.toArrayLatLng()))
+                        .withFillColor(ColorUtils.colorToRgbaString(shapeConfiguration.color))
+                        .withFillOutlineColor(ColorUtils.colorToRgbaString(shapeConfiguration.colorBorder))
+                )
+            }
+
+        }
+        if (shape != null) {
+            idsShapes.add(Triple(shape, shapeConfiguration.key, shapeConfiguration.shape))
         }
     }
 
     override fun removeShape(id: String) {
-      val shape =  idsShapes.firstOrNull {
+        val shape = idsShapes.firstOrNull {
             it.second == id
         }
-        if(shape!= null){
-            shapeManager?.delete(shape.first)
-            idsShapes.remove(shape)
+        when {
+            shape != null && shape.third == Shape.POLYGON -> fillShapeManager?.delete(shape.first as Fill)
+            shape != null && shape.third == Shape.CIRCLE -> circleShapeManager?.delete(shape.first as Circle)
         }
-
+        idsShapes.remove(shape)
     }
 
-    private fun removeShapesByType(shape:String){
-      val shapes =  when (shape) {
-            "rect" -> idsShapes.filter { shape ->
-                shape.third == Shape.POLYGON
+    private fun removeShapesByType(shape: String) {
+        val shapes = when (shape) {
+            "rect" -> {
+                val shapes = idsShapes.filter { shape ->
+                    shape.third == Shape.POLYGON
+                }
+                fillShapeManager?.delete(shapes.map { it.first }.filterIsInstance<Fill>())
+                shapes
             }
-            "circle" -> idsShapes.filter { shape ->
-                shape.third == Shape.CIRCLE
+
+            "circle" -> {
+                val shapes = idsShapes.filter { shape ->
+                    shape.third == Shape.CIRCLE
+                }
+                circleShapeManager?.delete(shapes.map { it.first }.filterIsInstance<Circle>())
+                shapes
             }
+
             else -> return
         }
-        shapeManager?.delete(shapes.map { it.first })
         idsShapes.retainAll(shapes)
     }
 

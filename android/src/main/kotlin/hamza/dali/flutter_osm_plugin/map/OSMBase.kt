@@ -8,9 +8,12 @@ import hamza.dali.flutter_osm_plugin.models.OSMTile
 import hamza.dali.flutter_osm_plugin.models.RoadOption
 import hamza.dali.flutter_osm_plugin.models.Shape
 import hamza.dali.flutter_osm_plugin.models.VectorOSMTile
+import hamza.dali.flutter_osm_plugin.models.toLngLat
 import hamza.dali.flutter_osm_plugin.models.toRoadOption
+import hamza.dali.flutter_osm_plugin.utilities.toARGB
 import hamza.dali.flutter_osm_plugin.utilities.toBitmap
 import hamza.dali.flutter_osm_plugin.utilities.toGeoPoint
+import org.maplibre.android.geometry.LatLng
 import org.osmdroid.api.IGeoPoint
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -97,7 +100,8 @@ data class OSMZoomConfiguration(
 
 data class OSMShapeConfiguration(
     val key: String,
-    val point: List<GeoPoint>,
+    val center: LatLng,
+    val points: List<GeoPoint>,
     val distance: Double,
     val shape: Shape,
     val color: Int,
@@ -130,26 +134,14 @@ data class OSMShapeConfiguration(
             }
             val stokeWidth = args["strokeWidth"] as Double
             val colorBorder = when (args.contains("colorBorder")) {
-                true -> {
-                    val rgb = args["colorBorder"] as List<*>
-                    Color.argb(
-                        Integer.parseInt(rgb[3].toString()),
-                        Integer.parseInt(rgb[0].toString()),
-                        Integer.parseInt(rgb[1].toString()),
-                        Integer.parseInt(rgb[2].toString()),
-                    )
-                }
+                true -> (args["colorBorder"] as List<*>).filterIsInstance<Int>().toARGB()
 
                 else -> null
             }
-            val colorFillPaint = Color.argb(
-                Integer.parseInt(colorRgb[3].toString()),
-                Integer.parseInt(colorRgb[0].toString()),
-                Integer.parseInt(colorRgb[1].toString()),
-                Integer.parseInt(colorRgb[2].toString()),
-            )
+            val colorFillPaint = colorRgb.filterIsInstance<Int>().toARGB()
             return OSMShapeConfiguration(
                 key,
+                geoPoint.toLngLat(),
                 shapeGeos,
                 distance,
                 shape,

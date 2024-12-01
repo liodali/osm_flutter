@@ -2,6 +2,7 @@ package hamza.dali.flutter_osm_plugin.models
 
 import android.graphics.Color
 import android.graphics.Paint
+import hamza.dali.flutter_osm_plugin.utilities.toARGB
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Polygon
@@ -25,29 +26,16 @@ class OSMShape(val args: HashMap<*, *>, map: MapView) : Polygon(map) {
 
         val stokeWidth = (args["strokeWidth"] as Double).toFloat()
         val colorBorder = when (args.contains("colorBorder")) {
-            true -> {
-                val rgb = args["colorBorder"] as List<*>
-                Color.argb(
-                    Integer.parseInt(rgb[3].toString()),
-                    Integer.parseInt(rgb[0].toString()),
-                    Integer.parseInt(rgb[1].toString()),
-                    Integer.parseInt(rgb[2].toString()),
-                )
-            }
+            true -> (args["colorBorder"] as List<*>).filterIsInstance<Int>().toARGB()
 
             else -> null
         }
-        val colorFillPaint = Color.argb(
-            Integer.parseInt(colorRgb[3].toString()),
-            Integer.parseInt(colorRgb[0].toString()),
-            Integer.parseInt(colorRgb[1].toString()),
-            Integer.parseInt(colorRgb[2].toString()),
-        )
+        val colorFillPaint = colorRgb.filterIsInstance<Int>().toARGB()
 
         val shapeGeos: List<GeoPoint> = when (shape) {
             Shape.POLYGON -> {
                 val distance = (args["distance"] as Double)
-                pointsAsRect(geoPoint, distance, distance).toList() as List<GeoPoint>
+                pointsAsRect(geoPoint, distance, distance).toList().filterIsInstance<GeoPoint>()
             }
 
             else -> {

@@ -251,3 +251,9 @@ fun List<GeoPoint>.toPolylineEncode(): String {
 fun List<LatLng>.encodePolyline(): String {
     return PolylineEncoder.encode(this.toGeoPoints().toCollection(ArrayList()), 10)
 }
+fun List<Int>.toARGB():Int = Color.argb(
+    Integer.parseInt(this[3].toString()),
+    Integer.parseInt(this[0].toString()),
+    Integer.parseInt(this[2].toString()),
+    Integer.parseInt(this[1].toString()),
+)
