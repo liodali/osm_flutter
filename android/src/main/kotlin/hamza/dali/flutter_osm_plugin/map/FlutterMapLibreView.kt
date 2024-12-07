@@ -50,6 +50,7 @@ import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
+import org.maplibre.android.maps.Style.OnStyleLoaded
 import org.maplibre.android.plugins.annotation.*
 import org.maplibre.android.plugins.annotation.Annotation
 import org.maplibre.android.utils.ColorUtils
@@ -253,7 +254,11 @@ class FlutterMapLibreView(
             }
 
             MapMethodChannelCall.ChangeTile -> {
-                result.success(200)
+                val args = call.arguments as String
+                changeTile(VectorOSMTile(style = args)) {
+                    result.success(200)
+                }
+
             }
 
             MapMethodChannelCall.DrawRoad -> {
@@ -372,6 +377,8 @@ class FlutterMapLibreView(
             }
 
             MapMethodChannelCall.RemoveMarkerPosition -> {
+                val geoMap = call.arguments as HashMap<String, Double>
+                removeMarker(geoMap.toGeoPoint())
                 result.success(200)
             }
 
@@ -549,6 +556,20 @@ class FlutterMapLibreView(
             }
 
             MapMethodChannelCall.ZoomToRegion -> {
+                val args = call.arguments as Map<*, *>
+                val box = BoundingBox.fromGeoPoints(
+                    arrayOf(
+                        GeoPoint(
+                            args["north"]!! as Double,
+                            args["east"]!! as Double,
+                        ),
+                        GeoPoint(
+                            args["south"]!! as Double,
+                            args["west"]!! as Double,
+                        ),
+                    ).toMutableList()
+                )
+                moveToBounds(box, 64, true)
                 result.success(200)
             }
 
@@ -567,7 +588,6 @@ class FlutterMapLibreView(
 
 
     var customPersonMarkerIcon: MarkerConfiguration? = null
-    var customArrowMarkerIcon: MarkerConfiguration? = null
     override var staticMarkerIcon: HashMap<String, Bitmap> = HashMap<String, Bitmap>()
     override val staticPoints: HashMap<String, MutableList<FlutterGeoPoint>> =
         HashMap<String, MutableList<FlutterGeoPoint>>()
@@ -663,6 +683,15 @@ class FlutterMapLibreView(
 
         }
 
+    }
+
+    override fun changeTile(tile: OSMTile, onDone: () -> Unit) {
+        mapLibre?.setStyle((tile as VectorOSMTile).style, object : OnStyleLoaded {
+            override fun onStyleLoaded(p0: Style) {
+                onDone()
+            }
+
+        })
     }
 
     override fun zoomConfig(zoomConfig: OSMZoomConfiguration) {

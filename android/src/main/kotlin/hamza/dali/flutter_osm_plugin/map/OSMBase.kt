@@ -239,6 +239,7 @@ interface OSMBase : OSM {
     var staticMarkerIcon: HashMap<String, Bitmap>
     val staticPoints: HashMap<String, MutableList<FlutterGeoPoint>>
     fun init(configuration: OSMInitConfiguration)
+    fun changeTile(tile: OSMTile,onDone:()-> Unit)
     fun zoomConfig(zoomConfig: OSMZoomConfiguration)
     fun setBoundingBox(bounds: BoundingBox)
     fun moveTo(point: IGeoPoint, zoom: Double? = null, animate: Boolean)
