@@ -158,7 +158,7 @@ class AnimatedCenterMarker extends StatefulWidget {
 class _AnimatedCenterMarker extends State<AnimatedCenterMarker> {
   late GeoPoint? _center = widget.center;
   bool isMoving = false;
-   Timer? timer;
+  Timer? timer;
 
   Timer createTimer() => Timer(const Duration(seconds: 2), () {
         setState(() {
@@ -186,6 +186,12 @@ class _AnimatedCenterMarker extends State<AnimatedCenterMarker> {
       _center = widget.center;
       debugPrint("isMoving: $isMoving");
     });
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
   }
 
   @override
