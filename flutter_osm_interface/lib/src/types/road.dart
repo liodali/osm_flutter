@@ -19,7 +19,7 @@ class Road {
   });
   Map toMap() => {
         'key': id,
-        "segments": polylines.map((p) {
+        'segments': polylines.map((p) {
           return p.toMap();
         }).toList(),
       };
@@ -56,7 +56,7 @@ class Polyline {
 ///
 /// [roadBorderWidth]      : (double) if null the road will be without border,else we will show border but if [roadBorderColor] null road border color will be the same as [roadColor]
 ///
-/// [zoomInto]             : (bool) to zoomIn/Out that will make all the road visible in the map (default false)
+/// [isDotted]             : (bool) to draw dotted line
 class PolylineOption {
   final Color roadColor;
   final double roadWidth;
@@ -86,22 +86,22 @@ class PolylineOption {
     /// disable/show markers in start,middle,end points
     if (roadBorderWidth != null && roadBorderWidth! > 0) {
       args.putIfAbsent(
-        "roadBorderWidth",
+        'roadBorderWidth',
         () => roadBorderWidth,
       );
     }
     args.putIfAbsent(
-      "roadWidth",
+      'roadWidth',
       () => roadWidth,
     );
-    args.addAll(roadColor.toMapPlatform("roadColor"));
+    args.addAll(roadColor.toMapPlatform('roadColor'));
     args.putIfAbsent(
-      "isDotted",
+      'isDotted',
       () => isDotted,
     );
     if (roadBorderColor != null) {
       args.putIfAbsent(
-        "roadBorderColor",
+        'roadBorderColor',
         () => (roadBorderColor!).toPlatform(),
       );
     }
@@ -133,11 +133,11 @@ class RoadInfo {
   }) : _key = UniqueKey().toString();
 
   RoadInfo.fromMap(Map map)
-      : _key = map["key"] ?? UniqueKey().toString(),
-        duration = map["duration"],
-        distance = map["distance"],
-        segments = map.containsKey("segments")
-            ? (map["instructions"] as List)
+      : _key = map['key'] ?? UniqueKey().toString(),
+        duration = map['duration'],
+        distance = map['distance'],
+        segments = map.containsKey('segments')
+            ? (map['instructions'] as List)
                 .map((e) => RoadSegment.fromMap(e))
                 .toList()
             : [];
@@ -170,7 +170,7 @@ class RoadInfo {
 
   @override
   String toString() {
-    return "key : $key, distance: $distance, duration : $duration";
+    return 'key : $key, distance: $distance, duration : $duration';
   }
 }
 
@@ -187,27 +187,27 @@ class RoadSegment {
     required this.instructions,
   });
   RoadSegment.fromMap(Map map)
-      : duration = map["duration"],
-        distance = map["distance"],
-        instructions = map.containsKey("instructions")
-            ? (map["instructions"] as List)
+      : duration = map['duration'],
+        distance = map['distance'],
+        instructions = map.containsKey('instructions')
+            ? (map['instructions'] as List)
                 .map((e) => Instruction.fromMap(e))
                 .toList()
             : [],
         route = map.containsKey('routePoints')
-            ? (map["routePoints"] as String).stringToGeoPoints()
+            ? (map['routePoints'] as String).stringToGeoPoints()
             : [];
   RoadSegment copyFromMap({
     required Map map,
   }) {
     return RoadSegment(
-        distance: map["duration"] ?? distance,
-        duration: map["distance"] ?? duration,
+        distance: map['duration'] ?? distance,
+        duration: map['distance'] ?? duration,
         route: map.containsKey(map)
-            ? (map["route"] as String).stringToGeoPoints()
+            ? (map['route'] as String).stringToGeoPoints()
             : route,
-        instructions: map.containsKey("instructions")
-            ? (map["instructions"] as List)
+        instructions: map.containsKey('instructions')
+            ? (map['instructions'] as List)
                 .map((e) => Instruction.fromMap(e))
                 .toList()
             : []);
@@ -242,10 +242,10 @@ class Instruction {
     required this.duration,
   });
   Instruction.fromMap(Map map)
-      : instruction = map["instruction"],
-        distance = map["distance"],
-        duration = map["duration"],
-        geoPoint = GeoPoint.fromMap(map["geoPoint"]);
+      : instruction = map['instruction'],
+        distance = map['distance'],
+        duration = map['duration'],
+        geoPoint = GeoPoint.fromMap(map['geoPoint']);
 
   @override
   String toString() {

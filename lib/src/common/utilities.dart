@@ -92,7 +92,7 @@ extension ExtListGeoPoints on List<GeoPoint> {
   }
 }
 
-extension ExtRoadInstruction on RoadInstruction {
+extension ExtRoadInstruction on RouteInstruction {
   Instruction toInstruction() {
     return Instruction(
       distance: distance,

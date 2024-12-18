@@ -4,7 +4,7 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/common/utilities.dart';
 
 import 'package:flutter_osm_plugin/src/widgets/mobile_osm_flutter.dart';
-import 'package:routing_client_dart/routing_client_dart.dart' as osrmClient;
+import 'package:routing_client_dart/routing_client_dart.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 
 MobileOSMController getOSMMap() => MobileOSMController();
@@ -17,7 +17,7 @@ final class MobileOSMController extends IBaseOSMController {
       OSMPlatform.instance as MobileOSMPlatform;
   final duration = const Duration(milliseconds: 300);
   Timer? _timer;
-  late final osrmManager = osrmClient.OSRMManager();
+  late final osrmManager = RoutingManager();
   late double stepZoom = 1;
   late double minZoomLevel = 2;
   late double maxZoomLevel = 18;
@@ -533,22 +533,23 @@ final class MobileOSMController extends IBaseOSMController {
     }
     final polyOption = polylineOption?.$2 ?? defaultRoadOption;
     final roadType = polylineOption?.$1 ?? RoadType.car;
-    final road = await osrmManager.getRoad(
-      waypoints: waypoints.toLngLatList(),
-      roadType: roadType != RoadType.mixed
-          ? osrmClient.RoadType.values[roadType.index]
-          : osrmClient.RoadType.car,
+    final route = await osrmManager.getRoute(
+      request: OSRMRequest.route(
+        waypoints: waypoints.toLngLatList(),
+        routingType: roadType != RoadType.mixed
+            ? RoutingType.values[roadType.index]
+            : RoutingType.car,
+      ),
     );
-    final instructions = await osrmManager.buildInstructions(road);
     final roadInfo = RoadInfo(
-      distance: road.distance,
-      duration: road.duration,
+      distance: route.distance,
+      duration: route.duration,
       segments: [
         RoadSegment(
-          distance: road.distance,
-          duration: road.duration,
-          route: road.polyline?.toGeoPointList() ?? [],
-          instructions: instructions
+          distance: route.distance,
+          duration: route.duration,
+          route: route.polyline?.toGeoPointList() ?? [],
+          instructions: route.instructions
               .map(
                 (instruction) => instruction.toInstruction(),
               )
@@ -563,9 +564,9 @@ final class MobileOSMController extends IBaseOSMController {
         polylines: [
           Polyline(
             id: 'seg-id',
-            encodedPolyline: road.polylineEncoded ??
+            encodedPolyline: route.polylineEncoded ??
                 encodePolyline(
-                  road.polyline
+                  route.polyline
                           ?.map(
                             (e) => e.toGeoPoint().toListNum(),
                           )

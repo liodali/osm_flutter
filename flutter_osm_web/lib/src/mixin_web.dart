@@ -6,7 +6,7 @@ import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
 import 'package:flutter_osm_web/src/interop/models/geo_point_js.dart';
 import 'package:flutter_osm_web/src/interop/models/shape_js.dart';
 import 'dart:js_interop';
-import 'package:routing_client_dart/routing_client_dart.dart' as routing;
+import 'package:routing_client_dart/routing_client_dart.dart';
 
 import 'common/extensions.dart';
 import 'interop/osm_interop.dart' as interop;
@@ -14,7 +14,7 @@ import 'osm_web.dart';
 
 mixin WebMixin {
   late int mapIdMixin;
-  final manager = routing.OSRMManager();
+  final manager = RoutingManager();
 
   late OsmWebWidgetState _osmWebFlutterState;
   PolylineOption defaultRoadOption = const PolylineOption.empty();
@@ -79,12 +79,12 @@ mixin WebMixin {
   }
 
   Future<void> drawCircle(CircleOSM circleOSM) async {
-    final opacity = circleOSM.color.opacity;
+    final opacity = circleOSM.color.a;
     final shapeConfig = CircleShapeJS(
       key: circleOSM.key,
       center: circleOSM.centerPoint.toGeoJS(),
       radius: circleOSM.radius,
-      color: circleOSM.color.withOpacity(1).toHexColor(),
+      color: circleOSM.color.withAlpha(255).toHexColor(),
       borderColor: circleOSM.borderColor?.toHexColor(),
       opacityFilled: opacity,
       strokeWidth: circleOSM.strokeWidth,
@@ -103,10 +103,10 @@ mixin WebMixin {
       lengthInMeters: rectOSM.distance,
       widthInMeters: rectOSM.distance,
     );
-    final opacity = rectOSM.color.opacity;
+    final opacity = rectOSM.color.a;
     final shapeConfig = RectShapeJS(
       key: rectOSM.key,
-      color: rectOSM.color.withOpacity(1).toHexColor(),
+      color: rectOSM.color.withAlpha(255).toHexColor(),
       strokeWidth: rectOSM.strokeWidth,
       opacityFilled: opacity,
       borderColor: rectOSM.borderColor?.toHexColor(),
@@ -298,15 +298,17 @@ mixin WebMixin {
     final waypoints = geoPoints.toLngLatList();
     final roadType = polylineOption?.$1 ?? RoadType.car;
     final roadOption = polylineOption?.$2 ?? defaultRoadOption;
-    final road = await manager.getRoad(
-      waypoints: waypoints,
-      roadType: roadType != RoadType.mixed
-          ? routing.RoadType.values[roadType.index]
-          : routing.RoadType.car,
-      alternative: false,
-      geometries: routing.Geometries.geojson,
+    final route = await manager.getRoute(
+      request: OSRMRequest.route(
+        waypoints: waypoints,
+        routingType: roadType != RoadType.mixed
+            ? RoutingType.values[roadType.index]
+            : RoutingType.car,
+        alternatives: false,
+        geometries: Geometries.geojson,
+      ),
     );
-    final routeJs = road.polyline!.mapToListGeoJS();
+    final routeJs = route.polyline!.mapToListGeoJS();
 
     var roadInfo = RoadInfo();
     final roadConfig = roadOption;
@@ -319,15 +321,14 @@ mixin WebMixin {
       (interestPoints?.toListGeoPointJs() ?? []).toJS,
       roadConfig.toRoadOptionJS,
     );
-    final instructions = await manager.buildInstructions(road);
     roadInfo = roadInfo.copyWith(
-      duration: road.duration,
-      distance: road.distance,
+      duration: route.duration,
+      distance: route.distance,
       segments: [
         RoadSegment(
-          distance: road.distance,
-          duration: road.duration,
-          instructions: instructions
+          distance: route.distance,
+          duration: route.duration,
+          instructions: route.instructions
               .map(
                 (e) => Instruction(
                   distance: e.distance,
@@ -337,7 +338,7 @@ mixin WebMixin {
                 ),
               )
               .toList(),
-          route: road.polyline!.mapToListGeoPoints(),
+          route: route.polyline!.mapToListGeoPoints(),
         ),
       ],
     );
@@ -350,7 +351,7 @@ mixin WebMixin {
     bool zoomInto = true,
   }) async {
     //TODO : implement drawRoadManually
-    
+
     // final routeJs = path.toListGeoPointJs();
 
     // interop.drawRoad(

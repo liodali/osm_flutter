@@ -18,7 +18,7 @@ dependencies:
   url_launcher: ^6.3.0
   dio: ^5.3.3
   uuid: ^4.2.1
-  routing_client_dart: ^0.5.5
+  routing_client_dart: ^1.0.3
   google_polyline_algorithm: ^3.1.0
   flutter_osm_interface: #^1.0.2
     path: ./flutter_osm_interface/

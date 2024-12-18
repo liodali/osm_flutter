@@ -384,14 +384,13 @@ class MapController extends BaseMapController {
     List<GeoPoint>? intersectPoint,
     bool zoomInto = true,
     PolylineOption polylineOption = const PolylineOption.empty(),
-  }) async {
-    return await osmBaseController.drawRoad(
-      start,
-      end,
-      interestPoints: intersectPoint,
-      polylineOption: (roadType, polylineOption),
-    );
-  }
+  }) =>
+      osmBaseController.drawRoad(
+        start,
+        end,
+        interestPoints: intersectPoint,
+        polylineOption: (roadType, polylineOption),
+      );
 
   /// [removeLastRoad]
   ///
