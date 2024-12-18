@@ -14,6 +14,10 @@ import androidx.lifecycle.LifecycleOwner
 import hamza.dali.flutter_osm_plugin.ProviderLifecycle
 import hamza.dali.flutter_osm_plugin.location.OSMVectorLocationManager
 import hamza.dali.flutter_osm_plugin.models.Anchor
+import hamza.dali.flutter_osm_plugin.models.CustomCircleManager
+import hamza.dali.flutter_osm_plugin.models.CustomFillManager
+import hamza.dali.flutter_osm_plugin.models.CustomLineManager
+import hamza.dali.flutter_osm_plugin.models.CustomSymbolManager
 import hamza.dali.flutter_osm_plugin.models.FlutterGeoPoint
 import hamza.dali.flutter_osm_plugin.models.FlutterMapLibreOSMRoad
 import hamza.dali.flutter_osm_plugin.models.FlutterRoad
@@ -53,6 +57,8 @@ import org.maplibre.android.maps.Style
 import org.maplibre.android.maps.Style.OnStyleLoaded
 import org.maplibre.android.plugins.annotation.*
 import org.maplibre.android.plugins.annotation.Annotation
+import org.maplibre.android.style.layers.Layer
+import org.maplibre.android.style.layers.PropertyValue
 import org.maplibre.android.utils.ColorUtils
 import org.osmdroid.api.IGeoPoint
 import org.osmdroid.util.BoundingBox
@@ -75,11 +81,11 @@ class FlutterMapLibreView(
     private var activity: Activity? = null
     private var mapView: MapView? = null
     private var mapLibre: MapLibreMap? = null
-    private var markerManager: SymbolManager? = null
-    private var markerStaticManager: SymbolManager? = null
-    private var fillShapeManager: FillManager? = null
-    private var circleShapeManager: CircleManager? = null
-    private var lineManager: LineManager? = null
+    private var markerManager: CustomSymbolManager? = null
+    private var markerStaticManager: CustomSymbolManager? = null
+    private var fillShapeManager: CustomFillManager? = null
+    private var circleShapeManager: CustomCircleManager? = null
+    private var lineManager: CustomLineManager? = null
     private var singleClickMarker: OnClickSymbols? = null
     private var longClickMarker: OnClickSymbols? = null
     private var mapClick: OnClickSymbols? = null
@@ -455,6 +461,11 @@ class FlutterMapLibreView(
 
 
             MapMethodChannelCall.ToggleLayers -> {
+                val isEnabled = call.arguments as Boolean
+                lineManager?.toggle(isEnabled)
+                markerManager?.toggle(isEnabled)
+                fillShapeManager?.toggle(isEnabled)
+                circleShapeManager?.toggle(isEnabled)
                 result.success(200)
             }
 
@@ -608,16 +619,16 @@ class FlutterMapLibreView(
             }
             val style = Style.Builder().fromUri(styleURL)
             map.setStyle(style) { styleLoaded ->
-                markerManager = SymbolManager(mapView!!, mapLibre!!, styleLoaded)
+                markerManager = CustomSymbolManager(mapView!!, mapLibre!!, styleLoaded)
 
-                lineManager = LineManager(
+                lineManager = CustomLineManager(
                     mapView!!,
                     mapLibre!!,
                     styleLoaded,
                     markerManager?.layerId,
                     null,
                 )
-                markerStaticManager = SymbolManager(
+                markerStaticManager = CustomSymbolManager(
                     mapView!!,
                     mapLibre!!,
                     styleLoaded,
@@ -625,11 +636,11 @@ class FlutterMapLibreView(
                     lineManager?.layerId
                 )
 
-                fillShapeManager = FillManager(
+                fillShapeManager = CustomFillManager(
                     mapView!!, mapLibre!!, mapLibre!!.style!!,
                     lineManager?.layerId, null,
                 )
-                circleShapeManager = CircleManager(
+                circleShapeManager = CustomCircleManager(
                     mapView!!, mapLibre!!, mapLibre!!.style!!,
                     lineManager?.layerId, null,
                 )

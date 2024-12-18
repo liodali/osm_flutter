@@ -69,12 +69,18 @@ fun LongSparseArray<Symbol>.where(f: (Symbol) -> Boolean): Symbol? {
     return null
 }
 
-fun LongSparseArray<Symbol>.toList(): List<Symbol> {
-    val list = mutableListOf<Symbol>()
+//fun LongSparseArray<Symbol>.toList(): List<Symbol> {
+//    val list = mutableListOf<Symbol>()
+//    this.forEach { k, symbol ->
+//        list.add(symbol)
+//    }
+//    return list.toList()
+//}
+ fun <T>  LongSparseArray<T>.toList(): List<T> {
+    val list = mutableListOf<T>()
     this.forEach { k, symbol ->
         list.add(symbol)
     }
-
     return list.toList()
 }
 
