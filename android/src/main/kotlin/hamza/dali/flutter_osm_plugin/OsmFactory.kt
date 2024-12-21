@@ -39,14 +39,15 @@ open class OsmFactory(
             isVector = args["isVectorTile"] as Boolean? == true
         }
         customTile = when {
-            args.containsKey("customTile") && !isVector -> CustomTile.fromMap(args["customTile"] as HashMap<String, Any>)
-            args.containsKey("customTile") && isVector -> VectorOSMTile((args["customTile"] as HashMap<String, *>)["serverStyleUrl"] as String)
+            args.containsKey("customTile") && !isVector -> CustomTile.fromMap(args["customTile"] as HashMap<*, *>)
+            args.containsKey("customTile") && isVector -> VectorOSMTile((args["customTile"] as HashMap<*, *>)["serverStyleUrl"] as String)
             else -> null
         }
         if (args.containsKey("enableRotationGesture")) {
             enableRotationGesture = args["enableRotationGesture"] as Boolean
         }
-        osmFlutterView = when (isVector) {
+        osmFlutterView =
+            when (isVector) {
             true -> FlutterMapLibreView(
                 requireNotNull(context),
                 binaryMessenger,

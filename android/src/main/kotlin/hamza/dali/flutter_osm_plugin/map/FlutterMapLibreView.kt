@@ -57,8 +57,6 @@ import org.maplibre.android.maps.Style
 import org.maplibre.android.maps.Style.OnStyleLoaded
 import org.maplibre.android.plugins.annotation.*
 import org.maplibre.android.plugins.annotation.Annotation
-import org.maplibre.android.style.layers.Layer
-import org.maplibre.android.style.layers.PropertyValue
 import org.maplibre.android.utils.ColorUtils
 import org.osmdroid.api.IGeoPoint
 import org.osmdroid.util.BoundingBox
@@ -613,11 +611,10 @@ class FlutterMapLibreView(
             if (configuration.bounds != null) {
                 mapLibre!!.setLatLngBoundsForCameraTarget(configuration.bounds.toBoundsLibre())
             }
-            val styleURL = when (configuration.customTile) {
-                is VectorOSMTile -> configuration.customTile.style
-                else -> "https://tiles.openfreemap.org/styles/liberty"
+            val style = when (configuration.customTile) {
+                is VectorOSMTile -> Style.Builder().fromUri(configuration.customTile.style)
+                else -> Style.Builder().fromUri("https://tiles.openfreemap.org/styles/liberty")
             }
-            val style = Style.Builder().fromUri(styleURL)
             map.setStyle(style) { styleLoaded ->
 
                 lineManager = CustomLineManager(
@@ -829,8 +826,13 @@ class FlutterMapLibreView(
         val road = FlutterMapLibreOSMRoad(idRoad = roadConfig.id, lineManager!!)
         for ((i, line) in roadConfig.linesConfig.withIndex()) {
             val linePoints = line.encodedPolyline.toPolyline()
-            if(line.roadOption.roadBorderWidth>0 && !line.roadOption.isDotted){
-                road.addSegment("${road.idRoad}-seg-$i-border", linePoints, line.roadOption, isBorder = true)
+            if (line.roadOption.roadBorderWidth > 0 && !line.roadOption.isDotted) {
+                road.addSegment(
+                    "${road.idRoad}-seg-$i-border",
+                    linePoints,
+                    line.roadOption,
+                    isBorder = true
+                )
             }
             road.addSegment("${road.idRoad}-seg-$i", linePoints, line.roadOption)
         }

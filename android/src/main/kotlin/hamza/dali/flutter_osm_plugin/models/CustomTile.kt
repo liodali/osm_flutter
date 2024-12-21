@@ -10,19 +10,19 @@ data class CustomTile(
     val minZoomLevel: Int,
     val maxZoomLevel: Int,
     val api: Pair<String, String>?
-): OSMTile() {
+) : OSMTile() {
     companion object {
-        fun fromMap(map: HashMap<String, Any>):CustomTile{
-            return  fromMapToCustomTile(map)
+        fun fromMap(map: HashMap<*, *>): CustomTile {
+            return fromMapToCustomTile(map)
         }
     }
 }
 data class VectorOSMTile(
     val style: String,
-): OSMTile()
+) : OSMTile()
 
-fun fromMapToCustomTile(map: HashMap<String, Any>): CustomTile = CustomTile(
-    urls = (map["urls"] as List<Any>).first() as List<String>,
+fun fromMapToCustomTile(map: HashMap<*, *>): CustomTile = CustomTile(
+    urls = (map["urls"] as List<*>).first() as List<String>,
     sourceName = map["name"] as String,
     tileFileExtension = map["tileExtension"] as String,
     tileSize = map["tileSize"] as Int,
@@ -33,6 +33,7 @@ fun fromMapToCustomTile(map: HashMap<String, Any>): CustomTile = CustomTile(
             (map["api"] as HashMap<*, *>).entries.first().key as String,
             (map["api"] as HashMap<*, *>).entries.first().value as String
         )
+
         else -> null
     }
 )
