@@ -619,15 +619,16 @@ class FlutterMapLibreView(
             }
             val style = Style.Builder().fromUri(styleURL)
             map.setStyle(style) { styleLoaded ->
-                markerManager = CustomSymbolManager(mapView!!, mapLibre!!, styleLoaded)
 
                 lineManager = CustomLineManager(
                     mapView!!,
                     mapLibre!!,
                     styleLoaded,
-                    markerManager?.layerId,
+                    null,//markerManager?.layerId,
                     null,
                 )
+                markerManager = CustomSymbolManager(mapView!!, mapLibre!!, styleLoaded)
+
                 markerStaticManager = CustomSymbolManager(
                     mapView!!,
                     mapLibre!!,
@@ -665,7 +666,7 @@ class FlutterMapLibreView(
             map.addOnMapClickListener { lng ->
                 mapClick?.invoke(lng.toGeoPoint())
                 methodChannel.invokeMethod("receiveSinglePress", lng.toGeoPoint().toHashMap())
-                true
+                false
             }
             map.addOnMapLongClickListener { lng ->
                 mapClick?.invoke(lng.toGeoPoint())
@@ -828,6 +829,9 @@ class FlutterMapLibreView(
         val road = FlutterMapLibreOSMRoad(idRoad = roadConfig.id, lineManager!!)
         for ((i, line) in roadConfig.linesConfig.withIndex()) {
             val linePoints = line.encodedPolyline.toPolyline()
+            if(line.roadOption.roadBorderWidth>0 && !line.roadOption.isDotted){
+                road.addSegment("${road.idRoad}-seg-$i-border", linePoints, line.roadOption, isBorder = true)
+            }
             road.addSegment("${road.idRoad}-seg-$i", linePoints, line.roadOption)
         }
         road.onRoadClickListener = object : FlutterRoad.OnRoadClickListener {
@@ -837,7 +841,11 @@ class FlutterMapLibreView(
                 lineDecoded: String
             ) {
                 val map = HashMap<String, Any?>()
-                map["key"] = idRoad
+
+                map["key"] = when {
+                    idRoad.contains("-border") -> idRoad.split("-border").first()
+                    else -> idRoad
+                }
                 map["segId"] = lineId
                 map["encoded"] = lineDecoded
                 methodChannel.invokeMethod("receiveRoad", map)
@@ -858,7 +866,7 @@ class FlutterMapLibreView(
 
     override fun removePolyline(id: String) {
         val road = roads.firstOrNull {
-            it.idRoad == id
+            it.idRoad.contains(id)
         }
         road?.remove()
         roads.remove(road)

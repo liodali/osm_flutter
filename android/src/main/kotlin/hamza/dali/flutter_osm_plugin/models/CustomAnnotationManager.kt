@@ -4,17 +4,11 @@ import com.google.gson.JsonObject
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
-import org.maplibre.android.plugins.annotation.Line
 import org.maplibre.android.plugins.annotation.CircleManager
 import org.maplibre.android.plugins.annotation.FillManager
 import org.maplibre.android.plugins.annotation.LineManager
-import org.maplibre.android.plugins.annotation.LineOptions
-import org.maplibre.android.plugins.annotation.Symbol
 import org.maplibre.android.plugins.annotation.SymbolManager
-import org.maplibre.android.plugins.annotation.SymbolOptions
 import org.maplibre.android.style.layers.PropertyValue
-import org.maplibre.geojson.LineString
-
 
 class CustomLineManager(
     mapView: MapView,
@@ -27,16 +21,8 @@ class CustomLineManager(
     fun toggle(toggle: Boolean) {
         layer.setProperties(PropertyValue<String>("visibility", "$toggle"))
     }
-
-
-    override fun create(options: LineOptions?): Line? {
-        val line = super.create(options)
-
-
-        return line
-    }
-    fun test(){
-        annotations[0]
+    init {
+        lineCap="round"
     }
 }
 

@@ -2,10 +2,9 @@ package hamza.dali.flutter_osm_plugin.models
 
 import android.graphics.Color
 import hamza.dali.flutter_osm_plugin.utilities.toRGB
-import org.osmdroid.bonuspack.routing.OSRMRoadManager
-import org.osmdroid.bonuspack.utils.PolylineEncoder
-import org.osmdroid.util.GeoPoint
-
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.plugins.annotation.LineOptions
+import org.maplibre.android.utils.ColorUtils
 
 
 data class RoadOption(
@@ -14,7 +13,27 @@ data class RoadOption(
     val roadBorderWidth: Float = 5f,
     val roadBorderColor: Int? = null,
     val isDotted: Boolean = false,
-)
+) {
+
+
+    fun width(isBorder: Boolean): Float = when {
+        isBorder && !isDotted -> roadWidth
+        isBorder && roadWidth > roadBorderWidth -> roadWidth + roadBorderWidth
+        isBorder && roadWidth < roadBorderWidth -> roadBorderWidth
+        else -> roadWidth
+    }
+
+    fun gapWidth(isBorder: Boolean) = when {
+        isBorder && !isDotted -> roadWidth
+        else -> 0f
+    }
+
+    fun color(isBorder: Boolean) = when (isBorder) {
+        true -> ColorUtils.colorToRgbaString(roadBorderColor ?: Color.BLUE)
+        else -> ColorUtils.colorToRgbaString(roadColor ?: Color.BLUE)
+    }
+
+}
 
 fun HashMap<*, *>.toRoadOption(): RoadOption {
     val roadColor = when (containsKey("roadColor")) {
@@ -47,3 +66,9 @@ fun HashMap<*, *>.toRoadOption(): RoadOption {
 }
 
 
+fun RoadOption.toLineOption(polyline: List<LatLng>, isBorder: Boolean): LineOptions = LineOptions()
+    .withLatLngs(polyline)
+    .withLineColor(color(isBorder))
+    .withLineWidth(width(isBorder))
+    .withDraggable(false)
+    .withLineGapWidth(gapWidth(isBorder))

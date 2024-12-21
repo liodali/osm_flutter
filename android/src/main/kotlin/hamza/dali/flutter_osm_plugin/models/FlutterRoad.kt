@@ -1,15 +1,10 @@
 package hamza.dali.flutter_osm_plugin.models
 
-import android.graphics.Color
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import hamza.dali.flutter_osm_plugin.utilities.encodePolyline
 import hamza.dali.flutter_osm_plugin.utilities.toPolylineEncode
 import org.maplibre.android.plugins.annotation.Line
 import org.maplibre.android.plugins.annotation.LineManager
-import org.maplibre.android.plugins.annotation.LineOptions
 import org.maplibre.android.plugins.annotation.OnLineClickListener
-import org.maplibre.android.utils.ColorUtils
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.FolderOverlay
 import org.osmdroid.views.overlay.Polyline
@@ -26,46 +21,46 @@ open class FlutterMapLibreOSMRoad(
     override val idRoad: String,
     val lineManager: LineManager
 ) : FlutterRoad {
+    companion object {
+        val DashPoly = arrayOf(1f, 1.5f)
+    }
+
     var onRoadClickListener: FlutterRoad.OnRoadClickListener? = null
     private val lines: MutableList<Line> = mutableListOf()
     private val linesIdPair: MutableList<Pair<Long, String>> = mutableListOf()
-    val roadSegments = lines.toList()
-    fun addSegment(id: String, polyline: List<GeoPoint>, polylineOption: RoadOption) {
-        var lineOptions = LineOptions()
-            .withLatLngs(polyline.toLngLats())
-            .withLineColor(ColorUtils.colorToRgbaString(polylineOption.roadColor ?: Color.BLUE))
-            .withLineWidth(polylineOption.roadWidth)
-            .withDraggable(false)
-        when (polylineOption.isDotted) {
-            true -> {
-                lineManager.lineDasharray = arrayOf(1f, 2f)
-                lineManager.lineCap = "square"
-            }
 
+    fun addSegment(
+        id: String,
+        polyline: List<GeoPoint>,
+        polylineOption: RoadOption,
+        isBorder: Boolean = false
+    ) {
+        val lineOptions = polylineOption.toLineOption(polyline = polyline.toLngLats(), isBorder)
+        when {
+            polylineOption.isDotted && !isBorder -> {
+                lineManager.lineDasharray = DashPoly
+                lineManager.lineRoundLimit = 12f
+            }
             else -> {
                 lineManager.lineDasharray = emptyArray<Float>()
-                lineManager.lineCap = "round"
+                lineManager.lineRoundLimit = 1f
             }
         }
 
         val line = lineManager.create(lineOptions)
         lineManager.updateSource()
         linesIdPair.add(Pair(line.id, id))
-
         lineManager.addClickListener(object : OnLineClickListener {
             override fun onAnnotationClick(t: Line?): Boolean {
                 if (t != null && lines.contains(t)) {
-
                     this@FlutterMapLibreOSMRoad.onRoadClickListener?.onClick(
                         idRoad,
                         linesIdPair.first { it.first == t.id }.second,
                         t.latLngs.encodePolyline()
                     )
                 }
-
                 return true
             }
-
         })
         lines.add(line)
     }
