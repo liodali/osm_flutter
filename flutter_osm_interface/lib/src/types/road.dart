@@ -16,7 +16,7 @@ class Road {
   Road({
     required this.id,
     required this.polylines,
-  });
+  }) : assert(polylines.isNotEmpty);
   Map toMap() => {
         'key': id,
         'segments': polylines.map((p) {

@@ -583,9 +583,14 @@ final class MobileOSMController extends IBaseOSMController {
     return roadInfo;
   }
 
-  /// draw road
-  ///  [path] : (list) path of the road
   @override
+  /// draw road manually
+  ///  [road] : (Road) path of the road that contain list of polyline 
+  ///
+  ///  return String unique key can be used to delete road
+  ///  paramteres :
+  ///
+  ///  [zoomInto] : (bool) default true, zoom into the boundingbox and show POIs of the route
   Future<String> drawRoadManually(
     Road road, {
     bool zoomInto = true,
