@@ -155,10 +155,8 @@ fun Polyline.setStyle(
     outlinePaint.strokeCap = Paint.Cap.ROUND
     var pathEffect: PathEffect? = null
     if (isDottedPolyline) {
-        pathEffect = DashPathEffect(arrayOf(10f, 20f).toFloatArray(), 0f)
+        pathEffect = DashPathEffect(arrayOf(20f, 40f).toFloatArray(), 10f)
     }
-
-
     if (borderWidth > 0) {
         val paintBorder = createPaintPolyline(
             color = borderColor ?: Color.BLACK,
@@ -180,6 +178,8 @@ fun Polyline.setStyle(
         )
         this.outlinePaintLists.add(MonochromaticPaintList(paintBorder))
         this.outlinePaintLists.add(MonochromaticPaintList(insideBorder))
+    }else {
+        outlinePaint.pathEffect = pathEffect
     }
 
 }

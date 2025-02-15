@@ -88,7 +88,7 @@ open class FlutterOSMRoad(
             true
         }
         segments.add(seg)
-
+        items.add(seg)
     }
 
 

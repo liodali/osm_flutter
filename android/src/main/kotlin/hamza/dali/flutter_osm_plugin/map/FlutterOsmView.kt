@@ -1042,9 +1042,11 @@ class FlutterOsmView(
             "rect" -> folderShape.items.removeAll { shape ->
                 shape is OSMShape && shape.shape == Shape.POLYGON
             }
+
             "circle" -> folderShape.items.removeAll { shape ->
                 shape is OSMShape && shape.shape == Shape.CIRCLE
             }
+
             else -> return
         }
     }
@@ -1107,9 +1109,7 @@ class FlutterOsmView(
             val encoded = arg["polylineEncoded"] as String
             val roadOption = (arg["option"] as HashMap<*, *>).toRoadOption()
             checkRoadFolderAboveUserOverlay()
-
-
-            val routePointsEncoded = PolylineEncoder.decode(encoded, 5, false)
+            val routePointsEncoded = PolylineEncoder.decode(encoded, 10, false)
             val polyLine = Polyline(map!!, false, false).apply {
                 setStyle(
                     borderColor = roadOption.roadBorderColor,
@@ -1120,11 +1120,10 @@ class FlutterOsmView(
 
                 )
                 setPoints(routePointsEncoded)
-
             }
             lines.add(polyLine)
         }
-        flutterRoad = createRoad(
+        createRoad(
             polyLines = lines,
             roadID = roadId,
         )
@@ -1136,7 +1135,6 @@ class FlutterOsmView(
                 64,
             )
         }
-
         map!!.invalidate()
 
         result.success(
@@ -1198,13 +1196,10 @@ class FlutterOsmView(
 
         val flutterRoad = FlutterOSMRoad(
             roadID,
-//            roadDistance = roadDistance,
-//            roadDuration = roadDuration,
         )
         flutterRoad.let { roadF ->
             for (polyline in polyLines) {
                 roadF.addSegment(polyline)
-                //roadF.road.setOnClickListener { polyline, mapView, eventPos ->  }
                 roadF.onRoadClickListener = object : FlutterRoad.OnRoadClickListener {
                     override fun onClick(idRoad: String, polyineId: String, polyEncoded: String) {
                         val map = HashMap<String, Any?>()
@@ -1216,9 +1211,8 @@ class FlutterOsmView(
 
                 }
             }
-            roadF.items.addAll(roadF.roadSegments)
-            folderRoad.items.add(roadF)
         }
+        folderRoad.items.add(flutterRoad)
 
         return flutterRoad
     }
