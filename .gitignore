@@ -52,3 +52,4 @@ pubspec.lock
 .vscode/**
 
 **/ios/Frameworks/**
+.metadata
