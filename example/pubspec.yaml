@@ -16,7 +16,7 @@ dependencies:
   flutter_hooks: ^0.18.5+1
   #osm_flutter_hooks: ^1.4.0
   pointer_interceptor: ^0.10.1+2
-  routing_client_dart: ^0.5.5
+  routing_client_dart: ^1.0.4
   flutter_bloc: ^8.1.5
   equatable: ^2.0.5
 

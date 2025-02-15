@@ -584,8 +584,9 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   @override
+
   /// draw road manually
-  ///  [road] : (Road) path of the road that contain list of polyline 
+  ///  [road] : (Road) path of the road that contain list of polyline
   ///
   ///  return String unique key can be used to delete road
   ///  paramteres :
