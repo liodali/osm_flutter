@@ -5,12 +5,13 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 
-class FlutterPickerViewOverlay(
+@Suppress("viewConstructor")
+class FlutterPickerViewOverlay (
     private val bitmap: Bitmap,
-    context: Context,
+    private val   context: Context,
     private val point: Point,
     private val isCustom: Boolean = false,
-) : View(context) {
+) : View(context,null,0) {
 
 
     private var mCirclePaint = Paint()
