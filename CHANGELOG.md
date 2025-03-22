@@ -1,3 +1,4 @@
+### 1.3.7: fix bug
 ### 1.3.6: fix bug
 * fix set multiple static marker icon (#575)
 ### 1.3.5+1: fix bug
