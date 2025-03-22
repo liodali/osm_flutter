@@ -503,7 +503,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<double> getZoom(int idOSM) async {
-    return await _channels[idOSM]?.invokeMethod('get#Zoom');
+    return (await _channels[idOSM]?.invokeMethod('get#Zoom')).toDouble();
   }
 
   @override
