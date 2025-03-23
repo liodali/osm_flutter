@@ -91,10 +91,56 @@ many thanks for @ben-xD
     * change kotlin version from `1.4.21` to `1.5.21`
     * change gradle version from `4.1.1` to `7.0.2`
 
-### For web integration
+### Web Integration
 
-> To show buttons,UI that have to manage user click over the map, you should use this library : `pointer_interceptor`
+#### Technical Issue: Event Capture in Web
 
+On web platforms, UI elements above the map cannot receive click events. This occurs because the OSM map renders as an `HtmlElementView` that captures all pointer events before they reach Flutter widgets.
+
+#### Common Issues
+- Dialogs appear but buttons are unclickable
+- UI elements over the map don't receive click events
+- The map's "grab" cursor shows even when hovering over your UI elements
+
+**Solution: Add pointer_interceptor**
+
+```yaml
+dependencies:
+  pointer_interceptor: ^0.10.1+2
+```
+
+#### Example: Basic Marker Click Handling with PointerInterceptor
+
+```dart
+      body: OSMFlutter(
+        controller: mapController,
+        osmOption: OSMOption(
+          zoomOption: ZoomOption(initZoom: 12),
+        ),
+        onGeoPointClicked: (point) {
+          // When a marker is clicked, show a popup with PointerInterceptor
+          showDialog(
+            context: context,
+            builder: (context) => PointerInterceptor(
+              // The PointerInterceptor is crucial here for web platforms
+              child: AlertDialog(
+                title: Text('Marker Clicked'),
+                content: Text('Location: ${point.latitude}, ${point.longitude}'),
+                actions: [
+                  TextButton(
+                    // This button will work on web thanks to PointerInterceptor
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('Close'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+```
+
+Without the `PointerInterceptor` wrapping the dialog, the buttons would be unresponsive on web platforms because the map underneath would capture all the click events before they reach your UI elements.
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
