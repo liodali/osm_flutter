@@ -69,10 +69,10 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     // Retrofit and relevant converters
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-moshi:2.9.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.11.0'
+    implementation 'com.squareup.retrofit2:converter-moshi:2.11.0'
     //picasso
-    implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'com.squareup.picasso3:picasso:3.0.0-alpha06'
 
 
     //Preference

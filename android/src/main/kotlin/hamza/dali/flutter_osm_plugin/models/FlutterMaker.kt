@@ -13,9 +13,9 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
-import com.squareup.picasso.Callback
-import com.squareup.picasso.Picasso
-import com.squareup.picasso.Target
+import com.squareup.picasso3.BitmapTarget
+import com.squareup.picasso3.Callback
+import com.squareup.picasso3.Picasso
 import hamza.dali.flutter_osm_plugin.R
 import hamza.dali.flutter_osm_plugin.utilities.scaleDensity
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +26,7 @@ import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
 import kotlin.math.PI
 import kotlin.math.absoluteValue
 import kotlin.math.sign
+import androidx.core.graphics.drawable.toDrawable
 
 
 typealias LongClickHandler = (marker: Marker) -> Boolean
@@ -121,29 +122,23 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
     }
 
     fun setIconMarkerFromURL(imageURL: String, angle: Double = 0.0) {
-        Picasso.get()
+        Picasso.Builder(context).build()
             .load(imageURL)
             .fetch(object : Callback {
+                override fun onError(t: Throwable) {
+                    Log.e("error image", t.stackTraceToString())
+                }
                 override fun onSuccess() {
-                    Picasso.get()
+                    Picasso.Builder(context).build()
                         .load(imageURL)
-                        .into(object : Target {
-                            override fun onBitmapLoaded(
-                                bitmapMarker: Bitmap?,
-                                from: Picasso.LoadedFrom?
-                            ) {
+                        .into(object : BitmapTarget {
 
-                                setIconMaker(bitmap = bitmapMarker, angle = angle)
-
+                            override fun onBitmapFailed(e: Exception, errorDrawable: Drawable?) {
+                                setIconMaker(bitmap = null, angle = angle)
                             }
 
-                            override fun onBitmapFailed(
-                                e: java.lang.Exception?,
-                                errorDrawable: Drawable?
-                            ) {
-                                setIconMaker(bitmap = null, angle = angle)
-
-
+                            override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom) {
+                                setIconMaker(bitmap = bitmap, angle = angle)
                             }
 
                             override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
@@ -151,10 +146,6 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
                             }
 
                         })
-                }
-
-                override fun onError(e: java.lang.Exception?) {
-                    Log.e("error image", e?.stackTraceToString() ?: "")
                 }
 
             })
@@ -186,23 +177,24 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
             )
             resizedBitmap
         }
-        iconBitmap?.let { bitmap ->
+        if(iconBitmap != null){
             iconDrawable = when (angle > 0.0) {
-                true -> BitmapDrawable(mapView.resources, rotateMarker(bitmap, angle))
-                false -> BitmapDrawable(mapView.resources, bitmap)
+                true -> rotateMarker(bitmap, angle).toDrawable(mapView.resources)
+                false -> bitmap.toDrawable(mapView.resources)
             }
             iconDrawable = iconDrawable.apply {
                 color?.let { c ->
-                    this?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                    colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
                         c,
                         BlendModeCompat.SRC_OVER
                     )
                 }
             }
-
-        } ?: run {
-            iconDrawable =
-                ContextCompat.getDrawable(context, R.drawable.ic_location_on_red_24dp)!!
+        }else {
+            run {
+                iconDrawable =
+                    ContextCompat.getDrawable(context, R.drawable.ic_location_on_red_24dp)!!
+            }
         }
         return iconDrawable!!
 
