@@ -10,11 +10,9 @@ import Foundation
 import Flutter
 
 public class MapviewFactory : NSObject, FlutterPlatformViewFactory {
-    let controller: FlutterViewController
     let messenger : FlutterBinaryMessenger
     let defaultPinPath:String?
-    init(controller: FlutterViewController,messenger:FlutterBinaryMessenger,defaultPin:String?) {
-        self.controller = controller
+    init(messenger:FlutterBinaryMessenger,defaultPin:String?) {
         self.messenger = messenger
         self.defaultPinPath = defaultPin
     }
