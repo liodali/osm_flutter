@@ -73,7 +73,7 @@ many thanks for @ben-xD
 ### Migration to `0.34.0` (Android Only)
 > if you are using this plugin before Flutter 3
 
-> you should make some modification in build.gradle before that run flutter clean && flutter pub get
+> you should make some modification in build.gradle, before that run `flutter clean` && `flutter pub get`
 
 > open file build.gradle inside android file
 
@@ -84,7 +84,7 @@ many thanks for @ben-xD
 ### Migration to `0.16.0` (Android Only)
 > if you are using this plugin before Flutter 2 
 
-> you should make some modification in build.gradle before that run flutter clean && flutter pub get
+> you should make some modification in build.gradle, before that run `flutter clean` && `flutter pub get`
 
 > open file build.gradle inside android file
 
@@ -93,7 +93,7 @@ many thanks for @ben-xD
 
 ### For web integration
 
-> To show buttons,UI that have to manage user click over the map, you should use this library : `pointer_interceptor`
+> To show buttons and a UI to manage user interactions with the map, you should use this library : `pointer_interceptor`
 
 
 ## Simple Usage
@@ -153,7 +153,7 @@ OSMFlutter(
 > **Note**
 > using the default constructor, you should use `initMapWithUserPosition` or `initPosition`
 > if you want the map to initialize using static position use the named constructor `withPosition`
-> or if you want to initialize the map with user position use `withUserPosition`
+> or if you want to initialize the map with the current location of the user use `withUserPosition`
 
 ```dart
 // default constructor
@@ -292,7 +292,7 @@ await controller.zoomToBoundingBox(BoundingBox(),paddingInPixel:0)
 
 ##### Note : 
 
-* For the box attribute ,If you don't have bounding box,you can use list of geopoint like this `BoundingBox.fromGeoPoints`
+* For the box attribute, If you don't have bounding box, you can use a list of geopoints like this `BoundingBox.fromGeoPoints`
 
 <b> 6) get current zoom level </b>b>
 
@@ -314,19 +314,19 @@ await controller.removeLimitAreaMap();
 ```
 
 
-<b> 8)  Track user current position </b>
+<b> 8)  Track the user's current location </b>
 
-> for iOS,you should add those line in your info.plist file
+> for iOS, you should add these lines in your `info.plist` file
 ```text
    <key>NSLocationWhenInUseUsageDescription</key>
 	<string>any text you want</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>any text you want</string>
 ``` 
-> from version 0.40.0 we can call only `enableTracking` will animate to user location 
-without need to call `currentLocation`
+> from version 0.40.0 up calling `enableTracking` will animate to the user's location,
+no need to call `currentLocation`
 
-> when `enableStopFollow` is true,map will not be centered if the user location changed
+> when `enableStopFollow` is true, the map will not be centered if the user's location has changed
 
 > you can disable rotation of personIcon using [disableUserMarkerRotation] (default: false)
 
@@ -340,7 +340,7 @@ or
 ```dart
  await controller.startLocationUpdating();
 ```
-<b> 9) Disable tracking user position </b>
+<b> 9) Disable tracking user location </b>
 
 ```dart
  await controller.disabledTracking();
@@ -355,7 +355,7 @@ or
 
 <b>10) update the location </b>
 
-> Change the location without create marker
+> Change the location without creating a marker
 
 ```dart
  await controller.moveTo(GeoPoint(latitude: 47.35387, longitude: 8.43609),animate:true);
@@ -379,7 +379,7 @@ GeoPoint centerMap = await controller.centerMap;
 ```dart
 List<GeoPoint> geoPoints = await controller.geopoints;
 ```
-<b> 13) get bounding box  map </b>
+<b> 13) get bounding box map </b>
 
 ```dart
 BoundingBox bounds = await controller.bounds;
@@ -418,7 +418,7 @@ controller.listenerRegionIsChanging.addListener(() {
 
 > you can change marker icon by using attribute `markerIcon`
 > the angle value should be between [0,2pi]
-> set anchor of ther Marker
+> set anchor of the Marker
 
 ```dart
 await controller.addMarker(GeoPoint,
@@ -429,9 +429,9 @@ await controller.addMarker(GeoPoint,
 ```
  <b> 15.1) Update Marker </b>
 
- > you can change the location,icon,angle,anchor of the specific marker
+ > you can change the location, icon, angle, anchor of the specific marker
 
- > The old configuration of the Marker will be keep it the same if not specificied
+ > The old configuration of the Marker will be keept the same if not specificied
 
 
 ```dart
@@ -441,7 +441,7 @@ await controller.changeLocationMarker(oldGeoPoint,newGeoPoint,MarkerIcon,angle,I
 <b> 15.2) Change Icon Marker  </b>
 
 > You can change marker icon by using attribute `markerIcon` of existing Marker
-> The GeoPoint/Marker should be exist
+> The GeoPoint/Marker should already be there
 
 ```dart
 await controller.setMarkerIcon(GeoPoint,MarkerIcon);
@@ -455,12 +455,12 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 * PS : static position cannot be removed by this method 
 
 
-<b>16) Draw road,recuperate instructions ,distance in km and duration in sec</b>
+<b>16) Draw road, recuperate instructions, distance in km and duration in sec</b>
 
-> you can add an middle position to pass your route through them
+> you can add a middle position to pass your route through them
 > change configuration of the road in runtime
 > zoom into the region of the road
-> change the type of the road that user want to use
+> change the type of the road that the user wants to use
 
 ```dart
  RoadInfo roadInfo = await controller.drawRoad( 
@@ -485,7 +485,7 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 
 | Properties               | Description                         |
 | ------------------------ | ----------------------------------- |
-| `roadColor`              | (Color) required Field,  change the default color of the route in runtime    |
+| `roadColor`              | (Color) required Field, change the default color of the route in runtime    |
 | `roadWidth`              | (double) change the road width, default value 5.0       |
 | `roadBorderColor`        | (Color?) set color of border polyline       |
 | `roadBorderWidth`        | (double?) set border width of polyline, if width null or 0,polyline will drawed without border |
