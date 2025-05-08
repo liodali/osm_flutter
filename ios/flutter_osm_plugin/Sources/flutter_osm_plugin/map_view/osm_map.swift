@@ -391,8 +391,10 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
             
         }
         if(defaultMarker != nil && icon == nil){
-            icon = UIImage.flutterImageWithName(defaultMarker!) ?? UIImage(systemName: "mappin")!
-        } 
+            icon = UIImage(named: defaultMarker!, in: Bundle.main, compatibleWith: nil) ?? UIImage(systemName: "mappin")!
+        }else if (defaultMarker == nil && icon == nil){
+            icon = UIImage(systemName: "mappin")!
+        }
         
         let point = args["point"] as! GeoPoint
         let coordinate = point.toLocationCoordinate()
