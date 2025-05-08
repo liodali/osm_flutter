@@ -1,3 +1,5 @@
+### 1.3.8: fix bug
+* hotfix for bug  when use our plugin in flutter app that hosted in native iOS app #588
 ### 1.3.7: fix bug
 ### 1.3.6: fix bug
 * fix set multiple static marker icon (#575)
