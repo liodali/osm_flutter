@@ -29,11 +29,13 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
     var canSkipFollow: Bool = false
     var userLocationWithoutControl: Bool = false
     var mapInitialized: Bool = false
+    let defaultMarker:String?
     private(set) var latestUserLocation:CLLocationCoordinate2D? = nil
     //let containerMapView:MapViewUIView
     init(_ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?,defaultPin:String?) {
         var initLocation:CLLocationCoordinate2D?
         var  enableRotationGesture = false
+        defaultMarker = defaultPin
         if (args as? [String: Any]) != nil {
             if ((args as! [String: Any]).keys.contains("customTile")) {
                 customTiles = CustomTiles(((args as! [String: Any])["customTile"] as? [String: Any])!)
@@ -380,26 +382,34 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
     }
     private func addMarkerManually(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
+        var iconSizeArg:[Int]? = [32,32]
+        var icon: UIImage? = nil
         if (args.keys.contains("icon")) {
             let iconArg = args["icon"] as! [String: Any]
-            let icon = convertImage(codeImage: iconArg["icon"] as! String)
-            let point = args["point"] as! GeoPoint
-            let coordinate = point.toLocationCoordinate()
-            let iconSizeArg = iconArg["size"] as? [Int]
-            let sizeIcon = iconSizeArg!.toMarkerSize()
-            var angle = Float(0.0)
-            var anchor:AnchorGeoPoint? = nil
-            if let _angle = point["angle"] {
-                angle = Float(_angle)
-            }
-            if let _anchor = args["iconAnchor"]{
-                anchor = AnchorGeoPoint(anchorMap: _anchor as! [String:Any])
-            }
-           //GeoPointMap(icon: icon, coordinate: coordinate, angle: angle, anchor: anchor)
-            let configuration = MarkerConfiguration(icon: icon!,iconSize: sizeIcon , angle: angle, anchor: anchor?.compute(),scaleType: MarkerScaleType.invariant)
-            let marker = Marker(location: coordinate, markerConfiguration: configuration)
-            self.mapOSM.markerManager.addMarker(marker: marker)
+            iconSizeArg = iconArg["size"] as? [Int]
+            icon = convertImage(codeImage: iconArg["icon"] as! String)
+            
         }
+        if(defaultMarker != nil && icon == nil){
+            icon = UIImage.flutterImageWithName(defaultMarker!) ?? UIImage(systemName: "mappin")!
+        } 
+        
+        let point = args["point"] as! GeoPoint
+        let coordinate = point.toLocationCoordinate()
+        
+        let sizeIcon = iconSizeArg!.toMarkerSize()
+        var angle = Float(0.0)
+        var anchor:AnchorGeoPoint? = nil
+        if let _angle = point["angle"] {
+            angle = Float(_angle)
+        }
+        if let _anchor = args["iconAnchor"]{
+            anchor = AnchorGeoPoint(anchorMap: _anchor as! [String:Any])
+        }
+       //GeoPointMap(icon: icon, coordinate: coordinate, angle: angle, anchor: anchor)
+        let configuration = MarkerConfiguration(icon: icon!,iconSize: sizeIcon , angle: angle, anchor: anchor?.compute(),scaleType: MarkerScaleType.invariant)
+        let marker = Marker(location: coordinate, markerConfiguration: configuration)
+        self.mapOSM.markerManager.addMarker(marker: marker)
     }
     private func changePositionMarker(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
