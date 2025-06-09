@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
+import 'package:permission_handler/permission_handler.dart' show Permission, PermissionActions;
 
 /// class [MapController] : map controller that will control map by select position,enable current location,
 /// draw road , show static geoPoint,
@@ -334,7 +335,13 @@ class MapController extends BaseMapController {
     Anchor anchor = Anchor.center,
     bool useDirectionMarker = false,
   }) async {
+     Permission.location.onGrantedCallback(()async{
     await osmBaseController.startLocationUpdating();
+    }).onLimitedCallback(()async{
+    await osmBaseController.startLocationUpdating();
+    }).onLimitedCallback(()async{
+       await osmBaseController.startLocationUpdating();
+    }).request();
   }
 
   ///[stopLocationUpdating]
