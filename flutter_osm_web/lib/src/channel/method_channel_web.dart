@@ -142,7 +142,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
               idOSM,
               UserLocation(
                 latitude: geoPt.latitude,
-                longitude: geoPt.latitude,
+                longitude: geoPt.longitude,
               ),
             ),
           );

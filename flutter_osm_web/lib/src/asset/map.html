@@ -118,8 +118,8 @@
         }
       }
     });
-    
-    async function removeControls(){
+
+    async function removeControls() {
       //  mymap = L.map('mapid', {
       //   renderer: L.canvas(),
       //   zoomControl: false,
@@ -134,8 +134,8 @@
       // mymap.dragging = false
       // mymap.touchZoom = false
       // mymap.dragging = false
-      mymap._handlers.forEach(function(handler) {
-          handler.disable();
+      mymap._handlers.forEach(function (handler) {
+        handler.disable();
       });
       console.log(mymap);
       return 200
@@ -179,7 +179,7 @@
           customTile.remove();
         }
         var serverURL = tile.url
-        if(!serverURL.includes("{z}") && !serverURL.includes("{x}") && !serverURL.includes("{y}")){
+        if (!serverURL.includes("{z}") && !serverURL.includes("{x}") && !serverURL.includes("{y}")) {
           serverURL = tile.url + '{z}/{x}/{y}'
         }
         customTile = L.tileLayer(serverURL + tile.tileExtension + tile.apiKey,//'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
@@ -214,7 +214,7 @@
 
     async function getMyLocation() {
       try {
-          var position = await new Promise((resolve, reject) => {
+        var position = await new Promise((resolve, reject) => {
           if (!navigator.geolocation) {
             reject({ error: true, message: 'Geolocation is not supported by your browser' });
           } else {
@@ -228,12 +228,12 @@
         });
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
-        console.log("getMyLocation "+latitude + ":" + longitude)
+        console.log("getMyLocation " + latitude + ":" + longitude)
         return {
           lat: latitude,
           lon: longitude
         };
-      }catch(e){
+      } catch (e) {
         console.error(err.message);
         return e
       }
@@ -286,7 +286,7 @@
         argsIcon["iconUrl"] = "data:image/png;base64," + iconMarker
       }
       if (anchor != undefined && (anchor.x <= 1 && anchor.y <= 1)) {
-       
+
         argsIcon["iconAnchor"] = anchorCalculate(anchor, iconSize)
       } else {
         argsIcon["iconAnchor"] = undefined //[iconSize.width, iconSize.height-1]
@@ -315,7 +315,7 @@
           if (layer instanceof L.Marker) {
             var geoPoint = layer.getLatLng();
             if (geoPoint.lat == oldLatlng.lat && geoPoint.lng == oldLatlng.lng) {
-              var iconMarker = updateIcon(layer.getIcon(),icon,iconSize, anchor); // ;              
+              var iconMarker = updateIcon(layer.getIcon(), icon, iconSize, anchor); // ;              
               layer.setIcon(iconMarker)
 
               const iconMarkerURL = iconMarker.options.iconUrl.split("data:image/png;base64,")[1];
@@ -323,12 +323,12 @@
               if (angle != undefined && angleMarker != angle) {
                 angleMarker = angle;
                 layer.setRotationAngle(angleMarker)
-                
+
               }
-              if(point != undefined){
+              if (point != undefined) {
                 layer.setLatLng([point.lat, point.lon]);
               }
-              
+
               // if(point != undefined){
               //   mainLayers.get("markers").removeLayer(layer);
               //   console.log(iconAnchor)
@@ -340,7 +340,7 @@
               //     layer.setIconOffset([iconAnchor.x, iconAnchor.y])
               //   }
               // }
-              
+
               return this;
             }
           }
@@ -511,7 +511,7 @@
       mymap.setMaxBounds(bounds);
       return 200;
     }
-     function getBounds() {
+    function getBounds() {
       var box = mymap.getBounds();
       return {
         south: box.getSouth(),
@@ -531,7 +531,7 @@
 
 
 
-    function drawRoad(key, route,interestGeoPts,roadOption/* colorRoute, routeWidth, zoomInto, roadBorderColor, roadBorderWidth, iconInterestPoint*/) {
+    function drawRoad(key, route, interestGeoPts, roadOption/* colorRoute, routeWidth, zoomInto, roadBorderColor, roadBorderWidth, iconInterestPoint*/) {
       /*if (lastRoad != undefined ) {
         mymap.removeLayer(lastRoad)
         routesLayer.pop()
@@ -547,13 +547,13 @@
         fillColor: roadOption.color,
         weight: roadOption.roadWidth,
       }
-      console.log("isDotted: "+roadOption.isDotted)
-      console.log("color: "+roadOption.color)
-      console.log("routeWidth: "+roadOption.roadWidth)
-      if(roadOption.isDotted){
+      console.log("isDotted: " + roadOption.isDotted)
+      console.log("color: " + roadOption.color)
+      console.log("routeWidth: " + roadOption.roadWidth)
+      if (roadOption.isDotted) {
         argsPolyline["dashArray"] = "15"
         argsPolyline["dashOffset"] = 15
-        console.log("argsPolyline: "+JSON.stringify(argsPolyline))
+        console.log("argsPolyline: " + JSON.stringify(argsPolyline))
       }
       if (roadOption.roadBorderWidth == 0) {
         lastRoad = L.polyline(routePolyline, argsPolyline)
@@ -568,21 +568,21 @@
         var polylineLenght = routePolyline.length - 1
         routePolyline[polylineLenght] = [routePolyline[polylineLenght][0], routePolyline[polylineLenght][1], 1]
         var argsPolylineWithBorder = {
-            id: key,
-            min: 0,
-            max: 1,
-            palette: {
-              0: roadOption.color,
-              1: roadOption.color
-            },
-            weight: roadOption.roadWidth,
-            outlineColor: roadOption.roadBorderColor,
-            outlineWidth: roadOption.roadBorderWidth,
-            smoothFactor: 0
-          }
-          console.log("argsPolylineWithBorder: "+JSON.stringify(argsPolylineWithBorder))
+          id: key,
+          min: 0,
+          max: 1,
+          palette: {
+            0: roadOption.color,
+            1: roadOption.color
+          },
+          weight: roadOption.roadWidth,
+          outlineColor: roadOption.roadBorderColor,
+          outlineWidth: roadOption.roadBorderWidth,
+          smoothFactor: 0
+        }
+        console.log("argsPolylineWithBorder: " + JSON.stringify(argsPolylineWithBorder))
         lastRoad = L.hotline(routePolyline,
-        argsPolylineWithBorder
+          argsPolylineWithBorder
         ).on('click', function (event) {
           onRoadClicked(event.target.options.id);
           L.DomEvent.stopPropagation(event);
@@ -707,7 +707,6 @@
     function startLocationUpdating() {
       if (idTracking == undefined) {
         idTracking = navigator.geolocation.watchPosition(function (position) {
-          var userPos = [position.coords.latitude, position.coords.longitude];
           onUserPositionListener(position.coords.longitude, position.coords.latitude)
         }, function (err) {
           console.log(err);
@@ -870,50 +869,50 @@
       }
 
     }
-    function updateIcon(iconLayer,icon,iconSize,anchor) {
-        var _iconSize = iconSize
-        var iconMarker = iconLayer
-        if (iconSize == undefined || iconSize == null) {
-              _iconSize = {
-              width: iconMarker.options.iconSize[0],
-              height: iconMarker.options.iconSize[1]
-          }
+    function updateIcon(iconLayer, icon, iconSize, anchor) {
+      var _iconSize = iconSize
+      var iconMarker = iconLayer
+      if (iconSize == undefined || iconSize == null) {
+        _iconSize = {
+          width: iconMarker.options.iconSize[0],
+          height: iconMarker.options.iconSize[1]
         }
-        var iconAnchor = undefined
-        if (iconMarker.options.iconAnchor != undefined) {
-            iconAnchor = {
-                x: iconMarker.options.iconAnchor[0],
-                y: iconMarker.options.iconAnchor[1]
-            };
-        }
-             
-        if ((anchor != undefined && anchor != null) && anchor != iconAnchor) {
-            iconAnchor = anchor;
-        }
-        if (icon != undefined && icon != null) {
-            iconMarker = L.icon({
-                iconUrl: "data:image/png;base64," + icon,
-                iconSize: [_iconSize.width, _iconSize.height],
-                //iconAnchor:iconAnchor,
-           });
-        }
-        if(anchor != undefined && anchor != null) {
-          iconMarker["iconAnchor"] = anchorCalculate(iconAnchor, _iconSize)
-        }
-      
-        return iconMarker
+      }
+      var iconAnchor = undefined
+      if (iconMarker.options.iconAnchor != undefined) {
+        iconAnchor = {
+          x: iconMarker.options.iconAnchor[0],
+          y: iconMarker.options.iconAnchor[1]
+        };
+      }
+
+      if ((anchor != undefined && anchor != null) && anchor != iconAnchor) {
+        iconAnchor = anchor;
+      }
+      if (icon != undefined && icon != null) {
+        iconMarker = L.icon({
+          iconUrl: "data:image/png;base64," + icon,
+          iconSize: [_iconSize.width, _iconSize.height],
+          //iconAnchor:iconAnchor,
+        });
+      }
+      if (anchor != undefined && anchor != null) {
+        iconMarker["iconAnchor"] = anchorCalculate(iconAnchor, _iconSize)
+      }
+
+      return iconMarker
     }
 
-    function anchorCalculate(anchor,iconSize) {
+    function anchorCalculate(anchor, iconSize) {
       var anchorX = anchor.x * iconSize.width
       var anchorY = anchor.y * (iconSize.height - 1)
       if (anchor.offset != undefined) {
-          var offsetX = -anchor.offset.x
-          var offsetY = anchor.offset.y
-          anchorX += (offsetX)
-          anchorY += (offsetY)
+        var offsetX = -anchor.offset.x
+        var offsetY = anchor.offset.y
+        anchorX += (offsetX)
+        anchorY += (offsetY)
       }
-      return [anchorX,anchorY]
+      return [anchorX, anchorY]
     }
   </script>
 
