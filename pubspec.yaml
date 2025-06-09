@@ -12,11 +12,11 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
-  plugin_platform_interface: ^2.1.2
+  plugin_platform_interface: ^2.1.8
   flutter_plugin_android_lifecycle: ^2.0.23
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.0+1
   url_launcher: ^6.3.1
-  dio: ^5.3.3
+  dio: ^5.8.0+1
   uuid: ^4.2.1
   routing_client_dart: ^0.5.5
   google_polyline_algorithm: ^3.1.0
@@ -30,13 +30,10 @@ dev_dependencies:
     sdk: flutter
 
 dependency_overrides:
-      permission_handler_android: ^12.0.13
-      url_launcher_android: ^6.3.15
-      url_launcher_ios: ^6.3.1
-      url_launcher_web: ^2.3.3
-#     permission_handler_html: 0.1.2
-#     url_launcher_web: 2.3.3
-#     web: ^1.0.0
+      permission_handler_android: ^13.0.1
+      url_launcher_android: ^6.3.16
+      url_launcher_ios: ^6.3.3
+      url_launcher_web: ^2.4.1
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

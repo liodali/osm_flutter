@@ -13,7 +13,7 @@ dependencies:
   plugin_platform_interface: ^2.1.8
   stream_transform: ^2.1.0
   google_polyline_algorithm: ^3.1.0
-  dio: ^5.0.0
+  dio: ^5.8.0+1
 dev_dependencies:
   flutter_test:
     sdk: flutter
