@@ -84,3 +84,4 @@ pubspec.lock
 analysis_options.yaml
 .cxx
 devtools_options.yaml
+.metadata
