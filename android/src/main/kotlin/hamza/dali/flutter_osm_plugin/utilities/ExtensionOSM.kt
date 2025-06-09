@@ -199,13 +199,13 @@ fun Road.toMap(
     }
 }
 
-fun ByteArray.toBitmap(): Bitmap = BitmapFactory.decodeByteArray(this, 0, this.size)
+fun ByteArray.toBitmap(): Bitmap =BitmapFactory.decodeByteArray(this, 0, this.size)
 fun Bitmap?.toByteArray(): ByteArray? {
     if (this == null) {
         return null
     }
     val stream = ByteArrayOutputStream()
-    this.compress(Bitmap.CompressFormat.PNG, 90, stream)
+    this.compress(Bitmap.CompressFormat.PNG, 100, stream)
     return stream.toByteArray()
 }
 

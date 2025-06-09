@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Point
 import android.graphics.PointF
+import android.graphics.Rect
 import android.location.Location
 import android.os.Handler
 import android.os.Looper
@@ -12,6 +13,7 @@ import android.util.Log
 import android.view.MotionEvent
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.drawable.toDrawable
 import hamza.dali.flutter_osm_plugin.R
 import hamza.dali.flutter_osm_plugin.VoidCallback
 import hamza.dali.flutter_osm_plugin.utilities.toGeoPoint
@@ -30,6 +32,10 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.IMyLocationConsumer
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
 import java.util.LinkedList
+import androidx.core.graphics.scale
+import androidx.core.graphics.withRotation
+import org.osmdroid.util.RectL
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 typealias OnChangedLocation = (userLocation: GeoPoint,heading:Double) -> Unit
 
@@ -38,7 +44,6 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
     private val provider: GpsMyLocationProvider  by lazy {
         GpsMyLocationProvider(mapView.context)
     }
-
     private var mDrawPixel: Point = Point()
     private var onChangedLocationCallback: OnChangedLocation? = null
     private val mRunOnFirstFix = LinkedList<Runnable>()
@@ -74,12 +79,17 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
             mapView.context.resources,
             R.drawable.ic_location_on_red_24dp,
             mapView.context.theme
-        )?.toBitmap()
+        )?.toBitmap()?.scale(56, 56)
+        setPersonAnchor(
+            .5f,
+            .1f
+        )
         mDirectionArrowBitmap = ResourcesCompat.getDrawable(
             mapView.context.resources,
             R.drawable.baseline_navigation_24,
             mapView.context.theme
-        )?.toBitmap()
+        )?.toBitmap()?.scale(56, 56)
+        setDirectionAnchor(.5f, .5f)
 
         provider.locationUpdateMinTime = 15000L
         provider.locationUpdateMinDistance = 1.5f
@@ -95,16 +105,13 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
     }
 
     fun enableMyLocation() {
-
         val isSuccess = provider.startLocationProvider(this)
 
         // set initial location when enabled
         if (isSuccess) {
-
                 provider.lastKnownLocation?.let {location->
                     setLocation(location)
                 }
-
         }
 
         // Update the screen to see changes take effect
@@ -247,7 +254,7 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
         }
     }
 
-    fun toggleFollow(enableStop: Boolean,) {
+    fun toggleFollow(enableStop: Boolean) {
         enableAutoStop = enableStop
         enableFollowLocation()
     }
@@ -308,58 +315,48 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
 
 
     fun setMarkerIcon(personIcon: Bitmap?, directionIcon: Bitmap?) {
-
-        when {
-            personIcon != null && directionIcon != null -> {
-                mPersonBitmap = personIcon
-                mDirectionArrowBitmap = directionIcon
-                setDirectionAnchor(.5f, .5f)
-                setPersonAnchor(
-                    .5f,
-                    .1f
-                )
-            }
-
-            personIcon != null -> {
-                mPersonBitmap = personIcon
-                setPersonAnchor(
-                    .5f,
-                    .1f
-                )
-            }
+        if(personIcon != null){
+            mPersonBitmap = personIcon
+            setPersonAnchor(
+                .5f,
+                .5f
+            )
+        }
+        if(directionIcon != null){
+            mDirectionArrowBitmap = directionIcon
+            setDirectionAnchor(.5f, .5f)
         }
     }
 
     private fun drawPerson(canvas: Canvas) {
 
-        canvas.save()
-        canvas.rotate(
+        canvas.withRotation(
             -mapView.mapOrientation, mDrawPixel.x.toFloat(),
             mDrawPixel.y.toFloat()
-        )
-
-        canvas.drawBitmap(
-            mPersonBitmap!!, mDrawPixel.x.toFloat() - mPersonHotspot.x,
-            mDrawPixel.y.toFloat() - mPersonHotspot.y, mPaint
-        )
-        canvas.restore()
+        ) {
+            drawBitmap(
+                mPersonBitmap!!,
+                mDrawPixel.x.toFloat() - mPersonHotspot.x,
+                mDrawPixel.y.toFloat() - mPersonHotspot.y,
+                mPaint
+            )
+            mPersonBitmap?.toDrawable(mapView.context.resources)?.draw(canvas)
+        }
     }
 
     private fun drawDirection(canvas: Canvas, mapRotation: Float) {
 
-        var rotation = mapRotation
+        var rotation = mapRotation - mapView.mapOrientation
         if (rotation >= 360.0f) {
             rotation -= 360f
         }
-        canvas.save()
-        canvas.rotate(rotation, mDrawPixel.x.toFloat(), mDrawPixel.y.toFloat())
+        canvas.withRotation(rotation, mDrawPixel.x.toFloat(), mDrawPixel.y.toFloat()) {
 
-
-        canvas.drawBitmap(
-            mDirectionArrowBitmap!!, mDrawPixel.x.toFloat() - mDirectionArrowCenterX,
-            mDrawPixel.y.toFloat() - mDirectionArrowCenterY, mPaint
-        )
-        canvas.restore()
+            drawBitmap(
+                mDirectionArrowBitmap!!, mDrawPixel.x.toFloat() - mDirectionArrowCenterX,
+                mDrawPixel.y.toFloat() - mDirectionArrowCenterY, mPaint
+            )
+        }
     }
 
     fun setAnchor(anchor: List<Double>) {
