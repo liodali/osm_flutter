@@ -8,6 +8,12 @@ mixin OSMMixinObserver {
   Future<void> mapRestored() async {}
 
   @mustCallSuper
+  void onMarkerClicked(GeoPoint position) {}
+
+  @mustCallSuper
+  void onMarkerLongPressed(GeoPoint position) {}
+
+  @mustCallSuper
   void onSingleTap(GeoPoint position) {}
 
   @mustCallSuper

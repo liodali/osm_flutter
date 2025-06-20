@@ -31,6 +31,8 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Stream<GeoPointEvent> onGeoPointClickListener(int idMap);
 
+  Stream<GeoPointLongPressEvent> onGeoPointLongPressListener(int idMap);
+
   Stream<UserLocationEvent> onUserPositionListener(int idMap);
 
   Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap);
