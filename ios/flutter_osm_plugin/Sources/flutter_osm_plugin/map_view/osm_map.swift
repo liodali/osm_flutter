@@ -11,7 +11,6 @@ import CoreLocation
 import Polyline
 
 class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,OnMapGesture,OnMapMoved, MapMarkerHandler,OSMUserLocationHandler,PoylineHandler {
-   
     
     let mapOSM: OSMView
     var isStaticMap: Bool = false
@@ -636,7 +635,7 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
         }
     }
     func onMove(center: CLLocationCoordinate2D, bounds: BoundingBox, zoom: Double) {
-        let data: [String: Any] = ["center": center.toGeoPoint(), "bounding": bounds.toMap()]
+        let data: [String: Any] = ["center": center.toGeoPoint(), "bounding": bounds.toMap(), "zoomLevel": zoom]
         if self.mapOSM.locationManager.isTrackingEnabled() && !isMovedToLocation
             && latestUserLocation != nil && latestUserLocation! - center {
             isMovedToLocation = true
@@ -675,11 +674,16 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
         
     }
     
-    func onTap(location: CLLocationCoordinate2D) {
+    func onMarkerSingleTap(location: CLLocationCoordinate2D) {
         DispatchQueue.main.async {
             self.channel.invokeMethod("receiveGeoPoint", arguments: location.toGeoPoint())
         }
-       
+    }
+    
+    func onMarkerLongPress(location: CLLocationCoordinate2D) {
+        DispatchQueue.main.async {
+            self.channel.invokeMethod("receiveGeoPointLongPress", arguments: location.toGeoPoint())
+        }
     }
     
     func onSingleTap(location: CLLocationCoordinate2D) {
