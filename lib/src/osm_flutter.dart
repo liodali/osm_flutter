@@ -17,7 +17,7 @@ import 'widgets/copyright_osm_widget.dart';
 /// [onGeoPointClicked] : (callback) is trigger when you clicked on marker,return current  geoPoint of the Marker
 ///
 /// [onLocationChanged] : (callback) it's fired when you activate tracking and  user position has been changed
-/// 
+///
 /// [onMapMoved] : (callback) it's fired when you activate tracking and  user position has been changed
 ///
 /// [onMapIsReady] : (callabck) it's fired when map initialization is complet
@@ -25,6 +25,7 @@ class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
   final Widget? mapIsLoading;
   final OnGeoPointClicked? onGeoPointClicked;
+  final OnGeoPointClicked? onGeoPointLongPressed;
   final OnLocationChanged? onLocationChanged;
   final OnMapMoved? onMapMoved;
   final Function(bool)? onMapIsReady;
@@ -35,10 +36,11 @@ class OSMFlutter extends StatefulWidget {
     required this.osmOption,
     this.mapIsLoading,
     this.onGeoPointClicked,
+    this.onGeoPointLongPressed,
     this.onLocationChanged,
     this.onMapMoved,
     this.onMapIsReady,
-  }) ;
+  });
 
   @override
   State<OSMFlutter> createState() => _OSMFlutterState();
@@ -62,8 +64,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
   @override
   void initState() {
     super.initState();
-    if (widget.osmOption.staticPoints.isNotEmpty &&
-        widget.osmOption.staticPoints.length > 1) {
+    if (widget.osmOption.staticPoints.isNotEmpty && widget.osmOption.staticPoints.length > 1) {
       List<String> ids = [];
       for (int i = 0; i < widget.osmOption.staticPoints.length; i++) {
         ids.add(widget.osmOption.staticPoints[i].id);
@@ -133,17 +134,14 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         onGeoPointClicked: widget.onGeoPointClicked,
                         onLocationChanged: widget.onLocationChanged,
                         onMapMoved: widget.onMapMoved,
-                        dynamicMarkerWidgetNotifier:
-                            dynamicMarkerWidgetNotifier,
+                        dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
                         mapIsLoading: widget.mapIsLoading,
                         mapIsReadyListener: mapIsReadyListener,
                         staticIconGlobalKeys: staticMarkersKeys,
                         roadConfiguration: widget.osmOption.roadConfiguration,
-                        showContributorBadgeForOSM:
-                            widget.osmOption.showContributorBadgeForOSM,
+                        showContributorBadgeForOSM: widget.osmOption.showContributorBadgeForOSM,
                         isPicker: widget.osmOption.isPicker,
-                        showDefaultInfoWindow:
-                            widget.osmOption.showDefaultInfoWindow,
+                        showDefaultInfoWindow: widget.osmOption.showDefaultInfoWindow,
                         showZoomController: widget.osmOption.showZoomController,
                         staticPoints: widget.osmOption.staticPoints,
                         globalKeys: [
@@ -159,8 +157,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         zoomOption: widget.osmOption.zoomOption,
                         userLocationMarker: widget.osmOption.userLocationMarker,
                         onMapIsReady: widget.onMapIsReady,
-                        enableRotationByGesture:
-                            widget.osmOption.enableRotationByGesture,
+                        enableRotationByGesture: widget.osmOption.enableRotationByGesture,
                       ),
                     ),
                     Positioned.fill(
@@ -191,8 +188,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   mapIsReadyListener: mapIsReadyListener,
                   staticIconGlobalKeys: staticMarkersKeys,
                   roadConfiguration: widget.osmOption.roadConfiguration,
-                  showContributorBadgeForOSM:
-                      widget.osmOption.showContributorBadgeForOSM,
+                  showContributorBadgeForOSM: widget.osmOption.showContributorBadgeForOSM,
                   isPicker: widget.osmOption.isPicker,
                   showDefaultInfoWindow: widget.osmOption.showDefaultInfoWindow,
                   showZoomController: widget.osmOption.showZoomController,
@@ -210,8 +206,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   zoomOption: widget.osmOption.zoomOption,
                   userLocationMarker: widget.osmOption.userLocationMarker,
                   onMapIsReady: widget.onMapIsReady,
-                  enableRotationByGesture:
-                      widget.osmOption.enableRotationByGesture,
+                  enableRotationByGesture: widget.osmOption.enableRotationByGesture,
                 ),
         ),
         if (widget.osmOption.showContributorBadgeForOSM && !kIsWeb) ...[
