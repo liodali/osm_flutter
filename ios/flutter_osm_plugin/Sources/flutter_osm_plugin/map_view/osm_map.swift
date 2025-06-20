@@ -695,6 +695,18 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
         }
        
     }
+    
+    func onMarkerSingleTap(location: CLLocationCoordinate2D) {
+        DispatchQueue.main.async {
+            self.channel.invokeMethod("receiveSinglePress", arguments: location.toGeoPoint())
+        }
+    }
+    
+    func onMarkerLongPress(location: CLLocationCoordinate2D) {
+        DispatchQueue.main.async {
+            self.channel.invokeMethod("receiveLongPress", arguments: location.toGeoPoint())
+        }
+    }
 }
 extension MapCoreOSMView {
     func drawRoadMCOSM(call: FlutterMethodCall, completion: @escaping (_ roadInfo: RoadInformation?, _ road: Road?, _ roadData: RoadData , _ boundingBox: BoundingBox?,_ polyline: Polyline?, _ error: Error?) -> ()) {
