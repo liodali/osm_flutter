@@ -22,10 +22,12 @@ abstract class OsmWebPlatform extends OSMPlatform {
 
 void bindingWebOSM() {
   interop.initMapFinish = initMapFinished.toJS;
-  interop.onStaticGeoPointClicked = onStaticGeoPointClicked.toJS;
+  interop.onGeoPointClicked = onGeoPointClicked.toJS;
+  interop.onGeoPointLongPress = onGeoPointLongPress.toJS;
   interop.onMapSingleTapListener = onMapSingleTapListener.toJS;
   interop.onRegionChangedListener = onRegionChangedListener.toJS;
   interop.onRoadListener = onRoadListener.toJS;
+  interop.onUserPositionListener = onUserPositionListener.toJS;
   interop.onUserPositionListener = onUserPositionListener.toJS;
   // interop.initMapFinish = initMapFinished.toJS;
   // interop.onStaticGeoPointClicked = allowInterop(onStaticGeoPointClicked);
@@ -41,25 +43,31 @@ void initMapFinished(JSNumber mapId, JSBoolean isReady) {
   controller.channel!.invokeMethod("initMap", isReady.toDart);
 }
 
-void onStaticGeoPointClicked(JSNumber mapId, JSNumber lon, JSNumber lat) {
-  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb)
-      .mapsController[mapId.toDartInt]!; //.map!;
-  controller.channel!.invokeMethod(
-      "receiveGeoPoint", "${lat.toDartDouble},${lon.toDartDouble}");
+void onGeoPointClicked(JSNumber mapId, JSNumber lon, JSNumber lat) {
+  final controller =
+      (OSMPlatform.instance as FlutterOsmPluginWeb).mapsController[mapId.toDartInt]!; //.map!;
+  controller.channel!.invokeMethod("receiveGeoPoint", "${lat.toDartDouble},${lon.toDartDouble}");
+}
+
+void onGeoPointLongPress(JSNumber mapId, JSNumber lon, JSNumber lat) {
+  final controller =
+      (OSMPlatform.instance as FlutterOsmPluginWeb).mapsController[mapId.toDartInt]!; //.map!;
+  controller.channel!
+      .invokeMethod("receiveGeoPointLongPress", "${lat.toDartDouble},${lon.toDartDouble}");
 }
 
 void onMapSingleTapListener(JSNumber mapId, JSNumber lon, JSNumber lat) {
-  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb)
-      .mapsController[mapId.toDartInt]!; //.map!;
-  controller.channel!.invokeMethod(
-      "onSingleTapListener", "${lat.toDartDouble},${lon.toDartDouble}");
+  final controller =
+      (OSMPlatform.instance as FlutterOsmPluginWeb).mapsController[mapId.toDartInt]!; //.map!;
+  controller.channel!
+      .invokeMethod("onSingleTapListener", "${lat.toDartDouble},${lon.toDartDouble}");
 }
 
 void onUserPositionListener(JSNumber mapId, JSNumber lon, JSNumber lat) {
-  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb)
-      .mapsController[mapId.toDartInt]!; //.map!;
-  controller.channel!.invokeMethod(
-      "receiveUserLocation", "${lat.toDartDouble},${lon.toDartDouble}");
+  final controller =
+      (OSMPlatform.instance as FlutterOsmPluginWeb).mapsController[mapId.toDartInt]!; //.map!;
+  controller.channel!
+      .invokeMethod("receiveUserLocation", "${lat.toDartDouble},${lon.toDartDouble}");
 }
 
 void onRegionChangedListener(

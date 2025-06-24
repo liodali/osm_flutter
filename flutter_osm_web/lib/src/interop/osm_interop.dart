@@ -75,7 +75,9 @@ external JSPromise setZoomWithStep(
 );
 
 @JS('getZoom')
-external JSPromise<JSNumber> getZoom();
+external JSPromise<JSNumber> getZoom(
+  JSNumber mapId,
+);
 
 @JS('setMaxZoomLevel')
 external JSPromise setMaxZoomLevel(
@@ -281,8 +283,14 @@ external JSNumber setUpMap(JSNumber mapId);
 external set initMapFinish(JSFunction f);
 
 /// Allows assigning a function to be callable from `window.onGeoPointClicked(lat,lon)`
-@JS('onStaticGeoPointClicked')
-external set onStaticGeoPointClicked(JSFunction f);
+// @JS('onStaticGeoPointClicked')
+// external set onStaticGeoPointClicked(JSFunction f);
+
+@JS('onGeoPointClicked')
+external set onGeoPointClicked(JSFunction f);
+
+@JS('onGeoPointLongPress')
+external set onGeoPointLongPress(JSFunction f);
 
 /// Allows assigning a function to be callable from `window.onMapSingleTapClicked(lat,lon)`
 @JS('onMapSingleTapListener')

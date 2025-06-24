@@ -124,6 +124,10 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
           final result = call.arguments as String;
           _streamController.add(GeoPointEvent(idOSM, GeoPoint.fromString(result)));
           break;
+        case "receiveGeoPointLongPress":
+          final result = call.arguments as String;
+          _streamController.add(GeoPointLongPressEvent(idOSM, GeoPoint.fromString(result)));
+          break;
         case "receiveRegionIsChanging":
           final result = call.arguments;
           _streamController.add(RegionIsChangingEvent(idOSM, Region.fromMap(result)));

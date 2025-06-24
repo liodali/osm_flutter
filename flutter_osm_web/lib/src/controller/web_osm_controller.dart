@@ -222,12 +222,22 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         osmMixin.onRoadTap(event.value);
       }
     });
-
-    if (osmWebFlutterState.widget.onGeoPointClicked != null) {
-      webPlatform.onGeoPointClickListener(mapIdMixin).listen((event) {
+    webPlatform.onGeoPointClickListener(mapIdMixin).listen((event) {
+      if (osmWebFlutterState.widget.onGeoPointClicked != null) {
         osmWebFlutterState.widget.onGeoPointClicked!(event.value);
-      });
-    }
+      }
+      for (final osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
+        osmMixin.onMarkerClicked(event.value);
+      }
+    });
+    webPlatform.onGeoPointLongPressListener(mapIdMixin).listen((event) {
+      if (osmWebFlutterState.widget.onGeoPointLongPressed != null) {
+        osmWebFlutterState.widget.onGeoPointLongPressed!(event.value);
+      }
+      for (final osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
+        osmMixin.onMarkerLongPressed(event.value);
+      }
+    });
     webPlatform.onUserPositionListener(mapIdMixin).listen((event) {
       if (osmWebFlutterState.widget.onLocationChanged != null) {
         osmWebFlutterState.widget.onLocationChanged!(event.value);
