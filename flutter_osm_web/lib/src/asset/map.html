@@ -70,6 +70,9 @@
     ])
     var keysMainLayers = ["roads", 'static', 'markers', 'userLocation'];
     var customTile;
+    // for long press
+    let longPressTimer;
+    let isLongPress = false;
 
     var mymap = L.map('mapid', {
       renderer: L.canvas(),
@@ -302,8 +305,40 @@
       L.marker(position, args)
         .addTo(mainLayers.get("markers"))
         .on("click", function (event) {
-          const geoP = event.latlng;
-          onGeoPointClicked(geoP.lng, geoP.lat)
+          if (!isLongPress) {
+            const geoP = event.latlng;
+            onGeoPointClicked(geoP.lng, geoP.lat)
+          }
+        })
+        .on('mousedown touchstart', function (e) {
+          isLongPress = false;
+          const geoP = e.latlng;
+          let startTime = Date.now();
+          let duration = 1000; // 1 second
+
+          // Animate progress
+          let animateProgress = () => {
+            let elapsed = Date.now() - startTime;
+            let progress = Math.min(elapsed / duration, 1);
+
+            if (progress < 1 && !isLongPress) {
+              requestAnimationFrame(animateProgress);
+            }
+          };
+          animateProgress();
+          longPressTimer = setTimeout(() => {
+            isLongPress = true;
+            onGeoPointLongPress(geoP.lng, geoP.lat);
+          }, duration);
+        }).on('mouseup touchend mouseleave touchcancel', function (e) {
+          clearTimeout(longPressTimer);
+          if (isLongPress && e.type === 'mouseup') {
+            e.originalEvent.preventDefault();
+            e.originalEvent.stopPropagation();
+          }
+          setTimeout(() => {
+            isLongPress = false;
+          }, 100);
         });
       return 200;
     }
@@ -411,8 +446,10 @@
         markers.push(L.marker([ele.lat, ele.lon], args)
           //.addTo(mainLayers.get("static"))
           .on("click", function (event) {
-            const geoP = event.latlng;
-            onGeoPointClicked(geoP.lng, geoP.lat)
+            if (!isLongPress) {
+              const geoP = event.latlng;
+              onGeoPointClicked(geoP.lng, geoP.lat)
+            }
           }))
       })
       const groupLayer = L.layerGroup(markers).addTo(mainLayers.get("static"));
