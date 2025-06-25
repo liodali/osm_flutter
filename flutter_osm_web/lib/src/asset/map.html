@@ -330,7 +330,8 @@
             isLongPress = true;
             onGeoPointLongPress(geoP.lng, geoP.lat);
           }, duration);
-        }).on('mouseup touchend mouseleave touchcancel', function (e) {
+        })
+        .on('mouseup touchend mouseleave touchcancel', function (e) {
           clearTimeout(longPressTimer);
           if (isLongPress && e.type === 'mouseup') {
             e.originalEvent.preventDefault();
@@ -363,19 +364,6 @@
               if (point != undefined) {
                 layer.setLatLng([point.lat, point.lon]);
               }
-
-              // if(point != undefined){
-              //   mainLayers.get("markers").removeLayer(layer);
-              //   console.log(iconAnchor)
-              //   addMarker(point, _iconSize, iconMarkerURL, angleMarker, iconAnchor)
-              // }else {
-              //   layer.setIcon(iconMarker)
-              //   layer.setRotationAngle(angleMarker)
-              //   if (iconAnchor != undefined) {
-              //     layer.setIconOffset([iconAnchor.x, iconAnchor.y])
-              //   }
-              // }
-
               return this;
             }
           }
@@ -443,14 +431,46 @@
 
       points.forEach(function (ele) {
         removeMarker(ele);
-        markers.push(L.marker([ele.lat, ele.lon], args)
+        let staticMarker = L.marker([ele.lat, ele.lon], args)
           //.addTo(mainLayers.get("static"))
           .on("click", function (event) {
             if (!isLongPress) {
               const geoP = event.latlng;
               onGeoPointClicked(geoP.lng, geoP.lat)
             }
-          }))
+          })
+          .on('mousedown touchstart', function (e) {
+            isLongPress = false;
+            const geoP = e.latlng;
+            let startTime = Date.now();
+            let duration = 1000; // 1 second
+
+            // Animate progress
+            let animateProgress = () => {
+              let elapsed = Date.now() - startTime;
+              let progress = Math.min(elapsed / duration, 1);
+
+              if (progress < 1 && !isLongPress) {
+                requestAnimationFrame(animateProgress);
+              }
+            };
+            animateProgress();
+            longPressTimer = setTimeout(() => {
+              isLongPress = true;
+              onGeoPointLongPress(geoP.lng, geoP.lat);
+            }, duration);
+          })
+          .on('mouseup touchend mouseleave touchcancel', function (e) {
+            clearTimeout(longPressTimer);
+            if (isLongPress && e.type === 'mouseup') {
+              e.originalEvent.preventDefault();
+              e.originalEvent.stopPropagation();
+            }
+            setTimeout(() => {
+              isLongPress = false;
+            }, 100);
+          })
+        markers.push(staticMarker)
       })
       const groupLayer = L.layerGroup(markers).addTo(mainLayers.get("static"));
       staticGeoPoint.set(id, groupLayer);
