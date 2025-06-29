@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Matrix
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,6 +12,7 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
+import androidx.core.graphics.drawable.toDrawable
 import com.squareup.picasso3.BitmapTarget
 import com.squareup.picasso3.Callback
 import com.squareup.picasso3.Picasso
@@ -26,12 +26,11 @@ import org.osmdroid.views.overlay.infowindow.MarkerInfoWindow
 import kotlin.math.PI
 import kotlin.math.absoluteValue
 import kotlin.math.sign
-import androidx.core.graphics.drawable.toDrawable
 
 
 typealias LongClickHandler = (marker: Marker) -> Boolean
 
-open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope?) :
+open class FlutterMarker(private var mapView: MapView,private var scope: CoroutineScope?) :
     Marker(mapView),
     Marker.OnMarkerClickListener {
     private lateinit var context: Context
@@ -40,7 +39,7 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
     private var canvas: Canvas? = null
     var longPress: LongClickHandler? = null
         set(longPress) {
-            if (longPress != null) field = longPress
+            field = longPress
         }
     var onClickListener: OnMarkerClickListener? = null
         set(listener) {
@@ -107,10 +106,12 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
     }
 
     override fun onLongPress(event: MotionEvent?, mapView: MapView?): Boolean {
-        if (longPress != null) {
-            longPress!!(this)
+        val touched = hitTest(event, mapView)
+        if (longPress != null && touched) {
+            closeInfoWindow()
+            longPress?.invoke(this)
         }
-        return super.onLongPress(event, mapView)
+        return longPress != null && touched
     }
 
     fun setIconMaker(color: Int? = null, bitmap: Bitmap?, angle: Double? = null) {
@@ -171,6 +172,7 @@ open class FlutterMarker(private var mapView: MapView, var scope: CoroutineScope
         var iconDrawable: Drawable? = null
         val iconBitmap = bitmap?.run {
             val matrix = Matrix()
+
             matrix.postScale(mapView.scaleDensity(), mapView.scaleDensity())
             val resizedBitmap = Bitmap.createBitmap(
                 this, 0, 0, width, height, matrix, false

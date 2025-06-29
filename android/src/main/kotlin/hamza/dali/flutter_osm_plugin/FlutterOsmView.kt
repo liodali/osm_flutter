@@ -856,13 +856,13 @@ class FlutterOsmView(
             methodChannel.invokeMethod("receiveGeoPoint", hashMap)
             true
         }
-        /*marker.longPress = { GeoPoint ->
+        marker.longPress = { gP ->
             val hashMap = HashMap<String, Double>()
-            hashMap["lon"] = GeoPoint.position.longitude
-            hashMap["lat"] = GeoPoint.position.latitude
-            methodChannel.invokeMethod("receiveLongPressGeoPoint", hashMap)
+            hashMap["lon"] = gP.position.longitude
+            hashMap["lat"] = gP.position.latitude
+            methodChannel.invokeMethod("receiveGeoPointLongPress", hashMap)
             true
-        }*/
+        }
         when {
             dynamicMarkerBitmap != null -> {
                 marker.setIconMaker(null, bitmap = dynamicMarkerBitmap, angle)
@@ -1494,6 +1494,13 @@ class FlutterOsmView(
                 hashMap["lon"] = markerP!!.position.longitude
                 hashMap["lat"] = markerP.position.latitude
                 methodChannel.invokeMethod("receiveGeoPoint", hashMap)
+                true
+            }
+            marker.longPress = { gP ->
+                val hashMap = HashMap<String, Double>()
+                hashMap["lon"] = gP.position.longitude
+                hashMap["lat"] = gP.position.latitude
+                methodChannel.invokeMethod("receiveGeoPointLongPress", hashMap)
                 true
             }
             if (staticMarkerIcon.isNotEmpty() && staticMarkerIcon.containsKey(idStaticPosition)) {

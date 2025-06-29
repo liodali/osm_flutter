@@ -199,7 +199,9 @@ fun Road.toMap(
     }
 }
 
-fun ByteArray.toBitmap(): Bitmap =BitmapFactory.decodeByteArray(this, 0, this.size)
+fun ByteArray.toBitmap(): Bitmap {
+    return BitmapFactory.decodeByteArray(this, 0, this.size)
+}
 fun Bitmap?.toByteArray(): ByteArray? {
     if (this == null) {
         return null
