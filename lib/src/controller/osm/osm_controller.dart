@@ -182,7 +182,9 @@ final class MobileOSMController extends IBaseOSMController {
     });
 
     osmPlatform.onGeoPointLongPressListener(_idMap).listen((event) {
-      _osmFlutterState.widget.onGeoPointLongPressed!(event.value);
+      if (_osmFlutterState.widget.onGeoPointLongPressed != null) {
+        _osmFlutterState.widget.onGeoPointLongPressed!(event.value);
+      }
       for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onMarkerLongPressed(event.value);
       }
