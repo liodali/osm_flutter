@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -141,7 +139,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   /// this callback has role to request location permission in your phone in android Side
   /// for iOS it's done manually
   Future<bool> requestPermission() async {
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       final locationStatus = await Permission.location.request();
       if (locationStatus.isGranted) {
         return true;
