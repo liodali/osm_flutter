@@ -1,3 +1,5 @@
+### 1.4.1:
+* add missing api in readme file
 ### 1.4.0:
 * update ios sdk
 * add `onGeoPointLongPress` callback and mixin 

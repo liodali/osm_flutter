@@ -38,6 +38,7 @@ FILE_PUBSEPEC_OSM_WEB = "flutter_osm_web/pubspec.yaml"  # Path to flutter_osm_we
 
 # Line number where version is defined in pubspec.yaml (0-indexed)
 LINE_VERSION = 2  # Typically version is on line 3 (0-indexed as 2)
+TIMEOUT_SECONDS = 120 # used to wait for the package to be published on pub.dev
 
 def check_version_exist(url_package,version):
     """Check if a specific version of a package exists on pub.dev
@@ -244,7 +245,7 @@ if __name__ == "__main__":
         version_interface = update_plugin_osm_interface()  # Update and publish flutter_osm_interface package
         
         # Set timeout for single-package modes only
-        timeout = 60 if args.mode == "onlyinterface" else None
+        timeout = TIMEOUT_SECONDS if args.mode == "onlyinterface" else None
         success = wait_interface_publish(version_interface, timeout)  # Wait for flutter_osm_interface to be published on pub.dev
         
         if not success:
@@ -269,7 +270,7 @@ if __name__ == "__main__":
         version_web = update_plugin_osm_web(version_interface)  # Update and publish flutter_osm_web package
         
         # Set timeout for single-package modes only
-        timeout = 60 if args.mode == "onlyweb" else None
+        timeout = TIMEOUT_SECONDS if args.mode == "onlyweb" else None
         success = wait_web_publish(version_web, timeout)  # Wait for flutter_osm_web to be published on pub.dev
         
         if not success:

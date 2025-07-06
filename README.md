@@ -4,7 +4,7 @@
 
 # flutter_osm_plugin 
 
-![pub](https://img.shields.io/badge/pub-v1.4.0-blue)   
+![pub](https://img.shields.io/badge/pub-v1.4.1-blue)   
 
 
 ## Platform Support
@@ -51,7 +51,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^1.4.0
+      flutter_osm_plugin: ^1.4.1
 
 
 
@@ -705,6 +705,8 @@ final configs = [
 | `mapRestored`                 | (callback) Should be override this method, to get notified when map is restored you can also add you backup |
 | `onSingleTap`                 | (callback) Called when the user makes single click on map |
 | `onLongTap`                   | (callback) Called when the user makes long click on map |
+| `onMarkerClicked`             | (callback) Called when the user makes single click on marker |
+| `onMarkerLongPress`           | (callback) Called when the user makes long press click on marker |
 | `onRegionChanged`             | (callback) Notified when map is change region (on moves) |
 | `onRoadTap`                   | (callback) Notified when user click on the polyline (road) |
 | `onLocationChanged`           | (callback) Notified when user location changed  |
@@ -772,6 +774,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
 | `osmOption`                   | (OSMOption) used to configure OSM Map such as zoom,road,userLocationMarker    |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
+| `onGeoPointLongPress`         | (callback) listener triggered when marker is long press clicked ,return current geoPoint of the marker         |
 | `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |
 | `onMapMoved`                  | (callback) it is each the map moved user handler or navigate to another location using APIs       |
 | `onMapIsReady`                | (callback) listener trigger to get map is initialized or not |
