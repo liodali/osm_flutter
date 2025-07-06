@@ -25,7 +25,7 @@ class MobileOsmFlutter extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
-  final OnGeoPointClicked? onGeoPointLongPressed;
+  final OnGeoPointClicked? onGeoPointLongPress;
   final OnLocationChanged? onLocationChanged;
   final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
@@ -48,7 +48,7 @@ class MobileOsmFlutter extends StatefulWidget {
     required this.controller,
     this.userTrackingOption,
     this.onGeoPointClicked,
-    this.onGeoPointLongPressed,
+    this.onGeoPointLongPress,
     this.onLocationChanged,
     this.onMapMoved,
     required this.mapIsReadyListener,

@@ -25,7 +25,7 @@ class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
   final Widget? mapIsLoading;
   final OnGeoPointClicked? onGeoPointClicked;
-  final OnGeoPointClicked? onGeoPointLongPressed;
+  final OnGeoPointClicked? onGeoPointLongPress;
   final OnLocationChanged? onLocationChanged;
   final OnMapMoved? onMapMoved;
   final Function(bool)? onMapIsReady;
@@ -36,7 +36,7 @@ class OSMFlutter extends StatefulWidget {
     required this.osmOption,
     this.mapIsLoading,
     this.onGeoPointClicked,
-    this.onGeoPointLongPressed,
+    this.onGeoPointLongPress,
     this.onLocationChanged,
     this.onMapMoved,
     this.onMapIsReady,
@@ -132,6 +132,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         controller: widget.controller,
                         userTrackingOption: widget.osmOption.userTrackingOption,
                         onGeoPointClicked: widget.onGeoPointClicked,
+                        onGeoPointLongPress: widget.onGeoPointLongPress,
                         onLocationChanged: widget.onLocationChanged,
                         onMapMoved: widget.onMapMoved,
                         dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,

@@ -58,6 +58,7 @@ class OSMMap extends StatefulWidget {
     required this.controller,
     this.userTrackingOption,
     this.onGeoPointClicked,
+    this.onGeoPointLongPress,
     this.onLocationChanged,
     this.onMapMoved,
     required this.mapIsReadyListener,
@@ -79,6 +80,7 @@ class OSMMap extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
+  final OnGeoPointClicked? onGeoPointLongPress;
   final OnLocationChanged? onLocationChanged;
   final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;

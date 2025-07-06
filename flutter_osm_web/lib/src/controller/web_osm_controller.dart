@@ -1,6 +1,7 @@
 //import 'dart:html' as html;
 //import 'dart:html';
 import 'dart:js_interop';
+import 'dart:nativewrappers/_internal/vm/lib/ffi_allocation_patch.dart';
 
 import 'package:web/web.dart' as web; // Add
 import 'dart:math';
@@ -195,9 +196,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     webPlatform.onMapIsReady(mapIdMixin).listen((event) async {
       osmWebFlutterState.widget.mapIsReadyListener.value = event.value;
       osmWebFlutterState.widget.controller.setValueListenerMapIsReady(event.value);
-      if (osmWebFlutterState.widget.onMapIsReady != null) {
-        osmWebFlutterState.widget.onMapIsReady!(event.value);
-      }
+      osmWebFlutterState.widget.onMapIsReady?.call(event.value);
       if (osmWebFlutterState.widget.controller.osMMixins.isNotEmpty) {
         Future.forEach(osmWebFlutterState.widget.controller.osMMixins, (osmMixin) async {
           osmMixin.mapIsReady(event.value);
@@ -208,9 +207,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       }
     });
     webPlatform.onRegionIsChangingListener(mapIdMixin).listen((event) {
-      if (osmWebFlutterState.widget.onMapMoved != null) {
-        osmWebFlutterState.widget.onMapMoved!(event.value);
-      }
+      osmWebFlutterState.widget.onMapMoved?.call(event.value);
       osmWebFlutterState.widget.controller.setValueListenerRegionIsChanging(event.value);
       for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
         osmMixin.onRegionChanged(event.value);
@@ -223,25 +220,20 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       }
     });
     webPlatform.onGeoPointClickListener(mapIdMixin).listen((event) {
-      if (osmWebFlutterState.widget.onGeoPointClicked != null) {
-        osmWebFlutterState.widget.onGeoPointClicked!(event.value);
-      }
+      osmWebFlutterState.widget.onGeoPointClicked?.call(event.value);
       for (final osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
         osmMixin.onMarkerClicked(event.value);
       }
     });
     webPlatform.onGeoPointLongPressListener(mapIdMixin).listen((event) {
-      if (osmWebFlutterState.widget.onGeoPointLongPressed != null) {
-        osmWebFlutterState.widget.onGeoPointLongPressed!(event.value);
-      }
+      osmWebFlutterState.widget.onGeoPointLongPress?.call(event.value);
       for (final osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
-        osmMixin.onMarkerLongPressed(event.value);
+        osmMixin.onMarkerLongPress(event.value);
       }
     });
     webPlatform.onUserPositionListener(mapIdMixin).listen((event) {
-      if (osmWebFlutterState.widget.onLocationChanged != null) {
-        osmWebFlutterState.widget.onLocationChanged!(event.value);
-      }
+      osmWebFlutterState.widget.onLocationChanged?.call(event.value);
+
       for (var osmMixin in osmWebFlutterState.widget.controller.osMMixins) {
         osmMixin.onLocationChanged(event.value);
       }

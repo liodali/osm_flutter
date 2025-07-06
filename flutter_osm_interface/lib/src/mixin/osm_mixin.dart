@@ -11,7 +11,7 @@ mixin OSMMixinObserver {
   void onMarkerClicked(GeoPoint position) {}
 
   @mustCallSuper
-  void onMarkerLongPressed(GeoPoint position) {}
+  void onMarkerLongPress(GeoPoint position) {}
 
   @mustCallSuper
   void onSingleTap(GeoPoint position) {}

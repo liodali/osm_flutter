@@ -7,6 +7,7 @@ Widget getWidget({
   required BaseMapController controller,
   UserTrackingOption? userTrackingOption,
   OnGeoPointClicked? onGeoPointClicked,
+  OnGeoPointClicked? onGeoPointLongPress,
   OnLocationChanged? onLocationChanged,
   OnMapMoved? onMapMoved,
   required ValueNotifier<bool> mapIsReadyListener,
@@ -30,6 +31,7 @@ Widget getWidget({
       userTrackingOption:
           userTrackingOption ?? controller.initMapWithUserPosition,
       onGeoPointClicked: onGeoPointClicked,
+      onGeoPointLongPress: onGeoPointLongPress,
       onLocationChanged: onLocationChanged,
       onMapMoved: onMapMoved,
       mapIsReadyListener: mapIsReadyListener,

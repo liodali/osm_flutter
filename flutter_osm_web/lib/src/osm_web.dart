@@ -9,7 +9,7 @@ class OsmWebWidget extends StatefulWidget {
   final UserTrackingOption? userTrackingOption;
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked? onGeoPointClicked;
-  final OnGeoPointClicked? onGeoPointLongPressed;
+  final OnGeoPointClicked? onGeoPointLongPress;
   final OnLocationChanged? onLocationChanged;
   final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
@@ -32,7 +32,7 @@ class OsmWebWidget extends StatefulWidget {
     required this.controller,
     this.userTrackingOption,
     this.onGeoPointClicked,
-    this.onGeoPointLongPressed,
+    this.onGeoPointLongPress,
     this.onLocationChanged,
     this.onMapMoved,
     required this.mapIsReadyListener,
