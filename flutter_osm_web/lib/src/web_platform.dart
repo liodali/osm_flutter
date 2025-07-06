@@ -44,30 +44,31 @@ void initMapFinished(JSNumber mapId, JSBoolean isReady) {
 }
 
 void onGeoPointClicked(JSNumber mapId, JSNumber lon, JSNumber lat) {
-  final controller =
-      (OSMPlatform.instance as FlutterOsmPluginWeb).mapsController[mapId.toDartInt]!; //.map!;
-  controller.channel!.invokeMethod("receiveGeoPoint", "${lat.toDartDouble},${lon.toDartDouble}");
+  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb)
+      .mapsController[mapId.toDartInt]!; //.map!;
+  controller.channel!.invokeMethod(
+      "receiveGeoPoint", "${lat.toDartDouble},${lon.toDartDouble}");
 }
 
 void onGeoPointLongPress(JSNumber mapId, JSNumber lon, JSNumber lat) {
-  final controller =
-      (OSMPlatform.instance as FlutterOsmPluginWeb).mapsController[mapId.toDartInt]!; //.map!;
-  controller.channel!
-      .invokeMethod("receiveGeoPointLongPress", "${lat.toDartDouble},${lon.toDartDouble}");
+  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb)
+      .mapsController[mapId.toDartInt]!; //.map!;
+  controller.channel!.invokeMethod(
+      "receiveGeoPointLongPress", "${lat.toDartDouble},${lon.toDartDouble}");
 }
 
 void onMapSingleTapListener(JSNumber mapId, JSNumber lon, JSNumber lat) {
-  final controller =
-      (OSMPlatform.instance as FlutterOsmPluginWeb).mapsController[mapId.toDartInt]!; //.map!;
-  controller.channel!
-      .invokeMethod("onSingleTapListener", "${lat.toDartDouble},${lon.toDartDouble}");
+  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb)
+      .mapsController[mapId.toDartInt]!; //.map!;
+  controller.channel!.invokeMethod(
+      "onSingleTapListener", "${lat.toDartDouble},${lon.toDartDouble}");
 }
 
 void onUserPositionListener(JSNumber mapId, JSNumber lon, JSNumber lat) {
-  final controller =
-      (OSMPlatform.instance as FlutterOsmPluginWeb).mapsController[mapId.toDartInt]!; //.map!;
-  controller.channel!
-      .invokeMethod("receiveUserLocation", "${lat.toDartDouble},${lon.toDartDouble}");
+  final controller = (OSMPlatform.instance as FlutterOsmPluginWeb)
+      .mapsController[mapId.toDartInt]!; //.map!;
+  controller.channel!.invokeMethod(
+      "receiveUserLocation", "${lat.toDartDouble},${lon.toDartDouble}");
 }
 
 void onRegionChangedListener(

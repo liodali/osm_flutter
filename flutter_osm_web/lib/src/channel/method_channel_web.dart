@@ -29,7 +29,8 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
 
   // Returns a filtered view of the events in the _controller, by mapId.
   Stream<EventOSM> _events(int mapId) =>
-      _streamController.stream.where((event) => event.mapId == mapId) as Stream<EventOSM>;
+      _streamController.stream.where((event) => event.mapId == mapId)
+          as Stream<EventOSM>;
 
   static void registerWith(Registrar registrar) {
     final messenger = registrar;
@@ -118,24 +119,29 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
           break;
         case "onSingleTapListener":
           final result = call.arguments as String;
-          _streamController.add(SingleTapEvent(idOSM, GeoPoint.fromString(result)));
+          _streamController
+              .add(SingleTapEvent(idOSM, GeoPoint.fromString(result)));
           break;
         case "receiveGeoPoint":
           final result = call.arguments as String;
-          _streamController.add(GeoPointEvent(idOSM, GeoPoint.fromString(result)));
+          _streamController
+              .add(GeoPointEvent(idOSM, GeoPoint.fromString(result)));
           break;
         case "receiveGeoPointLongPress":
           final result = call.arguments as String;
-          _streamController.add(GeoPointLongPressEvent(idOSM, GeoPoint.fromString(result)));
+          _streamController
+              .add(GeoPointLongPressEvent(idOSM, GeoPoint.fromString(result)));
           break;
         case "receiveRegionIsChanging":
           final result = call.arguments;
-          _streamController.add(RegionIsChangingEvent(idOSM, Region.fromMap(result)));
+          _streamController
+              .add(RegionIsChangingEvent(idOSM, Region.fromMap(result)));
           break;
         case "receiveRoad":
           final roadKey = call.arguments as String;
           if (map != null && map!.roadsWebCache.containsKey(roadKey)) {
-            _streamController.add(RoadTapEvent(idOSM, map!.roadsWebCache[roadKey]!));
+            _streamController
+                .add(RoadTapEvent(idOSM, map!.roadsWebCache[roadKey]!));
           }
           break;
         case "receiveUserLocation":
@@ -154,7 +160,8 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
         default:
           throw PlatformException(
             code: 'Unimplemented',
-            details: 'osm_web_plugin for web doesn\'t implement \'${call.method}\'',
+            details:
+                'osm_web_plugin for web doesn\'t implement \'${call.method}\'',
           );
       }
     });

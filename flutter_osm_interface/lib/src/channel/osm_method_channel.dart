@@ -109,7 +109,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
           break;
         case "receiveSinglePress":
           final result = call.arguments;
-          _streamController.add(SingleTapEvent(idMap, GeoPoint.fromMap(result)));
+          _streamController
+              .add(SingleTapEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveRoad":
           final result = call.arguments;
@@ -121,15 +122,18 @@ class MethodChannelOSM extends MobileOSMPlatform {
           break;
         case "receiveGeoPointLongPress":
           final result = call.arguments;
-          _streamController.add(GeoPointLongPressEvent(idMap, GeoPoint.fromMap(result)));
+          _streamController
+              .add(GeoPointLongPressEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveUserLocation":
           final result = call.arguments;
-          _streamController.add(UserLocationEvent(idMap, UserLocation.fromMap(result)));
+          _streamController
+              .add(UserLocationEvent(idMap, UserLocation.fromMap(result)));
           break;
         case "receiveRegionIsChanging":
           final result = call.arguments;
-          _streamController.add(RegionIsChangingEvent(idMap, Region.fromMap(result)));
+          _streamController
+              .add(RegionIsChangingEvent(idMap, Region.fromMap(result)));
           break;
         case "map#init#ios":
           final result = call.arguments;
@@ -174,7 +178,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @override
   Future<GeoPoint> myLocation(int idMap) async {
     try {
-      Map<String, dynamic> map = (await _channels[idMap]!.invokeMapMethod("user#position"))!;
+      Map<String, dynamic> map =
+          (await _channels[idMap]!.invokeMapMethod("user#position"))!;
       return GeoPoint(latitude: map["lat"], longitude: map["lon"]);
     } on PlatformException catch (e) {
       throw GeoPointException(msg: e.message);
@@ -293,7 +298,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> removePosition(int idOSM, GeoPoint p) async {
-    await _channels[idOSM]?.invokeMethod("user#removeMarkerPosition", p.toMap());
+    await _channels[idOSM]
+        ?.invokeMethod("user#removeMarkerPosition", p.toMap());
   }
 
   @override
@@ -340,7 +346,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
       image = await boundary.toImage();
     }
 
-    ByteData byteData = (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
+    ByteData byteData =
+        (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
     Uint8List pngBytes = byteData.buffer.asUint8List();
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       return {
@@ -593,7 +600,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
       args[i]['key'] = roadInfo.key;
     }
 
-    final List result = (await _channels[idOSM]?.invokeListMethod("draw#multi#road", args))!;
+    final List result =
+        (await _channels[idOSM]?.invokeListMethod("draw#multi#road", args))!;
     final List<Map<String, dynamic>> mapRoadInfo =
         result.map((e) => Map<String, dynamic>.from(e)).toList();
     return mapRoadInfo
@@ -637,7 +645,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> changeTileLayer(int idOSM, CustomTile? tile) async {
     //osmTileURL
     final argTile = tile?.toMap() ??
-        (defaultTargetPlatform == TargetPlatform.iOS ? CustomTile.osm().toMap() : null);
+        (defaultTargetPlatform == TargetPlatform.iOS
+            ? CustomTile.osm().toMap()
+            : null);
     await _channels[idOSM]!.invokeMethod("change#tile", argTile);
   }
 

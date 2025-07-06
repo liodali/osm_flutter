@@ -52,7 +52,7 @@ Widget getWidget({
     );
 
 class OSMMapWidget extends StatelessWidget {
- const OSMMapWidget({
+  const OSMMapWidget({
     super.key,
     required this.controller,
     this.userTrackingOption,

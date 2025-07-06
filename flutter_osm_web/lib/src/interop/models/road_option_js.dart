@@ -24,6 +24,4 @@ extension type RoadOptionJS._(JSObject _) implements JSObject {
     bool isDotted = false,
     String? iconInterestPoints,
   });
-
-
 }

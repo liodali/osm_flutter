@@ -22,6 +22,7 @@ class PickerMapController extends BaseMapController {
   void setSearchableText(String text) {
     _searchableText.value = text;
   }
+
   void setMapMoving(bool isMoving) {
     _isMovingNotifier.value = isMoving;
   }

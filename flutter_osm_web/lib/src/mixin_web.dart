@@ -203,13 +203,17 @@ mixin WebMixin {
   }
 
   Future<void> setStaticPosition(List<GeoPoint> geoPoints, String id) async {
-    var listWithoutOrientation = geoPoints.skipWhile((p) => p is GeoPointWithOrientation).toList();
+    var listWithoutOrientation =
+        geoPoints.skipWhile((p) => p is GeoPointWithOrientation).toList();
     if (listWithoutOrientation.isNotEmpty) {
       await interop
           .setStaticGeoPoints(
             mapIdMixin.toJS,
             id.toJS,
-            listWithoutOrientation.map((point) => point.toGeoJS()).toList().toJS,
+            listWithoutOrientation
+                .map((point) => point.toGeoJS())
+                .toList()
+                .toJS,
           )
           .toDart;
     }
@@ -306,7 +310,8 @@ mixin WebMixin {
     final routeJs = road.polyline!.mapToListGeoJS();
 
     var roadInfo = RoadInfo();
-    final roadConfig = roadOption ?? defaultRoadOption ?? const RoadOption.empty();
+    final roadConfig =
+        roadOption ?? defaultRoadOption ?? const RoadOption.empty();
     debugPrint(roadOption?.toString());
 
     interop.drawRoad(

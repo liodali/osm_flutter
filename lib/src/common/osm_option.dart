@@ -10,7 +10,7 @@ import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 ///
 /// [showZoomController] : (bool) if us true, you can zoomIn zoomOut directly in the map
 ///
-/// [staticPoints] : (List<StaticPositionGeoPoint>) if you have static point that  you want to show,like static of taxi or location of your stores
+/// [staticPoints] : [List<StaticPositionGeoPoint>] if you have static point that  you want to show,like static of taxi or location of your stores
 ///
 /// [userLocationMarker] : change user marker or direction marker icon in tracking location
 ///
@@ -79,9 +79,9 @@ class ZoomOption {
   final double maxZoomLevel;
 
   Map<String, int> get toMap => {
-    "stepZoom":stepZoom.toInt(),
-    "initZoom":initZoom.toInt(),
-    "minZoom":minZoomLevel.toInt(),
-    "maxZoom":maxZoomLevel.toInt(),
-  };
+        "stepZoom": stepZoom.toInt(),
+        "initZoom": initZoom.toInt(),
+        "minZoom": minZoomLevel.toInt(),
+        "maxZoom": maxZoomLevel.toInt(),
+      };
 }

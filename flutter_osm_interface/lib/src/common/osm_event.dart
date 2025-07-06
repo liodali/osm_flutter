@@ -58,6 +58,7 @@ class UserLocationEvent extends EventOSM<UserLocation> {
 class RegionIsChangingEvent extends EventOSM<Region> {
   RegionIsChangingEvent(super.mapId, super.region);
 }
+
 class IosMapInit extends EventOSM<bool> {
   IosMapInit(super.mapId, super.loaded);
 }
