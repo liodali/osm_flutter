@@ -1,3 +1,8 @@
+### 1.4.0:
+* update ios sdk
+* add `onGeoPointLongPress` callback and mixin 
+* fix wrong user location information from JS to dart
+* fix readme file thnx to #assemblethis
 ### 1.3.8: fix bug
 * hotfix for bug  when use our plugin in flutter app that hosted in native iOS app #588
 ### 1.3.7: fix bug

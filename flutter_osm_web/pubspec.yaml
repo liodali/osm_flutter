@@ -16,7 +16,7 @@ dependencies:
   stream_transform: ^2.1.0
   routing_client_dart: ^0.5.5
   flutter_osm_interface: ^1.4.0
-  #  path: ../flutter_osm_interface/
+    path: ../flutter_osm_interface/
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -112,33 +112,59 @@ def publish_osm_web(version):
     for line in lines:  # Iterate through each line of output
         print(line)  # Print each line of the git command output
 
-def wait_interface_publish(version):
+def wait_interface_publish(version, timeout_seconds=None):
     """Wait for flutter_osm_interface package to be published on pub.dev
     
     Args:
         version (str): Version number to wait for
+        timeout_seconds (int, optional): Maximum time to wait in seconds. If None, wait indefinitely.
+    
+    Returns:
+        bool: True if published successfully, False if timeout occurred
     """
-    while True:  # Loop indefinitely until package is published
+    start_time = time.time()
+    while True:  # Loop until package is published or timeout
         isExist = check_version_exist(URL_VER_PACKAGE_OSM_INTERFACE,version)  # Check if version exists on pub.dev
         if isExist:  # If version is found on pub.dev
-            break  # Exit the loop
-        time.sleep(5)  # Wait 5 seconds before checking again (Note: time module needs to be imported)
+            print("flutter_osm_interface published successfully")  # Print success message when published
+            return True
+        
+        # Check timeout if specified
+        if timeout_seconds is not None:
+            elapsed_time = time.time() - start_time
+            if elapsed_time >= timeout_seconds:
+                print(f"Timeout: flutter_osm_interface was not published within {timeout_seconds} seconds")
+                return False
+        
+        time.sleep(1)  # Wait 1 seconds before checking again
         print("waiting for the flutter_osm_interface to be published ...")  # Print waiting message
-    print("flutter_osm_interface published successfully")  # Print success message when published
 
-def wait_web_publish(version):
+def wait_web_publish(version, timeout_seconds=None):
     """Wait for flutter_osm_web package to be published on pub.dev
     
     Args:
         version (str): Version number to wait for
+        timeout_seconds (int, optional): Maximum time to wait in seconds. If None, wait indefinitely.
+    
+    Returns:
+        bool: True if published successfully, False if timeout occurred
     """
-    while True:  # Loop indefinitely until package is published
+    start_time = time.time()
+    while True:  # Loop until package is published or timeout
         isExist = check_version_exist(URL_VER_PACKAGE_WEB,version)  # Check if version exists on pub.dev
         if isExist:  # If version is found on pub.dev
-            break  # Exit the loop
-        time.sleep(5)  # Wait 5 seconds before checking again (Note: time module needs to be imported)
+            print("flutter_osm_web published successfully")  # Print success message when published
+            return True
+        
+        # Check timeout if specified
+        if timeout_seconds is not None:
+            elapsed_time = time.time() - start_time
+            if elapsed_time >= timeout_seconds:
+                print(f"Timeout: flutter_osm_web was not published within {timeout_seconds} seconds")
+                return False
+        
+        time.sleep(1)  # Wait 1 seconds before checking again
         print("waiting for the flutter_osm_web to be published ...")  # Print waiting message
-    print("flutter_osm_web published successfully")  # Print success message when published
 
 def update_interface_in_plugin_osm_web(version):
     """Update the flutter_osm_interface dependency version in flutter_osm_web's pubspec.yaml
@@ -216,8 +242,22 @@ if __name__ == "__main__":
     if args.mode in ["onlyinterface", "all"]:
         print("=== Processing flutter_osm_interface ===")
         version_interface = update_plugin_osm_interface()  # Update and publish flutter_osm_interface package
-        wait_interface_publish(version_interface)  # Wait for flutter_osm_interface to be published on pub.dev
+        
+        # Set timeout for single-package modes only
+        timeout = 60 if args.mode == "onlyinterface" else None
+        success = wait_interface_publish(version_interface, timeout)  # Wait for flutter_osm_interface to be published on pub.dev
+        
+        if not success:
+            print("Failed to publish flutter_osm_interface within timeout period")
+            sys.exit(1)
+        
         print("flutter_osm_interface processing completed\n")
+    
+    # Add 3-second wait between packages when processing both
+    if args.mode == "all" and version_interface is not None:
+        print("Waiting 5 seconds before processing flutter_osm_web...")
+        time.sleep(5)
+        print("")
     
     if args.mode in ["onlyweb", "all"]:
         print("=== Processing flutter_osm_web ===")
@@ -227,7 +267,15 @@ if __name__ == "__main__":
             print(f"Using existing flutter_osm_interface version: {version_interface}\n")
         
         version_web = update_plugin_osm_web(version_interface)  # Update and publish flutter_osm_web package
-        wait_web_publish(version_web)  # Wait for flutter_osm_web to be published on pub.dev
+        
+        # Set timeout for single-package modes only
+        timeout = 60 if args.mode == "onlyweb" else None
+        success = wait_web_publish(version_web, timeout)  # Wait for flutter_osm_web to be published on pub.dev
+        
+        if not success:
+            print("Failed to publish flutter_osm_web within timeout period")
+            sys.exit(1)
+        
         print("flutter_osm_web processing completed\n")
     
     print("=== Summary ===")
