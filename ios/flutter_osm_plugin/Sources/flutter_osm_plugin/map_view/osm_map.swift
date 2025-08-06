@@ -98,9 +98,10 @@ class MapCoreOSMView : NSObject, FlutterPlatformView, CLLocationManagerDelegate,
         print(call.method)
         switch call.method {
             case "init#ios#map":
-                
                 //channel.invokeMethod("map#init", arguments: true)
-                //self.mapOSM.initOSMMap(tile:customTiles)
+                if let tile = customTiles {
+                    mapOSM.setCustomTile(tile: tile)
+                }
                 mapOSM.setZoom(zoom: 1)
                 channel.invokeMethod("map#init#ios", arguments: true)
                 result(200)
