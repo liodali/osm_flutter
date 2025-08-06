@@ -1,3 +1,5 @@
+### 1.4.2:
+* fix init customTile in ios where tile was not applied
 ### 1.4.1:
 * add missing api in readme file
 ### 1.4.0:
