@@ -1,3 +1,4 @@
+import com.android.sdklib.AndroidVersion.VersionCodes.BAKLAVA
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -26,8 +27,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
@@ -38,8 +39,8 @@ android {
         applicationId = "hamza.dali.flutter_osm_plugin_example"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 30
+        targetSdk = BAKLAVA
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
