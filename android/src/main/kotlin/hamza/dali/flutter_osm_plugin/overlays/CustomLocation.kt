@@ -394,7 +394,7 @@ class CustomLocationManager(private val mapView: MapView) : Overlay(), IMyLocati
             true
         } else {
             runnable?.let {
-                mRunOnFirstFix.addLast(runnable!)
+                mRunOnFirstFix.addLast(runnable!!)
             }
             false
         }
