@@ -1,6 +1,7 @@
 //import 'dart:html' as html;
 //import 'dart:html';
 import 'dart:js_interop';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:web/web.dart' as web; // Add
 import 'dart:math';
 import 'dart:ui_web' as ui;
@@ -26,7 +27,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   FlutterOsmPluginWeb get webPlatform =>
       OSMPlatform.instance as FlutterOsmPluginWeb;
 
-  WebOsmController() {
+  WebOsmController(String htmlContent) {
     //createHtml(id: );
     mapId++;
 
@@ -45,12 +46,15 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       debugPrint(idFrame);
       _frame = web.document.createElement("iframe") as web.HTMLIFrameElement
         ..id = idFrame
-        ..src =
-            "${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/map.html"
-        ..allow = "cross-origin-anonymous"
+        // ..src =
+        //     'https://github.com/liodali/osm_flutter/blob/$versionCDN/flutter_osm_web/lib/src/asset/map.html'
+        //   'https://cdn.jsdelivr.net/gh/liodali/osm_flutter@$versionCDN/flutter_osm_web/lib/src/asset/map.html'
+        //"${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/map.html"
+        //..allow = "cross-origin-anonymous"
         //..crossOrigin = "anonymous"
         ..style.width = '100%'
         ..style.height = '100%';
+      _frame!.setAttribute('srcdoc', htmlContent);
       _div.appendChild(_frame!);
       return _div;
     });
@@ -70,23 +74,28 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     }
   }
 
-  void createHtml() {
+  void createHtml(
+    // String versionCDN,
+    String script,
+    String scriptOsmInterop,
+  ) {
     final body = web.window.document.querySelector('body')!;
 
     debugPrint("div added iframe");
     if (web.window.document.getElementById("osm_interop") == null) {
-      body.appendChild(
+      final interopScript =
           web.document.createElement('script') as web.HTMLScriptElement
             ..id = "osm_interop"
-            ..src =
-                '${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/osm_interop.js'
-            ..type = 'application/javascript');
+            ..crossOrigin = "cross-origin"
+            ..innerHTML = scriptOsmInterop.toJS
+            ..type = 'application/javascript';
+      body.appendChild(interopScript);
     }
     if (web.window.document.getElementById("mapScript") == null) {
       mapScript = web.document.createElement('script') as web.HTMLScriptElement
         ..id = "mapScript"
-        ..src =
-            '${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/map.js'
+        ..crossOrigin = "cross-origin"
+        ..innerHTML = script.toJS
         ..type = 'application/javascript';
       body.appendChild(mapScript!);
     }
