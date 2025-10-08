@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "hamza.dali.flutter_osm_plugin_example"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
     if (keystorePropertiesFile.exists()) {
         signingConfigs {
             create("release") {
@@ -32,7 +32,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -48,6 +48,8 @@ android {
     buildTypes {
         if(keystorePropertiesFile.exists()){
             release {
+                isMinifyEnabled = true
+                isShrinkResources = true
                 signingConfig = signingConfigs.getByName("release")
             }
         }else {

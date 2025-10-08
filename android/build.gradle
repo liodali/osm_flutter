@@ -11,7 +11,7 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.android.tools.build:gradle:7.1.3'
+        classpath 'com.android.tools.build:gradle:8.12.1'
     }
 }
 
@@ -28,7 +28,7 @@ apply plugin: 'kotlin-android'
 //apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdk 35
+    compileSdk 36
     namespace "hamza.dali.flutter_osm_plugin"
 
     sourceSets {
@@ -64,13 +64,13 @@ android {
 }
 dependencies {
 
-    def coroutines_version ="1.10.1"
+    def coroutines_version ="1.10.2"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     // Retrofit and relevant converters
-    implementation 'com.squareup.retrofit2:retrofit:2.11.0'
-    implementation 'com.squareup.retrofit2:converter-moshi:2.11.0'
+    implementation 'com.squareup.retrofit2:retrofit:3.0.0'
+    implementation 'com.squareup.retrofit2:converter-moshi:3.0.0'
     //picasso
     implementation 'com.squareup.picasso3:picasso:3.0.0-alpha06'
 
