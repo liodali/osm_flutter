@@ -3,18 +3,14 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/home/main_example.dart';
 import 'package:flutter_osm_plugin_example/src/search_example.dart';
 import 'package:flutter_osm_plugin_example/src/simple_example_hook.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart'
+    show usePathUrlStrategy;
 
-//import 'src/adv_home/home_example.dart';
 import 'src/home/home_example.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // if (kIsWeb) {
-  //   runApp(WebApp());
-  // } else {
-  //   await dotenv.load(fileName: ".env");
-  //    runApp(MyApp());
-  // }
+  usePathUrlStrategy();
   runApp(const MyApp());
 }
 
