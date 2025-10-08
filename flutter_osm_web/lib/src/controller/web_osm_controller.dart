@@ -1,12 +1,10 @@
 //import 'dart:html' as html;
 //import 'dart:html';
 import 'dart:js_interop';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:web/web.dart' as web; // Add
 import 'dart:math';
 import 'dart:ui_web' as ui;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
@@ -46,12 +44,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       debugPrint(idFrame);
       _frame = web.document.createElement("iframe") as web.HTMLIFrameElement
         ..id = idFrame
-        // ..src =
-        //     'https://github.com/liodali/osm_flutter/blob/$versionCDN/flutter_osm_web/lib/src/asset/map.html'
-        //   'https://cdn.jsdelivr.net/gh/liodali/osm_flutter@$versionCDN/flutter_osm_web/lib/src/asset/map.html'
-        //"${kReleaseMode ? "assets/" : ''}packages/flutter_osm_web/src/asset/map.html"
-        //..allow = "cross-origin-anonymous"
-        //..crossOrigin = "anonymous"
         ..style.width = '100%'
         ..style.height = '100%';
       _frame!.setAttribute('srcdoc', htmlContent);
@@ -63,7 +55,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   void init(OsmWebWidgetState osmWebFlutterState, int idMap) {
     debugPrint("idMap $idMap");
     OSMPlatform.instance.init(mapIdMixin);
-    //mapIdMixin = idMap;
     setWidgetState(osmWebFlutterState);
     channel = MethodChannel(FlutterOsmPluginWeb.getViewType(mapIdMixin));
     debugPrint("in init _mapId $mapIdMixin");
@@ -75,7 +66,6 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   }
 
   void createHtml(
-    // String versionCDN,
     String script,
     String scriptOsmInterop,
   ) {

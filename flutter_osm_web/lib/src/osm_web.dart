@@ -139,11 +139,6 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
   }
 
   Future<void> onPlatformViewCreated(int id) async {
-    // final platformInfo = await PackageInfo.fromPlatform();
-
-    // final versionCDN = kReleaseMode
-    //     ? 'refs/tags/flutter_osm_web-v${platformInfo.version}'
-    //     : 'refs/heads/main';
     controller.init(this, id);
     controller.onListenToNativeChannel();
     controller.createHtml(
