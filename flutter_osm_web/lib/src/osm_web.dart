@@ -1,10 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 import 'package:flutter_osm_web/src/controller/web_osm_controller.dart';
-import 'package:package_info_plus/package_info_plus.dart' show PackageInfo;
 
 class OsmWebWidget extends StatefulWidget {
   final BaseMapController controller;

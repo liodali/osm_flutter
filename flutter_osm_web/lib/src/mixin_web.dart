@@ -79,12 +79,12 @@ mixin WebMixin {
   }
 
   Future<void> drawCircle(CircleOSM circleOSM) async {
-    final opacity = circleOSM.color.opacity;
+    final opacity = (circleOSM.color.a * 255.0).round();
     final shapeConfig = CircleShapeJS(
       key: circleOSM.key,
       center: circleOSM.centerPoint.toGeoJS(),
       radius: circleOSM.radius,
-      color: circleOSM.color.withOpacity(1).toHexColor(),
+      color: circleOSM.color.withValues(alpha: 1).toHexColor(),
       borderColor: circleOSM.borderColor?.toHexColor(),
       opacityFilled: opacity,
       strokeWidth: circleOSM.strokeWidth,
@@ -103,10 +103,10 @@ mixin WebMixin {
       lengthInMeters: rectOSM.distance,
       widthInMeters: rectOSM.distance,
     );
-    final opacity = rectOSM.color.opacity;
+    final opacity = (rectOSM.color.a * 255.0).round();
     final shapeConfig = RectShapeJS(
       key: rectOSM.key,
-      color: rectOSM.color.withOpacity(1).toHexColor(),
+      color: rectOSM.color.withValues(alpha: 1).toHexColor(),
       strokeWidth: rectOSM.strokeWidth,
       opacityFilled: opacity,
       borderColor: rectOSM.borderColor?.toHexColor(),
