@@ -1,3 +1,5 @@
+### 1.4.3:
+* fix bug in web assets
 ### 1.4.2:
 * fix init customTile in ios where tile was not applied
 ### 1.4.1:
