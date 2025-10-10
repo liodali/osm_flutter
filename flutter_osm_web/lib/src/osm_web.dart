@@ -92,10 +92,8 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
   }
 
   Future<void> initController() async {
-    final platformInfo = await PackageInfo.fromPlatform();
-    final versionCDN = kReleaseMode
-        ? 'refs/tags/flutter_osm_web-v${platformInfo.version}'
-        : 'refs/heads/main';
+    const versionCDN = 'refs/tags/flutter_osm_web-v1.4.2';
+    //kReleaseMode ? 'refs/tags/flutter_osm_web-v1.4.1' : 'refs/heads/main';
     final dio = Dio(BaseOptions(
       baseUrl:
           'https://raw.githubusercontent.com/liodali/osm_flutter/$versionCDN/flutter_osm_web/lib/src/asset/',

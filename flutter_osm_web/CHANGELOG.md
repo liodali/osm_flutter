@@ -1,3 +1,5 @@
+## 1.4.2: 
+* fix bug in loading assets where we download them from github cdn
 ## 1.4.1: 
 ## 1.4.0: 
 * add `onGeoPointLongPressEvent` to handle long click in web
