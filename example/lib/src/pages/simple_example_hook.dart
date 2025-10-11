@@ -27,13 +27,13 @@ class _SimpleExampleState extends State<SimpleHookExample> {
       appBar: AppBar(
         title: const Text("osm simple hook"),
       ),
-      body: const SimpleOSM(),
+      body: const _InnerSimpleOSM(),
     );
   }
 }
 
-class SimpleOSM extends HookWidget {
-  const SimpleOSM({super.key});
+class _InnerSimpleOSM extends HookWidget {
+  const _InnerSimpleOSM();
 
   @override
   Widget build(BuildContext context) {
