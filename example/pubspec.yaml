@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   forui: ^0.16.0
   auto_route: ^10.1.2
+  forui_assets: ^0.16.0
+  flex_color_picker: ^3.7.1
   flutter_web_plugins:
     sdk: flutter
   flutter_osm_plugin: #1.2.0 #^0.40.3+2

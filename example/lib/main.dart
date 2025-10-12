@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_osm_plugin_example/src/common/router_config.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart'
     show usePathUrlStrategy;
@@ -15,10 +16,13 @@ class MyApp extends StatelessWidget {
   final AppRouter router;
   @override
   Widget build(BuildContext context) {
+    final theme = SystemUiOverlayStyle.dark == SystemUiOverlayStyle.dark
+        ? FThemes.zinc.dark
+        : FThemes.zinc.light;
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       routerConfig: router.config(),
-      theme: FThemes.zinc.dark.toApproximateMaterialTheme(),
+      theme: theme.toApproximateMaterialTheme(),
       localizationsDelegates: const [
         ...FLocalizations.localizationsDelegates,
       ],

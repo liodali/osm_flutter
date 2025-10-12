@@ -5,15 +5,16 @@ import 'package:flutter_osm_plugin_example/src/pages/home/main_example.dart';
 import 'package:flutter_osm_plugin_example/src/pages/search_example.dart';
 import 'package:flutter_osm_plugin_example/src/pages/simple_example_hook.dart';
 import 'package:flutter_osm_plugin_example/src/pages/simple_osm.dart';
+import 'package:flutter_osm_plugin_example/src/widgets/themed_widget.dart';
 
 class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
     NamedRouteDef(
       name: 'home',
-      path: '/home',
+      path: '/',
       initial: true,
-      builder: (context, _) => const MainPageExample(),
+      builder: (context, _) => const ThemedWidget(child: MainPageExample()),
     ),
     NamedRouteDef(
       name: 'simple',

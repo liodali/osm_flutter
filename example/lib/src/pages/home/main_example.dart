@@ -2,40 +2,28 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/src/models/map_widget_configuration.dart'
+    show MoreActionConfig;
+import 'package:flutter_osm_plugin_example/src/pages/home/component/header_home.dart';
+import 'package:flutter_osm_plugin_example/src/widgets/action_buttons.dart'
+    show ActionButton;
+import 'package:forui/forui.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
-class MainPageExample extends StatelessWidget {
+class MainPageExample extends StatefulWidget {
   const MainPageExample({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: const Main(),
-      drawer: PointerInterceptor(
-        child: const DrawerMain(),
-      ),
-    );
-  }
-}
-
-class Main extends StatefulWidget {
-  const Main({super.key});
 
   @override
-  State<StatefulWidget> createState() => _MainState();
+  State<MainPageExample> createState() => _MainPageExampleState();
 }
 
-class _MainState extends State<Main> with OSMMixinObserver {
+class _MainPageExampleState extends State<MainPageExample> {
   late MapController controller;
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
-  ValueNotifier<bool> showFab = ValueNotifier(false);
-  ValueNotifier<bool> disableMapControlUserTracking = ValueNotifier(true);
   ValueNotifier<IconData> userLocationIcon = ValueNotifier(Icons.near_me);
-  ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
-  List<GeoPoint> geos = [];
   ValueNotifier<GeoPoint?> userLocationNotifier = ValueNotifier(null);
-  ValueNotifier<int> zoomLevelNotifier = ValueNotifier(16);
-  final mapKey = GlobalKey();
-
+  ValueNotifier<bool> disableMapControlUserTracking = ValueNotifier(true);
+  late MoreActionConfig configuration;
   @override
   void initState() {
     super.initState();
@@ -49,11 +37,71 @@ class _MainState extends State<Main> with OSMMixinObserver {
       // ),
       useExternalTracking: disableMapControlUserTracking.value,
     );
-    controller.addObserver(this);
-    trackingNotifier.addListener(() async {
-      if (userLocationNotifier.value != null && !trackingNotifier.value) {
-        await controller.removeMarker(userLocationNotifier.value!);
-        userLocationNotifier.value = null;
+    configuration = (
+      controller: controller,
+      trackingNotifier: trackingNotifier,
+      userLocationIcon: userLocationIcon,
+      userLocationNotifier: userLocationNotifier,
+      geos: ValueNotifier([]),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width > 600;
+    return FScaffold(
+      resizeToAvoidBottomInset: false,
+      scaffoldStyle: (style) => FTheme.of(context).scaffoldStyle.copyWith(
+        backgroundColor: FTheme.of(context).colors.background,
+        systemOverlayStyle: FTheme.of(context).scaffoldStyle.systemOverlayStyle,
+      ),
+      header: isDesktop
+          ? HeaderHome(
+              configuration: configuration,
+            )
+          : null,
+      sidebar: PointerInterceptor(
+        child: const DrawerMain(),
+      ),
+      child: Main(
+        configuration: configuration,
+        disableMapControlUserTracking: disableMapControlUserTracking,
+      ),
+    );
+  }
+}
+
+class Main extends StatefulWidget {
+  const Main({
+    super.key,
+    required this.configuration,
+    required this.disableMapControlUserTracking,
+  });
+  final MoreActionConfig configuration;
+  final ValueNotifier<bool> disableMapControlUserTracking;
+
+  @override
+  State<StatefulWidget> createState() => _MainState();
+}
+
+class _MainState extends State<Main> with OSMMixinObserver {
+  ValueNotifier<bool> showFab = ValueNotifier(false);
+  ValueNotifier<int> zoomLevelNotifier = ValueNotifier(16);
+  final mapKey = GlobalKey();
+  ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
+
+  @override
+  void initState() {
+    super.initState();
+
+    widget.configuration.controller.addObserver(this);
+    widget.configuration.trackingNotifier.addListener(() async {
+      if (widget.configuration.userLocationNotifier.value != null &&
+          !widget.configuration.trackingNotifier.value) {
+        await widget.configuration.controller.removeMarker(
+          widget.configuration.userLocationNotifier.value!,
+        );
+        widget.configuration.userLocationNotifier.value = null;
       }
     });
   }
@@ -76,7 +124,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
         //   //iconAnchor: IconAnchor(anchor: Anchor.top),
         // );
         //controller.removeMarker(lastGeoPoint.value!);
-        await controller.addMarker(
+        await widget.configuration.controller.addMarker(
           position,
           markerIcon: const MarkerIcon(
             icon: Icon(
@@ -88,13 +136,13 @@ class _MainState extends State<Main> with OSMMixinObserver {
           //angle: userLocation.angle,
         );
       } else {
-        await controller.addMarker(
+        await widget.configuration.controller.addMarker(
           position,
           markerIcon: const MarkerIcon(
             icon: Icon(
               Icons.person_pin,
               color: Colors.red,
-              size: 56,
+              size: 32,
             ),
           ),
           // iconAnchor: IconAnchor(
@@ -106,7 +154,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
       }
       //await controller.moveTo(position, animate: true);
       lastGeoPoint.value = position;
-      geos.add(position);
+      widget.configuration.geos.value.add(position);
     });
   }
 
@@ -146,15 +194,17 @@ class _MainState extends State<Main> with OSMMixinObserver {
                 child: SnackBarAction(
                   label: 'procees',
                   onPressed: () async {
-                    await controller.removeMarker(position);
-                    geos.remove(position);
+                    await widget.configuration.controller.removeMarker(
+                      position,
+                    );
+                    widget.configuration.geos.value.remove(position);
                     if (!mounted) {
                       return;
                     }
                     ScaffoldMessenger.of(context).removeCurrentSnackBar();
                   },
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -165,19 +215,19 @@ class _MainState extends State<Main> with OSMMixinObserver {
   @override
   void onRegionChanged(Region region) {
     super.onRegionChanged(region);
-    controller.getZoom().then((v) {
+    widget.configuration.controller.getZoom().then((v) {
       zoomLevelNotifier.value = v.toInt();
     });
-    if (trackingNotifier.value) {
-      final userLocation = userLocationNotifier.value;
+    if (widget.configuration.trackingNotifier.value) {
+      final userLocation = widget.configuration.userLocationNotifier.value;
       if (userLocation == null ||
           !region.center.isEqual(
             userLocation,
             precision: 1e4,
           )) {
-        userLocationIcon.value = Icons.gps_not_fixed;
+        widget.configuration.userLocationIcon.value = Icons.gps_not_fixed;
       } else {
-        userLocationIcon.value = Icons.gps_fixed;
+        widget.configuration.userLocationIcon.value = Icons.gps_fixed;
       }
     }
   }
@@ -185,10 +235,11 @@ class _MainState extends State<Main> with OSMMixinObserver {
   @override
   void onLocationChanged(UserLocation userLocation) async {
     super.onLocationChanged(userLocation);
-    if (disableMapControlUserTracking.value && trackingNotifier.value) {
-      await controller.moveTo(userLocation);
-      if (userLocationNotifier.value == null) {
-        await controller.addMarker(
+    if (widget.disableMapControlUserTracking.value &&
+        widget.configuration.trackingNotifier.value) {
+      await widget.configuration.controller.moveTo(userLocation);
+      if (widget.configuration.userLocationNotifier.value == null) {
+        await widget.configuration.controller.addMarker(
           userLocation,
           markerIcon: const MarkerIcon(
             icon: Icon(
@@ -199,17 +250,20 @@ class _MainState extends State<Main> with OSMMixinObserver {
           angle: userLocation.angle,
         );
       } else {
-        await controller.changeLocationMarker(
-          oldLocation: userLocationNotifier.value!,
+        await widget.configuration.controller.changeLocationMarker(
+          oldLocation: widget.configuration.userLocationNotifier.value!,
           newLocation: userLocation,
           angle: userLocation.angle,
         );
       }
-      userLocationNotifier.value = userLocation;
+      widget.configuration.userLocationNotifier.value = userLocation;
     } else {
-      if (userLocationNotifier.value != null && !trackingNotifier.value) {
-        await controller.removeMarker(userLocationNotifier.value!);
-        userLocationNotifier.value = null;
+      if (widget.configuration.userLocationNotifier.value != null &&
+          !widget.configuration.trackingNotifier.value) {
+        await widget.configuration.controller.removeMarker(
+          widget.configuration.userLocationNotifier.value!,
+        );
+        widget.configuration.userLocationNotifier.value = null;
       }
     }
   }
@@ -220,17 +274,28 @@ class _MainState extends State<Main> with OSMMixinObserver {
     return Stack(
       children: [
         Map(
-          controller: controller,
+          controller: widget.configuration.controller,
         ),
-        if (!kReleaseMode || kIsWeb) ...[
+        if (kIsWeb) ...[
           Positioned(
             bottom: 23.0,
-            left: 15,
-            child: ZoomNavigation(
-              controller: controller,
-              zoomNotifier: zoomLevelNotifier,
+            right: 15,
+            child: Column(
+              spacing: 12,
+              children: [
+                ActivationUserLocation(
+                  controller: widget.configuration.controller,
+                  trackingNotifier: widget.configuration.trackingNotifier,
+                  userLocation: widget.configuration.userLocationNotifier,
+                  userLocationIcon: widget.configuration.userLocationIcon,
+                ),
+                ZoomNavigation(
+                  controller: widget.configuration.controller,
+                  zoomNotifier: zoomLevelNotifier,
+                ),
+              ],
             ),
-          )
+          ),
         ],
         Positioned.fill(
           child: ValueListenableBuilder(
@@ -246,61 +311,15 @@ class _MainState extends State<Main> with OSMMixinObserver {
                       top: (topPadding ?? 26) + 48,
                       right: 15,
                       child: MapRotation(
-                        controller: controller,
+                        controller: widget.configuration.controller,
                       ),
-                    )
+                    ),
                   ],
-                  Positioned(
-                    top: kIsWeb ? 26 : topPadding ?? 26.0,
-                    left: 12,
-                    child: PointerInterceptor(
-                      child: const MainNavigation(),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 32,
-                    right: 15,
-                    child: ActivationUserLocation(
-                      controller: controller,
-                      trackingNotifier: trackingNotifier,
-                      userLocation: userLocationNotifier,
-                      userLocationIcon: userLocationIcon,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 148,
-                    right: 15,
-                    child: IconButton(
-                      onPressed: () async {
-                        Future.forEach(geos, (element) async {
-                          await controller.removeMarker(element);
-                          await Future.delayed(
-                              const Duration(milliseconds: 100));
-                        });
-                      },
-                      icon: const Icon(Icons.clear_all),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 92,
-                    right: 15,
-                    child: DirectionRouteLocation(
-                      controller: controller,
-                    ),
-                  ),
-                  Positioned(
-                    top: kIsWeb ? 26 : topPadding,
-                    left: 64,
-                    right: 72,
-                    child: SearchInMap(
-                      controller: controller,
-                    ),
-                  ),
                 ],
               );
             },
           ),
-        )
+        ),
       ],
     );
   }
@@ -321,48 +340,48 @@ class ZoomNavigation extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         PointerInterceptor(
-          child: ElevatedButton(
+          child: ActionButton(
             onPressed: () async {
               controller.zoomIn();
             },
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(48, 32),
-              maximumSize: const Size(48, 48),
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
+            buttonStyle: (style) => style.copyWith(
+              shape: WidgetStateOutlinedBorder.resolveWith(
+                (_) => const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
                 ),
               ),
-              backgroundColor: Colors.white,
-              padding: EdgeInsets.zero,
-              elevation: 0,
             ),
-            child: const Center(
-              child: Icon(Icons.add),
+            child: Center(
+              child: Icon(
+                FIcons.plus,
+                color: FTheme.of(context).colors.foreground,
+              ),
             ),
           ),
         ),
         PointerInterceptor(
-          child: ElevatedButton(
+          child: ActionButton(
             onPressed: () async {
               controller.zoomOut();
             },
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(48, 32),
-              maximumSize: const Size(48, 48),
-              elevation: 0,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(12),
-                  bottomRight: Radius.circular(12),
+            buttonStyle: (style) => style.copyWith(
+              shape: WidgetStateOutlinedBorder.resolveWith(
+                (_) => const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
                 ),
               ),
-              backgroundColor: Colors.white,
-              padding: EdgeInsets.zero,
             ),
-            child: const Center(
-              child: Icon(Icons.remove),
+            child: Center(
+              child: Icon(
+                FIcons.minus,
+                color: FTheme.of(context).colors.foreground,
+              ),
             ),
           ),
         ),
@@ -411,24 +430,6 @@ class MapRotation extends HookWidget {
   }
 }
 
-class MainNavigation extends StatelessWidget {
-  const MainNavigation({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton(
-      key: UniqueKey(),
-      onPressed: () {
-        Scaffold.of(context).openDrawer();
-      },
-      heroTag: "MainMenuFab",
-      mini: true,
-      backgroundColor: Colors.white,
-      child: const Icon(Icons.menu),
-    );
-  }
-}
-
 class DrawerMain extends StatelessWidget {
   const DrawerMain({super.key});
 
@@ -439,28 +440,28 @@ class DrawerMain extends StatelessWidget {
         onHorizontalDragEnd: (_) {
           Scaffold.of(context).closeDrawer();
         },
-        child: PointerInterceptor(
-          child: Drawer(
-            child: Column(
+        child: Material(
+          child: PointerInterceptor(
+            child: FSidebar(
               children: [
                 SizedBox(height: MediaQuery.viewPaddingOf(context).top),
-                ListTile(
-                  onTap: () {},
+                FItem(
+                  onPress: () {},
                   title: const Text("search example"),
                 ),
-                ListTile(
-                  onTap: () {},
+                FItem(
+                  onPress: () {},
                   title: const Text("map with hook example"),
                 ),
                 PointerInterceptor(
-                  child: ListTile(
-                    onTap: () async {
+                  child: FItem(
+                    onPress: () async {
                       Scaffold.of(context).closeDrawer();
                       await Navigator.pushNamed(context, '/old-home');
                     },
                     title: const Text("old home example"),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -495,57 +496,23 @@ class Map extends StatelessWidget {
           stepZoom: 1.0,
         ),
         userLocationMarker: UserLocationMaker(
-            personMarker: MarkerIcon(
-              // icon: Icon(
-              //   Icons.car_crash_sharp,
-              //   color: Colors.red,
-              //   size: 48,
-              // ),
-              // iconWidget: SizedBox.square(
-              //   dimension: 56,
-              //   child: Image.asset(
-              //     "asset/taxi.png",
-              //     scale: .3,
-              //   ),
-              // ),
-              iconWidget: SizedBox(
-                width: 32,
-                height: 64,
-                child: Image.asset(
-                  "asset/directionIcon.png",
-                  scale: .3,
-                ),
+          personMarker: MarkerIcon(
+            iconWidget: SizedBox(
+              width: 32,
+              height: 64,
+              child: Image.asset(
+                "asset/directionIcon.png",
+                scale: .3,
               ),
-              // assetMarker: AssetMarker(
-              //   image: AssetImage(
-              //     "asset/taxi.png",
-              //   ),
-              //   scaleAssetImage: 0.3,
-              // ),
             ),
-            directionArrowMarker: const MarkerIcon(
-              icon: Icon(
-                Icons.navigation_rounded,
-                size: 48,
-              ),
-              // iconWidget: SizedBox(
-              //   width: 32,
-              //   height: 64,
-              //   child: Image.asset(
-              //     "asset/directionIcon.png",
-              //     scale: .3,
-              //   ),
-              // ),
-            )
-            // directionArrowMarker: MarkerIcon(
-            //   assetMarker: AssetMarker(
-            //     image: AssetImage(
-            //       "asset/taxi.png",
-            //     ),
-            //     scaleAssetImage: 0.25,
-            //   ),
-            // ),
+          ),
+          directionArrowMarker: const MarkerIcon(
+            icon: Icon(
+              Icons.navigation_rounded,
+              size: 48,
             ),
+          ),
+        ),
         staticPoints: [
           StaticPositionGeoPoint(
             "line 1",
@@ -611,7 +578,7 @@ class ActivationUserLocation extends StatelessWidget {
           await controller.stopLocationUpdating();
           trackingNotifier.value = false;
         },
-        child: FloatingActionButton(
+        child: ActionButton(
           key: UniqueKey(),
           onPressed: () async {
             if (!trackingNotifier.value) {
@@ -643,8 +610,17 @@ class ActivationUserLocation extends StatelessWidget {
               // }
             }
           },
-          mini: true,
-          heroTag: "UserLocationFab",
+          buttonStyle: (style) => style.copyWith(
+            minimumSize: WidgetStateProperty.resolveWith(
+              (_) => const Size(48, 48),
+            ),
+            padding: WidgetStateProperty.resolveWith(
+              (_) => const EdgeInsets.all(12),
+            ),
+            backgroundColor: WidgetStateProperty.resolveWith(
+              (_) => FTheme.of(context).colors.background,
+            ),
+          ),
           child: ValueListenableBuilder<bool>(
             valueListenable: trackingNotifier,
             builder: (ctx, isTracking, _) {
@@ -656,7 +632,11 @@ class ActivationUserLocation extends StatelessWidget {
                   },
                 );
               }
-              return const Icon(Icons.near_me);
+              return Icon(
+                FIcons.navigation,
+                size: 24,
+                color: FTheme.of(context).colors.foreground,
+              );
             },
           ),
         ),
@@ -685,67 +665,6 @@ class DirectionRouteLocation extends StatelessWidget {
         child: const Icon(
           Icons.directions,
           color: Colors.white,
-        ),
-      ),
-    );
-  }
-}
-
-class SearchInMap extends StatefulWidget {
-  final MapController controller;
-
-  const SearchInMap({
-    super.key,
-    required this.controller,
-  });
-  @override
-  State<StatefulWidget> createState() => _SearchInMapState();
-}
-
-class _SearchInMapState extends State<SearchInMap> {
-  final textController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    textController.addListener(onTextChanged);
-  }
-
-  void onTextChanged() {}
-  @override
-  void dispose() {
-    textController.removeListener(onTextChanged);
-    textController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 48,
-      child: Card(
-        color: Colors.white,
-        elevation: 2,
-        shape: const StadiumBorder(),
-        child: TextField(
-          controller: textController,
-          onTap: () {},
-          maxLines: 1,
-          keyboardType: TextInputType.text,
-          textInputAction: TextInputAction.search,
-          decoration: const InputDecoration(
-            contentPadding: EdgeInsets.zero,
-            filled: false,
-            isDense: true,
-            hintText: "search",
-            prefixIcon: Icon(
-              Icons.search,
-              size: 22,
-            ),
-            border: OutlineInputBorder(
-              borderSide: BorderSide.none,
-            ),
-          ),
         ),
       ),
     );
