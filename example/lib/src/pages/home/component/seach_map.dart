@@ -53,9 +53,13 @@ class _SearchInMapState extends State<SearchInMap> {
         ),
       ),
       prefixBuilder: (context, style, states) {
-        return const Icon(
-          FIcons.search,
-          size: 18,
+        return Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Icon(
+            FIcons.search,
+            size: 18,
+            color: FTheme.of(context).colors.foreground,
+          ),
         );
       },
     );

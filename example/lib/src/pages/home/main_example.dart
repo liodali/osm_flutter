@@ -5,6 +5,7 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_widget_configuration.dart'
     show MoreActionConfig;
 import 'package:flutter_osm_plugin_example/src/pages/home/component/header_home.dart';
+import 'package:flutter_osm_plugin_example/src/pages/home/component/side_bar.dart';
 import 'package:flutter_osm_plugin_example/src/widgets/action_buttons.dart'
     show ActionButton;
 import 'package:forui/forui.dart';
@@ -24,6 +25,7 @@ class _MainPageExampleState extends State<MainPageExample> {
   ValueNotifier<GeoPoint?> userLocationNotifier = ValueNotifier(null);
   ValueNotifier<bool> disableMapControlUserTracking = ValueNotifier(true);
   late MoreActionConfig configuration;
+  ValueNotifier<bool> showSidebar = ValueNotifier(false);
   @override
   void initState() {
     super.initState();
@@ -51,17 +53,24 @@ class _MainPageExampleState extends State<MainPageExample> {
     final isDesktop = MediaQuery.of(context).size.width > 600;
     return FScaffold(
       resizeToAvoidBottomInset: false,
-      scaffoldStyle: (style) => FTheme.of(context).scaffoldStyle.copyWith(
+      scaffoldStyle: (style) => style.copyWith(
         backgroundColor: FTheme.of(context).colors.background,
         systemOverlayStyle: FTheme.of(context).scaffoldStyle.systemOverlayStyle,
+        childPadding: EdgeInsets.zero,
       ),
       header: isDesktop
           ? HeaderHome(
               configuration: configuration,
+              isCollapsedNotifier: showSidebar,
             )
           : null,
       sidebar: PointerInterceptor(
-        child: const DrawerMain(),
+        child: ValueListenableBuilder(
+          valueListenable: showSidebar,
+          builder: (context, isCollapsed, child) {
+            return SideBar(width: isCollapsed ? 0 : 250);
+          },
+        ),
       ),
       child: Main(
         configuration: configuration,
@@ -430,47 +439,6 @@ class MapRotation extends HookWidget {
   }
 }
 
-class DrawerMain extends StatelessWidget {
-  const DrawerMain({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return PointerInterceptor(
-      child: GestureDetector(
-        onHorizontalDragEnd: (_) {
-          Scaffold.of(context).closeDrawer();
-        },
-        child: Material(
-          child: PointerInterceptor(
-            child: FSidebar(
-              children: [
-                SizedBox(height: MediaQuery.viewPaddingOf(context).top),
-                FItem(
-                  onPress: () {},
-                  title: const Text("search example"),
-                ),
-                FItem(
-                  onPress: () {},
-                  title: const Text("map with hook example"),
-                ),
-                PointerInterceptor(
-                  child: FItem(
-                    onPress: () async {
-                      Scaffold.of(context).closeDrawer();
-                      await Navigator.pushNamed(context, '/old-home');
-                    },
-                    title: const Text("old home example"),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class Map extends StatelessWidget {
   const Map({
     super.key,
@@ -612,10 +580,18 @@ class ActivationUserLocation extends StatelessWidget {
           },
           buttonStyle: (style) => style.copyWith(
             minimumSize: WidgetStateProperty.resolveWith(
-              (_) => const Size(48, 48),
+              (_) => const Size(56, 48),
+            ),
+            maximumSize: WidgetStateProperty.resolveWith(
+              (_) => const Size(56, 48),
             ),
             padding: WidgetStateProperty.resolveWith(
               (_) => const EdgeInsets.all(12),
+            ),
+            shape: FWidgetStateMap.all(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             backgroundColor: WidgetStateProperty.resolveWith(
               (_) => FTheme.of(context).colors.background,
@@ -634,7 +610,7 @@ class ActivationUserLocation extends StatelessWidget {
               }
               return Icon(
                 FIcons.navigation,
-                size: 24,
+                size: 18,
                 color: FTheme.of(context).colors.foreground,
               );
             },

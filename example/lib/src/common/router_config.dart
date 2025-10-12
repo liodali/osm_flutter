@@ -28,7 +28,7 @@ class AppRouter extends RootStackRouter {
     ),
     NamedRouteDef(
       name: 'hook',
-      path: '/hook',  
+      path: '/hook',
       builder: (context, _) => const SimpleHookExample(),
     ),
     NamedRouteDef(
@@ -47,4 +47,14 @@ class AppRouter extends RootStackRouter {
       builder: (context, _) => const SearchPage(),
     ),
   ];
+}
+
+extension AppRouterExtension on StackRouter {
+  Future<void> pushHome() async => pushPath('/home');
+  Future<void> pushSimple() async => pushPath('/simple');
+  Future<void> pushOldHome() async => pushPath('/old-home');
+  Future<void> pushSearch() async => pushPath('/search');
+  Future<void> pushHook() async => pushPath('/hook');
+  Future<void> pushConfiguration() async => pushPath('/configuration');
+  Future<void> pushPickerResult() async => pushPath('/picker-result');
 }
