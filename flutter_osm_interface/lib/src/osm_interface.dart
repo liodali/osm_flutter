@@ -31,6 +31,8 @@ abstract class OSMPlatform extends PlatformInterface {
 
   Stream<GeoPointEvent> onGeoPointClickListener(int idMap);
 
+  Stream<GeoPointLongPressEvent> onGeoPointLongPressListener(int idMap);
+
   Stream<UserLocationEvent> onUserPositionListener(int idMap);
 
   Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap);
@@ -83,18 +85,18 @@ abstract class MobileOSMPlatform extends OSMPlatform {
     bool useDirectionMarker = false,
   });
 
-  Future<void> startLocationUpdating(int idOSM,);
-  Future<void> stopLocationUpdating(int idOSM,);
+  Future<void> startLocationUpdating(
+    int idOSM,
+  );
+  Future<void> stopLocationUpdating(
+    int idOSM,
+  );
   Future<void> addPosition(
     int idOSM,
     GeoPoint p,
   );
 
-  Future<void> goToPosition(
-    int idOSM,
-    GeoPoint p,
-    {bool animate = false}
-  );
+  Future<void> goToPosition(int idOSM, GeoPoint p, {bool animate = false});
 
   Future<void> addMarker(
     int idOSM,

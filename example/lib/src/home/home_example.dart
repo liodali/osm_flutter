@@ -413,11 +413,11 @@ class _MainExampleState extends State<OldMainExample>
                     //   size: 48,
                     // ),
                     iconWidget: SizedBox(
-                      width: 32,
-                      height: 64,
+                      width: 64,
+                      height: 128,
                       child: Image.asset(
                         "asset/directionIcon.png",
-                        scale: .3,
+                        scale: .9,
                       ),
                     ),
                   )

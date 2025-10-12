@@ -10,8 +10,11 @@ class OSMJS {
    initMapFinish(this.mapId,isReady);
   }
   onGeoPointClicked(lon, lat) {
-   onStaticGeoPointClicked(this.mapId,lon, lat);
+    onGeoPointClicked(this.mapId,lon, lat);
   }
+  onGeoPointLongPress(lon, lat) {
+    onGeoPointLongPress(this.mapId,lon, lat);
+   }
   onMapSingleTapClicked(lon, lat) {
    onMapSingleTapListener(this.mapId,lon, lat);
   }

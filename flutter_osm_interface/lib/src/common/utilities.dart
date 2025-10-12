@@ -173,8 +173,8 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         map.addAll(color.toHexMap("roadColor"));
 
-        map["roadWidth"] =
-            roadConf.roadOptionConfiguration?.roadWidth ?? commonRoadOption.roadWidth;
+        map["roadWidth"] = roadConf.roadOptionConfiguration?.roadWidth ??
+            commonRoadOption.roadWidth;
       } else {
         map.addAll(color.toMap("roadColor"));
 

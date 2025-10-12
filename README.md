@@ -4,7 +4,7 @@
 
 # flutter_osm_plugin 
 
-![pub](https://img.shields.io/badge/pub-v1.3.6-blue)   
+![pub](https://img.shields.io/badge/pub-v1.4.2-blue)   
 
 
 ## Platform Support
@@ -51,7 +51,7 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^1.3.6
+      flutter_osm_plugin: ^1.4.2
 
 
 
@@ -91,59 +91,106 @@ many thanks for @ben-xD
     * change kotlin version from `1.4.21` to `1.5.21`
     * change gradle version from `4.1.1` to `7.0.2`
 
-### For web integration
+### Web Integration
 
-> To show buttons,UI that have to manage user click over the map, you should use this library : `pointer_interceptor`
+#### Technical Issue: Event Capture in Web
 
+On web platforms, UI elements above the map cannot receive click events. This occurs because the OSM map renders as an `HtmlElementView` that captures all pointer events before they reach Flutter widgets.
+
+#### Common Issues
+- Dialogs appear but buttons are unclickable
+- UI elements over the map don't receive click events
+- The map's "grab" cursor shows even when hovering over your UI elements
+
+**Solution: Add pointer_interceptor**
+
+```yaml
+dependencies:
+  pointer_interceptor: ^0.10.1+2
+```
+
+#### Example: Basic Marker Click Handling with PointerInterceptor
+
+```dart
+      body: OSMFlutter(
+        controller: mapController,
+        osmOption: OSMOption(
+          zoomOption: ZoomOption(initZoom: 12),
+        ),
+        onGeoPointLongPressed:(point){
+          print("long press on $point");
+        },
+        onGeoPointClicked: (point) {
+          // When a marker is clicked, show a popup with PointerInterceptor
+          showDialog(
+            context: context,
+            builder: (context) => PointerInterceptor(
+              // The PointerInterceptor is crucial here for web platforms
+              child: AlertDialog(
+                title: Text('Marker Clicked'),
+                content: Text('Location: ${point.latitude}, ${point.longitude}'),
+                actions: [
+                  TextButton(
+                    // This button will work on web thanks to PointerInterceptor
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('Close'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+```
+
+Without the `PointerInterceptor` wrapping the dialog, the buttons would be unresponsive on web platforms because the map underneath would capture all the click events before they reach your UI elements.
 
 ## Simple Usage
 #### Creating a basic `OSMFlutter` :
   
   
 ```dart
- OSMFlutter( 
-        controller:mapController,
-        osmOption: OSMOption(
-              userTrackingOption: UserTrackingOption(
-              enableTracking: true,
-              unFollowUser: false,
-            ),
-            zoomOption: ZoomOption(
-                  initZoom: 8,
-                  minZoomLevel: 3,
-                  maxZoomLevel: 19,
-                  stepZoom: 1.0,
-            ),
-            userLocationMarker: UserLocationMaker(
-                personMarker: MarkerIcon(
-                    icon: Icon(
-                        Icons.location_history_rounded,
-                        color: Colors.red,
-                        size: 48,
-                    ),
-                ),
-                directionArrowMarker: MarkerIcon(
-                    icon: Icon(
-                        Icons.double_arrow,
-                        size: 48,
-                    ),
-                ),
-            ),
-            roadConfiguration: RoadOption(
-                    roadColor: Colors.yellowAccent,
-            ),
-            markerOption: MarkerOption(
-                defaultMarker: MarkerIcon(
-                    icon: Icon(
-                      Icons.person_pin_circle,
-                      color: Colors.blue,
-                      size: 56,
-                    ),
-                )
-            ),
-        )
-    );
-
+OSMFlutter(
+  controller: MapController(
+    initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
+    areaLimit: const BoundingBox(
+      east: 10.4922941,
+      north: 47.8084648,
+      south: 45.817995,
+      west: 5.9559113,
+    ),
+  ),
+  osmOption: OSMOption(
+    userTrackingOption: const UserTrackingOption(
+      enableTracking: true,
+      unFollowUser: false,
+    ),
+    zoomOption: const ZoomOption(
+      initZoom: 8,
+      minZoomLevel: 3,
+      maxZoomLevel: 19,
+      stepZoom: 1.0,
+    ),
+    userLocationMarker: UserLocationMaker(
+      personMarker: const MarkerIcon(
+        icon: Icon(
+          Icons.location_history_rounded,
+          color: Colors.red,
+          size: 48,
+        ),
+      ),
+      directionArrowMarker: const MarkerIcon(
+        icon: Icon(
+          Icons.double_arrow,
+          size: 48,
+        ),
+      ),
+    ),
+    roadConfiguration: const RoadOption(
+      roadColor: Colors.yellowAccent,
+    ),
+  ),
+)
 ```
 
 ## MapController
@@ -658,6 +705,8 @@ final configs = [
 | `mapRestored`                 | (callback) Should be override this method, to get notified when map is restored you can also add you backup |
 | `onSingleTap`                 | (callback) Called when the user makes single click on map |
 | `onLongTap`                   | (callback) Called when the user makes long click on map |
+| `onMarkerClicked`             | (callback) Called when the user makes single click on marker |
+| `onMarkerLongPress`           | (callback) Called when the user makes long press click on marker |
 | `onRegionChanged`             | (callback) Notified when map is change region (on moves) |
 | `onRoadTap`                   | (callback) Notified when user click on the polyline (road) |
 | `onLocationChanged`           | (callback) Notified when user location changed  |
@@ -725,6 +774,7 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 | `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
 | `osmOption`                   | (OSMOption) used to configure OSM Map such as zoom,road,userLocationMarker    |
 | `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
+| `onGeoPointLongPress`         | (callback) listener triggered when marker is long press clicked ,return current geoPoint of the marker         |
 | `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |
 | `onMapMoved`                  | (callback) it is each the map moved user handler or navigate to another location using APIs       |
 | `onMapIsReady`                | (callback) listener trigger to get map is initialized or not |

@@ -157,8 +157,7 @@ class _SearchPageState extends State<SearchPage> {
                             onTap: () {
                               textEditingController.clear();
                               controller.setSearchableText("");
-                              FocusScope.of(context)
-                                  .requestFocus(FocusNode());
+                              FocusScope.of(context).requestFocus(FocusNode());
                             },
                             child: const Icon(
                               Icons.close,
@@ -196,7 +195,7 @@ class _SearchPageState extends State<SearchPage> {
           child: FloatingActionButton(
             onPressed: () async {
               GeoPoint p = await controller.selectAdvancedPositionPicker();
-               if (!context.mounted) return;
+              if (!context.mounted) return;
               Navigator.pop(context, p);
             },
             child: const Icon(Icons.arrow_forward),
@@ -320,7 +319,7 @@ class _TopSearchWidgetState extends State<TopSearchWidget> {
                       /// hide suggestion card
                       notifierAutoCompletion.value = false;
                       await reInitStream();
-                       if (!context.mounted) return;
+                      if (!context.mounted) return;
                       FocusScope.of(context).requestFocus(
                         FocusNode(),
                       );

@@ -53,7 +53,6 @@ enum Anchor {
       value.$2,
     ];
   }
-
 }
 
 class IconAnchor {
@@ -129,7 +128,7 @@ class MarkerIcon extends StatelessWidget {
     this.assetMarker,
     this.iconWidget,
     super.key,
-  })  : assert((icon != null && assetMarker == null && iconWidget == null) ||
+  }) : assert((icon != null && assetMarker == null && iconWidget == null) ||
             (iconWidget != null && assetMarker == null && icon == null) ||
             (assetMarker != null && icon == null && iconWidget == null));
 

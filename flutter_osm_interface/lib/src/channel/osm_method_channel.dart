@@ -69,6 +69,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }
 
   @override
+  Stream<GeoPointLongPressEvent> onGeoPointLongPressListener(int idMap) {
+    return _events(idMap).whereType<GeoPointLongPressEvent>();
+  }
+
+  @override
   Stream<UserLocationEvent> onUserPositionListener(int idMap) {
     return _events(idMap).whereType<UserLocationEvent>();
   }
@@ -114,6 +119,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
         case "receiveGeoPoint":
           final result = call.arguments;
           _streamController.add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
+          break;
+        case "receiveGeoPointLongPress":
+          final result = call.arguments;
+          _streamController
+              .add(GeoPointLongPressEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveUserLocation":
           final result = call.arguments;
@@ -503,7 +513,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<double> getZoom(int idOSM) async {
-    return await _channels[idOSM]?.invokeMethod('get#Zoom');
+    final zoom = await _channels[idOSM]?.invokeMethod('get#Zoom');
+    return zoom.toDouble();
   }
 
   @override

@@ -249,7 +249,12 @@ mixin WebMixin {
   }
 
   Future<double> getZoom() async {
-    return (await interop.getZoom().toDart).toDartDouble;
+    return (await interop
+            .getZoom(
+              mapIdMixin.toJS,
+            )
+            .toDart)
+        .toDartDouble;
   }
 
   Future<void> limitArea(BoundingBox box) async {

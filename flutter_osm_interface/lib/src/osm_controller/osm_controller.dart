@@ -137,18 +137,18 @@ abstract class IBaseOSMController {
   /// has attribute which is the desired location
   /// [p] : (GeoPoint) desired location
   /// [animate] : (bool) animate the camera if true (default:false)
-  Future<void> goToPosition(GeoPoint p,{bool animate = false});
+  Future<void> goToPosition(GeoPoint p, {bool animate = false});
 
   /// [enableTracking]
-  /// 
-  /// to start tracking user location where we will show [personMarker] 
+  ///
+  /// to start tracking user location where we will show [personMarker]
   /// or [directionMarker] depend on heading value but we can configure the marker to be always
   /// [directionMarker] by set [useDirectionMarker] to true (default:false)
-  /// 
+  ///
   /// we can also enable stop following user when the user move the map by set [enableStopFollow] to true
   /// with [disableMarkerRotation] we can disable rotation of the marker
   /// and [anchor] will change the position of the marker compared to center of the marker
-  /// 
+  ///
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableMarkerRotation,
@@ -162,6 +162,7 @@ abstract class IBaseOSMController {
   /// [startLocationUpdating]
   ///
   Future<void> startLocationUpdating();
+
   /// [stopLocationUpdating]
   ///
   Future<void> stopLocationUpdating();

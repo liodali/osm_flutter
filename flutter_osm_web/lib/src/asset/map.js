@@ -226,6 +226,7 @@ function setUpMap(mapId){
       osmJS.isMapReady(isReady)
    };
    innerWindow.onGeoPointClicked =(lon, lat)=> { osmLinks.get(mapId).onGeoPointClicked(lon, lat) };
+   innerWindow.onGeoPointLongPress =(lon, lat)=> { osmLinks.get(mapId).onGeoPointLongPress(lon, lat) };
    innerWindow.onMapSingleTapClicked =(lon, lat)=>{ osmLinks.get(mapId).onMapSingleTapClicked(lon, lat) };
    innerWindow.onRegionChanged = (box, center)=>{ osmLinks.get(mapId).onRegionChanged(box, center) };
    innerWindow.onRoadClicked = (roadKey) => { osmLinks.get(mapId).onRoadClicked(roadKey) };

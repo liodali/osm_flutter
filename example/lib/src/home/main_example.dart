@@ -33,6 +33,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
   List<GeoPoint> geos = [];
   ValueNotifier<GeoPoint?> userLocationNotifier = ValueNotifier(null);
+  ValueNotifier<int> zoomLevelNotifier = ValueNotifier(16);
   final mapKey = GlobalKey();
 
   @override
@@ -81,7 +82,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
             icon: Icon(
               Icons.person_pin,
               color: Colors.red,
-              size: 32,
+              size: 56,
             ),
           ),
           //angle: userLocation.angle,
@@ -93,7 +94,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
             icon: Icon(
               Icons.person_pin,
               color: Colors.red,
-              size: 32,
+              size: 56,
             ),
           ),
           // iconAnchor: IconAnchor(
@@ -110,8 +111,63 @@ class _MainState extends State<Main> with OSMMixinObserver {
   }
 
   @override
+  void onMarkerClicked(GeoPoint position) {
+    super.onMarkerClicked(position);
+    Future.microtask(() async {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("the marker will be clicked!"),
+        ),
+      );
+    });
+  }
+
+  @override
+  void onMarkerLongPress(GeoPoint position) {
+    super.onMarkerLongPress(position);
+    Future.microtask(() async {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Expanded(
+                child: Text("the marker will be deleted!"),
+              ),
+              PointerInterceptor(
+                child: SnackBarAction(
+                  label: 'procees',
+                  onPressed: () async {
+                    await controller.removeMarker(position);
+                    geos.remove(position);
+                    if (!mounted) {
+                      return;
+                    }
+                    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+                  },
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
   void onRegionChanged(Region region) {
     super.onRegionChanged(region);
+    controller.getZoom().then((v) {
+      zoomLevelNotifier.value = v.toInt();
+    });
     if (trackingNotifier.value) {
       final userLocation = userLocationNotifier.value;
       if (userLocation == null ||
@@ -135,7 +191,10 @@ class _MainState extends State<Main> with OSMMixinObserver {
         await controller.addMarker(
           userLocation,
           markerIcon: const MarkerIcon(
-            icon: Icon(Icons.navigation),
+            icon: Icon(
+              Icons.navigation,
+              size: 48,
+            ),
           ),
           angle: userLocation.angle,
         );
@@ -169,6 +228,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
             left: 15,
             child: ZoomNavigation(
               controller: controller,
+              zoomNotifier: zoomLevelNotifier,
             ),
           )
         ],
@@ -250,42 +310,53 @@ class ZoomNavigation extends StatelessWidget {
   const ZoomNavigation({
     super.key,
     required this.controller,
+    required this.zoomNotifier,
   });
   final MapController controller;
+  final ValueNotifier<int> zoomNotifier;
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         PointerInterceptor(
           child: ElevatedButton(
+            onPressed: () async {
+              controller.zoomIn();
+            },
             style: ElevatedButton.styleFrom(
+              minimumSize: const Size(48, 32),
               maximumSize: const Size(48, 48),
-              minimumSize: const Size(24, 32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
               ),
               backgroundColor: Colors.white,
               padding: EdgeInsets.zero,
+              elevation: 0,
             ),
             child: const Center(
               child: Icon(Icons.add),
             ),
-            onPressed: () async {
-              controller.zoomIn();
-            },
           ),
-        ),
-        const SizedBox(
-          height: 16,
         ),
         PointerInterceptor(
           child: ElevatedButton(
+            onPressed: () async {
+              controller.zoomOut();
+            },
             style: ElevatedButton.styleFrom(
+              minimumSize: const Size(48, 32),
               maximumSize: const Size(48, 48),
-              minimumSize: const Size(24, 32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              elevation: 0,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(12),
+                  bottomRight: Radius.circular(12),
+                ),
               ),
               backgroundColor: Colors.white,
               padding: EdgeInsets.zero,
@@ -293,9 +364,6 @@ class ZoomNavigation extends StatelessWidget {
             child: const Center(
               child: Icon(Icons.remove),
             ),
-            onPressed: () async {
-              controller.zoomOut();
-            },
           ),
         ),
       ],
@@ -485,7 +553,7 @@ class Map extends StatelessWidget {
               icon: Icon(
                 Icons.train,
                 color: Colors.green,
-                size: 32,
+                size: 48,
               ),
             ),
             [
@@ -554,6 +622,7 @@ class ActivationUserLocation extends StatelessWidget {
                 anchor: Anchor.right,
                 useDirectionMarker: true,
               );*/
+
               await controller.startLocationUpdating();
               trackingNotifier.value = true;
 

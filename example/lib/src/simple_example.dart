@@ -43,7 +43,8 @@ class _SimpleExampleState extends State<SimpleExample> {
         currentIndex: indexPage,
         onTap: (p) {
           controller.animateToPage(p,
-              duration: const Duration(milliseconds: 500), curve: Curves.linear);
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.linear);
         },
         items: const [
           BottomNavigationBarItem(
