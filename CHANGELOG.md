@@ -1,3 +1,30 @@
+### 1.4.2:
+* fix init customTile in ios where tile was not applied
+### 1.4.1:
+* add missing api in readme file
+### 1.4.0:
+* update ios sdk
+* add `onGeoPointLongPress` callback and mixin 
+* fix wrong user location information from JS to dart
+* fix readme file thnx to #assemblethis
+### 1.3.8: fix bug
+* hotfix for bug  when use our plugin in flutter app that hosted in native iOS app #588
+### 1.3.7: fix bug
+### 1.3.6: fix bug
+* fix set multiple static marker icon (#575)
+### 1.3.5+1: fix bug
+* fix android build by remove unnecessary dependency in gradle file
+### 1.3.5: fix bug
+* fix issue in convert js object to dart for web side
+### 1.3.4: fix bug
+### 1.3.3+1:
+* remove unnecessary gradle dependency that cause issue
+### 1.3.3:
+* fix bug in web side
+### 1.3.2:
+* fix bug in mylocation on web side
+### 1.3.1:
+* fix bug in setIconMarker In web side (#560)
 ### 1.3.0:
 * add new attribute `isDotted` to `RoadOption`  to draw dotted line
 * fix bug related to draw shapes in mobile side

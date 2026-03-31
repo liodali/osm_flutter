@@ -93,9 +93,7 @@ class CustomTile {
   Map toMap() {
     final map = {
       "name": sourceName,
-      "urls": urlsServers
-          .map((e) => e.toMapPlatform())
-          .toList(),
+      "urls": urlsServers.map((e) => e.toMapPlatform()).toList(),
       "tileSize": tileSize,
       "tileExtension": tileExtension,
       "maxZoomLevel": maxZoomLevel,

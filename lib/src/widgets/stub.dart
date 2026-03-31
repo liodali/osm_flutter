@@ -6,6 +6,7 @@ Widget getWidget({
   required BaseMapController controller,
   UserTrackingOption? userTrackingOption,
   OnGeoPointClicked? onGeoPointClicked,
+  OnGeoPointClicked? onGeoPointLongPressed,
   OnLocationChanged? onLocationChanged,
   OnMapMoved? onMapMoved,
   required ValueNotifier<bool> mapIsReadyListener,
@@ -33,6 +34,7 @@ class OSMMapWidget extends StatelessWidget {
     required this.controller,
     this.userTrackingOption,
     this.onGeoPointClicked,
+    this.onGeoPointLongPressed,
     this.onLocationChanged,
     this.onMapMoved,
     required this.mapIsReadyListener,
@@ -55,6 +57,7 @@ class OSMMapWidget extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
+  final OnGeoPointClicked? onGeoPointLongPressed;
   final OnLocationChanged? onLocationChanged;
   final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;

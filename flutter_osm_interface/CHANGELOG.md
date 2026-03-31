@@ -1,3 +1,8 @@
+## 1.4.0: 
+* add `onGeoPointLongPressEvent` to handle long click
+* add mixin `onGeoPointLongPressEvent`
+## 1.3.2:
+## 1.3.1:
 ## 1.3.0:
 ## 1.1.0:
 ## 1.0.3:

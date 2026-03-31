@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_interface/src/common/utilities.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -114,5 +114,10 @@ void main() {
         GeoPoint(latitude: 47.43751421525967, longitude: 8.473695728446962);
     expect(p1.isEqual(p2), true);
     expect(p1.isEqual(p3), false);
+  });
+  test("test color", () {
+    Color color = Colors.red;
+    expect(color.toHexColor(), "#fff44336");
+    expect(color.toHexColorWeb(), "#f44336");
   });
 }

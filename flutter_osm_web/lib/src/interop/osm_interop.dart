@@ -17,17 +17,17 @@ external JSPromise removeControls(
 );
 
 @JS('centerMap')
-external JSPromise centerMap(
+external GeoPointJs centerMap(
   JSNumber mapId,
 );
 
 @JS('getBounds')
-external JSPromise getBounds(
+external BoundingBoxJs getBounds(
   JSNumber mapId,
 );
 
 @JS('locateMe')
-external JSPromise locateMe(
+external JSPromise<JSString> locateMe(
   JSNumber mapId,
 );
 
@@ -75,7 +75,9 @@ external JSPromise setZoomWithStep(
 );
 
 @JS('getZoom')
-external JSPromise<JSNumber> getZoom();
+external JSPromise<JSNumber> getZoom(
+  JSNumber mapId,
+);
 
 @JS('setMaxZoomLevel')
 external JSPromise setMaxZoomLevel(
@@ -108,8 +110,8 @@ external JSPromise addMarker(
 @JS('changeMarker')
 external JSPromise changeMarker(
   JSNumber mapId,
-  GeoPointJs oldP,
-  GeoPointJs newP,
+  GeoPointJs currentPoint,
+  GeoPointJs? newP,
   JSString? icon,
   SizeJs? iconSize,
   JSNumber? angle,
@@ -161,7 +163,7 @@ external JSPromise setIconStaticGeoPoints(
 );
 
 @JS('limitArea')
-external JSPromise limitArea(
+external JSAny limitArea(
   JSNumber mapId,
   BoundingBoxJs box,
 );
@@ -281,8 +283,14 @@ external JSNumber setUpMap(JSNumber mapId);
 external set initMapFinish(JSFunction f);
 
 /// Allows assigning a function to be callable from `window.onGeoPointClicked(lat,lon)`
-@JS('onStaticGeoPointClicked')
-external set onStaticGeoPointClicked(JSFunction f);
+// @JS('onStaticGeoPointClicked')
+// external set onStaticGeoPointClicked(JSFunction f);
+
+@JS('onGeoPointClicked')
+external set onGeoPointClicked(JSFunction f);
+
+@JS('onGeoPointLongPress')
+external set onGeoPointLongPress(JSFunction f);
 
 /// Allows assigning a function to be callable from `window.onMapSingleTapClicked(lat,lon)`
 @JS('onMapSingleTapListener')

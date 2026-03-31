@@ -37,7 +37,7 @@ class SimpleOSM extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-   /* final controller = useMapController(
+    /* final controller = useMapController(
         initPosition: GeoPoint(
       latitude: 47.4358055,
       longitude: 8.4737324,

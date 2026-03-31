@@ -13,6 +13,13 @@ extension type GeoPointJs._(JSObject o) implements JSObject {
 
   // Must have an unnamed factory constructor with named arguments.
   external factory GeoPointJs({num lon, num lat});
+
+  Map<String, double> toMap() {
+    return {
+      'lon': lon.toDouble(),
+      'lat': lat.toDouble(),
+    };
+  }
 }
 
 @JS()

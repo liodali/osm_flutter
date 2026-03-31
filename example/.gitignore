@@ -82,3 +82,6 @@ ios/Podfile.lock
 .env
 pubspec.lock
 analysis_options.yaml
+.cxx
+devtools_options.yaml
+.metadata

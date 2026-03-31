@@ -17,7 +17,7 @@ import 'widgets/copyright_osm_widget.dart';
 /// [onGeoPointClicked] : (callback) is trigger when you clicked on marker,return current  geoPoint of the Marker
 ///
 /// [onLocationChanged] : (callback) it's fired when you activate tracking and  user position has been changed
-/// 
+///
 /// [onMapMoved] : (callback) it's fired when you activate tracking and  user position has been changed
 ///
 /// [onMapIsReady] : (callabck) it's fired when map initialization is complet
@@ -25,6 +25,7 @@ class OSMFlutter extends StatefulWidget {
   final BaseMapController controller;
   final Widget? mapIsLoading;
   final OnGeoPointClicked? onGeoPointClicked;
+  final OnGeoPointClicked? onGeoPointLongPress;
   final OnLocationChanged? onLocationChanged;
   final OnMapMoved? onMapMoved;
   final Function(bool)? onMapIsReady;
@@ -35,10 +36,11 @@ class OSMFlutter extends StatefulWidget {
     required this.osmOption,
     this.mapIsLoading,
     this.onGeoPointClicked,
+    this.onGeoPointLongPress,
     this.onLocationChanged,
     this.onMapMoved,
     this.onMapIsReady,
-  }) ;
+  });
 
   @override
   State<OSMFlutter> createState() => _OSMFlutterState();
@@ -131,6 +133,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         controller: widget.controller,
                         userTrackingOption: widget.osmOption.userTrackingOption,
                         onGeoPointClicked: widget.onGeoPointClicked,
+                        onGeoPointLongPress: widget.onGeoPointLongPress,
                         onLocationChanged: widget.onLocationChanged,
                         onMapMoved: widget.onMapMoved,
                         dynamicMarkerWidgetNotifier:

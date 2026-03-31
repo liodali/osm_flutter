@@ -1,13 +1,13 @@
-async function centerMap(mapId) {
+function centerMap(mapId) {
    var iframe = getIframe(mapId);
-   var geoAsync = await iframe.contentWindow.centerMap();
+   var geoAsync =  iframe.contentWindow.centerMap();
    return geoAsync;
 }
 
 async function locateMe(mapId) {
    var iframe = getIframe(mapId);
    var geoAsync = await iframe.contentWindow.getMyLocation();
-   return geoAsync;
+   return JSON.stringify(geoAsync);
 }
 
 async function changeTileLayer(mapId,tile) {
@@ -29,9 +29,9 @@ async function changeMarker(mapId,oldPoint, point, icon,iconSize,angle,anchor) {
    return iframe.contentWindow.changeMarker(oldPoint, point, icon,iconSize,angle,anchor);
 }
 
-async function modifyMarker(mapId,point, icon) {
+async function modifyMarker(mapId,point, icon,size) {
    var iframe = getIframe(mapId);
-   return await iframe.contentWindow.modifyMarker(point, icon);
+   return await iframe.contentWindow.modifyMarker(point, icon,size);
 }
 
 async function initMapLocation(mapId,point) {
@@ -103,13 +103,13 @@ async function setMinZoomLevel(mapId,zoomLevel) {
    var iframe = getIframe(mapId);
    return await iframe.contentWindow.setMinZoomLevel(zoomLevel);
 }
-async function limitArea(mapId,box) {
+ function limitArea(mapId,box) {
    var iframe = getIframe(mapId);
-   return await iframe.contentWindow.limitBoundingBox(box);
+   return  iframe.contentWindow.limitBoundingBox(box);
 }
-async function getBounds(mapId) {
+ function getBounds(mapId) {
    var iframe = getIframe(mapId);
-   return await iframe.contentWindow.getBounds();
+   return  iframe.contentWindow.getBounds();
 }
 async function flyToBounds(mapId,box, padding) {
    var iframe = getIframe(mapId);
@@ -226,6 +226,7 @@ function setUpMap(mapId){
       osmJS.isMapReady(isReady)
    };
    innerWindow.onGeoPointClicked =(lon, lat)=> { osmLinks.get(mapId).onGeoPointClicked(lon, lat) };
+   innerWindow.onGeoPointLongPress =(lon, lat)=> { osmLinks.get(mapId).onGeoPointLongPress(lon, lat) };
    innerWindow.onMapSingleTapClicked =(lon, lat)=>{ osmLinks.get(mapId).onMapSingleTapClicked(lon, lat) };
    innerWindow.onRegionChanged = (box, center)=>{ osmLinks.get(mapId).onRegionChanged(box, center) };
    innerWindow.onRoadClicked = (roadKey) => { osmLinks.get(mapId).onRoadClicked(roadKey) };

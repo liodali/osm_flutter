@@ -52,3 +52,5 @@ pubspec.lock
 .vscode/**
 
 **/ios/Frameworks/**
+**/ios/flutter/ephemeral
+CLAUDE.md

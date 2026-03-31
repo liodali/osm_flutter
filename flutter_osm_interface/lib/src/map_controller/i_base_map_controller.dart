@@ -16,10 +16,13 @@ abstract class IBaseMapController {
   final BoundingBox? areaLimit;
   final List<OSMMixinObserver> _mixinObserver = [];
 
-  late final ValueNotifier<GeoPoint?> _listenerMapLongTapping = ValueNotifier(null);
-  late final ValueNotifier<GeoPoint?> _listenerMapSingleTapping = ValueNotifier(null);
+  late final ValueNotifier<GeoPoint?> _listenerMapLongTapping =
+      ValueNotifier(null);
+  late final ValueNotifier<GeoPoint?> _listenerMapSingleTapping =
+      ValueNotifier(null);
   late final ValueNotifier<bool> _listenerMapIsReady = ValueNotifier(false);
-  late final ValueNotifier<Region?> _listenerRegionIsChanging = ValueNotifier(null);
+  late final ValueNotifier<Region?> _listenerRegionIsChanging =
+      ValueNotifier(null);
   late final ValueNotifier<RoadInfo?> _listenerRoadTapped = ValueNotifier(null);
 
   ValueListenable<GeoPoint?> get listenerMapLongTapping =>
@@ -58,7 +61,7 @@ abstract class IBaseMapController {
   }
 }
 
-extension setLiteners on IBaseMapController {
+extension SetLiteners on IBaseMapController {
   void setValueListenerMapLongTapping(GeoPoint p) {
     _listenerMapLongTapping.value = p;
   }

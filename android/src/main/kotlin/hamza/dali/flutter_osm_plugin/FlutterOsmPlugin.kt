@@ -27,7 +27,6 @@ class FlutterOsmPlugin :
         var state = AtomicInteger(0)
         var pluginBinding: ActivityPluginBinding? = null
         var lifecycle: Lifecycle? = null
-        //private var register: PluginRegistry.Registrar? = null
         const val VIEW_TYPE = "plugins.dali.hamza/osmview"
         const val CREATED = 1
         const val STARTED = 2
@@ -36,24 +35,6 @@ class FlutterOsmPlugin :
         const val STOPPED = 5
         const val DESTROYED = 6
 
-        /*@JvmStatic
-        fun registerWith(register: PluginRegistry.Registrar) {
-            val registerActivity: Activity = register.activity() ?: return
-            this.register = register
-
-            val flutterOsmView = FlutterOsmPlugin()
-            //register.activity()?.application?.registerActivityLifecycleCallbacks(flutterOsmView.)
-            register.platformViewRegistry().registerViewFactory(
-                VIEW_TYPE,
-                OsmFactory(
-                    register.messenger(),
-                    object : ProviderLifecycle {
-                        override fun getLifecyle(): Lifecycle =
-                            ProxyLifecycleProvider(activity = registerActivity).lifecycle
-                    },
-                ),
-            )
-        }*/
     }
 
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
@@ -109,64 +90,4 @@ class FlutterOsmPlugin :
 
 interface ProviderLifecycle {
     fun getOSMLifecycle(): Lifecycle?
-}
-
-private class ProxyLifecycleProvider constructor(
-    activity: Activity
-) : Application.ActivityLifecycleCallbacks, LifecycleOwner, ProviderLifecycle {
-
-    override val lifecycle: LifecycleRegistry = LifecycleRegistry(this)
-    var registrarActivityHashCode: Int = activity.hashCode()
-
-    init {
-        activity.application.registerActivityLifecycleCallbacks(this)
-    }
-
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-        if (activity.hashCode() != registrarActivityHashCode) {
-            return
-        }
-        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    }
-
-    override fun onActivityStarted(activity: Activity) {
-        if (activity.hashCode() != registrarActivityHashCode) {
-            return
-        }
-        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START)
-    }
-
-    override fun onActivityResumed(activity: Activity) {
-        if (activity.hashCode() != registrarActivityHashCode) {
-            return
-        }
-        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    }
-
-    override fun onActivityPaused(activity: Activity) {
-        if (activity.hashCode() != registrarActivityHashCode) {
-            return
-        }
-        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    }
-
-    override fun onActivityStopped(activity: Activity) {
-        if (activity.hashCode() != registrarActivityHashCode) {
-            return
-        }
-        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
-    }
-
-    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
-
-    override fun onActivityDestroyed(activity: Activity) {
-        if (activity.hashCode() != registrarActivityHashCode) {
-            return
-        }
-        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    }
-
-
-    override fun getOSMLifecycle(): Lifecycle = lifecycle
-
 }

@@ -183,15 +183,8 @@ class _MainExampleState extends State<OldMainExample>
           await controller.changeLocationMarker(
             oldLocation: lastGeoPoint.value!,
             newLocation: controller.listenerMapSingleTapping.value!,
-            //angle: Random.secure().nextDouble() * (2 * pi),
-            // iconAnchor: IconAnchor(
-            //   anchor: Anchor.center,
-            //   offset: (
-            //     x: 32,
-            //     y: 16,
-            //   ),
-            // ),
           );
+
           lastGeoPoint.value = controller.listenerMapSingleTapping.value;
         } else {
           await controller.addMarker(
@@ -420,11 +413,11 @@ class _MainExampleState extends State<OldMainExample>
                     //   size: 48,
                     // ),
                     iconWidget: SizedBox(
-                      width: 32,
-                      height: 64,
+                      width: 64,
+                      height: 128,
                       child: Image.asset(
                         "asset/directionIcon.png",
-                        scale: .3,
+                        scale: .9,
                       ),
                     ),
                   )

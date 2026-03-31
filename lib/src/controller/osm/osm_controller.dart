@@ -10,8 +10,7 @@ final class MobileOSMController extends IBaseOSMController {
   late int _idMap;
   late MobileOsmFlutterState _osmFlutterState;
 
-  static MobileOSMPlatform osmPlatform =
-      OSMPlatform.instance as MobileOSMPlatform;
+  static MobileOSMPlatform osmPlatform = OSMPlatform.instance as MobileOSMPlatform;
   final duration = const Duration(milliseconds: 300);
   Timer? _timer;
 
@@ -102,27 +101,34 @@ final class MobileOSMController extends IBaseOSMController {
       initZoom ?? _osmFlutterState.widget.zoomOption.initZoom,
     );
 
-    /// listen to data send from native map
+    if (Platform.isAndroid) {
+      await initMap(
+        initPosition,
+        userPositionOption,
+        useExternalTracking,
+        box,
+        initZoom,
+      );
+    }
+  }
 
+  /// listen to data send from native map
+  void onListenChannel() {
     osmPlatform.onLongPressMapClickListener(_idMap).listen((event) {
-      _osmFlutterState.widget.controller
-          .setValueListenerMapLongTapping(event.value);
+      _osmFlutterState.widget.controller.setValueListenerMapLongTapping(event.value);
       for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onLongTap(event.value);
       }
     });
-
     osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
-      _osmFlutterState.widget.controller
-          .setValueListenerMapSingleTapping(event.value);
+      _osmFlutterState.widget.controller.setValueListenerMapSingleTapping(event.value);
       for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onSingleTap(event.value);
       }
     });
 
     osmPlatform.onRoadMapClickListener(_idMap).listen((event) {
-      _osmFlutterState.widget.controller
-          .setValueListenerMapRoadTapping(event.value);
+      _osmFlutterState.widget.controller.setValueListenerMapRoadTapping(event.value);
       for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onRoadTap(event.value);
       }
@@ -136,8 +142,12 @@ final class MobileOSMController extends IBaseOSMController {
       if (_osmFlutterState.widget.onMapIsReady != null) {
         _osmFlutterState.widget.onMapIsReady!(event.value);
       }
-      _osmFlutterState.widget.controller
-          .setValueListenerMapIsReady(event.value);
+      if (_osmFlutterState.widget.controller.osMMixins.isNotEmpty) {
+        Future.forEach(_osmFlutterState.widget.controller.osMMixins, (osmMixin) async {
+          osmMixin.mapIsReady(event.value);
+        });
+      }
+      _osmFlutterState.widget.controller.setValueListenerMapIsReady(event.value);
     });
 
     osmPlatform.onRegionIsChangingListener(_idMap).listen((event) {
@@ -145,8 +155,7 @@ final class MobileOSMController extends IBaseOSMController {
         _osmFlutterState.widget.onMapMoved!(event.value);
       }
 
-      _osmFlutterState.widget.controller
-          .setValueListenerRegionIsChanging(event.value);
+      _osmFlutterState.widget.controller.setValueListenerRegionIsChanging(event.value);
       for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onRegionChanged(event.value);
       }
@@ -163,11 +172,21 @@ final class MobileOSMController extends IBaseOSMController {
       });
     });
 
-    if (_osmFlutterState.widget.onGeoPointClicked != null) {
-      osmPlatform.onGeoPointClickListener(_idMap).listen((event) {
+    osmPlatform.onGeoPointClickListener(_idMap).listen((event) {
+      if (_osmFlutterState.widget.onGeoPointClicked != null) {
         _osmFlutterState.widget.onGeoPointClicked!(event.value);
-      });
-    }
+      }
+      for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
+        osmMixin.onMarkerClicked(event.value);
+      }
+    });
+
+    osmPlatform.onGeoPointLongPressListener(_idMap).listen((event) {
+      _osmFlutterState.widget.onGeoPointLongPress?.call(event.value);
+      for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
+        osmMixin.onMarkerLongPress(event.value);
+      }
+    });
 
     osmPlatform.onUserPositionListener(_idMap).listen((event) {
       if (_osmFlutterState.widget.onLocationChanged != null) {
@@ -177,16 +196,6 @@ final class MobileOSMController extends IBaseOSMController {
         mixin.onLocationChanged(event.value);
       }
     });
-
-    if (Platform.isAndroid) {
-      await initMap(
-        initPosition,
-        userPositionOption,
-        useExternalTracking,
-        box,
-        initZoom,
-      );
-    }
   }
 
   void _checkBoundingBox(BoundingBox? box, GeoPoint? initPosition) {
@@ -205,8 +214,7 @@ final class MobileOSMController extends IBaseOSMController {
     BoundingBox? box,
     double? initZoom,
   ) async {
-    final userTrackOption =
-        userPositionOption ?? _osmFlutterState.widget.userTrackingOption;
+    final userTrackOption = userPositionOption ?? _osmFlutterState.widget.userTrackingOption;
 
     /// change user person Icon and arrow Icon
     if (_osmFlutterState.widget.userLocationMarker != null) {
@@ -227,8 +235,7 @@ final class MobileOSMController extends IBaseOSMController {
       if (Platform.isAndroid) {
         bool granted = await _osmFlutterState.requestPermission();
         if (!granted) {
-          throw Exception(
-              "we cannot continue showing the map without grant gps permission");
+          throw Exception("we cannot continue showing the map without grant gps permission");
         }
       }
       initPosition = await myLocation();
@@ -264,8 +271,7 @@ final class MobileOSMController extends IBaseOSMController {
   Future<void> _drawInitStaticPoints() async {
     /// draw static position
     if (_osmFlutterState.widget.staticPoints.isNotEmpty) {
-      await Future.forEach(_osmFlutterState.widget.staticPoints,
-          (points) async {
+      await Future.forEach(_osmFlutterState.widget.staticPoints, (points) async {
         if (points.markerIcon != null) {
           await osmPlatform.customMarkerStaticPosition(
             _idMap,
@@ -301,8 +307,7 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<void> changeTileLayer({CustomTile? tileLayer}) =>
-      osmPlatform.changeTileLayer(
+  Future<void> changeTileLayer({CustomTile? tileLayer}) => osmPlatform.changeTileLayer(
         _idMap,
         tileLayer,
       );
@@ -349,14 +354,13 @@ final class MobileOSMController extends IBaseOSMController {
     bool refresh = false,
   }) async {
     _osmFlutterState.widget.dynamicMarkerWidgetNotifier.value = markerIcon;
-    await Future.delayed(duration, () async {
-      await osmPlatform.customMarkerStaticPosition(
-        _idMap,
-        _osmFlutterState.dynamicMarkerKey,
-        id,
-        refresh: refresh,
-      );
-    });
+    await osmPlatform.customMarkerStaticPosition(
+      _idMap,
+      _osmFlutterState.dynamicMarkerKey,
+      id,
+      refresh: refresh,
+    );
+    await Future.delayed(duration);
   }
 
   /// change static position in runtime
@@ -484,10 +488,8 @@ final class MobileOSMController extends IBaseOSMController {
 
   @override
   Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
-    if (zoomLevel != null &&
-        (zoomLevel < minZoomLevel || zoomLevel > maxZoomLevel)) {
-      throw Exception(
-          "zoom level should be between $minZoomLevel and $maxZoomLevel");
+    if (zoomLevel != null && (zoomLevel < minZoomLevel || zoomLevel > maxZoomLevel)) {
+      throw Exception("zoom level should be between $minZoomLevel and $maxZoomLevel");
     }
     await osmPlatform.setZoom(
       _idMap,
@@ -497,9 +499,7 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<double> getZoom() async {
-    return await osmPlatform.getZoom(_idMap);
-  }
+  Future<double> getZoom() => osmPlatform.getZoom(_idMap);
 
   /// draw road
   ///  [start] : started point of your Road
@@ -672,8 +672,7 @@ final class MobileOSMController extends IBaseOSMController {
     BoundingBox box, {
     int paddinInPixel = 0,
   }) async {
-    await (MobileOSMController.osmPlatform as MethodChannelOSM)
-        .zoomToBoundingBox(
+    await (MobileOSMController.osmPlatform as MethodChannelOSM).zoomToBoundingBox(
       _idMap,
       box,
       paddinInPixel: paddinInPixel,
@@ -732,8 +731,7 @@ final class MobileOSMController extends IBaseOSMController {
         _idMap,
         oldLocation,
         newLocation,
-        globalKeyIcon:
-            newMarkerIcon != null ? _osmFlutterState.dynamicMarkerKey : null,
+        globalKeyIcon: newMarkerIcon != null ? _osmFlutterState.dynamicMarkerKey : null,
         angle: angle,
         iconAnchor: iconAnchor,
       );
@@ -751,12 +749,10 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   @override
-  Future<void> startLocationUpdating() =>
-      osmPlatform.startLocationUpdating(_idMap);
+  Future<void> startLocationUpdating() => osmPlatform.startLocationUpdating(_idMap);
 
   @override
-  Future<void> stopLocationUpdating() =>
-      osmPlatform.stopLocationUpdating(_idMap);
+  Future<void> stopLocationUpdating() => osmPlatform.stopLocationUpdating(_idMap);
 }
 
 extension PrivateMethodOSMController on MobileOSMController {

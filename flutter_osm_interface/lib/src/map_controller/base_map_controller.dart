@@ -14,8 +14,6 @@ import 'package:flutter_osm_interface/src/map_controller/i_base_map_controller.d
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 abstract class BaseMapController extends IBaseMapController {
   late IBaseOSMController _osmBaseController;
-  @override
-  final BoundingBox? areaLimit;
   final CustomTile? customTile;
   late Timer? _timer;
   var _layerIsVisible = true;
@@ -24,13 +22,10 @@ abstract class BaseMapController extends IBaseMapController {
   BaseMapController({
     super.initMapWithUserPosition,
     super.initPosition,
-    this.areaLimit = const BoundingBox.world(),
+    super.areaLimit = const BoundingBox.world(),
     this.customTile,
     this.useExternalTracking = false,
-  })  : assert((initMapWithUserPosition != null) ^ (initPosition != null)),
-        super(
-          areaLimit: areaLimit,
-        );
+  }) : assert((initMapWithUserPosition != null) ^ (initPosition != null));
 
   /// implement this method,should be end with super.dispose()
   @mustCallSuper

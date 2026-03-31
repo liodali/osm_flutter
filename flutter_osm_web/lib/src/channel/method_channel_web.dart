@@ -59,6 +59,11 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
+  Stream<GeoPointLongPressEvent> onGeoPointLongPressListener(int idMap) {
+    return _events(idMap).whereType<GeoPointLongPressEvent>();
+  }
+
+  @override
   Stream<UserLocationEvent> onUserPositionListener(int idMap) {
     return _events(idMap).whereType<UserLocationEvent>();
   }
@@ -122,6 +127,11 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
           _streamController
               .add(GeoPointEvent(idOSM, GeoPoint.fromString(result)));
           break;
+        case "receiveGeoPointLongPress":
+          final result = call.arguments as String;
+          _streamController
+              .add(GeoPointLongPressEvent(idOSM, GeoPoint.fromString(result)));
+          break;
         case "receiveRegionIsChanging":
           final result = call.arguments;
           _streamController
@@ -142,7 +152,7 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
               idOSM,
               UserLocation(
                 latitude: geoPt.latitude,
-                longitude: geoPt.latitude,
+                longitude: geoPt.longitude,
               ),
             ),
           );

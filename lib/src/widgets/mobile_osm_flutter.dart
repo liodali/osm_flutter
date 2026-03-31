@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,6 +23,7 @@ class MobileOsmFlutter extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
+  final OnGeoPointClicked? onGeoPointLongPress;
   final OnLocationChanged? onLocationChanged;
   final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
@@ -47,6 +46,7 @@ class MobileOsmFlutter extends StatefulWidget {
     required this.controller,
     this.userTrackingOption,
     this.onGeoPointClicked,
+    this.onGeoPointLongPress,
     this.onLocationChanged,
     this.onMapMoved,
     required this.mapIsReadyListener,
@@ -111,8 +111,8 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   @override
   void mapIsReady(bool isReady) async {
     Future.delayed(const Duration(milliseconds: 300), () async {
-      widget.controller.osMMixins.forEach((osm) async {
-        await osm.mapIsReady(isReady);
+      Future.forEach(widget.controller.osMMixins, (osmMixin) async {
+        await osmMixin.mapIsReady(isReady);
       });
     });
   }
@@ -139,7 +139,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   /// this callback has role to request location permission in your phone in android Side
   /// for iOS it's done manually
   Future<bool> requestPermission() async {
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       final locationStatus = await Permission.location.request();
       if (locationStatus.isGranted) {
         return true;
@@ -162,6 +162,7 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
       await requestPermission();
     }
     widget.controller.init();
+    _osmController!.onListenChannel();
     if (!isFirstLaunched.value) {
       isFirstLaunched.value = true;
     }

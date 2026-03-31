@@ -1,7 +1,10 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 import 'package:flutter_osm_web/src/controller/web_osm_controller.dart';
+import 'package:package_info_plus/package_info_plus.dart' show PackageInfo;
 
 class OsmWebWidget extends StatefulWidget {
   final BaseMapController controller;
@@ -9,6 +12,7 @@ class OsmWebWidget extends StatefulWidget {
   final UserTrackingOption? userTrackingOption;
   final List<StaticPositionGeoPoint> staticPoints;
   final OnGeoPointClicked? onGeoPointClicked;
+  final OnGeoPointClicked? onGeoPointLongPress;
   final OnLocationChanged? onLocationChanged;
   final OnMapMoved? onMapMoved;
   final ValueNotifier<bool> mapIsReadyListener;
@@ -31,6 +35,7 @@ class OsmWebWidget extends StatefulWidget {
     required this.controller,
     this.userTrackingOption,
     this.onGeoPointClicked,
+    this.onGeoPointLongPress,
     this.onLocationChanged,
     this.onMapMoved,
     required this.mapIsReadyListener,
@@ -74,14 +79,38 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
 
   GlobalKey get arrowDirectionMarkerKey => widget.globalKeys[7];
   final keyWidget = GlobalKey();
-
+  late Future<void> _future;
+  ValueNotifier<({String mapScript, String osmInterop, String html})?>
+      dataScripts = ValueNotifier(null);
   @override
   void initState() {
     super.initState();
-    controller = WebOsmController();
+    _future = initController();
     if (widget.mapIsLoading == null) {
       widget.mapIsReadyListener.value = false;
     }
+  }
+
+  Future<void> initController() async {
+    const versionCDN = 'refs/tags/flutter_osm_web-v1.4.2';
+    //kReleaseMode ? 'refs/tags/flutter_osm_web-v1.4.1' : 'refs/heads/main';
+    final dio = Dio(BaseOptions(
+      baseUrl:
+          'https://raw.githubusercontent.com/liodali/osm_flutter/$versionCDN/flutter_osm_web/lib/src/asset/',
+    ));
+    final mapScript = await dio.get<String>(
+      'map.js',
+    );
+    final osmInterop = await dio.get<String>(
+      'osm_interop.js',
+    );
+    final html = await dio.get<String>('map.html');
+    dataScripts.value = (
+      mapScript: mapScript.data!,
+      osmInterop: osmInterop.data!,
+      html: html.data!,
+    );
+    controller = WebOsmController(dataScripts.value!.html);
   }
 
   @override
@@ -92,16 +121,28 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return HtmlElementView(
-      key: keyWidget,
-      viewType: FlutterOsmPluginWeb.getViewType(mapId),
-      onPlatformViewCreated: onPlatformViewCreated,
+    return FutureBuilder(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return HtmlElementView(
+            key: keyWidget,
+            viewType: FlutterOsmPluginWeb.getViewType(mapId),
+            onPlatformViewCreated: onPlatformViewCreated,
+          );
+        }
+        return const Center(child: CircularProgressIndicator.adaptive());
+      },
     );
   }
 
   Future<void> onPlatformViewCreated(int id) async {
     controller.init(this, id);
-    controller.createHtml();
+    controller.onListenToNativeChannel();
+    controller.createHtml(
+      dataScripts.value!.mapScript,
+      dataScripts.value!.osmInterop,
+    );
     //controller.addObserver(this);
     (OSMPlatform.instance as FlutterOsmPluginWeb).setWebMapController(
       mapId,

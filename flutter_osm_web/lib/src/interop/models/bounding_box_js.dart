@@ -22,3 +22,14 @@ extension type BoundingBoxJs._(JSObject _) implements JSObject {
     double west,
   });
 }
+
+extension BoundingBoxJsExt on BoundingBoxJs {
+  Map<String, double> toDart() {
+    return {
+      "north": north,
+      "east": east,
+      "south": south,
+      "west": west,
+    };
+  }
+}

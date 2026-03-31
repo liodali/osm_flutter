@@ -23,19 +23,19 @@ enum Anchor {
     "bottom",
     value: (0.5, 0),
   ),
-  top_left(
+  topLeft(
     "top-left",
     value: (1, 1),
   ),
-  top_right(
+  topRight(
     "top-right",
     value: (0, 1),
   ),
-  bottom_left(
+  bottomLeft(
     "bottom-left",
     value: (1, 0),
   ),
-  bottom_right(
+  bottomRight(
     "bottom-right",
     value: (0, 0),
   );
@@ -53,7 +53,6 @@ enum Anchor {
       value.$2,
     ];
   }
-
 }
 
 class IconAnchor {
@@ -129,7 +128,7 @@ class MarkerIcon extends StatelessWidget {
     this.assetMarker,
     this.iconWidget,
     super.key,
-  })  : assert((icon != null && assetMarker == null && iconWidget == null) ||
+  }) : assert((icon != null && assetMarker == null && iconWidget == null) ||
             (iconWidget != null && assetMarker == null && icon == null) ||
             (assetMarker != null && icon == null && iconWidget == null));
 

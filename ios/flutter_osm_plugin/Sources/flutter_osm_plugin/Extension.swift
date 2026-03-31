@@ -41,6 +41,8 @@ extension UIImage {
 
 
 
+
+
 extension GeoPoint {
     func toLocationCoordinate() -> CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: self["lat"]!, longitude: self["lon"]!)

@@ -43,6 +43,10 @@ class GeoPointEvent extends EventOSM<GeoPoint> {
   GeoPointEvent(super.mapId, super.position);
 }
 
+class GeoPointLongPressEvent extends EventOSM<GeoPoint> {
+  GeoPointLongPressEvent(super.mapId, super.position);
+}
+
 class RoadTapEvent extends EventOSM<RoadInfo> {
   RoadTapEvent(super.mapId, super.road);
 }
@@ -54,6 +58,7 @@ class UserLocationEvent extends EventOSM<UserLocation> {
 class RegionIsChangingEvent extends EventOSM<Region> {
   RegionIsChangingEvent(super.mapId, super.region);
 }
+
 class IosMapInit extends EventOSM<bool> {
   IosMapInit(super.mapId, super.loaded);
 }

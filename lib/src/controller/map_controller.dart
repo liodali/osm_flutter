@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
+import 'package:permission_handler/permission_handler.dart' show Permission, PermissionActions;
 
 /// class [MapController] : map controller that will control map by select position,enable current location,
 /// draw road , show static geoPoint,
@@ -230,7 +231,7 @@ class MapController extends BaseMapController {
   /// [getZoom]
   ///
   /// recuperate current zoom level
-  Future<double> getZoom() async => await osmBaseController.getZoom();
+  Future<double> getZoom() => osmBaseController.getZoom();
 
   /// [setZoom]
   ///
@@ -334,7 +335,13 @@ class MapController extends BaseMapController {
     Anchor anchor = Anchor.center,
     bool useDirectionMarker = false,
   }) async {
-    await osmBaseController.startLocationUpdating();
+    Permission.location.onGrantedCallback(() async {
+      await osmBaseController.startLocationUpdating();
+    }).onLimitedCallback(() async {
+      await osmBaseController.startLocationUpdating();
+    }).onLimitedCallback(() async {
+      await osmBaseController.startLocationUpdating();
+    }).request();
   }
 
   ///[stopLocationUpdating]
@@ -500,8 +507,7 @@ class MapController extends BaseMapController {
     IconAnchor? iconAnchor,
   }) async {
     if (angle != null) {
-      assert(
-          angle >= 0 && angle <= 2 * pi, "angle should be between 0 and 2*pi");
+      assert(angle >= 0 && angle <= 2 * pi, "angle should be between 0 and 2*pi");
     }
     await osmBaseController.addMarker(
       p,
@@ -527,14 +533,12 @@ class MapController extends BaseMapController {
     );
   }
 
-  Future<BoundingBox> get bounds async => await osmBaseController.getBounds();
+  Future<BoundingBox> get bounds async => osmBaseController.getBounds();
 
   /// centerMap
   ///
   /// this attribute to retrieve center location of the map
-  Future<GeoPoint> get centerMap async =>
-      await osmBaseController.getMapCenter();
+  Future<GeoPoint> get centerMap async => osmBaseController.getMapCenter();
 
-  Future<List<GeoPoint>> get geopoints async =>
-      await osmBaseController.geoPoints();
+  Future<List<GeoPoint>> get geopoints async => osmBaseController.geoPoints();
 }
