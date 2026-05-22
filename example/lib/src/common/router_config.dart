@@ -3,6 +3,7 @@ import 'package:flutter_osm_plugin_example/src/pages/configuration_map_widget.da
 import 'package:flutter_osm_plugin_example/src/pages/home/home_example.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/main_example.dart';
 import 'package:flutter_osm_plugin_example/src/pages/search_example.dart';
+import 'package:flutter_osm_plugin_example/src/pages/settings_page.dart';
 import 'package:flutter_osm_plugin_example/src/pages/simple_example_hook.dart';
 import 'package:flutter_osm_plugin_example/src/pages/simple_osm.dart';
 import 'package:flutter_osm_plugin_example/src/widgets/themed_widget.dart';
@@ -46,6 +47,11 @@ class AppRouter extends RootStackRouter {
       path: '/search',
       builder: (context, _) => const SearchPage(),
     ),
+    NamedRouteDef(
+      name: 'settings',
+      path: '/settings',
+      builder: (context, _) => const SettingsPage(),
+    ),
   ];
 }
 
@@ -57,4 +63,5 @@ extension AppRouterExtension on StackRouter {
   Future<void> pushHook() async => pushPath('/hook');
   Future<void> pushConfiguration() async => pushPath('/configuration');
   Future<void> pushPickerResult() async => pushPath('/picker-result');
+  Future<void> pushSettings() async => pushPath('/settings');
 }

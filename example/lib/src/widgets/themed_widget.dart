@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:forui/theme.dart';
+import 'package:forui/forui.dart';
 
 class ThemedWidget extends StatelessWidget {
   final Widget child;
@@ -11,8 +11,8 @@ class ThemedWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FAnimatedTheme(
-      data: FTheme.of(context),
+    return FTheme(
+      data: FThemes.zinc.light.touch,
       child: child,
     );
   }

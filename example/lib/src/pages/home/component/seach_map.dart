@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' show TextInputAction;
+import 'package:flutter/material.dart' show TextInputAction, OutlineInputBorder;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart' show MapController;
 import 'package:forui/forui.dart';
@@ -34,23 +34,24 @@ class _SearchInMapState extends State<SearchInMap> {
   @override
   Widget build(BuildContext context) {
     return FTextField(
-      controller: textController,
+      control: .managed(controller: textController),
       onTap: () {},
       maxLines: 1,
       keyboardType: TextInputType.text,
       textInputAction: TextInputAction.search,
       hint: "search for place,location,restaurant,etc ..",
-      style: (styleTextField) => styleTextField.copyWith(
-        filled: false,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12),
-        border: styleTextField.border.map(
-          (border) => border.copyWith(
-            borderSide: BorderSide(
-              width: 0.5,
-              color: FTheme.of(context).colors.border,
+      style: .delta(
+        contentPadding: const .value(EdgeInsets.symmetric(vertical: 12)),
+        border: .delta([
+          .base(
+            OutlineInputBorder(
+              borderSide: BorderSide(
+                width: 0.5,
+                color: FTheme.of(context).colors.border,
+              ),
             ),
           ),
-        ),
+        ]),
       ),
       prefixBuilder: (context, style, states) {
         return Padding(

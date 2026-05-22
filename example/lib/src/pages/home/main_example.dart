@@ -5,6 +5,8 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_widget_configuration.dart'
     show MoreActionConfig;
 import 'package:flutter_osm_plugin_example/src/pages/home/component/header_home.dart';
+import 'package:flutter_osm_plugin_example/src/pages/home/component/seach_map.dart'
+    show SearchInMap;
 import 'package:flutter_osm_plugin_example/src/pages/home/component/side_bar.dart';
 import 'package:flutter_osm_plugin_example/src/widgets/action_buttons.dart'
     show ActionButton;
@@ -50,13 +52,13 @@ class _MainPageExampleState extends State<MainPageExample> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width > 600;
+    final isDesktop = MediaQuery.of(context).size.width > 700;
     return FScaffold(
       resizeToAvoidBottomInset: false,
-      scaffoldStyle: (style) => style.copyWith(
+      scaffoldStyle: .delta(
         backgroundColor: FTheme.of(context).colors.background,
         systemOverlayStyle: FTheme.of(context).scaffoldStyle.systemOverlayStyle,
-        childPadding: EdgeInsets.zero,
+        childPadding: const EdgeInsetsGeometryDelta.value(EdgeInsets.zero),
       ),
       header: isDesktop
           ? HeaderHome(
@@ -68,13 +70,19 @@ class _MainPageExampleState extends State<MainPageExample> {
         child: ValueListenableBuilder(
           valueListenable: showSidebar,
           builder: (context, isCollapsed, child) {
-            return SideBar(width: isCollapsed ? 0 : 250);
+            return SideBar(
+              width: isCollapsed ? 0 : 250,
+              onToggleCallback: () {
+                showSidebar.value = !isCollapsed;
+              },
+            );
           },
         ),
       ),
       child: Main(
         configuration: configuration,
         disableMapControlUserTracking: disableMapControlUserTracking,
+        showSidebar: showSidebar,
       ),
     );
   }
@@ -85,9 +93,11 @@ class Main extends StatefulWidget {
     super.key,
     required this.configuration,
     required this.disableMapControlUserTracking,
+    required this.showSidebar,
   });
   final MoreActionConfig configuration;
   final ValueNotifier<bool> disableMapControlUserTracking;
+  final ValueNotifier<bool> showSidebar;
 
   @override
   State<StatefulWidget> createState() => _MainState();
@@ -174,10 +184,9 @@ class _MainState extends State<Main> with OSMMixinObserver {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("the marker will be clicked!"),
-        ),
+      showFToast(
+        context: context,
+        title: const Text("the marker will be clicked!"),
       );
     });
   }
@@ -190,32 +199,16 @@ class _MainState extends State<Main> with OSMMixinObserver {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Expanded(
-                child: Text("the marker will be deleted!"),
-              ),
-              PointerInterceptor(
-                child: SnackBarAction(
-                  label: 'procees',
-                  onPressed: () async {
-                    await widget.configuration.controller.removeMarker(
-                      position,
-                    );
-                    widget.configuration.geos.value.remove(position);
-                    if (!mounted) {
-                      return;
-                    }
-                    ScaffoldMessenger.of(context).removeCurrentSnackBar();
-                  },
-                ),
-              ),
-            ],
-          ),
+      showFToast(
+        context: context,
+        title: const Text("the marker will be deleted!"),
+        suffixBuilder: (context, entry) => FTappable(
+          onPress: () async {
+            await widget.configuration.controller.removeMarker(position);
+            widget.configuration.geos.value.remove(position);
+            entry.dismiss();
+          },
+          child: const Text('proceed'),
         ),
       );
     });
@@ -279,33 +272,74 @@ class _MainState extends State<Main> with OSMMixinObserver {
 
   @override
   Widget build(BuildContext context) {
-    final topPadding = MediaQuery.maybeOf(context)?.viewPadding.top;
+    final topPadding = MediaQuery.maybeOf(context)?.viewPadding.top ?? 0;
     return Stack(
       children: [
         Map(
           controller: widget.configuration.controller,
         ),
-        if (kIsWeb) ...[
-          Positioned(
-            bottom: 23.0,
-            right: 15,
-            child: Column(
-              spacing: 12,
+        Positioned(
+          top: topPadding + 8,
+          left: 16,
+          right: 16,
+          child: PointerInterceptor(
+            child: Row(
               children: [
-                ActivationUserLocation(
-                  controller: widget.configuration.controller,
-                  trackingNotifier: widget.configuration.trackingNotifier,
-                  userLocation: widget.configuration.userLocationNotifier,
-                  userLocationIcon: widget.configuration.userLocationIcon,
+                ValueListenableBuilder(
+                  valueListenable: widget.showSidebar,
+                  builder: (context, isVisible, _) {
+                    return ActionButton(
+                      onPressed: () {
+                        widget.showSidebar.value = !isVisible;
+                      },
+                      buttonStyle: (style) => style.copyWith(
+                        minimumSize: WidgetStateProperty.resolveWith(
+                          (_) => const Size(48, 48),
+                        ),
+                        maximumSize: WidgetStateProperty.resolveWith(
+                          (_) => const Size(48, 48),
+                        ),
+                      ),
+                      child: Icon(
+                        FIcons.menu,
+                        size: 18,
+                        color: FTheme.of(context).colors.foreground,
+                      ),
+                    );
+                  },
                 ),
-                ZoomNavigation(
-                  controller: widget.configuration.controller,
-                  zoomNotifier: zoomLevelNotifier,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SearchInMap(
+                    controller: widget.configuration.controller,
+                  ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
+        Positioned(
+          bottom: 23.0,
+          right: 15,
+          child: Column(
+            spacing: 8,
+            children: [
+              ActivationUserLocation(
+                controller: widget.configuration.controller,
+                trackingNotifier: widget.configuration.trackingNotifier,
+                userLocation: widget.configuration.userLocationNotifier,
+                userLocationIcon: widget.configuration.userLocationIcon,
+              ),
+              ZoomNavigation(
+                controller: widget.configuration.controller,
+                zoomNotifier: zoomLevelNotifier,
+              ),
+              ChangeTileButton(
+                controller: widget.configuration.controller,
+              ),
+            ],
+          ),
+        ),
         Positioned.fill(
           child: ValueListenableBuilder(
             valueListenable: showFab,
@@ -317,7 +351,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
                 children: [
                   if (!kIsWeb) ...[
                     Positioned(
-                      top: (topPadding ?? 26) + 48,
+                      top: topPadding + 56,
                       right: 15,
                       child: MapRotation(
                         controller: widget.configuration.controller,
@@ -588,7 +622,7 @@ class ActivationUserLocation extends StatelessWidget {
             padding: WidgetStateProperty.resolveWith(
               (_) => const EdgeInsets.all(12),
             ),
-            shape: FWidgetStateMap.all(
+            shape: .all(
               RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -641,6 +675,78 @@ class DirectionRouteLocation extends StatelessWidget {
         child: const Icon(
           Icons.directions,
           color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+class ChangeTileButton extends StatefulWidget {
+  const ChangeTileButton({
+    super.key,
+    required this.controller,
+  });
+  final MapController controller;
+
+  @override
+  State<ChangeTileButton> createState() => _ChangeTileButtonState();
+}
+
+class _ChangeTileButtonState extends State<ChangeTileButton> {
+  final _layers = [
+    (
+      name: 'Basic',
+      icon: FIcons.map,
+      tile: null,
+    ),
+    (
+      name: 'Cycle',
+      icon: FIcons.bike,
+      tile: CustomTile.cycleOSM(),
+    ),
+    (
+      name: 'Transport',
+      icon: FIcons.bus,
+      tile: CustomTile.publicTransportationOSM(),
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return PointerInterceptor(
+      child: ActionButton(
+        onPressed: () async {
+          await showFSheet(
+            context: context,
+            side: FLayout.btt,
+            builder: (context) => FTileGroup(
+              children: [
+                for (final layer in _layers)
+                  FTile(
+                    prefix: Icon(layer.icon),
+                    title: Text(layer.name),
+                    onPress: () async {
+                      await widget.controller.changeTileLayer(
+                        tileLayer: layer.tile,
+                      );
+                      if (context.mounted) {
+                        showFToast(
+                          context: context,
+                          title: Text('${layer.name} layer'),
+                        );
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+              ],
+            ),
+          );
+        },
+        child: Center(
+          child: Icon(
+            FIcons.layers,
+            color: FTheme.of(context).colors.foreground,
+          ),
         ),
       ),
     );

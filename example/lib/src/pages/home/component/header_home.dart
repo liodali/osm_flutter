@@ -1,4 +1,3 @@
-
 import 'package:flutter/widgets.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_widget_configuration.dart'
     show MoreActionConfig;
@@ -20,7 +19,7 @@ class HeaderHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FHeader.nested(
-      style: (style) => style.copyWith(),
+      style: const .delta(),
       prefixes: [
         ValueListenableBuilder(
           valueListenable: isCollapsedNotifier,
@@ -67,10 +66,10 @@ class MainNavigation extends StatelessWidget {
     return ActionButton(
       onPressed: () => onToggle(!isCollapsed),
       buttonStyle: (style) => style.copyWith(
-        backgroundColor: FWidgetStateMap.all(
+        backgroundColor: .all(
           FTheme.of(context).colors.background,
         ),
-        elevation: FWidgetStateMap.all(0),
+        elevation: .all(0),
       ),
       child: Icon(
         !isCollapsed ? FIcons.arrowLeftToLine : FIcons.arrowRightToLine,
