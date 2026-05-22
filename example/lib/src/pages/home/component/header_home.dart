@@ -4,6 +4,7 @@ import 'package:flutter_osm_plugin_example/src/models/map_widget_configuration.d
 import 'package:flutter_osm_plugin_example/src/pages/home/component/home_more_action.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/component/seach_map.dart'
     show SearchInMap;
+import 'package:flutter_osm_plugin_example/src/pages/home/component/side_bar.dart';
 import 'package:flutter_osm_plugin_example/src/widgets/action_buttons.dart';
 
 import 'package:forui/forui.dart';
@@ -12,21 +13,21 @@ class HeaderHome extends StatelessWidget {
   const HeaderHome({
     super.key,
     required this.configuration,
-    required this.isCollapsedNotifier,
   });
   final MoreActionConfig configuration;
-  final ValueNotifier<bool> isCollapsedNotifier;
   @override
   Widget build(BuildContext context) {
     return FHeader.nested(
       style: const .delta(),
       prefixes: [
-        ValueListenableBuilder(
-          valueListenable: isCollapsedNotifier,
-          builder: (context, value, child) {
-            return MainNavigation(
-              isCollapsed: value,
-              onToggle: (value) => isCollapsedNotifier.value = value,
+        MainNavigation(
+          onOpen: () async {
+            await showFSheet(
+              context: context,
+              side: FLayout.ltr,
+              builder: (context) => SideBar(
+                onToggleCallback: () => Navigator.of(context).pop(),
+              ),
             );
           },
         ),
@@ -56,15 +57,13 @@ class HeaderHome extends StatelessWidget {
 class MainNavigation extends StatelessWidget {
   const MainNavigation({
     super.key,
-    this.isCollapsed = false,
-    required this.onToggle,
+    required this.onOpen,
   });
-  final bool isCollapsed;
-  final Function(bool) onToggle;
+  final VoidCallback onOpen;
   @override
   Widget build(BuildContext context) {
     return ActionButton(
-      onPressed: () => onToggle(!isCollapsed),
+      onPressed: onOpen,
       buttonStyle: (style) => style.copyWith(
         backgroundColor: .all(
           FTheme.of(context).colors.background,
@@ -72,7 +71,7 @@ class MainNavigation extends StatelessWidget {
         elevation: .all(0),
       ),
       child: Icon(
-        !isCollapsed ? FIcons.arrowLeftToLine : FIcons.arrowRightToLine,
+        FIcons.menu,
         size: 18,
         color: FTheme.of(context).colors.secondaryForeground,
       ),

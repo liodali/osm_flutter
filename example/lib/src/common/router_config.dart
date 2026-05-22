@@ -56,12 +56,12 @@ class AppRouter extends RootStackRouter {
 }
 
 extension AppRouterExtension on StackRouter {
-  Future<void> pushHome() async => pushPath('/home');
-  Future<void> pushSimple() async => pushPath('/simple');
-  Future<void> pushOldHome() async => pushPath('/old-home');
-  Future<void> pushSearch() async => pushPath('/search');
-  Future<void> pushHook() async => pushPath('/hook');
-  Future<void> pushConfiguration() async => pushPath('/configuration');
-  Future<void> pushPickerResult() async => pushPath('/picker-result');
-  Future<void> pushSettings() async => pushPath('/settings');
+  Future<dynamic> pushHome() => pushPath('/home');
+  Future<dynamic> pushSimple() => pushPath('/simple');
+  Future<dynamic> pushOldHome() => pushPath('/old-home');
+  Future<dynamic> pushSearch() => pushPath('/search');
+  Future<dynamic> pushHook() => pushPath('/hook');
+  Future<dynamic> pushConfiguration() => pushPath('/configuration');
+  Future<dynamic> pushPickerResult() => pushPath('/picker-result');
+  Future<dynamic> pushSettings() => pushPath('/settings');
 }

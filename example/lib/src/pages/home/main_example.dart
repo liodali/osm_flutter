@@ -27,7 +27,6 @@ class _MainPageExampleState extends State<MainPageExample> {
   ValueNotifier<GeoPoint?> userLocationNotifier = ValueNotifier(null);
   ValueNotifier<bool> disableMapControlUserTracking = ValueNotifier(true);
   late MoreActionConfig configuration;
-  ValueNotifier<bool> showSidebar = ValueNotifier(false);
   @override
   void initState() {
     super.initState();
@@ -63,26 +62,11 @@ class _MainPageExampleState extends State<MainPageExample> {
       header: isDesktop
           ? HeaderHome(
               configuration: configuration,
-              isCollapsedNotifier: showSidebar,
             )
           : null,
-      sidebar: PointerInterceptor(
-        child: ValueListenableBuilder(
-          valueListenable: showSidebar,
-          builder: (context, isCollapsed, child) {
-            return SideBar(
-              width: isCollapsed ? 0 : 250,
-              onToggleCallback: () {
-                showSidebar.value = !isCollapsed;
-              },
-            );
-          },
-        ),
-      ),
       child: Main(
         configuration: configuration,
         disableMapControlUserTracking: disableMapControlUserTracking,
-        showSidebar: showSidebar,
       ),
     );
   }
@@ -93,11 +77,9 @@ class Main extends StatefulWidget {
     super.key,
     required this.configuration,
     required this.disableMapControlUserTracking,
-    required this.showSidebar,
   });
   final MoreActionConfig configuration;
   final ValueNotifier<bool> disableMapControlUserTracking;
-  final ValueNotifier<bool> showSidebar;
 
   @override
   State<StatefulWidget> createState() => _MainState();
@@ -285,28 +267,29 @@ class _MainState extends State<Main> with OSMMixinObserver {
           child: PointerInterceptor(
             child: Row(
               children: [
-                ValueListenableBuilder(
-                  valueListenable: widget.showSidebar,
-                  builder: (context, isVisible, _) {
-                    return ActionButton(
-                      onPressed: () {
-                        widget.showSidebar.value = !isVisible;
-                      },
-                      buttonStyle: (style) => style.copyWith(
-                        minimumSize: WidgetStateProperty.resolveWith(
-                          (_) => const Size(48, 48),
-                        ),
-                        maximumSize: WidgetStateProperty.resolveWith(
-                          (_) => const Size(48, 48),
-                        ),
-                      ),
-                      child: Icon(
-                        FIcons.menu,
-                        size: 18,
-                        color: FTheme.of(context).colors.foreground,
+                ActionButton(
+                  onPressed: () async {
+                    await showFSheet(
+                      context: context,
+                      side: FLayout.ltr,
+                      builder: (context) => SideBar(
+                        onToggleCallback: () => Navigator.of(context).pop(),
                       ),
                     );
                   },
+                  buttonStyle: (style) => style.copyWith(
+                    minimumSize: WidgetStateProperty.resolveWith(
+                      (_) => const Size(48, 48),
+                    ),
+                    maximumSize: WidgetStateProperty.resolveWith(
+                      (_) => const Size(48, 48),
+                    ),
+                  ),
+                  child: Icon(
+                    FIcons.menu,
+                    size: 18,
+                    color: FTheme.of(context).colors.foreground,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(

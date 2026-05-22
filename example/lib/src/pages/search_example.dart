@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/src/common/router_config.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 class LocationAppExample extends StatefulWidget {
@@ -41,7 +43,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
               children: [
                 ElevatedButton(
                   onPressed: () async {
-                    var p = await Navigator.pushNamed(context, "/search");
+                    var p = await context.router.pushSearch();
                     if (p != null) {
                       notifier.value = p as GeoPoint;
                     }
@@ -69,7 +71,7 @@ class _LocationAppExampleState extends State<LocationAppExample> {
                     }
                   },
                   child: const Text("show picker address"),
-                )
+                ),
               ],
             ),
           ],
@@ -184,7 +186,7 @@ class _SearchPageState extends State<SearchPage> {
             const SizedBox(
               height: 8,
             ),
-            const TopSearchWidget()
+            const TopSearchWidget(),
           ],
         ),
       ),
@@ -244,8 +246,9 @@ class _TopSearchWidgetState extends State<TopSearchWidget> {
           _timerToStartSuggestionReq!.isActive) {
         _timerToStartSuggestionReq!.cancel();
       }
-      _timerToStartSuggestionReq =
-          Timer.periodic(const Duration(seconds: 3), (timer) async {
+      _timerToStartSuggestionReq = Timer.periodic(const Duration(seconds: 3), (
+        timer,
+      ) async {
         await suggestionProcessing(v);
         timer.cancel();
       });

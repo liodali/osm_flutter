@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/src/common/router_config.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:routing_client_dart/routing_client_dart.dart' as routing;
 
@@ -33,8 +35,10 @@ class _MainExampleState extends State<OldMainExample>
   Timer? timer;
   int x = 0;
   late AnimationController animationController;
-  late Animation<double> animation =
-      Tween<double>(begin: 0, end: 2 * pi).animate(animationController);
+  late Animation<double> animation = Tween<double>(
+    begin: 0,
+    end: 2 * pi,
+  ).animate(animationController);
   final ValueNotifier<int> mapRotate = ValueNotifier(0);
   @override
   void initState() {
@@ -324,20 +328,22 @@ class _MainExampleState extends State<OldMainExample>
               });
             },
           ),
-          Builder(builder: (ctx) {
-            return GestureDetector(
-              onLongPress: () => drawMultiRoads(),
-              onDoubleTap: () async {
-                await controller.clearAllRoads();
-              },
-              child: IconButton(
-                onPressed: () {
-                  beginDrawRoad.value = true;
+          Builder(
+            builder: (ctx) {
+              return GestureDetector(
+                onLongPress: () => drawMultiRoads(),
+                onDoubleTap: () async {
+                  await controller.clearAllRoads();
                 },
-                icon: const Icon(Icons.route),
-              ),
-            );
-          }),
+                child: IconButton(
+                  onPressed: () {
+                    beginDrawRoad.value = true;
+                  },
+                  icon: const Icon(Icons.route),
+                ),
+              );
+            },
+          ),
           IconButton(
             onPressed: () async {
               await drawRoadManually();
@@ -354,7 +360,7 @@ class _MainExampleState extends State<OldMainExample>
           ),
           IconButton(
             onPressed: () async {
-              await Navigator.pushNamed(context, "/picker-result");
+              await context.router.pushPickerResult();
             },
             icon: const Icon(Icons.search),
           ),
@@ -379,57 +385,57 @@ class _MainExampleState extends State<OldMainExample>
                 stepZoom: 1.0,
               ),
               userLocationMarker: UserLocationMaker(
-                  personMarker: MarkerIcon(
-                    // icon: Icon(
-                    //   Icons.car_crash_sharp,
-                    //   color: Colors.red,
-                    //   size: 48,
-                    // ),
-                    // iconWidget: SizedBox.square(
-                    //   dimension: 56,
-                    //   child: Image.asset(
-                    //     "asset/taxi.png",
-                    //     scale: .3,
-                    //   ),
-                    // ),
-                    iconWidget: SizedBox(
-                      width: 32,
-                      height: 64,
-                      child: Image.asset(
-                        "asset/directionIcon.png",
-                        scale: .3,
-                      ),
-                    ),
-                    // assetMarker: AssetMarker(
-                    //   image: AssetImage(
-                    //     "asset/taxi.png",
-                    //   ),
-                    //   scaleAssetImage: 0.3,
-                    // ),
-                  ),
-                  directionArrowMarker: MarkerIcon(
-                    // icon: Icon(
-                    //   Icons.navigation_rounded,
-                    //   size: 48,
-                    // ),
-                    iconWidget: SizedBox(
-                      width: 64,
-                      height: 128,
-                      child: Image.asset(
-                        "asset/directionIcon.png",
-                        scale: .9,
-                      ),
-                    ),
-                  )
-                  // directionArrowMarker: MarkerIcon(
-                  //   assetMarker: AssetMarker(
-                  //     image: AssetImage(
-                  //       "asset/taxi.png",
-                  //     ),
-                  //     scaleAssetImage: 0.25,
+                personMarker: MarkerIcon(
+                  // icon: Icon(
+                  //   Icons.car_crash_sharp,
+                  //   color: Colors.red,
+                  //   size: 48,
+                  // ),
+                  // iconWidget: SizedBox.square(
+                  //   dimension: 56,
+                  //   child: Image.asset(
+                  //     "asset/taxi.png",
+                  //     scale: .3,
                   //   ),
                   // ),
+                  iconWidget: SizedBox(
+                    width: 32,
+                    height: 64,
+                    child: Image.asset(
+                      "asset/directionIcon.png",
+                      scale: .3,
+                    ),
                   ),
+                  // assetMarker: AssetMarker(
+                  //   image: AssetImage(
+                  //     "asset/taxi.png",
+                  //   ),
+                  //   scaleAssetImage: 0.3,
+                  // ),
+                ),
+                directionArrowMarker: MarkerIcon(
+                  // icon: Icon(
+                  //   Icons.navigation_rounded,
+                  //   size: 48,
+                  // ),
+                  iconWidget: SizedBox(
+                    width: 64,
+                    height: 128,
+                    child: Image.asset(
+                      "asset/directionIcon.png",
+                      scale: .9,
+                    ),
+                  ),
+                ),
+                // directionArrowMarker: MarkerIcon(
+                //   assetMarker: AssetMarker(
+                //     image: AssetImage(
+                //       "asset/taxi.png",
+                //     ),
+                //     scaleAssetImage: 0.25,
+                //   ),
+                // ),
+              ),
               staticPoints: [
                 StaticPositionGeoPoint(
                   "line 1",
@@ -725,8 +731,9 @@ class _MainExampleState extends State<OldMainExample>
           pointsRoad.first,
           pointsRoad.last,
           roadType: notifierRoadType.value,
-          intersectPoint:
-              pointsRoad.getRange(1, pointsRoad.length - 1).toList(),
+          intersectPoint: pointsRoad
+              .getRange(1, pointsRoad.length - 1)
+              .toList(),
           roadOption: const RoadOption(
             roadWidth: 15,
             roadColor: Colors.red,
@@ -738,7 +745,8 @@ class _MainExampleState extends State<OldMainExample>
         );
         pointsRoad.clear();
         debugPrint(
-            "app duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}");
+          "app duration:${Duration(seconds: roadInformation.duration!.toInt()).inMinutes}",
+        );
         debugPrint("app distance:${roadInformation.distance}Km");
         debugPrint("app road:$roadInformation");
         final console = roadInformation.instructions
@@ -794,17 +802,18 @@ class _MainExampleState extends State<OldMainExample>
         ),
       ),
       MultiRoadConfiguration(
-          startPoint: GeoPoint(
-            latitude: 47.4814981476,
-            longitude: 8.5244329867,
-          ),
-          destinationPoint: GeoPoint(
-            latitude: 47.3982152237,
-            longitude: 8.4129691189,
-          ),
-          roadOptionConfiguration: const MultiRoadOption(
-            roadColor: Colors.orange,
-          )),
+        startPoint: GeoPoint(
+          latitude: 47.4814981476,
+          longitude: 8.5244329867,
+        ),
+        destinationPoint: GeoPoint(
+          latitude: 47.3982152237,
+          longitude: 8.4129691189,
+        ),
+        roadOptionConfiguration: const MultiRoadOption(
+          roadColor: Colors.orange,
+        ),
+      ),
       MultiRoadConfiguration(
         startPoint: GeoPoint(
           latitude: 47.4519015578,

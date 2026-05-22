@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_osm_plugin_example/src/common/router_config.dart';
 import 'package:flutter_osm_plugin_example/src/common/url_strategy/url_strategy.dart'
     show usePathUrlStrategy;

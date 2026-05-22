@@ -7,19 +7,17 @@ import 'package:pointer_interceptor/pointer_interceptor.dart';
 class SideBar extends StatelessWidget {
   const SideBar({
     super.key,
-    this.width = 250,
     required this.onToggleCallback,
   });
-  final double width;
   final Function() onToggleCallback;
 
   @override
   Widget build(BuildContext context) {
     return PointerInterceptor(
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        width: width,
+      child: SizedBox(
+        width: 280,
         child: FSidebar(
+          style: .delta(),
           header: Padding(
             padding: EdgeInsets.only(
               top: MediaQuery.viewPaddingOf(context).top + 8,
