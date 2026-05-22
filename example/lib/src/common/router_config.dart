@@ -50,7 +50,7 @@ class AppRouter extends RootStackRouter {
     NamedRouteDef(
       name: 'settings',
       path: '/settings',
-      builder: (context, _) => const SettingsPage(),
+      builder: (context, _) => const ThemedWidget(child: SettingsPage()),
     ),
   ];
 }

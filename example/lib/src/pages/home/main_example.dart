@@ -4,7 +4,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_widget_configuration.dart'
     show MoreActionConfig;
-import 'package:flutter_osm_plugin_example/src/pages/home/component/header_home.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/component/seach_map.dart'
     show SearchInMap;
 import 'package:flutter_osm_plugin_example/src/pages/home/component/side_bar.dart';
@@ -51,7 +50,6 @@ class _MainPageExampleState extends State<MainPageExample> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width > 700;
     return FScaffold(
       resizeToAvoidBottomInset: false,
       scaffoldStyle: .delta(
@@ -59,11 +57,6 @@ class _MainPageExampleState extends State<MainPageExample> {
         systemOverlayStyle: FTheme.of(context).scaffoldStyle.systemOverlayStyle,
         childPadding: const EdgeInsetsGeometryDelta.value(EdgeInsets.zero),
       ),
-      header: isDesktop
-          ? HeaderHome(
-              configuration: configuration,
-            )
-          : null,
       child: Main(
         configuration: configuration,
         disableMapControlUserTracking: disableMapControlUserTracking,
@@ -336,8 +329,10 @@ class _MainState extends State<Main> with OSMMixinObserver {
                     Positioned(
                       top: topPadding + 56,
                       right: 15,
-                      child: MapRotation(
-                        controller: widget.configuration.controller,
+                      child: PointerInterceptor(
+                        child: MapRotation(
+                          controller: widget.configuration.controller,
+                        ),
                       ),
                     ),
                   ],
@@ -699,31 +694,111 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
     return PointerInterceptor(
       child: ActionButton(
         onPressed: () async {
-          await showFSheet(
-            context: context,
-            side: FLayout.btt,
-            builder: (context) => FTileGroup(
-              children: [
-                for (final layer in _layers)
-                  FTile(
-                    prefix: Icon(layer.icon),
-                    title: Text(layer.name),
-                    onPress: () async {
-                      await widget.controller.changeTileLayer(
-                        tileLayer: layer.tile,
-                      );
-                      if (context.mounted) {
-                        showFToast(
-                          context: context,
-                          title: Text('${layer.name} layer'),
-                        );
-                        Navigator.of(context).pop();
-                      }
-                    },
+          final isDesktop = MediaQuery.of(context).size.width > 700;
+          FToasterEntry? entry;
+          if (isDesktop) {
+            entry ??= showFToast(
+              context: context,
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Select Layer',
+                      style: FTheme.of(context).typography.lg,
+                    ),
                   ),
-              ],
-            ),
-          );
+                  GestureDetector(
+                    onTap: () {
+                      entry?.dismiss();
+                      entry = null;
+                    },
+                    child: const Icon(
+                      Icons.close,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+              description: PointerInterceptor(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final layer in _layers) ...[
+                      FTappable(
+                        onPress: () async {
+                          await widget.controller.changeTileLayer(
+                            tileLayer: layer.tile,
+                          );
+                          entry?.dismiss();
+                          entry = null;
+                          if (context.mounted) {
+                            showFToast(
+                              context: context,
+                              duration: const Duration(seconds: 2),
+                              swipeToDismiss: [
+                                AxisDirection.down,
+                              ],
+                              title: Text(
+                                '${layer.name} layer',
+                                style: FTheme.of(context).typography.md,
+                              ),
+                            );
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
+                          child: Row(
+                            spacing: 8,
+                            children: [
+                              Icon(layer.icon),
+                              Expanded(
+                                child: Text(
+                                  layer.name,
+                                  style: FTheme.of(context).typography.md,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              duration: const Duration(days: 1),
+            );
+          } else {
+            await showFSheet(
+              context: context,
+              side: FLayout.btt,
+              builder: (context) => PointerInterceptor(
+                child: FTileGroup(
+                  children: [
+                    for (final layer in _layers)
+                      FTile(
+                        prefix: Icon(layer.icon),
+                        title: Text(layer.name),
+                        onPress: () async {
+                          await widget.controller.changeTileLayer(
+                            tileLayer: layer.tile,
+                          );
+                          if (context.mounted) {
+                            showFToast(
+                              context: context,
+                              title: Text('${layer.name} layer'),
+                            );
+                            Navigator.of(context).pop();
+                          }
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }
         },
         child: Center(
           child: Icon(
