@@ -26,7 +26,7 @@ Pod::Spec.new do |s|
   #s.source = { :git => 'https://github.com/liodali/OSMMapCoreIOSFramework.git', :tag => '0.0.1' }
 
   #s.vendored_frameworks = 'Frameworks/OSMFlutterFramework.xcframework'
-  s.platform = :ios, '13.0'
+  s.platform = :ios, '15.6'
   #s.xcconfig = { 'OTHER_LDFLAGS' => '-framework OSMFlutterFramework' }
   #s.preserve_paths = 'OSMFlutterFramework.xcframework/**/*'
   #s.dependency 'OSMFlutterFramework'

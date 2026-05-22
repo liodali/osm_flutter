@@ -10,20 +10,23 @@ import PackageDescription
 let package = Package(
   name: "flutter_osm_plugin",
   platforms: [
-    .iOS("13.0")
+    .iOS("15.6")
   ],
   products: [
     .library(name: "image-flutter_osm_plugin-ios", targets: ["flutter_osm_plugin"])
   ],
   dependencies: [
-    .package(url:"https://github.com/liodali/OSMMapCoreIOSFramework.git",from: "0.7.4")
+    .package(url:"https://github.com/liodali/OSMMapCoreIOSFramework.git",from: "0.7.4"),
+    .package(name: "FlutterFramework", path: "../FlutterFramework")
   ],
   targets: [
     .target(
       name: "flutter_osm_plugin",
       path: "Sources/flutter_osm_plugin",
       publicHeadersPath: "Sources/flutter_osm_plugin/",
-      dependencies: [],
+      dependencies: [
+        .product(name: "FlutterFramework", package: "FlutterFramework")
+      ],
       resources: [
         //.process("Resources")
       ]
