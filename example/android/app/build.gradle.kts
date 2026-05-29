@@ -1,10 +1,8 @@
-import com.android.sdklib.AndroidVersion.VersionCodes.BAKLAVA
 import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 val keystoreProperties =  Properties()
@@ -14,8 +12,8 @@ if (keystorePropertiesFile.exists()) {
 }
 android {
     namespace = "hamza.dali.flutter_osm_plugin_example"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    compileSdk = 36
+    ndkVersion = "28.2.13676358"
     if (keystorePropertiesFile.exists()) {
         signingConfigs {
             create("release") {
@@ -31,16 +29,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     defaultConfig {
         applicationId = "hamza.dali.flutter_osm_plugin_example"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 30
-        targetSdk = BAKLAVA
+        minSdk = 32
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -58,6 +52,12 @@ android {
             }
         }
 
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 

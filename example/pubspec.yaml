@@ -15,6 +15,7 @@ dependencies:
   auto_route: ^10.1.2
   forui_assets: ^0.21.0
   flex_color_picker: ^3.7.1
+  package_info_plus: ^10.1.0
 
   flutter_osm_plugin: #1.2.0 #^0.40.3+2
     path: ../

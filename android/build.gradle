@@ -1,8 +1,9 @@
+import com.android.Version
+
 group 'hamza.dali.flutter_osm_plugin'
 version '1.0'
 
 buildscript {
-    ext.kotlin_version = '1.9.24'
     repositories {
         google()
         mavenCentral()
@@ -10,8 +11,8 @@ buildscript {
     }
 
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.android.tools.build:gradle:8.12.1'
+        classpath 'com.android.tools.build:gradle:8.13.2'
+
     }
 }
 
@@ -24,12 +25,12 @@ rootProject.allprojects {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-//apply plugin: 'kotlin-kapt'
+
+//apply plugin: 'kotlin-android'
 
 android {
-    compileSdk 36
     namespace "hamza.dali.flutter_osm_plugin"
+    compileSdkVersion 36
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -53,7 +54,7 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17
+        jvmTarget = "17"
     }
     packagingOptions {
         pickFirst 'lib/x86/libc++_shared.so'
@@ -62,9 +63,16 @@ android {
         pickFirst 'lib/arm64-v8a/libc++_shared.so'
     }
 }
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}
+
 dependencies {
 
-    def coroutines_version ="1.10.2"
+    def coroutines_version ="1.11.0"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 

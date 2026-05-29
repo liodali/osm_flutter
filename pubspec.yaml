@@ -15,7 +15,7 @@ dependencies:
   plugin_platform_interface: ^2.1.8
   flutter_plugin_android_lifecycle: ^2.0.23
   permission_manager: ^2.0.9
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.2
   dio: ^5.8.0+1
   uuid: ^4.2.1
   routing_client_dart: ^0.5.5
@@ -31,9 +31,9 @@ dev_dependencies:
 
 dependency_overrides:
 
-      url_launcher_android: ^6.3.16
-      url_launcher_ios: ^6.3.3
-      url_launcher_web: ^2.4.1
+      url_launcher_android: ^6.3.30
+      url_launcher_ios: ^6.4.1
+      url_launcher_web: ^2.4.3
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
