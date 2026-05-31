@@ -72,6 +72,33 @@ def get_version_package(package):
         return version
 
 
+def get_dependency_version_in_pubspec(pubspec_path, dep_name):
+    """Extract the version constraint for dep_name from pubspec.yaml.
+    Returns the version string (e.g. '1.4.0') or None if not found/not a version."""
+    with open(pubspec_path, "r") as pub:
+        lines = pub.readlines()
+        for i, line in enumerate(lines):
+            if dep_name in line:
+                stripped = line.strip()
+                # Skip commented lines
+                if stripped.startswith("#"):
+                    continue
+                # Check if version is on same line after colon
+                parts = line.split(":")[-1].strip()
+                if parts and not parts.startswith("path"):
+                    # Extract version from constraint like ^1.4.0 or >=1.4.0 <1.5.0
+                    ver = parts.replace("^", "").replace('"', "").replace(">=", "")
+                    ver = ver.split("<")[0].strip()
+                    return ver
+                # Check next line for path or version
+                if i + 1 < len(lines):
+                    next_line = lines[i + 1].strip()
+                    if next_line.startswith("version:"):
+                        ver = next_line.split(":")[-1].strip().replace('"', "")
+                        return ver
+        return None
+
+
 def get_max_version(version):
     index_max = 3
     range_max = 1
@@ -145,7 +172,7 @@ def update_plugin_osm_web(version_interface):
     print(f"the flutter_osm_web with version :{version} {msg}\n")
     # set version of osm interface in osm web plugin 
     change_dependencies_version(FILE_PUBSEPEC_OSM_WEB,
-        "flutter_osm_interface:", version_interface, isLocal=True)
+        "flutter_osm_interface:", version_interface, isLocal=True,useDefault=True,skipMaxVersion=True)
     if isExist == False:
         print(f"publishing flutter_osm_web : {version} ...\n")
         publish_osm_web()
@@ -154,5 +181,19 @@ if __name__ == "__main__":
 
     version_interface = update_plugin_osm_interface()
     version_web = update_plugin_osm_web(version_interface)
-    change_dependencies_version(FILE_PUBSEPEC_OSM,"flutter_osm_interface:", version_interface, isLocal=True,useDefault=True)
-    change_dependencies_version(FILE_PUBSEPEC_OSM,"flutter_osm_web:", version_web, isLocal=True,skipMaxVersion=True)
+
+    # Check if versions already exist in root pubspec before updating
+    current_interface_ver = get_dependency_version_in_pubspec(FILE_PUBSEPEC_OSM, "flutter_osm_interface:")
+    current_web_ver = get_dependency_version_in_pubspec(FILE_PUBSEPEC_OSM, "flutter_osm_web:")
+
+    if current_interface_ver == version_interface:
+        print(f"Root pubspec already has flutter_osm_interface at {version_interface}, skipping update\n")
+    else:
+        print(f"Updating root pubspec flutter_osm_interface: {current_interface_ver} -> {version_interface}\n")
+        change_dependencies_version(FILE_PUBSEPEC_OSM, "flutter_osm_interface:", version_interface, isLocal=True, useDefault=True, skipMaxVersion=True)
+
+    if current_web_ver == version_web:
+        print(f"Root pubspec already has flutter_osm_web at {version_web}, skipping update\n")
+    else:
+        print(f"Updating root pubspec flutter_osm_web: {current_web_ver} -> {version_web}\n")
+        change_dependencies_version(FILE_PUBSEPEC_OSM, "flutter_osm_web:", version_web, isLocal=True, skipMaxVersion=True, useDefault=True)
