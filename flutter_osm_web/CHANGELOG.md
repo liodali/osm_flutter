@@ -1,3 +1,7 @@
+# ChangeLog
+
+## 1.4.3:
+* remove package_info_plus dependency
 ## 1.4.2: 
 * fix bug in loading assets where we download them from github cdn
 ## 1.4.1: 
