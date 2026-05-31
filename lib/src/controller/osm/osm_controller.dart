@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
 import 'package:flutter_osm_plugin/src/widgets/mobile_osm_flutter.dart';
@@ -73,7 +73,7 @@ final class MobileOSMController extends IBaseOSMController {
     }
 
     /// load config map scene for iOS
-    if (Platform.isIOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       osmPlatform.onIosMapInit(_idMap).listen((event) async {
         if (event.value) {
           await initMap(
@@ -101,7 +101,7 @@ final class MobileOSMController extends IBaseOSMController {
       initZoom ?? _osmFlutterState.widget.zoomOption.initZoom,
     );
 
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       await initMap(
         initPosition,
         userPositionOption,
@@ -232,7 +232,7 @@ final class MobileOSMController extends IBaseOSMController {
 
     /// init location in map
     if (userTrackOption != null && userTrackOption.initWithUserPosition) {
-      if (Platform.isAndroid) {
+      if (defaultTargetPlatform == TargetPlatform.android) {
         bool granted = await _osmFlutterState.requestPermission();
         if (!granted) {
           throw Exception("we cannot continue showing the map without grant gps permission");
@@ -392,7 +392,7 @@ final class MobileOSMController extends IBaseOSMController {
   /// activate current location position
   @override
   Future<void> currentLocation() async {
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       bool granted = await _osmFlutterState.requestPermission();
       if (!granted) {
         throw Exception("Location permission not granted");
