@@ -1,3 +1,6 @@
+### 1.4.5:
+* remove dart:io
+* update dependencies
 ### 1.4.4:
 * SPM support for iOS
 * KGP support for Android

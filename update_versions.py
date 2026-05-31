@@ -63,6 +63,37 @@ def build_constraint(version, version_type):
         return f'">={version} <{max_version}"'
 
 
+def get_dep_state(pubspec_path, dep_name):
+    """Returns (kind, version) where kind is 'path', 'version', or 'missing'."""
+    with open(pubspec_path, "r") as f:
+        lines = f.readlines()
+
+    for i, line in enumerate(lines):
+        if re.match(rf"^\s+{re.escape(dep_name)}\s*:", line):
+            stripped = line.lstrip()
+            if stripped.startswith("#"):
+                continue
+
+            parts = line.split(":")[-1].strip()
+            # Empty after colon, check next line for path
+            if not parts:
+                if i + 1 < len(lines):
+                    next_stripped = lines[i + 1].lstrip()
+                    if next_stripped.startswith("path:"):
+                        return ("path", None)
+                return ("missing", None)
+
+            # Has content on same line - it's a version constraint
+            if not parts.startswith("path"):
+                ver = parts.replace("^", "").replace('"', "").replace(">=", "")
+                ver = ver.split("<")[0].strip()
+                return ("version", ver)
+
+            return ("missing", None)
+
+    return ("missing", None)
+
+
 def update_dependency_in_place(pubspec_path, dep_name, version, version_type="upperbound"):
     """
     Replace the dependency line with the chosen constraint.
@@ -97,31 +128,48 @@ def update_dependency_in_place(pubspec_path, dep_name, version, version_type="up
         f.writelines(updated_lines)
 
 
-def update_osm_dependencies(version_interface, version_web, version_type="upperbound"):
+def update_osm_dependencies(deps_to_update, version_type="caret"):
     """
-    Update root pubspec: comment out current dependency lines for
-    flutter_osm_interface and flutter_osm_web, then add new version
-    constraint lines right before dev_dependencies.
+    Update root pubspec: for deps in deps_to_update, comment out current lines
+    (including a following path line if present) and add new version constraint
+    lines right before dev_dependencies.
     """
-    deps = {
-        "flutter_osm_interface": version_interface,
-        "flutter_osm_web": version_web,
-    }
+    if not deps_to_update:
+        print("Nothing to update in root pubspec")
+        return
 
     with open(FILE_PUBSPEC_ROOT, "r") as f:
         lines = f.readlines()
 
-    # 1) Comment out existing dependency lines
+    # 1) Comment out existing dependency lines for deps we're updating
     updated = []
-    for line in lines:
-        for dep_name in deps:
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        matched_dep = None
+        for dep_name in deps_to_update:
             if re.match(rf"^\s+{re.escape(dep_name)}\s*:", line):
-                # Preserve indentation, just add '# ' before the content
                 stripped = line.lstrip()
-                indent = line[:len(line) - len(stripped)]
-                line = f"{indent}# {stripped}"
-                break
-        updated.append(line)
+                if not stripped.startswith("#"):
+                    matched_dep = dep_name
+                    break
+
+        if matched_dep:
+            stripped = line.lstrip()
+            indent = line[:len(line) - len(stripped)]
+            updated.append(f"{indent}# {stripped}")
+            i += 1
+            # Comment out following path line if present
+            if i < len(lines):
+                next_line = lines[i]
+                next_stripped = next_line.lstrip()
+                if next_stripped.startswith("path:"):
+                    indent_next = next_line[:len(next_line) - len(next_stripped)]
+                    updated.append(f"{indent_next}# {next_stripped}")
+                    i += 1
+        else:
+            updated.append(line)
+            i += 1
 
     # 2) Find dev_dependencies index and insert new lines before it
     dev_index = None
@@ -134,7 +182,7 @@ def update_osm_dependencies(version_interface, version_web, version_type="upperb
         raise RuntimeError("Could not find 'dev_dependencies:' in root pubspec.yaml")
 
     new_lines = []
-    for dep_name, version in deps.items():
+    for dep_name, version in deps_to_update.items():
         constraint = build_constraint(version, version_type)
         new_lines.append(f"  {dep_name}: {constraint}\n")
 
@@ -156,8 +204,31 @@ def update_osm(version_type):
     version_web = get_version(FILE_PUBSPEC_WEB)
     print(f"flutter_osm_interface version: {version_interface}")
     print(f"flutter_osm_web version: {version_web}")
-    update_osm_dependencies(version_interface, version_web, version_type)
-    print(f"Updated {FILE_PUBSPEC_ROOT}")
+
+    deps_to_update = {}
+    for dep_name, target_version in [
+        ("flutter_osm_interface", version_interface),
+        ("flutter_osm_web", version_web),
+    ]:
+        kind, current_ver = get_dep_state(FILE_PUBSPEC_ROOT, dep_name)
+
+        if kind == "path":
+            print(f"  {dep_name}: path -> {target_version}")
+            deps_to_update[dep_name] = target_version
+        elif kind == "version":
+            if current_ver == target_version:
+                print(f"  {dep_name}: up-to-date ({current_ver})")
+            else:
+                print(f"  {dep_name}: {current_ver} -> {target_version}")
+                deps_to_update[dep_name] = target_version
+        else:
+            print(f"  {dep_name}: not found or commented, skipping")
+
+    if deps_to_update:
+        update_osm_dependencies(deps_to_update, version_type)
+        print(f"Updated {FILE_PUBSPEC_ROOT}")
+    else:
+        print("No changes needed for root pubspec")
 
 
 def main():
