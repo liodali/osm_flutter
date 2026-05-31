@@ -1,3 +1,6 @@
+### 1.4.4:
+* SPM support for iOS
+* KGP support for Android
 ### 1.4.3:
 * fix bug in web assets
 ### 1.4.2:

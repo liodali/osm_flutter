@@ -1,5 +1,5 @@
 # ChangeLog
-
+## 1.4.4:
 ## 1.4.3:
 * remove package_info_plus dependency
 ## 1.4.2: 

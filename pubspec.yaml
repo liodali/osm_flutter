@@ -22,6 +22,11 @@ dependencies:
   google_polyline_algorithm: ^3.1.0
   flutter_osm_interface: ^1.4.0
   flutter_osm_web: ^1.4.4
+  # path dependency for local development
+  # flutter_osm_interface:
+  #   path: ../flutter_osm_interface/
+  # flutter_osm_web:
+  #   path: ../flutter_osm_web/
 dev_dependencies:
   flutter_lints: ^4.0.0
   flutter_test:
