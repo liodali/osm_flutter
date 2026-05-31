@@ -17,6 +17,9 @@ dependencies:
   routing_client_dart: ^0.5.5
   dio: ^5.9.0
   flutter_osm_interface: ^1.4.0
+  # path dependency for local development
+  # flutter_osm_interface: 
+  #   path: ../flutter_osm_interface/
   flutter_test:
     sdk: flutter
 
