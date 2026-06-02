@@ -1,3 +1,5 @@
+// swift-tools-version: 5.9
+// The swift-tools-version declares the minimum version of Swift required to build this package.
 //
 //  Package.swift
 //  flutter_osm_plugin
@@ -13,7 +15,7 @@ let package = Package(
     .iOS("15.6")
   ],
   products: [
-    .library(name: "image-flutter_osm_plugin-ios", targets: ["flutter_osm_plugin"])
+    .library(name: "flutter-osm-plugin-ios", targets: ["flutter_osm_plugin"])
   ],
   dependencies: [
     .package(url:"https://github.com/liodali/OSMMapCoreIOSFramework.git",from: "0.7.4"),
