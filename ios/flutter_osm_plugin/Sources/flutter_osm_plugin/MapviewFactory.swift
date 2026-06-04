@@ -6,27 +6,29 @@
 //  Copyright © 2020 The Chromium Authors. All rights reserved.
 //
 
-import Foundation
 import Flutter
+import Foundation
 
-public class MapviewFactory : NSObject, FlutterPlatformViewFactory {
-    let messenger : FlutterBinaryMessenger
-    let defaultPinPath:String?
-    init(messenger:FlutterBinaryMessenger,defaultPin:String?) {
+@MainActor
+public class MapviewFactory: NSObject, FlutterPlatformViewFactory {
+    let messenger: FlutterBinaryMessenger
+    let defaultPinPath: String?
+    nonisolated init(messenger: FlutterBinaryMessenger, defaultPin: String?) {
         self.messenger = messenger
         self.defaultPinPath = defaultPin
     }
-    
+
     public func create(
         withFrame frame: CGRect,
         viewIdentifier viewId: Int64,
         arguments args: Any?
     ) -> FlutterPlatformView {
-       let channel = FlutterMethodChannel(
-            name: "plugins.dali.hamza/osmview_"+String(viewId),
+        let channel = FlutterMethodChannel(
+            name: "plugins.dali.hamza/osmview_" + String(viewId),
             binaryMessenger: self.messenger
         )
-        return MapCoreOSMView(frame, viewId: viewId, channel: channel, args: args, defaultPin: defaultPinPath)
+        return MapCoreOSMView(
+            frame, viewId: viewId, channel: channel, args: args, defaultPin: defaultPinPath)
         //return MyMapView(frame, viewId: viewId, channel: channel, args: args,dynamicOSM: dynamicOSMPath,defaultPin: defaultPinPath)
     }
 

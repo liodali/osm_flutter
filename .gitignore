@@ -58,3 +58,6 @@ CLAUDE.md
 .kilo
 .kilocode
 __pycache__
+.build/
+.devin/
+.metadata

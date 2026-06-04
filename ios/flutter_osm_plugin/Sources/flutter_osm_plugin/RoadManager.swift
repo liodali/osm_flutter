@@ -2,21 +2,19 @@
 // Created by Dali on 6/20/21.
 //
 
-import Foundation
 import Alamofire
+import Foundation
 import MapKit
 import Polyline
 
 typealias ParserJson = ([String: Any?]?) -> Road
-typealias RoadHandler = (Road?) -> Void
-
+typealias RoadHandler = @Sendable (Road?) -> Void
 
 enum RoadType: String {
     case car = "routed-car"
     case bike = "routed-bike"
     case foot = "routed-foot"
 }
-
 
 protocol PRoadManager {
 
@@ -25,11 +23,12 @@ protocol PRoadManager {
     func hasRoads() -> Bool
 }
 
-class OSMRoadManager: PRoadManager {
+@MainActor
+class OSMRoadManager: PRoadManager, @unchecked Sendable {
 
-    
+    private let contentLangEn: [String: Any]
 
-    public let MANEUVERS: Dictionary<String, Int> = [
+    public let MANEUVERS: [String: Int] = [
         "new name": 2,
         "turn-straight": 1,
         "turn-slight right": 6,
@@ -62,8 +61,8 @@ class OSMRoadManager: PRoadManager {
         "ramp-right": 18,
         "ramp-sharp right": 18,
         "ramp-slight right": 18,
-        "ramp-straight": 19
-    ];
+        "ramp-straight": 19,
+    ]
 
     public let DIRECTIONS = [
         1: ["en": "Continue[ on %s]", "de": ""],
@@ -94,17 +93,26 @@ class OSMRoadManager: PRoadManager {
     private var lastMarkerRoad: RoadFolder? = nil
     private(set) var roads: [RoadFolder] = [RoadFolder]()
 
-    init() {}
-
-
+    init() {
+        guard let url = Bundle(for: type(of: self)).url(forResource: "en", withExtension: "json")
+        else {
+            self.contentLangEn = [:]
+            return
+        }
+        do {
+            let data = try String(contentsOf: url).data(using: .utf8)
+            self.contentLangEn = Self.parse(jsonData: data)
+        } catch {
+            self.contentLangEn = [:]
+        }
+    }
 
     func hasRoads() -> Bool {
         !roads.isEmpty
     }
-    
-    
+
     /*func roadContainCLLocationCoordinate2D(location: CLLocationCoordinate2D) -> RoadFolder? {
-     
+
         return  roads.filter { road in
             road.polyline.coordinates != nil
         }.first { folder in
@@ -115,39 +123,26 @@ class OSMRoadManager: PRoadManager {
             return contain
         }
     }*/
-    
-  
- 
+
     func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler) {
         let serverURL = buildURL(wayPoints, typeRoad.rawValue)
-        guard let url = Bundle(for: type(of: self)).url(forResource: "en", withExtension: "json") else {
-            return print("File not found")
-        }
-        var contentLangEn: [String:Any] = [String:Any]()
-        do {
-            let data = try String(contentsOf: url).data(using: .utf8)
-            contentLangEn = parse(jsonData: data)
-        } catch let error {
-            print(error)
-        }
 
-        DispatchQueue.global(qos: .background).async {
-            self.httpCall(url: serverURL) { json in
-                if json != nil {
-                    let road = self.parserRoad(json: json!, instructionResource: contentLangEn)
-                    DispatchQueue.main.async {
-                        self.road = road
-                        handler(road)
-                    }
+        self.httpCall(url: serverURL) { [self] data in
+            DispatchQueue.main.async {
+
+                if let data = data {
+                    let json = Self.parse(jsonData: data) as? [String: Any?]
+                    let road = self.parserRoad(
+                        json: json ?? [:], instructionResource: self.contentLangEn)
+                    self.road = road
+                    handler(road)
                 } else {
-                    DispatchQueue.main.async {
-                        handler(nil)
-                    }
+                    handler(nil)
                 }
             }
+
         }
     }
-
 
     func buildURL(_ waysPoints: [String], _ typeRoad: String, alternative: Bool = false) -> String {
         let serverBaseURL = "https://routing.openstreetmap.de/\(typeRoad)/route/v1/driving/"
@@ -157,22 +152,17 @@ class OSMRoadManager: PRoadManager {
         var stringWayPoint = points
         stringWayPoint.removeFirst()
 
-
-        return "\(serverBaseURL)\(stringWayPoint)?alternatives=\(alternative)&overview=full&steps=true"
+        return
+            "\(serverBaseURL)\(stringWayPoint)?alternatives=\(alternative)&overview=full&steps=true"
     }
 
-    private func httpCall(url: String, parseHandler: @escaping (_ json: [String: Any?]?) -> Void) {
-        AF.request(url, method: .get).responseJSON { response in
-            if response.data != nil {
-                let data = response.value as? [String: Any?]
-                parseHandler(data!)
-            } else {
-                parseHandler(nil)
-            }
+    private func httpCall(url: String, parseHandler: @Sendable @escaping (_ data: Data?) -> Void) {
+        AF.request(url, method: .get).responseData { response in
+            parseHandler(response.data)
         }
     }
 
-    private func parserRoad(json: [String: Any?], instructionResource: [String:Any]) -> Road {
+    private func parserRoad(json: [String: Any?], instructionResource: [String: Any]) -> Road {
         var road: Road = Road()
         if json.keys.contains("routes") {
             let routes = json["routes"] as! [[String: Any?]]
@@ -181,7 +171,7 @@ class OSMRoadManager: PRoadManager {
                 road.duration = route["duration"] as! Double
                 road.mRouteHigh = route["geometry"] as! String
                 let jsonLegs = route["legs"] as! [[String: Any]]
-                jsonLegs.enumerated().forEach { indexLeg,jLeg in
+                jsonLegs.enumerated().forEach { indexLeg, jLeg in
                     var legR: RoadLeg = RoadLeg()
                     legR.distance = (jLeg["distance"] as! Double) / 1000
                     legR.duration = jLeg["duration"] as! Double
@@ -189,22 +179,26 @@ class OSMRoadManager: PRoadManager {
                     let jsonSteps = jLeg["steps"] as! [[String: Any?]]
                     var lastName = ""
                     var lastNode: RoadNode? = nil
-                    jsonSteps.enumerated().forEach { index,step in
+                    jsonSteps.enumerated().forEach { index, step in
                         let maneuver = (step["maneuver"] as! [String: Any?])
                         let location = maneuver["location"] as! [Double]
                         var node = RoadNode(
-                                location: CLLocationCoordinate2D(
-                                        latitude: (location)[1],
-                                        longitude: (location)[0]
-                                )
+                            location: CLLocationCoordinate2D(
+                                latitude: (location)[1],
+                                longitude: (location)[0]
+                            )
                         )
                         node.distance = (step["distance"] as! Double) / 1000
                         node.duration = step["duration"] as! Double
                         let roadStep = RoadStep(json: step)
-                        node.instruction = roadStep.buildInstruction(instructions: instructionResource,options: [
-                            "legIndex":indexLeg , "legCount" : jsonLegs.count - 1
-                        ])
-                        if lastNode != nil && roadStep.maneuver.maneuverType == "new name" && lastName == roadStep.name {
+                        node.instruction = roadStep.buildInstruction(
+                            instructions: instructionResource,
+                            options: [
+                                "legIndex": indexLeg, "legCount": jsonLegs.count - 1,
+                            ])
+                        if lastNode != nil && roadStep.maneuver.maneuverType == "new name"
+                            && lastName == roadStep.name
+                        {
                             lastNode?.duration += node.duration
                             lastNode?.distance += node.distance
                         } else {
@@ -212,7 +206,6 @@ class OSMRoadManager: PRoadManager {
                             lastNode = node
                             lastName = roadStep.name
                         }
-
 
                     }
 
@@ -222,19 +215,17 @@ class OSMRoadManager: PRoadManager {
         return road
 
     }
-    private func parse(jsonData: Data?) -> [String:Any] {
+    private static func parse(jsonData: Data?) -> [String: Any] {
         if jsonData == nil {
-            return [String:Any]()
+            return [String: Any]()
         }
         do {
             let decodedData = try JSONSerialization.jsonObject(with: jsonData!)
-            return decodedData as! [String:Any]
+            return decodedData as! [String: Any]
         } catch {
             print("decode error")
         }
-        return [String:Any]()
+        return [String: Any]()
     }
 
-
- }
-
+}

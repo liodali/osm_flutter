@@ -1,38 +1,34 @@
 #
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
-# Run `pod lib lint flutter_osm_plugin.podspec' to validate before publishing.
+# Run `pod lib lint flutter_osm_plugin.podspec` to validate before publishing.
 #
 Pod::Spec.new do |s|
   s.name             = 'flutter_osm_plugin'
   s.version          = '0.0.1'
-  s.summary          = 'OSM plugin for flutter apps  Android,iOS,web '
+  s.summary          = 'A new Flutter plugin project.'
   s.description      = <<-DESC
-  OSM plugin for flutter apps  Android,iOS,web
+A new Flutter plugin project.
                        DESC
   s.homepage         = 'http://example.com'
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'flutter_osm_plugin/Sources/flutter_osm_plugin/**/*.{h,m,swift}' #'Classes/**/*'
+  s.source_files = 'flutter_osm_plugin/Sources/flutter_osm_plugin/**/*'
+  s.dependency 'Flutter'
+  s.platform = :ios, '13.1'
   s.resources = ['Assets/**.json']
   s.dependency 'Flutter'
   s.dependency 'Alamofire'
   s.dependency 'Polyline'
   s.dependency 'Yams'
   s.dependency 'OSMFlutterFramework'
-  #s.preserve_paths = 'Frameworks/OSMFlutterFramework.xcframework'
-  #s.xcconfig = { 'OTHER_LDFLAGS' => '-framework OSMFlutterFramework' }
-  #s.vendored_frameworks = 'OSMFlutterFramework.xcframework'
-  #s.source = { :git => 'https://github.com/liodali/OSMMapCoreIOSFramework.git', :tag => '0.0.1' }
-
-  #s.vendored_frameworks = 'Frameworks/OSMFlutterFramework.xcframework'
-  s.platform = :ios, '15.6'
-  #s.xcconfig = { 'OTHER_LDFLAGS' => '-framework OSMFlutterFramework' }
-  #s.preserve_paths = 'OSMFlutterFramework.xcframework/**/*'
-  #s.dependency 'OSMFlutterFramework'
-
-
-  # Flutter.framework does not contain a i386 slice. Only x86_64 simulators are supported.
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'VALID_ARCHS[sdk=iphonesimulator*]' => 'i386' }
+  # Flutter.framework does not contain a i386 slice.
+  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
   s.swift_version = '5.0'
+
+  # If your plugin requires a privacy manifest, for example if it uses any
+  # required reason APIs, update the PrivacyInfo.xcprivacy file to describe your
+  # plugin's privacy impact, and then uncomment this line. For more information,
+  # see https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
+  # s.resource_bundles = {'flutter_osm_plugin_privacy' => ['flutter_osm_plugin/Sources/flutter_osm_plugin/PrivacyInfo.xcprivacy']}
 end

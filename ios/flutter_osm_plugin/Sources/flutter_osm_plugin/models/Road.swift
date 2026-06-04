@@ -6,24 +6,23 @@ import Foundation
 import MapKit
 import Polyline
 
-struct StoredRoad: Equatable {
+struct StoredRoad: Sendable, Equatable {
     static func == (lhs: StoredRoad, rhs: StoredRoad) -> Bool {
         lhs.id == rhs.id
     }
-    
-    let id:String
-    let roadInformation:RoadInformation?
-    let instructions:[RoadInstruction]
+
+    let id: String
+    let roadInformation: RoadInformation?
+    let instructions: [RoadInstruction]
 }
-struct RoadInformation: Equatable {
+struct RoadInformation: Sendable, Equatable {
     let id: String
     let distance: Double
     let seconds: Double
     let encodedRoute: String
 }
 
-
-struct RoadInstruction {
+struct RoadInstruction: Sendable {
     var location: CLLocationCoordinate2D
     var instruction: String
 }
@@ -34,38 +33,41 @@ struct RoadData {
     var roadBorderWidth: Double?
     var roadBorderColor: String? = nil
     var isDotted = false
-    
-    init(){
-        
+
+    init() {
+
     }
-    init(roadColor: String, roadWidth: Double, roadBorderWidth: Double? = nil, roadBorderColor: String? = nil, isDotted: Bool = false) {
+    init(
+        roadColor: String, roadWidth: Double, roadBorderWidth: Double? = nil,
+        roadBorderColor: String? = nil, isDotted: Bool = false
+    ) {
         self.roadColor = roadColor
         self.roadWidth = roadWidth
         self.roadBorderWidth = roadBorderWidth
         self.roadBorderColor = roadBorderColor
         self.isDotted = isDotted
     }
-    init(json: [String:Any] ){
-      
-        if (json.keys.contains("roadColor")) {
+    init(json: [String: Any]) {
+
+        if json.keys.contains("roadColor") {
             roadColor = json["roadColor"] as! String
         }
-        if (json.keys.contains("roadBorderColor")) {
+        if json.keys.contains("roadBorderColor") {
             roadBorderColor = json["roadBorderColor"] as! String?
         }
-        if (json.keys.contains("roadWidth")) {
+        if json.keys.contains("roadWidth") {
             roadWidth = json["roadWidth"] as! Double
         }
-        if (json.keys.contains("roadBorderWidth")) {
+        if json.keys.contains("roadBorderWidth") {
             roadBorderWidth = json["roadBorderWidth"] as? Double
         }
-        if (json.keys.contains("isDotted")) {
+        if json.keys.contains("isDotted") {
             isDotted = json["isDotted"] as! Bool
         }
     }
 }
 
-struct Road {
+struct Road: Sendable {
     var steps: [RoadNode]
     var legs: [RoadLeg]
     var roadData: RoadData = RoadData()
@@ -105,18 +107,16 @@ struct RoadConfig {
     var roadType: RoadType
 }
 
-
-struct RoadFolder : Equatable {
+struct RoadFolder: Equatable {
     static func == (lhs: RoadFolder, rhs: RoadFolder) -> Bool {
         lhs.id == rhs.id
     }
-    
+
     let id: String
     //var tgRouteMarker: TGMarker
     var polyline: Polyline
     let roadInformation: RoadInformation?
 }
-
 
 struct RoadStep {
     var name: String
@@ -164,8 +164,9 @@ struct Intersections {
     var location: CLLocationCoordinate2D
 
     init(json: [String: Any?]) {
-        location = CLLocationCoordinate2D(latitude: (json["location"] as! [Double]).last!,
-                longitude: (json["location"] as! [Double]).first!
+        location = CLLocationCoordinate2D(
+            latitude: (json["location"] as! [Double]).last!,
+            longitude: (json["location"] as! [Double]).first!
         )
         bearings = json["bearings"] as! [Int]
         if json.keys.contains("lanes") {
@@ -185,16 +186,17 @@ struct Maneuver {
     var location: CLLocationCoordinate2D
 
     init(json: [String: Any?]) {
-        location = CLLocationCoordinate2D(latitude: (json["location"] as! [Double]).last!,
-                longitude: (json["location"] as! [Double]).first!
+        location = CLLocationCoordinate2D(
+            latitude: (json["location"] as! [Double]).last!,
+            longitude: (json["location"] as! [Double]).first!
         )
         maneuverType = json["type"] as! String
-        if (json.keys.contains("modifier")) {
+        if json.keys.contains("modifier") {
             modifier = json["modifier"] as! String?
         }
         bearingBefore = json["bearing_before"] as! Double
         bearingAfter = json["bearing_after"] as! Double
-        if (json.keys.contains("exit")) {
+        if json.keys.contains("exit") {
             exit = json["exit"] as! Int?
         }
     }
@@ -214,42 +216,57 @@ extension RoadStep {
     func buildInstruction(instructions: [String: Any], options: [String: Int]) -> String {
         var type = maneuver.maneuverType
         let instructionsV5 = instructions["v5"] as! [String: Any]
-        if (!instructionsV5.keys.contains(type)) {
+        if !instructionsV5.keys.contains(type) {
             type = "turn"
         }
 
-        var instructionObject = (instructionsV5[type] as! [String: Any])["default"] as! [String: Any]
-        var omitSide = type == "off ramp" && ((maneuver.modifier?.index(ofAccessibilityElement: drivingSide) ?? 0) >= 0);
-        if maneuver.modifier != nil && (instructionsV5[type] as! [String: Any]).keys.contains(maneuver.modifier!) && !omitSide {
-            instructionObject = (instructionsV5[type] as! [String: Any])[maneuver.modifier!] as! [String: Any]
+        var instructionObject =
+            (instructionsV5[type] as! [String: Any])["default"] as! [String: Any]
+        var omitSide =
+            type == "off ramp"
+            && ((maneuver.modifier?.index(ofAccessibilityElement: drivingSide) ?? 0) >= 0)
+        if maneuver.modifier != nil
+            && (instructionsV5[type] as! [String: Any]).keys.contains(maneuver.modifier!)
+            && !omitSide
+        {
+            instructionObject =
+                (instructionsV5[type] as! [String: Any])[maneuver.modifier!] as! [String: Any]
         }
         var laneInstruction: String?
-        switch (maneuver.maneuverType) {
+        switch maneuver.maneuverType {
         case "use lane":
             let lane = laneConfig()
-            if (lane != nil) {
-                laneInstruction = (((instructionsV5[type] as! [String: Any])["constants"] as! [String: Any])["lanes"] as! [String: String])[lane!]
+            if lane != nil {
+                laneInstruction =
+                    (((instructionsV5[type] as! [String: Any])["constants"] as! [String: Any])[
+                        "lanes"] as! [String: String])[lane!]
             } else {
-                instructionObject = ((instructionsV5[type] as! [String: Any])[maneuver.maneuverType] as! [String: Any])["no_lanes"] as! [String: Any]
+                instructionObject =
+                    ((instructionsV5[type] as! [String: Any])[maneuver.maneuverType]
+                    as! [String: Any])["no_lanes"] as! [String: Any]
             }
-            break;
+            break
         case "rotary", "roundabout":
-            if (rotaryName != nil && maneuver.exit != nil && instructionObject.keys.contains("name_exit")) {
+            if rotaryName != nil && maneuver.exit != nil
+                && instructionObject.keys.contains("name_exit")
+            {
                 instructionObject = instructionObject["name_exit"] as! [String: Any]
-            } else if (rotaryName != nil && instructionObject.keys.contains("name")) {
+            } else if rotaryName != nil && instructionObject.keys.contains("name") {
                 instructionObject = instructionObject["name"] as! [String: Any]
-            } else if (maneuver.exit != nil && instructionObject.keys.contains("exit")) {
+            } else if maneuver.exit != nil && instructionObject.keys.contains("exit") {
                 instructionObject = instructionObject["exit"] as! [String: Any]
             } else {
                 instructionObject = instructionObject["default"] as! [String: Any]
             }
-            break;
+            break
         default:
-            break;
+            break
         }
         let name = retrieveName()
         var instruction = instructionObject["default"] as! String
-        if destinations != nil && exits != nil && instructionObject.keys.contains("exit_destination") {
+        if destinations != nil && exits != nil
+            && instructionObject.keys.contains("exit_destination")
+        {
             instruction = instructionObject["exit_destination"] as! String
         } else if destinations != nil && instructionObject.keys.contains("destination") {
             instruction = instructionObject["destination"] as! String
@@ -265,17 +282,17 @@ extension RoadStep {
                 let destinationRef = try destinationSplits.first?.split(separator: ",").first
                 if destinationSplits.count > 1 {
                     let destination = try destinationSplits[1].split(separator: ",").first
-                        firstDestination = "\(destinationRef ?? destination ?? "")"
+                    firstDestination = "\(destinationRef ?? destination ?? "")"
                     if let destination = destination, let destinationRef = destinationRef {
                         firstDestination = "\(destinationRef): \(destination)"
-                    }else{
+                    } else {
                         if let destination = destination {
                             firstDestination = "\(destinationRef): \(destination)"
-                        }else if let destinationRef = destinationRef {
+                        } else if let destinationRef = destinationRef {
                             firstDestination = "\(destinationRef)"
                         }
                     }
-                }else{
+                } else {
                     firstDestination = String("\(destinationRef ?? "")")
                 }
             }
@@ -285,7 +302,9 @@ extension RoadStep {
 
         var modifierInstruction = ""
         if let modifier = maneuver.modifier {
-            modifierInstruction = ((instructionsV5["constants"] as! [String: Any])["modifier"] as! [String: String])[modifier]!
+            modifierInstruction =
+                ((instructionsV5["constants"] as! [String: Any])["modifier"] as! [String: String])[
+                    modifier]!
         }
         var nthWaypoint = ""
         if options["legIndex"]! >= 0 && options["legIndex"]! != options["legCount"]! {
@@ -296,17 +315,19 @@ extension RoadStep {
         if let exit = maneuver.exit {
             exitOrdinalise = ordinalize(instructionsV5: instructionsV5, key: "\(exit)") ?? ""
         }
-        let outputInstruction = tokenize(instruction: instruction, tokens: [
-            "way_name": name,
-            "destination": firstDestination ?? "",
-            "exit": String(exits?.split(separator: ";").first ?? ""),
-            "exit_number": exitOrdinalise,
-            "rotary_name": rotaryName ?? "",
-            "lane_instruction": laneInstruction ?? "",
-            "modifier": modifierInstruction,
-            "direction": directionFromDegree(degree: maneuver.bearingBefore),
-            "nth": nthWaypoint
-        ] as [String: String])
+        let outputInstruction = tokenize(
+            instruction: instruction,
+            tokens: [
+                "way_name": name,
+                "destination": firstDestination ?? "",
+                "exit": String(exits?.split(separator: ";").first ?? ""),
+                "exit_number": exitOrdinalise,
+                "rotary_name": rotaryName ?? "",
+                "lane_instruction": laneInstruction ?? "",
+                "modifier": modifierInstruction,
+                "direction": directionFromDegree(degree: maneuver.bearingBefore),
+                "nth": nthWaypoint,
+            ] as [String: String])
         return outputInstruction
     }
 
@@ -332,7 +353,7 @@ extension RoadStep {
     private func retrieveName() -> String {
         let refN = ref?.split(separator: ";").first
         var n = name
-        if (refN != nil && refN! == n) {
+        if refN != nil && refN! == n {
             n = ""
         }
         if !n.isEmpty && refN != nil {
@@ -342,41 +363,41 @@ extension RoadStep {
     }
 
     private func directionFromDegree(degree: Double?) -> String {
-        if (degree != nil) {
+        if degree != nil {
             // step had no bearing_after degree,
-            return "";
-        } else if (degree! >= 0 && degree! <= 20) {
-            return "north";
-        } else if (degree! > 20 && degree! < 70) {
-            return "northeast";
-        } else if (degree! >= 70 && degree! <= 110) {
-            return "east";
-        } else if (degree! > 110 && degree! < 160) {
-            return "southeast";
-        } else if (degree! >= 160 && degree! <= 200) {
-            return "south";
-        } else if (degree! > 200 && degree! < 250) {
-            return "southwest";
-        } else if (degree! >= 250 && degree! <= 290) {
-            return "west";
-        } else if (degree! > 290 && degree! < 340) {
-            return "northwest";
-        } else if (degree! >= 340 && degree! <= 360) {
-            return "north";
+            return ""
+        } else if degree! >= 0 && degree! <= 20 {
+            return "north"
+        } else if degree! > 20 && degree! < 70 {
+            return "northeast"
+        } else if degree! >= 70 && degree! <= 110 {
+            return "east"
+        } else if degree! > 110 && degree! < 160 {
+            return "southeast"
+        } else if degree! >= 160 && degree! <= 200 {
+            return "south"
+        } else if degree! > 200 && degree! < 250 {
+            return "southwest"
+        } else if degree! >= 250 && degree! <= 290 {
+            return "west"
+        } else if degree! > 290 && degree! < 340 {
+            return "northwest"
+        } else if degree! >= 340 && degree! <= 360 {
+            return "north"
         } else {
             return ""
         }
     }
 
     private func laneConfig() -> String? {
-        if (intersections.isEmpty || (intersections.first?.lanes == nil)) {
+        if intersections.isEmpty || (intersections.first?.lanes == nil) {
             return nil
         }
         var config: [String] = []
         var validity: Bool? = nil
         intersections.first?.lanes?.forEach { lane in
             if validity == nil || validity != lane.valid {
-                if (lane.valid) {
+                if lane.valid {
                     config.append("o")
                 } else {
                     config.append("x")
