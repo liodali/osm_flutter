@@ -4,7 +4,8 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
-import 'package:permission_manager/permission_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:routing_client_dart/routing_client_dart.dart' as routing;
 
 /// class [MapController] : map controller that will control map by select position,enable current location,
 /// draw road , show static geoPoint,
@@ -13,6 +14,7 @@ import 'package:permission_manager/permission_manager.dart';
 ///
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 class MapController extends BaseMapController {
+  late final osrmManager = routing.OSRMManager();
   MapController({
     super.initMapWithUserPosition,
     super.initPosition,
@@ -336,17 +338,36 @@ class MapController extends BaseMapController {
     Anchor anchor = Anchor.center,
     bool useDirectionMarker = false,
   }) async {
-    final status = await PermissionManager.request(
-      PermissionManagerPermission.location,
-    );
-
-    if (status == PermissionManagerStatus.granted ||
-        status == PermissionManagerStatus.limited) {
-      // Permission granted
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.iOS) {
       await osmBaseController.startLocationUpdating();
-    } else if (status == PermissionManagerStatus.permanentlyDenied) {
       return;
     }
+    final hasPermission = await _requestLocationPermission();
+    if (!hasPermission) {
+      return;
+    }
+
+    await osmBaseController.startLocationUpdating();
+  }
+
+  Future<bool> _requestLocationPermission() async {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final locationStatus = await Permission.locationWhenInUse.request();
+      if (!_isPermissionGranted(locationStatus)) {
+        return false;
+      }
+
+      final locationAlwaysStatus = await Permission.locationAlways.request();
+      return _isPermissionGranted(locationStatus) ||
+          _isPermissionGranted(locationAlwaysStatus);
+    }
+
+    final locationStatus = await Permission.locationWhenInUse.request();
+    return _isPermissionGranted(locationStatus);
+  }
+
+  bool _isPermissionGranted(PermissionStatus status) {
+    return status.isGranted || status.isLimited;
   }
 
   ///[stopLocationUpdating]
@@ -388,13 +409,50 @@ class MapController extends BaseMapController {
     List<GeoPoint>? intersectPoint,
     RoadOption? roadOption,
   }) async {
-    return await osmBaseController.drawRoad(
-      start,
-      end,
-      roadType: roadType,
-      interestPoints: intersectPoint,
-      roadOption: roadOption,
+    final road = await osrmManager.getRoad(
+      waypoints: [
+        routing.LngLat(lng: start.longitude, lat: start.latitude),
+        ...?intersectPoint
+            ?.map((e) => routing.LngLat(lng: e.longitude, lat: e.latitude)),
+        routing.LngLat(lng: end.longitude, lat: end.latitude),
+      ],
+      roadType: switch (roadType) {
+        RoadType.car => routing.RoadType.car,
+        RoadType.bike => routing.RoadType.bike,
+        RoadType.foot => routing.RoadType.foot,
+      },
     );
+    final instructions = await osrmManager.buildInstructions(road);
+    final geoPoints = road.polyline
+        ?.map((e) => GeoPoint(latitude: e.lat, longitude: e.lng))
+        .toList();
+    final roadInfo = RoadInfo(
+      instructions: instructions
+          .map((e) => Instruction(
+                geoPoint: GeoPoint(
+                  latitude: e.location.lat,
+                  longitude: e.location.lng,
+                ),
+                instruction: e.instruction,
+              ))
+          .toList(),
+      distance: road.distance,
+      duration: road.duration,
+      route: geoPoints ?? [],
+    );
+    unawaited(osmBaseController.drawRoadManually(
+      roadInfo.key,
+      geoPoints ?? [],
+      roadOption ?? const RoadOption.empty(),
+    ));
+    return roadInfo;
+    // return await osmBaseController.drawRoad(
+    //   start,
+    //   end,
+    //   roadType: roadType,
+    //   interestPoints: intersectPoint,
+    //   roadOption: roadOption,
+    // );
   }
 
   /// [drawMultipleRoad]
@@ -494,16 +552,15 @@ class MapController extends BaseMapController {
   ///  [path] : (list of GeoPoint) path of the road
   ///
   ///  [roadOption] : (RoadOption) define styles of the road
-  Future<String> drawRoadManually(
+  Future<void> drawRoadManually(
     List<GeoPoint> path,
     RoadOption roadOption,
-  ) async {
-    return await osmBaseController.drawRoadManually(
-      UniqueKey().toString(),
-      path,
-      roadOption,
-    );
-  }
+  ) =>
+      osmBaseController.drawRoadManually(
+        UniqueKey().toString(),
+        path,
+        roadOption,
+      );
 
   Future<void> addMarker(
     GeoPoint p, {
