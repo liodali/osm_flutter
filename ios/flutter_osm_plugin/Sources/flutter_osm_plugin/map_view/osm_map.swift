@@ -183,8 +183,10 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
             break
         case "startLocationUpdating":
             userLocationWithoutControl = true
-            self.mapOSM.locationManager.toggleTracking(
-                configuration: TrackConfiguration(moveMap: false, controlUserMarker: false))
+            if !self.mapOSM.locationManager.isTrackingEnabled() {
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: TrackConfiguration(moveMap: false, controlUserMarker: false))
+            }
             result(200)
             break
         case "stopLocationUpdating":
@@ -631,7 +633,6 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
         }
     }
     func stopTracking() {
-        self.mapOSM.locationManager.toggleTracking(configuration: TrackConfiguration())
         self.mapOSM.locationManager.stopLocation()
     }
     private func getGeoPoints(_ result: FlutterResult) {
@@ -664,16 +665,8 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
                 var mapInfo = road.roadInformation?.toMap(instructions: road.instructions) ?? [:]
                 mapInfo["key"] = roadId
                 self.channel.invokeMethod("receiveRoad", arguments: mapInfo)
-                // DispatchQueue.main.async {
-                //
-                // }
-
             } else {
                 self.channel.invokeMethod("receiveRoad", arguments: ["key": roadId])
-                // DispatchQueue.main.async {
-                //
-                // }
-
             }
         }
 

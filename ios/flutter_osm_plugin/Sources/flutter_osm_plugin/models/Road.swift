@@ -215,7 +215,9 @@ struct Lane {
 extension RoadStep {
     func buildInstruction(instructions: [String: Any], options: [String: Int]) -> String {
         var type = maneuver.maneuverType
-        let instructionsV5 = instructions["v5"] as! [String: Any]
+        guard let instructionsV5 = instructions["v5"] as? [String: Any] else {
+            return ""
+        }
         if !instructionsV5.keys.contains(type) {
             type = "turn"
         }
@@ -363,26 +365,26 @@ extension RoadStep {
     }
 
     private func directionFromDegree(degree: Double?) -> String {
-        if degree != nil {
-            // step had no bearing_after degree,
+        guard let degree = degree else {
             return ""
-        } else if degree! >= 0 && degree! <= 20 {
+        }
+        if degree >= 0 && degree <= 20 {
             return "north"
-        } else if degree! > 20 && degree! < 70 {
+        } else if degree > 20 && degree < 70 {
             return "northeast"
-        } else if degree! >= 70 && degree! <= 110 {
+        } else if degree >= 70 && degree <= 110 {
             return "east"
-        } else if degree! > 110 && degree! < 160 {
+        } else if degree > 110 && degree < 160 {
             return "southeast"
-        } else if degree! >= 160 && degree! <= 200 {
+        } else if degree >= 160 && degree <= 200 {
             return "south"
-        } else if degree! > 200 && degree! < 250 {
+        } else if degree > 200 && degree < 250 {
             return "southwest"
-        } else if degree! >= 250 && degree! <= 290 {
+        } else if degree >= 250 && degree <= 290 {
             return "west"
-        } else if degree! > 290 && degree! < 340 {
+        } else if degree > 290 && degree < 340 {
             return "northwest"
-        } else if degree! >= 340 && degree! <= 360 {
+        } else if degree >= 340 && degree <= 360 {
             return "north"
         } else {
             return ""

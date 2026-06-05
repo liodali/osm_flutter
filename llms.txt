@@ -1,0 +1,345 @@
+# llms.txt — OSM Flutter Plugin
+
+## Project
+
+Flutter plugin for OpenStreetMap. Multi-platform: Android, iOS, Web. Uses federated plugin architecture.
+
+## Packages
+
+### flutter_osm_plugin (root)
+- **Role**: Main plugin package
+- **Version**: 1.4.5
+- **Platforms**: Android, iOS, Web (via federated web package)
+- **Entry**: `lib/flutter_osm_plugin.dart` — exports from interface + local widgets/controllers
+
+### flutter_osm_interface
+- **Role**: Platform interface package (abstract contract)
+- **Version**: 1.4.0
+- **Entry**: `lib/flutter_osm_interface.dart`
+- **Key**: `OSMPlatform` abstract class, `MobileOSMPlatform` extension, `MethodChannelOSM`, types, events
+
+### flutter_osm_web
+- **Role**: Web platform implementation
+- **Version**: 1.4.4
+- **Entry**: `lib/flutter_osm_web.dart`
+- **Key**: `OsmWebPlatform`, `WebOsmController`, JS interop via `HtmlElementView`
+- **Assets**: `map.html`, `map.js`, `osm_interop.js` under `lib/src/asset/`
+
+## Architecture
+
+```
+flutter_osm_plugin
+  ├─ depends on flutter_osm_interface ^1.4.0
+  ├─ depends on flutter_osm_web ^1.4.4
+  ├─ android/    → Kotlin native plugin
+  ├─ ios/        → Swift native plugin
+  └─ lib/        → Dart widgets + controllers
+
+flutter_osm_interface
+  └─ Platform interface + shared types (no native code)
+
+flutter_osm_web
+  ├─ depends on flutter_osm_interface ^1.4.0
+  └─ Web implementation (HtmlElementView + JS interop)
+```
+
+Platform registration: `plugin_platform_interface` pattern. Web registers via `OsmWebPlatform` extending `OSMPlatform`.
+
+## API Surface
+
+### Widget Layer — `OSMFlutter`
+
+Principal widget to render the map. Platform-aware: uses `MobileOSMFlutter` on mobile, `OsmWebWidget` on web.
+
+**Constructor parameters:**
+- `controller` (required `BaseMapController`) — `MapController` instance
+- `osmOption` (required `OSMOption`) — map configuration
+- `mapIsLoading` (`Widget?`) — shown while map initializes
+- `onGeoPointClicked` (`Function(GeoPoint)?`) — tap on marker
+- `onGeoPointLongPress` (`Function(GeoPoint)?`) — long press on marker
+- `onLocationChanged` (`Function(GeoPoint)?`) — user location updated
+- `onMapMoved` (`Function(Region)?`) — camera moved
+- `onMapIsReady` (`Function(bool)?`) — map initialization complete
+
+**OSMOption fields:**
+- `userTrackingOption` (`UserTrackingOption?`) — init with user position + tracking config
+- `staticPoints` (`List<StaticPositionGeoPoint>`) — pre-defined marker groups
+- `zoomOption` (`ZoomOption`) — min/max/init zoom, step zoom
+- `userLocationMarker` (`UserLocationMaker?`) — custom user marker + direction arrow widgets
+- `roadConfiguration` (`RoadOption?`) — default road style
+- `showContributorBadgeForOSM` (`bool`) — OSM copyright badge (mobile only, hidden on web)
+- `isPicker` (`bool`) — picker mode (no zoom controls)
+- `showDefaultInfoWindow` (`bool`) — tap marker shows default info window
+- `showZoomController` (`bool`) — show +/- zoom buttons
+- `enableRotationByGesture` (`bool`) — allow rotation gesture
+
+### Controller API — `MapController`
+
+Primary API for interacting with the map at runtime.
+
+**Constructors:**
+- `MapController()` — requires either `initMapWithUserPosition` or `initPosition`
+- `MapController.withPosition({required GeoPoint initPosition})` — init at specific position
+- `MapController.withUserPosition()` — init at user location
+- `MapController.customLayer({required CustomTile customTile})` — with custom tile layer
+- `MapController.cyclOSMLayer()` — pre-configured CyclOSM tile layer
+- `MapController.publicTransportationLayer()` — pre-configured public transport tile layer
+
+**Camera & Position:**
+- `moveTo(GeoPoint position, {bool animate = false})` — animate camera to position
+- `goToLocation(GeoPoint position)` — deprecated, use `moveTo`
+- `changeLocation(GeoPoint position)` — deprecated, use `addMarker`
+- `currentLocation()` — move camera to user location
+- `myLocation()` → `Future<GeoPoint>` — get current user location
+- `centerMap` → `Future<GeoPoint>` — get map center
+- `bounds` → `Future<BoundingBox>` — get visible bounds
+
+**Zoom:**
+- `getZoom()` → `Future<double>`
+- `setZoom({double? zoomLevel, double? stepZoom})`
+- `zoomIn()` / `zoomOut()`
+- `zoomToBoundingBox(BoundingBox box, {int paddinInPixel = 0})`
+
+**Markers:**
+- `addMarker(GeoPoint p, {MarkerIcon? markerIcon, double? angle, IconAnchor? iconAnchor})`
+- `removeMarker(GeoPoint position)`
+- `removeMarkers(List<GeoPoint> geoPoints)`
+- `setMarkerIcon(GeoPoint point, MarkerIcon markerIcon)` — change existing marker icon
+- `changeLocationMarker({required GeoPoint oldLocation, required GeoPoint newLocation, MarkerIcon? markerIcon, double? angle, IconAnchor? iconAnchor})`
+- `geopoints` → `Future<List<GeoPoint>>` — list all markers on map
+
+**Static Positions:**
+- `setStaticPosition(List<GeoPoint> geoPoints, String id)` — update group by id
+- `setMarkerOfStaticPoint({required String id, required MarkerIcon markerIcon})`
+
+**Tracking:**
+- `enableTracking({bool enableStopFollow = false, bool disableUserMarkerRotation = false, Anchor anchor = Anchor.center, bool useDirectionMarker = false})`
+- `disabledTracking()`
+- `startLocationUpdating()` — receive location events without controlling camera
+- `stopLocationUpdating()`
+
+**Roads:**
+- `drawRoad(GeoPoint start, GeoPoint end, {RoadType roadType = RoadType.car, List<GeoPoint>? intersectPoint, RoadOption? roadOption})` → `Future<RoadInfo>`
+- `drawMultipleRoad(List<MultiRoadConfiguration> configs, {MultiRoadOption commonRoadOption = const MultiRoadOption.empty()})` → `Future<List<RoadInfo>>`
+- `drawRoadManually(List<GeoPoint> path, RoadOption roadOption)` → `Future<String>` (returns road key)
+- `removeLastRoad()` / `removeRoad({required String roadKey})` / `clearAllRoads()`
+
+**Shapes:**
+- `drawCircle(CircleOSM circleOSM)` — center point, radius, color, border
+- `removeCircle(String keyCircle)` / `removeAllCircle()`
+- `drawRect(RectOSM rectOSM)` — center point, distance (square), color, border
+- `removeRect(String keyRect)` / `removeAllRect()`
+- `removeAllShapes()`
+
+**Map Config:**
+- `changeTileLayer({CustomTile? tileLayer})` — switch raster tile source
+- `limitAreaMap(BoundingBox boundingBox)` — constrain camera to bounds
+- `removeLimitAreaMap()` — remove constraint
+- `rotateMapCamera(double degree)` — rotate map (mobile only)
+- `dispose()` — release resources (mobile only)
+
+### Platform Support Matrix
+
+| API | Android | iOS | Web | Notes |
+|---|---|---|---|---|
+| `moveTo` | ✅ | ✅ | ✅ | |
+| `addMarker` | ✅ | ✅ | ✅ | Web captures widget as PNG base64 |
+| `removeMarker` / `removeMarkers` | ✅ | ✅ | ✅ | |
+| `setMarkerIcon` | ✅ | ✅ | ✅ | |
+| `changeLocationMarker` | ✅ | ✅ | ✅ | |
+| `setStaticPosition` | ✅ | ✅ | ✅ | |
+| `getZoom` / `setZoom` / `zoomIn` / `zoomOut` | ✅ | ✅ | ✅ | |
+| `zoomToBoundingBox` | ✅ | ✅ | ✅ | |
+| `currentLocation` | ✅ | ✅ | ✅ | |
+| `myLocation` | ✅ | ✅ | ✅ | Web uses browser geolocation API |
+| `enableTracking` / `disabledTracking` | ✅ | ✅ | ✅ | |
+| `startLocationUpdating` / `stopLocationUpdating` | ✅ | ✅ | ✅ | |
+| `drawRoad` | ✅ | ✅ | ✅ | Web uses OSRM via `routing_client_dart` |
+| `drawMultipleRoad` | ✅ | ✅ | ✅ | Sequential on web |
+| `drawRoadManually` | ✅ | ✅ | ✅ | |
+| `removeLastRoad` / `removeRoad` / `clearAllRoads` | ✅ | ✅ | ✅ | |
+| `drawCircle` / `removeCircle` / `removeAllCircle` | ✅ | ✅ | ✅ | |
+| `drawRect` / `removeRect` / `removeAllRect` | ✅ | ✅ | ✅ | |
+| `removeAllShapes` | ✅ | ✅ | ✅ | |
+| `rotateMapCamera` | ✅ | ✅ | ❌ | Web: no-op with debug print |
+| `changeTileLayer` | ✅ | ✅ | ✅ | Raster tiles only |
+| `limitAreaMap` / `removeLimitAreaMap` | ✅ | ✅ | ✅ | |
+| `bounds` / `centerMap` / `geopoints` | ✅ | ✅ | ✅ | |
+| `onGeoPointClicked` | ✅ | ✅ | ✅ | |
+| `onGeoPointLongPress` | ✅ | ✅ | ✅ | |
+| `onLocationChanged` | ✅ | ✅ | ✅ | |
+| `onMapMoved` | ✅ | ✅ | ✅ | |
+| `onMapIsReady` | ✅ | ✅ | ✅ | |
+
+### Types
+
+**Core:**
+- `GeoPoint({required double latitude, required double longitude})`
+- `GeoPointWithOrientation({required double latitude, required double longitude, required double angle})` extends `GeoPoint`
+- `BoundingBox({required double north, required double east, required double south, required double west})` — `BoundingBox.world()` for no limit
+
+**Markers:**
+- `MarkerIcon({required Widget icon})` — wraps any Flutter widget as marker
+- `IconAnchor` — enum: `topLeft`, `topCenter`, `topRight`, `centerLeft`, `center`, `centerRight`, `bottomLeft`, `bottomCenter`, `bottomRight`
+
+**Roads:**
+- `RoadInfo` — `key`, `duration` (seconds), `distance` (km), `instructions` (`List<Instruction>`), `route` (`List<GeoPoint>`)
+- `RoadOption` — `roadColor`, `roadWidth`, `zoomInto`, `showMarkerOfPOI`, `iconMarker`, `dottedLine`, `extraPoints`
+- `MultiRoadConfiguration` — `startPoint`, `destinationPoint`, `intersectPoints`, `roadOptionConfiguration`
+- `MultiRoadOption` — shared style across multiple roads
+- `RoadType` — `car`, `bike`, `foot`
+
+**Shapes:**
+- `CircleOSM` — `key`, `centerPoint`, `radius` (meters), `color`, `borderColor`, `strokeWidth`
+- `RectOSM` — `key`, `centerPoint`, `distance` (meters), `color`, `borderColor`, `strokeWidth`
+
+**Tiles:**
+- `CustomTile` — `urlsServers` (`List<TileURLs>`), `tileExtension`, `sourceName`, `tileSize`, `keyApi`, `maxZoomLevel`, `minZoomLevel`
+- `TileURLs` — `url` template with `{s}` for subdomain, `subdomains` list
+
+**Tracking:**
+- `UserTrackingOption` — `enableTracking`, `unFollowUser`, `initWithUserPosition`
+- `UserLocationMaker` — `personMarker` (`MarkerIcon?`), `directionArrowMarker` (`MarkerIcon?`)
+- `Anchor` — enum for marker anchor point
+
+**Static Points:**
+- `StaticPositionGeoPoint` — `id` (must be unique), `geoPoints` (`List<GeoPoint>`), `markerIcon` (`MarkerIcon?`)
+
+**Zoom:**
+- `ZoomOption` — `stepZoom`, `initZoom`, `minZoomLevel`, `maxZoomLevel`
+
+### Interface Layer — `flutter_osm_interface`
+
+**Abstract Classes:**
+- `OSMPlatform` — base platform interface (map events, init, close)
+- `MobileOSMPlatform` extends `OSMPlatform` — all map operations (markers, roads, shapes, zoom, tracking)
+
+**Events (streams by map id):**
+- `onMapIsReady(int idMap)` → `Stream<MapInitialization>`
+- `onSinglePressMapClickListener(int idMap)` → `Stream<SingleTapEvent>`
+- `onLongPressMapClickListener(int idMap)` → `Stream<LongTapEvent>`
+- `onRoadMapClickListener(int idMap)` → `Stream<RoadTapEvent>`
+- `onGeoPointClickListener(int idMap)` → `Stream<GeoPointEvent>`
+- `onGeoPointLongPressListener(int idMap)` → `Stream<GeoPointLongPressEvent>`
+- `onUserPositionListener(int idMap)` → `Stream<UserLocationEvent>`
+- `onRegionIsChangingListener(int idMap)` → `Stream<RegionIsChangingEvent>`
+- `onIosMapInit(int idMap)` → `Stream<IosMapInit>` (iOS only)
+- `onMapRestored(int idMap)` → `Stream<MapRestoration>` (mobile only)
+
+**Implementation:**
+- `MethodChannelOSM` — default Android/iOS via `MethodChannel`
+
+### Web Layer — `flutter_osm_web`
+
+**Classes:**
+- `OsmWebPlatform` — web platform registration, extends `OSMPlatform`
+- `WebOsmController` — implements `IBaseOSMController`, uses `WebMixin`
+- `OsmWebWidget` / `OsmWebWidgetState` — web map widget using `HtmlElementView`
+
+**Web implementation details:**
+- Map renders inside an iframe loaded from `map.html` asset
+- JS interop via `dart:js_interop` and `package:web`
+- Marker icons: Flutter widget → PNG capture → base64 → JS
+- Road routing: computed client-side via `routing.OSRMManager` from `routing_client_dart`, then polyline drawn via JS
+- Road info cached locally in `roadsWebCache` since JS doesn't return structured data
+- `selectPosition()` throws — not supported, use `addMarker`
+- `mapOrientation()` prints "not implemented in web side" and returns
+
+## Web Limitations
+
+1. **Map rotation** (`rotateMapCamera`) — not implemented
+2. **Pointer events** — `HtmlElementView` captures all clicks; overlay widgets need `pointer_interceptor`
+3. **No `dart:io`** — any `Platform.is*` check crashes on web; use `defaultTargetPlatform`
+4. **Marker rendering** — custom widgets are rasterized to PNG before display (slight delay)
+5. **Road computation** — done via Dart client-side OSRM, not native engine
+
+## Key Files
+
+| File | Purpose |
+|---|---|
+| `lib/src/osm_flutter.dart` | Main `OSMFlutter` widget |
+| `lib/src/controller/map_controller.dart` | `MapController` — primary API surface for users |
+| `lib/src/controller/osm/osm_controller.dart` | `MobileOSMController` — mobile implementation |
+| `lib/src/widgets/mobile_osm_flutter.dart` | Mobile-specific map widget |
+| `lib/src/widgets/osm_web.dart` | Web-specific map widget (stub + platform dispatch) |
+| `flutter_osm_interface/lib/src/osm_interface.dart` | `OSMPlatform` + `MobileOSMPlatform` abstracts |
+| `flutter_osm_interface/lib/src/channel/osm_method_channel.dart` | `MethodChannelOSM` — Android/iOS channel impl |
+| `flutter_osm_web/lib/src/web_platform.dart` | `OsmWebPlatform` — web platform registration |
+| `flutter_osm_web/lib/src/controller/web_osm_controller.dart` | `WebOsmController` — web-side map control |
+| `flutter_osm_web/lib/src/mixin_web.dart` | `WebMixin` — web implementation of all map operations |
+| `flutter_osm_web/lib/src/interop/` | JS interop bindings |
+| `android/src/main/kotlin/...` | Kotlin plugin + map views + lifecycle |
+| `ios/flutter_osm_plugin/` | Swift plugin + map views |
+
+## Pubspec Versions (Current)
+
+- Root: `1.4.5`
+- Interface: `1.4.0`
+- Web: `1.4.4`
+
+## Scripts
+
+### update_versions.py
+Updates dependency versions between inner packages without publishing.
+
+```bash
+python3 update_versions.py --mode all [--version-type caret|upperbound]
+```
+
+Modes: `web` | `interface` | `osm` | `all`
+Version types: `caret` (default `^1.4.0`) | `upperbound` (`>=1.4.0 <1.5.0`)
+
+Smart behavior for `osm` mode: reads current root pubspec state, converts `path:` deps to version constraints, skips if already up-to-date, comments old lines before inserting new ones.
+
+### check_pubspec_release.py
+Checks pub.dev for version existence, optionally publishes missing packages, then updates root dependencies.
+
+```bash
+python3 check_pubspec_release.py           # fail if versions missing on pub.dev
+python3 check_pubspec_release.py --publish # publish missing inner packages
+```
+
+Imports `update_versions` module directly for the dependency update step.
+
+### pre_release.py
+Legacy release script. Uses git tags like `flutter_osm_interface-v1.4.0` to trigger publishing.
+
+## CI/CD Workflows
+
+| Workflow | Trigger | Action |
+|---|---|---|
+| `publish.yaml` | `vX.Y.Z` tag | Publish main plugin |
+| `build_packages.yaml` | `flutter_osm_interface-vX.Y.Z` / `flutter_osm_web-vX.Y.Z` | Publish inner packages via reusable workflow |
+| `deploy_example_android.yaml` | `app-vX.Y.Z` tag or manual dispatch | Build AAB + upload to Google Play |
+
+## Example App
+
+Location: `example/`
+Package: `hamza.dali.flutter_osm_plugin_example`
+Build: `cd example && flutter build appbundle --release`
+Android config: compileSdk 36, minSdk 32, NDK 28.2.13676358, Java/Kotlin 17
+Signing: reads `android/key.properties` for release keystore
+
+## Rules & Patterns
+
+- **Never use `dart:io`** for platform detection. Use `defaultTargetPlatform` from `package:flutter/foundation.dart`.
+- Web crashes on `Platform.isAndroid` / `Platform.isIOS`. Guard with `kIsWeb` or `defaultTargetPlatform`.
+- Federated plugin changes must update interface first, then implementations, then root re-exports.
+- Path dependencies (`path: ../package/`) are for local dev only. Release uses caret constraints.
+- Web renders via `HtmlElementView`; pointer events are captured by the HTML element, requiring `pointer_interceptor` for overlays.
+
+## Dependencies
+
+Root plugin: `dio`, `routing_client_dart`, `google_polyline_algorithm`, `permission_manager`, `url_launcher`, `uuid`, `plugin_platform_interface`, `flutter_plugin_android_lifecycle`
+
+Interface: `plugin_platform_interface`, `stream_transform`, `google_polyline_algorithm`, `dio`
+
+Web: `web`, `stream_transform`, `routing_client_dart`, `dio`, `flutter_osm_interface`
+
+## Changelog Entry Format
+
+```
+### 1.4.5:
+* remove dart:io
+* update dependencies
+```

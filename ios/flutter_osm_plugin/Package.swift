@@ -13,17 +13,13 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "FlutterFramework", path: "../FlutterFramework"),
-        // .package(name: "OSMMapCoreIOSFramework", path: "../OSMMapCoreIOSFramework"),
-        // .package(url: "https://github.com/UbiqueInnovation/djinni.git", exact: "1.0.9"),
         .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.11.0")),
         .package(url: "https://github.com/raphaelmor/Polyline.git", from: "5.1.0"),
         .package(url: "https://github.com/jpsim/Yams.git", from: "6.2.2"),
         .package(
             url: "https://github.com/liodali/OSMMapCoreIOSFramework.git",
-            revision: "b78896c390aa88abd24fc3116de4aeef74196aba"),
-        //exact: "0.8.6"),
-        // .package(url: "https://github.com/openmobilemaps/maps-core.git", from: "3.7.1"),
-        // .package(url: "https://github.com/raphaelmor/Polyline.git", from: "5.1.0")
+           revision: "6f479844f9af888584be4cbaa42f53af9413a13f"),    
+        //.exact("0.8.7")),
 
     ],
     targets: [
@@ -53,7 +49,8 @@ let package = Package(
                     "-strict-concurrency=minimal", "-enable-experimental-feature",
                     "AccessLevelOnImport",
                 ])
-            ]
+            ],
+            
         )
     ]
 )
