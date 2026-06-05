@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 import 'package:flutter_osm_plugin/src/controller/simple_map_controller.dart';
-import 'package:permission_manager/permission_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
@@ -140,15 +140,8 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   /// for iOS it's done manually
   Future<bool> requestPermission() async {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      final status = await PermissionManager.request(
-        PermissionManagerPermission.location,
-      );
-
-      if (status == PermissionManagerStatus.granted) {
-        return true;
-      } else if (status == PermissionManagerStatus.permanentlyDenied) {
-        return false;
-      }
+      final status = await Permission.locationWhenInUse.request();
+      return status.isGranted || status.isLimited;
     }
     return true;
   }

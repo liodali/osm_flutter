@@ -6,7 +6,7 @@ version: 1.4.5
 homepage: https://github.com/liodali/osm_flutter
 environment:
   sdk: '>=3.5.0 <4.0.0'
-  flutter: ">=1.12.0"
+  flutter: ">=3.41.0"
 dependencies:
   flutter:
     sdk: flutter
@@ -14,19 +14,19 @@ dependencies:
     sdk: flutter
   plugin_platform_interface: ^2.1.8
   flutter_plugin_android_lifecycle: ^2.0.23
-  permission_manager: ^2.0.9
+  permission_handler: ^12.0.3
   url_launcher: ^6.3.2
   dio: ^5.9.2
   uuid: ^4.2.1
   routing_client_dart: ^0.5.5
   google_polyline_algorithm: ^3.1.0
-  flutter_osm_interface: ^1.4.0
-  flutter_osm_web: ^1.4.4
+  # flutter_osm_interface: ^1.4.0
+  # flutter_osm_web: ^1.4.4
   # path dependency for local development
-  # flutter_osm_interface:
-  #   path: ../flutter_osm_interface/
-  # flutter_osm_web:
-  #   path: ../flutter_osm_web/
+  flutter_osm_interface:
+    path: flutter_osm_interface/
+  flutter_osm_web:
+    path: flutter_osm_web/
 dev_dependencies:
   flutter_lints: ^4.0.0
   flutter_test:
