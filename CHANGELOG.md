@@ -1,3 +1,7 @@
+### 1.4.6:
+* Fix SPM Configuration
+* remove permission manager and return permission_handler
+* use osm_routing_client to draw road instead of native implementation
 ### 1.4.5:
 * remove dart:io
 * update dependencies
