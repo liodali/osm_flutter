@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cross-Origin-Resource-Policy" content="cross-origin">
+  <meta http-equiv="Cross-Origin-Embedder-Policy" content="credentialless">
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="credentialless">
+  <script src="https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.css" rel="stylesheet" />
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    #mapid {
+      width: 100%;
+      height: 100%;
+    }
+
+    .maplibregl-marker img {
+      image-rendering: auto;
+    }
+  </style>
+</head>
+
+<body id="frame_body_map" style="margin:0px;">
+  <div id="mapid"></div>
+  <div id="render-icon" style="display:none;">
+  </div>
+  <script>
+
+    var zoom = 2.0;
+    var stepZoom = 1.0;
+    var defaultIcon = "";
+    var staticIcons = new Map();
+    var staticGeoPoint = new Map();
+    var shapesLayers = new Map();
+    var userLocationMarkerIcon = undefined;
+    var userLocationDirectionIcon = undefined;
+    var dynamicIcon = "";
+    var advSearchIcon = "";
+    var homeMarker;
+    var userPosition;
+    var isReady = false;
+    var lastRoad;
+    var colorRoad;
+    var routesLayer = new Map();
+    var idTracking;
+    var skipFollow = false;
+    var startAdvSearchLocation = false;
+    var useDirectionMarker = false;
+    var cachedLayers = [];
+    var mainLayers = new Map([
+      ['roads', []],
+      ['static', []],
+      ['markers', []],
+      ['userLocation', []],
+    ]);
+    var keysMainLayers = ["roads", 'static', 'markers', 'userLocation'];
+    var customTile;
+    var longPressTimer;
+    var isLongPress = false;
+
+    var markerRegistry = new Map();
+
+    var defaultStyle = {
+      version: 8,
+      sources: {
+        'osm-raster': {
+          type: 'raster',
+          tiles: ['https://tile.openstreetmap.de/{z}/{x}/{y}.png'],
+          tileSize: 256,
+          attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxzoom: 19,
+          minzoom: 2,
+        }
+      },
+      layers: [
+        {
+          id: 'osm-raster-layer',
+          type: 'raster',
+          source: 'osm-raster',
+        }
+      ]
+    };
+
+    var mymap = new maplibregl.Map({
+      container: 'mapid',
+      style: defaultStyle,
+      center: [0, 0],
+      zoom: 2,
+      attributionControl: false,
+    });
+
+    var currentCustomSourceId = null;
+    var usingCustomStyle = false;
+
+    mymap.on('load', function () {
+      mymap.on('click', function (event) {
+        onMapSingleTapClicked(event.lngLat.lng, event.lngLat.lat);
+      });
+
+      mymap.on('move', function (e) {
+        if (isReady) {
+          var bounds = mymap.getBounds();
+          var center = mymap.getCenter();
+          var box = {
+            north: bounds.getNorth(),
+            east: bounds.getEast(),
+            west: bounds.getWest(),
+            south: bounds.getSouth(),
+          };
+          var centerP = {
+            lat: center.lat,
+            lon: center.lng
+          };
+          onRegionChanged(box, centerP);
+        }
+      });
+
+      mymap.on('mousedown', function (e) {
+        if (isReady) {
+          if (userPosition != undefined && idTracking != undefined && skipFollow) {
+            skipFollow = true;
+          }
+        }
+      });
+    });
+
+    async function removeControls() {
+      try {
+        mymap.scrollZoom.disable();
+        mymap.boxZoom.disable();
+        mymap.dragRotate.disable();
+        mymap.dragPan.disable();
+        mymap.keyboard.disable();
+        mymap.doubleClickZoom.disable();
+        mymap.touchZoomRotate.disable();
+      } catch (e) {
+        console.error(e);
+      }
+      return 200;
+    }
+
+    async function toggleAlllayers(visible) {
+      keysMainLayers.forEach(function (key) {
+        var layers = mainLayers.get(key);
+        if (Array.isArray(layers)) {
+          layers.forEach(function (item) {
+            if (item && item.marker) {
+              if (visible) {
+                item.marker.addTo(mymap);
+              } else {
+                item.marker.remove();
+              }
+            }
+          });
+        }
+      });
+      return 200;
+    }
+
+    async function initMapLocation(point) {
+      mymap.jumpTo({ center: [point.lon, point.lat], zoom: zoom });
+      isReady = true;
+      isMapReady(isReady);
+      return 200;
+    }
+
+    async function changeTileLayer(tile) {
+      if (tile == undefined && customTile != undefined) {
+        if (usingCustomStyle) {
+          mymap.setStyle(defaultStyle);
+          usingCustomStyle = false;
+          mymap.once('style.load', function () {
+            restoreShapesAndRoads();
+          });
+        } else if (currentCustomSourceId) {
+          try {
+            mymap.removeLayer(currentCustomSourceId + '-layer');
+            mymap.removeSource(currentCustomSourceId);
+          } catch (e) { }
+          currentCustomSourceId = null;
+          if (!mymap.getSource('osm-raster')) {
+            mymap.addSource('osm-raster', defaultStyle.sources['osm-raster']);
+            mymap.addLayer(defaultStyle.layers[0]);
+          }
+        }
+        customTile = undefined;
+      } else if (tile != undefined) {
+        if (tile.styleURL) {
+          mymap.setStyle(tile.styleURL);
+          usingCustomStyle = true;
+          customTile = tile;
+          mymap.once('style.load', function () {
+            restoreShapesAndRoads();
+          });
+        } else {
+          var serverURL = tile.url;
+          if (!serverURL.includes("{z}") && !serverURL.includes("{x}") && !serverURL.includes("{y}")) {
+            serverURL = tile.url + '{z}/{x}/{y}';
+          }
+          var fullUrl = serverURL + tile.tileExtension + (tile.apiKey || '');
+
+          if (currentCustomSourceId) {
+            try {
+              mymap.removeLayer(currentCustomSourceId + '-layer');
+              mymap.removeSource(currentCustomSourceId);
+            } catch (e) { }
+          }
+
+          var sourceId = 'custom-raster-' + Date.now();
+          currentCustomSourceId = sourceId;
+
+          try { mymap.removeLayer('osm-raster-layer'); } catch (e) { }
+          try { mymap.removeSource('osm-raster'); } catch (e) { }
+
+          mymap.addSource(sourceId, {
+            type: 'raster',
+            tiles: [fullUrl],
+            tileSize: tile.tileSize || 256,
+            maxzoom: tile.maxZoom || 19,
+            minzoom: tile.minZoom || 2,
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          });
+          mymap.addLayer({
+            id: sourceId + '-layer',
+            type: 'raster',
+            source: sourceId,
+          });
+          customTile = tile;
+        }
+      }
+      return 200;
+    }
+
+    function restoreShapesAndRoads() {
+      routesLayer.forEach(function (roadData, key) {
+        if (roadData.geojson) {
+          var sourceId = 'road-' + key;
+          if (!mymap.getSource(sourceId)) {
+            mymap.addSource(sourceId, { type: 'geojson', data: roadData.geojson });
+            if (roadData.borderLayerId) {
+              mymap.addLayer({
+                id: roadData.borderLayerId,
+                type: 'line',
+                source: sourceId,
+                paint: roadData.borderPaint,
+                layout: roadData.layout || {}
+              });
+            }
+            mymap.addLayer({
+              id: roadData.layerId,
+              type: 'line',
+              source: sourceId,
+              paint: roadData.paint,
+              layout: roadData.layout || {}
+            });
+          }
+        }
+      });
+      shapesLayers.forEach(function (shapeData, key) {
+        if (shapeData.geojson) {
+          var sourceId = 'shape-' + key;
+          if (!mymap.getSource(sourceId)) {
+            mymap.addSource(sourceId, { type: 'geojson', data: shapeData.geojson });
+            mymap.addLayer({
+              id: shapeData.layerId,
+              type: shapeData.layerType,
+              source: sourceId,
+              paint: shapeData.paint,
+            });
+          }
+        }
+      });
+    }
+
+    async function userLocation() {
+      getMyLocation().then(function (user) {
+        mymap.flyTo({ center: [user.lon, user.lat] });
+      });
+      return 200;
+    }
+
+    function centerMap() {
+      var center = mymap.getCenter();
+      return {
+        lat: center.lat,
+        lon: center.lng
+      };
+    }
+
+    async function getMyLocation() {
+      try {
+        var position = await new Promise(function (resolve, reject) {
+          if (!navigator.geolocation) {
+            reject({ error: true, message: 'Geolocation is not supported by your browser' });
+          } else {
+            navigator.geolocation.getCurrentPosition(
+              resolve,
+              function (position) {
+                reject({ error: true, message: 'Unable to retrieve your location' });
+              }
+            );
+          }
+        });
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+        return {
+          lat: latitude,
+          lon: longitude
+        };
+      } catch (e) {
+        console.error(e.message);
+        return e;
+      }
+    }
+
+    async function getGeoPoints() {
+      var listGeoPoint = [];
+      markerRegistry.forEach(function (info, key) {
+        listGeoPoint.push({
+          lat: info.lat,
+          lon: info.lng
+        });
+      });
+      return JSON.stringify(listGeoPoint);
+    }
+
+    async function moveToPosition(point, showMarker, animate) {
+      if (!animate) {
+        mymap.jumpTo({ center: [point.lon, point.lat] });
+      } else {
+        mymap.flyTo({ center: [point.lon, point.lat] });
+      }
+      if (showMarker) {
+        setHomeMarker(point, {});
+      }
+      return 200;
+    }
+
+    function makePosKey(lat, lng) {
+      return lat.toFixed(7) + ',' + lng.toFixed(7);
+    }
+
+    function addMarker(point, iconSize, iconMarker, angle, anchor) {
+      var el = document.createElement('img');
+      el.style.width = iconSize.width + 'px';
+      el.style.height = iconSize.height + 'px';
+      if (iconMarker != "") {
+        el.src = "data:image/png;base64," + iconMarker;
+      }
+      if (angle != undefined && angle != 0) {
+        el.style.transform = 'rotate(' + angle + 'deg)';
+      }
+
+      var markerOpts = { element: el };
+      if (anchor != undefined && (anchor.x <= 1 && anchor.y <= 1)) {
+        markerOpts.anchor = 'center';
+        markerOpts.offset = [
+          (anchor.x - 0.5) * iconSize.width,
+          (anchor.y - 0.5) * iconSize.height
+        ];
+      }
+      if (angle != undefined && angle != 0) {
+        markerOpts.rotation = angle;
+      }
+
+      var marker = new maplibregl.Marker(markerOpts)
+        .setLngLat([point.lon, point.lat])
+        .addTo(mymap);
+
+      var posKey = makePosKey(point.lat, point.lon);
+      markerRegistry.set(posKey, {
+        marker: marker,
+        lat: point.lat,
+        lng: point.lon,
+        icon: iconMarker,
+        iconSize: iconSize,
+        angle: angle || 0,
+        anchor: anchor,
+        element: el,
+      });
+
+      el.addEventListener('click', function (event) {
+        if (!isLongPress) {
+          onGeoPointClicked(point.lon, point.lat);
+        }
+      });
+
+      el.addEventListener('mousedown', function (e) {
+        isLongPress = false;
+        longPressTimer = setTimeout(function () {
+          isLongPress = true;
+          onGeoPointLongPress(point.lon, point.lat);
+        }, 1000);
+      });
+
+      el.addEventListener('touchstart', function (e) {
+        isLongPress = false;
+        longPressTimer = setTimeout(function () {
+          isLongPress = true;
+          onGeoPointLongPress(point.lon, point.lat);
+        }, 1000);
+      });
+
+      ['mouseup', 'touchend', 'mouseleave', 'touchcancel'].forEach(function (evt) {
+        el.addEventListener(evt, function (e) {
+          clearTimeout(longPressTimer);
+          setTimeout(function () { isLongPress = false; }, 100);
+        });
+      });
+
+      mainLayers.get('markers').push({ marker: marker, posKey: posKey });
+      return 200;
+    }
+
+    async function changeMarker(oldPoint, point, icon, iconSize, angle, anchor) {
+      var oldKey = makePosKey(oldPoint.lat, oldPoint.lon);
+      var info = markerRegistry.get(oldKey);
+
+      if (info) {
+        if (icon != undefined && icon != null && icon != "") {
+          info.element.src = "data:image/png;base64," + icon;
+          info.icon = icon;
+        }
+        if (iconSize != undefined && iconSize != null) {
+          info.element.style.width = iconSize.width + 'px';
+          info.element.style.height = iconSize.height + 'px';
+          info.iconSize = iconSize;
+        }
+        if (angle != undefined && info.angle != angle) {
+          info.angle = angle;
+          info.element.style.transform = 'rotate(' + angle + 'deg)';
+          info.marker.setRotation(angle);
+        }
+        if (point != undefined) {
+          info.marker.setLngLat([point.lon, point.lat]);
+          var newKey = makePosKey(point.lat, point.lon);
+          markerRegistry.delete(oldKey);
+          info.lat = point.lat;
+          info.lng = point.lon;
+          markerRegistry.set(newKey, info);
+          mainLayers.get('markers').forEach(function (item) {
+            if (item.posKey === oldKey) item.posKey = newKey;
+          });
+        }
+      }
+      return 200;
+    }
+
+    async function modifyMarker(point, icon) {
+      var posKey = makePosKey(point.lat, point.lon);
+      var info = markerRegistry.get(posKey);
+      if (info && icon != undefined && icon != "") {
+        info.element.src = "data:image/png;base64," + icon;
+        info.icon = icon;
+      }
+      return 200;
+    }
+
+    async function removeMarker(point) {
+      var posKey = makePosKey(point.lat, point.lon);
+      var info = markerRegistry.get(posKey);
+      if (info) {
+        info.marker.remove();
+        markerRegistry.delete(posKey);
+      }
+      var markersList = mainLayers.get('markers');
+      for (var i = markersList.length - 1; i >= 0; i--) {
+        if (markersList[i].posKey === posKey) {
+          markersList.splice(i, 1);
+        }
+      }
+      return 200;
+    }
+
+    async function setDefaultIcon(icon) {
+      defaultIcon = icon;
+      return 200;
+    }
+
+    async function setStaticGeoPointIcon(id, icon) {
+      staticIcons.set(id, icon);
+      return 200;
+    }
+
+    async function setStaticGeoPoint(id, points) {
+      if (staticGeoPoint.has(id) && staticGeoPoint.get(id) != undefined) {
+        var oldMarkers = staticGeoPoint.get(id);
+        oldMarkers.forEach(function (m) { m.marker.remove(); });
+      }
+      var markers = [];
+      var iconUrl = staticIcons.has(id) ? staticIcons.get(id) : "";
+
+      points.forEach(function (ele) {
+        removeMarker(ele);
+        var el = document.createElement('img');
+        el.style.width = '32px';
+        el.style.height = '32px';
+        if (iconUrl != "") {
+          el.src = "data:image/png;base64," + iconUrl;
+        }
+        var marker = new maplibregl.Marker({ element: el })
+          .setLngLat([ele.lon, ele.lat])
+          .addTo(mymap);
+
+        var posKey = makePosKey(ele.lat, ele.lon);
+        markerRegistry.set(posKey, {
+          marker: marker, lat: ele.lat, lng: ele.lon,
+          icon: iconUrl, iconSize: { width: 32, height: 32 },
+          angle: 0, element: el,
+        });
+
+        el.addEventListener('click', function (event) {
+          if (!isLongPress) {
+            onGeoPointClicked(ele.lon, ele.lat);
+          }
+        });
+        el.addEventListener('mousedown', function (e) {
+          isLongPress = false;
+          longPressTimer = setTimeout(function () {
+            isLongPress = true;
+            onGeoPointLongPress(ele.lon, ele.lat);
+          }, 1000);
+        });
+        el.addEventListener('touchstart', function (e) {
+          isLongPress = false;
+          longPressTimer = setTimeout(function () {
+            isLongPress = true;
+            onGeoPointLongPress(ele.lon, ele.lat);
+          }, 1000);
+        });
+        ['mouseup', 'touchend', 'mouseleave', 'touchcancel'].forEach(function (evt) {
+          el.addEventListener(evt, function (e) {
+            clearTimeout(longPressTimer);
+            setTimeout(function () { isLongPress = false; }, 100);
+          });
+        });
+
+        markers.push({ marker: marker, posKey: posKey });
+      });
+
+      staticGeoPoint.set(id, markers);
+      return 200;
+    }
+
+    async function setStaticGeoPointsWithOrientation(id, points) {
+      if (staticGeoPoint.has(id) && staticGeoPoint.get(id) != undefined) {
+        var oldMarkers = staticGeoPoint.get(id);
+        oldMarkers.forEach(function (m) { m.marker.remove(); });
+      }
+      var markers = [];
+      var iconUrl = staticIcons.has(id) ? staticIcons.get(id) : "";
+
+      points.forEach(function (ele) {
+        removeMarker(ele);
+        var el = document.createElement('img');
+        el.style.width = '32px';
+        el.style.height = '32px';
+        if (iconUrl != "") {
+          el.src = "data:image/png;base64," + iconUrl;
+        }
+        if (ele.angle != undefined && ele.angle != 0) {
+          el.style.transform = 'rotate(' + ele.angle + 'deg)';
+        }
+
+        var markerOpts = { element: el };
+        if (ele.angle != undefined && ele.angle != 0) {
+          markerOpts.rotation = ele.angle;
+        }
+        var marker = new maplibregl.Marker(markerOpts)
+          .setLngLat([ele.lon, ele.lat])
+          .addTo(mymap);
+
+        var posKey = makePosKey(ele.lat, ele.lon);
+        markerRegistry.set(posKey, {
+          marker: marker, lat: ele.lat, lng: ele.lon,
+          icon: iconUrl, iconSize: { width: 32, height: 32 },
+          angle: ele.angle || 0, element: el,
+        });
+
+        el.addEventListener('click', function (event) {
+          onGeoPointClicked(ele.lon, ele.lat);
+        });
+
+        markers.push({ marker: marker, posKey: posKey });
+      });
+
+      staticGeoPoint.set(id, markers);
+      return 200;
+    }
+
+    async function configInitZoomMap(step, initZoom, minZoomLevel, maxZoomLevel) {
+      mymap.setMinZoom(minZoomLevel);
+      mymap.setMaxZoom(maxZoomLevel);
+      zoom = initZoom;
+      stepZoom = step;
+      return 200;
+    }
+
+    async function setZoomStep(zoomStep) {
+      stepZoom = zoomStep;
+      return 200;
+    }
+
+    async function zoomIn() {
+      mymap.zoomIn({ duration: 300 });
+      return 200;
+    }
+
+    async function zoomOut() {
+      mymap.zoomOut({ duration: 300 });
+      return 200;
+    }
+
+    async function setZoomLevel(zoomLevel) {
+      if (zoomLevel >= mymap.getMinZoom() && zoomLevel <= mymap.getMaxZoom()) {
+        mymap.setZoom(zoomLevel);
+      }
+      return 200;
+    }
+
+    async function setZoomWithStep(step) {
+      var nzoomlevel = mymap.getZoom() + step;
+      if (nzoomlevel >= mymap.getMinZoom() && nzoomlevel <= mymap.getMaxZoom()) {
+        mymap.setZoom(nzoomlevel);
+      } else {
+        if (nzoomlevel > mymap.getMaxZoom()) {
+          mymap.setZoom(mymap.getMaxZoom());
+        } else if (nzoomlevel < mymap.getMinZoom()) {
+          mymap.setZoom(mymap.getMinZoom());
+        }
+      }
+      return 200;
+    }
+
+    async function getZoom() {
+      return mymap.getZoom();
+    }
+
+    async function setMaxZoomLevel(zoomLevel) {
+      mymap.setMaxZoom(zoomLevel);
+      return 200;
+    }
+
+    async function setMinZoomLevel(zoomLevel) {
+      mymap.setMinZoom(zoomLevel);
+      return 200;
+    }
+
+    function limitBoundingBox(box) {
+      mymap.setMaxBounds([box.west, box.south, box.east, box.north]);
+      return 200;
+    }
+
+    function getBounds() {
+      var box = mymap.getBounds();
+      return {
+        south: box.getSouth(),
+        west: box.getWest(),
+        east: box.getEast(),
+        north: box.getNorth()
+      };
+    }
+
+    async function flyToBoundingBox(box, pad) {
+      mymap.fitBounds(
+        [[box.west, box.south], [box.east, box.north]],
+        { padding: pad, duration: 1000 }
+      );
+      return 200;
+    }
+
+    function drawRoad(key, route, interestGeoPts, roadOption) {
+      if (key == undefined) {
+        return 400;
+      }
+
+      var coordinates = route.map(function (elem) {
+        return [elem.lon, elem.lat];
+      });
+
+      var geojson = {
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: coordinates
+        }
+      };
+
+      var sourceId = 'road-' + key;
+      var layerId = 'road-layer-' + key;
+      var borderLayerId = 'road-border-' + key;
+
+      if (mymap.getLayer(layerId)) mymap.removeLayer(layerId);
+      if (mymap.getLayer(borderLayerId)) mymap.removeLayer(borderLayerId);
+      if (mymap.getSource(sourceId)) mymap.removeSource(sourceId);
+
+      mymap.addSource(sourceId, {
+        type: 'geojson',
+        data: geojson
+      });
+
+      var layout = {};
+      if (roadOption.isDotted) {
+        layout['line-cap'] = 'round';
+      }
+
+      if (roadOption.roadBorderWidth != 0) {
+        mymap.addLayer({
+          id: borderLayerId,
+          type: 'line',
+          source: sourceId,
+          layout: layout,
+          paint: {
+            'line-color': roadOption.roadBorderColor || '#000000',
+            'line-width': (roadOption.roadWidth || 5) + (roadOption.roadBorderWidth || 2) * 2,
+            'line-opacity': 1,
+          }
+        });
+      }
+
+      var paint = {
+        'line-color': roadOption.color || '#3388ff',
+        'line-width': roadOption.roadWidth || 5,
+        'line-opacity': 1,
+      };
+      if (roadOption.isDotted) {
+        paint['line-dasharray'] = [2, 4];
+      }
+
+      mymap.addLayer({
+        id: layerId,
+        type: 'line',
+        source: sourceId,
+        layout: layout,
+        paint: paint,
+      });
+
+      mymap.on('click', layerId, function (event) {
+        onRoadClicked(key);
+        event.originalEvent.stopPropagation();
+      });
+
+      routesLayer.set(key, {
+        geojson: geojson,
+        layerId: layerId,
+        borderLayerId: roadOption.roadBorderWidth != 0 ? borderLayerId : null,
+        paint: paint,
+        borderPaint: roadOption.roadBorderWidth != 0 ? {
+          'line-color': roadOption.roadBorderColor || '#000000',
+          'line-width': (roadOption.roadWidth || 5) + (roadOption.roadBorderWidth || 2) * 2,
+          'line-opacity': 1,
+        } : null,
+        layout: layout,
+      });
+
+      lastRoad = key;
+
+      if (roadOption.zoomInto) {
+        var bounds = new maplibregl.LngLatBounds();
+        coordinates.forEach(function (c) { bounds.extend(c); });
+        mymap.fitBounds(bounds, { padding: 50 });
+      }
+
+      return 200;
+    }
+
+    function removeLastRoad() {
+      if (lastRoad != undefined && routesLayer.has(lastRoad)) {
+        var roadData = routesLayer.get(lastRoad);
+        try { mymap.removeLayer(roadData.layerId); } catch (e) { }
+        if (roadData.borderLayerId) {
+          try { mymap.removeLayer(roadData.borderLayerId); } catch (e) { }
+        }
+        try { mymap.removeSource('road-' + lastRoad); } catch (e) { }
+        routesLayer.delete(lastRoad);
+        lastRoad = undefined;
+      }
+      return 200;
+    }
+
+    function clearAllRoads() {
+      routesLayer.forEach(function (roadData, key) {
+        try { mymap.removeLayer(roadData.layerId); } catch (e) { }
+        if (roadData.borderLayerId) {
+          try { mymap.removeLayer(roadData.borderLayerId); } catch (e) { }
+        }
+        try { mymap.removeSource('road-' + key); } catch (e) { }
+      });
+      routesLayer.clear();
+      lastRoad = undefined;
+      return 200;
+    }
+
+    function removeRoad(key) {
+      if (routesLayer.has(key)) {
+        var roadData = routesLayer.get(key);
+        try { mymap.removeLayer(roadData.layerId); } catch (e) { }
+        if (roadData.borderLayerId) {
+          try { mymap.removeLayer(roadData.borderLayerId); } catch (e) { }
+        }
+        try { mymap.removeSource('road-' + key); } catch (e) { }
+        routesLayer.delete(key);
+        if (lastRoad === key) lastRoad = undefined;
+      }
+      return 200;
+    }
+
+    function setUserLocationIconMarker(icon, size) {
+      if (icon != undefined && icon != "")
+        userLocationMarkerIcon = { icon: icon, size: size };
+    }
+
+    function setUserLocationDirectionIconMarker(icon, size) {
+      if (icon != undefined && icon != "")
+        userLocationDirectionIcon = { icon: icon, size: size };
+    }
+
+    async function enableTracking(enableStopFollow, useDirectionMarker, anchorJS, controlMap) {
+      if (idTracking == undefined) {
+        idTracking = navigator.geolocation.watchPosition(function (position) {
+          var userPos = [position.coords.longitude, position.coords.latitude];
+          onUserPositionListener(position.coords.longitude, position.coords.latitude);
+          if (!skipFollow) {
+            mymap.flyTo({ center: userPos });
+            if (enableStopFollow) {
+              skipFollow = true;
+            }
+          }
+          var el;
+          var iconURL;
+          var iconSize;
+          if (userLocationMarkerIcon != undefined) {
+            iconURL = userLocationMarkerIcon.icon;
+            iconSize = [userLocationMarkerIcon.size.width, userLocationMarkerIcon.size.height];
+            if (useDirectionMarker && userLocationDirectionIcon != undefined) {
+              iconURL = userLocationDirectionIcon.icon;
+              iconSize = [userLocationDirectionIcon.size.width, userLocationDirectionIcon.size.height];
+            }
+            el = document.createElement('img');
+            el.src = "data:image/png;base64," + iconURL;
+            el.style.width = iconSize[0] + 'px';
+            el.style.height = iconSize[1] + 'px';
+          }
+
+          if (userPosition == undefined) {
+            var opts = {};
+            if (el) opts.element = el;
+            userPosition = new maplibregl.Marker(opts)
+              .setLngLat(userPos)
+              .addTo(mymap);
+          } else if (userPosition != undefined && !skipFollow) {
+            userPosition.setLngLat(userPos);
+            if (el) userPosition.setElement(el);
+          }
+        }, function (err) { }, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 600000,
+        });
+      } else {
+        navigator.geolocation.getCurrentPosition(function (position) {
+          var userPos = [position.coords.longitude, position.coords.latitude];
+          onUserPositionListener(position.coords.longitude, position.coords.latitude);
+          if (userPosition != undefined) {
+            userPosition.setLngLat(userPos);
+          }
+          mymap.flyTo({ center: userPos });
+        }, function (err) { }, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 600000,
+        });
+        skipFollow = !enableStopFollow;
+      }
+      return 200;
+    }
+
+    function startLocationUpdating() {
+      if (idTracking == undefined) {
+        idTracking = navigator.geolocation.watchPosition(function (position) {
+          onUserPositionListener(position.coords.longitude, position.coords.latitude);
+        }, function (err) {
+          console.log(err);
+        }, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 600000,
+        });
+      }
+      return 200;
+    }
+
+    function stopLocationUpdating() {
+      navigator.geolocation.clearWatch(idTracking);
+      idTracking = undefined;
+      return 200;
+    }
+
+    function disableTracking() {
+      stopLocationUpdating();
+      if (userPosition != undefined) {
+        userPosition.remove();
+        userPosition = undefined;
+      }
+      skipFollow = false;
+      return 200;
+    }
+
+    async function advSearchLocation() {
+      startAdvSearchLocation = true;
+      keysMainLayers.forEach(function (key) {
+        var layers = mainLayers.get(key);
+        if (Array.isArray(layers)) {
+          layers.forEach(function (item) {
+            if (item && item.marker) {
+              item.marker.remove();
+            }
+          });
+        }
+      });
+      routesLayer.forEach(function (roadData, key) {
+        try { mymap.setLayoutProperty(roadData.layerId, 'visibility', 'none'); } catch (e) { }
+        if (roadData.borderLayerId) {
+          try { mymap.setLayoutProperty(roadData.borderLayerId, 'visibility', 'none'); } catch (e) { }
+        }
+      });
+      shapesLayers.forEach(function (shapeData, key) {
+        try { mymap.setLayoutProperty(shapeData.layerId, 'visibility', 'none'); } catch (e) { }
+      });
+      document.getElementById("render-icon").style.display = "block";
+      document.getElementById("render-icon").style.position = "absolute";
+      document.getElementById("render-icon").style.zIndex = "1000";
+      document.getElementById("render-icon").style.top = "45%";
+      document.getElementById("render-icon").style.left = "45%";
+      return 200;
+    }
+
+    async function cancelAdvSearchLocation() {
+      document.getElementById("render-icon").style.display = "none";
+      keysMainLayers.forEach(function (key) {
+        var layers = mainLayers.get(key);
+        if (Array.isArray(layers)) {
+          layers.forEach(function (item) {
+            if (item && item.marker) {
+              item.marker.addTo(mymap);
+            }
+          });
+        }
+      });
+      routesLayer.forEach(function (roadData, key) {
+        try { mymap.setLayoutProperty(roadData.layerId, 'visibility', 'visible'); } catch (e) { }
+        if (roadData.borderLayerId) {
+          try { mymap.setLayoutProperty(roadData.borderLayerId, 'visibility', 'visible'); } catch (e) { }
+        }
+      });
+      shapesLayers.forEach(function (shapeData, key) {
+        try { mymap.setLayoutProperty(shapeData.layerId, 'visibility', 'visible'); } catch (e) { }
+      });
+      return 200;
+    }
+
+    async function changeIconAdvPickerMarker(icon, size) {
+      advSearchIcon = icon;
+      var container = document.getElementById("render-icon");
+      container.innerHTML = '';
+      var nodeImg = document.createElement("img");
+      nodeImg.setAttribute('src', 'data:image/png;base64,' + icon);
+      container.appendChild(nodeImg);
+      nodeImg.style.height = size.height + "px";
+      nodeImg.style.width = size.width + "px";
+      return 200;
+    }
+
+    async function drawRect(key, center, configuration) {
+      var coordinates = center.map(function (p) {
+        return [p.lon, p.lat];
+      });
+      if (coordinates.length > 0) {
+        coordinates.push(coordinates[0]);
+      }
+
+      var geojson = {
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: [coordinates]
+        }
+      };
+
+      var sourceId = 'shape-' + key;
+      var layerId = 'shape-layer-' + key;
+
+      if (mymap.getLayer(layerId)) mymap.removeLayer(layerId);
+      if (mymap.getSource(sourceId)) mymap.removeSource(sourceId);
+
+      mymap.addSource(sourceId, { type: 'geojson', data: geojson });
+
+      var borderColor = configuration.borderColor || configuration.color;
+      mymap.addLayer({
+        id: layerId,
+        type: 'fill',
+        source: sourceId,
+        paint: {
+          'fill-color': configuration.color || '#3388ff',
+          'fill-opacity': configuration.opacityFilled != undefined ? configuration.opacityFilled : 0.3,
+          'fill-outline-color': borderColor,
+        }
+      });
+
+      shapesLayers.set(key, {
+        geojson: geojson,
+        layerId: layerId,
+        layerType: 'fill',
+        shapeType: 'rect',
+        paint: {
+          'fill-color': configuration.color || '#3388ff',
+          'fill-opacity': configuration.opacityFilled != undefined ? configuration.opacityFilled : 0.3,
+          'fill-outline-color': borderColor,
+        }
+      });
+      return 200;
+    }
+
+    async function drawCircle(configuration) {
+      var center = configuration.center;
+      var radius = configuration.radius;
+      var circleCoords = createCirclePolygon(center, radius);
+
+      var geojson = {
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: [circleCoords]
+        }
+      };
+
+      var key = configuration.key;
+      var sourceId = 'shape-' + key;
+      var layerId = 'shape-layer-' + key;
+
+      if (mymap.getLayer(layerId)) mymap.removeLayer(layerId);
+      if (mymap.getSource(sourceId)) mymap.removeSource(sourceId);
+
+      mymap.addSource(sourceId, { type: 'geojson', data: geojson });
+
+      var borderColor = configuration.borderColor || configuration.color;
+      mymap.addLayer({
+        id: layerId,
+        type: 'fill',
+        source: sourceId,
+        paint: {
+          'fill-color': configuration.color || '#3388ff',
+          'fill-opacity': configuration.opacityFilled != undefined ? configuration.opacityFilled : 0.3,
+          'fill-outline-color': borderColor,
+        }
+      });
+
+      shapesLayers.set(key, {
+        geojson: geojson,
+        layerId: layerId,
+        layerType: 'fill',
+        shapeType: 'circle',
+        paint: {
+          'fill-color': configuration.color || '#3388ff',
+          'fill-opacity': configuration.opacityFilled != undefined ? configuration.opacityFilled : 0.3,
+          'fill-outline-color': borderColor,
+        }
+      });
+      return 200;
+    }
+
+    function createCirclePolygon(center, radiusMeters, numPoints) {
+      numPoints = numPoints || 64;
+      var coords = [];
+      var lat = center.lat;
+      var lng = center.lon;
+      for (var i = 0; i < numPoints; i++) {
+        var angle = (i / numPoints) * 2 * Math.PI;
+        var dx = radiusMeters * Math.cos(angle);
+        var dy = radiusMeters * Math.sin(angle);
+        var dLat = dy / 111320;
+        var dLng = dx / (111320 * Math.cos(lat * Math.PI / 180));
+        coords.push([lng + dLng, lat + dLat]);
+      }
+      coords.push(coords[0]);
+      return coords;
+    }
+
+    async function removePath(key) {
+      if (shapesLayers.has(key)) {
+        var shapeData = shapesLayers.get(key);
+        try { mymap.removeLayer(shapeData.layerId); } catch (e) { }
+        try { mymap.removeSource('shape-' + key); } catch (e) { }
+        shapesLayers.delete(key);
+      }
+      return 200;
+    }
+
+    async function removeAllCircle() {
+      var toRemove = [];
+      shapesLayers.forEach(function (shapeData, key) {
+        if (shapeData.shapeType === 'circle') {
+          toRemove.push(key);
+        }
+      });
+      toRemove.forEach(function (key) {
+        removePath(key);
+      });
+      return 200;
+    }
+
+    async function removeAllRect() {
+      var toRemove = [];
+      shapesLayers.forEach(function (shapeData, key) {
+        if (shapeData.shapeType === 'rect') {
+          toRemove.push(key);
+        }
+      });
+      toRemove.forEach(function (key) {
+        removePath(key);
+      });
+      return 200;
+    }
+
+    async function removeAllShapes() {
+      var keys = [];
+      shapesLayers.forEach(function (shapeData, key) {
+        keys.push(key);
+      });
+      keys.forEach(function (key) {
+        removePath(key);
+      });
+      return 200;
+    }
+
+    function setHomeMarker(point, args) {
+      if (homeMarker == undefined) {
+        var el = document.createElement('img');
+        el.style.width = '32px';
+        el.style.height = '32px';
+        if (defaultIcon != "") {
+          el.src = "data:image/png;base64," + defaultIcon;
+        }
+        homeMarker = new maplibregl.Marker({ element: el })
+          .setLngLat([point.lon, point.lat])
+          .addTo(mymap);
+      } else {
+        homeMarker.setLngLat([point.lon, point.lat]);
+      }
+    }
+
+    function removeUnecessaryStaff() {
+      try {
+        var attrEl = document.querySelector('.maplibregl-control-attribution');
+        if (attrEl && attrEl.firstElementChild) {
+          attrEl.removeChild(attrEl.firstElementChild);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function updateIcon(iconLayer, icon, iconSize, anchor) {
+      return { icon: icon, iconSize: iconSize, anchor: anchor };
+    }
+
+    function anchorCalculate(anchor, iconSize) {
+      var anchorX = anchor.x * iconSize.width;
+      var anchorY = anchor.y * (iconSize.height - 1);
+      if (anchor.offset != undefined) {
+        var offsetX = -anchor.offset.x;
+        var offsetY = anchor.offset.y;
+        anchorX += (offsetX);
+        anchorY += (offsetY);
+      }
+      return [anchorX, anchorY];
+    }
+
+    async function setZoomControl(mapId, showZoomControl) {
+      return 200;
+    }
+
+  </script>
+</body>
+
+</html>
