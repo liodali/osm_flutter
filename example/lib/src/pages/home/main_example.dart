@@ -87,6 +87,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
   UserLocation? _pendingWebLocationUpdate;
   UserLocation? _lastAppliedWebLocation;
   DateTime? _lastAppliedWebLocationAt;
+  bool _sidebarExpanded = true;
 
   @override
   void initState() {
@@ -313,16 +314,24 @@ class _MainState extends State<Main> with OSMMixinObserver {
     if (kIsWeb) {
       return Row(
         children: [
-          SizedBox(
-            width: 320,
-            child: SideBar(
-              onToggleCallback: () {},
-              showToggleButton: false,
-              topContent: RouteSearchPanel(
-                controller: widget.configuration.controller,
-                embeddedInSidebar: true,
-              ),
-            ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            child: _sidebarExpanded
+                ? SizedBox(
+                    width: 320,
+                    child: SideBar(
+                      onToggleCallback: () {
+                        setState(() => _sidebarExpanded = false);
+                      },
+                      showToggleButton: true,
+                      topContent: RouteSearchPanel(
+                        controller: widget.configuration.controller,
+                        embeddedInSidebar: true,
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ),
           Expanded(
             child: Stack(
@@ -330,6 +339,31 @@ class _MainState extends State<Main> with OSMMixinObserver {
                 Map(
                   controller: widget.configuration.controller,
                 ),
+                if (!_sidebarExpanded)
+                  Positioned(
+                    top: 8,
+                    left: 16,
+                    child: PointerInterceptor(
+                      child: ActionButton(
+                        onPressed: () {
+                          setState(() => _sidebarExpanded = true);
+                        },
+                        buttonStyle: (style) => style.copyWith(
+                          minimumSize: WidgetStateProperty.resolveWith(
+                            (_) => const Size(48, 48),
+                          ),
+                          maximumSize: WidgetStateProperty.resolveWith(
+                            (_) => const Size(48, 48),
+                          ),
+                        ),
+                        child: Icon(
+                          FIcons.menu,
+                          size: 18,
+                          color: FTheme.of(context).colors.foreground,
+                        ),
+                      ),
+                    ),
+                  ),
                 Positioned(
                   bottom: 23.0,
                   right: 15,

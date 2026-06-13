@@ -39,11 +39,7 @@ class HomeMoreActionDesktop extends StatelessWidget {
       childAnchor: Alignment.bottomRight,
       menu: [
         FItemGroup(
-          children: [
-            // FItem(
-            //   prefix: ,
-            // ),
-          ],
+          children: [],
         ),
       ],
       builder: (context, controller, child) => FHeaderAction(

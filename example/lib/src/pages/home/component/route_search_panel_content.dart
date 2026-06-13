@@ -41,7 +41,8 @@ class RouteSearchPanelContent extends StatelessWidget {
   final Future<void> Function({
     required bool isStart,
     required SearchInfo location,
-  }) onSetRoutePoint;
+  })
+  onSetRoutePoint;
   final Future<void> Function() onClearRouteSelection;
   final Future<void> Function() onSwapRoutePoints;
   final Future<void> Function() onClearDestination;
@@ -233,7 +234,8 @@ class _RouteInputs extends StatelessWidget {
   final Future<void> Function({
     required bool isStart,
     required SearchInfo location,
-  }) onSetRoutePoint;
+  })
+  onSetRoutePoint;
   final Future<void> Function() onClearRouteSelection;
   final Future<void> Function() onClearDestination;
   final bool showDestinationWhenStartExists;
@@ -247,14 +249,15 @@ class _RouteInputs extends StatelessWidget {
           locale: locale,
           label: 'From',
           selectedAddress: routeStartLabel,
-          onSelected: (value) => onSetRoutePoint(isStart: true, location: value),
+          onSelected: (value) =>
+              onSetRoutePoint(isStart: true, location: value),
           onClear: routeStart == null
               ? null
               : () async {
                   await onClearRouteSelection();
                 },
         ),
-        if (!showDestinationWhenStartExists || routeStart != null)
+        if (!showDestinationWhenStartExists || routeStart != null) ...[
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: SearchInMap(
@@ -271,6 +274,7 @@ class _RouteInputs extends StatelessWidget {
                     },
             ),
           ),
+        ],
       ],
     );
   }

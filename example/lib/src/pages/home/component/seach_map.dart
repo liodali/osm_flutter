@@ -270,21 +270,23 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
           ),
           Padding(
             padding: const EdgeInsets.only(top: 12),
-            child: FTextField(
-              control: FTextFieldControl.managed(
-                controller: _searchController,
+            child: PointerInterceptor(
+              child: FTextField(
+                control: FTextFieldControl.managed(
+                  controller: _searchController,
+                ),
+                autofocus: true,
+                textInputAction: TextInputAction.search,
+                hint: 'Search for a location',
+                prefixBuilder: (context, style, variants) =>
+                    FTextField.prefixIconBuilder(
+                      context,
+                      style,
+                      variants,
+                      const Icon(Icons.search),
+                    ),
+                clearable: (value) => value.text.isNotEmpty,
               ),
-              autofocus: true,
-              textInputAction: TextInputAction.search,
-              hint: 'Search for a location',
-              prefixBuilder: (context, style, variants) =>
-                  FTextField.prefixIconBuilder(
-                    context,
-                    style,
-                    variants,
-                    const Icon(Icons.search),
-                  ),
-              clearable: (value) => value.text.isNotEmpty,
             ),
           ),
           Expanded(

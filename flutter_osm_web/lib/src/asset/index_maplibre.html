@@ -717,32 +717,40 @@
         data: geojson
       });
 
+      var roadWidth = roadOption.roadWidth || 5;
+      var roadBorderWidth = roadOption.roadBorderWidth || 0;
+
       var layout = {};
       if (roadOption.isDotted) {
         layout['line-cap'] = 'round';
       }
 
-      if (roadOption.roadBorderWidth != 0) {
+      if (roadBorderWidth != 0) {
+        var borderWidth = roadBorderWidth + roadWidth;
+        var borderPaint = {
+          'line-color': roadOption.roadBorderColor || '#000000',
+          'line-width': borderWidth,
+          'line-opacity': 1,
+        };
+        if (roadOption.isDotted) {
+          borderPaint['line-dasharray'] = [0, 1.2];
+        }
         mymap.addLayer({
           id: borderLayerId,
           type: 'line',
           source: sourceId,
           layout: layout,
-          paint: {
-            'line-color': roadOption.roadBorderColor || '#000000',
-            'line-width': (roadOption.roadWidth || 5) + (roadOption.roadBorderWidth || 2) * 2,
-            'line-opacity': 1,
-          }
+          paint: borderPaint,
         });
       }
 
       var paint = {
         'line-color': roadOption.color || '#3388ff',
-        'line-width': roadOption.roadWidth || 5,
+        'line-width': roadWidth,
         'line-opacity': 1,
       };
       if (roadOption.isDotted) {
-        paint['line-dasharray'] = [2, 4];
+        paint['line-dasharray'] = [0, 2];
       }
 
       mymap.addLayer({
@@ -761,12 +769,13 @@
       routesLayer.set(key, {
         geojson: geojson,
         layerId: layerId,
-        borderLayerId: roadOption.roadBorderWidth != 0 ? borderLayerId : null,
+        borderLayerId: roadBorderWidth != 0 ? borderLayerId : null,
         paint: paint,
-        borderPaint: roadOption.roadBorderWidth != 0 ? {
+        borderPaint: roadBorderWidth != 0 ? {
           'line-color': roadOption.roadBorderColor || '#000000',
-          'line-width': (roadOption.roadWidth || 5) + (roadOption.roadBorderWidth || 2) * 2,
+          'line-width': roadBorderWidth + roadWidth,
           'line-opacity': 1,
+          'line-dasharray': roadOption.isDotted ? [0, 2] : undefined,
         } : null,
         layout: layout,
       });
