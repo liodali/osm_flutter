@@ -65,8 +65,6 @@
     var isLongPress = false;
     var trackingActive = false;
 
-    var markerRegistry = new Map();
-
     var defaultStyle = {
       version: 8,
       sources: {
@@ -203,11 +201,7 @@
             restoreShapesAndRoads();
           });
         } else {
-          var serverURL = tile.url;
-          if (!serverURL.includes("{z}") && !serverURL.includes("{x}") && !serverURL.includes("{y}")) {
-            serverURL = tile.url + '{z}/{x}/{y}';
-          }
-          var fullUrl = serverURL + tile.tileExtension + (tile.apiKey || '');
+          var tiles = buildTileUrls(tile);
 
           if (currentCustomSourceId) {
             try {
@@ -224,7 +218,7 @@
 
           mymap.addSource(sourceId, {
             type: 'raster',
-            tiles: [fullUrl],
+            tiles: tiles,
             tileSize: tile.tileSize || 256,
             maxzoom: tile.maxZoom || 19,
             minzoom: tile.minZoom || 2,
@@ -239,6 +233,25 @@
         }
       }
       return 200;
+    }
+
+    function buildTileUrls(tile) {
+      var baseUrl = tile.url;
+      if (!baseUrl.includes('{z}') && !baseUrl.includes('{x}') && !baseUrl.includes('{y}')) {
+        baseUrl = baseUrl + '{z}/{x}/{y}';
+      }
+      var ext = tile.tileExtension || '';
+      var key = tile.apiKey || '';
+      var subs = tile.subDomains || '';
+
+      if (subs.length > 0 && baseUrl.includes('{s}')) {
+        var urls = [];
+        for (var i = 0; i < subs.length; i++) {
+          urls.push(baseUrl.replace('{s}', subs[i]) + ext + key);
+        }
+        return urls;
+      }
+      return [baseUrl.replace('{s}', '') + ext + key];
     }
 
     function restoreShapesAndRoads() {
@@ -325,10 +338,11 @@
 
     async function getGeoPoints() {
       var listGeoPoint = [];
-      markerRegistry.forEach(function (info, key) {
+      mainLayers.get('markers').forEach(function (item) {
+        var lngLat = item.marker.getLngLat();
         listGeoPoint.push({
-          lat: info.lat,
-          lon: info.lng
+          lat: lngLat.lat,
+          lon: lngLat.lng
         });
       });
       return JSON.stringify(listGeoPoint);
@@ -344,10 +358,6 @@
         setHomeMarker(point, {});
       }
       return 200;
-    }
-
-    function makePosKey(lat, lng) {
-      return lat.toFixed(7) + ',' + lng.toFixed(7);
     }
 
     function addMarker(point, iconSize, iconMarker, angle, anchor) {
@@ -377,22 +387,16 @@
         .setLngLat([point.lon, point.lat])
         .addTo(mymap);
 
-      var posKey = makePosKey(point.lat, point.lon);
-      markerRegistry.set(posKey, {
-        marker: marker,
-        lat: point.lat,
-        lng: point.lon,
-        icon: iconMarker,
-        iconSize: iconSize,
-        angle: angle || 0,
-        anchor: anchor,
-        element: el,
-      });
+      function getCurrentGeo() {
+        var lngLat = marker.getLngLat();
+        return { lat: lngLat.lat, lon: lngLat.lng };
+      }
 
       el.addEventListener('click', function (event) {
         event.stopPropagation();
         if (!isLongPress) {
-          onGeoPointClicked(point.lon, point.lat);
+          var geo = getCurrentGeo();
+          onGeoPointClicked(geo.lon, geo.lat);
         }
       });
 
@@ -401,7 +405,8 @@
         isLongPress = false;
         longPressTimer = setTimeout(function () {
           isLongPress = true;
-          onGeoPointLongPress(point.lon, point.lat);
+          var geo = getCurrentGeo();
+          onGeoPointLongPress(geo.lon, geo.lat);
         }, 1000);
       });
 
@@ -410,7 +415,8 @@
         isLongPress = false;
         longPressTimer = setTimeout(function () {
           isLongPress = true;
-          onGeoPointLongPress(point.lon, point.lat);
+          var geo = getCurrentGeo();
+          onGeoPointLongPress(geo.lon, geo.lat);
         }, 1000);
       });
 
@@ -421,64 +427,67 @@
         });
       });
 
-      mainLayers.get('markers').push({ marker: marker, posKey: posKey });
+      mainLayers.get('markers').push({ marker: marker, angle: angle || 0 });
       return 200;
     }
 
-    async function changeMarker(oldPoint, point, icon, iconSize, angle, anchor) {
-      var oldKey = makePosKey(oldPoint.lat, oldPoint.lon);
-      var info = markerRegistry.get(oldKey);
+    function markersAreEqual(a, b) {
+      var eps = 1e-9;
+      return Math.abs(a.lat - b.lat) <= eps && Math.abs(a.lon - b.lon) <= eps;
+    }
 
-      if (info) {
+    function findMarker(point) {
+      var markersList = mainLayers.get('markers');
+      for (var i = 0; i < markersList.length; i++) {
+        var lngLat = markersList[i].marker.getLngLat();
+        if (markersAreEqual({ lat: lngLat.lat, lon: lngLat.lng }, point)) {
+          return markersList[i];
+        }
+      }
+      return null;
+    }
+
+    async function changeMarker(oldPoint, point, icon, iconSize, angle, anchor) {
+      var item = findMarker(oldPoint);
+      console.log('changeMarker find old Marker', item);
+      if (item) {
+        var marker = item.marker;
+        var el = marker.getElement();
         if (icon != undefined && icon != null && icon != "") {
-          info.element.src = "data:image/png;base64," + icon;
-          info.icon = icon;
+          el.src = "data:image/png;base64," + icon;
         }
         if (iconSize != undefined && iconSize != null) {
-          info.element.style.width = iconSize.width + 'px';
-          info.element.style.height = iconSize.height + 'px';
-          info.iconSize = iconSize;
+          el.style.width = iconSize.width + 'px';
+          el.style.height = iconSize.height + 'px';
         }
-        if (angle != undefined && info.angle != angle) {
-          info.angle = angle;
-          info.element.style.transform = 'rotate(' + angle + 'deg)';
-          info.marker.setRotation(angle);
+        if (angle != undefined && item.angle != angle) {
+          item.angle = angle;
+          el.style.transform = 'rotate(' + angle + 'deg)';
+          marker.setRotation(angle);
         }
         if (point != undefined) {
-          info.marker.setLngLat([point.lon, point.lat]);
-          var newKey = makePosKey(point.lat, point.lon);
-          markerRegistry.delete(oldKey);
-          info.lat = point.lat;
-          info.lng = point.lon;
-          markerRegistry.set(newKey, info);
-          mainLayers.get('markers').forEach(function (item) {
-            if (item.posKey === oldKey) item.posKey = newKey;
-          });
+          marker.setLngLat([point.lon, point.lat]);
         }
       }
       return 200;
     }
 
     async function modifyMarker(point, icon) {
-      var posKey = makePosKey(point.lat, point.lon);
-      var info = markerRegistry.get(posKey);
-      if (info && icon != undefined && icon != "") {
-        info.element.src = "data:image/png;base64," + icon;
-        info.icon = icon;
+      var item = findMarker(point);
+      if (item && icon != undefined && icon != "") {
+        var el = item.marker.getElement();
+        el.src = "data:image/png;base64," + icon;
       }
       return 200;
     }
 
     async function removeMarker(point) {
-      var posKey = makePosKey(point.lat, point.lon);
-      var info = markerRegistry.get(posKey);
-      if (info) {
-        info.marker.remove();
-        markerRegistry.delete(posKey);
-      }
+      console.log('removeMarker', point);
       var markersList = mainLayers.get('markers');
       for (var i = markersList.length - 1; i >= 0; i--) {
-        if (markersList[i].posKey === posKey) {
+        var lngLat = markersList[i].marker.getLngLat();
+        if (markersAreEqual({ lat: lngLat.lat, lon: lngLat.lng }, point)) {
+          markersList[i].marker.remove();
           markersList.splice(i, 1);
         }
       }
@@ -498,7 +507,9 @@
     async function setStaticGeoPoint(id, points) {
       if (staticGeoPoint.has(id) && staticGeoPoint.get(id) != undefined) {
         var oldMarkers = staticGeoPoint.get(id);
-        oldMarkers.forEach(function (m) { m.marker.remove(); });
+        oldMarkers.forEach(function (m) {
+          m.marker.remove();
+        });
       }
       var markers = [];
       var iconUrl = staticIcons.has(id) ? staticIcons.get(id) : "";
@@ -514,13 +525,6 @@
         var marker = new maplibregl.Marker({ element: el })
           .setLngLat([ele.lon, ele.lat])
           .addTo(mymap);
-
-        var posKey = makePosKey(ele.lat, ele.lon);
-        markerRegistry.set(posKey, {
-          marker: marker, lat: ele.lat, lng: ele.lon,
-          icon: iconUrl, iconSize: { width: 32, height: 32 },
-          angle: 0, element: el,
-        });
 
         el.addEventListener('click', function (event) {
           event.stopPropagation();
@@ -551,7 +555,7 @@
           });
         });
 
-        markers.push({ marker: marker, posKey: posKey });
+        markers.push({ marker: marker });
       });
 
       staticGeoPoint.set(id, markers);
@@ -561,7 +565,9 @@
     async function setStaticGeoPointsWithOrientation(id, points) {
       if (staticGeoPoint.has(id) && staticGeoPoint.get(id) != undefined) {
         var oldMarkers = staticGeoPoint.get(id);
-        oldMarkers.forEach(function (m) { m.marker.remove(); });
+        oldMarkers.forEach(function (m) {
+          m.marker.remove();
+        });
       }
       var markers = [];
       var iconUrl = staticIcons.has(id) ? staticIcons.get(id) : "";
@@ -586,19 +592,14 @@
           .setLngLat([ele.lon, ele.lat])
           .addTo(mymap);
 
-        var posKey = makePosKey(ele.lat, ele.lon);
-        markerRegistry.set(posKey, {
-          marker: marker, lat: ele.lat, lng: ele.lon,
-          icon: iconUrl, iconSize: { width: 32, height: 32 },
-          angle: ele.angle || 0, element: el,
-        });
-
         el.addEventListener('click', function (event) {
           event.stopPropagation();
-          onGeoPointClicked(ele.lon, ele.lat);
+          if (!isLongPress) {
+            onGeoPointClicked(ele.lon, ele.lat);
+          }
         });
 
-        markers.push({ marker: marker, posKey: posKey });
+        markers.push({ marker: marker });
       });
 
       staticGeoPoint.set(id, markers);
@@ -832,59 +833,66 @@
         userLocationDirectionIcon = { icon: icon, size: size };
     }
 
+    function createUserMarkerElement(iconURL, iconSize) {
+      if (!iconURL || !iconSize) return undefined;
+      var el = document.createElement('img');
+      el.src = "data:image/png;base64," + iconURL;
+      el.style.width = iconSize[0] + 'px';
+      el.style.height = iconSize[1] + 'px';
+      return el;
+    }
+
     async function enableTracking(enableStopFollow, useDirectionMarker, anchorJS, controlMap) {
       trackingActive = true;
-      if (idTracking == undefined) {
-        idTracking = navigator.geolocation.watchPosition(function (position) {
-          if (!trackingActive) return;
-          var userPos = [position.coords.longitude, position.coords.latitude];
-          onUserPositionListener(position.coords.longitude, position.coords.latitude);
-          if (!skipFollow) {
-            mymap.flyTo({ center: userPos });
-            if (enableStopFollow) {
-              skipFollow = true;
-            }
-          }
-          var el;
-          var iconURL;
-          var iconSize;
-          if (userLocationMarkerIcon != undefined) {
-            iconURL = userLocationMarkerIcon.icon;
-            iconSize = [userLocationMarkerIcon.size.width, userLocationMarkerIcon.size.height];
-            if (useDirectionMarker && userLocationDirectionIcon != undefined) {
-              iconURL = userLocationDirectionIcon.icon;
-              iconSize = [userLocationDirectionIcon.size.width, userLocationDirectionIcon.size.height];
-            }
-            el = document.createElement('img');
-            el.src = "data:image/png;base64," + iconURL;
-            el.style.width = iconSize[0] + 'px';
-            el.style.height = iconSize[1] + 'px';
-          }
+      var el;
+      var iconURL;
+      var iconSize;
+      if (userLocationMarkerIcon != undefined) {
+        iconURL = userLocationMarkerIcon.icon;
+        iconSize = [userLocationMarkerIcon.size.width, userLocationMarkerIcon.size.height];
+        if (useDirectionMarker && userLocationDirectionIcon != undefined) {
+          iconURL = userLocationDirectionIcon.icon;
+          iconSize = [userLocationDirectionIcon.size.width, userLocationDirectionIcon.size.height];
+        }
+        el = createUserMarkerElement(iconURL, iconSize);
+      }
 
-          if (userPosition == undefined) {
-            var opts = {};
-            if (el) opts.element = el;
-            userPosition = new maplibregl.Marker(opts)
-              .setLngLat(userPos)
-              .addTo(mymap);
-          } else if (userPosition != undefined && !skipFollow) {
-            userPosition.setLngLat(userPos);
-            if (el) userPosition.setElement(el);
+      function updateUserPosition(position) {
+        if (!trackingActive) return;
+        var userPos = [position.coords.longitude, position.coords.latitude];
+        onUserPositionListener(position.coords.longitude, position.coords.latitude);
+        if (!skipFollow) {
+          mymap.flyTo({ center: userPos });
+          if (enableStopFollow) {
+            skipFollow = true;
           }
-        }, function (err) { }, {
+        }
+        if (userPosition != undefined) {
+          try {
+            userPosition.remove();
+          } catch (e) {
+            console.error(e);
+          }finally{
+            userPosition = undefined;
+          }
+        }
+        var opts = {};
+        if (el) {
+          opts.element = el;
+        }
+        userPosition = new maplibregl.Marker(opts)
+          .setLngLat(userPos)
+          .addTo(mymap);
+      }
+
+      if (idTracking == undefined) {
+        idTracking = navigator.geolocation.watchPosition(updateUserPosition, function (err) { }, {
           enableHighAccuracy: true,
           timeout: 5000,
           maximumAge: 600000,
         });
       } else {
-        navigator.geolocation.getCurrentPosition(function (position) {
-          var userPos = [position.coords.longitude, position.coords.latitude];
-          onUserPositionListener(position.coords.longitude, position.coords.latitude);
-          if (userPosition != undefined) {
-            userPosition.setLngLat(userPos);
-          }
-          mymap.flyTo({ center: userPos });
-        }, function (err) { }, {
+        navigator.geolocation.getCurrentPosition(updateUserPosition, function (err) { }, {
           enableHighAccuracy: true,
           timeout: 5000,
           maximumAge: 600000,
@@ -910,8 +918,10 @@
     }
 
     function stopLocationUpdating() {
-      navigator.geolocation.clearWatch(idTracking);
-      idTracking = undefined;
+      if (idTracking != undefined) {
+        navigator.geolocation.clearWatch(idTracking);
+        idTracking = undefined;
+      }
       return 200;
     }
 
@@ -919,7 +929,11 @@
       trackingActive = false;
       stopLocationUpdating();
       if (userPosition != undefined) {
-        userPosition.remove();
+        try {
+          userPosition.remove();
+        } catch (e) {
+          console.error(e);
+        }
         userPosition = undefined;
       }
       skipFollow = false;

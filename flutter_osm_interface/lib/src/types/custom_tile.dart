@@ -24,6 +24,7 @@ class CustomTile {
   final String sourceName;
   final int tileSize, minZoomLevel, maxZoomLevel;
   final MapEntry<String, String>? keyApi;
+  final String? styleURL;
 
   CustomTile({
     required this.urlsServers,
@@ -33,6 +34,7 @@ class CustomTile {
     this.minZoomLevel = 2,
     this.maxZoomLevel = 19,
     this.keyApi,
+    this.styleURL,
   })  : assert(urlsServers.isNotEmpty),
         assert(
           urlsServers.where((element) => element.url.isEmpty).isEmpty,
@@ -61,7 +63,8 @@ class CustomTile {
         tileExtension = ".png",
         sourceName = "mapnik",
         tileSize = 256,
-        keyApi = null;
+        keyApi = null,
+        styleURL = null;
   CustomTile.cycleOSM({
     this.maxZoomLevel = 19,
     this.minZoomLevel = 2,
@@ -78,7 +81,8 @@ class CustomTile {
         tileExtension = ".png",
         sourceName = "cycleMapnik",
         tileSize = 256,
-        keyApi = null;
+        keyApi = null,
+        styleURL = null;
   CustomTile.publicTransportationOSM({
     this.maxZoomLevel = 19,
     this.minZoomLevel = 2,
@@ -88,7 +92,19 @@ class CustomTile {
         tileExtension = ".png",
         sourceName = "memomapsMapnik",
         tileSize = 256,
-        keyApi = null;
+        keyApi = null,
+        styleURL = null;
+  CustomTile.openFreeMap({
+    this.maxZoomLevel = 19,
+    this.minZoomLevel = 2,
+  })  : urlsServers = [
+          TileURLs(url: "https://tiles.openfreemap.org/styles/liberty"),
+        ],
+        tileExtension = "",
+        sourceName = "openFreeMap",
+        tileSize = 256,
+        keyApi = null,
+        styleURL = "https://tiles.openfreemap.org/styles/liberty";
 
   Map toMap() {
     final map = {
@@ -101,6 +117,9 @@ class CustomTile {
     };
     if (keyApi != null) {
       map.putIfAbsent("api", () => {keyApi!.key: keyApi!.value});
+    }
+    if (styleURL != null) {
+      map.putIfAbsent("styleURL", () => styleURL!);
     }
     return map;
   }

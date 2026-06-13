@@ -43,8 +43,11 @@ Future<double> distance2point(GeoPoint p1, GeoPoint p2) async {
   return earthRadius * c; //metres
 }
 
-Future<List<SearchInfo>> addressSuggestion(String searchText,
-    {int limitInformation = 5, String locale = ""}) async {
+Future<List<SearchInfo>> addressSuggestion(
+  String searchText, {
+  int limitInformation = 5,
+  String locale = "en",
+}) async {
   Response response = await Dio().get(
     "https://photon.komoot.io/api/",
     queryParameters: {
@@ -58,4 +61,29 @@ Future<List<SearchInfo>> addressSuggestion(String searchText,
   return (json["features"] as List)
       .map((d) => SearchInfo.fromPhotonAPI(d))
       .toList();
+}
+
+Future<String?> reverseGeocodeAddress(
+  GeoPoint point, {
+  String locale = "en",
+}) async {
+  try {
+    final response = await Dio().get(
+      "https://nominatim.openstreetmap.org/reverse",
+      queryParameters: {
+        "format": "jsonv2",
+        "lat": point.latitude.toString(),
+        "lon": point.longitude.toString(),
+        if (locale.isNotEmpty) "accept-language": locale,
+      },
+    );
+    final data = response.data;
+    final displayName = data["display_name"];
+    if (displayName is String && displayName.trim().isNotEmpty) {
+      return displayName;
+    }
+  } catch (_) {
+    return null;
+  }
+  return null;
 }

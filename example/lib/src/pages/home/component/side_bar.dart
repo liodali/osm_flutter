@@ -8,33 +8,36 @@ class SideBar extends StatelessWidget {
   const SideBar({
     super.key,
     required this.onToggleCallback,
+    this.showToggleButton = true,
+    this.topContent,
   });
   final Function() onToggleCallback;
+  final bool showToggleButton;
+  final Widget? topContent;
 
   @override
   Widget build(BuildContext context) {
-    return PointerInterceptor(
-      child: SizedBox(
-        width: 280,
-        child: FSidebar(
-          style: .delta(),
-          header: Padding(
-            padding: EdgeInsets.only(
-              top: MediaQuery.viewPaddingOf(context).top + 8,
-              left: 12,
-              right: 12,
-              bottom: 8,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'OSM Plugin',
-                    style: FTheme.of(context).typography.lg.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+    final header = Padding(
+      padding: EdgeInsets.only(
+        top: MediaQuery.viewPaddingOf(context).top + 8,
+        left: 12,
+        right: 12,
+        bottom: 12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'OSM Plugin',
+                  style: FTheme.of(context).typography.lg.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+              ),
+              if (showToggleButton)
                 FTappable(
                   onPress: () => onToggleCallback(),
                   child: Icon(
@@ -43,31 +46,52 @@ class SideBar extends StatelessWidget {
                     color: FTheme.of(context).colors.mutedForeground,
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
-          footer: Padding(
-            padding: const EdgeInsets.all(12),
-            child: FTappable(
-              onPress: () => context.router.pushSettings(),
-              child: Row(
-                children: [
-                  Icon(
-                    FIcons.settings,
-                    size: 18,
-                    color: FTheme.of(context).colors.mutedForeground,
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Settings',
-                    style: FTheme.of(context).typography.sm.copyWith(
-                      color: FTheme.of(context).colors.mutedForeground,
-                    ),
-                  ),
-                ],
+          if (topContent != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: topContent!,
+            ),
+          Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: FDivider(),
+          ),
+        ],
+      ),
+    );
+
+    final footer = Padding(
+      padding: const EdgeInsets.all(12),
+      child: FTappable(
+        onPress: () => context.router.pushSettings(),
+        child: Row(
+          children: [
+            Icon(
+              FIcons.settings,
+              size: 18,
+              color: FTheme.of(context).colors.mutedForeground,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Text(
+                'Settings',
+                style: FTheme.of(context).typography.sm.copyWith(
+                  color: FTheme.of(context).colors.mutedForeground,
+                ),
               ),
             ),
-          ),
+          ],
+        ),
+      ),
+    );
+
+    return PointerInterceptor(
+      child: SizedBox(
+        width: 280,
+        child: FSidebar(
+          header: header,
+          footer: footer,
           children: [
             FSidebarGroup(
               label: const Text('Navigation'),

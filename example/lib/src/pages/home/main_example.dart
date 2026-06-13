@@ -4,8 +4,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_widget_configuration.dart'
     show MoreActionConfig;
-import 'package:flutter_osm_plugin_example/src/pages/home/component/seach_map.dart'
-    show SearchInMap;
+import 'package:flutter_osm_plugin_example/src/pages/home/component/route_search_panel.dart'
+    show RouteSearchPanel;
 import 'package:flutter_osm_plugin_example/src/pages/home/component/side_bar.dart';
 import 'package:flutter_osm_plugin_example/src/widgets/action_buttons.dart'
     show ActionButton;
@@ -83,6 +83,10 @@ class _MainState extends State<Main> with OSMMixinObserver {
   ValueNotifier<int> zoomLevelNotifier = ValueNotifier(16);
   final mapKey = GlobalKey();
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
+  bool _isApplyingWebLocationUpdate = false;
+  UserLocation? _pendingWebLocationUpdate;
+  UserLocation? _lastAppliedWebLocation;
+  DateTime? _lastAppliedWebLocationAt;
 
   @override
   void initState() {
@@ -177,13 +181,19 @@ class _MainState extends State<Main> with OSMMixinObserver {
       showFToast(
         context: context,
         title: const Text("the marker will be deleted!"),
-        suffixBuilder: (context, entry) => FTappable(
-          onPress: () async {
-            await widget.configuration.controller.removeMarker(position);
-            widget.configuration.geos.value.remove(position);
-            entry.dismiss();
-          },
-          child: const Text('proceed'),
+
+        suffixBuilder: (context, entry) => PointerInterceptor(
+          child: FTappable(
+            onPress: () async {
+              await widget.configuration.controller.removeMarker(position);
+              widget.configuration.geos.value.remove(position);
+              entry.dismiss();
+            },
+            child: Text(
+              'proceed',
+              style: context.theme.typography.md,
+            ),
+          ),
         ),
       );
     });
@@ -210,8 +220,60 @@ class _MainState extends State<Main> with OSMMixinObserver {
   }
 
   @override
-  void onLocationChanged(UserLocation userLocation) async {
+  void onLocationChanged(UserLocation userLocation) {
     super.onLocationChanged(userLocation);
+    if (kIsWeb) {
+      _handleWebLocationChanged(userLocation);
+      return;
+    }
+    _applyLocationChanged(userLocation);
+  }
+
+  Future<void> _handleWebLocationChanged(UserLocation userLocation) async {
+    if (_shouldIgnoreWebLocationUpdate(userLocation)) {
+      return;
+    }
+
+    _pendingWebLocationUpdate = userLocation;
+    if (_isApplyingWebLocationUpdate) {
+      return;
+    }
+
+    _isApplyingWebLocationUpdate = true;
+    try {
+      while (_pendingWebLocationUpdate != null) {
+        final nextLocation = _pendingWebLocationUpdate!;
+        _pendingWebLocationUpdate = null;
+
+        if (_shouldIgnoreWebLocationUpdate(nextLocation)) {
+          continue;
+        }
+
+        _lastAppliedWebLocation = nextLocation;
+        _lastAppliedWebLocationAt = DateTime.now();
+        await _applyLocationChanged(nextLocation);
+      }
+    } finally {
+      _isApplyingWebLocationUpdate = false;
+    }
+  }
+
+  bool _shouldIgnoreWebLocationUpdate(UserLocation userLocation) {
+    final lastLocation = _lastAppliedWebLocation;
+    final lastLocationAt = _lastAppliedWebLocationAt;
+    if (lastLocation == null || lastLocationAt == null) {
+      return false;
+    }
+
+    final isSameLocation = userLocation.isEqual(lastLocation, precision: 1e6);
+    final isSameOrientation =
+        (userLocation.angle - lastLocation.angle).abs() <= 1e-6;
+    return isSameLocation &&
+        isSameOrientation &&
+        DateTime.now().difference(lastLocationAt).inMilliseconds < 250;
+  }
+
+  Future<void> _applyLocationChanged(UserLocation userLocation) async {
     if (widget.disableMapControlUserTracking.value &&
         widget.configuration.trackingNotifier.value) {
       await widget.configuration.controller.moveTo(userLocation);
@@ -248,6 +310,66 @@ class _MainState extends State<Main> with OSMMixinObserver {
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.maybeOf(context)?.viewPadding.top ?? 0;
+    if (kIsWeb) {
+      return Row(
+        children: [
+          SizedBox(
+            width: 320,
+            child: SideBar(
+              onToggleCallback: () {},
+              showToggleButton: false,
+              topContent: RouteSearchPanel(
+                controller: widget.configuration.controller,
+                embeddedInSidebar: true,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                Map(
+                  controller: widget.configuration.controller,
+                ),
+                Positioned(
+                  bottom: 23.0,
+                  right: 15,
+                  child: Column(
+                    spacing: 8,
+                    children: [
+                      ActivationUserLocation(
+                        controller: widget.configuration.controller,
+                        trackingNotifier: widget.configuration.trackingNotifier,
+                        userLocation: widget.configuration.userLocationNotifier,
+                        userLocationIcon: widget.configuration.userLocationIcon,
+                      ),
+                      ZoomNavigation(
+                        controller: widget.configuration.controller,
+                        zoomNotifier: zoomLevelNotifier,
+                      ),
+                      ChangeTileButton(
+                        controller: widget.configuration.controller,
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned.fill(
+                  child: ValueListenableBuilder(
+                    valueListenable: showFab,
+                    builder: (context, isVisible, child) {
+                      if (!isVisible) {
+                        return const SizedBox.shrink();
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     return Stack(
       children: [
         Map(
@@ -257,41 +379,44 @@ class _MainState extends State<Main> with OSMMixinObserver {
           top: topPadding + 8,
           left: 16,
           right: 16,
-          child: PointerInterceptor(
-            child: Row(
-              children: [
-                ActionButton(
-                  onPressed: () async {
-                    await showFSheet(
-                      context: context,
-                      side: FLayout.ltr,
-                      builder: (context) => SideBar(
-                        onToggleCallback: () => Navigator.of(context).pop(),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: PointerInterceptor(
+                  child: ActionButton(
+                    onPressed: () async {
+                      await showFSheet(
+                        context: context,
+                        side: FLayout.ltr,
+                        builder: (context) => SideBar(
+                          onToggleCallback: () => Navigator.of(context).pop(),
+                        ),
+                      );
+                    },
+                    buttonStyle: (style) => style.copyWith(
+                      minimumSize: WidgetStateProperty.resolveWith(
+                        (_) => const Size(48, 48),
                       ),
-                    );
-                  },
-                  buttonStyle: (style) => style.copyWith(
-                    minimumSize: WidgetStateProperty.resolveWith(
-                      (_) => const Size(48, 48),
+                      maximumSize: WidgetStateProperty.resolveWith(
+                        (_) => const Size(48, 48),
+                      ),
                     ),
-                    maximumSize: WidgetStateProperty.resolveWith(
-                      (_) => const Size(48, 48),
+                    child: Icon(
+                      FIcons.menu,
+                      size: 18,
+                      color: FTheme.of(context).colors.foreground,
                     ),
-                  ),
-                  child: Icon(
-                    FIcons.menu,
-                    size: 18,
-                    color: FTheme.of(context).colors.foreground,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SearchInMap(
-                    controller: widget.configuration.controller,
-                  ),
+              ),
+              Expanded(
+                child: RouteSearchPanel(
+                  controller: widget.configuration.controller,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         Positioned(
@@ -325,17 +450,15 @@ class _MainState extends State<Main> with OSMMixinObserver {
               }
               return Stack(
                 children: [
-                  if (!kIsWeb) ...[
-                    Positioned(
-                      top: topPadding + 56,
-                      right: 15,
-                      child: PointerInterceptor(
-                        child: MapRotation(
-                          controller: widget.configuration.controller,
-                        ),
+                  Positioned(
+                    top: topPadding + 56,
+                    right: 15,
+                    child: PointerInterceptor(
+                      child: MapRotation(
+                        controller: widget.configuration.controller,
                       ),
                     ),
-                  ],
+                  ),
                 ],
               );
             },
@@ -468,6 +591,7 @@ class Map extends StatelessWidget {
         debugPrint(location.toString());
       },
       osmOption: OSMOption(
+        useWebMapLibre: true,
         enableRotationByGesture: true,
         zoomOption: const ZoomOption(
           initZoom: 16,
