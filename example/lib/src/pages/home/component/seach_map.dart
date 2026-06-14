@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
 import 'package:forui/forui.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
@@ -9,19 +10,21 @@ class SearchInMap extends StatelessWidget {
   const SearchInMap({
     super.key,
     this.controller,
-    this.label = 'Search location',
+    this.placeholder = 'Start location',
     this.selectedAddress,
     this.onSelected,
     this.onClear,
+    this.onUseCurrentLocation,
     this.compact = false,
     this.locale = 'en',
   });
 
   final MapController? controller;
-  final String label;
+  final String placeholder;
   final String? selectedAddress;
   final ValueChanged<SearchInfo>? onSelected;
   final VoidCallback? onClear;
+  final VoidCallback? onUseCurrentLocation;
   final bool compact;
   final String locale;
 
@@ -37,8 +40,9 @@ class SearchInMap extends StatelessWidget {
       builder: (context) => FractionallySizedBox(
         heightFactor: 0.9,
         child: _LocationSearchSheet(
-          title: label,
+          placeholder: placeholder,
           locale: locale,
+          onUseCurrentLocation: onUseCurrentLocation,
         ),
       ),
     );
@@ -53,13 +57,13 @@ class SearchInMap extends StatelessWidget {
     }
 
     if (controller != null) {
-      await controller!.goToLocation(selectedLocation!.point!);
+      await controller!.moveTo(selectedLocation!.point!);
     }
   }
 
   String _subtitle() {
     if (selectedAddress == null || selectedAddress!.trim().isEmpty) {
-      return 'Tap to search';
+      return placeholder;
     }
     return selectedAddress!;
   }
@@ -104,7 +108,7 @@ class SearchInMap extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      label,
+                      placeholder,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: FTheme.of(context).typography.sm.copyWith(
@@ -123,8 +127,18 @@ class SearchInMap extends StatelessWidget {
                   ],
                 ),
               ),
+              if (onUseCurrentLocation != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: IconButton(
+                    visualDensity: VisualDensity.compact,
+                    onPressed: onUseCurrentLocation,
+                    icon: const Icon(Icons.my_location),
+                    tooltip: 'Use current location',
+                  ),
+                ),
               Padding(
-                padding: const EdgeInsets.only(left: 8),
+                padding: const EdgeInsets.only(left: 4),
                 child:
                     selectedAddress != null &&
                         selectedAddress!.trim().isNotEmpty
@@ -147,10 +161,15 @@ class SearchInMap extends StatelessWidget {
 }
 
 class _LocationSearchSheet extends StatefulWidget {
-  const _LocationSearchSheet({required this.title, required this.locale});
+  const _LocationSearchSheet({
+    required this.placeholder,
+    required this.locale,
+    this.onUseCurrentLocation,
+  });
 
-  final String title;
+  final String placeholder;
   final String locale;
+  final VoidCallback? onUseCurrentLocation;
 
   @override
   State<_LocationSearchSheet> createState() => _LocationSearchSheetState();
@@ -159,6 +178,7 @@ class _LocationSearchSheet extends StatefulWidget {
 class _LocationSearchSheetState extends State<_LocationSearchSheet> {
   final TextEditingController _searchController = TextEditingController();
   final List<SearchInfo> _suggestions = [];
+  List<SavedLocation> _savedLocations = [];
   Timer? _debounce;
   bool _loading = false;
   String? _error;
@@ -167,6 +187,16 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
   void initState() {
     super.initState();
     _searchController.addListener(_handleQueryChanged);
+    _loadSavedLocations();
+  }
+
+  Future<void> _loadSavedLocations() async {
+    final locations = await LocationStorage.getLocations();
+    if (mounted) {
+      setState(() {
+        _savedLocations = locations;
+      });
+    }
   }
 
   @override
@@ -263,7 +293,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                widget.title,
+                widget.placeholder,
                 style: typography.lg,
               ),
             ),
@@ -289,22 +319,103 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
               ),
             ),
           ),
+          if (widget.onUseCurrentLocation != null &&
+              _searchController.text.trim().isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: PointerInterceptor(
+                child: FTappable(
+                  onPress: () {
+                    widget.onUseCurrentLocation!();
+                    Navigator.of(context).pop();
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colors.background,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.my_location, color: colors.foreground),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Use current location',
+                          style: typography.md.copyWith(
+                            color: colors.foreground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (_savedLocations.isNotEmpty &&
+              _searchController.text.trim().isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Latest searched locations',
+                  style: typography.sm.copyWith(
+                    color: colors.secondaryForeground,
+                  ),
+                ),
+              ),
+            ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(top: 12),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: _searchController.text.trim().length < 3
-                    ? Center(
-                        key: const ValueKey('empty-query'),
-                        child: Text(
-                          'Type at least 3 characters to search.',
-                          style: typography.sm.copyWith(
-                            color: colors.secondaryForeground,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      )
+                    ? _savedLocations.isNotEmpty
+                          ? ListView.separated(
+                              key: const ValueKey('saved'),
+                              itemCount: _savedLocations.length,
+                              separatorBuilder: (_, __) =>
+                                  const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                final location = _savedLocations[index];
+                                return PointerInterceptor(
+                                  child: ListTile(
+                                    leading: const Icon(Icons.bookmark),
+                                    title: Text(
+                                      location.address,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    subtitle: Text(
+                                      '${location.geoPoint.latitude.toStringAsFixed(5)}, ${location.geoPoint.longitude.toStringAsFixed(5)}',
+                                    ),
+                                    onTap: () {
+                                      Navigator.of(context).pop(
+                                        SearchInfo(
+                                          point: location.geoPoint,
+                                          address: Address(
+                                            name: location.address,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            )
+                          : Center(
+                              key: const ValueKey('empty-query'),
+                              child: Text(
+                                'Type at least 3 characters to search.',
+                                style: typography.sm.copyWith(
+                                  color: colors.secondaryForeground,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            )
                     : _loading
                     ? const Center(
                         key: ValueKey('loading'),
@@ -350,8 +461,20 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                                   : Text(
                                       '${suggestion.point!.latitude.toStringAsFixed(5)}, ${suggestion.point!.longitude.toStringAsFixed(5)}',
                                     ),
-                              onTap: () {
-                                Navigator.of(context).pop(suggestion);
+                              onTap: () async {
+                                final point = suggestion.point;
+                                if (point != null) {
+                                  await LocationStorage.saveLocation(
+                                    SavedLocation(
+                                      address: _displayText(suggestion),
+                                      geoPoint: point,
+                                    ),
+                                  );
+                                }
+
+                                if (context.mounted) {
+                                  Navigator.of(context).pop(suggestion);
+                                }
                               },
                             ),
                           );
