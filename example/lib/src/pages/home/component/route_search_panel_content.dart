@@ -184,16 +184,6 @@ class RouteSearchPanelContent extends StatelessWidget {
                               ),
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: SelectableText(
-                              'Polyline base64: ${entry.polylineBase64}',
-                              maxLines: 3,
-                              style: FTheme.of(context).typography.xs.copyWith(
-                                color: colors.secondaryForeground,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     );

@@ -356,9 +356,17 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
         return;
       }
 
+      final address = await reverseGeocodeAddress(
+        currentLocation,
+        locale: _activeLocale,
+      );
       final searchInfo = SearchInfo(
         point: currentLocation,
-        address: Address(name: 'Current Location'),
+        address: Address(
+          name: address?.trim().isNotEmpty == true
+              ? address!
+              : 'Current Location',
+        ),
       );
 
       if (_routeStart == null) {
