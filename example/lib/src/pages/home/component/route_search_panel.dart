@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/component/route_search_panel_content.dart';
+import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
 
 class RouteSearchPanel extends StatefulWidget {
   const RouteSearchPanel({
@@ -33,6 +34,7 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
   String? _routeStartLabel;
   String? _routeDestinationLabel;
   RoadInfo? _currentRoad;
+  List<RouteHistoryEntry> _routeHistory = [];
   bool _isDrawingRoad = false;
   String? _roadError;
   late String _locale;
@@ -48,6 +50,18 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
   void initState() {
     super.initState();
     _locale = widget.locale;
+    _loadRouteHistory();
+  }
+
+  Future<void> _loadRouteHistory() async {
+    final routes = await RouteHistoryStorage.getRoutes();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _routeHistory = routes;
+    });
   }
 
   @override
@@ -104,6 +118,15 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
     );
     if (reverseAddress != null && reverseAddress.trim().isNotEmpty) {
       return reverseAddress;
+    }
+
+    return '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}';
+  }
+
+  String _resolveLabelFallback(SearchInfo? location) {
+    final point = location?.point;
+    if (point == null) {
+      return 'Unknown location';
     }
 
     return '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}';
@@ -236,6 +259,25 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
       setState(() {
         _currentRoad = roadInformation;
       });
+
+      final routePoints = roadInformation.route;
+      final encodedPolyline = routePoints.isNotEmpty
+          ? await routePoints.encodedToString()
+          : '';
+      await RouteHistoryStorage.saveRoute(
+        RouteHistoryEntry(
+          startAddress: _routeStartLabel ?? _resolveLabelFallback(_routeStart),
+          destinationAddress:
+              _routeDestinationLabel ??
+              _resolveLabelFallback(_routeDestination),
+          startPoint: _routeStart!.point!,
+          destinationPoint: _routeDestination!.point!,
+          distanceKm: roadInformation.distance,
+          durationSeconds: roadInformation.duration,
+          polylineBase64: encodedPolyline,
+        ),
+      );
+      await _loadRouteHistory();
     } on RoadException catch (e) {
       if (!mounted) {
         return;
@@ -302,6 +344,37 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
         });
         await widget.controller.clearAllRoads();
       },
+      onUseCurrentLocation: _useCurrentLocation,
+      routeHistory: _routeHistory,
     );
+  }
+
+  Future<void> _useCurrentLocation() async {
+    try {
+      final currentLocation = await widget.controller.myLocation();
+      if (!mounted) {
+        return;
+      }
+
+      final searchInfo = SearchInfo(
+        point: currentLocation,
+        address: Address(name: 'Current Location'),
+      );
+
+      if (_routeStart == null) {
+        await _setRoutePoint(isStart: true, location: searchInfo);
+      } else if (_routeDestination == null) {
+        await _setRoutePoint(isStart: false, location: searchInfo);
+      } else {
+        await _setRoutePoint(isStart: true, location: searchInfo);
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _roadError = 'Unable to get current location.';
+      });
+    }
   }
 }

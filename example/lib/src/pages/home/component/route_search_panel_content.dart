@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/component/seach_map.dart'
     show SearchInMap;
+import 'package:flutter_osm_plugin_example/src/services/location_storage.dart'
+    show RouteHistoryEntry;
 import 'package:forui/forui.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
@@ -24,6 +26,8 @@ class RouteSearchPanelContent extends StatelessWidget {
     required this.onClearRouteSelection,
     required this.onSwapRoutePoints,
     required this.onClearDestination,
+    required this.onUseCurrentLocation,
+    required this.routeHistory,
   });
 
   final bool embeddedInSidebar;
@@ -46,6 +50,8 @@ class RouteSearchPanelContent extends StatelessWidget {
   final Future<void> Function() onClearRouteSelection;
   final Future<void> Function() onSwapRoutePoints;
   final Future<void> Function() onClearDestination;
+  final VoidCallback? onUseCurrentLocation;
+  final List<RouteHistoryEntry> routeHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +104,7 @@ class RouteSearchPanelContent extends StatelessWidget {
                     onSetRoutePoint: onSetRoutePoint,
                     onClearRouteSelection: onClearRouteSelection,
                     onClearDestination: onClearDestination,
+                    onUseCurrentLocation: onUseCurrentLocation,
                   )
                 : _RouteInputs.dual(
                     locale: activeLocale,
@@ -108,6 +115,7 @@ class RouteSearchPanelContent extends StatelessWidget {
                     onSetRoutePoint: onSetRoutePoint,
                     onClearRouteSelection: onClearRouteSelection,
                     onClearDestination: onClearDestination,
+                    onUseCurrentLocation: onUseCurrentLocation,
                   ),
           ),
           _ActionRow(
@@ -115,6 +123,85 @@ class RouteSearchPanelContent extends StatelessWidget {
             onSwapRoutePoints: onSwapRoutePoints,
             onClearRouteSelection: onClearRouteSelection,
           ),
+          if (routeHistory.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                'Direction search history',
+                style: FTheme.of(context).typography.sm.copyWith(
+                  color: colors.secondaryForeground,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 260),
+                child: ListView.separated(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemCount: routeHistory.length,
+                  physics: const NeverScrollableScrollPhysics(),
+                  separatorBuilder: (_, __) =>
+                      const Divider(height: 8, thickness: 0),
+                  itemBuilder: (context, index) {
+                    final entry = routeHistory[index];
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colors.background,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            '${entry.startAddress} → ${entry.destinationAddress}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: FTheme.of(context).typography.sm.copyWith(
+                              color: colors.foreground,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              [
+                                if (entry.distanceKm != null)
+                                  '${entry.distanceKm!.toStringAsFixed(2)} km',
+                                if (entry.durationSeconds != null)
+                                  '${Duration(seconds: entry.durationSeconds!.round()).inMinutes} min',
+                                entry.createdAt
+                                    .toLocal()
+                                    .toString()
+                                    .split('.')
+                                    .first,
+                              ].join(' • '),
+                              style: FTheme.of(context).typography.xs.copyWith(
+                                color: colors.secondaryForeground,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: SelectableText(
+                              'Polyline base64: ${entry.polylineBase64}',
+                              maxLines: 3,
+                              style: FTheme.of(context).typography.xs.copyWith(
+                                color: colors.secondaryForeground,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -213,6 +300,7 @@ class _RouteInputs extends StatelessWidget {
     required this.onSetRoutePoint,
     required this.onClearRouteSelection,
     required this.onClearDestination,
+    this.onUseCurrentLocation,
   }) : showDestinationWhenStartExists = true;
 
   const _RouteInputs.dual({
@@ -224,6 +312,7 @@ class _RouteInputs extends StatelessWidget {
     required this.onSetRoutePoint,
     required this.onClearRouteSelection,
     required this.onClearDestination,
+    this.onUseCurrentLocation,
   }) : showDestinationWhenStartExists = false;
 
   final String locale;
@@ -238,6 +327,7 @@ class _RouteInputs extends StatelessWidget {
   onSetRoutePoint;
   final Future<void> Function() onClearRouteSelection;
   final Future<void> Function() onClearDestination;
+  final VoidCallback? onUseCurrentLocation;
   final bool showDestinationWhenStartExists;
 
   @override
@@ -247,7 +337,7 @@ class _RouteInputs extends StatelessWidget {
         SearchInMap(
           compact: true,
           locale: locale,
-          label: 'From',
+          placeholder: 'Start location',
           selectedAddress: routeStartLabel,
           onSelected: (value) =>
               onSetRoutePoint(isStart: true, location: value),
@@ -256,6 +346,7 @@ class _RouteInputs extends StatelessWidget {
               : () async {
                   await onClearRouteSelection();
                 },
+          onUseCurrentLocation: onUseCurrentLocation,
         ),
         if (!showDestinationWhenStartExists || routeStart != null) ...[
           Padding(
@@ -263,7 +354,7 @@ class _RouteInputs extends StatelessWidget {
             child: SearchInMap(
               compact: true,
               locale: locale,
-              label: 'To',
+              placeholder: 'Destination location',
               selectedAddress: routeDestinationLabel,
               onSelected: (value) =>
                   onSetRoutePoint(isStart: false, location: value),
@@ -272,6 +363,7 @@ class _RouteInputs extends StatelessWidget {
                   : () async {
                       await onClearDestination();
                     },
+              onUseCurrentLocation: onUseCurrentLocation,
             ),
           ),
         ],
