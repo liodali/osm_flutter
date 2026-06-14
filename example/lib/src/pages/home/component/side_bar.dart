@@ -1,10 +1,11 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin_example/src/common/router_config.dart';
+import 'package:flutter_osm_plugin_example/src/pages/home/component/route_history_list.dart';
 import 'package:forui/forui.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
-class SideBar extends StatelessWidget {
+class SideBar extends StatefulWidget {
   const SideBar({
     super.key,
     required this.onToggleCallback,
@@ -14,6 +15,65 @@ class SideBar extends StatelessWidget {
   final Function() onToggleCallback;
   final bool showToggleButton;
   final Widget? topContent;
+
+  @override
+  State<SideBar> createState() => _SideBarState();
+}
+
+class _SideBarState extends State<SideBar> {
+  void _showHistory(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    if (isMobile) {
+      showFSheet(
+        context: context,
+        side: FLayout.btt,
+        builder: (context) => DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.theme.colors.background,
+            border: Border.all(
+              color: context.theme.colors.border,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Direction search history',
+                  style: FTheme.of(context).typography.lg.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(
+                    top: 12,
+                    bottom: 48,
+                  ),
+                  child: RouteHistoryList(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } else {
+      showFDialog(
+        context: context,
+        builder: (context, style, animation) => FDialog(
+          style: style,
+          animation: animation,
+          title: const Text('Direction search history'),
+          actions: const [],
+          body: const SizedBox(
+            width: 400,
+            child: RouteHistoryList(),
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,23 +97,26 @@ class SideBar extends StatelessWidget {
                   ),
                 ),
               ),
-              if (showToggleButton)
+              if (widget.showToggleButton) ...[
                 FTappable(
-                  onPress: () => onToggleCallback(),
+                  onPress: () => widget.onToggleCallback(),
                   child: Icon(
                     FIcons.arrowLeftToLine,
                     size: 18,
                     color: FTheme.of(context).colors.mutedForeground,
                   ),
                 ),
+              ],
             ],
           ),
-          if (topContent != null)
+          if (widget.topContent != null) ...[
             Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: topContent!,
+              child: widget.topContent!,
             ),
-          Padding(
+          ],
+
+          const Padding(
             padding: EdgeInsets.only(top: 12),
             child: FDivider(),
           ),
@@ -93,6 +156,15 @@ class SideBar extends StatelessWidget {
           header: header,
           footer: footer,
           children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: FSidebarItem(
+                icon: const Icon(FIcons.history),
+                label: const Text('Direction History'),
+                selected: false,
+                onPress: () => _showHistory(context),
+              ),
+            ),
             FSidebarGroup(
               label: const Text('Navigation'),
               children: [

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/src/models/map_style_configuration.dart';
 import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
 import 'package:forui/forui.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -16,7 +17,6 @@ class SearchInMap extends StatelessWidget {
     this.onClear,
     this.onUseCurrentLocation,
     this.compact = false,
-    this.locale = 'en',
   });
 
   final MapController? controller;
@@ -26,7 +26,6 @@ class SearchInMap extends StatelessWidget {
   final VoidCallback? onClear;
   final VoidCallback? onUseCurrentLocation;
   final bool compact;
-  final String locale;
 
   Future<void> _openSearchSheet(BuildContext context) async {
     final selectedLocation = await showModalBottomSheet<SearchInfo>(
@@ -41,7 +40,6 @@ class SearchInMap extends StatelessWidget {
         heightFactor: 0.9,
         child: _LocationSearchSheet(
           placeholder: placeholder,
-          locale: locale,
           onUseCurrentLocation: onUseCurrentLocation,
         ),
       ),
@@ -115,15 +113,17 @@ class SearchInMap extends StatelessWidget {
                         color: colors.secondaryForeground,
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        _subtitle(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: subtitleStyle,
+                    if (selectedAddress != null) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          _subtitle(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: subtitleStyle,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -163,12 +163,10 @@ class SearchInMap extends StatelessWidget {
 class _LocationSearchSheet extends StatefulWidget {
   const _LocationSearchSheet({
     required this.placeholder,
-    required this.locale,
     this.onUseCurrentLocation,
   });
 
   final String placeholder;
-  final String locale;
   final VoidCallback? onUseCurrentLocation;
 
   @override
@@ -237,7 +235,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
         final results = await addressSuggestion(
           query,
           limitInformation: 8,
-          locale: widget.locale,
+          locale: ExampleMapStyleConfiguration.instance.searchLocale,
         );
         if (!mounted) {
           return;

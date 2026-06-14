@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/src/models/map_style_configuration.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/component/route_search_panel_content.dart';
 import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
 
@@ -8,49 +8,55 @@ class RouteSearchPanel extends StatefulWidget {
   const RouteSearchPanel({
     super.key,
     required this.controller,
-    this.locale = 'en',
     this.embeddedInSidebar = false,
+    this.collapsed = false,
+    this.onToggleCollapsed,
+    this.historyNotifier,
   });
 
   final MapController controller;
-  final String locale;
   final bool embeddedInSidebar;
+  final bool collapsed;
+  final VoidCallback? onToggleCollapsed;
+  final ValueNotifier<List<RouteHistoryEntry>>? historyNotifier;
 
   @override
   State<RouteSearchPanel> createState() => _RouteSearchPanelState();
 }
 
 class _RouteSearchPanelState extends State<RouteSearchPanel> {
-  static const Map<String, String> _supportedLocales = {
-    'en': 'English',
-    'fr': 'French',
-    'ar': 'Arabic',
-    'es': 'Spanish',
-    'de': 'Deutsch',
-  };
-
+  final ExampleMapStyleConfiguration _styleConfig =
+      ExampleMapStyleConfiguration.instance;
   SearchInfo? _routeStart;
   SearchInfo? _routeDestination;
   String? _routeStartLabel;
   String? _routeDestinationLabel;
   RoadInfo? _currentRoad;
-  List<RouteHistoryEntry> _routeHistory = [];
   bool _isDrawingRoad = false;
   String? _roadError;
-  late String _locale;
 
-  bool get _isWeb => kIsWeb;
+  void _handleStyleChanged() {
+    if (!mounted) {
+      return;
+    }
 
-  String get _activeLocale =>
-      _supportedLocales.containsKey(_locale) ? _locale : 'en';
-
-  String get _localeLabel => _supportedLocales[_activeLocale] ?? 'English';
+    setState(() {});
+    if (_routeStart?.point != null && _routeDestination?.point != null) {
+      Future.microtask(_drawRouteIfReady);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _locale = widget.locale;
+    _styleConfig.addListener(_handleStyleChanged);
     _loadRouteHistory();
+  }
+
+  @override
+  void dispose() {
+    _styleConfig.removeListener(_handleStyleChanged);
+    super.dispose();
   }
 
   Future<void> _loadRouteHistory() async {
@@ -59,46 +65,7 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
       return;
     }
 
-    setState(() {
-      _routeHistory = routes;
-    });
-  }
-
-  @override
-  void didUpdateWidget(covariant RouteSearchPanel oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.locale != widget.locale && widget.locale != _locale) {
-      _locale = widget.locale;
-      _refreshResolvedLabels();
-    }
-  }
-
-  Future<void> _refreshResolvedLabels() async {
-    final start = _routeStart;
-    final destination = _routeDestination;
-    if (start == null && destination == null) {
-      return;
-    }
-
-    final startLabel = start == null
-        ? null
-        : await _resolveLocationLabel(start);
-    final destinationLabel = destination == null
-        ? null
-        : await _resolveLocationLabel(destination);
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      if (startLabel != null) {
-        _routeStartLabel = startLabel;
-      }
-      if (destinationLabel != null) {
-        _routeDestinationLabel = destinationLabel;
-      }
-    });
+    widget.historyNotifier?.value = List.unmodifiable(routes);
   }
 
   Future<String> _resolveLocationLabel(SearchInfo location) async {
@@ -114,7 +81,7 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
 
     final reverseAddress = await reverseGeocodeAddress(
       point,
-      locale: _activeLocale,
+      locale: _styleConfig.searchLocale,
     );
     if (reverseAddress != null && reverseAddress.trim().isNotEmpty) {
       return reverseAddress;
@@ -153,17 +120,6 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
     });
 
     await _drawRouteIfReady();
-  }
-
-  Future<void> _setLocale(String locale) async {
-    if (locale == _locale) {
-      return;
-    }
-
-    setState(() {
-      _locale = locale;
-    });
-    await _refreshResolvedLabels();
   }
 
   Future<void> _clearRouteSelection() async {
@@ -243,15 +199,8 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
       final roadInformation = await widget.controller.drawRoad(
         start,
         destination,
-        roadType: RoadType.car,
-        roadOption: const RoadOption(
-          roadWidth: 15,
-          roadColor: Colors.red,
-          zoomInto: true,
-          roadBorderWidth: 10.0,
-          roadBorderColor: Colors.green,
-          isDotted: true,
-        ),
+        roadType: _styleConfig.roadType,
+        roadOption: _styleConfig.buildRoadOption(),
       );
       if (!mounted) {
         return;
@@ -321,17 +270,12 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
   Widget build(BuildContext context) {
     return RouteSearchPanelContent(
       embeddedInSidebar: widget.embeddedInSidebar,
-      useSequentialWebInputs: _isWeb || widget.embeddedInSidebar,
-      supportedLocales: _supportedLocales,
-      activeLocale: _activeLocale,
-      localeLabel: _localeLabel,
       statusMessage: _statusMessage(),
       isError: _roadError != null,
       routeStart: _routeStart,
       routeDestination: _routeDestination,
       routeStartLabel: _routeStartLabel,
       routeDestinationLabel: _routeDestinationLabel,
-      onLocaleSelected: _setLocale,
       onSetRoutePoint: _setRoutePoint,
       onClearRouteSelection: _clearRouteSelection,
       onSwapRoutePoints: _swapRoutePoints,
@@ -345,7 +289,8 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
         await widget.controller.clearAllRoads();
       },
       onUseCurrentLocation: _useCurrentLocation,
-      routeHistory: _routeHistory,
+      collapsed: widget.collapsed,
+      onToggleCollapsed: widget.onToggleCollapsed,
     );
   }
 
@@ -358,7 +303,7 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
 
       final address = await reverseGeocodeAddress(
         currentLocation,
-        locale: _activeLocale,
+        locale: _styleConfig.searchLocale,
       );
       final searchInfo = SearchInfo(
         point: currentLocation,

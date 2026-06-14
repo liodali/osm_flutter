@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/component/seach_map.dart'
     show SearchInMap;
-import 'package:flutter_osm_plugin_example/src/services/location_storage.dart'
-    show RouteHistoryEntry;
 import 'package:forui/forui.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
@@ -11,37 +9,28 @@ class RouteSearchPanelContent extends StatelessWidget {
   const RouteSearchPanelContent({
     super.key,
     required this.embeddedInSidebar,
-    required this.useSequentialWebInputs,
-    required this.supportedLocales,
-    required this.activeLocale,
-    required this.localeLabel,
     required this.statusMessage,
     required this.isError,
     required this.routeStart,
     required this.routeDestination,
     required this.routeStartLabel,
     required this.routeDestinationLabel,
-    required this.onLocaleSelected,
     required this.onSetRoutePoint,
     required this.onClearRouteSelection,
     required this.onSwapRoutePoints,
     required this.onClearDestination,
     required this.onUseCurrentLocation,
-    required this.routeHistory,
+    this.collapsed = false,
+    this.onToggleCollapsed,
   });
 
   final bool embeddedInSidebar;
-  final bool useSequentialWebInputs;
-  final Map<String, String> supportedLocales;
-  final String activeLocale;
-  final String localeLabel;
   final String statusMessage;
   final bool isError;
   final SearchInfo? routeStart;
   final SearchInfo? routeDestination;
   final String? routeStartLabel;
   final String? routeDestinationLabel;
-  final Future<void> Function(String locale) onLocaleSelected;
   final Future<void> Function({
     required bool isStart,
     required SearchInfo location,
@@ -51,7 +40,8 @@ class RouteSearchPanelContent extends StatelessWidget {
   final Future<void> Function() onSwapRoutePoints;
   final Future<void> Function() onClearDestination;
   final VoidCallback? onUseCurrentLocation;
-  final List<RouteHistoryEntry> routeHistory;
+  final bool collapsed;
+  final VoidCallback? onToggleCollapsed;
 
   @override
   Widget build(BuildContext context) {
@@ -68,130 +58,48 @@ class RouteSearchPanelContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  statusMessage,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: FTheme.of(context).typography.sm.copyWith(
-                    color: isError ? Colors.red : colors.secondaryForeground,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: _LocaleSelector(
-                  activeLocale: activeLocale,
-                  localeLabel: localeLabel,
-                  supportedLocales: supportedLocales,
-                  onLocaleSelected: onLocaleSelected,
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: useSequentialWebInputs
-                ? _RouteInputs.sequential(
-                    locale: activeLocale,
-                    routeStart: routeStart,
-                    routeDestination: routeDestination,
-                    routeStartLabel: routeStartLabel,
-                    routeDestinationLabel: routeDestinationLabel,
-                    onSetRoutePoint: onSetRoutePoint,
-                    onClearRouteSelection: onClearRouteSelection,
-                    onClearDestination: onClearDestination,
-                    onUseCurrentLocation: onUseCurrentLocation,
-                  )
-                : _RouteInputs.dual(
-                    locale: activeLocale,
-                    routeStart: routeStart,
-                    routeDestination: routeDestination,
-                    routeStartLabel: routeStartLabel,
-                    routeDestinationLabel: routeDestinationLabel,
-                    onSetRoutePoint: onSetRoutePoint,
-                    onClearRouteSelection: onClearRouteSelection,
-                    onClearDestination: onClearDestination,
-                    onUseCurrentLocation: onUseCurrentLocation,
-                  ),
-          ),
-          _ActionRow(
-            hasSelection: routeStart != null || routeDestination != null,
-            onSwapRoutePoints: onSwapRoutePoints,
-            onClearRouteSelection: onClearRouteSelection,
-          ),
-          if (routeHistory.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                'Direction search history',
-                style: FTheme.of(context).typography.sm.copyWith(
-                  color: colors.secondaryForeground,
-                ),
+          if (!collapsed)
+            Text(
+              statusMessage,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: FTheme.of(context).typography.sm.copyWith(
+                color: isError ? Colors.red : colors.secondaryForeground,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 260),
-                child: ListView.separated(
-                  padding: EdgeInsets.zero,
-                  shrinkWrap: true,
-                  itemCount: routeHistory.length,
-                  physics: const NeverScrollableScrollPhysics(),
-                  separatorBuilder: (_, __) =>
-                      const Divider(height: 8, thickness: 0),
-                  itemBuilder: (context, index) {
-                    final entry = routeHistory[index];
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colors.background,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: colors.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            '${entry.startAddress} → ${entry.destinationAddress}',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: FTheme.of(context).typography.sm.copyWith(
-                              color: colors.foreground,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              [
-                                if (entry.distanceKm != null)
-                                  '${entry.distanceKm!.toStringAsFixed(2)} km',
-                                if (entry.durationSeconds != null)
-                                  '${Duration(seconds: entry.durationSeconds!.round()).inMinutes} min',
-                                entry.createdAt
-                                    .toLocal()
-                                    .toString()
-                                    .split('.')
-                                    .first,
-                              ].join(' • '),
-                              style: FTheme.of(context).typography.xs.copyWith(
-                                color: colors.secondaryForeground,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
+          Padding(
+            padding: EdgeInsets.only(top: collapsed ? 0 : 10),
+            child: _RouteInputs(
+              routeStart: routeStart,
+              routeDestination: collapsed ? null : routeDestination,
+              routeStartLabel: routeStartLabel,
+              routeDestinationLabel: routeDestinationLabel,
+              onSetRoutePoint: onSetRoutePoint,
+              onClearRouteSelection: onClearRouteSelection,
+              onClearDestination: onClearDestination,
+              onUseCurrentLocation: onUseCurrentLocation,
+              showDestination: !collapsed,
+            ),
+          ),
+          if (!collapsed) ...[
+            _ActionRow(
+              hasSelection: routeStart != null || routeDestination != null,
+              onSwapRoutePoints: onSwapRoutePoints,
+              onClearRouteSelection: onClearRouteSelection,
             ),
           ],
+          if (onToggleCollapsed != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                visualDensity: VisualDensity.compact,
+                onPressed: onToggleCollapsed,
+                icon: Icon(
+                  collapsed ? FIcons.chevronDown : FIcons.chevronUp,
+                  color: colors.mutedForeground,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -212,100 +120,19 @@ class RouteSearchPanelContent extends StatelessWidget {
   }
 }
 
-class _LocaleSelector extends StatelessWidget {
-  const _LocaleSelector({
-    required this.activeLocale,
-    required this.localeLabel,
-    required this.supportedLocales,
-    required this.onLocaleSelected,
+class _RouteInputs extends StatelessWidget {
+  const _RouteInputs({
+    required this.routeStart,
+    required this.routeDestination,
+    required this.routeStartLabel,
+    required this.routeDestinationLabel,
+    required this.onSetRoutePoint,
+    required this.onClearRouteSelection,
+    required this.onClearDestination,
+    this.onUseCurrentLocation,
+    this.showDestination = true,
   });
 
-  final String activeLocale;
-  final String localeLabel;
-  final Map<String, String> supportedLocales;
-  final Future<void> Function(String locale) onLocaleSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = FTheme.of(context).colors;
-
-    return FPopoverMenu(
-      menuAnchor: Alignment.topRight,
-      childAnchor: Alignment.bottomRight,
-      menu: [
-        FItemGroup(
-          children: supportedLocales.entries
-              .map(
-                (entry) => FItem(
-                  title: Text(entry.value),
-                  selected: entry.key == activeLocale,
-                  prefix: entry.key == activeLocale
-                      ? const Icon(Icons.check, size: 16)
-                      : null,
-                  onPress: () => onLocaleSelected(entry.key),
-                ),
-              )
-              .toList(),
-        ),
-      ],
-      builder: (context, controller, _) => FTappable(
-        onPress: controller.toggle,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: colors.background,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: colors.border),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.language, size: 16),
-              Padding(
-                padding: const EdgeInsets.only(left: 6),
-                child: Text(
-                  localeLabel,
-                  style: FTheme.of(context).typography.sm,
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 4),
-                child: Icon(Icons.arrow_drop_down, size: 18),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RouteInputs extends StatelessWidget {
-  const _RouteInputs.sequential({
-    required this.locale,
-    required this.routeStart,
-    required this.routeDestination,
-    required this.routeStartLabel,
-    required this.routeDestinationLabel,
-    required this.onSetRoutePoint,
-    required this.onClearRouteSelection,
-    required this.onClearDestination,
-    this.onUseCurrentLocation,
-  }) : showDestinationWhenStartExists = true;
-
-  const _RouteInputs.dual({
-    required this.locale,
-    required this.routeStart,
-    required this.routeDestination,
-    required this.routeStartLabel,
-    required this.routeDestinationLabel,
-    required this.onSetRoutePoint,
-    required this.onClearRouteSelection,
-    required this.onClearDestination,
-    this.onUseCurrentLocation,
-  }) : showDestinationWhenStartExists = false;
-
-  final String locale;
   final SearchInfo? routeStart;
   final SearchInfo? routeDestination;
   final String? routeStartLabel;
@@ -318,7 +145,7 @@ class _RouteInputs extends StatelessWidget {
   final Future<void> Function() onClearRouteSelection;
   final Future<void> Function() onClearDestination;
   final VoidCallback? onUseCurrentLocation;
-  final bool showDestinationWhenStartExists;
+  final bool showDestination;
 
   @override
   Widget build(BuildContext context) {
@@ -326,7 +153,6 @@ class _RouteInputs extends StatelessWidget {
       children: [
         SearchInMap(
           compact: true,
-          locale: locale,
           placeholder: 'Start location',
           selectedAddress: routeStartLabel,
           onSelected: (value) =>
@@ -338,12 +164,11 @@ class _RouteInputs extends StatelessWidget {
                 },
           onUseCurrentLocation: onUseCurrentLocation,
         ),
-        if (!showDestinationWhenStartExists || routeStart != null) ...[
+        if (showDestination && routeStart != null) ...[
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: SearchInMap(
               compact: true,
-              locale: locale,
               placeholder: 'Destination location',
               selectedAddress: routeDestinationLabel,
               onSelected: (value) =>
@@ -353,7 +178,6 @@ class _RouteInputs extends StatelessWidget {
                   : () async {
                       await onClearDestination();
                     },
-              onUseCurrentLocation: onUseCurrentLocation,
             ),
           ),
         ],

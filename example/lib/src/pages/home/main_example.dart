@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/src/models/map_style_configuration.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_widget_configuration.dart'
     show MoreActionConfig;
 import 'package:flutter_osm_plugin_example/src/pages/home/component/route_search_panel.dart'
     show RouteSearchPanel;
 import 'package:flutter_osm_plugin_example/src/pages/home/component/side_bar.dart';
+import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
 import 'package:flutter_osm_plugin_example/src/widgets/action_buttons.dart'
     show ActionButton;
 import 'package:forui/forui.dart';
@@ -88,12 +90,28 @@ class _MainState extends State<Main> with OSMMixinObserver {
   UserLocation? _lastAppliedWebLocation;
   DateTime? _lastAppliedWebLocationAt;
   bool _sidebarExpanded = true;
+  bool _routePanelCollapsed = false;
+  final ValueNotifier<List<RouteHistoryEntry>> _routeHistoryNotifier =
+      ValueNotifier([]);
+  final ExampleMapStyleConfiguration _styleConfig =
+      ExampleMapStyleConfiguration.instance;
+
+  void _handleStyleChanged() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+  }
 
   @override
   void initState() {
     super.initState();
 
     widget.configuration.controller.addObserver(this);
+    _styleConfig.addListener(_handleStyleChanged);
+    _routeHistoryNotifier.addListener(() {
+      if (mounted) setState(() {});
+    });
     widget.configuration.trackingNotifier.addListener(() async {
       if (widget.configuration.userLocationNotifier.value != null &&
           !widget.configuration.trackingNotifier.value) {
@@ -103,6 +121,13 @@ class _MainState extends State<Main> with OSMMixinObserver {
         widget.configuration.userLocationNotifier.value = null;
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _styleConfig.removeListener(_handleStyleChanged);
+    _routeHistoryNotifier.dispose();
+    super.dispose();
   }
 
   @override
@@ -125,25 +150,13 @@ class _MainState extends State<Main> with OSMMixinObserver {
         //controller.removeMarker(lastGeoPoint.value!);
         await widget.configuration.controller.addMarker(
           position,
-          markerIcon: const MarkerIcon(
-            icon: Icon(
-              Icons.person_pin,
-              color: Colors.red,
-              size: 56,
-            ),
-          ),
+          markerIcon: _styleConfig.buildMarkerIcon(),
           //angle: userLocation.angle,
         );
       } else {
         await widget.configuration.controller.addMarker(
           position,
-          markerIcon: const MarkerIcon(
-            icon: Icon(
-              Icons.person_pin,
-              color: Colors.red,
-              size: 32,
-            ),
-          ),
+          markerIcon: _styleConfig.buildMarkerIcon(),
           // iconAnchor: IconAnchor(
           //   anchor: Anchor.left,
           //   //offset: (x: 32.5, y: -32),
@@ -328,6 +341,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
                       topContent: RouteSearchPanel(
                         controller: widget.configuration.controller,
                         embeddedInSidebar: true,
+                        historyNotifier: _routeHistoryNotifier,
                       ),
                     ),
                   )
@@ -448,6 +462,13 @@ class _MainState extends State<Main> with OSMMixinObserver {
               Expanded(
                 child: RouteSearchPanel(
                   controller: widget.configuration.controller,
+                  collapsed: _routePanelCollapsed,
+                  onToggleCollapsed: () {
+                    setState(
+                      () => _routePanelCollapsed = !_routePanelCollapsed,
+                    );
+                  },
+                  historyNotifier: _routeHistoryNotifier,
                 ),
               ),
             ],
@@ -485,8 +506,8 @@ class _MainState extends State<Main> with OSMMixinObserver {
               return Stack(
                 children: [
                   Positioned(
-                    top: topPadding + 56,
-                    right: 15,
+                    bottom: 23,
+                    left: 15,
                     child: PointerInterceptor(
                       child: MapRotation(
                         controller: widget.configuration.controller,
@@ -616,6 +637,7 @@ class Map extends StatelessWidget {
   final MapController controller;
   @override
   Widget build(BuildContext context) {
+    final styleConfig = ExampleMapStyleConfiguration.instance;
     return OSMFlutter(
       controller: controller,
       // mapIsLoading: Center(
@@ -633,34 +655,11 @@ class Map extends StatelessWidget {
           maxZoomLevel: 19,
           stepZoom: 1.0,
         ),
-        userLocationMarker: UserLocationMaker(
-          personMarker: MarkerIcon(
-            iconWidget: SizedBox(
-              width: 32,
-              height: 64,
-              child: Image.asset(
-                "asset/directionIcon.png",
-                scale: .3,
-              ),
-            ),
-          ),
-          directionArrowMarker: const MarkerIcon(
-            icon: Icon(
-              Icons.navigation_rounded,
-              size: 48,
-            ),
-          ),
-        ),
+        userLocationMarker: styleConfig.buildUserLocationMarker(),
         staticPoints: [
           StaticPositionGeoPoint(
             "line 1",
-            const MarkerIcon(
-              icon: Icon(
-                Icons.train,
-                color: Colors.green,
-                size: 48,
-              ),
-            ),
+            styleConfig.buildMarkerIcon(),
             [
               GeoPoint(
                 latitude: 47.4333594,
@@ -673,9 +672,7 @@ class Map extends StatelessWidget {
             ],
           ),
         ],
-        roadConfiguration: const RoadOption(
-          roadColor: Colors.blueAccent,
-        ),
+        roadConfiguration: styleConfig.buildRoadOption(),
         showContributorBadgeForOSM: true,
         //trackMyPosition: trackingNotifier.value,
         showDefaultInfoWindow: false,
@@ -684,14 +681,6 @@ class Map extends StatelessWidget {
   }
 }
 
-class SearchLocation extends StatelessWidget {
-  const SearchLocation({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const TextField();
-  }
-}
 
 class ActivationUserLocation extends StatelessWidget {
   final ValueNotifier<bool> trackingNotifier;
