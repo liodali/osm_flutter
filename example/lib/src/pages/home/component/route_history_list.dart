@@ -48,81 +48,96 @@ class _RouteHistoryListState extends State<RouteHistoryList> {
           thickness: 0,
         ),
         itemBuilder: (context, index) {
-          final entry = _history[index];
-          return Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: FTheme.of(context).colors.background,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: FTheme.of(context).colors.border,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
+          return HistoryDirectionItem(
+            entry: _history[index],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class HistoryDirectionItem extends StatelessWidget {
+  const HistoryDirectionItem({
+    super.key,
+    required this.entry,
+  });
+
+  final RouteHistoryEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: FTheme.of(context).colors.background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: FTheme.of(context).colors.border,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text.rich(
+            TextSpan(
+              text: 'From\n',
               children: [
-                Text.rich(
-                  TextSpan(
-                    text: 'From\n',
-                    children: [
-                      TextSpan(
-                        text: '${entry.startAddress}\n',
-                        style: FTheme.of(context).typography.sm.copyWith(
-                          color: FTheme.of(context).colors.foreground,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                        ),
-                      ),
-                      TextSpan(
-                        text: 'to\n',
-                        style: FTheme.of(context).typography.sm.copyWith(
-                          color: FTheme.of(context).colors.foreground,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 14,
-                        ),
-                      ),
-                      TextSpan(
-                        text: entry.destinationAddress,
-                        style: FTheme.of(context).typography.sm.copyWith(
-                          color: FTheme.of(context).colors.foreground,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                    style: FTheme.of(context).typography.sm.copyWith(
-                      color: FTheme.of(context).colors.foreground,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 14,
-                    ),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                TextSpan(
+                  text: '${entry.startAddress}\n',
                   style: FTheme.of(context).typography.sm.copyWith(
                     color: FTheme.of(context).colors.foreground,
                     fontWeight: FontWeight.w600,
+                    fontSize: 18,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    [
-                      if (entry.distanceKm != null)
-                        '${entry.distanceKm!.toStringAsFixed(2)} km',
-                      if (entry.durationSeconds != null)
-                        '${Duration(seconds: entry.durationSeconds!.round()).inMinutes} min',
-                      entry.createdAt.toLocal().toString().split('.').first,
-                    ].join(' • '),
-                    style: FTheme.of(context).typography.xs.copyWith(
-                      color: FTheme.of(context).colors.secondaryForeground,
-                    ),
+                TextSpan(
+                  text: 'to\n',
+                  style: FTheme.of(context).typography.sm.copyWith(
+                    color: FTheme.of(context).colors.foreground,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                  ),
+                ),
+                TextSpan(
+                  text: entry.destinationAddress,
+                  style: FTheme.of(context).typography.sm.copyWith(
+                    color: FTheme.of(context).colors.foreground,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
                   ),
                 ),
               ],
+              style: FTheme.of(context).typography.sm.copyWith(
+                color: FTheme.of(context).colors.foreground,
+                fontWeight: FontWeight.w400,
+                fontSize: 14,
+              ),
             ),
-          );
-        },
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: FTheme.of(context).typography.sm.copyWith(
+              color: FTheme.of(context).colors.foreground,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              [
+                if (entry.distanceKm != null)
+                  '${entry.distanceKm!.toStringAsFixed(2)} km',
+                if (entry.durationSeconds != null)
+                  '${Duration(seconds: entry.durationSeconds!.round()).inMinutes} min',
+                entry.createdAt.toLocal().toString().split('.').first,
+              ].join(' • '),
+              style: FTheme.of(context).typography.xs.copyWith(
+                color: FTheme.of(context).colors.secondaryForeground,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
