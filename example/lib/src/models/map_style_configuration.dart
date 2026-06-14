@@ -1,0 +1,243 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+
+enum ExampleMarkerStyle {
+  icon,
+  image,
+}
+
+class ExampleMapStyleConfiguration extends ChangeNotifier {
+  ExampleMapStyleConfiguration._();
+
+  static final ExampleMapStyleConfiguration instance =
+      ExampleMapStyleConfiguration._();
+
+  static const List<String> markerAssetOptions = <String>[
+    'asset/taxi.png',
+    'asset/pin.png',
+    'asset/directionIcon.png',
+  ];
+
+  static const List<IconData> markerIconOptions = <IconData>[
+    Icons.person_pin,
+    Icons.location_on,
+    Icons.place,
+  ];
+
+  static const List<Color> roadColorOptions = <Color>[
+    Colors.red,
+    Colors.blueAccent,
+    Colors.green,
+    Colors.orange,
+    Colors.purple,
+  ];
+
+  static const List<Color> roadBorderColorOptions = <Color>[
+    Colors.green,
+    Colors.white,
+    Colors.black,
+    Colors.orange,
+  ];
+
+  static const List<double> roadBorderWidthOptions = <double>[
+    4,
+    8,
+    10,
+    14,
+  ];
+
+  ExampleMarkerStyle _markerStyle = ExampleMarkerStyle.image;
+  IconData _markerIcon = Icons.person_pin;
+  Color _markerIconColor = Colors.red;
+  double _markerIconSize = 48;
+  String _markerAssetPath = 'asset/taxi.png';
+  double _markerAssetWidth = 32;
+  double _markerAssetHeight = 64;
+
+  Color _roadColor = Colors.red;
+  bool _hasRoadBorder = true;
+  Color _roadBorderColor = Colors.green;
+  double _roadBorderWidth = 10;
+  RoadType _roadType = RoadType.car;
+  String _searchLocale = 'en';
+
+  ExampleMarkerStyle get markerStyle => _markerStyle;
+  IconData get markerIcon => _markerIcon;
+  Color get markerIconColor => _markerIconColor;
+  double get markerIconSize => _markerIconSize;
+  String get markerAssetPath => _markerAssetPath;
+  double get markerAssetWidth => _markerAssetWidth;
+  double get markerAssetHeight => _markerAssetHeight;
+  Color get roadColor => _roadColor;
+  bool get hasRoadBorder => _hasRoadBorder;
+  Color get roadBorderColor => _roadBorderColor;
+  double get roadBorderWidth => _roadBorderWidth;
+  RoadType get roadType => _roadType;
+  String get searchLocale => _searchLocale;
+
+  static const Map<String, String> supportedSearchLocales = {
+    'en': 'English',
+    'fr': 'French',
+    'ar': 'Arabic',
+    'es': 'Spanish',
+    'de': 'Deutsch',
+  };
+
+  set markerStyle(ExampleMarkerStyle value) {
+    if (_markerStyle == value) {
+      return;
+    }
+    _markerStyle = value;
+    notifyListeners();
+  }
+
+  set markerIcon(IconData value) {
+    if (_markerIcon == value) {
+      return;
+    }
+    _markerIcon = value;
+    notifyListeners();
+  }
+
+  set markerIconColor(Color value) {
+    if (_markerIconColor == value) {
+      return;
+    }
+    _markerIconColor = value;
+    notifyListeners();
+  }
+
+  set markerIconSize(double value) {
+    if (_markerIconSize == value) {
+      return;
+    }
+    _markerIconSize = value;
+    notifyListeners();
+  }
+
+  set markerAssetPath(String value) {
+    if (_markerAssetPath == value) {
+      return;
+    }
+    _markerAssetPath = value;
+    notifyListeners();
+  }
+
+  set markerAssetWidth(double value) {
+    if (_markerAssetWidth == value) {
+      return;
+    }
+    _markerAssetWidth = value;
+    notifyListeners();
+  }
+
+  set markerAssetHeight(double value) {
+    if (_markerAssetHeight == value) {
+      return;
+    }
+    _markerAssetHeight = value;
+    notifyListeners();
+  }
+
+  set roadColor(Color value) {
+    if (_roadColor == value) {
+      return;
+    }
+    _roadColor = value;
+    notifyListeners();
+  }
+
+  set hasRoadBorder(bool value) {
+    if (_hasRoadBorder == value) {
+      return;
+    }
+    _hasRoadBorder = value;
+    notifyListeners();
+  }
+
+  set roadBorderColor(Color value) {
+    if (_roadBorderColor == value) {
+      return;
+    }
+    _roadBorderColor = value;
+    notifyListeners();
+  }
+
+  set roadBorderWidth(double value) {
+    if (_roadBorderWidth == value) {
+      return;
+    }
+    _roadBorderWidth = value;
+    notifyListeners();
+  }
+
+  set roadType(RoadType value) {
+    if (_roadType == value) {
+      return;
+    }
+    _roadType = value;
+    notifyListeners();
+  }
+
+  set searchLocale(String value) {
+    if (_searchLocale == value) {
+      return;
+    }
+    _searchLocale = value;
+    notifyListeners();
+  }
+
+  MarkerIcon buildMarkerIcon() {
+    switch (_markerStyle) {
+      case ExampleMarkerStyle.icon:
+        return MarkerIcon(
+          icon: Icon(
+            _markerIcon,
+            color: _markerIconColor,
+            size: _markerIconSize,
+          ),
+        );
+      case ExampleMarkerStyle.image:
+        return MarkerIcon(
+          iconWidget: Padding(
+            padding: const EdgeInsets.all(4),
+            child: SizedBox(
+              width: _markerAssetWidth,
+              height: _markerAssetHeight,
+              child: Image.asset(
+                _markerAssetPath,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        );
+    }
+  }
+
+  UserLocationMaker buildUserLocationMarker() {
+    return UserLocationMaker(
+      personMarker: buildMarkerIcon(),
+      directionArrowMarker: buildDirectionArrowMarker(),
+    );
+  }
+
+  MarkerIcon buildDirectionArrowMarker() {
+    return const MarkerIcon(
+      icon: Icon(
+        Icons.navigation_rounded,
+        size: 48,
+      ),
+    );
+  }
+
+  RoadOption buildRoadOption() {
+    return RoadOption(
+      roadWidth: 15,
+      roadColor: _roadColor,
+      zoomInto: true,
+      isDotted: true,
+      roadBorderColor: _hasRoadBorder ? _roadBorderColor : null,
+      roadBorderWidth: _hasRoadBorder ? _roadBorderWidth : null,
+    );
+  }
+}
