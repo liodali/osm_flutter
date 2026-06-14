@@ -28,6 +28,9 @@ dependencies:
   routing_client_dart: ^0.5.5
   flutter_bloc: ^8.1.5
   equatable: ^2.0.5
+  hive_ce: ^2.19.2
+  hive_ce_flutter: ^2.2.0
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_lints: ^4.0.0
