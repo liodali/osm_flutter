@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/component/route_history_empty.dart';
 import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
@@ -9,7 +11,7 @@ class RouteHistoryList extends StatefulWidget {
     required this.onTapItem,
   });
 
-  final Function(RouteHistoryEntry) onTapItem;
+  final Future<void> Function(RouteHistoryEntry) onTapItem;
 
   @override
   State<RouteHistoryList> createState() => _RouteHistoryListState();
@@ -68,12 +70,14 @@ class HistoryDirectionItem extends StatelessWidget {
   });
 
   final RouteHistoryEntry entry;
-  final Function(RouteHistoryEntry) onTapItem;
+  final Future<void> Function(RouteHistoryEntry) onTapItem;
 
   @override
   Widget build(BuildContext context) {
     return FTappable(
-      onPress: () => onTapItem(entry),
+      onPress: () {
+        unawaited(onTapItem(entry));
+      },
       child: Container(
         padding: const EdgeInsets.all(12),
         margin: const EdgeInsets.symmetric(vertical: 4),

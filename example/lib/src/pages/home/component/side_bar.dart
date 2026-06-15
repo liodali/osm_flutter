@@ -18,7 +18,7 @@ class SideBar extends StatefulWidget {
   final Function() onToggleCallback;
   final bool showToggleButton;
   final Widget? topContent;
-  final Function(RouteHistoryEntry entry)? onHistoryItemTap;
+  final Future<void> Function(RouteHistoryEntry entry)? onHistoryItemTap;
 
   @override
   State<SideBar> createState() => _SideBarState();
@@ -56,9 +56,11 @@ class _SideBarState extends State<SideBar> {
                       vertical: 12,
                     ),
                     child: RouteHistoryList(
-                      onTapItem: (entry) {
-                        widget.onHistoryItemTap?.call(entry);
-                        Navigator.pop(context);
+                      onTapItem: (entry) async {
+                        await widget.onHistoryItemTap?.call(entry);
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                        }
                       },
                     ),
                   ),
@@ -87,9 +89,11 @@ class _SideBarState extends State<SideBar> {
           body: SizedBox(
             width: 400,
             child: RouteHistoryList(
-              onTapItem: (entry) {
-                widget.onHistoryItemTap?.call(entry);
-                Navigator.pop(context);
+              onTapItem: (entry) async {
+                await widget.onHistoryItemTap?.call(entry);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
               },
             ),
           ),

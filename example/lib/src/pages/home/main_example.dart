@@ -338,12 +338,17 @@ class _MainState extends State<Main> with OSMMixinObserver {
                     child: SideBar(
                       onHistoryItemTap: (entry) async {
                         // Handle history item tap
+                        final path = entry.polylineBase64.stringToGeoPoints();
+                        if (path.isEmpty) {
+                          debugPrint(
+                            'Skipping manual road redraw: empty history polyline for ${entry.startAddress} -> ${entry.destinationAddress}',
+                          );
+                          return;
+                        }
                         final roadOption = _styleConfig.buildRoadOption();
-                        unawaited(
-                          widget.configuration.controller.drawRoadManually(
-                            entry.polylineBase64.stringToGeoPoints(),
-                            roadOption,
-                          ),
+                        await widget.configuration.controller.drawRoadManually(
+                          path,
+                          roadOption,
                         );
                       },
                       onToggleCallback: () {
@@ -456,13 +461,20 @@ class _MainState extends State<Main> with OSMMixinObserver {
                           onToggleCallback: () => Navigator.of(context).pop(),
                           onHistoryItemTap: (entry) async {
                             // Handle history item tap
+                            final path = entry.polylineBase64
+                                .stringToGeoPoints();
+                            if (path.isEmpty) {
+                              debugPrint(
+                                'Skipping manual road redraw: empty history polyline for ${entry.startAddress} -> ${entry.destinationAddress}',
+                              );
+                              return;
+                            }
                             final roadOption = _styleConfig.buildRoadOption();
-                            unawaited(
-                              widget.configuration.controller.drawRoadManually(
-                                entry.polylineBase64.stringToGeoPoints(),
-                                roadOption,
-                              ),
-                            );
+                            await widget.configuration.controller
+                                .drawRoadManually(
+                                  path,
+                                  roadOption,
+                                );
                           },
                         ),
                       );
