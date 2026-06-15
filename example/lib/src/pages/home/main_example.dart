@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -334,6 +336,16 @@ class _MainState extends State<Main> with OSMMixinObserver {
                 ? SizedBox(
                     width: 320,
                     child: SideBar(
+                      onHistoryItemTap: (entry) async {
+                        // Handle history item tap
+                        final roadOption = _styleConfig.buildRoadOption();
+                        unawaited(
+                          widget.configuration.controller.drawRoadManually(
+                            entry.polylineBase64.stringToGeoPoints(),
+                            roadOption,
+                          ),
+                        );
+                      },
                       onToggleCallback: () {
                         setState(() => _sidebarExpanded = false);
                       },
@@ -353,7 +365,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
                 Map(
                   controller: widget.configuration.controller,
                 ),
-                if (!_sidebarExpanded)
+                if (!_sidebarExpanded) ...[
                   Positioned(
                     top: 8,
                     left: 16,
@@ -378,6 +390,8 @@ class _MainState extends State<Main> with OSMMixinObserver {
                       ),
                     ),
                   ),
+                ],
+
                 Positioned(
                   bottom: 23.0,
                   right: 15,
@@ -440,6 +454,16 @@ class _MainState extends State<Main> with OSMMixinObserver {
                         side: FLayout.ltr,
                         builder: (context) => SideBar(
                           onToggleCallback: () => Navigator.of(context).pop(),
+                          onHistoryItemTap: (entry) async {
+                            // Handle history item tap
+                            final roadOption = _styleConfig.buildRoadOption();
+                            unawaited(
+                              widget.configuration.controller.drawRoadManually(
+                                entry.polylineBase64.stringToGeoPoints(),
+                                roadOption,
+                              ),
+                            );
+                          },
                         ),
                       );
                     },
@@ -680,7 +704,6 @@ class Map extends StatelessWidget {
     );
   }
 }
-
 
 class ActivationUserLocation extends StatelessWidget {
   final ValueNotifier<bool> trackingNotifier;

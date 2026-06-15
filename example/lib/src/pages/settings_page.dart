@@ -664,44 +664,18 @@ class _SettingsPageState extends State<SettingsPage> {
                           const Text('Road type'),
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
-                            child: FPopoverMenu.tiles(
-                              builder: (context, controller, child) => FButton(
-                                variant: .outline,
-                                onPress: controller.toggle,
-                                child: child,
-                              ),
-                              menu: [
-                                FTileGroup(
-                                  children: [
-                                    FTile(
-                                      title: const Text('Car'),
-                                      onPress: () => setState(
-                                        () => _config.roadType = RoadType.car,
-                                      ),
+                            child: RoadTypeSelector(
+                              isRoadTypeDotted: _config.isRoadTypeDotted,
+                              onRoadTypeDottedChanged:
+                                  (
+                                    roadType,
+                                    dotted,
+                                  ) => setState(
+                                    () => _config.setRoadTypeDotted(
+                                      roadType,
+                                      dotted,
                                     ),
-                                    FTile(
-                                      title: const Text('Bike'),
-                                      onPress: () => setState(
-                                        () => _config.roadType = RoadType.bike,
-                                      ),
-                                    ),
-                                    FTile(
-                                      title: const Text('Foot'),
-                                      onPress: () => setState(
-                                        () => _config.roadType = RoadType.foot,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-
-                              child: Text(
-                                switch (_config.roadType) {
-                                  RoadType.car => 'Car',
-                                  RoadType.bike => 'Bike',
-                                  RoadType.foot => 'Foot',
-                                },
-                              ),
+                                  ),
                             ),
                           ),
                         ],
@@ -762,6 +736,60 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class RoadTypeSelector extends StatelessWidget {
+  const RoadTypeSelector({
+    super.key,
+    required this.isRoadTypeDotted,
+    required this.onRoadTypeDottedChanged,
+  });
+
+  final bool Function(RoadType roadType) isRoadTypeDotted;
+  final void Function(RoadType roadType, bool dotted) onRoadTypeDottedChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return FTileGroup(
+      children: ExampleMapStyleConfiguration.roadTypeOptions
+          .map(
+            (roadType) => FTile(
+              title: Text(
+                ExampleMapStyleConfiguration.roadTypeLabel(roadType),
+              ),
+              suffix: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FButton(
+                      variant: .outline,
+                      selected: isRoadTypeDotted(roadType),
+                      mainAxisSize: MainAxisSize.min,
+                      onPress: () => onRoadTypeDottedChanged(
+                        roadType,
+                        true,
+                      ),
+                      child: const Text('Dotted'),
+                    ),
+                  ),
+                  FButton(
+                    variant: .outline,
+                    selected: !isRoadTypeDotted(roadType),
+                    mainAxisSize: MainAxisSize.min,
+                    onPress: () => onRoadTypeDottedChanged(
+                      roadType,
+                      false,
+                    ),
+                    child: const Text('Solid'),
+                  ),
+                ],
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 }

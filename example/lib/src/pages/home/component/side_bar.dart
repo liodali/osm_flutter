@@ -2,6 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin_example/src/common/router_config.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/component/route_history_list.dart';
+import 'package:flutter_osm_plugin_example/src/services/location_storage.dart'
+    show RouteHistoryEntry;
 import 'package:forui/forui.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
@@ -11,10 +13,12 @@ class SideBar extends StatefulWidget {
     required this.onToggleCallback,
     this.showToggleButton = true,
     this.topContent,
+    this.onHistoryItemTap,
   });
   final Function() onToggleCallback;
   final bool showToggleButton;
   final Widget? topContent;
+  final Function(RouteHistoryEntry entry)? onHistoryItemTap;
 
   @override
   State<SideBar> createState() => _SideBarState();
@@ -46,12 +50,18 @@ class _SideBarState extends State<SideBar> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.only(
-                    top: 12,
-                    bottom: 48,
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                    ),
+                    child: RouteHistoryList(
+                      onTapItem: (entry) {
+                        widget.onHistoryItemTap?.call(entry);
+                        Navigator.pop(context);
+                      },
+                    ),
                   ),
-                  child: RouteHistoryList(),
                 ),
               ],
             ),
@@ -65,10 +75,23 @@ class _SideBarState extends State<SideBar> {
           style: style,
           animation: animation,
           title: const Text('Direction search history'),
-          actions: const [],
-          body: const SizedBox(
+          actions: [
+            FButton(
+              variant: .ghost,
+              onPress: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Close'),
+            ),
+          ],
+          body: SizedBox(
             width: 400,
-            child: RouteHistoryList(),
+            child: RouteHistoryList(
+              onTapItem: (entry) {
+                widget.onHistoryItemTap?.call(entry);
+                Navigator.pop(context);
+              },
+            ),
           ),
         ),
       );

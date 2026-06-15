@@ -46,6 +46,12 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
     14,
   ];
 
+  static const List<RoadType> roadTypeOptions = <RoadType>[
+    RoadType.car,
+    RoadType.bike,
+    RoadType.foot,
+  ];
+
   ExampleMarkerStyle _markerStyle = ExampleMarkerStyle.image;
   IconData _markerIcon = Icons.person_pin;
   Color _markerIconColor = Colors.red;
@@ -59,6 +65,12 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
   Color _roadBorderColor = Colors.green;
   double _roadBorderWidth = 10;
   RoadType _roadType = RoadType.car;
+  bool _isDotted = false;
+  final Map<RoadType, bool> _roadTypeDottedCache = <RoadType, bool>{
+    RoadType.car: false,
+    RoadType.bike: true,
+    RoadType.foot: true,
+  };
   String _searchLocale = 'en';
 
   ExampleMarkerStyle get markerStyle => _markerStyle;
@@ -73,6 +85,7 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
   Color get roadBorderColor => _roadBorderColor;
   double get roadBorderWidth => _roadBorderWidth;
   RoadType get roadType => _roadType;
+  bool get isDotted => _isDotted;
   String get searchLocale => _searchLocale;
 
   static const Map<String, String> supportedSearchLocales = {
@@ -82,6 +95,41 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
     'es': 'Spanish',
     'de': 'Deutsch',
   };
+
+  static String roadTypeLabel(RoadType value) {
+    switch (value) {
+      case RoadType.car:
+        return 'Car';
+      case RoadType.bike:
+        return 'Bike';
+      case RoadType.foot:
+        return 'Foot';
+    }
+  }
+
+  static bool roadTypeIsDotted(RoadType value) {
+    return value == RoadType.bike || value == RoadType.foot;
+  }
+
+  static RoadType roadTypeForDotted(bool value) {
+    return value ? RoadType.bike : RoadType.car;
+  }
+
+  bool isRoadTypeDotted(RoadType value) {
+    return _roadTypeDottedCache[value] ?? roadTypeIsDotted(value);
+  }
+
+  void setRoadTypeDotted(RoadType value, bool dotted) {
+    if (_roadTypeDottedCache[value] == dotted &&
+        (_roadType != value || _isDotted == dotted)) {
+      return;
+    }
+    _roadTypeDottedCache[value] = dotted;
+    if (_roadType == value) {
+      _isDotted = dotted;
+    }
+    notifyListeners();
+  }
 
   set markerStyle(ExampleMarkerStyle value) {
     if (_markerStyle == value) {
@@ -176,6 +224,17 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
       return;
     }
     _roadType = value;
+    _isDotted = isRoadTypeDotted(value);
+    notifyListeners();
+  }
+
+  set isDotted(bool value) {
+    if (_isDotted == value) {
+      return;
+    }
+    _isDotted = value;
+    _roadType = roadTypeForDotted(value);
+    _roadTypeDottedCache[_roadType] = value;
     notifyListeners();
   }
 
@@ -235,7 +294,7 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
       roadWidth: 15,
       roadColor: _roadColor,
       zoomInto: true,
-      isDotted: true,
+      isDotted: _isDotted,
       roadBorderColor: _hasRoadBorder ? _roadBorderColor : null,
       roadBorderWidth: _hasRoadBorder ? _roadBorderWidth : null,
     );

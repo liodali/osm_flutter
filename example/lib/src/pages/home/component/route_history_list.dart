@@ -4,7 +4,12 @@ import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
 import 'package:forui/forui.dart';
 
 class RouteHistoryList extends StatefulWidget {
-  const RouteHistoryList({super.key});
+  const RouteHistoryList({
+    super.key,
+    required this.onTapItem,
+  });
+
+  final Function(RouteHistoryEntry) onTapItem;
 
   @override
   State<RouteHistoryList> createState() => _RouteHistoryListState();
@@ -37,22 +42,20 @@ class _RouteHistoryListState extends State<RouteHistoryList> {
     if (_history.isEmpty) {
       return const RouteHistoryEmpty();
     }
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 400),
-      child: ListView.separated(
-        padding: EdgeInsets.zero,
-        shrinkWrap: true,
-        itemCount: _history.length,
-        separatorBuilder: (_, __) => const Divider(
-          height: 8,
-          thickness: 0,
-        ),
-        itemBuilder: (context, index) {
-          return HistoryDirectionItem(
-            entry: _history[index],
-          );
-        },
-      ),
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      shrinkWrap: true,
+      itemCount: _history.length,
+      // separatorBuilder: (_, __) => const Divider(
+      //   height: 8,
+      //   thickness: 0,
+      // ),
+      itemBuilder: (context, index) {
+        return HistoryDirectionItem(
+          entry: _history[index],
+          onTapItem: widget.onTapItem,
+        );
+      },
     );
   }
 }
@@ -61,83 +64,89 @@ class HistoryDirectionItem extends StatelessWidget {
   const HistoryDirectionItem({
     super.key,
     required this.entry,
+    required this.onTapItem,
   });
 
   final RouteHistoryEntry entry;
+  final Function(RouteHistoryEntry) onTapItem;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: FTheme.of(context).colors.background,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: FTheme.of(context).colors.border,
+    return FTappable(
+      onPress: () => onTapItem(entry),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: FTheme.of(context).colors.background,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: FTheme.of(context).colors.border,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text.rich(
-            TextSpan(
-              text: 'From\n',
-              children: [
-                TextSpan(
-                  text: '${entry.startAddress}\n',
-                  style: FTheme.of(context).typography.sm.copyWith(
-                    color: FTheme.of(context).colors.foreground,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text.rich(
+              TextSpan(
+                text: 'From\n',
+                children: [
+                  TextSpan(
+                    text: '${entry.startAddress}\n',
+                    style: FTheme.of(context).typography.sm.copyWith(
+                      color: FTheme.of(context).colors.foreground,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: 'to\n',
-                  style: FTheme.of(context).typography.sm.copyWith(
-                    color: FTheme.of(context).colors.foreground,
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14,
+                  TextSpan(
+                    text: 'to\n',
+                    style: FTheme.of(context).typography.sm.copyWith(
+                      color: FTheme.of(context).colors.foreground,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: entry.destinationAddress,
-                  style: FTheme.of(context).typography.sm.copyWith(
-                    color: FTheme.of(context).colors.foreground,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18,
+                  TextSpan(
+                    text: entry.destinationAddress,
+                    style: FTheme.of(context).typography.sm.copyWith(
+                      color: FTheme.of(context).colors.foreground,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
                   ),
+                ],
+                style: FTheme.of(context).typography.sm.copyWith(
+                  color: FTheme.of(context).colors.foreground,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 14,
                 ),
-              ],
+              ),
+              maxLines: 6,
+              overflow: TextOverflow.ellipsis,
               style: FTheme.of(context).typography.sm.copyWith(
                 color: FTheme.of(context).colors.foreground,
-                fontWeight: FontWeight.w400,
-                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: FTheme.of(context).typography.sm.copyWith(
-              color: FTheme.of(context).colors.foreground,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              [
-                if (entry.distanceKm != null)
-                  '${entry.distanceKm!.toStringAsFixed(2)} km',
-                if (entry.durationSeconds != null)
-                  '${Duration(seconds: entry.durationSeconds!.round()).inMinutes} min',
-                entry.createdAt.toLocal().toString().split('.').first,
-              ].join(' • '),
-              style: FTheme.of(context).typography.xs.copyWith(
-                color: FTheme.of(context).colors.secondaryForeground,
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                [
+                  if (entry.distanceKm != null)
+                    '${entry.distanceKm!.toStringAsFixed(2)} km',
+                  if (entry.durationSeconds != null)
+                    '${Duration(seconds: entry.durationSeconds!.round()).inMinutes} min',
+                  entry.createdAt.toLocal().toString().split('.').first,
+                ].join(' • '),
+                style: FTheme.of(context).typography.xs.copyWith(
+                  color: FTheme.of(context).colors.secondaryForeground,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
