@@ -809,7 +809,7 @@ extension MapCoreOSMView {
     func drawRoadManually(call: FlutterMethodCall, result: FlutterResult) {
         let args = call.arguments as! [String: Any]
         let roadEncoded = args["road"] as! String
-
+        var roadType = PolylineType.LINE
         var roadColor = "#ff0000"
         if args.keys.contains("roadColor") {
             roadColor = args["roadColor"] as! String
@@ -819,7 +819,18 @@ extension MapCoreOSMView {
             roadWidth = args["roadWidth"] as! Double
         }
         let zoomInto = args["zoomIntoRegion"] as! Bool
-
+        let isDotted = args["isDotted"] as? Bool ?? false
+        if isDotted {
+            roadType = PolylineType.DOT
+        }
+        var roadBoardColor: UIColor? = UIColor(hexString: "#f55b5b")
+        if args.keys.contains("roadBorderColor") {
+            roadBoardColor = UIColor(hexString: args["roadBorderColor"] as! String)
+        }
+        var roadBoardWidth: CFloat? = nil
+        if args.keys.contains("roadBorderWidth") {
+            roadBoardWidth = CFloat((args["roadBorderWidth"] as? Double ?? 5.0) + roadWidth)
+        }
         var road = Road()
         road.mRouteHigh = roadEncoded
         road.roadData = RoadData(roadColor: roadColor, roadWidth: roadWidth)
@@ -828,7 +839,7 @@ extension MapCoreOSMView {
         if route.coordinates != nil {
             let roadConfiguration = RoadConfiguration(
                 width: Float(roadWidth), color: UIColor(hexString: roadColor) ?? .blue,
-                borderColor: nil)
+                borderWidth: roadBoardWidth, borderColor: roadBoardColor, polylineType: roadType)
             self.mapOSM.roadManager.addRoad(
                 id: roadKey, polylines: route.coordinates!, configuration: roadConfiguration)
             if zoomInto {
