@@ -872,6 +872,11 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
       icon: FIcons.bus,
       tile: CustomTile.publicTransportationOSM(),
     ),
+    (
+      name: 'Vector',
+      icon: Icons.public,
+      tile: CustomTile.openFreeMap(),
+    ),
   ];
 
   @override
@@ -892,25 +897,32 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                       style: FTheme.of(context).typography.lg,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      entry?.dismiss();
-                      entry = null;
-                    },
-                    child: const Icon(
-                      Icons.close,
-                      size: 20,
+                  PointerInterceptor(
+                    child: GestureDetector(
+                      onTap: () {
+                        entry?.dismiss();
+                        entry = null;
+                      },
+                      child: const Icon(
+                        Icons.close,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
               ),
-              description: PointerInterceptor(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final layer in _layers) ...[
-                      FTappable(
+              description: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final layer in _layers) ...[
+                    PointerInterceptor(
+                      child: FTappable(
                         onPress: () async {
+                          if (layer.tile?.styleURL != null && !kIsWeb) {
+                            entry?.dismiss();
+                            entry = null;
+                            return;
+                          }
                           await widget.controller.changeTileLayer(
                             tileLayer: layer.tile,
                           );
@@ -932,7 +944,7 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            vertical: 8,
+                            vertical: 2,
                             horizontal: 12,
                           ),
                           child: Row(
@@ -949,9 +961,9 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ],
-                ),
+                ],
               ),
               duration: const Duration(days: 1),
             );
