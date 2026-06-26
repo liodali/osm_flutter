@@ -55,6 +55,11 @@ Future<List<SearchInfo>> addressSuggestion(
       "limit": limitInformation == 0 ? "" : "$limitInformation",
       "lang": locale
     },
+    options: Options(
+      headers: {
+        "User-Agent": "FlutterOSMPlugin/1.0",
+      },
+    ),
   );
   final json = response.data;
 

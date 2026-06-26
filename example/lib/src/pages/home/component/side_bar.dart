@@ -61,6 +61,7 @@ class _SideBarState extends State<SideBar> {
                         if (context.mounted) {
                           Navigator.pop(context);
                         }
+                        widget.onToggleCallback();
                       },
                     ),
                   ),

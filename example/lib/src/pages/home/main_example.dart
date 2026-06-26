@@ -346,6 +346,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
                           return;
                         }
                         final roadOption = _styleConfig.buildRoadOption();
+                        await widget.configuration.controller.clearAllRoads();
                         await widget.configuration.controller.drawRoadManually(
                           path,
                           roadOption,
@@ -470,6 +471,8 @@ class _MainState extends State<Main> with OSMMixinObserver {
                               return;
                             }
                             final roadOption = _styleConfig.buildRoadOption();
+                            await widget.configuration.controller
+                                .clearAllRoads();
                             await widget.configuration.controller
                                 .drawRoadManually(
                                   path,
