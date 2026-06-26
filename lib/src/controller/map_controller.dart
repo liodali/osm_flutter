@@ -116,8 +116,9 @@ class MapController extends BaseMapController {
 
   /// [changeTileLayer]
   ///
-  /// this method used to change tiles of map,
-  /// for now we support only raster tiles for now
+  /// this method used to change tiles of map.
+  /// raster tiles are supported on all platforms; vector tile styles
+  /// (via [CustomTile.styleURL]) are supported on web.
   Future<void> changeTileLayer({
     CustomTile? tileLayer,
   }) async {
