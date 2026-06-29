@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/liodali/OSMMapCoreIOSFramework.git",
       "state" : {
-        "revision" : "b276b6d99dc8d854e9aa147f1090f73caa8190e1",
-        "version" : "0.8.6"
+        "revision" : "d6330a88b2aff17e9cb77fda55a9a82c07ce52e5",
+        "version" : null
       }
     },
     {

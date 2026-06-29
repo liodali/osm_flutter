@@ -18,7 +18,7 @@ let package = Package(
         .package(url: "https://github.com/jpsim/Yams.git", from: "6.2.2"),
         .package(
             url: "https://github.com/liodali/OSMMapCoreIOSFramework.git",
-           revision: "6f479844f9af888584be4cbaa42f53af9413a13f"),    
+            revision: "d6330a88b2aff17e9cb77fda55a9a82c07ce52e5"),
         //.exact("0.8.7")),
 
     ],
@@ -50,7 +50,7 @@ let package = Package(
                     "AccessLevelOnImport",
                 ])
             ],
-            
+
         )
     ]
 )
