@@ -879,6 +879,9 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
     ),
   ];
 
+  bool get _isVectorTileSupported =>
+      kIsWeb || defaultTargetPlatform == TargetPlatform.iOS;
+
   @override
   Widget build(BuildContext context) {
     return PointerInterceptor(
@@ -918,7 +921,8 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                     PointerInterceptor(
                       child: FTappable(
                         onPress: () async {
-                          if (layer.tile?.styleURL != null && !kIsWeb) {
+                          if (layer.tile?.styleURL != null &&
+                              !_isVectorTileSupported) {
                             entry?.dismiss();
                             entry = null;
                             return;
@@ -979,6 +983,11 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                         prefix: Icon(layer.icon),
                         title: Text(layer.name),
                         onPress: () async {
+                          if (layer.tile?.styleURL != null &&
+                              !_isVectorTileSupported) {
+                            Navigator.of(context).pop();
+                            return;
+                          }
                           await widget.controller.changeTileLayer(
                             tileLayer: layer.tile,
                           );

@@ -934,6 +934,9 @@ class OSMLayersChoiceWidget extends StatelessWidget {
     required this.centerPoint,
   });
 
+  bool get _isVectorTileSupported =>
+      kIsWeb || defaultTargetPlatform == TargetPlatform.iOS;
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -1010,7 +1013,7 @@ class OSMLayersChoiceWidget extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () {
-                    if (!kIsWeb) return;
+                    if (!_isVectorTileSupported) return;
                     setLayerCallback(CustomTile.openFreeMap());
                   },
                   child: Column(
@@ -1024,7 +1027,7 @@ class OSMLayersChoiceWidget extends StatelessWidget {
                           color: Theme.of(context).primaryColor,
                         ),
                       ),
-                      const Text("Vector"),
+                      const Text("Vector\n(iOS/Web)"),
                     ],
                   ),
                 ),
