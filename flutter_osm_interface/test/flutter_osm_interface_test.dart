@@ -96,6 +96,13 @@ void main() {
     expect(urlsWeb, result);
   });
 
+  test('vector tile serialization includes isVector', () {
+    final vectorTile = CustomTile.openFreeMap();
+    final map = vectorTile.toMap() as Map<String, dynamic>;
+    expect(map['styleURL'], 'https://tiles.openfreemap.org/styles/liberty');
+    expect(map['isVector'], true);
+  });
+
   test('test isEqual1eX', () {
     expect(isEqual1eX(0.001), true);
     expect(isEqual1eX(0.01), false);

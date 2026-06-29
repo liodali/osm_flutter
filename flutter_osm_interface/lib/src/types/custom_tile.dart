@@ -120,6 +120,7 @@ class CustomTile {
     }
     if (styleURL != null) {
       map.putIfAbsent("styleURL", () => styleURL!);
+      map.putIfAbsent("isVector", () => true);
     }
     return map;
   }
