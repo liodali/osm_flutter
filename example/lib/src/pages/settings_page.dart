@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_style_configuration.dart';
+import 'package:flutter_osm_plugin_example/src/widgets/tile_layer_settings.dart';
 import 'package:forui/forui.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -682,6 +683,19 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: FCard(
+                title: const Text('Tile Layers'),
+                subtitle: const Text(
+                  'Set the default tile and manage custom tile sources.',
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: TileLayerSettings(),
                 ),
               ),
             ),

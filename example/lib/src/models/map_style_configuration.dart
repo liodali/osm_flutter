@@ -1,5 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:forui/forui.dart';
+
+/// A selectable tile layer preset.
+class TilePreset {
+  final String id;
+  final String name;
+  final IconData icon;
+  final CustomTile tile;
+  final bool isBuiltIn;
+
+  const TilePreset({
+    required this.id,
+    required this.name,
+    required this.icon,
+    required this.tile,
+    this.isBuiltIn = false,
+  });
+}
 
 enum ExampleMarkerStyle {
   icon,
@@ -52,6 +70,44 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
     RoadType.foot,
   ];
 
+  static final List<TilePreset> builtInTiles = <TilePreset>[
+    TilePreset(
+      id: 'basic',
+      name: 'Basic',
+      icon: FIcons.map,
+      tile: CustomTile.osm(),
+      isBuiltIn: true,
+    ),
+    TilePreset(
+      id: 'cycle',
+      name: 'Cycle',
+      icon: FIcons.bike,
+      tile: CustomTile.cycleOSM(),
+      isBuiltIn: true,
+    ),
+    TilePreset(
+      id: 'transport',
+      name: 'Transport',
+      icon: FIcons.bus,
+      tile: CustomTile.publicTransportationOSM(),
+      isBuiltIn: true,
+    ),
+    TilePreset(
+      id: 'vector',
+      name: 'Vector',
+      icon: Icons.public,
+      tile: CustomTile.openFreeMap(),
+      isBuiltIn: true,
+    ),
+    TilePreset(
+      id: 'satellite',
+      name: 'Satellite',
+      icon: Icons.satellite,
+      tile: CustomTile.satellite(),
+      isBuiltIn: true,
+    ),
+  ];
+
   ExampleMarkerStyle _markerStyle = ExampleMarkerStyle.image;
   IconData _markerIcon = Icons.person_pin;
   Color _markerIconColor = Colors.red;
@@ -72,6 +128,8 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
     RoadType.foot: true,
   };
   String _searchLocale = 'en';
+  List<TilePreset> _customTiles = <TilePreset>[];
+  String _defaultTileId = 'basic';
 
   ExampleMarkerStyle get markerStyle => _markerStyle;
   IconData get markerIcon => _markerIcon;
@@ -87,6 +145,69 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
   RoadType get roadType => _roadType;
   bool get isDotted => _isDotted;
   String get searchLocale => _searchLocale;
+
+  List<TilePreset> get customTiles => List.unmodifiable(_customTiles);
+
+  List<TilePreset> get availableTiles => <TilePreset>[
+    ...builtInTiles,
+    ..._customTiles,
+  ];
+
+  TilePreset get defaultTile => availableTiles.firstWhere(
+    (TilePreset tile) => tile.id == _defaultTileId,
+    orElse: () => builtInTiles.first,
+  );
+
+  String get defaultTileId => _defaultTileId;
+
+  set defaultTileId(String value) {
+    if (_defaultTileId == value) {
+      return;
+    }
+    _defaultTileId = value;
+    notifyListeners();
+  }
+
+  void addCustomTile({
+    required String name,
+    required String url,
+    String tileExtension = '.png',
+    int tileSize = 256,
+    int minZoomLevel = 2,
+    int maxZoomLevel = 19,
+  }) {
+    final id = 'custom_${DateTime.now().millisecondsSinceEpoch}';
+    _customTiles = <TilePreset>[
+      ..._customTiles,
+      TilePreset(
+        id: id,
+        name: name,
+        icon: FIcons.map,
+        tile: CustomTile(
+          urlsServers: <TileURLs>[TileURLs(url: url)],
+          tileExtension: tileExtension,
+          sourceName: id,
+          tileSize: tileSize,
+          minZoomLevel: minZoomLevel,
+          maxZoomLevel: maxZoomLevel,
+        ),
+      ),
+    ];
+    notifyListeners();
+  }
+
+  void removeCustomTile(String id) {
+    if (availableTiles.length <= 2) {
+      return;
+    }
+    _customTiles = _customTiles
+        .where((TilePreset tile) => tile.id != id)
+        .toList();
+    if (_defaultTileId == id) {
+      _defaultTileId = 'basic';
+    }
+    notifyListeners();
+  }
 
   static const Map<String, String> supportedSearchLocales = {
     'en': 'English',

@@ -33,7 +33,8 @@ class _MainPageExampleState extends State<MainPageExample> {
   @override
   void initState() {
     super.initState();
-    controller = MapController(
+    final styleConfig = ExampleMapStyleConfiguration.instance;
+    controller = MapController.customLayer(
       initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
@@ -42,6 +43,7 @@ class _MainPageExampleState extends State<MainPageExample> {
       //   enableTracking: trackingNotifier.value,
       // ),
       useExternalTracking: disableMapControlUserTracking.value,
+      customTile: styleConfig.defaultTile.tile,
     );
     configuration = (
       controller: controller,
@@ -856,28 +858,8 @@ class ChangeTileButton extends StatefulWidget {
 }
 
 class _ChangeTileButtonState extends State<ChangeTileButton> {
-  final _layers = [
-    (
-      name: 'Basic',
-      icon: FIcons.map,
-      tile: null,
-    ),
-    (
-      name: 'Cycle',
-      icon: FIcons.bike,
-      tile: CustomTile.cycleOSM(),
-    ),
-    (
-      name: 'Transport',
-      icon: FIcons.bus,
-      tile: CustomTile.publicTransportationOSM(),
-    ),
-    (
-      name: 'Vector',
-      icon: Icons.public,
-      tile: CustomTile.openFreeMap(),
-    ),
-  ];
+  List<TilePreset> get _layers =>
+      ExampleMapStyleConfiguration.instance.availableTiles;
 
   bool get _isVectorTileSupported =>
       kIsWeb || defaultTargetPlatform == TargetPlatform.iOS;
@@ -921,7 +903,7 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                     PointerInterceptor(
                       child: FTappable(
                         onPress: () async {
-                          if (layer.tile?.styleURL != null &&
+                          if (layer.tile.styleURL != null &&
                               !_isVectorTileSupported) {
                             entry?.dismiss();
                             entry = null;
@@ -983,7 +965,7 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                         prefix: Icon(layer.icon),
                         title: Text(layer.name),
                         onPress: () async {
-                          if (layer.tile?.styleURL != null &&
+                          if (layer.tile.styleURL != null &&
                               !_isVectorTileSupported) {
                             Navigator.of(context).pop();
                             return;
