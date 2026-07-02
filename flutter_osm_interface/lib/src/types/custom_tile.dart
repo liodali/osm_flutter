@@ -106,6 +106,21 @@ class CustomTile {
         keyApi = null,
         styleURL = "https://tiles.openfreemap.org/styles/liberty";
 
+  CustomTile.satellite({
+    this.maxZoomLevel = 19,
+    this.minZoomLevel = 2,
+  })  : urlsServers = [
+          TileURLs(
+            url:
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          ),
+        ],
+        tileExtension = "",
+        sourceName = "arcgisWorldImagery",
+        tileSize = 256,
+        keyApi = null,
+        styleURL = null;
+
   Map toMap() {
     final map = {
       "name": sourceName,
