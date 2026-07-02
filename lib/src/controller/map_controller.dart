@@ -103,6 +103,28 @@ class MapController extends BaseMapController {
           ),
         );
 
+  MapController.satelliteLayer({
+    super.initMapWithUserPosition,
+    super.initPosition,
+    super.areaLimit = const BoundingBox.world(),
+  })  : assert(
+          (initMapWithUserPosition != null) || initPosition != null,
+        ),
+        super(
+          customTile: CustomTile(
+            urlsServers: [
+              TileURLs(
+                url:
+                    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+              ),
+            ],
+            tileExtension: "",
+            sourceName: "arcgisWorldImagery",
+            tileSize: 256,
+            maxZoomLevel: 19,
+          ),
+        );
+
   /// [dispose]
   ///
   /// this method used to dispose controller in the map
