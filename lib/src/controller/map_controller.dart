@@ -53,6 +53,7 @@ class MapController extends BaseMapController {
     super.initMapWithUserPosition,
     super.initPosition,
     super.areaLimit = const BoundingBox.world(),
+    super.useExternalTracking,
     required CustomTile customTile,
   })  : assert(
           (initMapWithUserPosition != null) || initPosition != null,
@@ -107,6 +108,7 @@ class MapController extends BaseMapController {
     super.initMapWithUserPosition,
     super.initPosition,
     super.areaLimit = const BoundingBox.world(),
+    super.useExternalTracking,
   })  : assert(
           (initMapWithUserPosition != null) || initPosition != null,
         ),
