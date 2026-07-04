@@ -326,7 +326,9 @@ class _RouteSearchPanelState extends State<RouteSearchPanel> {
         return;
       }
       setState(() {
-        _roadError = 'Unable to get current location.';
+        _roadError = e.toString().contains('permission')
+            ? 'Location permission denied. Please grant location access in settings.'
+            : 'Unable to get current location.';
       });
     }
   }

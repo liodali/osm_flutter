@@ -419,6 +419,12 @@ final class MobileOSMController extends IBaseOSMController {
   /// recuperation of user current position
   @override
   Future<GeoPoint> myLocation() async {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      bool granted = await _osmFlutterState.requestPermission();
+      if (!granted) {
+        throw Exception("Location permission not granted");
+      }
+    }
     return await osmPlatform.myLocation(_idMap);
   }
 
