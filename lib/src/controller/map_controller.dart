@@ -53,6 +53,7 @@ class MapController extends BaseMapController {
     super.initMapWithUserPosition,
     super.initPosition,
     super.areaLimit = const BoundingBox.world(),
+    super.useExternalTracking,
     required CustomTile customTile,
   })  : assert(
           (initMapWithUserPosition != null) || initPosition != null,
@@ -103,6 +104,29 @@ class MapController extends BaseMapController {
           ),
         );
 
+  MapController.satelliteLayer({
+    super.initMapWithUserPosition,
+    super.initPosition,
+    super.areaLimit = const BoundingBox.world(),
+    super.useExternalTracking,
+  })  : assert(
+          (initMapWithUserPosition != null) || initPosition != null,
+        ),
+        super(
+          customTile: CustomTile(
+            urlsServers: [
+              TileURLs(
+                url:
+                    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+              ),
+            ],
+            tileExtension: "",
+            sourceName: "arcgisWorldImagery",
+            tileSize: 256,
+            maxZoomLevel: 19,
+          ),
+        );
+
   /// [dispose]
   ///
   /// this method used to dispose controller in the map
@@ -116,8 +140,9 @@ class MapController extends BaseMapController {
 
   /// [changeTileLayer]
   ///
-  /// this method used to change tiles of map,
-  /// for now we support only raster tiles for now
+  /// this method used to change tiles of map.
+  /// raster tiles are supported on all platforms; vector tile styles
+  /// (via [CustomTile.styleURL]) are supported on web and iOS.
   Future<void> changeTileLayer({
     CustomTile? tileLayer,
   }) async {

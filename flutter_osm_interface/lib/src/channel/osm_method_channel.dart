@@ -428,6 +428,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
       'key': roadKey,
       "road": encodedCoordinates,
       "roadWidth": roadOption.roadWidth,
+      'isDotted': roadOption.isDotted,
+      'roadBorderColor': roadOption.roadBorderColor,
+      'roadBorderWidth': roadOption.roadBorderWidth,
+      'zoomIntoRegion': roadOption.zoomInto,
     };
     data.addAll(Map.from(roadOption.toMap()));
 

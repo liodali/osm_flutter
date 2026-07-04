@@ -36,6 +36,7 @@ mixin WebMixin {
                   apiKey: tileLayer.keyApi != null
                       ? '?${tileLayer.keyApi!.key}=${tileLayer.keyApi!.value}'
                       : '',
+                  styleURL: tileLayer.styleURL ?? '',
                   maxZoom: tileLayer.maxZoomLevel,
                   minZoom: tileLayer.minZoomLevel,
                   tileExtension: tileLayer.tileExtension,

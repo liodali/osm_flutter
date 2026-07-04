@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kReleaseMode;
+import 'package:flutter/foundation.dart' show kDebugMode, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
@@ -29,6 +29,7 @@ class OsmWebWidget extends StatefulWidget {
   final Function(bool)? onMapIsReady;
   final UserLocationMaker? userLocationMarker;
   final bool isStatic;
+  final bool useMapLibre;
   const OsmWebWidget({
     super.key,
     required this.controller,
@@ -53,6 +54,7 @@ class OsmWebWidget extends StatefulWidget {
     this.onMapIsReady,
     this.userLocationMarker,
     this.isStatic = false,
+    this.useMapLibre = false,
   });
 
   @override
@@ -91,11 +93,15 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
   }
 
   Future<void> initController() async {
+    const packageBaseUrl = 'packages/flutter_osm_web/src/asset/';
     const versionCDN = //'refs/tags/flutter_osm_web-v1.4.2';
-        kReleaseMode ? 'refs/tags/flutter_osm_web-v1.4.1' : 'refs/heads/main';
+        kReleaseMode
+            ? 'refs/tags/flutter_osm_web-v1.4.1'
+            : 'refs/heads/migrate_to_maplibre_js'; //migrate_to_maplibre_js 'refs/heads/main'
     final dio = Dio(BaseOptions(
-      baseUrl:
-          'https://raw.githubusercontent.com/liodali/osm_flutter/$versionCDN/flutter_osm_web/lib/src/asset/',
+      baseUrl: kDebugMode
+          ? packageBaseUrl
+          : 'https://raw.githubusercontent.com/liodali/osm_flutter/$versionCDN/flutter_osm_web/lib/src/asset/',
     ));
     final mapScript = await dio.get<String>(
       'map.js',
@@ -103,7 +109,9 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
     final osmInterop = await dio.get<String>(
       'osm_interop.js',
     );
-    final html = await dio.get<String>('map.html');
+    final html = await dio.get<String>(
+      widget.useMapLibre ? 'index_maplibre.html' : 'map.html',
+    );
     dataScripts.value = (
       mapScript: mapScript.data!,
       osmInterop: osmInterop.data!,

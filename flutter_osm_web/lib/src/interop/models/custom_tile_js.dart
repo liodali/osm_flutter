@@ -10,16 +10,17 @@ extension type CustomTileJs._(JSObject _) implements JSObject {
   external String subDomains;
   external String tileExtension;
   external String apiKey;
+  external String styleURL;
   external num tileSize;
   external num maxZoom;
   external num minZoom;
 
-  // Must have an unnamed factory constructor with named arguments.
   external factory CustomTileJs({
     String url,
     String subDomains,
     String tileExtension,
     String apiKey,
+    String styleURL,
     num tileSize,
     num maxZoom,
     num minZoom,

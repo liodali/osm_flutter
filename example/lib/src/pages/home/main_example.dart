@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/src/models/map_style_configuration.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_widget_configuration.dart'
     show MoreActionConfig;
-import 'package:flutter_osm_plugin_example/src/pages/home/component/seach_map.dart'
-    show SearchInMap;
+import 'package:flutter_osm_plugin_example/src/pages/home/component/route_search_panel.dart'
+    show RouteSearchPanel;
 import 'package:flutter_osm_plugin_example/src/pages/home/component/side_bar.dart';
+import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
 import 'package:flutter_osm_plugin_example/src/widgets/action_buttons.dart'
     show ActionButton;
 import 'package:forui/forui.dart';
@@ -29,7 +33,8 @@ class _MainPageExampleState extends State<MainPageExample> {
   @override
   void initState() {
     super.initState();
-    controller = MapController(
+    final styleConfig = ExampleMapStyleConfiguration.instance;
+    controller = MapController.customLayer(
       initPosition: GeoPoint(
         latitude: 47.4358055,
         longitude: 8.4737324,
@@ -38,6 +43,7 @@ class _MainPageExampleState extends State<MainPageExample> {
       //   enableTracking: trackingNotifier.value,
       // ),
       useExternalTracking: disableMapControlUserTracking.value,
+      customTile: styleConfig.defaultTile.tile,
     );
     configuration = (
       controller: controller,
@@ -83,12 +89,33 @@ class _MainState extends State<Main> with OSMMixinObserver {
   ValueNotifier<int> zoomLevelNotifier = ValueNotifier(16);
   final mapKey = GlobalKey();
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
+  bool _isApplyingWebLocationUpdate = false;
+  UserLocation? _pendingWebLocationUpdate;
+  UserLocation? _lastAppliedWebLocation;
+  DateTime? _lastAppliedWebLocationAt;
+  bool _sidebarExpanded = true;
+  bool _routePanelCollapsed = false;
+  final ValueNotifier<List<RouteHistoryEntry>> _routeHistoryNotifier =
+      ValueNotifier([]);
+  final ExampleMapStyleConfiguration _styleConfig =
+      ExampleMapStyleConfiguration.instance;
+
+  void _handleStyleChanged() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+  }
 
   @override
   void initState() {
     super.initState();
 
     widget.configuration.controller.addObserver(this);
+    _styleConfig.addListener(_handleStyleChanged);
+    _routeHistoryNotifier.addListener(() {
+      if (mounted) setState(() {});
+    });
     widget.configuration.trackingNotifier.addListener(() async {
       if (widget.configuration.userLocationNotifier.value != null &&
           !widget.configuration.trackingNotifier.value) {
@@ -98,6 +125,13 @@ class _MainState extends State<Main> with OSMMixinObserver {
         widget.configuration.userLocationNotifier.value = null;
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _styleConfig.removeListener(_handleStyleChanged);
+    _routeHistoryNotifier.dispose();
+    super.dispose();
   }
 
   @override
@@ -120,25 +154,13 @@ class _MainState extends State<Main> with OSMMixinObserver {
         //controller.removeMarker(lastGeoPoint.value!);
         await widget.configuration.controller.addMarker(
           position,
-          markerIcon: const MarkerIcon(
-            icon: Icon(
-              Icons.person_pin,
-              color: Colors.red,
-              size: 56,
-            ),
-          ),
+          markerIcon: _styleConfig.buildMarkerIcon(),
           //angle: userLocation.angle,
         );
       } else {
         await widget.configuration.controller.addMarker(
           position,
-          markerIcon: const MarkerIcon(
-            icon: Icon(
-              Icons.person_pin,
-              color: Colors.red,
-              size: 32,
-            ),
-          ),
+          markerIcon: _styleConfig.buildMarkerIcon(),
           // iconAnchor: IconAnchor(
           //   anchor: Anchor.left,
           //   //offset: (x: 32.5, y: -32),
@@ -177,13 +199,19 @@ class _MainState extends State<Main> with OSMMixinObserver {
       showFToast(
         context: context,
         title: const Text("the marker will be deleted!"),
-        suffixBuilder: (context, entry) => FTappable(
-          onPress: () async {
-            await widget.configuration.controller.removeMarker(position);
-            widget.configuration.geos.value.remove(position);
-            entry.dismiss();
-          },
-          child: const Text('proceed'),
+
+        suffixBuilder: (context, entry) => PointerInterceptor(
+          child: FTappable(
+            onPress: () async {
+              await widget.configuration.controller.removeMarker(position);
+              widget.configuration.geos.value.remove(position);
+              entry.dismiss();
+            },
+            child: Text(
+              'proceed',
+              style: context.theme.typography.md,
+            ),
+          ),
         ),
       );
     });
@@ -210,8 +238,60 @@ class _MainState extends State<Main> with OSMMixinObserver {
   }
 
   @override
-  void onLocationChanged(UserLocation userLocation) async {
+  void onLocationChanged(UserLocation userLocation) {
     super.onLocationChanged(userLocation);
+    if (kIsWeb) {
+      _handleWebLocationChanged(userLocation);
+      return;
+    }
+    _applyLocationChanged(userLocation);
+  }
+
+  Future<void> _handleWebLocationChanged(UserLocation userLocation) async {
+    if (_shouldIgnoreWebLocationUpdate(userLocation)) {
+      return;
+    }
+
+    _pendingWebLocationUpdate = userLocation;
+    if (_isApplyingWebLocationUpdate) {
+      return;
+    }
+
+    _isApplyingWebLocationUpdate = true;
+    try {
+      while (_pendingWebLocationUpdate != null) {
+        final nextLocation = _pendingWebLocationUpdate!;
+        _pendingWebLocationUpdate = null;
+
+        if (_shouldIgnoreWebLocationUpdate(nextLocation)) {
+          continue;
+        }
+
+        _lastAppliedWebLocation = nextLocation;
+        _lastAppliedWebLocationAt = DateTime.now();
+        await _applyLocationChanged(nextLocation);
+      }
+    } finally {
+      _isApplyingWebLocationUpdate = false;
+    }
+  }
+
+  bool _shouldIgnoreWebLocationUpdate(UserLocation userLocation) {
+    final lastLocation = _lastAppliedWebLocation;
+    final lastLocationAt = _lastAppliedWebLocationAt;
+    if (lastLocation == null || lastLocationAt == null) {
+      return false;
+    }
+
+    final isSameLocation = userLocation.isEqual(lastLocation, precision: 1e6);
+    final isSameOrientation =
+        (userLocation.angle - lastLocation.angle).abs() <= 1e-6;
+    return isSameLocation &&
+        isSameOrientation &&
+        DateTime.now().difference(lastLocationAt).inMilliseconds < 250;
+  }
+
+  Future<void> _applyLocationChanged(UserLocation userLocation) async {
     if (widget.disableMapControlUserTracking.value &&
         widget.configuration.trackingNotifier.value) {
       await widget.configuration.controller.moveTo(userLocation);
@@ -248,6 +328,118 @@ class _MainState extends State<Main> with OSMMixinObserver {
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.maybeOf(context)?.viewPadding.top ?? 0;
+    if (kIsWeb) {
+      return Row(
+        children: [
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            child: _sidebarExpanded
+                ? SizedBox(
+                    width: 320,
+                    child: SideBar(
+                      onHistoryItemTap: (entry) async {
+                        // Handle history item tap
+                        final path = entry.polylineBase64.stringToGeoPoints();
+                        if (path.isEmpty) {
+                          debugPrint(
+                            'Skipping manual road redraw: empty history polyline for ${entry.startAddress} -> ${entry.destinationAddress}',
+                          );
+                          return;
+                        }
+                        final roadOption = _styleConfig.buildRoadOption();
+                        await widget.configuration.controller.clearAllRoads();
+                        await widget.configuration.controller.drawRoadManually(
+                          path,
+                          roadOption,
+                        );
+                      },
+                      onToggleCallback: () {
+                        setState(() => _sidebarExpanded = false);
+                      },
+                      showToggleButton: true,
+                      topContent: RouteSearchPanel(
+                        controller: widget.configuration.controller,
+                        embeddedInSidebar: true,
+                        historyNotifier: _routeHistoryNotifier,
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                Map(
+                  controller: widget.configuration.controller,
+                ),
+                if (!_sidebarExpanded) ...[
+                  Positioned(
+                    top: 8,
+                    left: 16,
+                    child: PointerInterceptor(
+                      child: ActionButton(
+                        onPressed: () {
+                          setState(() => _sidebarExpanded = true);
+                        },
+                        buttonStyle: (style) => style.copyWith(
+                          minimumSize: WidgetStateProperty.resolveWith(
+                            (_) => const Size(48, 48),
+                          ),
+                          maximumSize: WidgetStateProperty.resolveWith(
+                            (_) => const Size(48, 48),
+                          ),
+                        ),
+                        child: Icon(
+                          FIcons.menu,
+                          size: 18,
+                          color: FTheme.of(context).colors.foreground,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+
+                Positioned(
+                  bottom: 23.0,
+                  right: 15,
+                  child: Column(
+                    spacing: 8,
+                    children: [
+                      ActivationUserLocation(
+                        controller: widget.configuration.controller,
+                        trackingNotifier: widget.configuration.trackingNotifier,
+                        userLocation: widget.configuration.userLocationNotifier,
+                        userLocationIcon: widget.configuration.userLocationIcon,
+                      ),
+                      ZoomNavigation(
+                        controller: widget.configuration.controller,
+                        zoomNotifier: zoomLevelNotifier,
+                      ),
+                      ChangeTileButton(
+                        controller: widget.configuration.controller,
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned.fill(
+                  child: ValueListenableBuilder(
+                    valueListenable: showFab,
+                    builder: (context, isVisible, child) {
+                      if (!isVisible) {
+                        return const SizedBox.shrink();
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     return Stack(
       children: [
         Map(
@@ -257,41 +449,70 @@ class _MainState extends State<Main> with OSMMixinObserver {
           top: topPadding + 8,
           left: 16,
           right: 16,
-          child: PointerInterceptor(
-            child: Row(
-              children: [
-                ActionButton(
-                  onPressed: () async {
-                    await showFSheet(
-                      context: context,
-                      side: FLayout.ltr,
-                      builder: (context) => SideBar(
-                        onToggleCallback: () => Navigator.of(context).pop(),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: PointerInterceptor(
+                  child: ActionButton(
+                    onPressed: () async {
+                      await showFSheet(
+                        context: context,
+                        side: FLayout.ltr,
+                        builder: (context) => SideBar(
+                          onToggleCallback: () => Navigator.of(context).pop(),
+                          onHistoryItemTap: (entry) async {
+                            // Handle history item tap
+                            final path = entry.polylineBase64
+                                .stringToGeoPoints();
+                            if (path.isEmpty) {
+                              debugPrint(
+                                'Skipping manual road redraw: empty history polyline for ${entry.startAddress} -> ${entry.destinationAddress}',
+                              );
+                              return;
+                            }
+                            final roadOption = _styleConfig.buildRoadOption();
+                            await widget.configuration.controller
+                                .clearAllRoads();
+                            await widget.configuration.controller
+                                .drawRoadManually(
+                                  path,
+                                  roadOption,
+                                );
+                          },
+                        ),
+                      );
+                    },
+                    buttonStyle: (style) => style.copyWith(
+                      minimumSize: WidgetStateProperty.resolveWith(
+                        (_) => const Size(48, 48),
                       ),
+                      maximumSize: WidgetStateProperty.resolveWith(
+                        (_) => const Size(48, 48),
+                      ),
+                    ),
+                    child: Icon(
+                      FIcons.menu,
+                      size: 18,
+                      color: FTheme.of(context).colors.foreground,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: RouteSearchPanel(
+                  controller: widget.configuration.controller,
+                  collapsed: _routePanelCollapsed,
+                  onToggleCollapsed: () {
+                    setState(
+                      () => _routePanelCollapsed = !_routePanelCollapsed,
                     );
                   },
-                  buttonStyle: (style) => style.copyWith(
-                    minimumSize: WidgetStateProperty.resolveWith(
-                      (_) => const Size(48, 48),
-                    ),
-                    maximumSize: WidgetStateProperty.resolveWith(
-                      (_) => const Size(48, 48),
-                    ),
-                  ),
-                  child: Icon(
-                    FIcons.menu,
-                    size: 18,
-                    color: FTheme.of(context).colors.foreground,
-                  ),
+                  historyNotifier: _routeHistoryNotifier,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SearchInMap(
-                    controller: widget.configuration.controller,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         Positioned(
@@ -325,17 +546,15 @@ class _MainState extends State<Main> with OSMMixinObserver {
               }
               return Stack(
                 children: [
-                  if (!kIsWeb) ...[
-                    Positioned(
-                      top: topPadding + 56,
-                      right: 15,
-                      child: PointerInterceptor(
-                        child: MapRotation(
-                          controller: widget.configuration.controller,
-                        ),
+                  Positioned(
+                    bottom: 23,
+                    left: 15,
+                    child: PointerInterceptor(
+                      child: MapRotation(
+                        controller: widget.configuration.controller,
                       ),
                     ),
-                  ],
+                  ),
                 ],
               );
             },
@@ -459,6 +678,7 @@ class Map extends StatelessWidget {
   final MapController controller;
   @override
   Widget build(BuildContext context) {
+    final styleConfig = ExampleMapStyleConfiguration.instance;
     return OSMFlutter(
       controller: controller,
       // mapIsLoading: Center(
@@ -468,6 +688,7 @@ class Map extends StatelessWidget {
         debugPrint(location.toString());
       },
       osmOption: OSMOption(
+        useWebMapLibre: true,
         enableRotationByGesture: true,
         zoomOption: const ZoomOption(
           initZoom: 16,
@@ -475,34 +696,11 @@ class Map extends StatelessWidget {
           maxZoomLevel: 19,
           stepZoom: 1.0,
         ),
-        userLocationMarker: UserLocationMaker(
-          personMarker: MarkerIcon(
-            iconWidget: SizedBox(
-              width: 32,
-              height: 64,
-              child: Image.asset(
-                "asset/directionIcon.png",
-                scale: .3,
-              ),
-            ),
-          ),
-          directionArrowMarker: const MarkerIcon(
-            icon: Icon(
-              Icons.navigation_rounded,
-              size: 48,
-            ),
-          ),
-        ),
+        userLocationMarker: styleConfig.buildUserLocationMarker(),
         staticPoints: [
           StaticPositionGeoPoint(
             "line 1",
-            const MarkerIcon(
-              icon: Icon(
-                Icons.train,
-                color: Colors.green,
-                size: 48,
-              ),
-            ),
+            styleConfig.buildMarkerIcon(),
             [
               GeoPoint(
                 latitude: 47.4333594,
@@ -515,23 +713,12 @@ class Map extends StatelessWidget {
             ],
           ),
         ],
-        roadConfiguration: const RoadOption(
-          roadColor: Colors.blueAccent,
-        ),
+        roadConfiguration: styleConfig.buildRoadOption(),
         showContributorBadgeForOSM: true,
         //trackMyPosition: trackingNotifier.value,
         showDefaultInfoWindow: false,
       ),
     );
-  }
-}
-
-class SearchLocation extends StatelessWidget {
-  const SearchLocation({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const TextField();
   }
 }
 
@@ -671,23 +858,11 @@ class ChangeTileButton extends StatefulWidget {
 }
 
 class _ChangeTileButtonState extends State<ChangeTileButton> {
-  final _layers = [
-    (
-      name: 'Basic',
-      icon: FIcons.map,
-      tile: null,
-    ),
-    (
-      name: 'Cycle',
-      icon: FIcons.bike,
-      tile: CustomTile.cycleOSM(),
-    ),
-    (
-      name: 'Transport',
-      icon: FIcons.bus,
-      tile: CustomTile.publicTransportationOSM(),
-    ),
-  ];
+  List<TilePreset> get _layers =>
+      ExampleMapStyleConfiguration.instance.availableTiles;
+
+  bool get _isVectorTileSupported =>
+      kIsWeb || defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   Widget build(BuildContext context) {
@@ -707,25 +882,33 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                       style: FTheme.of(context).typography.lg,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      entry?.dismiss();
-                      entry = null;
-                    },
-                    child: const Icon(
-                      Icons.close,
-                      size: 20,
+                  PointerInterceptor(
+                    child: GestureDetector(
+                      onTap: () {
+                        entry?.dismiss();
+                        entry = null;
+                      },
+                      child: const Icon(
+                        Icons.close,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
               ),
-              description: PointerInterceptor(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final layer in _layers) ...[
-                      FTappable(
+              description: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final layer in _layers) ...[
+                    PointerInterceptor(
+                      child: FTappable(
                         onPress: () async {
+                          if (layer.tile.styleURL != null &&
+                              !_isVectorTileSupported) {
+                            entry?.dismiss();
+                            entry = null;
+                            return;
+                          }
                           await widget.controller.changeTileLayer(
                             tileLayer: layer.tile,
                           );
@@ -747,7 +930,7 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            vertical: 8,
+                            vertical: 2,
                             horizontal: 12,
                           ),
                           child: Row(
@@ -764,9 +947,9 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ],
-                ),
+                ],
               ),
               duration: const Duration(days: 1),
             );
@@ -782,6 +965,11 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                         prefix: Icon(layer.icon),
                         title: Text(layer.name),
                         onPress: () async {
+                          if (layer.tile.styleURL != null &&
+                              !_isVectorTileSupported) {
+                            Navigator.of(context).pop();
+                            return;
+                          }
                           await widget.controller.changeTileLayer(
                             tileLayer: layer.tile,
                           );

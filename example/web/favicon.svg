@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="roadBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1491da" />
+      <stop offset="1" stop-color="#0f7fc7" />
+    </linearGradient>
+    <linearGradient id="orangeBlock" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8a31d" />
+      <stop offset="1" stop-color="#f38b17" />
+    </linearGradient>
+    <linearGradient id="purpleBlock" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a36ec9" />
+      <stop offset="1" stop-color="#7e54b0" />
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.10" />
+    </filter>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <rect x="278" y="240" width="530" height="54" rx="2" fill="url(#roadBlue)" />
+    <rect x="368" y="186" width="54" height="728" rx="2" fill="url(#roadBlue)" />
+    <rect x="620" y="186" width="54" height="354" rx="2" fill="url(#roadBlue)" />
+    <rect x="278" y="498" width="530" height="54" rx="2" fill="url(#roadBlue)" />
+    <rect x="278" y="794" width="226" height="54" rx="2" fill="url(#roadBlue)" />
+    <rect x="620" y="498" width="54" height="102" rx="2" fill="url(#roadBlue)" />
+  </g>
+
+  <g stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" opacity="0.96">
+    <path d="M 286 267 H 388" stroke-dasharray="12 10" />
+    <path d="M 402 195 V 896" stroke-dasharray="12 10" />
+    <path d="M 412 267 H 785" stroke-dasharray="12 10" />
+    <path d="M 286 525 H 706" stroke-dasharray="12 10" />
+    <path d="M 652 525 H 790" stroke-dasharray="12 10" />
+    <path d="M 292 816 H 506" stroke-dasharray="12 10" />
+    <path d="M 648 198 V 524" stroke-dasharray="12 10" />
+  </g>
+
+  <g fill="#ffffff" opacity="0.98">
+    <rect x="368" y="240" width="4" height="54" />
+    <rect x="378" y="240" width="4" height="54" />
+    <rect x="388" y="240" width="4" height="54" />
+    <rect x="398" y="240" width="4" height="54" />
+    <rect x="408" y="240" width="4" height="54" />
+    <rect x="418" y="240" width="4" height="54" />
+    <rect x="628" y="240" width="4" height="54" />
+    <rect x="638" y="240" width="4" height="54" />
+    <rect x="648" y="240" width="4" height="54" />
+    <rect x="658" y="240" width="4" height="54" />
+    <rect x="668" y="240" width="4" height="54" />
+  </g>
+
+  <g fill="#ffffff" opacity="0.98">
+    <rect x="367" y="495" width="54" height="4" />
+    <rect x="367" y="505" width="54" height="4" />
+    <rect x="367" y="515" width="54" height="4" />
+    <rect x="367" y="525" width="54" height="4" />
+    <rect x="367" y="535" width="54" height="4" />
+    <rect x="367" y="795" width="54" height="4" />
+    <rect x="367" y="805" width="54" height="4" />
+    <rect x="367" y="815" width="54" height="4" />
+    <rect x="367" y="825" width="54" height="4" />
+    <rect x="367" y="775" width="54" height="4" />
+    <rect x="367" y="785" width="54" height="4" />
+  </g>
+
+  <g fill="url(#orangeBlock)">
+    <path d="M 300 303 H 346 V 362 H 312 V 331 H 300 Z" />
+    <path d="M 443 303 H 510 V 332 H 473 V 361 H 443 Z" />
+    <path d="M 526 303 H 609 V 340 H 526 Z" />
+    <path d="M 300 433 H 339 V 470 H 300 Z" />
+    <path d="M 492 462 H 538 V 488 H 492 Z" />
+    <path d="M 448 552 H 499 V 579 H 448 Z" />
+    <path d="M 506 552 H 571 V 605 H 507 V 579 H 492 V 569 H 506 Z" />
+    <path d="M 708 552 H 751 V 566 H 765 V 619 H 708 Z" />
+    <path d="M 300 587 H 341 V 637 H 300 Z" />
+    <path d="M 300 667 H 338 V 694 H 321 V 726 H 300 Z" />
+    <path d="M 444 637 H 492 V 665 H 444 Z" />
+    <path d="M 450 682 H 515 V 742 H 466 V 711 H 450 Z" />
+    <path d="M 699 642 H 744 V 685 H 699 Z" />
+    <path d="M 434 899 H 472 V 855 H 434 Z" />
+    <path d="M 434 750 H 472 V 785 H 434 Z" />
+    <path d="M 334 750 H 272 V 785 H 334 Z" />
+    <path d="M 314 729 H 272 V 785 H 314 Z" />
+  </g>
+
+  <g fill="url(#purpleBlock)">
+    <path d="M 279 304 H 302 V 384 H 333 V 393 H 279 Z" />
+    <path d="M 413 377 H 474 V 392 H 443 V 451 H 413 Z" />
+    <path d="M 279 545 H 316 V 559 H 279 Z" />
+    <path d="M 279 616 H 338 V 631 H 303 V 701 H 279 Z" />
+    <path d="M 423 615 H 498 V 630 H 423 Z" />
+    <path d="M 572 548 H 583 V 610 H 598 V 628 H 572 Z" />
+  </g>
+
+  <g fill="#ffffff" opacity="0.92">
+    <rect x="298" y="384" width="88" height="6" />
+    <rect x="334" y="370" width="6" height="74" />
+    <rect x="447" y="377" width="56" height="6" />
+    <rect x="447" y="385" width="6" height="42" />
+    <rect x="279" y="616" width="76" height="6" />
+    <rect x="279" y="690" width="52" height="6" />
+    <rect x="423" y="615" width="72" height="6" />
+    <rect x="572" y="548" width="6" height="76" />
+  </g>
+
+  <g transform="translate(651 525)">
+    <rect x="-27" y="-27" width="54" height="54" rx="2" fill="url(#roadBlue)" />
+    <g fill="#ffffff" opacity="0.98">
+      <rect x="-23" y="-19" width="4" height="38" />
+      <rect x="-15" y="-19" width="4" height="38" />
+      <rect x="-7" y="-19" width="4" height="38" />
+      <rect x="1" y="-19" width="4" height="38" />
+      <rect x="9" y="-19" width="4" height="38" />
+      <rect x="17" y="-19" width="4" height="38" />
+    </g>
+    <g fill="#ffffff" opacity="0.92">
+      <rect x="-27" y="-3" width="54" height="2" />
+      <rect x="-27" y="5" width="54" height="2" />
+    </g>
+  </g>
+
+  <g transform="translate(566 472) scale(0.84)">
+    <path d="M 0 -49 C 27 -49 49 -27 49 0 C 49 36 0 77 0 77 C 0 77 -49 36 -49 0 C -49 -27 -27 -49 0 -49 Z"
+      fill="#f59a1d" stroke="#1b88cf" stroke-width="8" />
+    <circle cx="0" cy="0" r="18" fill="#1b88cf" />
+    <circle cx="0" cy="0" r="9" fill="#ffffff" />
+  </g>
+</svg>
