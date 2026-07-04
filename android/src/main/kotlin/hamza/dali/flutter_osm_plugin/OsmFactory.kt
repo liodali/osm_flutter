@@ -2,8 +2,8 @@ package hamza.dali.flutter_osm_plugin
 
 import android.app.Activity
 import android.content.Context
+import hamza.dali.flutter_osm_plugin.mapscore.MapscoreFlutterOsmView
 import hamza.dali.flutter_osm_plugin.models.CustomTile
-import hamza.dali.flutter_osm_plugin.models.fromMapToCustomTile
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.StandardMessageCodec
@@ -14,7 +14,7 @@ open class OsmFactory(
     private val binaryMessenger: BinaryMessenger,
     private val provider: ProviderLifecycle,
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
-    private lateinit var osmFlutterView: FlutterOsmView
+    private lateinit var osmFlutterView: MapscoreFlutterOsmView
 
     private var activity: Activity? = null
     private var binding: ActivityPluginBinding? = null
@@ -36,7 +36,7 @@ open class OsmFactory(
         if ((args).containsKey("enableRotationGesture")) {
             enableRotationGesture = args["enableRotationGesture"] as Boolean
         }
-        osmFlutterView = FlutterOsmView(
+        osmFlutterView = MapscoreFlutterOsmView(
             requireNotNull(context),
             binaryMessenger,
             viewId,

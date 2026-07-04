@@ -14,6 +14,7 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.embedding.engine.plugins.lifecycle.FlutterLifecycleAdapter
+import io.openmobilemaps.mapscore.MapsCore
 import org.osmdroid.config.Configuration
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -38,6 +39,8 @@ class FlutterOsmPlugin :
     }
 
     override fun onAttachedToEngine(binding: FlutterPluginBinding) {
+        // Initialize the mapscore (openmobilemaps) engine as early as possible.
+        MapsCore.initialize()
         Configuration.getInstance().load(
             requireNotNull(binding.applicationContext),
             PreferenceManager.getDefaultSharedPreferences(binding.applicationContext)

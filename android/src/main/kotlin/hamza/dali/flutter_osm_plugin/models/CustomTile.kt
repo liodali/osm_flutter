@@ -7,7 +7,9 @@ data class CustomTile(
     val tileSize: Int,
     val minZoomLevel: Int,
     val maxZoomLevel: Int,
-    val api: Pair<String, String>?
+    val api: Pair<String, String>?,
+    val styleURL: String?,
+    val isVector: Boolean,
 ) {
     companion object {
         fun fromMap(map: HashMap<String, Any>):CustomTile{
@@ -29,5 +31,7 @@ fun fromMapToCustomTile(map: HashMap<String, Any>): CustomTile = CustomTile(
             (map["api"] as HashMap<*, *>).entries.first().value as String
         )
         else -> null
-    }
+    },
+    styleURL = map["styleURL"] as? String,
+    isVector = map["isVector"] as? Boolean ?: (map["styleURL"] as? String != null),
 )
