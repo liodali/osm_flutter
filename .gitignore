@@ -61,3 +61,7 @@ __pycache__
 .build/
 .devin/
 .metadata
+*.jpeg
+*.png
+*.svg
+!android/src/main/assets/fonts/*.png
