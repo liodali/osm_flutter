@@ -37,7 +37,7 @@
 - listen to region change (Android/iOS/Web)
 - set custom tiles (Android/iOS/Web)
 - satellite tiles preset (Android/iOS/Web)
-- vector tiles support via styleURL (Android/iOS)
+- vector tiles support via styleURL (Android/iOS/Web)
 - external tracking control (Android/iOS/Web)
 
 ## Getting Started
@@ -85,7 +85,7 @@ Add the following to your `pubspec.yaml` file:
 - `MapController.satelliteLayer` — named constructor with ArcGIS World Imagery satellite tiles
 - `CustomTile.satellite` — preset for satellite tiles
 - `CustomTile.openFreeMap` — preset for OpenFreeMap vector tiles with `styleURL`
-- `styleURL` and `isVector` fields on `CustomTile` for vector tile support
+- `styleURL` and `isVector` fields on `CustomTile` for vector tile support (Android/iOS/Web)
 - `useExternalTracking` parameter on all `MapController` constructors for external location control
 - Dotted road style and border customization in `drawRoadManually` (iOS)
 - Improved location permission handling with explicit checks and user-friendly errors
