@@ -1,6 +1,6 @@
 name: flutter_osm_web
 description: flutter web interface for flutter osm contain web channel and web api
-version: 1.4.4
+version: 2.0.0
 homepage: https://github.com/liodali/osm_flutter
 
 environment:
@@ -16,10 +16,10 @@ dependencies:
   stream_transform: ^2.1.0
   routing_client_dart: ^0.5.5
   dio: ^5.9.0
-  flutter_osm_interface: ^1.4.0
+  flutter_osm_interface: ^1.5.0
   # path dependency for local development
-  # flutter_osm_interface: 
-  #   path: ../flutter_osm_interface/
+  #flutter_osm_interface:
+  #  path: ../flutter_osm_interface/
   flutter_test:
     sdk: flutter
 
@@ -39,6 +39,7 @@ flutter:
         fileName: flutter_osm_web.dart
   assets:
     - packages/flutter_osm_web/src/asset/map.html
+    - packages/flutter_osm_web/src/asset/index_maplibre.html
     - packages/flutter_osm_web/src/asset/map.js
     - packages/flutter_osm_web/src/asset/osm_interop.js
   # To add assets to your plugin package, add an assets section, like this:
