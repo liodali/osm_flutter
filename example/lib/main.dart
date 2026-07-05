@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin_example/src/common/router_config.dart';
 import 'package:flutter_osm_plugin_example/src/common/url_strategy/url_strategy.dart'
@@ -5,10 +6,15 @@ import 'package:flutter_osm_plugin_example/src/common/url_strategy/url_strategy.
 import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
 import 'package:forui/forui.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:marionette_flutter/marionette_flutter.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  if (kDebugMode) {
+    MarionetteBinding.ensureInitialized();
+  } else {
+    WidgetsFlutterBinding.ensureInitialized();
+  }
   await Hive.initFlutter();
   await LocationStorage.init();
   await RouteHistoryStorage.init();

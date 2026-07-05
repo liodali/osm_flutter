@@ -30,6 +30,7 @@ dependencies:
   hive_ce: ^2.19.2
   hive_ce_flutter: ^2.2.0
   path_provider: ^2.1.5
+  marionette_flutter: 0.6.0
 
 dev_dependencies:
   flutter_lints: ^4.0.0
