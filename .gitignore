@@ -64,4 +64,5 @@ __pycache__
 *.jpeg
 *.png
 *.svg
+!assets/default_pin.png
 !android/src/main/assets/fonts/*.png

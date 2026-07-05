@@ -1,3 +1,7 @@
+### 2.0.0+1:
+
+- fix missing `assets/default_pin.png` in published package caused by `.gitignore` `*.png` rule
+
 ### 2.0.0:
 
 - **Breaking**: migrate Android map engine from osmdroid to mapscore (openmobilemaps)
