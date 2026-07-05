@@ -2,44 +2,46 @@
   <img src="https://raw.githubusercontent.com/liodali/osm_flutter/0.70.1/.github/OSM%20Flutter%20Logo.png?sanitize=true" width="500px">
 </p>
 
-# flutter_osm_plugin 
+# flutter_osm_plugin
 
-![pub](https://img.shields.io/badge/pub-v1.4.3-blue)   
-
+![pub](https://img.shields.io/badge/pub-v2.0.0-blue)
 
 ## Platform Support
-| Android | iOS | Web |
-|:---:|:---:|:---:|
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 13) | supported :heavy_check_mark: |
 
+|           Android            |                           iOS                           |             Web              |
+| :--------------------------: | :-----------------------------------------------------: | :--------------------------: |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 15.6) | supported :heavy_check_mark: |
 
 <b>osm plugin for flutter apps </b>
 
-* current position (Android/iOS/web)
-* change position (Android/iOS/web) 
-* create Marker manually (Android/iOS/web)
-* tracking user location (Android/iOS/web)
-* customize Icon Marker (Android/iOS/web)
-* customize user Marker (Android/iOS/web)
-* assisted selection position (Android/iOS)
-* set BoundingBox (Android/iOS/Web)
-* zoom into region (Android/iOS/web)
-* draw Road  (Android/iOS/web)
-* draw dotted Road (Android/iOS/web)
-* recuperate information (instruction/duration/distance) of the current road  (Android/iOS/web)
-* draw Road manually (Android/iOS/web)
-* draw multiple Roads  (Android/iOS/web)
-* ClickListener on Marker (Android/iOS/web)
-* ClickListener on Map (Android/iOS/web)
-* calculate distance between 2 points 
-* address suggestion
-* draw shapes (Android/iOS/web)
-* simple dialog location picker (Android/iOS)
-* listen to region change (Android/iOS/Web)
-* set custom tiles (Android/iOS/Web) 
-
+- current position (Android/iOS/web)
+- change position (Android/iOS/web)
+- create Marker manually (Android/iOS/web)
+- tracking user location (Android/iOS/web)
+- customize Icon Marker (Android/iOS/web)
+- customize user Marker (Android/iOS/web)
+- assisted selection position (Android/iOS)
+- set BoundingBox (Android/iOS/Web)
+- zoom into region (Android/iOS/web)
+- draw Road (Android/iOS/web)
+- draw dotted Road (Android/iOS/web)
+- recuperate information (instruction/duration/distance) of the current road (Android/iOS/web)
+- draw Road manually (Android/iOS/web)
+- draw multiple Roads (Android/iOS/web)
+- ClickListener on Marker (Android/iOS/web)
+- ClickListener on Map (Android/iOS/web)
+- calculate distance between 2 points
+- address suggestion
+- draw shapes (Android/iOS/web)
+- simple dialog location picker (Android/iOS)
+- listen to region change (Android/iOS/Web)
+- set custom tiles (Android/iOS/Web)
+- satellite tiles preset (Android/iOS/Web)
+- vector tiles support via styleURL (Android/iOS)
+- external tracking control (Android/iOS/Web)
 
 ## Getting Started
+
 <img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
 <br>
 <img src="https://github.com/liodali/osm_flutter/blob/0.41.0/tileLayerRuntime.gif?raw=true" alt="openStreetMap flutter examples" width=260><br>
@@ -51,15 +53,43 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^1.4.3
-
-
+      flutter_osm_plugin: ^2.0.0
 
 ## Integration with Hooks
 
 > To use our map library with `Flutter_Hooks` library use our new extension library
-https://pub.dev/packages/osm_flutter_hooks
-many thanks for @ben-xD
+> https://pub.dev/packages/osm_flutter_hooks
+> many thanks for @ben-xD
+
+### Migration to `2.0.0`
+
+> **Breaking**: Android map engine switched from osmdroid to mapscore (openmobilemaps).
+> iOS minimum version raised to 15.6.
+
+**Android:**
+
+- `compileSdk` must be **36**
+- `minSdk` must be **32**
+- Kotlin Gradle Plugin (KGP) is now required
+- The map rendering engine is now [mapscore](https://github.com/ecmwf/openmobilemaps) (openmobilemaps) instead of osmdroid
+- Custom tiles, markers, roads, and shapes are now handled by the new `MapscoreFlutterOsmView`
+
+**iOS:**
+
+- Minimum iOS version is now **15.6**
+- Swift Package Manager (SPM) is the preferred dependency manager
+- The `OSMMapCoreIOSFramework` dependency has been updated to the latest revision
+
+**What's new:**
+
+- `MapController.satelliteLayer` — named constructor with ArcGIS World Imagery satellite tiles
+- `CustomTile.satellite` — preset for satellite tiles
+- `CustomTile.openFreeMap` — preset for OpenFreeMap vector tiles with `styleURL`
+- `styleURL` and `isVector` fields on `CustomTile` for vector tile support
+- `useExternalTracking` parameter on all `MapController` constructors for external location control
+- Dotted road style and border customization in `drawRoadManually` (iOS)
+- Improved location permission handling with explicit checks and user-friendly errors
+- `myLocation()` now requests location permission on Android if not granted
 
 ### Migration to `0.41.2` (Android Only)
 
@@ -69,8 +99,8 @@ many thanks for @ben-xD
     * change gradle version from `7.0.4` to `7.1.3`
     * change compileSdkVersion to 33
 
-
 ### Migration to `0.34.0` (Android Only)
+
 > if you are using this plugin before Flutter 3
 
 > you should make some modification in build.gradle before that run flutter clean && flutter pub get
@@ -80,9 +110,10 @@ many thanks for @ben-xD
     * change kotlin version from `1.5.21` to `1.6.21`
     * change gradle version from `7.0.2` to `7.1.3` or `7.0.4`
     * change compileSdkVersion to 32
-    
+
 ### Migration to `0.16.0` (Android Only)
-> if you are using this plugin before Flutter 2 
+
+> if you are using this plugin before Flutter 2
 
 > you should make some modification in build.gradle before that run flutter clean && flutter pub get
 
@@ -98,6 +129,7 @@ many thanks for @ben-xD
 On web platforms, UI elements above the map cannot receive click events. This occurs because the OSM map renders as an `HtmlElementView` that captures all pointer events before they reach Flutter widgets.
 
 #### Common Issues
+
 - Dialogs appear but buttons are unclickable
 - UI elements over the map don't receive click events
 - The map's "grab" cursor shows even when hovering over your UI elements
@@ -146,9 +178,9 @@ dependencies:
 Without the `PointerInterceptor` wrapping the dialog, the buttons would be unresponsive on web platforms because the map underneath would capture all the click events before they reach your UI elements.
 
 ## Simple Usage
+
 #### Creating a basic `OSMFlutter` :
-  
-  
+
 ```dart
 OSMFlutter(
   controller: MapController(
@@ -195,8 +227,8 @@ OSMFlutter(
 
 ## MapController
 
-> Declare `MapController` to control OSM map 
- 
+> Declare `MapController` to control OSM map
+
 <b>1) Initialisation </b>
 
 > **Note**
@@ -208,10 +240,10 @@ OSMFlutter(
 // default constructor
  MapController controller = MapController(
                             initPosition: GeoPoint(latitude: 47.4358055, longitude: 8.4737324),
-                            areaLimit: BoundingBox( 
-                                east: 10.4922941, 
-                                north: 47.8084648, 
-                                south: 45.817995, 
+                            areaLimit: BoundingBox(
+                                east: 10.4922941,
+                                north: 47.8084648,
+                                south: 45.817995,
                                 west:  5.9559113,
                       ),
             );
@@ -240,31 +272,27 @@ final controller = MapController.withUserPosition(
 )
 ```
 
-
-
 <b>2) Dispose </b>
 
 ```dart
      controller.dispose();
 ```
 
-<b> 3) Properties  of default `MapController` </b>
+<b> 3) Properties of default `MapController` </b>
 
-> `MapController` has 2 named Constructor `MapController.withPosition`,
-`MapController.withUserPosition` to control initialization of the Map
+> `MapController` has named constructors: `MapController.withPosition`, `MapController.withUserPosition`, `MapController.customLayer`, `MapController.cyclOSMLayer`, `MapController.publicTransportationLayer`, `MapController.satelliteLayer` to control initialization of the Map
 
-| Properties                   |  Description                                                        |
-| ---------------------------- | ----------------------------------------------------------------------- |
-| `initMapWithUserPosition`    | (UserTrackingOption?) initialize map with user position   |
-| `initPosition`               | (GeoPoint) if it isn't null, the map will be pointed at this position   |
-| `areaLimit`                  | (Bounding) set area limit of the map (default BoundingBox.world())   |
-| `customLayer`                | (CustomTile) set customer layer  using different osm server , this attribute used only with named constructor `customLayer`  |
-| ` useExternalTracking`       | (bool) if true,we will disable our logic to show userlocation marker or to move to the user position |
+| Properties                | Description                                                                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `initMapWithUserPosition` | (UserTrackingOption?) initialize map with user position                                                                                   |
+| `initPosition`            | (GeoPoint) if it isn't null, the map will be pointed at this position                                                                     |
+| `areaLimit`               | (Bounding) set area limit of the map (default BoundingBox.world())                                                                        |
+| `customLayer`             | (CustomTile) set customer layer using different osm server , this attribute used only with named constructor `customLayer`                |
+| `useExternalTracking`     | (bool) if true, we will disable our logic to show userLocation marker or to move to the user position, only receive user location updates |
 
+<b> 3.1) Custom Layers with `MapController` </b>
 
-<b> 3.1) Custom Layers with  `MapController` </b>
-
-* To change the tile source in OSMFlutter, you should used our named constructor `customLayer`, see the example below
+- To change the tile source in OSMFlutter, you should used our named constructor `customLayer`, see the example below
 
 ```dart
 
@@ -291,30 +319,61 @@ controller = MapController.customLayer(
 
 ```
 
-* also,you can use our predefined custom tiles like 
-* `cyclOSMLayer` constructor for cycling tiles
-* `publicTransportationLayer` constructor for transport tiles ,it's public osm server
-* we support full server path like `("https://tile.opentopomap.org/{z}/{x}/{y}")`
+- also,you can use our predefined custom tiles like
+- `cyclOSMLayer` constructor for cycling tiles
+- `publicTransportationLayer` constructor for transport tiles ,it's public osm server
+- we support full server path like `("https://tile.opentopomap.org/{z}/{x}/{y}")`
+
+* `satelliteLayer` constructor for satellite tiles (ArcGIS World Imagery)
+* `openFreeMap` constructor for vector tiles with styleURL
 
 For more example see our example in `home_example.dart`
 <br>
+<br>
+<b> 3.1.1) Satellite Layer </b>
+
+```dart
+controller = MapController.satelliteLayer(
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+)
+```
+
+<b> 3.1.2) Vector Tiles (OpenFreeMap) </b>
+
+```dart
+controller = MapController.customLayer(
+      initPosition: GeoPoint(
+        latitude: 47.4358055,
+        longitude: 8.4737324,
+      ),
+      customTile: CustomTile.openFreeMap(),
+)
+```
+
+> When `styleURL` is set in `CustomTile`, the tile is treated as a vector tile (`isVector: true` is sent to the platform).
+
 <br>
 <b> 3.2) Change Layers in runtime </b>
 
 ```dart
  await controller.changeTileLayer(tileLayer: CustomTile(...));
 ```
+
 <b>4) Set map on user current location </b>
 
 ```dart
  await controller.currentLocation();
 
 ```
+
 <b> 5) Zoom IN </b>
 
 ```dart
  await controller.setZoom(stepZoom: 2);
- // or 
+ // or
  await controller.zoomIn();
 ```
 
@@ -322,10 +381,11 @@ For more example see our example in `home_example.dart`
 
 ```dart
  await controller.setZoom(stepZoom: -2);
- // or 
+ // or
  await controller.zoomOut();
- 
+
 ```
+
 <b> 5.2) change zoom level </b>
 
 > `zoomLevel` should be between `minZoomLevel` and `maxZoomLevel`
@@ -333,15 +393,16 @@ For more example see our example in `home_example.dart`
 ```dart
  await controller.setZoom(zoomLevel: 8);
 ```
+
 <b> 5.3) zoom to specific bounding box </b>
 
 ```dart
 await controller.zoomToBoundingBox(BoundingBox(),paddingInPixel:0)
 ```
 
-##### Note : 
+##### Note :
 
-* For the box attribute ,If you don't have bounding box,you can use list of geopoint like this `BoundingBox.fromGeoPoints`
+- For the box attribute ,If you don't have bounding box,you can use list of geopoint like this `BoundingBox.fromGeoPoints`
 
 <b> 6) get current zoom level </b>b>
 
@@ -356,24 +417,26 @@ await controller.getZoom();
 ```dart
 await controller.limitAreaMap(BoundingBox( east: 10.4922941, north: 47.8084648, south: 45.817995, west: 5.9559113,));
 ```
+
 > remove bounding box in the map
 
 ```dart
 await controller.removeLimitAreaMap();
 ```
 
-
-<b> 8)  Track user current position </b>
+<b> 8) Track user current position </b>
 
 > for iOS,you should add those line in your info.plist file
+
 ```text
    <key>NSLocationWhenInUseUsageDescription</key>
 	<string>any text you want</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>any text you want</string>
-``` 
-> from version 0.40.0 we can call only `enableTracking` will animate to user location 
-without need to call `currentLocation`
+```
+
+> from version 0.40.0 we can call only `enableTracking` will animate to user location
+> without need to call `currentLocation`
 
 > when `enableStopFollow` is true,map will not be centered if the user location changed
 
@@ -382,19 +445,22 @@ without need to call `currentLocation`
 ```dart
  await controller.enableTracking(enableStopFollow:false,);
 ```
-or 
+
+or
 
 > use this method below if you want to control the map(move to the user location and show the marker) while receiving the user location
 
 ```dart
  await controller.startLocationUpdating();
 ```
+
 <b> 9) Disable tracking user position </b>
 
 ```dart
  await controller.disabledTracking();
 ```
-or 
+
+or
 
 > use this method below if you already used `startLocationUpdating`
 
@@ -410,36 +476,39 @@ or
  await controller.moveTo(GeoPoint(latitude: 47.35387, longitude: 8.43609),animate:true);
 ```
 
-
 <b> 11) recuperation current position </b>
 
 ```dart
  GeoPoint geoPoint = await controller.myLocation();
 ```
+
 <b> 12) get center map </b>
 
 ```dart
 GeoPoint centerMap = await controller.centerMap;
 ```
+
 <b> 12.1) get geoPoint in the map </b>
 
-* recuperate geoPoint of marker add it by user except static points
+- recuperate geoPoint of marker add it by user except static points
 
 ```dart
 List<GeoPoint> geoPoints = await controller.geopoints;
 ```
-<b> 13) get bounding box  map </b>
+
+<b> 13) get bounding box map </b>
 
 ```dart
 BoundingBox bounds = await controller.bounds;
 ```
 
-<b> 14) Map Listener  </b>
+<b> 14) Map Listener </b>
 
-> Get GeoPoint from  listener from controller directly
- (for more example: see home_example.dart )
+> Get GeoPoint from listener from controller directly
+> (for more example: see home_example.dart )
 
 a.1) single tap listener
+
 ```dart
 controller.listenerMapSingleTapping.addListener(() {
       if (controller.listenerMapSingleTapping.value != null) {
@@ -447,7 +516,9 @@ controller.listenerMapSingleTapping.addListener(() {
       }
     });
 ```
+
 a.2) long tap listener
+
 ```dart
 controller.listenerMapLongTapping.addListener(() {
       if (controller.listenerMapLongTapping.value != null) {
@@ -455,7 +526,9 @@ controller.listenerMapLongTapping.addListener(() {
       }
     });
 ```
+
 a.3) region change listener
+
 ```dart
 controller.listenerRegionIsChanging.addListener(() {
       if (controller.listenerRegionIsChanging.value != null) {
@@ -463,6 +536,7 @@ controller.listenerRegionIsChanging.addListener(() {
       }
     });
 ```
+
 <b>15) Create Marker Programmatically </b>
 
 > you can change marker icon by using attribute `markerIcon`
@@ -476,18 +550,18 @@ await controller.addMarker(GeoPoint,
       anchor:IconAnchor(anchor: Anchor.top,)
 );
 ```
- <b> 15.1) Update Marker </b>
 
- > you can change the location,icon,angle,anchor of the specific marker
+<b> 15.1) Update Marker </b>
 
- > The old configuration of the Marker will be keep it the same if not specificied
+> you can change the location,icon,angle,anchor of the specific marker
 
+> The old configuration of the Marker will be keep it the same if not specificied
 
 ```dart
 await controller.changeLocationMarker(oldGeoPoint,newGeoPoint,MarkerIcon,angle,IconAnchor);
 ```
 
-<b> 15.2) Change Icon Marker  </b>
+<b> 15.2) Change Icon Marker </b>
 
 > You can change marker icon by using attribute `markerIcon` of existing Marker
 > The GeoPoint/Marker should be exist
@@ -501,8 +575,8 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 ```dart
  await controller.removeMarker(geoPoint);
 ```
-* PS : static position cannot be removed by this method 
 
+- PS : static position cannot be removed by this method
 
 <b>16) Draw road,recuperate instructions ,distance in km and duration in sec</b>
 
@@ -512,7 +586,7 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 > change the type of the road that user want to use
 
 ```dart
- RoadInfo roadInfo = await controller.drawRoad( 
+ RoadInfo roadInfo = await controller.drawRoad(
    GeoPoint(latitude: 47.35387, longitude: 8.43609),
    GeoPoint(latitude: 47.4371, longitude: 8.6136),
    roadType: RoadType.car,
@@ -528,22 +602,21 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
  print("${roadInfo.instructions}");
 ```
 
+### properties of `RoadOption`
 
-### properties of `RoadOption` 
+| Properties        | Description                                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| `roadColor`       | (Color) required Field, change the default color of the route in runtime                       |
+| `roadWidth`       | (double) change the road width, default value 5.0                                              |
+| `roadBorderColor` | (Color?) set color of border polyline                                                          |
+| `roadBorderWidth` | (double?) set border width of polyline, if width null or 0,polyline will drawed without border |
+| `zoomInto`        | (bool) change zoom level to make the all the road visible (default:true)                       |
+| `isDotted`        | (bool) to draw dotted polyline (default: false)                                                |
 
-
-| Properties               | Description                         |
-| ------------------------ | ----------------------------------- |
-| `roadColor`              | (Color) required Field,  change the default color of the route in runtime    |
-| `roadWidth`              | (double) change the road width, default value 5.0       |
-| `roadBorderColor`        | (Color?) set color of border polyline       |
-| `roadBorderWidth`        | (double?) set border width of polyline, if width null or 0,polyline will drawed without border |
-| `zoomInto`               | (bool)  change zoom level to make the all the road visible (default:true)    |
-| `isDotted`               | (bool)  to draw dotted polyline   (default: false)    |
-
-**Note** drawing dotted polyline has limitation on web where we cannot draw dotted poyline with borderWidth > 0 
+**Note** drawing dotted polyline has limitation on web where we cannot draw dotted poyline with borderWidth > 0
 
 <b> 16.b) draw road manually </b>
+
 ```dart
 await controller.drawRoadManually(
         waysPoint,
@@ -612,10 +685,9 @@ final configs = [
 
 <b>19) delete all roads </b>
 
-```dart 
+```dart
  await controller.clearAllRoads();
 ```
-
 
 <b>20) Change static GeoPoint position </b>
 
@@ -623,12 +695,12 @@ final configs = [
 
 > change their position over time
 
->  change orientation of the static GeoPoint with `GeoPointWithOrientation`
-
+> change orientation of the static GeoPoint with `GeoPointWithOrientation`
 
 ```dart
  await controller.setStaticPosition(List<GeoPoint> geoPoints,String id );
 ```
+
 <b>21) Change/Add Marker old/new static GeoPoint position </b>
 
 > add marker of new static point
@@ -647,7 +719,8 @@ final configs = [
 
 <b>23) Draw Shape in the map </b>
 
-* Circle
+- Circle
+
 ```dart
  /// to draw
  await controller.drawCircle(CircleOSM(
@@ -662,11 +735,13 @@ final configs = [
  /// to remove Circle using Key
  await controller.removeCircle("circle0");
 
- /// to remove All Circle in the map 
+ /// to remove All Circle in the map
  await controller.removeAllCircle();
 
 ```
-* Rect
+
+- Rect
+
 ```dart
  /// to draw
  await controller.drawRect(RectOSM(
@@ -680,18 +755,21 @@ final configs = [
  /// to remove Rect using Key
  await controller.removeRect("rect");
 
- /// to remove All Rect in the map 
+ /// to remove All Rect in the map
  await controller.removeAllRect();
 
 ```
-* remove all shapes in the map
+
+- remove all shapes in the map
+
 ```dart
  await controller.removeAllShapes();
 ```
 
 ### Interfaces:
-* OSMMixinObserver :
-> contain listener methods to get event from native map view like when mapIsReady,mapRestored
+
+- OSMMixinObserver :
+  > contain listener methods to get event from native map view like when mapIsReady,mapRestored
 
 > you should add ths line `controller.addObserver(this);` in initState
 
@@ -699,20 +777,20 @@ final configs = [
 
 > `mapIsReady` will replace `listenerMapIsReady`
 
-| Methods                       | Description                         |
-| ----------------------------- | ----------------------------------- |
-| `mapIsReady`                  | (callback) Should be override this method, to get notified when map is ready to go or not |
-| `mapRestored`                 | (callback) Should be override this method, to get notified when map is restored you can also add you backup |
-| `onSingleTap`                 | (callback) Called when the user makes single click on map |
-| `onLongTap`                   | (callback) Called when the user makes long click on map |
-| `onMarkerClicked`             | (callback) Called when the user makes single click on marker |
-| `onMarkerLongPress`           | (callback) Called when the user makes long press click on marker |
-| `onRegionChanged`             | (callback) Notified when map is change region (on moves) |
-| `onRoadTap`                   | (callback) Notified when user click on the polyline (road) |
-| `onLocationChanged`           | (callback) Notified when user location changed  |
+| Methods             | Description                                                                                                 |
+| ------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `mapIsReady`        | (callback) Should be override this method, to get notified when map is ready to go or not                   |
+| `mapRestored`       | (callback) Should be override this method, to get notified when map is restored you can also add you backup |
+| `onSingleTap`       | (callback) Called when the user makes single click on map                                                   |
+| `onLongTap`         | (callback) Called when the user makes long click on map                                                     |
+| `onMarkerClicked`   | (callback) Called when the user makes single click on marker                                                |
+| `onMarkerLongPress` | (callback) Called when the user makes long press click on marker                                            |
+| `onRegionChanged`   | (callback) Notified when map is change region (on moves)                                                    |
+| `onRoadTap`         | (callback) Notified when user click on the polyline (road)                                                  |
+| `onLocationChanged` | (callback) Notified when user location changed                                                              |
 
+\*\* example
 
-** example 
 ```dart
 class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 
@@ -765,52 +843,51 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 }
 ```
 
+## `OSMFlutter`
 
+| Properties            | Description                                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------------------------ |
+| `mapIsLoading`        | (Widget) show custom widget when the map finish initialization                                         |
+| `osmOption`           | (OSMOption) used to configure OSM Map such as zoom,road,userLocationMarker                             |
+| `onGeoPointClicked`   | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker            |
+| `onGeoPointLongPress` | (callback) listener triggered when marker is long press clicked ,return current geoPoint of the marker |
+| `onLocationChanged`   | (callback) it is fired when you activate tracking and user position has been changed                   |
+| `onMapMoved`          | (callback) it is each the map moved user handler or navigate to another location using APIs            |
+| `onMapIsReady`        | (callback) listener trigger to get map is initialized or not                                           |
 
-##  `OSMFlutter`
+## `OSMOption`
 
-| Properties                    | Description                         |
-| ----------------------------- | ----------------------------------- |
-| `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
-| `osmOption`                   | (OSMOption) used to configure OSM Map such as zoom,road,userLocationMarker    |
-| `onGeoPointClicked`           | (callback) listener triggered when marker is clicked ,return current geoPoint of the marker         |
-| `onGeoPointLongPress`         | (callback) listener triggered when marker is long press clicked ,return current geoPoint of the marker         |
-| `onLocationChanged`           | (callback) it is fired when you activate tracking and  user position has been changed          |
-| `onMapMoved`                  | (callback) it is each the map moved user handler or navigate to another location using APIs       |
-| `onMapIsReady`                | (callback) listener trigger to get map is initialized or not |
-
-## `OSMOption` 
-
-| Properties                    | Description                         |
-| ----------------------------- | ----------------------------------- |
-| `mapIsLoading`                | (Widget)  show custom  widget when the map finish initialization     |
-| `trackMyPosition`             | enable tracking user position.     |
-| `showZoomController`          | show default zoom controller.       |
-| `userLocationMarker`          | change user marker or direction marker icon in tracking location                |
-| `markerOption`                | configure marker of osm map                   |
-| `zoomOption`                  | set  configuration for zoom in the Map
-| `roadConfiguration`           | (RoadOption) set  default color,width,borderColor,borderWdith for polylines |
-| `staticPoints`                | List of Markers you want to show always ,should every marker have unique id |
-| `showContributorBadgeForOSM`  | (bool) enable to show copyright widget of osm in the map  |
-| `enableRotationByGesture`     | (bool) enable to rotation gesture for map, default: false  |
-| `showDefaultInfoWindow`       | (bool) enable/disable default infoWindow of marker (default = false)         |
-| `isPicker`                    | (bool) enable advanced picker from init of  the map (default = false)         |
-
+| Properties                   | Description                                                                 |
+| ---------------------------- | --------------------------------------------------------------------------- |
+| `mapIsLoading`               | (Widget) show custom widget when the map finish initialization              |
+| `trackMyPosition`            | enable tracking user position.                                              |
+| `showZoomController`         | show default zoom controller.                                               |
+| `userLocationMarker`         | change user marker or direction marker icon in tracking location            |
+| `markerOption`               | configure marker of osm map                                                 |
+| `zoomOption`                 | set configuration for zoom in the Map                                       |
+| `roadConfiguration`          | (RoadOption) set default color,width,borderColor,borderWdith for polylines  |
+| `staticPoints`               | List of Markers you want to show always ,should every marker have unique id |
+| `showContributorBadgeForOSM` | (bool) enable to show copyright widget of osm in the map                    |
+| `enableRotationByGesture`    | (bool) enable to rotation gesture for map, default: false                   |
+| `showDefaultInfoWindow`      | (bool) enable/disable default infoWindow of marker (default = false)        |
+| `isPicker`                   | (bool) enable advanced picker from init of the map (default = false)        |
 
 ## `ZoomOption`
 
-| Properties                    | Description                                                  |
-| ----------------------------- | ------------------------------------------------------------ |
-| `stepZoom`                    | set step zoom to use in zoomIn()/zoomOut() (default 1)       |
-| `initZoom`                    | set init zoom level in the map (default 10)                  |
-| `maxZoomLevel`                | set maximum zoom level in the map  (2 <= x <= 19)            |
-| `minZoomLevel`                | set minimum zoom level in the map  (2 <= x <= 19 )           |
+| Properties     | Description                                            |
+| -------------- | ------------------------------------------------------ |
+| `stepZoom`     | set step zoom to use in zoomIn()/zoomOut() (default 1) |
+| `initZoom`     | set init zoom level in the map (default 10)            |
+| `maxZoomLevel` | set maximum zoom level in the map (2 <= x <= 19)       |
+| `minZoomLevel` | set minimum zoom level in the map (2 <= x <= 19 )      |
 
 ### Custom Controller
+
 > To create your own MapController to need to extends from `BaseMapController`,
 > if you want to make a custom initialization to need to call init() and put your code after super.init()
 
-* example
+- example
+
 ```dart
 class CustomMapController extends BaseMapController {
 
@@ -827,10 +904,10 @@ class CustomMapController extends BaseMapController {
   }
 }
 ```
-### STATIC Map: 
+
+### STATIC Map:
 
 > using `OSMViewer` we can show static map that contain on location
-
 
 ```dart
 OSMViewer(
@@ -850,10 +927,10 @@ OSMViewer(
 
 ```
 
-
 ## STATIC METHODS:
 
 <b>1) Calculate distance between 2 geoPoint position </b>
+
 ```dart
  double distanceEnMetres = await distance2point(GeoPoint(longitude: 36.84612143139903,latitude: 11.099388684927824,),
         GeoPoint( longitude: 36.8388023164018, latitude: 11.096959785428027, ),);
@@ -861,7 +938,7 @@ OSMViewer(
 
 <b>2) Get search Suggestion of text </b>
 
->  you should know that i'm using public api, don't make lot of request
+> you should know that i'm using public api, don't make lot of request
 
 ```dart
     List<SearchInfo> suggestions = await addressSuggestion("address");
@@ -869,7 +946,7 @@ OSMViewer(
 
 ## show dialog picker
 
-> simple dialog  location picker to selected user location   
+> simple dialog location picker to selected user location
 
 ```dart
 GeoPoint p = await showSimplePickerLocation(
@@ -882,42 +959,43 @@ GeoPoint p = await showSimplePickerLocation(
 ```
 
 ## CustomLocationPicker
-> customizable widget to build  search location  
+
+> customizable widget to build search location
 
 > you should use `PickerMapController` as controller for the widget
- see example  :  [ search widget ](https://github.com/liodali/osm_flutter/blob/master/example/lib/search_example.dart) 
+> see example : [ search widget ](https://github.com/liodali/osm_flutter/blob/master/example/lib/search_example.dart)
 
 #### Properties of `CustomLocationPicker`
 
-
-| Properties               | Description                         |
-| ------------------------ | ----------------------------------- |
-| `controller`             | (PickerMapController) controller of the widget     |
-| `appBarPicker`           | (AppBar) appbar for the widget        |
-| `topWidgetPicker`        | (Widget?) widget will be show on top of osm map,for example to show address suggestion                     |
-| `bottomWidgetPicker`     | (Widget?) widget will be show at bottom of screen for example to show more details about selected location or more action       |
-
-
+| Properties           | Description                                                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `controller`         | (PickerMapController) controller of the widget                                                                            |
+| `appBarPicker`       | (AppBar) appbar for the widget                                                                                            |
+| `topWidgetPicker`    | (Widget?) widget will be show on top of osm map,for example to show address suggestion                                    |
+| `bottomWidgetPicker` | (Widget?) widget will be show at bottom of screen for example to show more details about selected location or more action |
 
 ## NOTICE:
-> `For now the map working for android,iOS , web will be available soon `
 
-> ` If you get ssl certfiction exception,use can use http by following instruction below `
+> `The map supports Android, iOS, and Web.`
 
-> ` If you want to use http in Android PIE or above : `
-  * enable useSecureURL and add ` android:usesCleartextTraffic="true" `  in your manifest like example below :
+> `If you get ssl certfiction exception,use can use http by following instruction below`
 
-    * ` <application
-        ...
-        android:usesCleartextTraffic="true"> 
-        `
-> if you faced build error in fresh project you need to follow those instruction [#40](https://github.com/liodali/osm_flutter/issues/40)
-    
-    1) remove flutter_osm_plugin from pubspec, after that pub get
-    2) open android module in android studio ( right click in name of project -> flutter-> open android module in android studio)
-    3) update gradle version to 4.1.1 ( IDE will show popup to make update)
-    4) update kotlin version to 1.4.21 & re-build the project
-    5) re-add flutter_osm_plugin in pubspec , pub get ( or flutter clean & pub get )
+> `If you want to use http in Android PIE or above :`
+
+- enable useSecureURL and add `android:usesCleartextTraffic="true"` in your manifest like example below :
+
+      * ` <application
+          ...
+          android:usesCleartextTraffic="true">
+          `
+
+  > if you faced build error in fresh project you need to follow those instruction [#40](https://github.com/liodali/osm_flutter/issues/40)
+
+      1) remove flutter_osm_plugin from pubspec, after that pub get
+      2) open android module in android studio ( right click in name of project -> flutter-> open android module in android studio)
+      3) update gradle version to 4.1.1 ( IDE will show popup to make update)
+      4) update kotlin version to 1.4.21 & re-build the project
+      5) re-add flutter_osm_plugin in pubspec , pub get ( or flutter clean & pub get )
 
 > Before you publish your application using this library,
 > you should take care about copyright of openStreetMap Data,
