@@ -71,7 +71,7 @@ jobs:
           echo '${{ secrets.SERVICE_ACCOUNT_JSON }}' > android/fastlane/service-account.json
 
       - name: Build App Bundle
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --no-tree-shake-icons
 
       - name: Upload to Google Play (Internal Testing)
         uses: r0adkll/upload-google-play@v1
