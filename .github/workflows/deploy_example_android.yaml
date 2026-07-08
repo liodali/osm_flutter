@@ -25,6 +25,9 @@ jobs:
         working-directory: example
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set track from input or default to internal for tags
         id: track
         run: |
@@ -33,9 +36,6 @@ jobs:
           else
             echo "track=internal" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
