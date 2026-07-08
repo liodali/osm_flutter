@@ -68,7 +68,7 @@ jobs:
       - name: Decode Google Play Service Account
         run: |
           mkdir -p android/fastlane
-          echo '${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}' > android/fastlane/service-account.json
+          echo '${{ secrets.SERVICE_ACCOUNT_JSON }}' > android/fastlane/service-account.json
 
       - name: Build App Bundle
         run: flutter build appbundle --release
@@ -76,7 +76,8 @@ jobs:
       - name: Upload to Google Play (Internal Testing)
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJson: example/android/fastlane/service-account.json
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          # serviceAccountJson: example/android/fastlane/service-account.json
           packageName: hamza.dali.flutter_osm_plugin_example
           releaseFiles: example/build/app/outputs/bundle/release/app-release.aab
           track: ${{ steps.track.outputs.track }}
