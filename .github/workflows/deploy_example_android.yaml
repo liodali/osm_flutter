@@ -123,8 +123,10 @@ jobs:
           set -e
           PUBSPEC_VERSION=$(grep '^version:' pubspec.yaml | head -n1 | awk '{print $2}')
           if echo "$PUBSPEC_VERSION" | grep -q '+'; then
+            VERSION_NAME=$(echo "$PUBSPEC_VERSION" | cut -d'+' -f1)
             BUILD_NUMBER=$(echo "$PUBSPEC_VERSION" | cut -d'+' -f2)
           else
+            VERSION_NAME="$PUBSPEC_VERSION"
             BUILD_NUMBER=1
           fi
 
@@ -143,13 +145,22 @@ jobs:
             BUILD_NUMBER=$((EXISTING_CODE + 1))
           fi
 
-          mkdir -p android
-          if [ -f "$LOCAL_PROPS" ] && grep -q '^flutter.versionCode=' "$LOCAL_PROPS"; then
-            sed -i "s/^flutter.versionCode=.*/flutter.versionCode=$BUILD_NUMBER/" "$LOCAL_PROPS"
-          else
-            echo "flutter.versionCode=$BUILD_NUMBER" >> "$LOCAL_PROPS"
-          fi
+          set_prop() {
+            local key="$1"
+            local value="$2"
+            if [ -f "$LOCAL_PROPS" ] && grep -q "^$key=" "$LOCAL_PROPS"; then
+              sed -i "s/^$key=.*/$key=$value/" "$LOCAL_PROPS"
+            else
+              echo "$key=$value" >> "$LOCAL_PROPS"
+            fi
+          }
 
+          mkdir -p android
+          set_prop "flutter.buildMode" "release"
+          set_prop "flutter.versionName" "$VERSION_NAME"
+          set_prop "flutter.versionCode" "$BUILD_NUMBER"
+
+          echo "flutter.versionName=$VERSION_NAME"
           echo "flutter.versionCode=$BUILD_NUMBER"
 
       - name: Build App Bundle
