@@ -1,7 +1,7 @@
 name: flutter_osm_plugin_example
 description: Demonstrates how to use the flutter_osm_plugin plugin.
 publish_to: 'none'
-version: 2.0.0
+version: 2.0.0+2
 
 environment:
   sdk: ">=3.10.0 <4.0.0"

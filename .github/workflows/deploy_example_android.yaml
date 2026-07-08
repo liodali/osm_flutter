@@ -70,6 +70,88 @@ jobs:
           mkdir -p android/fastlane
           echo '${{ secrets.SERVICE_ACCOUNT_JSON }}' > android/fastlane/service-account.json
 
+      - name: Get latest versionCode from Google Play
+        id: play_version
+        run: |
+          cat > /tmp/get_play_version.py <<'PYEOF'
+          import json
+          import os
+          import sys
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+
+          package_name = "hamza.dali.flutter_osm_plugin_example"
+          service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON", "")
+          if not service_account_json:
+              print("0")
+              sys.exit(0)
+
+          try:
+              info = json.loads(service_account_json)
+              credentials = service_account.Credentials.from_service_account_info(
+                  info,
+                  scopes=["https://www.googleapis.com/auth/androidpublisher"]
+              )
+              service = build("androidpublisher", "v3", credentials=credentials, cache_discovery=False)
+              edit = service.edits().insert(packageName=package_name).execute()
+              edit_id = edit["id"]
+              tracks = service.edits().tracks().list(packageName=package_name, editId=edit_id).execute()
+              max_code = 0
+              for track in tracks.get("tracks", []):
+                  for release in track.get("releases", []):
+                      for vc in release.get("versionCodes", []):
+                          try:
+                              max_code = max(max_code, int(vc))
+                          except ValueError:
+                              pass
+              service.edits().delete(packageName=package_name, editId=edit_id).execute()
+              print(max_code)
+          except Exception as e:
+              print(f"Failed to query Play Console: {e}", file=sys.stderr)
+              print("0")
+          PYEOF
+
+          pip install -q google-auth google-api-python-client
+          PLAY_VERSION=$(python3 /tmp/get_play_version.py)
+          echo "play_version_code=$PLAY_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Play Console max versionCode: $PLAY_VERSION"
+        env:
+          SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+
+      - name: Set versionCode from pubspec and auto-increment
+        run: |
+          set -e
+          PUBSPEC_VERSION=$(grep '^version:' pubspec.yaml | head -n1 | awk '{print $2}')
+          if echo "$PUBSPEC_VERSION" | grep -q '+'; then
+            BUILD_NUMBER=$(echo "$PUBSPEC_VERSION" | cut -d'+' -f2)
+          else
+            BUILD_NUMBER=1
+          fi
+
+          PLAY_CODE="${{ steps.play_version.outputs.play_version_code }}"
+          if [ -n "$PLAY_CODE" ] && [ "$PLAY_CODE" -gt 0 ] 2>/dev/null; then
+            BUILD_NUMBER=$((PLAY_CODE + 1))
+          fi
+
+          LOCAL_PROPS="android/local.properties"
+          EXISTING_CODE=""
+          if [ -f "$LOCAL_PROPS" ]; then
+            EXISTING_CODE=$(grep '^flutter.versionCode=' "$LOCAL_PROPS" | cut -d'=' -f2 | tail -n1)
+          fi
+
+          if [ -n "$EXISTING_CODE" ] && [ "$EXISTING_CODE" -ge "$BUILD_NUMBER" ] 2>/dev/null; then
+            BUILD_NUMBER=$((EXISTING_CODE + 1))
+          fi
+
+          mkdir -p android
+          if [ -f "$LOCAL_PROPS" ] && grep -q '^flutter.versionCode=' "$LOCAL_PROPS"; then
+            sed -i "s/^flutter.versionCode=.*/flutter.versionCode=$BUILD_NUMBER/" "$LOCAL_PROPS"
+          else
+            echo "flutter.versionCode=$BUILD_NUMBER" >> "$LOCAL_PROPS"
+          fi
+
+          echo "flutter.versionCode=$BUILD_NUMBER"
+
       - name: Build App Bundle
         run: flutter build appbundle --release --no-tree-shake-icons
 
