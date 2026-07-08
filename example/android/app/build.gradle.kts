@@ -10,11 +10,16 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+val localProperties =  Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+val flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
     throw new GradleException("versionCode not found. Define flutter.versionCode in the local.properties file.")
 }
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
+val flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
     throw new GradleException("versionName not found. Define flutter.versionName in the local.properties file.")
 }
