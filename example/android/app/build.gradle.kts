@@ -15,13 +15,13 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
-val flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+val flutterVersionCode = localProperties.getProperty("flutter.versionCode")
 if (flutterVersionCode == null) {
-    throw new GradleException("versionCode not found. Define flutter.versionCode in the local.properties file.")
+    throw GradleException("versionCode not found. Define flutter.versionCode in the local.properties file.")
 }
-val flutterVersionName = localProperties.getProperty('flutter.versionName')
+val flutterVersionName = localProperties.getProperty("flutter.versionName")
 if (flutterVersionName == null) {
-    throw new GradleException("versionName not found. Define flutter.versionName in the local.properties file.")
+    throw GradleException("versionName not found. Define flutter.versionName in the local.properties file.")
 }
 android {
     namespace = "hamza.dali.flutter_osm_plugin_example"
