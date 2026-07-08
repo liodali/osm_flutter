@@ -62,7 +62,7 @@ jobs:
           storePassword=${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
           keyAlias=${{ secrets.KEY_ALIAS }}
-          storeFile=app/keystore.jks
+          storeFile=keystore.jks
           EOF
 
       - name: Decode Google Play Service Account
