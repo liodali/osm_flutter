@@ -160,6 +160,12 @@ jobs:
           set_prop "flutter.versionName" "$VERSION_NAME"
           set_prop "flutter.versionCode" "$BUILD_NUMBER"
 
+          FINAL_VERSION="${VERSION_NAME}+${BUILD_NUMBER}"
+          if [ "$PUBSPEC_VERSION" != "$FINAL_VERSION" ]; then
+            sed -i "s|^version: .*|version: ${FINAL_VERSION}|" pubspec.yaml
+            echo "Updated pubspec.yaml version to $FINAL_VERSION"
+          fi
+
           echo "flutter.versionName=$VERSION_NAME"
           echo "flutter.versionCode=$BUILD_NUMBER"
 
