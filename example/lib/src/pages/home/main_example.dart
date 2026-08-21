@@ -28,7 +28,9 @@ class _MainPageExampleState extends State<MainPageExample> {
   ValueNotifier<bool> trackingNotifier = ValueNotifier(false);
   ValueNotifier<IconData> userLocationIcon = ValueNotifier(Icons.near_me);
   ValueNotifier<GeoPoint?> userLocationNotifier = ValueNotifier(null);
-  ValueNotifier<bool> disableMapControlUserTracking = ValueNotifier(true);
+  // Let the plugin draw the built-in user-location marker rather than a
+  // custom Dart marker, so the example showcases the native behavior.
+  ValueNotifier<bool> disableMapControlUserTracking = ValueNotifier(false);
   late MoreActionConfig configuration;
   @override
   void initState() {
@@ -97,6 +99,9 @@ class _MainState extends State<Main> with OSMMixinObserver {
   bool _routePanelCollapsed = false;
   final ValueNotifier<List<RouteHistoryEntry>> _routeHistoryNotifier =
       ValueNotifier([]);
+  final ValueNotifier<UserLocation?> _nativeLocationNotifier = ValueNotifier(
+    null,
+  );
   final ExampleMapStyleConfiguration _styleConfig =
       ExampleMapStyleConfiguration.instance;
 
@@ -131,6 +136,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
   void dispose() {
     _styleConfig.removeListener(_handleStyleChanged);
     _routeHistoryNotifier.dispose();
+    _nativeLocationNotifier.dispose();
     super.dispose();
   }
 
@@ -240,6 +246,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
   @override
   void onLocationChanged(UserLocation userLocation) {
     super.onLocationChanged(userLocation);
+    _nativeLocationNotifier.value = userLocation;
     if (kIsWeb) {
       _handleWebLocationChanged(userLocation);
       return;
@@ -409,8 +416,8 @@ class _MainState extends State<Main> with OSMMixinObserver {
                       ActivationUserLocation(
                         controller: widget.configuration.controller,
                         trackingNotifier: widget.configuration.trackingNotifier,
-                        userLocation: widget.configuration.userLocationNotifier,
                         userLocationIcon: widget.configuration.userLocationIcon,
+                        nativeLocationNotifier: _nativeLocationNotifier,
                       ),
                       ZoomNavigation(
                         controller: widget.configuration.controller,
@@ -524,8 +531,8 @@ class _MainState extends State<Main> with OSMMixinObserver {
               ActivationUserLocation(
                 controller: widget.configuration.controller,
                 trackingNotifier: widget.configuration.trackingNotifier,
-                userLocation: widget.configuration.userLocationNotifier,
                 userLocationIcon: widget.configuration.userLocationIcon,
+                nativeLocationNotifier: _nativeLocationNotifier,
               ),
               ZoomNavigation(
                 controller: widget.configuration.controller,
@@ -696,7 +703,30 @@ class Map extends StatelessWidget {
           maxZoomLevel: 19,
           stepZoom: 1.0,
         ),
-        userLocationMarker: styleConfig.buildUserLocationMarker(),
+        // Distinct person (red) and direction (blue) markers for the built-in
+        // user-location layer.
+        userLocationMarker: UserLocationMaker(
+          personMarker: const MarkerIcon(
+            icon: Icon(
+              Icons.directions_walk,
+              color: Colors.red,
+              size: 80,
+              shadows: [
+                Shadow(blurRadius: 7, color: Colors.black),
+              ],
+            ),
+          ),
+          directionArrowMarker: const MarkerIcon(
+            icon: Icon(
+              Icons.navigation,
+              color: Colors.blue,
+              size: 90,
+              shadows: [
+                Shadow(blurRadius: 7, color: Colors.black),
+              ],
+            ),
+          ),
+        ),
         staticPoints: [
           StaticPositionGeoPoint(
             "line 1",
@@ -726,93 +756,328 @@ class ActivationUserLocation extends StatelessWidget {
   final ValueNotifier<bool> trackingNotifier;
   final MapController controller;
   final ValueNotifier<IconData> userLocationIcon;
-  final ValueNotifier<GeoPoint?> userLocation;
+  final ValueNotifier<UserLocation?> nativeLocationNotifier;
 
   const ActivationUserLocation({
     super.key,
     required this.trackingNotifier,
     required this.controller,
     required this.userLocationIcon,
-    required this.userLocation,
+    required this.nativeLocationNotifier,
   });
+
   @override
   Widget build(BuildContext context) {
     return PointerInterceptor(
-      child: GestureDetector(
-        behavior: HitTestBehavior.deferToChild,
-        onLongPress: () async {
-          //await controller.disabledTracking();
-          await controller.stopLocationUpdating();
-          trackingNotifier.value = false;
+      child: ActionButton(
+        key: const ValueKey('location-test-button'),
+        onPressed: () async {
+          await showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            showDragHandle: true,
+            builder: (context) => LocationControlsPanel(
+              controller: controller,
+              trackingNotifier: trackingNotifier,
+              nativeLocationNotifier: nativeLocationNotifier,
+            ),
+          );
         },
-        child: ActionButton(
-          key: UniqueKey(),
-          onPressed: () async {
-            if (!trackingNotifier.value) {
-              /*await controller.currentLocation();
-              await controller.enableTracking(
-                enableStopFollow: true,
-                disableUserMarkerRotation: false,
-                anchor: Anchor.right,
-                useDirectionMarker: true,
-              );*/
-
-              await controller.startLocationUpdating();
-              trackingNotifier.value = true;
-
-              //await controller.zoom(5.0);
-            } else {
-              if (userLocation.value != null) {
-                await controller.moveTo(userLocation.value!);
-              }
-
-              /*await controller.enableTracking(
-                  enableStopFollow: false,
-                  disableUserMarkerRotation: true,
-                  anchor: Anchor.center,
-                  useDirectionMarker: true);*/
-              // if (userLocationNotifier.value != null) {
-              //   await controller
-              //       .goToLocation(userLocationNotifier.value!);
-              // }
-            }
-          },
-          buttonStyle: (style) => style.copyWith(
-            minimumSize: WidgetStateProperty.resolveWith(
-              (_) => const Size(56, 48),
-            ),
-            maximumSize: WidgetStateProperty.resolveWith(
-              (_) => const Size(56, 48),
-            ),
-            padding: WidgetStateProperty.resolveWith(
-              (_) => const EdgeInsets.all(12),
-            ),
-            shape: .all(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            backgroundColor: WidgetStateProperty.resolveWith(
-              (_) => FTheme.of(context).colors.background,
+        buttonStyle: (style) => style.copyWith(
+          minimumSize: WidgetStateProperty.resolveWith(
+            (_) => const Size(56, 48),
+          ),
+          maximumSize: WidgetStateProperty.resolveWith(
+            (_) => const Size(56, 48),
+          ),
+          padding: WidgetStateProperty.resolveWith(
+            (_) => const EdgeInsets.all(12),
+          ),
+          shape: .all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: ValueListenableBuilder<bool>(
-            valueListenable: trackingNotifier,
-            builder: (ctx, isTracking, _) {
-              if (isTracking) {
-                return ValueListenableBuilder<IconData>(
-                  valueListenable: userLocationIcon,
-                  builder: (context, icon, _) {
-                    return Icon(icon);
-                  },
-                );
-              }
-              return Icon(
-                FIcons.navigation,
-                size: 18,
-                color: FTheme.of(context).colors.foreground,
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (_) => FTheme.of(context).colors.background,
+          ),
+        ),
+        child: ValueListenableBuilder<bool>(
+          valueListenable: trackingNotifier,
+          builder: (ctx, isTracking, _) {
+            if (isTracking) {
+              return ValueListenableBuilder<IconData>(
+                valueListenable: userLocationIcon,
+                builder: (context, icon, _) => Icon(icon),
               );
-            },
+            }
+            return Icon(
+              FIcons.navigation,
+              size: 18,
+              color: FTheme.of(context).colors.foreground,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class LocationControlsPanel extends StatefulWidget {
+  const LocationControlsPanel({
+    super.key,
+    required this.controller,
+    required this.trackingNotifier,
+    required this.nativeLocationNotifier,
+  });
+
+  final MapController controller;
+  final ValueNotifier<bool> trackingNotifier;
+  final ValueNotifier<UserLocation?> nativeLocationNotifier;
+
+  @override
+  State<LocationControlsPanel> createState() => _LocationControlsPanelState();
+}
+
+class _LocationControlsPanelState extends State<LocationControlsPanel> {
+  String _status = 'Ready. Choose an action below.';
+  bool _isRunning = false;
+
+  Future<void> _run(
+    String pendingStatus,
+    String successStatus,
+    Future<void> Function() action,
+  ) async {
+    setState(() {
+      _isRunning = true;
+      _status = pendingStatus;
+    });
+    try {
+      await action();
+      if (!mounted) return;
+      setState(() => _status = successStatus);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _status = 'Error: $error');
+    } finally {
+      if (mounted) setState(() => _isRunning = false);
+    }
+  }
+
+  Future<void> _currentLocation() async {
+    widget.nativeLocationNotifier.value = null;
+    await _run(
+      'Getting current location…',
+      'Centered on the current location.',
+      widget.controller.currentLocation,
+    );
+  }
+
+  Future<void> _enableTracking({required bool forceDirectionMarker}) async {
+    await _run(
+      forceDirectionMarker
+          ? 'Starting direction tracking…'
+          : 'Starting automatic tracking…',
+      forceDirectionMarker
+          ? 'Direction tracking active. The map follows your position with the direction marker.'
+          : 'Automatic tracking active. The map follows your position.',
+      () async {
+        await widget.controller.enableTracking(
+          enableStopFollow: true,
+          disableUserMarkerRotation: false,
+          anchor: Anchor.center,
+          useDirectionMarker: forceDirectionMarker,
+        );
+        widget.trackingNotifier.value = true;
+      },
+    );
+  }
+
+  Future<void> _stopTracking() async {
+    await _run(
+      'Stopping tracking…',
+      'Tracking stopped.',
+      () async {
+        await widget.controller.disabledTracking();
+        widget.trackingNotifier.value = false;
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return PointerInterceptor(
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 16,
+            children: [
+              Text(
+                'My location',
+                style: theme.textTheme.titleLarge,
+              ),
+              Text(
+                'Center the map on your position, start live tracking, or '
+                'switch between the automatic icon and the direction marker.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  FilledButton.icon(
+                    key: const ValueKey('location-current'),
+                    onPressed: _isRunning ? null : _currentLocation,
+                    icon: const Icon(Icons.my_location),
+                    label: const Text('Current location'),
+                  ),
+                  FilledButton.tonalIcon(
+                    key: const ValueKey('location-track-auto'),
+                    onPressed: _isRunning
+                        ? null
+                        : () => _enableTracking(
+                            forceDirectionMarker: false,
+                          ),
+                    icon: const Icon(Icons.directions_walk),
+                    label: const Text('Track'),
+                  ),
+                  FilledButton.tonalIcon(
+                    key: const ValueKey('location-track-direction'),
+                    onPressed: _isRunning
+                        ? null
+                        : () => _enableTracking(
+                            forceDirectionMarker: true,
+                          ),
+                    icon: const Icon(Icons.navigation),
+                    label: const Text('Direction'),
+                  ),
+                  OutlinedButton.icon(
+                    key: const ValueKey('location-stop'),
+                    onPressed: _isRunning ? null : _stopTracking,
+                    icon: const Icon(Icons.location_disabled),
+                    label: const Text('Stop'),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 8,
+                  children: [
+                    Row(
+                      spacing: 8,
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 18,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        Text(
+                          'Status',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      _status,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+              ValueListenableBuilder<UserLocation?>(
+                valueListenable: widget.nativeLocationNotifier,
+                builder: (context, location, _) {
+                  if (location == null) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: 4,
+                      children: [
+                        Text(
+                          'Live coordinates',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        Row(
+                          spacing: 8,
+                          children: [
+                            Icon(
+                              Icons.location_searching,
+                              size: 18,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            Text(
+                              'Waiting for a location update…',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 4,
+                    children: [
+                      Text(
+                        'Live coordinates',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Row(
+                        spacing: 8,
+                        children: [
+                          Icon(
+                            Icons.place,
+                            size: 18,
+                            color: colorScheme.primary,
+                          ),
+                          Expanded(
+                            child: Text(
+                              '${location.latitude.toStringAsFixed(6)}, '
+                              '${location.longitude.toStringAsFixed(6)}',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        spacing: 8,
+                        children: [
+                          Icon(
+                            Icons.explore,
+                            size: 18,
+                            color: colorScheme.primary,
+                          ),
+                          Text(
+                            '${location.angle.toStringAsFixed(1)}°',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ),
