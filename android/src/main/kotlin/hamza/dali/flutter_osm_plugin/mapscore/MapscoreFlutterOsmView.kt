@@ -1,6 +1,5 @@
 package hamza.dali.flutter_osm_plugin.mapscore
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -10,8 +9,6 @@ import android.location.LocationManager.GPS_PROVIDER
 import android.location.LocationManager.NETWORK_PROVIDER
 import android.os.Bundle
 import android.util.Log
-import android.view.GestureDetector
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
@@ -64,6 +61,7 @@ import io.openmobilemaps.mapscore.shared.graphics.common.Vec2F
 import io.openmobilemaps.mapscore.shared.graphics.shader.BlendMode
 import io.openmobilemaps.mapscore.shared.map.MapConfig
 import io.openmobilemaps.mapscore.shared.map.MapInterface
+import io.openmobilemaps.mapscore.shared.map.controls.TouchInterface
 import io.openmobilemaps.mapscore.shared.map.coordinates.CoordinateSystemFactory
 import io.openmobilemaps.mapscore.shared.map.coordinates.Coord
 import io.openmobilemaps.mapscore.shared.map.coordinates.RectCoord
@@ -157,17 +155,27 @@ class MapscoreFlutterOsmView(
         layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
     }
 
-    private val gestureDetector: GestureDetector by lazy {
-        GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                invokeTap(e.x, e.y, longPress = false)
-                return true
-            }
+    private val mapTouchListener = object : TouchInterface() {
+        override fun onClickConfirmed(posScreen: Vec2F): Boolean {
+            invokeTap(posScreen.x, posScreen.y, longPress = false)
+            return true
+        }
 
-            override fun onLongPress(e: MotionEvent) {
-                invokeTap(e.x, e.y, longPress = true)
-            }
-        })
+        override fun onLongPress(posScreen: Vec2F): Boolean {
+            invokeTap(posScreen.x, posScreen.y, longPress = true)
+            return true
+        }
+
+        override fun onTouchDown(posScreen: Vec2F) = false
+        override fun onClickUnconfirmed(posScreen: Vec2F) = false
+        override fun onDoubleClick(posScreen: Vec2F) = false
+        override fun onMove(deltaScreen: Vec2F, confirmed: Boolean, doubleClick: Boolean) = false
+        override fun onMoveComplete() = false
+        override fun onOneFingerDoubleClickMoveComplete() = false
+        override fun onTwoFingerClick(posScreen1: Vec2F, posScreen2: Vec2F) = false
+        override fun onTwoFingerMove(posScreenOld: ArrayList<Vec2F>, posScreenNew: ArrayList<Vec2F>) = false
+        override fun onTwoFingerMoveComplete() = false
+        override fun clearTouch() {}
     }
 
     init {
@@ -178,7 +186,6 @@ class MapscoreFlutterOsmView(
         this.activity = activity
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     private fun initMap(lifecycle: androidx.lifecycle.Lifecycle) {
         val map = MapView(context).apply {
             layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
@@ -213,6 +220,9 @@ class MapscoreFlutterOsmView(
         setupMarkerCallbacks(staticIconLayer)
         setupRoadCallbacks()
         setupCameraListener()
+        // Register the generic map listener behind clickable overlays. MapsCore
+        // stops propagation when a marker or road listener handles the gesture.
+        map.requireMapInterface().getTouchHandler().insertListener(mapTouchListener, 0)
 
         try {
             map.getCamera().setMinZoom(MapscoreConstants.osmZoomToMapscore(2.0))
@@ -220,11 +230,6 @@ class MapscoreFlutterOsmView(
             map.getCamera().setRotationEnabled(isEnabledRotationGesture && !isStaticMap)
         } catch (e: Exception) {
             Log.e("osm", "camera setup: ${e.message}")
-        }
-
-        map.setOnTouchListener { _, event ->
-            if (!isStaticMap) gestureDetector.onTouchEvent(event)
-            false
         }
 
         mainLinearLayout.addView(map)
@@ -281,11 +286,9 @@ class MapscoreFlutterOsmView(
                     val h = HashMap<String, Double>()
                     h["lat"] = lat
                     h["lon"] = lon
-                    val marker = findMarkerByPosition(lat, lon)
-                    if (marker != null) {
-                        marker.onClickListener?.invoke(marker)
+                    scope?.launch(Dispatchers.Main) {
+                        methodChannel.invokeMethod("receiveGeoPoint", h)
                     }
-                    methodChannel.invokeMethod("receiveGeoPoint", h)
                 }
                 return true
             }
@@ -297,11 +300,9 @@ class MapscoreFlutterOsmView(
                     val h = HashMap<String, Double>()
                     h["lat"] = lat
                     h["lon"] = lon
-                    val marker = findMarkerByPosition(lat, lon)
-                    if (marker != null) {
-                        marker.longPress?.invoke(marker)
+                    scope?.launch(Dispatchers.Main) {
+                        methodChannel.invokeMethod("receiveGeoPointLongPress", h)
                     }
-                    methodChannel.invokeMethod("receiveGeoPointLongPress", h)
                 }
                 return true
             }
@@ -312,14 +313,19 @@ class MapscoreFlutterOsmView(
         lineLayer.setLayerClickable(true)
         lineLayer.setCallbackHandler(object : LineLayerCallbackInterface() {
             override fun onLineClickConfirmed(line: LineInfoInterface) {
-                val road = roads.values.firstOrNull { it.matches(line) } ?: return
-                val helper = mapView?.getCoordinateConversionHelper() ?: return
-                val map = HashMap<String, Any>()
-                map["roadPoints"] = road.coordinates.map { it.toHashMap(helper) }
-                map["distance"] = road.roadDistance
-                map["duration"] = road.roadDuration
-                map["key"] = road.idRoad
-                methodChannel.invokeMethod("receiveRoad", map)
+                val identifier = line.getIdentifier()
+                scope?.launch(Dispatchers.Main) {
+                    val road = roads.values.firstOrNull {
+                        it.matchesIdentifier(identifier)
+                    } ?: return@launch
+                    val helper = mapView?.getCoordinateConversionHelper() ?: return@launch
+                    val map = HashMap<String, Any>()
+                    map["roadPoints"] = road.coordinates.map { it.toHashMap(helper) }
+                    map["distance"] = road.roadDistance
+                    map["duration"] = road.roadDuration
+                    map["key"] = road.idRoad
+                    methodChannel.invokeMethod("receiveRoad", map)
+                }
             }
         })
     }
@@ -367,7 +373,12 @@ class MapscoreFlutterOsmView(
             val h = HashMap<String, Double>()
             h["lat"] = lat
             h["lon"] = lon
-            methodChannel.invokeMethod(if (longPress) "receiveLongPress" else "receiveSinglePress", h)
+            scope?.launch(Dispatchers.Main) {
+                methodChannel.invokeMethod(
+                    if (longPress) "receiveLongPress" else "receiveSinglePress",
+                    h,
+                )
+            }
         } catch (e: Exception) {
             Log.e("osm", "tap conversion failed: ${e.message}")
         }
@@ -644,9 +655,9 @@ class MapscoreFlutterOsmView(
         locationNewOverlay.runOnFirstFix(Runnable {
             scope?.launch(Dispatchers.Main) {
                 try {
-                    // Camera APIs expect WGS84 (EPSG:4326) and convert internally, while icon
-                    // layers receive render-system coordinates. Passing render coordinates here
-                    // crashed CoordinateConversionHelper::convert (native SIGABRT on Android 16).
+                    // MapsCore camera and icon APIs accept a public CRS and convert internally.
+                    // Passing preconverted render coordinates prevents reverse conversion and
+                    // caused native SIGABRT failures on Android 16.
                     // Fix for https://github.com/liodali/osm_flutter/issues/611.
                     val coord = latLonToCoord(
                         locationNewOverlay.mGeoPointLat,
@@ -722,26 +733,11 @@ class MapscoreFlutterOsmView(
         val density = screenDensity(context)
         val marker = FlutterMarker(
             context = context,
-            helper = mapView!!.getCoordinateConversionHelper(),
             iconLayer = iconLayer,
             identifier = UUID.randomUUID().toString(),
             density = density,
         )
         marker.setPosition(lat, lon)
-        marker.onClickListener = { m ->
-            val h = HashMap<String, Double>()
-            h["lat"] = m.lat
-            h["lon"] = m.lon
-            methodChannel.invokeMethod("receiveGeoPoint", h)
-            true
-        }
-        marker.longPress = { m ->
-            val h = HashMap<String, Double>()
-            h["lat"] = m.lat
-            h["lon"] = m.lon
-            methodChannel.invokeMethod("receiveGeoPointLongPress", h)
-            true
-        }
         markers[marker.identifier] = marker
         when {
             dynamicMarkerBitmap != null -> marker.setIconMaker(null, dynamicMarkerBitmap, angle)
@@ -943,34 +939,24 @@ class MapscoreFlutterOsmView(
         zoomToRegion: Boolean,
     ) {
         val helper = mapView?.getCoordinateConversionHelper() ?: return
-        val renderCoords = latLonCoords.map { latLonToRender(helper, it.first, it.second) }
+        val coordinates = latLonCoords.map { latLonToCoord(it.first, it.second) }
         val color = option.roadColor ?: android.graphics.Color.GREEN
         val border = option.roadBorderColor ?: android.graphics.Color.BLACK
 
-        val renderArrayList = ArrayList(renderCoords)
+        val coordinateList = ArrayList(coordinates)
         val borderLine = if (option.roadBorderWidth > 0) {
             LineFactory.createLine(
                 "${roadId}_border",
-                renderArrayList,
+                coordinateList,
                 lineStyle(border, option.roadBorderWidth + option.roadWidth, option.isDotted)
             )
         } else null
         val mainLine =
-            LineFactory.createLine(roadId, renderArrayList, lineStyle(color, option.roadWidth, option.isDotted))
+            LineFactory.createLine(roadId, coordinateList, lineStyle(color, option.roadWidth, option.isDotted))
 
         roads[roadId]?.remove()
         val road = FlutterRoad(roadId, duration, distance, lineLayer)
-        road.setRoad(renderCoords, borderLine, mainLine)
-        road.onRoadClickListener = object : FlutterRoad.OnRoadClickListener {
-            override fun onClick(road: FlutterRoad) {
-                val map = HashMap<String, Any>()
-                map["roadPoints"] = road.coordinates.map { it.toHashMap(helper) }
-                map["distance"] = road.roadDistance
-                map["duration"] = road.roadDuration
-                map["key"] = road.idRoad
-                methodChannel.invokeMethod("receiveRoad", map)
-            }
-        }
+        road.setRoad(coordinates, borderLine, mainLine)
         roads[roadId] = road
 
         if (zoomToRegion && latLonCoords.size >= 2) {
@@ -1053,8 +1039,7 @@ class MapscoreFlutterOsmView(
     }
 
     private fun showStaticPosition(id: String) {
-        val helper = mapView?.getCoordinateConversionHelper() ?: return
-        val density = screenDensity(context)
+        if (mapView == null) return
         // remove existing static icons for this group
         staticIcons[id]?.forEach { staticIconLayer.remove(it) }
         staticIcons[id] = mutableListOf()
@@ -1068,7 +1053,7 @@ class MapscoreFlutterOsmView(
                 val (holder, size) = source.toTextureHolder()
                 io.openmobilemaps.mapscore.shared.map.layers.icon.IconFactory.createIconWithAnchor(
                     identifier = "static_${id}_$index",
-                    coordinate = latLonToRender(helper, geoPoint.lat, geoPoint.lon),
+                    coordinate = latLonToCoord(geoPoint.lat, geoPoint.lon),
                     texture = holder,
                     iconSize = size,
                     scaleType = io.openmobilemaps.mapscore.shared.map.layers.icon.IconType.INVARIANT,
@@ -1084,7 +1069,7 @@ class MapscoreFlutterOsmView(
                 val size = Vec2F(def.intrinsicWidth.toFloat(), def.intrinsicHeight.toFloat())
                 io.openmobilemaps.mapscore.shared.map.layers.icon.IconFactory.createIconWithAnchor(
                     identifier = "static_${id}_$index",
-                    coordinate = latLonToRender(helper, geoPoint.lat, geoPoint.lon),
+                    coordinate = latLonToCoord(geoPoint.lat, geoPoint.lon),
                     texture = holder,
                     iconSize = size,
                     scaleType = io.openmobilemaps.mapscore.shared.map.layers.icon.IconType.INVARIANT,
@@ -1111,6 +1096,7 @@ class MapscoreFlutterOsmView(
 
     override fun dispose() {
         locationNewOverlay.onDestroy()
+        mapView?.requireMapInterface()?.getTouchHandler()?.removeListener(mapTouchListener)
         job?.let { if (it.isActive) it.cancel() }
         mainLinearLayout.removeAllViews()
         providerLifecycle.getOSMLifecycle()?.removeObserver(this)
@@ -1173,6 +1159,7 @@ class MapscoreFlutterOsmView(
     override fun onDestroy(owner: LifecycleOwner) {
         super.onDestroy(owner)
         locationNewOverlay.onDestroy()
+        mapView?.requireMapInterface()?.getTouchHandler()?.removeListener(mapTouchListener)
         hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.pluginBinding?.removeActivityResultListener(this)
         mainLinearLayout.removeAllViews()
         methodChannel.setMethodCallHandler(null)
