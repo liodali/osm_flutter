@@ -11,13 +11,12 @@ import com.squareup.picasso3.Callback
 import com.squareup.picasso3.Picasso
 import hamza.dali.flutter_osm_plugin.R
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.MapscoreConstants
-import hamza.dali.flutter_osm_plugin.mapscore.utilities.latLonToRender
+import hamza.dali.flutter_osm_plugin.mapscore.utilities.latLonToCoord
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.rotate
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.scaleBy
-import io.openmobilemaps.mapscore.graphics.BitmapTextureHolder
+import hamza.dali.flutter_osm_plugin.mapscore.utilities.toTextureHolder
 import io.openmobilemaps.mapscore.shared.graphics.common.Vec2F
 import io.openmobilemaps.mapscore.shared.graphics.shader.BlendMode
-import io.openmobilemaps.mapscore.shared.map.coordinates.CoordinateConversionHelperInterface
 import io.openmobilemaps.mapscore.shared.map.layers.icon.IconFactory
 import io.openmobilemaps.mapscore.shared.map.layers.icon.IconInfoInterface
 import io.openmobilemaps.mapscore.shared.map.layers.icon.IconLayerInterface
@@ -32,7 +31,6 @@ import kotlin.math.PI
  */
 class FlutterMarker(
     private val context: Context,
-    private val helper: CoordinateConversionHelperInterface,
     private val iconLayer: IconLayerInterface,
     val identifier: String,
     private val density: Float,
@@ -49,17 +47,14 @@ class FlutterMarker(
     var iconInfo: IconInfoInterface? = null
         private set
 
-    var onClickListener: ((FlutterMarker) -> Boolean)? = null
-    var longPress: ((FlutterMarker) -> Boolean)? = null
-
     fun setPosition(lat: Double, lon: Double) {
         this.lat = lat
         this.lon = lon
-        iconInfo?.setCoordinate(latLonToRender(helper, lat, lon))
+        iconInfo?.setCoordinate(latLonToCoord(lat, lon))
     }
 
     fun setIconMaker(color: Int? = null, bitmap: Bitmap?, angle: Double? = null) {
-        this.angle = angle ?: 0.0
+        if (angle != null) this.angle = angle
         iconBitmap = bitmap
         applyIcon(color)
     }
@@ -107,14 +102,14 @@ class FlutterMarker(
             bmp = bmp.rotate((angle * (180.0 / PI)).toFloat())
         }
 
-        // Capture size before BitmapTextureHolder, which may recycle [bmp].
-        val size = Vec2F(bmp.width.toFloat(), bmp.height.toFloat())
-        val holder = BitmapTextureHolder(bmp)
+        val (holder, size) = bmp.toTextureHolder()
 
         val old = iconInfo
         iconInfo = IconFactory.createIconWithAnchor(
             identifier = identifier,
-            coordinate = latLonToRender(helper, lat, lon),
+            // Keep the public CRS on icon coordinates. IconLayer converts to render
+            // space internally and needs a reversible CRS for click hit-testing.
+            coordinate = latLonToCoord(lat, lon),
             texture = holder,
             iconSize = size,
             scaleType = IconType.INVARIANT,
