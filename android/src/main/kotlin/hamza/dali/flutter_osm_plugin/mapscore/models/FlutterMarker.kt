@@ -107,8 +107,9 @@ class FlutterMarker(
             bmp = bmp.rotate((angle * (180.0 / PI)).toFloat())
         }
 
-        val holder = BitmapTextureHolder(bmp)
+        // Capture size before BitmapTextureHolder, which may recycle [bmp].
         val size = Vec2F(bmp.width.toFloat(), bmp.height.toFloat())
+        val holder = BitmapTextureHolder(bmp)
 
         val old = iconInfo
         iconInfo = IconFactory.createIconWithAnchor(

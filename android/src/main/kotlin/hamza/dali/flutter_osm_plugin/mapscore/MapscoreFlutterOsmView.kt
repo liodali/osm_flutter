@@ -43,6 +43,7 @@ import hamza.dali.flutter_osm_plugin.mapscore.utilities.openSettingLocation
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.rotate
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.screenDensity
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.toBitmap
+import hamza.dali.flutter_osm_plugin.mapscore.utilities.toTextureHolder
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.toByteArray
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.toHashMap
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.toLatLon
@@ -643,8 +644,14 @@ class MapscoreFlutterOsmView(
         locationNewOverlay.runOnFirstFix(Runnable {
             scope?.launch(Dispatchers.Main) {
                 try {
-                    val helper = mapView?.getCoordinateConversionHelper() ?: return@launch
-                    val coord = latLonToRender(helper, locationNewOverlay.mGeoPointLat, locationNewOverlay.mGeoPointLon)
+                    // Camera APIs expect WGS84 (EPSG:4326) and convert internally, while icon
+                    // layers receive render-system coordinates. Passing render coordinates here
+                    // crashed CoordinateConversionHelper::convert (native SIGABRT on Android 16).
+                    // Fix for https://github.com/liodali/osm_flutter/issues/611.
+                    val coord = latLonToCoord(
+                        locationNewOverlay.mGeoPointLat,
+                        locationNewOverlay.mGeoPointLon,
+                    )
                     mapView?.getCamera()?.moveToCenterPosition(coord, false)
                 } catch (e: Exception) {
                     Log.e("osm", "enableUserLocation: ${e.message}")
@@ -1055,10 +1062,10 @@ class MapscoreFlutterOsmView(
         val bitmap = staticMarkerIcon[id]
         points.forEachIndexed { index, geoPoint ->
             val texBmp = bitmap
-            val iconInfo = if (texBmp != null) {
-                val holder =
-                    BitmapTextureHolder(if (geoPoint.angle > 0.0) texBmp.rotate((geoPoint.angle * 180.0 / PI).toFloat()) else texBmp)
-                val size = Vec2F(texBmp.width.toFloat(), texBmp.height.toFloat())
+            val iconInfo = if (texBmp != null && !texBmp.isRecycled) {
+                val source =
+                    if (geoPoint.angle > 0.0) texBmp.rotate((geoPoint.angle * 180.0 / PI).toFloat()) else texBmp
+                val (holder, size) = source.toTextureHolder()
                 io.openmobilemaps.mapscore.shared.map.layers.icon.IconFactory.createIconWithAnchor(
                     identifier = "static_${id}_$index",
                     coordinate = latLonToRender(helper, geoPoint.lat, geoPoint.lon),

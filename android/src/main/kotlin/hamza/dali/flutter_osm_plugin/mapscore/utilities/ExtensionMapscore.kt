@@ -9,6 +9,8 @@ import android.graphics.Matrix
 import android.graphics.drawable.Drawable
 import android.provider.Settings
 import androidx.core.graphics.drawable.toDrawable
+import io.openmobilemaps.mapscore.graphics.BitmapTextureHolder
+import io.openmobilemaps.mapscore.shared.graphics.common.Vec2F
 import io.openmobilemaps.mapscore.shared.map.coordinates.CoordinateConversionHelperInterface
 import io.openmobilemaps.mapscore.shared.map.coordinates.CoordinateSystemIdentifiers
 import io.openmobilemaps.mapscore.shared.map.coordinates.Coord
@@ -84,6 +86,23 @@ fun Bitmap.scaleBy(density: Float): Bitmap {
     val matrix = Matrix()
     matrix.postScale(density, density)
     return Bitmap.createBitmap(this, 0, 0, width, height, matrix, false)
+}
+
+/**
+ * Build a [BitmapTextureHolder] without recycling [this].
+ *
+ * mapscore pads non-power-of-two premultiplied bitmaps and recycles the source.
+ * Callers that still own the bitmap (user location, static icons, cached markers)
+ * must copy first, and must read width/height before the holder is constructed.
+ */
+fun Bitmap.toTextureHolder(): Pair<BitmapTextureHolder, Vec2F> {
+    if (isRecycled) {
+        throw IllegalStateException("Cannot create mapscore texture from a recycled bitmap")
+    }
+    val copy = copy(Bitmap.Config.ARGB_8888, false)
+        ?: throw IllegalStateException("Failed to copy bitmap for mapscore texture")
+    val size = Vec2F(copy.width.toFloat(), copy.height.toFloat())
+    return BitmapTextureHolder(copy) to size
 }
 
 fun Bitmap.toDrawableCompat(resources: android.content.res.Resources): Drawable = this.toDrawable(resources)

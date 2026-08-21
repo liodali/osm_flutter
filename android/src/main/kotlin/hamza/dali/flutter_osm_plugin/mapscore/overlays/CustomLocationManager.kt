@@ -9,9 +9,11 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import hamza.dali.flutter_osm_plugin.R
+import hamza.dali.flutter_osm_plugin.mapscore.utilities.latLonToCoord
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.latLonToRender
+import hamza.dali.flutter_osm_plugin.mapscore.utilities.rotate
+import hamza.dali.flutter_osm_plugin.mapscore.utilities.toTextureHolder
 import io.flutter.plugin.common.MethodChannel
-import io.openmobilemaps.mapscore.graphics.BitmapTextureHolder
 import io.openmobilemaps.mapscore.map.view.MapView
 import io.openmobilemaps.mapscore.shared.graphics.common.Vec2F
 import io.openmobilemaps.mapscore.shared.graphics.shader.BlendMode
@@ -63,6 +65,8 @@ class CustomLocationManager(
     private var personIcon: IconInfoInterface? = null
     private var directionIcon: IconInfoInterface? = null
     private var showingDirection = false
+    private var iconAnchor = Vec2F(0.5f, 0.5f)
+    private var directionRotation: Float? = null
 
     private var controlMapFromOutSide = false
     private var enabled = false
@@ -94,10 +98,12 @@ class CustomLocationManager(
         mIsLocationEnabled = false
         provider.stop()
         handler.removeCallbacksAndMessages(null)
+        clearMarkerIcons()
     }
 
     fun startLocationUpdating() {
         controlMapFromOutSide = true
+        clearMarkerIcons()
         enableMyLocation()
     }
 
@@ -106,14 +112,31 @@ class CustomLocationManager(
         onStopLocation()
     }
 
-    fun setMarkerIcon(personIcon: Bitmap?, directionIcon: Bitmap?) {
-        if (personIcon != null) personBitmap = personIcon
-        if (directionIcon != null) directionBitmap = directionIcon
+    fun setMarkerIcon(personIconBmp: Bitmap?, directionIconBmp: Bitmap?) {
+        if (personIconBmp != null && !personIconBmp.isRecycled) {
+            personBitmap = personIconBmp
+            personIcon?.let { iconLayer.remove(it) }
+            personIcon = null
+        }
+        if (directionIconBmp != null && !directionIconBmp.isRecycled) {
+            directionBitmap = directionIconBmp
+            directionIcon?.let { iconLayer.remove(it) }
+            directionIcon = null
+            showingDirection = false
+            directionRotation = null
+        }
         currentLocation?.let { updateMarker(it, mIsFollowing) }
     }
 
     fun setAnchor(anchor: List<Double>) {
-        // anchors for the user marker are kept centered (0.5, 0.5); stored for parity.
+        if (anchor.size < 2) return
+        iconAnchor = Vec2F(
+            anchor.first().toFloat().coerceIn(0f, 1f),
+            anchor.last().toFloat().coerceIn(0f, 1f),
+        )
+        clearMarkerIcons()
+        currentLocation?.takeUnless { controlMapFromOutSide }
+            ?.let { updateMarker(it, mIsFollowing) }
     }
 
     fun onChangedLocation(cb: OnChangedLocationMapscore) {
@@ -162,6 +185,7 @@ class CustomLocationManager(
     fun onDestroy() {
         provider.stop()
         handler.removeCallbacksAndMessages(null)
+        clearMarkerIcons()
     }
 
     private fun onLocationChanged(loc: Location) {
@@ -170,14 +194,20 @@ class CustomLocationManager(
         mGeoPointLon = loc.longitude
         onChangedLocationCallback?.invoke(loc.latitude, loc.longitude, loc.bearing.toDouble())
 
-        if (!controlMapFromOutSide) {
-            updateMarker(loc, mIsFollowing)
+        val apply = Runnable {
+            if (!controlMapFromOutSide) {
+                updateMarker(loc, mIsFollowing)
+            }
+            if (runOnFirstFixQueue.isNotEmpty()) {
+                val runnables = ArrayList(runOnFirstFixQueue)
+                runOnFirstFixQueue.clear()
+                runnables.forEach { Thread(it).start() }
+            }
         }
-        // run queued first-fix callbacks
-        if (runOnFirstFixQueue.isNotEmpty()) {
-            val runnables = ArrayList(runOnFirstFixQueue)
-            runOnFirstFixQueue.clear()
-            runnables.forEach { Thread(it).start() }
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            apply.run()
+        } else {
+            handler.post(apply)
         }
     }
 
@@ -185,45 +215,70 @@ class CustomLocationManager(
         val render = latLonToRender(helper, loc.latitude, loc.longitude)
         val hasBearing = loc.hasBearing() || useDirectionMarker
         if (hasBearing && directionBitmap != null) {
-            ensureIcon(personIcon, personBitmap, "osm_user_person", render)
-            if (!showingDirection) {
+            personIcon?.let { iconLayer.remove(it) }
+            personIcon = null
+            val rotation = if (disableRotateDirection) 0f else loc.bearing
+            if (directionIcon == null || directionRotation != rotation) {
                 directionIcon?.let { iconLayer.remove(it) }
-                directionIcon = createIcon("osm_user_direction", directionBitmap!!, render)
-                iconLayer.add(directionIcon!!)
-                showingDirection = true
+                directionIcon = createAndAddIcon(
+                    "osm_user_direction",
+                    directionBitmap,
+                    render,
+                    rotation,
+                )
+                directionRotation = rotation
+                showingDirection = directionIcon != null
+            } else {
+                directionIcon?.setCoordinate(render)
             }
-            personIcon?.setCoordinate(render)
-            directionIcon?.setCoordinate(render)
         } else {
             if (showingDirection) {
                 directionIcon?.let { iconLayer.remove(it) }
                 directionIcon = null
                 showingDirection = false
+                directionRotation = null
             }
-            ensureIcon(personIcon, personBitmap, "osm_user_person", render)
-            personIcon?.setCoordinate(render)
+            if (personIcon == null) {
+                personIcon = createAndAddIcon("osm_user_person", personBitmap, render)
+            } else {
+                personIcon?.setCoordinate(render)
+            }
         }
         iconLayer.invalidate()
+        mapView.requestRender()
 
         if (follow) {
             try {
-                mapView.getCamera().moveToCenterPosition(render, true)
+                // Camera APIs expect WGS84, not the render coordinate used above
+                // by the icon layer.
+                val cameraCoordinate = latLonToCoord(loc.latitude, loc.longitude)
+                mapView.getCamera().moveToCenterPosition(cameraCoordinate, true)
             } catch (e: IllegalStateException) {
                 // map not ready yet; ignore
             }
         }
     }
 
-    private fun ensureIcon(
-        current: IconInfoInterface?,
-        bitmap: Bitmap?,
+    private fun clearMarkerIcons() {
+        personIcon?.let { iconLayer.remove(it) }
+        directionIcon?.let { iconLayer.remove(it) }
+        personIcon = null
+        directionIcon = null
+        showingDirection = false
+        directionRotation = null
+        iconLayer.invalidate()
+        mapView.requestRender()
+    }
+
+    private fun createAndAddIcon(
         identifier: String,
+        bitmap: Bitmap?,
         coord: io.openmobilemaps.mapscore.shared.map.coordinates.Coord,
+        rotation: Float = 0f,
     ): IconInfoInterface? {
-        if (current != null) return current
-        if (bitmap == null) return null
-        val holder = BitmapTextureHolder(bitmap)
-        val size = Vec2F(bitmap.width.toFloat(), bitmap.height.toFloat())
+        if (bitmap == null || bitmap.isRecycled) return null
+        val source = if (rotation == 0f) bitmap else bitmap.rotate(rotation)
+        val (holder, size) = source.toTextureHolder()
         val icon = IconFactory.createIconWithAnchor(
             identifier = identifier,
             coordinate = coord,
@@ -231,28 +286,10 @@ class CustomLocationManager(
             iconSize = size,
             scaleType = IconType.INVARIANT,
             blendMode = BlendMode.NORMAL,
-            iconAnchor = Vec2F(0.5f, 0.5f),
+            iconAnchor = iconAnchor,
         )
         iconLayer.add(icon)
         return icon
-    }
-
-    private fun createIcon(
-        identifier: String,
-        bitmap: Bitmap,
-        coord: io.openmobilemaps.mapscore.shared.map.coordinates.Coord,
-    ): IconInfoInterface {
-        val holder = BitmapTextureHolder(bitmap)
-        val size = Vec2F(bitmap.width.toFloat(), bitmap.height.toFloat())
-        return IconFactory.createIconWithAnchor(
-            identifier = identifier,
-            coordinate = coord,
-            texture = holder,
-            iconSize = size,
-            scaleType = IconType.INVARIANT,
-            blendMode = BlendMode.NORMAL,
-            iconAnchor = Vec2F(0.5f, 0.5f),
-        )
     }
 
     @Suppress("unused")
