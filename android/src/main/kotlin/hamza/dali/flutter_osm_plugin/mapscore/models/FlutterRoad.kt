@@ -20,13 +20,7 @@ class FlutterRoad(
     private var mainLine: LineInfoInterface? = null
     private var roadCoords: List<Coord> = emptyList()
 
-    var onRoadClickListener: OnRoadClickListener? = null
-
     val coordinates: List<Coord> get() = roadCoords
-
-    interface OnRoadClickListener {
-        fun onClick(road: FlutterRoad)
-    }
 
     fun setRoad(
         coords: List<Coord>,
@@ -48,6 +42,6 @@ class FlutterRoad(
         mainLine = null
     }
 
-    fun matches(line: LineInfoInterface): Boolean =
-        mainLine?.getIdentifier() == line.getIdentifier() || borderLine?.getIdentifier() == line.getIdentifier()
+    fun matchesIdentifier(identifier: String): Boolean =
+        mainLine?.getIdentifier() == identifier || borderLine?.getIdentifier() == identifier
 }
