@@ -10,7 +10,6 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import hamza.dali.flutter_osm_plugin.R
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.latLonToCoord
-import hamza.dali.flutter_osm_plugin.mapscore.utilities.latLonToRender
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.rotate
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.toTextureHolder
 import io.flutter.plugin.common.MethodChannel
@@ -40,7 +39,6 @@ class CustomLocationManager(
     private val mapView: MapView,
     private val iconLayer: IconLayerInterface,
 ) {
-    private val helper = mapView.getCoordinateConversionHelper()
     private val provider = OsmLocationProvider(context)
     private val handler = Handler(Looper.getMainLooper())
 
@@ -212,7 +210,7 @@ class CustomLocationManager(
     }
 
     private fun updateMarker(loc: Location, follow: Boolean) {
-        val render = latLonToRender(helper, loc.latitude, loc.longitude)
+        val coordinate = latLonToCoord(loc.latitude, loc.longitude)
         val hasBearing = loc.hasBearing() || useDirectionMarker
         if (hasBearing && directionBitmap != null) {
             personIcon?.let { iconLayer.remove(it) }
@@ -223,13 +221,13 @@ class CustomLocationManager(
                 directionIcon = createAndAddIcon(
                     "osm_user_direction",
                     directionBitmap,
-                    render,
+                    coordinate,
                     rotation,
                 )
                 directionRotation = rotation
                 showingDirection = directionIcon != null
             } else {
-                directionIcon?.setCoordinate(render)
+                directionIcon?.setCoordinate(coordinate)
             }
         } else {
             if (showingDirection) {
@@ -239,9 +237,9 @@ class CustomLocationManager(
                 directionRotation = null
             }
             if (personIcon == null) {
-                personIcon = createAndAddIcon("osm_user_person", personBitmap, render)
+                personIcon = createAndAddIcon("osm_user_person", personBitmap, coordinate)
             } else {
-                personIcon?.setCoordinate(render)
+                personIcon?.setCoordinate(coordinate)
             }
         }
         iconLayer.invalidate()
@@ -249,10 +247,7 @@ class CustomLocationManager(
 
         if (follow) {
             try {
-                // Camera APIs expect WGS84, not the render coordinate used above
-                // by the icon layer.
-                val cameraCoordinate = latLonToCoord(loc.latitude, loc.longitude)
-                mapView.getCamera().moveToCenterPosition(cameraCoordinate, true)
+                mapView.getCamera().moveToCenterPosition(coordinate, true)
             } catch (e: IllegalStateException) {
                 // map not ready yet; ignore
             }
