@@ -46,7 +46,14 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
         ..id = idFrame
         ..style.width = '100%'
         ..style.height = '100%';
-      _frame!.setAttribute('srcdoc', htmlContent);
+      // Blob URLs stay same-origin. `srcdoc` becomes `about:srcdoc` under
+      // Flutter WASM COOP/COEP and breaks History.replaceState + JS interop.
+      final blob = web.Blob(
+        [htmlContent.toJS].toJS,
+        web.BlobPropertyBag(type: 'text/html'),
+      );
+      _frameUrl = web.URL.createObjectURL(blob);
+      _frame!.src = _frameUrl!;
       _div.appendChild(_frame!);
       return _div;
     });
@@ -76,17 +83,15 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
       final interopScript =
           web.document.createElement('script') as web.HTMLScriptElement
             ..id = "osm_interop"
-            ..crossOrigin = "cross-origin"
-            ..innerHTML = scriptOsmInterop.toJS
-            ..type = 'application/javascript';
+            ..type = 'text/javascript'
+            ..text = scriptOsmInterop;
       body.appendChild(interopScript);
     }
     if (web.window.document.getElementById("mapScript") == null) {
       mapScript = web.document.createElement('script') as web.HTMLScriptElement
         ..id = "mapScript"
-        ..crossOrigin = "cross-origin"
-        ..innerHTML = script.toJS
-        ..type = 'application/javascript';
+        ..type = 'text/javascript'
+        ..text = script;
       body.appendChild(mapScript!);
     }
   }
@@ -96,6 +101,7 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
   web.HTMLIFrameElement? _frame;
   late web.HTMLDivElement _div;
   web.HTMLScriptElement? mapScript;
+  String? _frameUrl;
 
   void dispose() {
     debugPrint("delete frame_map_$mapIdMixin");
@@ -105,6 +111,10 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     //_div.remove();
     _frame?.remove();
     _frame = null;
+    if (_frameUrl != null) {
+      web.URL.revokeObjectURL(_frameUrl!);
+      _frameUrl = null;
+    }
     //mapScript?.remove();
     webPlatform.close(mapIdMixin);
     channel = null;

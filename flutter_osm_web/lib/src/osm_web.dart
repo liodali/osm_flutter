@@ -1,6 +1,5 @@
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kReleaseMode;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
 import 'package:flutter_osm_web/src/controller/web_osm_controller.dart';
@@ -93,36 +92,29 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
   }
 
   Future<void> initController() async {
-    const packageBaseUrl = 'packages/flutter_osm_web/src/asset/';
-    const versionCDN = //'refs/tags/flutter_osm_web-v1.4.2';
-        kReleaseMode
-            ? 'refs/tags/flutter_osm_web-v1.4.1'
-            : 'refs/heads/migrate_to_maplibre_js'; //migrate_to_maplibre_js 'refs/heads/main'
-    final dio = Dio(BaseOptions(
-      baseUrl: kDebugMode
-          ? packageBaseUrl
-          : 'https://raw.githubusercontent.com/liodali/osm_flutter/$versionCDN/flutter_osm_web/lib/src/asset/',
-    ));
-    final mapScript = await dio.get<String>(
-      'map.js',
-    );
-    final osmInterop = await dio.get<String>(
-      'osm_interop.js',
-    );
-    final html = await dio.get<String>(
-      widget.useMapLibre ? 'index_maplibre.html' : 'map.html',
-    );
+    const packageBase = 'packages/flutter_osm_web/src/asset';
+    final results = await Future.wait([
+      rootBundle.loadString('$packageBase/map.js'),
+      rootBundle.loadString('$packageBase/osm_interop.js'),
+      rootBundle.loadString(
+        widget.useMapLibre
+            ? '$packageBase/index_maplibre.html'
+            : '$packageBase/map.html',
+      ),
+    ]);
     dataScripts.value = (
-      mapScript: mapScript.data!,
-      osmInterop: osmInterop.data!,
-      html: html.data!,
+      mapScript: results[0],
+      osmInterop: results[1],
+      html: results[2],
     );
     controller = WebOsmController(dataScripts.value!.html);
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    if (dataScripts.value != null) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -131,6 +123,11 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
     return FutureBuilder(
       future: _future,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text('Failed to load OSM web assets: ${snapshot.error}'),
+          );
+        }
         if (snapshot.connectionState == ConnectionState.done) {
           return HtmlElementView(
             key: keyWidget,
