@@ -26,7 +26,12 @@ rootProject.allprojects {
 
 apply plugin: 'com.android.library'
 
-//apply plugin: 'kotlin-android'
+// AGP 9+ provides built-in Kotlin. Retain KGP only for consuming apps on
+// earlier AGP versions.
+def agpMajor = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.tokenize('.')[0] as int
+if (agpMajor < 9) {
+    apply plugin: 'kotlin-android'
+}
 
 android {
     namespace "hamza.dali.flutter_osm_plugin"
@@ -52,9 +57,6 @@ android {
         // Sets Java compatibility to Java 17
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
     }
     packagingOptions {
         pickFirst 'lib/x86/libc++_shared.so'
