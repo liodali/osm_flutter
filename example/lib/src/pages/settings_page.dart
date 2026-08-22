@@ -747,6 +747,134 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: FCard(
+                title: const Text('Location Button'),
+                subtitle: const Text(
+                  'Choose how the location button reacts to taps and long presses.',
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Single click'),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: FPopoverMenu.tiles(
+                          builder: (context, controller, child) => FButton(
+                            variant: .outline,
+                            onPress: controller.toggle,
+                            child: child,
+                          ),
+                          menu: [
+                            FTileGroup(
+                              children: [
+                                FTile(
+                                  title: const Text(
+                                    'Start tracking, then center',
+                                  ),
+                                  subtitle: const Text(
+                                    'Starts tracking and moves the map to your location.',
+                                  ),
+                                  onPress: () => setState(
+                                    () => _config.singleClickMode =
+                                        LocationButtonSingleClickMode
+                                            .startTrackingThenCenter,
+                                  ),
+                                ),
+                                FTile(
+                                  title: const Text('Toggle tracking'),
+                                  subtitle: const Text(
+                                    'Turns tracking on or off.',
+                                  ),
+                                  onPress: () => setState(
+                                    () => _config.singleClickMode =
+                                        LocationButtonSingleClickMode
+                                            .toggleTracking,
+                                  ),
+                                ),
+                                FTile(
+                                  title: const Text('Center only'),
+                                  subtitle: const Text(
+                                    'Every tap moves the map to your location.',
+                                  ),
+                                  onPress: () => setState(
+                                    () => _config.singleClickMode =
+                                        LocationButtonSingleClickMode
+                                            .centerOnly,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          child: Text(
+                            switch (_config.singleClickMode) {
+                              LocationButtonSingleClickMode
+                                  .startTrackingThenCenter =>
+                                'Start tracking, then center',
+                              LocationButtonSingleClickMode.toggleTracking =>
+                                'Toggle tracking',
+                              LocationButtonSingleClickMode.centerOnly =>
+                                'Center only',
+                            },
+                          ),
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 16),
+                        child: Text('Long click'),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: FPopoverMenu.tiles(
+                          builder: (context, controller, child) => FButton(
+                            variant: .outline,
+                            onPress: controller.toggle,
+                            child: child,
+                          ),
+                          menu: [
+                            FTileGroup(
+                              children: [
+                                FTile(
+                                  title: const Text('Stop tracking'),
+                                  subtitle: const Text(
+                                    'Stops tracking when active.',
+                                  ),
+                                  onPress: () => setState(
+                                    () => _config.longClickMode =
+                                        LocationButtonLongClickMode
+                                            .stopTracking,
+                                  ),
+                                ),
+                                FTile(
+                                  title: const Text('Center'),
+                                  subtitle: const Text(
+                                    'Moves the map to your location.',
+                                  ),
+                                  onPress: () => setState(
+                                    () => _config.longClickMode =
+                                        LocationButtonLongClickMode.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          child: Text(
+                            switch (_config.longClickMode) {
+                              LocationButtonLongClickMode.stopTracking =>
+                                'Stop tracking',
+                              LocationButtonLongClickMode.center => 'Center',
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

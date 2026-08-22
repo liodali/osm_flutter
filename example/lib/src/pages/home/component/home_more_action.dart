@@ -39,7 +39,7 @@ class HomeMoreActionDesktop extends StatelessWidget {
       childAnchor: Alignment.bottomRight,
       menu: [
         FItemGroup(
-          children: [],
+          children: const [],
         ),
       ],
       builder: (context, controller, child) => FHeaderAction(
@@ -109,7 +109,6 @@ class _HomeMoreActionMobileState extends State<HomeMoreActionMobile>
                   child: ActivationUserLocation(
                     controller: widget.configuration.controller,
                     trackingNotifier: widget.configuration.trackingNotifier,
-                    userLocation: widget.configuration.userLocationNotifier,
                     userLocationIcon: widget.configuration.userLocationIcon,
                   ),
                 ),

@@ -24,6 +24,27 @@ enum ExampleMarkerStyle {
   image,
 }
 
+/// How the location FAB should behave on a single tap.
+enum LocationButtonSingleClickMode {
+  /// Start tracking if needed, then center the map on the user.
+  startTrackingThenCenter,
+
+  /// Toggle tracking on/off.
+  toggleTracking,
+
+  /// Every tap only centers the map on the user.
+  centerOnly,
+}
+
+/// How the location FAB should behave on a long press.
+enum LocationButtonLongClickMode {
+  /// Stop tracking if it is active.
+  stopTracking,
+
+  /// Center the map on the user.
+  center,
+}
+
 class ExampleMapStyleConfiguration extends ChangeNotifier {
   ExampleMapStyleConfiguration._();
 
@@ -128,6 +149,10 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
     RoadType.foot: true,
   };
   String _searchLocale = 'en';
+  LocationButtonSingleClickMode _singleClickMode =
+      LocationButtonSingleClickMode.startTrackingThenCenter;
+  LocationButtonLongClickMode _longClickMode =
+      LocationButtonLongClickMode.stopTracking;
   List<TilePreset> _customTiles = <TilePreset>[];
   String _defaultTileId = 'basic';
 
@@ -145,6 +170,10 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
   RoadType get roadType => _roadType;
   bool get isDotted => _isDotted;
   String get searchLocale => _searchLocale;
+
+  LocationButtonSingleClickMode get singleClickMode => _singleClickMode;
+
+  LocationButtonLongClickMode get longClickMode => _longClickMode;
 
   List<TilePreset> get customTiles => List.unmodifiable(_customTiles);
 
@@ -364,6 +393,22 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
       return;
     }
     _searchLocale = value;
+    notifyListeners();
+  }
+
+  set singleClickMode(LocationButtonSingleClickMode value) {
+    if (_singleClickMode == value) {
+      return;
+    }
+    _singleClickMode = value;
+    notifyListeners();
+  }
+
+  set longClickMode(LocationButtonLongClickMode value) {
+    if (_longClickMode == value) {
+      return;
+    }
+    _longClickMode = value;
     notifyListeners();
   }
 
