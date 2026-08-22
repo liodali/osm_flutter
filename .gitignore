@@ -17,6 +17,7 @@ build/
 *.jks
 *.patch
 *.sh
+!jenkins/deploy.sh
 # iOS/XCode related
 **/ios/**/*.mode1v3
 **/ios/**/*.mode2v3
@@ -47,6 +48,7 @@ build/
 
 /example/lib/src/test_bottom_nav/app_with_bottom_nav.dart
 /example/.env
+/jenkins/.env
 /example/pubspec.lock
 pubspec.lock
 .vscode/**
@@ -66,3 +68,4 @@ __pycache__
 *.svg
 !assets/default_pin.png
 !android/src/main/assets/fonts/*.png
+jenkins

@@ -1,0 +1,8 @@
+.git/
+.github/
+.dart_tool/
+**/.dart_tool/
+build/
+**/build/
+example/.env
+jenkins/.env
