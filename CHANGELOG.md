@@ -1,3 +1,11 @@
+### 2.0.1:
+
+- fix(android): route map gestures through MapsCore
+- fix(android): stabilize user location markers
+- refactor(android): match roads by line identifier
+- refactor(android): keep marker icons in public CRS
+- refactor(android): use public CRS for user location overlay
+
 ### 2.0.0+1:
 
 - fix missing `assets/default_pin.png` in published package caused by `.gitignore` `*.png` rule
