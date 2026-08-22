@@ -1,3 +1,7 @@
+### 2.0.1+1:
+
+- fix loading assets for web (wasm)
+
 ### 2.0.1:
 
 - fix(android): route map gestures through MapsCore
