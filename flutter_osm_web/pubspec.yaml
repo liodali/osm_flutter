@@ -18,8 +18,7 @@ dependencies:
   dio: ^5.9.0
   # flutter_osm_interface: ^1.5.0
   # path dependency for local development
-  flutter_osm_interface:
-    path: ../flutter_osm_interface/
+  flutter_osm_interface: ^1.5.0
   flutter_test:
     sdk: flutter
 
