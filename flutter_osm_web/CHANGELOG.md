@@ -1,5 +1,11 @@
 # ChangeLog
 
+## 2.0.1:
+
+- fix Flutter Web WASM build: load map HTML/JS from Flutter assets instead of Dio/CDN
+- inject map scripts with `HTMLScriptElement.text` (WASM `innerHTML` parsed the JS as HTML)
+- load the map iframe from a same-origin blob URL instead of `srcdoc` to avoid `about:srcdoc` History.replaceState errors under COOP/COEP
+
 ## 2.0.0:
 
 - **Breaking**: migrate web rendering engine from Leaflet to MapLibre GL JS
