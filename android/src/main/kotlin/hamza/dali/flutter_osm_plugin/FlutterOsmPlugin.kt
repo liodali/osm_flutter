@@ -1,13 +1,7 @@
 package hamza.dali.flutter_osm_plugin
 
-import android.app.Activity
-import android.app.Application
-import android.os.Bundle
 import android.util.ArrayMap
-import android.util.Log
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
 import androidx.preference.PreferenceManager
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
@@ -60,31 +54,31 @@ class FlutterOsmPlugin :
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding)
-
         pluginBinding = binding
-
+        factory?.attachActivity(binding)
     }
 
     override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
-        // lifecycle?.removeObserver(this)
+        factory?.dispose()
         factory = null
+        lifecycle = null
+        pluginBinding = null
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
-        Log.e("osm", "detached activity")
-        //  this.onDetachedFromActivity()
-        // lifecycle?.removeObserver(this)
-        // lifecycle = null
+        factory?.detachActivity()
+        lifecycle = null
+        pluginBinding = null
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        Log.e("osm", "reAttached activity for changes")
         lifecycle = FlutterLifecycleAdapter.getActivityLifecycle(binding)
-        factory!!.setActRefInView(binding.activity)
+        pluginBinding = binding
+        factory?.attachActivity(binding)
     }
 
     override fun onDetachedFromActivity() {
-        //lifecycle?.removeObserver(this)
+        factory?.detachActivity()
         lifecycle = null
         pluginBinding = null
     }

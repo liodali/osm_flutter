@@ -50,7 +50,6 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import io.flutter.plugin.common.PluginRegistry
 import io.flutter.plugin.platform.PlatformView
 import io.openmobilemaps.mapscore.graphics.BitmapTextureHolder
 import io.openmobilemaps.mapscore.map.layers.TiledRasterLayer
@@ -104,8 +103,9 @@ class MapscoreFlutterOsmView(
     private val customTile: CustomTile?,
     private val isEnabledRotationGesture: Boolean = false,
     private val isStaticMap: Boolean = false,
+    private val onDisposed: (Int) -> Unit = {},
 ) : OnSaveInstanceStateListener, PlatformView, MethodCallHandler,
-    PluginRegistry.ActivityResultListener, DefaultLifecycleObserver {
+    DefaultLifecycleObserver, MapscoreMapSession {
 
     private var mapView: MapView? = null
     private var rasterLayer: TiledRasterLayer? = null
@@ -117,7 +117,9 @@ class MapscoreFlutterOsmView(
     private lateinit var polygonLayer: PolygonLayerInterface
 
     private lateinit var locationNewOverlay: CustomLocationManager
-    private lateinit var methodChannel: MethodChannel
+    private lateinit var legacyChannel: LegacyMethodChannelAdapter
+    private var eventSink: MapEventSink = NoopMapEventSink
+    private var released = false
 
     private val markers: MutableMap<String, FlutterMarker> = LinkedHashMap()
     private val markerIconsCache: MutableMap<String, ByteArray?> = LinkedHashMap()
@@ -138,6 +140,9 @@ class MapscoreFlutterOsmView(
     private var resultFlutter: MethodChannel.Result? = null
     private var skipCheckLocation = false
     private var activity: Activity? = null
+
+    override val viewId: Int
+        get() = id
 
     internal var stepZoom = MapscoreConstants.stepZoom
     internal var initZoom = 10.0
@@ -182,8 +187,17 @@ class MapscoreFlutterOsmView(
         providerLifecycle.getOSMLifecycle()?.addObserver(this)
     }
 
-    fun setActivity(activity: Activity) {
+    override fun setActivity(activity: Activity?) {
         this.activity = activity
+    }
+
+    override fun setEventSink(sink: MapEventSink) {
+        if (released) {
+            sink.close()
+            return
+        }
+        eventSink.close()
+        eventSink = sink
     }
 
     private fun initMap(lifecycle: androidx.lifecycle.Lifecycle) {
@@ -241,7 +255,7 @@ class MapscoreFlutterOsmView(
                 map2["lat"] = lat
                 map2["lon"] = lon
                 map2["heading"] = heading
-                methodChannel.invokeMethod("receiveUserLocation", map2)
+                eventSink.emit("receiveUserLocation", map2)
             }
         }
     }
@@ -287,7 +301,7 @@ class MapscoreFlutterOsmView(
                     h["lat"] = lat
                     h["lon"] = lon
                     scope?.launch(Dispatchers.Main) {
-                        methodChannel.invokeMethod("receiveGeoPoint", h)
+                        eventSink.emit("receiveGeoPoint", h)
                     }
                 }
                 return true
@@ -301,7 +315,7 @@ class MapscoreFlutterOsmView(
                     h["lat"] = lat
                     h["lon"] = lon
                     scope?.launch(Dispatchers.Main) {
-                        methodChannel.invokeMethod("receiveGeoPointLongPress", h)
+                        eventSink.emit("receiveGeoPointLongPress", h)
                     }
                 }
                 return true
@@ -324,7 +338,7 @@ class MapscoreFlutterOsmView(
                     map["distance"] = road.roadDistance
                     map["duration"] = road.roadDuration
                     map["key"] = road.idRoad
-                    methodChannel.invokeMethod("receiveRoad", map)
+                    eventSink.emit("receiveRoad", map)
                 }
             }
         })
@@ -340,7 +354,7 @@ class MapscoreFlutterOsmView(
                 val center = mapView?.getCamera()?.getCenterPosition()
                 h["center"] = center?.toHashMap(helper)
                 scope?.launch(Dispatchers.Main) {
-                    methodChannel.invokeMethod("receiveRegionIsChanging", h)
+                    eventSink.emit("receiveRegionIsChanging", h)
                 }
             }
 
@@ -374,7 +388,7 @@ class MapscoreFlutterOsmView(
             h["lat"] = lat
             h["lon"] = lon
             scope?.launch(Dispatchers.Main) {
-                methodChannel.invokeMethod(
+                eventSink.emit(
                     if (longPress) "receiveLongPress" else "receiveSinglePress",
                     h,
                 )
@@ -407,8 +421,8 @@ class MapscoreFlutterOsmView(
                 }
 
                 "config#Zoom" -> configZoomMap(call, result)
-                "Zoom" -> setZoom(call, result)
-                "get#Zoom" -> getZoom(result)
+                "Zoom" -> handleSetZoom(call, result)
+                "get#Zoom" -> handleGetZoom(result)
                 "change#stepZoom" -> {
                     stepZoom = call.arguments as Double
                     result.success(null)
@@ -540,6 +554,56 @@ class MapscoreFlutterOsmView(
         map.requestRender()
     }
 
+    override fun setZoom(zoomLevel: Double?, stepZoom: Double?) {
+        val camera = mapView?.getCamera() ?: return
+        if (stepZoom != null) {
+            var step = stepZoom
+            if (step == 0.0) step = this.stepZoom
+            else if (step == -1.0) step = -this.stepZoom
+            val current = MapscoreConstants.mapscoreToOsmZoom(camera.getZoom())
+            camera.setZoom(MapscoreConstants.osmZoomToMapscore(current + step), true)
+        } else if (zoomLevel != null) {
+            camera.setZoom(MapscoreConstants.osmZoomToMapscore(zoomLevel), true)
+        }
+    }
+
+    override fun getZoom(): Double? {
+        return mapView?.getCamera()?.getZoom()?.let(MapscoreConstants::mapscoreToOsmZoom)
+    }
+
+    override fun moveTo(latitude: Double, longitude: Double, animate: Boolean) {
+        mapView?.getCamera()?.moveToCenterPosition(latLonToCoord(latitude, longitude), animate)
+    }
+
+    override fun addMarker(
+        markerId: String,
+        latitude: Double,
+        longitude: Double,
+        icon: ByteArray?,
+    ): Boolean {
+        if (released || mapView == null || !::iconLayer.isInitialized) return false
+        if (markers.containsKey(markerId)) return false
+        val zoom = mapView?.getCamera()?.getZoom()?.let {
+            MapscoreConstants.mapscoreToOsmZoom(it)
+        } ?: initZoom
+        addMarker(
+            lat = latitude,
+            lon = longitude,
+            zoom = zoom,
+            identifier = markerId,
+            dynamicMarkerBitmap = icon?.toBitmap(),
+            animateTo = false,
+        )
+        return true
+    }
+
+    override fun removeMarker(markerId: String): Boolean {
+        val marker = markers.remove(markerId) ?: return false
+        marker.remove()
+        markerIconsCache.remove("${marker.lat},${marker.lon}")
+        return true
+    }
+
     private fun configZoomMap(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as HashMap<*, *>
         val camera = mapView?.getCamera()
@@ -552,27 +616,21 @@ class MapscoreFlutterOsmView(
         result.success(200)
     }
 
-    private fun getZoom(result: MethodChannel.Result) {
+    private fun handleGetZoom(result: MethodChannel.Result) {
         try {
-            val z = mapView?.getCamera()?.getZoom() ?: return result.error("404", "no zoom", null)
-            result.success(MapscoreConstants.mapscoreToOsmZoom(z))
+            val zoom = getZoom() ?: return result.error("404", "no zoom", null)
+            result.success(zoom)
         } catch (e: Exception) {
             result.error("404", e.stackTraceToString(), null)
         }
     }
 
-    private fun setZoom(call: MethodCall, result: MethodChannel.Result) {
+    private fun handleSetZoom(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as HashMap<String, Any>
-        val camera = mapView?.getCamera() ?: return result.success(null)
-        if (args.containsKey("stepZoom")) {
-            var step = args["stepZoom"] as Double
-            if (step == 0.0) step = stepZoom
-            else if (step == -1.0) step = -stepZoom
-            val current = MapscoreConstants.mapscoreToOsmZoom(camera.getZoom())
-            camera.setZoom(MapscoreConstants.osmZoomToMapscore(current + step), true)
-        } else if (args.containsKey("zoomLevel")) {
-            camera.setZoom(MapscoreConstants.osmZoomToMapscore(args["zoomLevel"] as Double), true)
-        }
+        setZoom(
+            zoomLevel = args["zoomLevel"] as? Double,
+            stepZoom = args["stepZoom"] as? Double,
+        )
         result.success(null)
     }
 
@@ -602,7 +660,7 @@ class MapscoreFlutterOsmView(
             false
         )
         mapView?.requestRender()
-        methodChannel.invokeMethod("map#init", true)
+        eventSink.emit("map#init", true)
         result.success(null)
     }
 
@@ -644,9 +702,10 @@ class MapscoreFlutterOsmView(
 
     private fun moveToSpecificPosition(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as HashMap<String, *>
-        val coord = latLonToCoord(args["lat"]!! as Double, args["lon"]!! as Double)
+        val latitude = args["lat"]!! as Double
+        val longitude = args["lon"]!! as Double
         val animate = args["animate"] as Boolean? ?: false
-        mapView?.getCamera()?.moveToCenterPosition(coord, animate)
+        moveTo(latitude, longitude, animate)
         result.success(null)
     }
 
@@ -729,12 +788,13 @@ class MapscoreFlutterOsmView(
         animateTo: Boolean = true,
         angle: Double = 0.0,
         anchor: Anchor? = null,
+        identifier: String = UUID.randomUUID().toString(),
     ): FlutterMarker {
         val density = screenDensity(context)
         val marker = FlutterMarker(
             context = context,
             iconLayer = iconLayer,
-            identifier = UUID.randomUUID().toString(),
+            identifier = identifier,
             density = density,
         )
         marker.setPosition(lat, lon)
@@ -1095,11 +1155,26 @@ class MapscoreFlutterOsmView(
     override fun getView(): View = mainLinearLayout
 
     override fun dispose() {
-        locationNewOverlay.onDestroy()
+        release()
+    }
+
+    private fun release() {
+        if (released) return
+        released = true
+
+        if (::locationNewOverlay.isInitialized) {
+            locationNewOverlay.onDestroy()
+        }
         mapView?.requireMapInterface()?.getTouchHandler()?.removeListener(mapTouchListener)
         job?.let { if (it.isActive) it.cancel() }
+        job = null
+        resultFlutter = null
+        eventSink.close()
+        eventSink = NoopMapEventSink
         mainLinearLayout.removeAllViews()
+        mapView = null
         providerLifecycle.getOSMLifecycle()?.removeObserver(this)
+        onDisposed(id)
     }
 
     override fun onFlutterViewAttached(flutterView: View) {}
@@ -1126,8 +1201,9 @@ class MapscoreFlutterOsmView(
 
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
-        methodChannel = MethodChannel(binaryMessenger, "plugins.dali.hamza/osmview_$id")
-        methodChannel.setMethodCallHandler(this)
+        legacyChannel = LegacyMethodChannelAdapter(binaryMessenger, id)
+        legacyChannel.setMethodCallHandler(this)
+        eventSink = legacyChannel
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")
@@ -1135,8 +1211,6 @@ class MapscoreFlutterOsmView(
 
     override fun onStart(owner: LifecycleOwner) {
         super.onStart(owner)
-        activity = hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.pluginBinding?.activity
-        hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.pluginBinding?.addActivityResultListener(this)
     }
 
     override fun onResume(owner: LifecycleOwner) {
@@ -1158,12 +1232,7 @@ class MapscoreFlutterOsmView(
 
     override fun onDestroy(owner: LifecycleOwner) {
         super.onDestroy(owner)
-        locationNewOverlay.onDestroy()
-        mapView?.requireMapInterface()?.getTouchHandler()?.removeListener(mapTouchListener)
-        hamza.dali.flutter_osm_plugin.FlutterOsmPlugin.pluginBinding?.removeActivityResultListener(this)
-        mainLinearLayout.removeAllViews()
-        methodChannel.setMethodCallHandler(null)
-        mapView = null
+        release()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {

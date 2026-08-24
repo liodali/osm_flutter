@@ -1,6 +1,5 @@
 package hamza.dali.flutter_osm_plugin
 
-import android.app.Activity
 import android.content.Context
 import hamza.dali.flutter_osm_plugin.mapscore.MapscoreFlutterOsmView
 import hamza.dali.flutter_osm_plugin.models.CustomTile
@@ -14,47 +13,49 @@ open class OsmFactory(
     private val binaryMessenger: BinaryMessenger,
     private val provider: ProviderLifecycle,
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
-    private lateinit var osmFlutterView: MapscoreFlutterOsmView
+    private val sessions = MapSessionRegistry()
 
-    private var activity: Activity? = null
-    private var binding: ActivityPluginBinding? = null
     override fun create(
         context: Context?,
         viewId: Int,
         args: Any?,
     ): PlatformView {
-        val keyUUID = (args as HashMap<*, *>)["uuid"] as String
-        var customTile: CustomTile? = null
-        var enableRotationGesture = false
-        val staticMap = when {
-            args.containsKey("isStaticMap")-> args["isStaticMap"] as Boolean
-            else -> false
+        val params = args as? HashMap<*, *>
+            ?: throw IllegalArgumentException("Map creation arguments must be a map")
+        val keyUUID = params["uuid"] as? String ?: viewId.toString()
+        val customTile = params["customTile"]?.let {
+            @Suppress("UNCHECKED_CAST")
+            CustomTile.fromMap(it as HashMap<String, Any>)
         }
-        if ((args).containsKey("customTile")) {
-            customTile = CustomTile.fromMap(args["customTile"] as HashMap<String, Any>)
-        }
-        if ((args).containsKey("enableRotationGesture")) {
-            enableRotationGesture = args["enableRotationGesture"] as Boolean
-        }
-        osmFlutterView = MapscoreFlutterOsmView(
-            requireNotNull(context),
-            binaryMessenger,
-            viewId,
-            provider,
-            keyUUID,
+        val enableRotationGesture = params["enableRotationGesture"] as? Boolean ?: false
+        val staticMap = params["isStaticMap"] as? Boolean ?: false
+
+        val view = MapscoreFlutterOsmView(
+            context = requireNotNull(context),
+            binaryMessenger = binaryMessenger,
+            id = viewId,
+            providerLifecycle = provider,
+            keyArgMapSnapShot = keyUUID,
             customTile = customTile,
             isEnabledRotationGesture = enableRotationGesture,
-            isStaticMap = staticMap
+            isStaticMap = staticMap,
+            onDisposed = { disposedViewId -> sessions.unregister(disposedViewId) },
         )
-        return osmFlutterView
+        sessions.register(view)
+        return view
     }
 
-    fun setActRefInView(activity: Activity) {
-        osmFlutterView.setActivity(activity)
+    fun attachActivity(binding: ActivityPluginBinding) {
+        sessions.attachActivity(binding)
     }
 
-    fun setBindingActivity(binding: ActivityPluginBinding) {
-        this.binding!!.addActivityResultListener(osmFlutterView)
+    fun detachActivity() {
+        sessions.detachActivity()
     }
 
+    fun dispose() {
+        sessions.clear()
+    }
+
+    internal fun sessionCount(): Int = sessions.size
 }
