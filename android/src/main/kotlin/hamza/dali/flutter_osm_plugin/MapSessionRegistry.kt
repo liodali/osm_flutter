@@ -1,9 +1,9 @@
 package hamza.dali.flutter_osm_plugin
 
 import android.app.Activity
-import hamza.dali.flutter_osm_plugin.mapscore.MapscoreMapSession
-import java.util.concurrent.ConcurrentHashMap
+import hamza.dali.flutter_osm_plugin.mapscore.MapSession
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Owns Android map views by Flutter's platform-view ID.
@@ -13,10 +13,10 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
  * `lateinit`-view behavior and gives the future JNI bridge one lookup point.
  */
 class MapSessionRegistry {
-    private val sessions = ConcurrentHashMap<Int, MapscoreMapSession>()
+    private val sessions = ConcurrentHashMap<Int, MapSession>()
     private var activityBinding: ActivityPluginBinding? = null
 
-    fun register(view: MapscoreMapSession) {
+    fun register(view: MapSession) {
         check(sessions.putIfAbsent(view.viewId, view) == null) {
             "A map session is already registered for view ${view.viewId}"
         }
@@ -26,16 +26,13 @@ class MapSessionRegistry {
         }
     }
 
-    fun get(viewId: Int): MapscoreMapSession? = sessions[viewId]
+    fun get(viewId: Int): MapSession? = sessions[viewId]
 
-    fun unregister(viewId: Int, view: MapscoreMapSession? = null) {
-        val removed = if (view == null) {
-            sessions.remove(viewId)
-        } else {
-            val current = sessions[viewId]
-            if (current === view && sessions.remove(viewId, view)) view else null
+    fun unregister(viewId: Int, session: MapSession) {
+        if (sessions[viewId] === session && sessions.remove(viewId, session)) {
+            activityBinding?.removeActivityResultListener(session)
+            session.setActivity(null)
         }
-        removed?.let { activityBinding?.removeActivityResultListener(it) }
     }
 
     fun attachActivity(binding: ActivityPluginBinding) {
@@ -62,9 +59,9 @@ class MapSessionRegistry {
     }
 
     fun clear() {
+        detachActivity()
         sessions.values.toList().forEach { it.dispose() }
         sessions.clear()
-        detachActivity()
     }
 
     val size: Int

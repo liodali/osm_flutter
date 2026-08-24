@@ -2,6 +2,7 @@ package hamza.dali.flutter_osm_plugin
 
 import android.content.Context
 import hamza.dali.flutter_osm_plugin.mapscore.MapscoreFlutterOsmView
+import hamza.dali.flutter_osm_plugin.mapscore.MapscoreMapSession
 import hamza.dali.flutter_osm_plugin.models.CustomTile
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.BinaryMessenger
@@ -30,19 +31,21 @@ open class OsmFactory(
         val enableRotationGesture = params["enableRotationGesture"] as? Boolean ?: false
         val staticMap = params["isStaticMap"] as? Boolean ?: false
 
-        val view = MapscoreFlutterOsmView(
+        val session = MapscoreMapSession(
             context = requireNotNull(context),
             binaryMessenger = binaryMessenger,
             id = viewId,
-            providerLifecycle = provider,
             keyArgMapSnapShot = keyUUID,
             customTile = customTile,
             isEnabledRotationGesture = enableRotationGesture,
             isStaticMap = staticMap,
-            onDisposed = { disposedViewId -> sessions.unregister(disposedViewId) },
+            onDisposed = { disposed -> sessions.unregister(disposed.viewId, disposed) },
         )
-        sessions.register(view)
-        return view
+        sessions.register(session)
+        return MapscoreFlutterOsmView(
+            session = session,
+            providerLifecycle = provider,
+        )
     }
 
     fun attachActivity(binding: ActivityPluginBinding) {
