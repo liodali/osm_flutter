@@ -11,11 +11,20 @@ interface MapSession : PluginRegistry.ActivityResultListener {
 
     fun setEventSink(sink: MapEventSink)
 
-    fun setZoom(zoomLevel: Double? = null, stepZoom: Double? = null)
+    fun initialize(latitude: Double, longitude: Double): Boolean
+
+    fun emitReady(isReady: Boolean)
+
+    fun setZoom(zoomLevel: Double? = null, stepZoom: Double? = null): Boolean
 
     fun getZoom(): Double?
 
-    fun moveTo(latitude: Double, longitude: Double, animate: Boolean)
+    /** Thread-safe camera snapshot for non-main-thread JNI queries. */
+    fun getZoomSnapshot(): Double?
+
+    fun moveTo(latitude: Double, longitude: Double, animate: Boolean): Boolean
+
+    fun setRotation(angle: Double, animate: Boolean): Boolean
 
     fun addMarker(
         markerId: String,
@@ -25,6 +34,12 @@ interface MapSession : PluginRegistry.ActivityResultListener {
     ): Boolean
 
     fun removeMarker(markerId: String): Boolean
+
+    fun emitAcknowledgement(requestId: String, operation: String)
+
+    fun emitError(requestId: String, operation: String, code: String, message: String?)
+
+    fun emitMarkerTap(markerId: String, latitude: Double, longitude: Double)
 
     fun dispose()
 }
