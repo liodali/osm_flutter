@@ -1,0 +1,82 @@
+import 'package:flutter/services.dart';
+import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_plugin/src/android_transport/android_event_decoder.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  group('decodeAndroidMapEvent', () {
+    test('decodes command acknowledgements', () {
+      final event = decodeAndroidMapEvent(
+        7,
+        const MethodCall('android#event', {
+          'version': 1,
+          'type': 'ack',
+          'requestId': '7-1',
+          'payload': {'operation': 'moveTo'},
+        }),
+      );
+
+      expect(event, isA<AndroidMapAcknowledgement>());
+      final acknowledgement = event! as AndroidMapAcknowledgement;
+      expect(acknowledgement.viewId, 7);
+      expect(acknowledgement.requestId, '7-1');
+      expect(acknowledgement.operation, 'moveTo');
+    });
+
+    test('decodes native errors with request context', () {
+      final event = decodeAndroidMapEvent(
+        8,
+        const MethodCall('android#event', {
+          'version': 1,
+          'type': 'error',
+          'requestId': '8-2',
+          'payload': {
+            'operation': 'addMarker',
+            'code': 'command_rejected',
+            'message': 'duplicate marker',
+          },
+        }),
+      );
+
+      final error = event! as AndroidMapError;
+      expect(error.requestId, '8-2');
+      expect(error.error.operation, 'addMarker');
+      expect(error.error.code, 'command_rejected');
+      expect(error.error.viewId, 8);
+    });
+
+    test('decodes stable marker identity', () {
+      final event = decodeAndroidMapEvent(
+        9,
+        const MethodCall('android#event', {
+          'version': 1,
+          'type': 'markerTap',
+          'payload': {
+            'markerId': 'marker-1',
+            'lat': 48.85,
+            'lon': 2.35,
+          },
+        }),
+      );
+
+      final markerTap = event! as AndroidMarkerTap;
+      expect(markerTap.markerId, const MarkerId('marker-1'));
+      expect(markerTap.position.latitude, 48.85);
+      expect(markerTap.position.longitude, 2.35);
+    });
+
+    test('ignores unsupported envelope versions', () {
+      final event = decodeAndroidMapEvent(
+        10,
+        const MethodCall('android#event', {
+          'version': 2,
+          'type': 'ack',
+          'requestId': '10-1',
+          'payload': {'operation': 'moveTo'},
+        }),
+      );
+
+      expect(event, isNull);
+    });
+  });
+}

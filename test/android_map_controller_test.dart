@@ -149,6 +149,38 @@ void main() {
       await controller.dispose();
     });
 
+    test('routes camera and stable marker commands through selected backend',
+        () async {
+      final transport = FakeAndroidMapTransport(
+        backend: AndroidMapBackend.jni,
+      );
+      final controller = AndroidMapController.withPosition(
+        initPosition: GeoPoint(latitude: 1, longitude: 2),
+        backend: AndroidMapBackend.jni,
+        transportFactory: (_) => transport,
+      );
+      await controller.attachAndroidMap(21);
+      transport.emit(const AndroidMapReady(viewId: 21, isReady: true));
+      await controller.ready;
+
+      final destination = GeoPoint(latitude: 48.85, longitude: 2.35);
+      await controller.camera.moveTo(destination, animated: true);
+      await controller.camera.setZoom(14);
+      expect(await controller.camera.getZoom(), 14);
+      await controller.camera.setRotation(0.5, animated: false);
+      final markerId = await controller.markers.add(destination);
+
+      expect(transport.movedPosition, destination);
+      expect(transport.zoom, 14);
+      expect(transport.rotation, 0.5);
+      expect(markerId.value, startsWith('android-21-'));
+      expect(transport.markers[markerId], destination);
+
+      await controller.markers.remove(markerId);
+      expect(transport.markers, isEmpty);
+      await controller.dispose();
+    });
+
     test('dispose during attach prevents fallback and initialization',
         () async {
       final attachGate = Completer<void>();
@@ -224,6 +256,10 @@ final class FakeAndroidMapTransport implements AndroidMapTransport {
   int closeCount = 0;
   int? attachedViewId;
   GeoPoint? initialPosition;
+  GeoPoint? movedPosition;
+  double? zoom;
+  double? rotation;
+  final Map<MarkerId, GeoPoint> markers = {};
   bool _closed = false;
 
   @override
@@ -248,6 +284,34 @@ final class FakeAndroidMapTransport implements AndroidMapTransport {
 
   void emit(AndroidMapEvent event) {
     _events.add(event);
+  }
+
+  @override
+  Future<void> moveTo(GeoPoint position, {required bool animated}) async {
+    movedPosition = position;
+  }
+
+  @override
+  Future<void> setZoom(double zoom) async {
+    this.zoom = zoom;
+  }
+
+  @override
+  Future<double> getZoom() async => zoom ?? 10;
+
+  @override
+  Future<void> setRotation(double angle, {required bool animated}) async {
+    rotation = angle;
+  }
+
+  @override
+  Future<void> addMarker(MarkerId markerId, GeoPoint position) async {
+    markers[markerId] = position;
+  }
+
+  @override
+  Future<void> removeMarker(MarkerId markerId) async {
+    markers.remove(markerId);
   }
 
   @override
