@@ -169,6 +169,319 @@ extension OsmAndroidBridge$$Methods on OsmAndroidBridge {
     return _get$isMainThread(_$$selfRef.pointer, _id_get$isMainThread.pointer)
         .boolean;
   }
+
+  static final _id_attach = OsmAndroidBridge._class.instanceMethodId(
+    r'attach',
+    r'(I)Z',
+  );
+
+  static final _attach = jni$_.ProtectedJniExtensions.lookup<
+          jni$_.NativeFunction<
+              jni$_.JniResult Function(
+                  jni$_.Pointer<jni$_.Void>,
+                  jni$_.JMethodIDPtr,
+                  jni$_
+                      .VarArgs<(jni$_.Int32,)>)>>('globalEnv_CallBooleanMethod')
+      .asFunction<
+          jni$_.JniResult Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, core$_.int)>();
+
+  /// from: `public fun attach(viewId: kotlin.Int): kotlin.Boolean`
+  core$_.bool attach(
+    core$_.int i,
+  ) {
+    final _$$selfRef = reference;
+    return _attach(_$$selfRef.pointer, _id_attach.pointer, i).boolean;
+  }
+
+  static final _id_initialize = OsmAndroidBridge._class.instanceMethodId(
+    r'initialize',
+    r'(IDDLjava/lang/String;)Z',
+  );
+
+  static final _initialize = jni$_.ProtectedJniExtensions.lookup<
+          jni$_.NativeFunction<
+              jni$_.JniResult Function(
+                  jni$_.Pointer<jni$_.Void>,
+                  jni$_.JMethodIDPtr,
+                  jni$_.VarArgs<
+                      (
+                        jni$_.Int32,
+                        jni$_.Double,
+                        jni$_.Double,
+                        jni$_.Pointer<jni$_.Void>
+                      )>)>>('globalEnv_CallBooleanMethod')
+      .asFunction<
+          jni$_.JniResult Function(
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr,
+              core$_.int,
+              core$_.double,
+              core$_.double,
+              jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `public fun initialize(viewId: kotlin.Int, latitude: kotlin.Double, longitude: kotlin.Double, requestId: kotlin.String): kotlin.Boolean`
+  core$_.bool initialize(
+    core$_.int i,
+    core$_.double d,
+    core$_.double d1,
+    jni$_.JString string,
+  ) {
+    final _$$selfRef = reference;
+    final _$string = string.reference;
+    return _initialize(_$$selfRef.pointer, _id_initialize.pointer, i, d, d1,
+            _$string.pointer)
+        .boolean;
+  }
+
+  static final _id_moveTo = OsmAndroidBridge._class.instanceMethodId(
+    r'moveTo',
+    r'(IDDZLjava/lang/String;)Z',
+  );
+
+  static final _moveTo = jni$_.ProtectedJniExtensions.lookup<
+          jni$_.NativeFunction<
+              jni$_.JniResult Function(
+                  jni$_.Pointer<jni$_.Void>,
+                  jni$_.JMethodIDPtr,
+                  jni$_.VarArgs<
+                      (
+                        jni$_.Int32,
+                        jni$_.Double,
+                        jni$_.Double,
+                        jni$_.Int32,
+                        jni$_.Pointer<jni$_.Void>
+                      )>)>>('globalEnv_CallBooleanMethod')
+      .asFunction<
+          jni$_.JniResult Function(
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr,
+              core$_.int,
+              core$_.double,
+              core$_.double,
+              core$_.int,
+              jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `public fun moveTo(viewId: kotlin.Int, latitude: kotlin.Double, longitude: kotlin.Double, animated: kotlin.Boolean, requestId: kotlin.String): kotlin.Boolean`
+  core$_.bool moveTo(
+    core$_.int i,
+    core$_.double d,
+    core$_.double d1,
+    core$_.bool z,
+    jni$_.JString string,
+  ) {
+    final _$$selfRef = reference;
+    final _$string = string.reference;
+    return _moveTo(_$$selfRef.pointer, _id_moveTo.pointer, i, d, d1, z ? 1 : 0,
+            _$string.pointer)
+        .boolean;
+  }
+
+  static final _id_setZoom = OsmAndroidBridge._class.instanceMethodId(
+    r'setZoom',
+    r'(IDLjava/lang/String;)Z',
+  );
+
+  static final _setZoom = jni$_.ProtectedJniExtensions.lookup<
+          jni$_.NativeFunction<
+              jni$_.JniResult Function(
+                  jni$_.Pointer<jni$_.Void>,
+                  jni$_.JMethodIDPtr,
+                  jni$_.VarArgs<
+                      (
+                        jni$_.Int32,
+                        jni$_.Double,
+                        jni$_.Pointer<jni$_.Void>
+                      )>)>>('globalEnv_CallBooleanMethod')
+      .asFunction<
+          jni$_.JniResult Function(
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr,
+              core$_.int,
+              core$_.double,
+              jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `public fun setZoom(viewId: kotlin.Int, zoom: kotlin.Double, requestId: kotlin.String): kotlin.Boolean`
+  core$_.bool setZoom(
+    core$_.int i,
+    core$_.double d,
+    jni$_.JString string,
+  ) {
+    final _$$selfRef = reference;
+    final _$string = string.reference;
+    return _setZoom(
+            _$$selfRef.pointer, _id_setZoom.pointer, i, d, _$string.pointer)
+        .boolean;
+  }
+
+  static final _id_getZoom = OsmAndroidBridge._class.instanceMethodId(
+    r'getZoom',
+    r'(I)D',
+  );
+
+  static final _getZoom = jni$_.ProtectedJniExtensions.lookup<
+          jni$_.NativeFunction<
+              jni$_.JniResult Function(
+                  jni$_.Pointer<jni$_.Void>,
+                  jni$_.JMethodIDPtr,
+                  jni$_.VarArgs<(jni$_.Int32,)>)>>('globalEnv_CallDoubleMethod')
+      .asFunction<
+          jni$_.JniResult Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, core$_.int)>();
+
+  /// from: `public fun getZoom(viewId: kotlin.Int): kotlin.Double`
+  core$_.double getZoom(
+    core$_.int i,
+  ) {
+    final _$$selfRef = reference;
+    return _getZoom(_$$selfRef.pointer, _id_getZoom.pointer, i).doubleFloat;
+  }
+
+  static final _id_setRotation = OsmAndroidBridge._class.instanceMethodId(
+    r'setRotation',
+    r'(IDZLjava/lang/String;)Z',
+  );
+
+  static final _setRotation = jni$_.ProtectedJniExtensions.lookup<
+          jni$_.NativeFunction<
+              jni$_.JniResult Function(
+                  jni$_.Pointer<jni$_.Void>,
+                  jni$_.JMethodIDPtr,
+                  jni$_.VarArgs<
+                      (
+                        jni$_.Int32,
+                        jni$_.Double,
+                        jni$_.Int32,
+                        jni$_.Pointer<jni$_.Void>
+                      )>)>>('globalEnv_CallBooleanMethod')
+      .asFunction<
+          jni$_.JniResult Function(
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr,
+              core$_.int,
+              core$_.double,
+              core$_.int,
+              jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `public fun setRotation(viewId: kotlin.Int, angle: kotlin.Double, animated: kotlin.Boolean, requestId: kotlin.String): kotlin.Boolean`
+  core$_.bool setRotation(
+    core$_.int i,
+    core$_.double d,
+    core$_.bool z,
+    jni$_.JString string,
+  ) {
+    final _$$selfRef = reference;
+    final _$string = string.reference;
+    return _setRotation(_$$selfRef.pointer, _id_setRotation.pointer, i, d,
+            z ? 1 : 0, _$string.pointer)
+        .boolean;
+  }
+
+  static final _id_addMarker = OsmAndroidBridge._class.instanceMethodId(
+    r'addMarker',
+    r'(ILjava/lang/String;DDLjava/lang/String;)Z',
+  );
+
+  static final _addMarker = jni$_.ProtectedJniExtensions.lookup<
+          jni$_.NativeFunction<
+              jni$_.JniResult Function(
+                  jni$_.Pointer<jni$_.Void>,
+                  jni$_.JMethodIDPtr,
+                  jni$_.VarArgs<
+                      (
+                        jni$_.Int32,
+                        jni$_.Pointer<jni$_.Void>,
+                        jni$_.Double,
+                        jni$_.Double,
+                        jni$_.Pointer<jni$_.Void>
+                      )>)>>('globalEnv_CallBooleanMethod')
+      .asFunction<
+          jni$_.JniResult Function(
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr,
+              core$_.int,
+              jni$_.Pointer<jni$_.Void>,
+              core$_.double,
+              core$_.double,
+              jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `public fun addMarker(viewId: kotlin.Int, markerId: kotlin.String, latitude: kotlin.Double, longitude: kotlin.Double, requestId: kotlin.String): kotlin.Boolean`
+  core$_.bool addMarker(
+    core$_.int i,
+    jni$_.JString string,
+    core$_.double d,
+    core$_.double d1,
+    jni$_.JString string1,
+  ) {
+    final _$$selfRef = reference;
+    final _$string = string.reference;
+    final _$string1 = string1.reference;
+    return _addMarker(_$$selfRef.pointer, _id_addMarker.pointer, i,
+            _$string.pointer, d, d1, _$string1.pointer)
+        .boolean;
+  }
+
+  static final _id_removeMarker = OsmAndroidBridge._class.instanceMethodId(
+    r'removeMarker',
+    r'(ILjava/lang/String;Ljava/lang/String;)Z',
+  );
+
+  static final _removeMarker = jni$_.ProtectedJniExtensions.lookup<
+          jni$_.NativeFunction<
+              jni$_.JniResult Function(
+                  jni$_.Pointer<jni$_.Void>,
+                  jni$_.JMethodIDPtr,
+                  jni$_.VarArgs<
+                      (
+                        jni$_.Int32,
+                        jni$_.Pointer<jni$_.Void>,
+                        jni$_.Pointer<jni$_.Void>
+                      )>)>>('globalEnv_CallBooleanMethod')
+      .asFunction<
+          jni$_.JniResult Function(
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr,
+              core$_.int,
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.Pointer<jni$_.Void>)>();
+
+  /// from: `public fun removeMarker(viewId: kotlin.Int, markerId: kotlin.String, requestId: kotlin.String): kotlin.Boolean`
+  core$_.bool removeMarker(
+    core$_.int i,
+    jni$_.JString string,
+    jni$_.JString string1,
+  ) {
+    final _$$selfRef = reference;
+    final _$string = string.reference;
+    final _$string1 = string1.reference;
+    return _removeMarker(_$$selfRef.pointer, _id_removeMarker.pointer, i,
+            _$string.pointer, _$string1.pointer)
+        .boolean;
+  }
+
+  static final _id_close = OsmAndroidBridge._class.instanceMethodId(
+    r'close',
+    r'(I)Z',
+  );
+
+  static final _close = jni$_.ProtectedJniExtensions.lookup<
+          jni$_.NativeFunction<
+              jni$_.JniResult Function(
+                  jni$_.Pointer<jni$_.Void>,
+                  jni$_.JMethodIDPtr,
+                  jni$_
+                      .VarArgs<(jni$_.Int32,)>)>>('globalEnv_CallBooleanMethod')
+      .asFunction<
+          jni$_.JniResult Function(
+              jni$_.Pointer<jni$_.Void>, jni$_.JMethodIDPtr, core$_.int)>();
+
+  /// from: `public fun close(viewId: kotlin.Int): kotlin.Boolean`
+  core$_.bool close(
+    core$_.int i,
+  ) {
+    final _$$selfRef = reference;
+    return _close(_$$selfRef.pointer, _id_close.pointer, i).boolean;
+  }
 }
 
 final class $OsmAndroidBridge$Type$ extends jni$_.JType<OsmAndroidBridge> {
