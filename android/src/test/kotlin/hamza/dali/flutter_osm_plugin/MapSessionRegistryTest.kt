@@ -61,6 +61,40 @@ class MapSessionRegistryTest {
     }
 
     @Test
+    fun `JNI lookup resolves one exposed registry`() {
+        val session = FakeMapSession(viewId = 12)
+        val registry = MapSessionRegistry()
+        registry.register(session)
+        MapSessionRegistry.expose(registry)
+
+        try {
+            assertSame(session, MapSessionRegistry.resolve(12))
+        } finally {
+            MapSessionRegistry.hide(registry)
+        }
+        assertNull(MapSessionRegistry.resolve(12))
+    }
+
+    @Test
+    fun `JNI lookup fails closed for colliding engine view IDs`() {
+        val first = MapSessionRegistry().apply {
+            register(FakeMapSession(viewId = 13))
+        }
+        val second = MapSessionRegistry().apply {
+            register(FakeMapSession(viewId = 13))
+        }
+        MapSessionRegistry.expose(first)
+        MapSessionRegistry.expose(second)
+
+        try {
+            assertNull(MapSessionRegistry.resolve(13))
+        } finally {
+            MapSessionRegistry.hide(first)
+            MapSessionRegistry.hide(second)
+        }
+    }
+
+    @Test
     fun `clear disposes every session once`() {
         val first = FakeMapSession(viewId = 1)
         val second = FakeMapSession(viewId = 2)
@@ -88,14 +122,23 @@ private class FakeMapSession(
 
     override fun setEventSink(sink: MapEventSink) = Unit
 
-    override fun setZoom(zoomLevel: Double?, stepZoom: Double?) = Unit
+    override fun initialize(latitude: Double, longitude: Double): Boolean = true
+
+    override fun emitReady(isReady: Boolean) = Unit
+
+    override fun setZoom(zoomLevel: Double?, stepZoom: Double?): Boolean = true
 
     override fun getZoom(): Double? = null
 
-    override fun moveTo(latitude: Double, longitude: Double, animate: Boolean) {
+    override fun getZoomSnapshot(): Double? = null
+
+    override fun moveTo(latitude: Double, longitude: Double, animate: Boolean): Boolean {
         lastLatitude = latitude
         lastMoveAnimation = animate
+        return true
     }
+
+    override fun setRotation(angle: Double, animate: Boolean): Boolean = true
 
     override fun addMarker(
         markerId: String,
@@ -108,6 +151,17 @@ private class FakeMapSession(
     }
 
     override fun removeMarker(markerId: String): Boolean = false
+
+    override fun emitAcknowledgement(requestId: String, operation: String) = Unit
+
+    override fun emitError(
+        requestId: String,
+        operation: String,
+        code: String,
+        message: String?,
+    ) = Unit
+
+    override fun emitMarkerTap(markerId: String, latitude: Double, longitude: Double) = Unit
 
     override fun dispose() {
         disposeCount += 1
