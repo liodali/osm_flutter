@@ -26,4 +26,5 @@ export 'src/android_transport/jni_android_map_transport.dart'
     show JniAndroidMapTransport;
 export 'src/android_transport/method_channel_android_map_transport.dart'
     show MethodChannelAndroidMapTransport;
-export 'src/controller/android_map_controller.dart' show AndroidMapController;
+export 'src/controller/android_map_controller.dart'
+    show AndroidMapCamera, AndroidMapController, AndroidMapMarkers;

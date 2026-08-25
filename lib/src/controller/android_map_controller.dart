@@ -6,9 +6,8 @@ import 'package:flutter_osm_plugin/src/android_transport/android_transport_facto
 
 /// Opt-in Android controller introduced alongside the legacy map controller.
 ///
-/// Phase 2 provides attach, backend selection, readiness, typed events, and
-/// deterministic disposal. Typed camera and marker capabilities are added in
-/// Phase 3 after their JNI completion policy is implemented.
+/// JNI mutations are queued onto Android's main thread and complete from
+/// MethodChannel acknowledgements. Backend fallback remains attach-only.
 final class AndroidMapController extends BaseMapController
     implements AndroidMapPlatform {
   AndroidMapController.withPosition({
@@ -23,6 +22,8 @@ final class AndroidMapController extends BaseMapController
           initPosition: initPosition,
           areaLimit: areaLimit,
         ) {
+    camera = AndroidMapCamera._(this);
+    markers = AndroidMapMarkers._(this);
     // Prevent a disposal/attach failure from becoming an unhandled async error
     // when callers only await attach. Awaiting [ready] still receives it.
     _readyCompleter.future.ignore();
@@ -39,6 +40,10 @@ final class AndroidMapController extends BaseMapController
   int? _viewId;
   bool _attaching = false;
   bool _attachStarted = false;
+  int _markerSequence = 0;
+
+  late final AndroidMapCamera camera;
+  late final AndroidMapMarkers markers;
 
   @override
   final AndroidMapBackend backend;
@@ -203,6 +208,22 @@ final class AndroidMapController extends BaseMapController
     }
   }
 
+  Future<AndroidMapTransport> _readyTransport() async {
+    await ready;
+    final transport = _transport;
+    if (transport == null || _disposeFuture != null) {
+      throw AndroidMapException(
+        operation: 'command',
+        code: 'controller_disposed',
+        viewId: _viewId,
+      );
+    }
+    return transport;
+  }
+
+  MarkerId _nextMarkerId() =>
+      MarkerId('android-${_viewId ?? 'pending'}-${_markerSequence++}');
+
   Future<void> _releaseTransport() async {
     await _transportEvents?.cancel();
     _transportEvents = null;
@@ -232,5 +253,66 @@ final class AndroidMapController extends BaseMapController
     );
     await _releaseTransport();
     await _events.close();
+  }
+}
+
+/// Typed camera capability for [AndroidMapController].
+final class AndroidMapCamera {
+  AndroidMapCamera._(this._controller);
+
+  final AndroidMapController _controller;
+
+  Future<void> moveTo(GeoPoint position, {bool animated = false}) async {
+    final transport = await _controller._readyTransport();
+    await transport.moveTo(position, animated: animated);
+  }
+
+  Future<void> setZoom(double zoom) async {
+    final transport = await _controller._readyTransport();
+    await transport.setZoom(zoom);
+  }
+
+  Future<double> getZoom() async {
+    final transport = await _controller._readyTransport();
+    return transport.getZoom();
+  }
+
+  Future<void> setRotation(double angle, {bool animated = true}) async {
+    final transport = await _controller._readyTransport();
+    await transport.setRotation(angle, animated: animated);
+  }
+}
+
+/// Stable-ID marker capability for [AndroidMapController].
+final class AndroidMapMarkers {
+  AndroidMapMarkers._(this._controller);
+
+  final AndroidMapController _controller;
+  final Set<MarkerId> _issuedIds = {};
+
+  Future<MarkerId> add(GeoPoint position, {MarkerId? markerId}) async {
+    final id = markerId ?? _controller._nextMarkerId();
+    if (!_issuedIds.add(id)) {
+      throw AndroidMapException(
+        operation: 'addMarker',
+        code: 'duplicate_marker_id',
+        viewId: _controller.viewId,
+        message: 'Marker ID ${id.value} was already issued by this controller.',
+      );
+    }
+    try {
+      final transport = await _controller._readyTransport();
+      await transport.addMarker(id, position);
+      return id;
+    } catch (_) {
+      _issuedIds.remove(id);
+      rethrow;
+    }
+  }
+
+  Future<void> remove(MarkerId markerId) async {
+    final transport = await _controller._readyTransport();
+    await transport.removeMarker(markerId);
+    _issuedIds.remove(markerId);
   }
 }
