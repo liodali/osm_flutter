@@ -112,6 +112,7 @@ internal class MapscoreMapSession(
     private lateinit var legacyChannel: LegacyMethodChannelAdapter
     private var eventSink: MapEventSink = NoopMapEventSink
     private var released = false
+    @Volatile private var zoomSnapshot: Double? = null
 
     private val markers: MutableMap<String, FlutterMarker> = LinkedHashMap()
     private val markerIconsCache: MutableMap<String, ByteArray?> = LinkedHashMap()
@@ -291,8 +292,14 @@ internal class MapscoreMapSession(
                     val h = HashMap<String, Double>()
                     h["lat"] = lat
                     h["lon"] = lon
+                    val markerId = markers.values.firstOrNull {
+                        it.iconInfo?.getIdentifier() == icon.getIdentifier()
+                    }?.identifier
                     scope?.launch(Dispatchers.Main) {
+                        // Preserve the legacy callback while giving the typed
+                        // Android controller stable marker identity.
                         eventSink.emit("receiveGeoPoint", h)
+                        markerId?.let { emitMarkerTap(it, lat, lon) }
                     }
                 }
                 return true
@@ -339,6 +346,7 @@ internal class MapscoreMapSession(
         val camera = mapView?.getCamera() ?: return
         camera.addListener(object : MapCameraListenerInterface() {
             override fun onVisibleBoundsChanged(visibleBounds: RectCoord, zoom: Double) {
+                zoomSnapshot = MapscoreConstants.mapscoreToOsmZoom(zoom)
                 val helper = mapView?.getCoordinateConversionHelper() ?: return
                 val h = HashMap<String, Any?>()
                 h["bounding"] = visibleBounds.toHashMap(helper)
@@ -529,6 +537,45 @@ internal class MapscoreMapSession(
         }
     }
 
+    private fun handleTypedChannelCommand(
+        command: TypedMapCommand,
+        call: MethodCall,
+        result: MethodChannel.Result,
+    ) {
+        try {
+            when (command) {
+                TypedMapCommand.SET_ROTATION -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    val changed = setRotation(
+                        angle = args["angle"] as Double,
+                        animate = args["animated"] as Boolean,
+                    )
+                    if (changed) result.success(null)
+                    else result.error("rotation_not_set", "Map camera is unavailable", null)
+                }
+
+                TypedMapCommand.ADD_MARKER -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    val added = addMarker(
+                        markerId = args["markerId"] as String,
+                        latitude = args["lat"] as Double,
+                        longitude = args["lon"] as Double,
+                    )
+                    if (added) result.success(null)
+                    else result.error("marker_not_added", "Marker ID exists or map is unavailable", null)
+                }
+
+                TypedMapCommand.REMOVE_MARKER -> {
+                    val markerId = call.arguments as String
+                    if (removeMarker(markerId)) result.success(null)
+                    else result.error("marker_not_found", "Unknown marker ID: $markerId", null)
+                }
+            }
+        } catch (error: Exception) {
+            result.error("typed_command_failed", error.message, error.stackTraceToString())
+        }
+    }
+
     private fun swapRasterLayer(tile: CustomTile?) {
         val map = mapView ?: return
         rasterLayer?.let { map.removeLayer(it); rasterLayer = null }
@@ -548,25 +595,57 @@ internal class MapscoreMapSession(
         map.requestRender()
     }
 
-    override fun setZoom(zoomLevel: Double?, stepZoom: Double?) {
-        val camera = mapView?.getCamera() ?: return
-        if (stepZoom != null) {
+    override fun initialize(latitude: Double, longitude: Double): Boolean {
+        val map = mapView ?: return false
+        val camera = map.getCamera()
+        camera.moveToCenterPositionZoom(
+            latLonToCoord(latitude, longitude),
+            MapscoreConstants.osmZoomToMapscore(initZoom),
+            false,
+        )
+        zoomSnapshot = initZoom
+        map.requestRender()
+        return true
+    }
+
+    override fun emitReady(isReady: Boolean) {
+        eventSink.emit("map#init", isReady)
+    }
+
+    override fun setZoom(zoomLevel: Double?, stepZoom: Double?): Boolean {
+        val camera = mapView?.getCamera() ?: return false
+        val targetZoom = if (stepZoom != null) {
             var step = stepZoom
             if (step == 0.0) step = this.stepZoom
             else if (step == -1.0) step = -this.stepZoom
             val current = MapscoreConstants.mapscoreToOsmZoom(camera.getZoom())
-            camera.setZoom(MapscoreConstants.osmZoomToMapscore(current + step), true)
-        } else if (zoomLevel != null) {
-            camera.setZoom(MapscoreConstants.osmZoomToMapscore(zoomLevel), true)
+            current + step
+        } else {
+            zoomLevel ?: return false
         }
+        camera.setZoom(MapscoreConstants.osmZoomToMapscore(targetZoom), true)
+        zoomSnapshot = targetZoom
+        return true
     }
 
     override fun getZoom(): Double? {
-        return mapView?.getCamera()?.getZoom()?.let(MapscoreConstants::mapscoreToOsmZoom)
+        val zoom = mapView?.getCamera()?.getZoom()?.let(MapscoreConstants::mapscoreToOsmZoom)
+        if (zoom != null) zoomSnapshot = zoom
+        return zoom
     }
 
-    override fun moveTo(latitude: Double, longitude: Double, animate: Boolean) {
-        mapView?.getCamera()?.moveToCenterPosition(latLonToCoord(latitude, longitude), animate)
+    override fun getZoomSnapshot(): Double? = zoomSnapshot
+
+    override fun moveTo(latitude: Double, longitude: Double, animate: Boolean): Boolean {
+        val camera = mapView?.getCamera() ?: return false
+        camera.moveToCenterPosition(latLonToCoord(latitude, longitude), animate)
+        return true
+    }
+
+    override fun setRotation(angle: Double, animate: Boolean): Boolean {
+        val camera = mapView?.getCamera() ?: return false
+        camera.setRotation(angle.toFloat(), animate)
+        return true
     }
 
     override fun addMarker(
@@ -596,6 +675,54 @@ internal class MapscoreMapSession(
         marker.remove()
         markerIconsCache.remove("${marker.lat},${marker.lon}")
         return true
+    }
+
+    override fun emitAcknowledgement(requestId: String, operation: String) {
+        eventSink.emit(
+            "android#event",
+            mapOf(
+                "version" to 1,
+                "type" to "ack",
+                "requestId" to requestId,
+                "payload" to mapOf("operation" to operation),
+            ),
+        )
+    }
+
+    override fun emitError(
+        requestId: String,
+        operation: String,
+        code: String,
+        message: String?,
+    ) {
+        eventSink.emit(
+            "android#event",
+            mapOf(
+                "version" to 1,
+                "type" to "error",
+                "requestId" to requestId,
+                "payload" to mapOf(
+                    "operation" to operation,
+                    "code" to code,
+                    "message" to message,
+                ),
+            ),
+        )
+    }
+
+    override fun emitMarkerTap(markerId: String, latitude: Double, longitude: Double) {
+        eventSink.emit(
+            "android#event",
+            mapOf(
+                "version" to 1,
+                "type" to "markerTap",
+                "payload" to mapOf(
+                    "markerId" to markerId,
+                    "lat" to latitude,
+                    "lon" to longitude,
+                ),
+            ),
+        )
     }
 
     private fun configZoomMap(call: MethodCall, result: MethodChannel.Result) {
@@ -647,14 +774,9 @@ internal class MapscoreMapSession(
 
     private fun initPosition(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as HashMap<String, Double>
-        val camera = mapView?.getCamera() ?: return result.success(null)
-        camera.moveToCenterPositionZoom(
-            latLonToCoord(args["lat"]!!, args["lon"]!!),
-            MapscoreConstants.osmZoomToMapscore(initZoom),
-            false
-        )
-        mapView?.requestRender()
-        eventSink.emit("map#init", true)
+        if (initialize(args["lat"]!!, args["lon"]!!)) {
+            emitReady(true)
+        }
         result.success(null)
     }
 
@@ -689,8 +811,8 @@ internal class MapscoreMapSession(
     }
 
     private fun mapOrientation(call: MethodCall, result: MethodChannel.Result) {
-        val angle = (call.arguments as Double?)?.toFloat() ?: 0f
-        mapView?.getCamera()?.setRotation(angle, true)
+        val angle = call.arguments as Double? ?: 0.0
+        setRotation(angle, true)
         result.success(null)
     }
 
@@ -1172,6 +1294,7 @@ internal class MapscoreMapSession(
         eventSink = NoopMapEventSink
         mainLinearLayout.removeAllViews()
         mapView = null
+        zoomSnapshot = null
         onDisposed(this)
     }
 
@@ -1202,6 +1325,7 @@ internal class MapscoreMapSession(
             messenger = binaryMessenger,
             viewId = id,
             dispatch = ::handleLegacyCommand,
+            typedDispatch = ::handleTypedChannelCommand,
         )
         if (eventSink === NoopMapEventSink) {
             eventSink = legacyChannel
