@@ -57,6 +57,20 @@ internal enum class LegacyMapCommand(val methodName: String) {
     }
 }
 
+/** New typed fallback commands kept separate from the legacy method set. */
+internal enum class TypedMapCommand(val methodName: String) {
+    SET_ROTATION("android#camera#rotation"),
+    ADD_MARKER("android#marker#add"),
+    REMOVE_MARKER("android#marker#remove"),
+    ;
+
+    companion object {
+        private val byMethodName = values().associateBy(TypedMapCommand::methodName)
+
+        fun fromMethodName(methodName: String): TypedMapCommand? = byMethodName[methodName]
+    }
+}
+
 /**
  * Compatibility transport for the existing Android MethodChannel contract.
  *
@@ -68,6 +82,7 @@ internal class LegacyMethodChannelAdapter(
     messenger: BinaryMessenger,
     viewId: Int,
     private val dispatch: (LegacyMapCommand, MethodCall, MethodChannel.Result) -> Unit,
+    private val typedDispatch: (TypedMapCommand, MethodCall, MethodChannel.Result) -> Unit,
 ) : MapEventSink, MethodChannel.MethodCallHandler {
     private val channel = MethodChannel(messenger, "plugins.dali.hamza/osmview_$viewId")
     private val eventSink = MethodChannelMapEventSink(channel)
@@ -78,11 +93,16 @@ internal class LegacyMethodChannelAdapter(
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         val command = LegacyMapCommand.fromMethodName(call.method)
-        if (command == null) {
-            result.notImplemented()
+        if (command != null) {
+            dispatch(command, call, result)
             return
         }
-        dispatch(command, call, result)
+        val typedCommand = TypedMapCommand.fromMethodName(call.method)
+        if (typedCommand != null) {
+            typedDispatch(typedCommand, call, result)
+            return
+        }
+        result.notImplemented()
     }
 
     override fun emit(method: String, arguments: Any?) {
