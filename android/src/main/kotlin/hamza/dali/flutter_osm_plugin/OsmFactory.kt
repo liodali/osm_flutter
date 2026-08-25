@@ -14,7 +14,8 @@ open class OsmFactory(
     private val binaryMessenger: BinaryMessenger,
     private val provider: ProviderLifecycle,
 ) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
-    private val sessions = MapSessionRegistry()
+    private val sessions = MapSessionRegistry().also(MapSessionRegistry::expose)
+    private var disposed = false
 
     override fun create(
         context: Context?,
@@ -57,6 +58,9 @@ open class OsmFactory(
     }
 
     fun dispose() {
+        if (disposed) return
+        disposed = true
+        MapSessionRegistry.hide(sessions)
         sessions.clear()
     }
 

@@ -10,9 +10,36 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * Platform views may coexist, and activity recreation must update every live
  * view. Keeping this ownership in the factory avoids the old single
- * `lateinit`-view behavior and gives the future JNI bridge one lookup point.
+ * `lateinit`-view behavior and gives the JNI bridge one lookup point.
  */
 class MapSessionRegistry {
+    companion object {
+        private val exposedRegistries = ConcurrentHashMap.newKeySet<MapSessionRegistry>()
+
+        internal fun expose(registry: MapSessionRegistry) {
+            exposedRegistries.add(registry)
+        }
+
+        internal fun hide(registry: MapSessionRegistry) {
+            exposedRegistries.remove(registry)
+        }
+
+        /**
+         * Resolves a JNI view ID only when exactly one Flutter engine owns it.
+         * This fails closed instead of routing a command across engines whose
+         * platform-view ID sequences happen to overlap.
+         */
+        internal fun resolve(viewId: Int): MapSession? {
+            var match: MapSession? = null
+            for (registry in exposedRegistries) {
+                val candidate = registry.get(viewId) ?: continue
+                if (match != null && match !== candidate) return null
+                match = candidate
+            }
+            return match
+        }
+    }
+
     private val sessions = ConcurrentHashMap<Int, MapSession>()
     private var activityBinding: ActivityPluginBinding? = null
 
