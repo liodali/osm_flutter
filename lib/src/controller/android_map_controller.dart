@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:flutter/material.dart' show Color;
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/android_transport/android_map_transport.dart';
 import 'package:flutter_osm_plugin/src/android_transport/android_transport_factory.dart';
@@ -24,6 +26,10 @@ final class AndroidMapController extends BaseMapController
         ) {
     camera = AndroidMapCamera._(this);
     markers = AndroidMapMarkers._(this);
+    shapes = AndroidMapShapes._(this);
+    staticPositions = AndroidMapStaticPositions._(this);
+    roads = AndroidMapRoads._(this);
+    layers = AndroidMapLayers._(this);
     // Prevent a disposal/attach failure from becoming an unhandled async error
     // when callers only await attach. Awaiting [ready] still receives it.
     _readyCompleter.future.ignore();
@@ -41,9 +47,16 @@ final class AndroidMapController extends BaseMapController
   bool _attaching = false;
   bool _attachStarted = false;
   int _markerSequence = 0;
+  int _shapeSequence = 0;
+  int _staticPositionSequence = 0;
+  int _roadSequence = 0;
 
   late final AndroidMapCamera camera;
   late final AndroidMapMarkers markers;
+  late final AndroidMapShapes shapes;
+  late final AndroidMapStaticPositions staticPositions;
+  late final AndroidMapRoads roads;
+  late final AndroidMapLayers layers;
 
   @override
   final AndroidMapBackend backend;
@@ -224,6 +237,16 @@ final class AndroidMapController extends BaseMapController
   MarkerId _nextMarkerId() =>
       MarkerId('android-${_viewId ?? 'pending'}-${_markerSequence++}');
 
+  ShapeId _nextShapeId() =>
+      ShapeId('android-shape-${_viewId ?? 'pending'}-${_shapeSequence++}');
+
+  StaticPositionId _nextStaticPositionId() => StaticPositionId(
+        'android-static-${_viewId ?? 'pending'}-${_staticPositionSequence++}',
+      );
+
+  RoadId _nextRoadId() =>
+      RoadId('android-road-${_viewId ?? 'pending'}-${_roadSequence++}');
+
   Future<void> _releaseTransport() async {
     await _transportEvents?.cancel();
     _transportEvents = null;
@@ -290,7 +313,15 @@ final class AndroidMapMarkers {
   final AndroidMapController _controller;
   final Set<MarkerId> _issuedIds = {};
 
-  Future<MarkerId> add(GeoPoint position, {MarkerId? markerId}) async {
+  /// Adds one marker. [iconBytes] must contain encoded image bytes such as PNG.
+  Future<MarkerId> add(
+    GeoPoint position, {
+    MarkerId? markerId,
+    Uint8List? iconBytes,
+  }) async {
+    if (iconBytes?.isEmpty ?? false) {
+      throw _argumentException(_controller, 'addMarker', 'empty_icon');
+    }
     final id = markerId ?? _controller._nextMarkerId();
     if (!_issuedIds.add(id)) {
       throw AndroidMapException(
@@ -302,7 +333,7 @@ final class AndroidMapMarkers {
     }
     try {
       final transport = await _controller._readyTransport();
-      await transport.addMarker(id, position);
+      await transport.addMarker(id, position, iconBytes: iconBytes);
       return id;
     } catch (_) {
       _issuedIds.remove(id);
@@ -310,9 +341,279 @@ final class AndroidMapMarkers {
     }
   }
 
+  /// Adds markers in one native command and returns their stable IDs.
+  Future<List<MarkerId>> addAll(Iterable<GeoPoint> positions) async {
+    final values = positions.toList(growable: false);
+    if (values.isEmpty) return const [];
+    final entries = <MarkerId, GeoPoint>{
+      for (final position in values) _controller._nextMarkerId(): position,
+    };
+    _issuedIds.addAll(entries.keys);
+    try {
+      final transport = await _controller._readyTransport();
+      await transport.addMarkers(entries);
+      return entries.keys.toList(growable: false);
+    } catch (_) {
+      _issuedIds.removeAll(entries.keys);
+      rethrow;
+    }
+  }
+
+  /// Replaces an existing marker icon using encoded image bytes.
+  Future<void> updateIcon(MarkerId markerId, Uint8List iconBytes) async {
+    if (iconBytes.isEmpty) {
+      throw _argumentException(_controller, 'updateMarkerIcon', 'empty_icon');
+    }
+    final transport = await _controller._readyTransport();
+    await transport.updateMarkerIcon(markerId, iconBytes);
+  }
+
   Future<void> remove(MarkerId markerId) async {
     final transport = await _controller._readyTransport();
     await transport.removeMarker(markerId);
     _issuedIds.remove(markerId);
   }
+
+  /// Removes markers in one native command.
+  Future<void> removeAll(Iterable<MarkerId> markerIds) async {
+    final ids = markerIds.toSet();
+    if (ids.isEmpty) return;
+    final transport = await _controller._readyTransport();
+    await transport.removeMarkers(ids);
+    _issuedIds.removeAll(ids);
+  }
+}
+
+/// Circle and rectangle overlays keyed by [ShapeId].
+final class AndroidMapShapes {
+  AndroidMapShapes._(this._controller);
+
+  final AndroidMapController _controller;
+  final Set<ShapeId> _issuedIds = {};
+
+  Future<ShapeId> addCircle({
+    required GeoPoint center,
+    required double radius,
+    required Color color,
+    Color? borderColor,
+    double strokeWidth = 1,
+    ShapeId? shapeId,
+  }) async {
+    if (!radius.isFinite ||
+        radius <= 0 ||
+        !strokeWidth.isFinite ||
+        strokeWidth <= 0) {
+      throw _argumentException(_controller, 'addCircle', 'invalid_shape');
+    }
+    final id = _issue(shapeId, 'addCircle');
+    try {
+      final transport = await _controller._readyTransport();
+      await transport.addCircle(
+        shapeId: id,
+        center: center,
+        radius: radius,
+        fillColor: _signedArgb(color),
+        borderColor: _signedArgb(borderColor ?? color),
+        strokeWidth: strokeWidth,
+      );
+      return id;
+    } catch (_) {
+      _issuedIds.remove(id);
+      rethrow;
+    }
+  }
+
+  Future<ShapeId> addRectangle({
+    required GeoPoint center,
+    required double distance,
+    required Color color,
+    Color? borderColor,
+    double strokeWidth = 1,
+    ShapeId? shapeId,
+  }) async {
+    if (!distance.isFinite ||
+        distance <= 0 ||
+        !strokeWidth.isFinite ||
+        strokeWidth <= 0) {
+      throw _argumentException(_controller, 'addRectangle', 'invalid_shape');
+    }
+    final id = _issue(shapeId, 'addRectangle');
+    try {
+      final transport = await _controller._readyTransport();
+      await transport.addRectangle(
+        shapeId: id,
+        center: center,
+        distance: distance,
+        fillColor: _signedArgb(color),
+        borderColor: _signedArgb(borderColor ?? color),
+        strokeWidth: strokeWidth,
+      );
+      return id;
+    } catch (_) {
+      _issuedIds.remove(id);
+      rethrow;
+    }
+  }
+
+  ShapeId _issue(ShapeId? requested, String operation) {
+    final id = requested ?? _controller._nextShapeId();
+    if (!_issuedIds.add(id)) {
+      throw AndroidMapException(
+        operation: operation,
+        code: 'duplicate_shape_id',
+        viewId: _controller.viewId,
+        message: 'Shape ID ${id.value} was already issued by this controller.',
+      );
+    }
+    return id;
+  }
+
+  Future<void> remove(ShapeId shapeId) async {
+    final transport = await _controller._readyTransport();
+    await transport.removeShape(shapeId);
+    _issuedIds.remove(shapeId);
+  }
+
+  Future<void> clear() async {
+    final transport = await _controller._readyTransport();
+    await transport.clearShapes();
+    _issuedIds.clear();
+  }
+}
+
+/// Bulk static-position groups, optionally sharing one encoded icon.
+final class AndroidMapStaticPositions {
+  AndroidMapStaticPositions._(this._controller);
+
+  final AndroidMapController _controller;
+  final Set<StaticPositionId> _issuedIds = {};
+
+  /// Creates or replaces a static-position group in one native command.
+  Future<StaticPositionId> set(
+    List<GeoPoint> positions, {
+    StaticPositionId? groupId,
+    Uint8List? iconBytes,
+  }) async {
+    if (positions.isEmpty) {
+      throw _argumentException(
+        _controller,
+        'setStaticPositions',
+        'empty_positions',
+      );
+    }
+    if (iconBytes?.isEmpty ?? false) {
+      throw _argumentException(
+        _controller,
+        'setStaticPositions',
+        'empty_icon',
+      );
+    }
+    final id = groupId ?? _controller._nextStaticPositionId();
+    final wasIssued = _issuedIds.contains(id);
+    _issuedIds.add(id);
+    try {
+      final transport = await _controller._readyTransport();
+      await transport.setStaticPositions(
+        id,
+        List<GeoPoint>.unmodifiable(positions),
+        iconBytes: iconBytes,
+      );
+      return id;
+    } catch (_) {
+      if (!wasIssued) _issuedIds.remove(id);
+      rethrow;
+    }
+  }
+
+  Future<void> remove(StaticPositionId groupId) async {
+    final transport = await _controller._readyTransport();
+    await transport.removeStaticPositions(groupId);
+    _issuedIds.remove(groupId);
+  }
+}
+
+/// Stable-ID road geometry. Route fetching stays in Dart; only coordinates are
+/// sent to the Android renderer.
+final class AndroidMapRoads {
+  AndroidMapRoads._(this._controller);
+
+  final AndroidMapController _controller;
+  final Set<RoadId> _issuedIds = {};
+
+  Future<RoadId> draw(
+    List<GeoPoint> geometry, {
+    RoadId? roadId,
+    RoadOption option = const RoadOption.empty(),
+  }) async {
+    if (geometry.length < 2) {
+      throw _argumentException(_controller, 'drawRoad', 'invalid_geometry');
+    }
+    final id = roadId ?? _controller._nextRoadId();
+    if (!_issuedIds.add(id)) {
+      throw AndroidMapException(
+        operation: 'drawRoad',
+        code: 'duplicate_road_id',
+        viewId: _controller.viewId,
+        message: 'Road ID ${id.value} was already issued by this controller.',
+      );
+    }
+    try {
+      final transport = await _controller._readyTransport();
+      await transport.drawRoad(
+        id,
+        List<GeoPoint>.unmodifiable(geometry),
+        option,
+      );
+      return id;
+    } catch (_) {
+      _issuedIds.remove(id);
+      rethrow;
+    }
+  }
+
+  Future<void> remove(RoadId roadId) async {
+    final transport = await _controller._readyTransport();
+    await transport.removeRoad(roadId);
+    _issuedIds.remove(roadId);
+  }
+
+  Future<void> clear() async {
+    final transport = await _controller._readyTransport();
+    await transport.clearRoads();
+    _issuedIds.clear();
+  }
+}
+
+/// Base tile and overlay-layer configuration.
+final class AndroidMapLayers {
+  AndroidMapLayers._(this._controller);
+
+  final AndroidMapController _controller;
+
+  /// Sets a raster/vector tile source, or restores OSM when [tile] is null.
+  Future<void> setTile(CustomTile? tile) async {
+    final transport = await _controller._readyTransport();
+    await transport.setTile(tile);
+  }
+
+  Future<void> setOverlaysVisible(bool visible) async {
+    final transport = await _controller._readyTransport();
+    await transport.setOverlaysVisible(visible);
+  }
+}
+
+AndroidMapException _argumentException(
+  AndroidMapController controller,
+  String operation,
+  String code,
+) =>
+    AndroidMapException(
+      operation: operation,
+      code: code,
+      viewId: controller.viewId,
+    );
+
+int _signedArgb(Color color) {
+  final value = color.toARGB32();
+  return value > 0x7fffffff ? value - 0x100000000 : value;
 }

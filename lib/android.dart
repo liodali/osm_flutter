@@ -17,7 +17,10 @@ export 'package:flutter_osm_interface/flutter_osm_interface.dart'
         AndroidMapTapKind,
         AndroidMarkerTap,
         AndroidRegionChanged,
-        MarkerId;
+        MarkerId,
+        RoadId,
+        ShapeId,
+        StaticPositionId;
 export 'src/android_jni/probe.dart'
     show AndroidJniProbeResult, runAndroidJniProbe;
 export 'src/android_transport/android_map_transport.dart'
@@ -27,4 +30,11 @@ export 'src/android_transport/jni_android_map_transport.dart'
 export 'src/android_transport/method_channel_android_map_transport.dart'
     show MethodChannelAndroidMapTransport;
 export 'src/controller/android_map_controller.dart'
-    show AndroidMapCamera, AndroidMapController, AndroidMapMarkers;
+    show
+        AndroidMapCamera,
+        AndroidMapController,
+        AndroidMapLayers,
+        AndroidMapMarkers,
+        AndroidMapRoads,
+        AndroidMapShapes,
+        AndroidMapStaticPositions;
