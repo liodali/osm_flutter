@@ -59,7 +59,38 @@ class LegacyMapCommandTest {
     }
 
     @Test
+    fun `keeps typed fallback names separate from legacy names`() {
+        val expectedNames = setOf(
+            "android#camera#zoom",
+            "android#camera#rotation",
+            "android#marker#add",
+            "android#marker#addAll",
+            "android#marker#icon",
+            "android#marker#remove",
+            "android#marker#removeAll",
+            "android#shape#circle",
+            "android#shape#rectangle",
+            "android#shape#remove",
+            "android#shape#clear",
+            "android#static#set",
+            "android#static#remove",
+            "android#road#draw",
+            "android#road#remove",
+            "android#road#clear",
+            "android#tile#set",
+            "android#layer#visibility",
+        )
+
+        assertEquals(expectedNames, TypedMapCommand.values().map { it.methodName }.toSet())
+        expectedNames.forEach { methodName ->
+            assertEquals(methodName, TypedMapCommand.fromMethodName(methodName)?.methodName)
+            assertNull(LegacyMapCommand.fromMethodName(methodName))
+        }
+    }
+
+    @Test
     fun `does not decode unknown methods`() {
         assertNull(LegacyMapCommand.fromMethodName("unknown#method"))
+        assertNull(TypedMapCommand.fromMethodName("unknown#method"))
     }
 }
