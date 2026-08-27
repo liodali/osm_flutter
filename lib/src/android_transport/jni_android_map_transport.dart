@@ -132,19 +132,72 @@ final class JniAndroidMapTransport implements AndroidMapTransport {
       });
 
   @override
-  Future<void> addMarker(MarkerId markerId, GeoPoint position) =>
+  Future<void> addMarker(
+    MarkerId markerId,
+    GeoPoint position, {
+    Uint8List? iconBytes,
+  }) =>
       _enqueue('addMarker', (bridge, viewId, requestId) {
         final nativeMarkerId = markerId.value.toJString();
+        final nativeIcon = iconBytes == null ? null : _byteArray(iconBytes);
         try {
           return bridge.addMarker(
             viewId,
             nativeMarkerId,
             position.latitude,
             position.longitude,
+            nativeIcon,
             requestId,
           );
         } finally {
           nativeMarkerId.release();
+          nativeIcon?.release();
+        }
+      });
+
+  @override
+  Future<void> addMarkers(Map<MarkerId, GeoPoint> markers) =>
+      _enqueue('addMarkers', (bridge, viewId, requestId) {
+        final nativeIds = _stringArray(
+          markers.keys.map((markerId) => markerId.value),
+        );
+        final coordinates = JDoubleArray.of([
+          for (final point in markers.values) ...[
+            point.latitude,
+            point.longitude,
+          ],
+        ]);
+        try {
+          return bridge.addMarkers(
+            viewId,
+            nativeIds.array,
+            coordinates,
+            requestId,
+          );
+        } finally {
+          nativeIds.release();
+          coordinates.release();
+        }
+      });
+
+  @override
+  Future<void> updateMarkerIcon(
+    MarkerId markerId,
+    Uint8List iconBytes,
+  ) =>
+      _enqueue('updateMarkerIcon', (bridge, viewId, requestId) {
+        final nativeMarkerId = markerId.value.toJString();
+        final nativeIcon = _byteArray(iconBytes);
+        try {
+          return bridge.updateMarkerIcon(
+            viewId,
+            nativeMarkerId,
+            nativeIcon,
+            requestId,
+          );
+        } finally {
+          nativeMarkerId.release();
+          nativeIcon.release();
         }
       });
 
@@ -157,6 +210,245 @@ final class JniAndroidMapTransport implements AndroidMapTransport {
         } finally {
           nativeMarkerId.release();
         }
+      });
+
+  @override
+  Future<void> removeMarkers(Iterable<MarkerId> markerIds) =>
+      _enqueue('removeMarkers', (bridge, viewId, requestId) {
+        final nativeIds = _stringArray(
+          markerIds.map((markerId) => markerId.value),
+        );
+        try {
+          return bridge.removeMarkers(viewId, nativeIds.array, requestId);
+        } finally {
+          nativeIds.release();
+        }
+      });
+
+  @override
+  Future<void> addCircle({
+    required ShapeId shapeId,
+    required GeoPoint center,
+    required double radius,
+    required int fillColor,
+    required int borderColor,
+    required double strokeWidth,
+  }) =>
+      _enqueue('addCircle', (bridge, viewId, requestId) {
+        final nativeShapeId = shapeId.value.toJString();
+        try {
+          return bridge.addCircle(
+            viewId,
+            nativeShapeId,
+            center.latitude,
+            center.longitude,
+            radius,
+            fillColor,
+            borderColor,
+            strokeWidth,
+            requestId,
+          );
+        } finally {
+          nativeShapeId.release();
+        }
+      });
+
+  @override
+  Future<void> addRectangle({
+    required ShapeId shapeId,
+    required GeoPoint center,
+    required double distance,
+    required int fillColor,
+    required int borderColor,
+    required double strokeWidth,
+  }) =>
+      _enqueue('addRectangle', (bridge, viewId, requestId) {
+        final nativeShapeId = shapeId.value.toJString();
+        try {
+          return bridge.addRectangle(
+            viewId,
+            nativeShapeId,
+            center.latitude,
+            center.longitude,
+            distance,
+            fillColor,
+            borderColor,
+            strokeWidth,
+            requestId,
+          );
+        } finally {
+          nativeShapeId.release();
+        }
+      });
+
+  @override
+  Future<void> removeShape(ShapeId shapeId) =>
+      _enqueue('removeShape', (bridge, viewId, requestId) {
+        final nativeShapeId = shapeId.value.toJString();
+        try {
+          return bridge.removeShape(viewId, nativeShapeId, requestId);
+        } finally {
+          nativeShapeId.release();
+        }
+      });
+
+  @override
+  Future<void> clearShapes() =>
+      _enqueue('clearShapes', (bridge, viewId, requestId) {
+        return bridge.clearShapes(viewId, requestId);
+      });
+
+  @override
+  Future<void> setStaticPositions(
+    StaticPositionId groupId,
+    List<GeoPoint> positions, {
+    Uint8List? iconBytes,
+  }) =>
+      _enqueue('setStaticPositions', (bridge, viewId, requestId) {
+        final nativeGroupId = groupId.value.toJString();
+        final coordinates = JDoubleArray.of([
+          for (final point in positions) ...[
+            point.latitude,
+            point.longitude,
+            point is GeoPointWithOrientation ? point.angle : 0.0,
+          ],
+        ]);
+        final nativeIcon = iconBytes == null ? null : _byteArray(iconBytes);
+        try {
+          return bridge.setStaticPositions(
+            viewId,
+            nativeGroupId,
+            coordinates,
+            nativeIcon,
+            requestId,
+          );
+        } finally {
+          nativeGroupId.release();
+          coordinates.release();
+          nativeIcon?.release();
+        }
+      });
+
+  @override
+  Future<void> removeStaticPositions(StaticPositionId groupId) =>
+      _enqueue('removeStaticPositions', (bridge, viewId, requestId) {
+        final nativeGroupId = groupId.value.toJString();
+        try {
+          return bridge.removeStaticPositions(
+            viewId,
+            nativeGroupId,
+            requestId,
+          );
+        } finally {
+          nativeGroupId.release();
+        }
+      });
+
+  @override
+  Future<void> drawRoad(
+    RoadId roadId,
+    List<GeoPoint> geometry,
+    RoadOption option,
+  ) =>
+      _enqueue('drawRoad', (bridge, viewId, requestId) {
+        final nativeRoadId = roadId.value.toJString();
+        final coordinates = JDoubleArray.of([
+          for (final point in geometry) ...[
+            point.latitude,
+            point.longitude,
+          ],
+        ]);
+        try {
+          return bridge.drawRoad(
+            viewId,
+            nativeRoadId,
+            coordinates,
+            _signedArgb(option.roadColor.toARGB32()),
+            option.roadWidth,
+            _signedArgb(
+              (option.roadBorderColor ?? option.roadColor).toARGB32(),
+            ),
+            option.roadBorderWidth ?? 0.0,
+            option.zoomInto,
+            option.isDotted,
+            requestId,
+          );
+        } finally {
+          nativeRoadId.release();
+          coordinates.release();
+        }
+      });
+
+  @override
+  Future<void> removeRoad(RoadId roadId) =>
+      _enqueue('removeRoad', (bridge, viewId, requestId) {
+        final nativeRoadId = roadId.value.toJString();
+        try {
+          return bridge.removeRoad(viewId, nativeRoadId, requestId);
+        } finally {
+          nativeRoadId.release();
+        }
+      });
+
+  @override
+  Future<void> clearRoads() =>
+      _enqueue('clearRoads', (bridge, viewId, requestId) {
+        return bridge.clearRoads(viewId, requestId);
+      });
+
+  @override
+  Future<void> setTile(CustomTile? tile) =>
+      _enqueue('setTile', (bridge, viewId, requestId) {
+        if (tile == null) return bridge.resetTile(viewId, requestId);
+        final styleUrl = tile.styleURL;
+        if (styleUrl != null) {
+          final nativeStyleUrl = styleUrl.toJString();
+          final nativeSourceName = tile.sourceName.toJString();
+          try {
+            return bridge.setVectorTile(
+              viewId,
+              nativeStyleUrl,
+              nativeSourceName,
+              tile.minZoomLevel,
+              tile.maxZoomLevel,
+              requestId,
+            );
+          } finally {
+            nativeStyleUrl.release();
+            nativeSourceName.release();
+          }
+        }
+
+        final url = tile.urlsServers.first.toMapAndroid().first.toJString();
+        final sourceName = tile.sourceName.toJString();
+        final extension = tile.tileExtension.toJString();
+        final apiKey = (tile.keyApi?.key ?? '').toJString();
+        final apiValue = (tile.keyApi?.value ?? '').toJString();
+        try {
+          return bridge.setRasterTile(
+            viewId,
+            url,
+            sourceName,
+            extension,
+            tile.minZoomLevel,
+            tile.maxZoomLevel,
+            apiKey,
+            apiValue,
+            requestId,
+          );
+        } finally {
+          url.release();
+          sourceName.release();
+          extension.release();
+          apiKey.release();
+          apiValue.release();
+        }
+      });
+
+  @override
+  Future<void> setOverlaysVisible(bool visible) =>
+      _enqueue('setOverlaysVisible', (bridge, viewId, requestId) {
+        return bridge.setOverlaysVisible(viewId, visible, requestId);
       });
 
   Future<void> _enqueue(
@@ -283,3 +575,40 @@ final class JniAndroidMapTransport implements AndroidMapTransport {
     await _events.close();
   }
 }
+
+final class _NativeStringArray {
+  _NativeStringArray(this.array, this._values);
+
+  final JArray<JString> array;
+  final List<JString> _values;
+
+  void release() {
+    try {
+      array.release();
+    } finally {
+      for (final value in _values) {
+        value.release();
+      }
+    }
+  }
+}
+
+_NativeStringArray _stringArray(Iterable<String> values) {
+  final nativeValues = values.map((value) => value.toJString()).toList();
+  try {
+    return _NativeStringArray(
+      JArray.of(JString.type, nativeValues),
+      nativeValues,
+    );
+  } catch (_) {
+    for (final value in nativeValues) {
+      value.release();
+    }
+    rethrow;
+  }
+}
+
+JByteArray _byteArray(Uint8List bytes) =>
+    JByteArray.of(bytes.map((value) => value > 127 ? value - 256 : value));
+
+int _signedArgb(int value) => value > 0x7fffffff ? value - 0x100000000 : value;
