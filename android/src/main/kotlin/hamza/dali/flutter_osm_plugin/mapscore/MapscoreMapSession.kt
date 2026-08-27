@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.location.LocationManager
 import android.location.LocationManager.GPS_PROVIDER
 import android.location.LocationManager.NETWORK_PROVIDER
@@ -543,36 +544,157 @@ internal class MapscoreMapSession(
         result: MethodChannel.Result,
     ) {
         try {
-            when (command) {
+            val accepted = when (command) {
+                TypedMapCommand.SET_ZOOM -> setZoom(
+                    zoomLevel = (call.arguments as Number).toDouble(),
+                    animated = false,
+                )
+
                 TypedMapCommand.SET_ROTATION -> {
                     val args = call.arguments as HashMap<String, Any>
-                    val changed = setRotation(
-                        angle = args["angle"] as Double,
+                    setRotation(
+                        angle = (args["angle"] as Number).toDouble(),
                         animate = args["animated"] as Boolean,
                     )
-                    if (changed) result.success(null)
-                    else result.error("rotation_not_set", "Map camera is unavailable", null)
                 }
 
                 TypedMapCommand.ADD_MARKER -> {
                     val args = call.arguments as HashMap<String, Any>
-                    val added = addMarker(
+                    addMarker(
                         markerId = args["markerId"] as String,
-                        latitude = args["lat"] as Double,
-                        longitude = args["lon"] as Double,
+                        latitude = (args["lat"] as Number).toDouble(),
+                        longitude = (args["lon"] as Number).toDouble(),
+                        icon = args["icon"] as? ByteArray,
                     )
-                    if (added) result.success(null)
-                    else result.error("marker_not_added", "Marker ID exists or map is unavailable", null)
                 }
 
-                TypedMapCommand.REMOVE_MARKER -> {
-                    val markerId = call.arguments as String
-                    if (removeMarker(markerId)) result.success(null)
-                    else result.error("marker_not_found", "Unknown marker ID: $markerId", null)
+                TypedMapCommand.ADD_MARKERS -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    addMarkers(
+                        markerIds = (args["markerIds"] as List<String>).toTypedArray(),
+                        coordinates = (args["coordinates"] as List<Number>)
+                            .map(Number::toDouble)
+                            .toDoubleArray(),
+                    )
                 }
+
+                TypedMapCommand.UPDATE_MARKER_ICON -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    updateMarkerIcon(
+                        markerId = args["markerId"] as String,
+                        icon = args["icon"] as ByteArray,
+                    )
+                }
+
+                TypedMapCommand.REMOVE_MARKER -> removeMarker(call.arguments as String)
+                TypedMapCommand.REMOVE_MARKERS -> removeMarkers(
+                    (call.arguments as List<String>).toTypedArray(),
+                )
+
+                TypedMapCommand.ADD_CIRCLE -> addTypedChannelShape(call, isCircle = true)
+                TypedMapCommand.ADD_RECTANGLE -> addTypedChannelShape(call, isCircle = false)
+                TypedMapCommand.REMOVE_SHAPE -> removeShape(call.arguments as String)
+                TypedMapCommand.CLEAR_SHAPES -> clearShapes()
+
+                TypedMapCommand.SET_STATIC_POSITIONS -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    setStaticPositions(
+                        groupId = args["groupId"] as String,
+                        coordinates = (args["coordinates"] as List<Number>)
+                            .map(Number::toDouble)
+                            .toDoubleArray(),
+                        icon = args["icon"] as? ByteArray,
+                    )
+                }
+
+                TypedMapCommand.REMOVE_STATIC_POSITIONS ->
+                    removeStaticPositions(call.arguments as String)
+
+                TypedMapCommand.DRAW_ROAD -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    drawRoad(
+                        roadId = args["roadId"] as String,
+                        coordinates = (args["coordinates"] as List<Number>)
+                            .map(Number::toDouble)
+                            .toDoubleArray(),
+                        roadColor = (args["roadColor"] as Number).toInt(),
+                        roadWidth = (args["roadWidth"] as Number).toDouble(),
+                        borderColor = (args["borderColor"] as Number).toInt(),
+                        borderWidth = (args["borderWidth"] as Number).toDouble(),
+                        zoomInto = args["zoomInto"] as Boolean,
+                        dotted = args["dotted"] as Boolean,
+                    )
+                }
+
+                TypedMapCommand.REMOVE_ROAD -> removeRoad(call.arguments as String)
+                TypedMapCommand.CLEAR_ROADS -> clearRoads()
+                TypedMapCommand.SET_TILE -> setTypedChannelTile(call.arguments)
+                TypedMapCommand.SET_OVERLAYS_VISIBLE ->
+                    setOverlaysVisible(call.arguments as Boolean)
             }
+            if (accepted) result.success(null)
+            else result.error(
+                "command_rejected",
+                "The map session rejected ${command.methodName}",
+                null,
+            )
         } catch (error: Exception) {
             result.error("typed_command_failed", error.message, error.stackTraceToString())
+        }
+    }
+
+    private fun addTypedChannelShape(call: MethodCall, isCircle: Boolean): Boolean {
+        val args = call.arguments as HashMap<String, Any>
+        val shapeId = args["shapeId"] as String
+        val latitude = (args["lat"] as Number).toDouble()
+        val longitude = (args["lon"] as Number).toDouble()
+        val size = (args["size"] as Number).toDouble()
+        val fillColor = (args["fillColor"] as Number).toInt()
+        val borderColor = (args["borderColor"] as Number).toInt()
+        val strokeWidth = (args["strokeWidth"] as Number).toDouble()
+        return if (isCircle) {
+            addCircle(
+                shapeId = shapeId,
+                latitude = latitude,
+                longitude = longitude,
+                radius = size,
+                fillColor = fillColor,
+                borderColor = borderColor,
+                strokeWidth = strokeWidth,
+            )
+        } else {
+            addRectangle(
+                shapeId = shapeId,
+                latitude = latitude,
+                longitude = longitude,
+                distance = size,
+                fillColor = fillColor,
+                borderColor = borderColor,
+                strokeWidth = strokeWidth,
+            )
+        }
+    }
+
+    private fun setTypedChannelTile(arguments: Any?): Boolean {
+        if (arguments == null) return resetTile()
+        val tile = CustomTile.fromMap(arguments as HashMap<String, Any>)
+        return if (tile.isVector) {
+            setVectorTile(
+                styleUrl = tile.styleURL ?: return false,
+                sourceName = tile.sourceName,
+                minZoom = tile.minZoomLevel,
+                maxZoom = tile.maxZoomLevel,
+            )
+        } else {
+            setRasterTile(
+                url = tile.urls.firstOrNull() ?: return false,
+                sourceName = tile.sourceName,
+                tileExtension = tile.tileFileExtension,
+                minZoom = tile.minZoomLevel,
+                maxZoom = tile.maxZoomLevel,
+                apiKey = tile.api?.first,
+                apiValue = tile.api?.second,
+            )
         }
     }
 
@@ -589,6 +711,10 @@ internal class MapscoreMapSession(
             val name = tile?.sourceName ?: "osm-default"
             val url = if (tile != null) buildCustomTileUrl(tile) else DEFAULT_OSM_TILE_URL
             val layer = TiledRasterLayer(context, url, name)
+            tile?.let {
+                layer.rasterLayerInterface().setMinZoomLevelIdentifier(it.minZoomLevel)
+                layer.rasterLayerInterface().setMaxZoomLevelIdentifier(it.maxZoomLevel)
+            }
             rasterLayer = layer
             map.insertLayerAt(layer, 0)
         }
@@ -612,7 +738,11 @@ internal class MapscoreMapSession(
         eventSink.emit("map#init", isReady)
     }
 
-    override fun setZoom(zoomLevel: Double?, stepZoom: Double?): Boolean {
+    override fun setZoom(
+        zoomLevel: Double?,
+        stepZoom: Double?,
+        animated: Boolean,
+    ): Boolean {
         val camera = mapView?.getCamera() ?: return false
         val targetZoom = if (stepZoom != null) {
             var step = stepZoom
@@ -623,7 +753,7 @@ internal class MapscoreMapSession(
         } else {
             zoomLevel ?: return false
         }
-        camera.setZoom(MapscoreConstants.osmZoomToMapscore(targetZoom), true)
+        camera.setZoom(MapscoreConstants.osmZoomToMapscore(targetZoom), animated)
         zoomSnapshot = targetZoom
         return true
     }
@@ -655,7 +785,9 @@ internal class MapscoreMapSession(
         icon: ByteArray?,
     ): Boolean {
         if (released || mapView == null || !::iconLayer.isInitialized) return false
-        if (markers.containsKey(markerId)) return false
+        if (markerId.isEmpty() || markers.containsKey(markerId)) return false
+        if (!isValidLatLon(latitude, longitude)) return false
+        val bitmap = icon?.let(::decodeBitmap) ?: if (icon == null) null else return false
         val zoom = mapView?.getCamera()?.getZoom()?.let {
             MapscoreConstants.mapscoreToOsmZoom(it)
         } ?: initZoom
@@ -664,9 +796,39 @@ internal class MapscoreMapSession(
             lon = longitude,
             zoom = zoom,
             identifier = markerId,
-            dynamicMarkerBitmap = icon?.toBitmap(),
+            dynamicMarkerBitmap = bitmap,
             animateTo = false,
         )
+        if (icon != null) markerIconsCache["$latitude,$longitude"] = icon
+        return true
+    }
+
+    override fun addMarkers(markerIds: Array<String>, coordinates: DoubleArray): Boolean {
+        if (markerIds.isEmpty() || coordinates.size != markerIds.size * 2) return false
+        if (markerIds.any { it.isEmpty() } || markerIds.toSet().size != markerIds.size) return false
+        if (markerIds.any(markers::containsKey) || !coordinates.hasValidLatLonPairs(2)) return false
+
+        val addedIds = ArrayList<String>(markerIds.size)
+        return try {
+            markerIds.forEachIndexed { index, markerId ->
+                if (!addMarker(markerId, coordinates[index * 2], coordinates[index * 2 + 1])) {
+                    throw IllegalStateException("Failed to add marker $markerId")
+                }
+                addedIds.add(markerId)
+            }
+            true
+        } catch (_: Throwable) {
+            addedIds.forEach(::removeMarker)
+            false
+        }
+    }
+
+    override fun updateMarkerIcon(markerId: String, icon: ByteArray): Boolean {
+        if (icon.isEmpty()) return false
+        val marker = markers[markerId] ?: return false
+        val bitmap = decodeBitmap(icon) ?: return false
+        marker.setIconMaker(bitmap = bitmap)
+        markerIconsCache["${marker.lat},${marker.lon}"] = icon
         return true
     }
 
@@ -674,6 +836,266 @@ internal class MapscoreMapSession(
         val marker = markers.remove(markerId) ?: return false
         marker.remove()
         markerIconsCache.remove("${marker.lat},${marker.lon}")
+        return true
+    }
+
+    override fun removeMarkers(markerIds: Array<String>): Boolean {
+        if (markerIds.isEmpty() || markerIds.toSet().size != markerIds.size) return false
+        if (markerIds.any { !markers.containsKey(it) }) return false
+        markerIds.forEach(::removeMarker)
+        return true
+    }
+
+    override fun addCircle(
+        shapeId: String,
+        latitude: Double,
+        longitude: Double,
+        radius: Double,
+        fillColor: Int,
+        borderColor: Int,
+        strokeWidth: Double,
+    ): Boolean = addTypedShape(
+        shapeId = shapeId,
+        latitude = latitude,
+        longitude = longitude,
+        size = radius,
+        fillColor = fillColor,
+        borderColor = borderColor,
+        strokeWidth = strokeWidth,
+        isCircle = true,
+    )
+
+    override fun addRectangle(
+        shapeId: String,
+        latitude: Double,
+        longitude: Double,
+        distance: Double,
+        fillColor: Int,
+        borderColor: Int,
+        strokeWidth: Double,
+    ): Boolean = addTypedShape(
+        shapeId = shapeId,
+        latitude = latitude,
+        longitude = longitude,
+        size = distance,
+        fillColor = fillColor,
+        borderColor = borderColor,
+        strokeWidth = strokeWidth,
+        isCircle = false,
+    )
+
+    private fun addTypedShape(
+        shapeId: String,
+        latitude: Double,
+        longitude: Double,
+        size: Double,
+        fillColor: Int,
+        borderColor: Int,
+        strokeWidth: Double,
+        isCircle: Boolean,
+    ): Boolean {
+        val map = mapView ?: return false
+        if (!::polygonLayer.isInitialized || shapeId.isEmpty() || shapes.containsKey(shapeId)) return false
+        if (!isValidLatLon(latitude, longitude) || !size.isFinite() || size <= 0.0) return false
+        if (!strokeWidth.isFinite() || strokeWidth <= 0.0) return false
+        val args = hashMapOf<String, Any>(
+            "key" to shapeId,
+            "lat" to latitude,
+            "lon" to longitude,
+            "color" to fillColor.toArgbList(),
+            "colorBorder" to borderColor.toArgbList(),
+            "strokeWidth" to strokeWidth,
+            (if (isCircle) "radius" else "distance") to size,
+        )
+        shapes[shapeId] = MapscoreShape(args, polygonLayer, map.getCoordinateConversionHelper())
+        map.requestRender()
+        return true
+    }
+
+    override fun removeShape(shapeId: String): Boolean {
+        val shape = shapes.remove(shapeId) ?: return false
+        shape.remove()
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun clearShapes(): Boolean {
+        if (released || !::polygonLayer.isInitialized) return false
+        shapes.values.forEach { it.remove() }
+        shapes.clear()
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun setStaticPositions(
+        groupId: String,
+        coordinates: DoubleArray,
+        icon: ByteArray?,
+    ): Boolean {
+        if (released || mapView == null || !::staticIconLayer.isInitialized) return false
+        if (groupId.isEmpty() || coordinates.isEmpty() || coordinates.size % 3 != 0) return false
+        if (!coordinates.hasValidLatLonPairs(3)) return false
+        val bitmap = icon?.let(::decodeBitmap) ?: if (icon == null) null else return false
+
+        staticPoints[groupId] = coordinates.asList().chunked(3).map { values ->
+            MapscoreGeoPoint(lat = values[0], lon = values[1], angle = values[2])
+        }.toMutableList()
+        if (bitmap == null) staticMarkerIcon.remove(groupId)
+        else staticMarkerIcon[groupId] = bitmap
+        showStaticPosition(groupId)
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun removeStaticPositions(groupId: String): Boolean {
+        if (!staticPoints.containsKey(groupId)) return false
+        staticIcons.remove(groupId)?.forEach { staticIconLayer.remove(it) }
+        staticPoints.remove(groupId)
+        staticMarkerIcon.remove(groupId)
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun drawRoad(
+        roadId: String,
+        coordinates: DoubleArray,
+        roadColor: Int,
+        roadWidth: Double,
+        borderColor: Int,
+        borderWidth: Double,
+        zoomInto: Boolean,
+        dotted: Boolean,
+    ): Boolean {
+        if (released || mapView == null || !::lineLayer.isInitialized) return false
+        if (roadId.isEmpty() || roads.containsKey(roadId)) return false
+        if (coordinates.size < 4 || coordinates.size % 2 != 0 || !coordinates.hasValidLatLonPairs(2)) return false
+        if (!roadWidth.isFinite() || roadWidth <= 0.0 || !borderWidth.isFinite() || borderWidth < 0.0) return false
+        val points = coordinates.asList().chunked(2).map { it[0] to it[1] }
+        drawRoadLines(
+            roadId = roadId,
+            option = RoadOption(
+                roadColor = roadColor,
+                roadWidth = roadWidth.toFloat(),
+                roadBorderWidth = borderWidth.toFloat(),
+                roadBorderColor = borderColor,
+                isDotted = dotted,
+            ),
+            latLonCoords = points,
+            distance = 0.0,
+            duration = 0.0,
+            zoomToRegion = zoomInto,
+        )
+        return roads.containsKey(roadId)
+    }
+
+    override fun removeRoad(roadId: String): Boolean {
+        val road = roads.remove(roadId) ?: return false
+        road.remove()
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun clearRoads(): Boolean {
+        if (released || !::lineLayer.isInitialized) return false
+        roads.values.forEach { it.remove() }
+        roads.clear()
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun setRasterTile(
+        url: String,
+        sourceName: String,
+        tileExtension: String,
+        minZoom: Int,
+        maxZoom: Int,
+        apiKey: String?,
+        apiValue: String?,
+    ): Boolean {
+        if (mapView == null || url.isEmpty() || sourceName.isEmpty() || minZoom >= maxZoom) return false
+        swapRasterLayer(
+            CustomTile(
+                urls = listOf(url),
+                tileFileExtension = tileExtension,
+                sourceName = sourceName,
+                tileSize = 256,
+                minZoomLevel = minZoom,
+                maxZoomLevel = maxZoom,
+                api = if (apiKey.isNullOrEmpty() || apiValue.isNullOrEmpty()) null else apiKey to apiValue,
+                styleURL = null,
+                isVector = false,
+            ),
+        )
+        return true
+    }
+
+    override fun setVectorTile(
+        styleUrl: String,
+        sourceName: String,
+        minZoom: Int,
+        maxZoom: Int,
+    ): Boolean {
+        if (mapView == null || styleUrl.isEmpty() || sourceName.isEmpty() || minZoom >= maxZoom) return false
+        swapRasterLayer(
+            CustomTile(
+                urls = listOf(styleUrl),
+                tileFileExtension = "",
+                sourceName = sourceName,
+                tileSize = 256,
+                minZoomLevel = minZoom,
+                maxZoomLevel = maxZoom,
+                api = null,
+                styleURL = styleUrl,
+                isVector = true,
+            ),
+        )
+        return vectorLayer != null
+    }
+
+    override fun resetTile(): Boolean {
+        if (mapView == null) return false
+        swapRasterLayer(null)
+        return rasterLayer != null
+    }
+
+    override fun setOverlaysVisible(visible: Boolean): Boolean {
+        if (released || !::iconLayer.isInitialized || !::staticIconLayer.isInitialized ||
+            !::lineLayer.isInitialized || !::polygonLayer.isInitialized || !::userIconLayer.isInitialized
+        ) return false
+        val layers = listOf(
+            iconLayer.asLayerInterface(),
+            staticIconLayer.asLayerInterface(),
+            lineLayer.asLayerInterface(),
+            polygonLayer.asLayerInterface(),
+            userIconLayer.asLayerInterface(),
+        )
+        layers.forEach { if (visible) it.show() else it.hide() }
+        mapView?.requestRender()
+        return true
+    }
+
+    private fun Int.toArgbList(): List<Int> = listOf(
+        android.graphics.Color.red(this),
+        android.graphics.Color.green(this),
+        android.graphics.Color.blue(this),
+        android.graphics.Color.alpha(this),
+    )
+
+    private fun decodeBitmap(bytes: ByteArray): Bitmap? =
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+
+    private fun isValidLatLon(latitude: Double, longitude: Double): Boolean =
+        latitude.isFinite() && longitude.isFinite() &&
+            latitude in -90.0..90.0 && longitude in -180.0..180.0
+
+    private fun DoubleArray.hasValidLatLonPairs(stride: Int): Boolean {
+        if (size % stride != 0) return false
+        for (index in indices step stride) {
+            if (!isValidLatLon(this[index], this[index + 1])) return false
+            for (extraIndex in index + 2 until index + stride) {
+                if (!this[extraIndex].isFinite()) return false
+            }
+        }
         return true
     }
 
@@ -1292,6 +1714,17 @@ internal class MapscoreMapSession(
             legacyChannel.close()
         }
         eventSink = NoopMapEventSink
+        markers.clear()
+        markerIconsCache.clear()
+        roads.clear()
+        shapes.clear()
+        staticIcons.clear()
+        staticPoints.clear()
+        staticMarkerIcon.clear()
+        homeMarker = null
+        customMarkerIcon = null
+        customPersonMarkerIcon = null
+        customArrowMarkerIcon = null
         mainLinearLayout.removeAllViews()
         mapView = null
         zoomSnapshot = null
