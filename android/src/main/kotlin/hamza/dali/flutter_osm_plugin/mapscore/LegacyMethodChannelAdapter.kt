@@ -59,9 +59,24 @@ internal enum class LegacyMapCommand(val methodName: String) {
 
 /** New typed fallback commands kept separate from the legacy method set. */
 internal enum class TypedMapCommand(val methodName: String) {
+    SET_ZOOM("android#camera#zoom"),
     SET_ROTATION("android#camera#rotation"),
     ADD_MARKER("android#marker#add"),
+    ADD_MARKERS("android#marker#addAll"),
+    UPDATE_MARKER_ICON("android#marker#icon"),
     REMOVE_MARKER("android#marker#remove"),
+    REMOVE_MARKERS("android#marker#removeAll"),
+    ADD_CIRCLE("android#shape#circle"),
+    ADD_RECTANGLE("android#shape#rectangle"),
+    REMOVE_SHAPE("android#shape#remove"),
+    CLEAR_SHAPES("android#shape#clear"),
+    SET_STATIC_POSITIONS("android#static#set"),
+    REMOVE_STATIC_POSITIONS("android#static#remove"),
+    DRAW_ROAD("android#road#draw"),
+    REMOVE_ROAD("android#road#remove"),
+    CLEAR_ROADS("android#road#clear"),
+    SET_TILE("android#tile#set"),
+    SET_OVERLAYS_VISIBLE("android#layer#visibility"),
     ;
 
     companion object {
