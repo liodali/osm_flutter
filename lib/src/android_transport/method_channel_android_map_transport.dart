@@ -54,9 +54,8 @@ final class MethodChannelAndroidMapTransport implements AndroidMapTransport {
       });
 
   @override
-  Future<void> setZoom(double zoom) => _invokeVoid('setZoom', 'Zoom', {
-        'zoomLevel': zoom,
-      });
+  Future<void> setZoom(double zoom) =>
+      _invokeVoid('setZoom', 'android#camera#zoom', zoom);
 
   @override
   Future<double> getZoom() async {
@@ -72,16 +71,160 @@ final class MethodChannelAndroidMapTransport implements AndroidMapTransport {
       });
 
   @override
-  Future<void> addMarker(MarkerId markerId, GeoPoint position) =>
+  Future<void> addMarker(
+    MarkerId markerId,
+    GeoPoint position, {
+    Uint8List? iconBytes,
+  }) =>
       _invokeVoid('addMarker', 'android#marker#add', {
         'markerId': markerId.value,
         'lat': position.latitude,
         'lon': position.longitude,
+        if (iconBytes != null) 'icon': iconBytes,
+      });
+
+  @override
+  Future<void> addMarkers(Map<MarkerId, GeoPoint> markers) =>
+      _invokeVoid('addMarkers', 'android#marker#addAll', {
+        'markerIds': markers.keys.map((id) => id.value).toList(),
+        'coordinates': [
+          for (final point in markers.values) ...[
+            point.latitude,
+            point.longitude,
+          ],
+        ],
+      });
+
+  @override
+  Future<void> updateMarkerIcon(
+    MarkerId markerId,
+    Uint8List iconBytes,
+  ) =>
+      _invokeVoid('updateMarkerIcon', 'android#marker#icon', {
+        'markerId': markerId.value,
+        'icon': iconBytes,
       });
 
   @override
   Future<void> removeMarker(MarkerId markerId) =>
       _invokeVoid('removeMarker', 'android#marker#remove', markerId.value);
+
+  @override
+  Future<void> removeMarkers(Iterable<MarkerId> markerIds) => _invokeVoid(
+        'removeMarkers',
+        'android#marker#removeAll',
+        markerIds.map((id) => id.value).toList(),
+      );
+
+  @override
+  Future<void> addCircle({
+    required ShapeId shapeId,
+    required GeoPoint center,
+    required double radius,
+    required int fillColor,
+    required int borderColor,
+    required double strokeWidth,
+  }) =>
+      _invokeVoid('addCircle', 'android#shape#circle', {
+        'shapeId': shapeId.value,
+        'lat': center.latitude,
+        'lon': center.longitude,
+        'size': radius,
+        'fillColor': fillColor,
+        'borderColor': borderColor,
+        'strokeWidth': strokeWidth,
+      });
+
+  @override
+  Future<void> addRectangle({
+    required ShapeId shapeId,
+    required GeoPoint center,
+    required double distance,
+    required int fillColor,
+    required int borderColor,
+    required double strokeWidth,
+  }) =>
+      _invokeVoid('addRectangle', 'android#shape#rectangle', {
+        'shapeId': shapeId.value,
+        'lat': center.latitude,
+        'lon': center.longitude,
+        'size': distance,
+        'fillColor': fillColor,
+        'borderColor': borderColor,
+        'strokeWidth': strokeWidth,
+      });
+
+  @override
+  Future<void> removeShape(ShapeId shapeId) =>
+      _invokeVoid('removeShape', 'android#shape#remove', shapeId.value);
+
+  @override
+  Future<void> clearShapes() =>
+      _invokeVoid('clearShapes', 'android#shape#clear');
+
+  @override
+  Future<void> setStaticPositions(
+    StaticPositionId groupId,
+    List<GeoPoint> positions, {
+    Uint8List? iconBytes,
+  }) =>
+      _invokeVoid('setStaticPositions', 'android#static#set', {
+        'groupId': groupId.value,
+        'coordinates': [
+          for (final point in positions) ...[
+            point.latitude,
+            point.longitude,
+            point is GeoPointWithOrientation ? point.angle : 0.0,
+          ],
+        ],
+        if (iconBytes != null) 'icon': iconBytes,
+      });
+
+  @override
+  Future<void> removeStaticPositions(StaticPositionId groupId) => _invokeVoid(
+        'removeStaticPositions',
+        'android#static#remove',
+        groupId.value,
+      );
+
+  @override
+  Future<void> drawRoad(
+    RoadId roadId,
+    List<GeoPoint> geometry,
+    RoadOption option,
+  ) =>
+      _invokeVoid('drawRoad', 'android#road#draw', {
+        'roadId': roadId.value,
+        'coordinates': [
+          for (final point in geometry) ...[
+            point.latitude,
+            point.longitude,
+          ],
+        ],
+        'roadColor': _signedArgb(option.roadColor.toARGB32()),
+        'roadWidth': option.roadWidth,
+        'borderColor': _signedArgb(
+          (option.roadBorderColor ?? option.roadColor).toARGB32(),
+        ),
+        'borderWidth': option.roadBorderWidth ?? 0.0,
+        'zoomInto': option.zoomInto,
+        'dotted': option.isDotted,
+      });
+
+  @override
+  Future<void> removeRoad(RoadId roadId) =>
+      _invokeVoid('removeRoad', 'android#road#remove', roadId.value);
+
+  @override
+  Future<void> clearRoads() => _invokeVoid('clearRoads', 'android#road#clear');
+
+  @override
+  Future<void> setTile(CustomTile? tile) =>
+      _invokeVoid('setTile', 'android#tile#set', tile?.toMap());
+
+  @override
+  Future<void> setOverlaysVisible(bool visible) =>
+      _invokeVoid('setOverlaysVisible', 'android#layer#visibility', visible);
 
   Future<bool> _handleMethodCall(MethodCall call) async {
     final viewId = _viewId;
@@ -175,3 +318,5 @@ final class MethodChannelAndroidMapTransport implements AndroidMapTransport {
     await _events.close();
   }
 }
+
+int _signedArgb(int value) => value > 0x7fffffff ? value - 0x100000000 : value;
