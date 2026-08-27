@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
@@ -23,9 +24,63 @@ abstract interface class AndroidMapTransport {
 
   Future<void> setRotation(double angle, {required bool animated});
 
-  Future<void> addMarker(MarkerId markerId, GeoPoint position);
+  Future<void> addMarker(
+    MarkerId markerId,
+    GeoPoint position, {
+    Uint8List? iconBytes,
+  });
+
+  Future<void> addMarkers(Map<MarkerId, GeoPoint> markers);
+
+  Future<void> updateMarkerIcon(MarkerId markerId, Uint8List iconBytes);
 
   Future<void> removeMarker(MarkerId markerId);
+
+  Future<void> removeMarkers(Iterable<MarkerId> markerIds);
+
+  Future<void> addCircle({
+    required ShapeId shapeId,
+    required GeoPoint center,
+    required double radius,
+    required int fillColor,
+    required int borderColor,
+    required double strokeWidth,
+  });
+
+  Future<void> addRectangle({
+    required ShapeId shapeId,
+    required GeoPoint center,
+    required double distance,
+    required int fillColor,
+    required int borderColor,
+    required double strokeWidth,
+  });
+
+  Future<void> removeShape(ShapeId shapeId);
+
+  Future<void> clearShapes();
+
+  Future<void> setStaticPositions(
+    StaticPositionId groupId,
+    List<GeoPoint> positions, {
+    Uint8List? iconBytes,
+  });
+
+  Future<void> removeStaticPositions(StaticPositionId groupId);
+
+  Future<void> drawRoad(
+    RoadId roadId,
+    List<GeoPoint> geometry,
+    RoadOption option,
+  );
+
+  Future<void> removeRoad(RoadId roadId);
+
+  Future<void> clearRoads();
+
+  Future<void> setTile(CustomTile? tile);
+
+  Future<void> setOverlaysVisible(bool visible);
 
   Future<void> close();
 }
