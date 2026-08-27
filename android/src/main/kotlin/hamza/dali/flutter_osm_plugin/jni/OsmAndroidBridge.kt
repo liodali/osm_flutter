@@ -63,7 +63,7 @@ class OsmAndroidBridge {
 
     fun setZoom(viewId: Int, zoom: Double, requestId: String): Boolean =
         queueCommand(viewId, requestId, "setZoom") {
-            it.setZoom(zoomLevel = zoom)
+            it.setZoom(zoomLevel = zoom, animated = false)
         }
 
     /** Returns a thread-safe snapshot; NaN means no camera value is available. */
@@ -84,15 +84,194 @@ class OsmAndroidBridge {
         markerId: String,
         latitude: Double,
         longitude: Double,
+        icon: ByteArray?,
         requestId: String,
     ): Boolean = queueCommand(viewId, requestId, "addMarker") {
-        it.addMarker(markerId, latitude, longitude)
+        it.addMarker(markerId, latitude, longitude, icon)
+    }
+
+    fun addMarkers(
+        viewId: Int,
+        markerIds: Array<String>,
+        coordinates: DoubleArray,
+        requestId: String,
+    ): Boolean = queueCommand(viewId, requestId, "addMarkers") {
+        it.addMarkers(markerIds, coordinates)
+    }
+
+    fun updateMarkerIcon(
+        viewId: Int,
+        markerId: String,
+        icon: ByteArray,
+        requestId: String,
+    ): Boolean = queueCommand(viewId, requestId, "updateMarkerIcon") {
+        it.updateMarkerIcon(markerId, icon)
     }
 
     fun removeMarker(viewId: Int, markerId: String, requestId: String): Boolean =
         queueCommand(viewId, requestId, "removeMarker") {
             it.removeMarker(markerId)
         }
+
+    fun removeMarkers(
+        viewId: Int,
+        markerIds: Array<String>,
+        requestId: String,
+    ): Boolean = queueCommand(viewId, requestId, "removeMarkers") {
+        it.removeMarkers(markerIds)
+    }
+
+    fun addCircle(
+        viewId: Int,
+        shapeId: String,
+        latitude: Double,
+        longitude: Double,
+        radius: Double,
+        fillColor: Int,
+        borderColor: Int,
+        strokeWidth: Double,
+        requestId: String,
+    ): Boolean = queueCommand(viewId, requestId, "addCircle") {
+        it.addCircle(
+            shapeId,
+            latitude,
+            longitude,
+            radius,
+            fillColor,
+            borderColor,
+            strokeWidth,
+        )
+    }
+
+    fun addRectangle(
+        viewId: Int,
+        shapeId: String,
+        latitude: Double,
+        longitude: Double,
+        distance: Double,
+        fillColor: Int,
+        borderColor: Int,
+        strokeWidth: Double,
+        requestId: String,
+    ): Boolean = queueCommand(viewId, requestId, "addRectangle") {
+        it.addRectangle(
+            shapeId,
+            latitude,
+            longitude,
+            distance,
+            fillColor,
+            borderColor,
+            strokeWidth,
+        )
+    }
+
+    fun removeShape(viewId: Int, shapeId: String, requestId: String): Boolean =
+        queueCommand(viewId, requestId, "removeShape") {
+            it.removeShape(shapeId)
+        }
+
+    fun clearShapes(viewId: Int, requestId: String): Boolean =
+        queueCommand(viewId, requestId, "clearShapes") {
+            it.clearShapes()
+        }
+
+    fun setStaticPositions(
+        viewId: Int,
+        groupId: String,
+        coordinates: DoubleArray,
+        icon: ByteArray?,
+        requestId: String,
+    ): Boolean = queueCommand(viewId, requestId, "setStaticPositions") {
+        it.setStaticPositions(groupId, coordinates, icon)
+    }
+
+    fun removeStaticPositions(
+        viewId: Int,
+        groupId: String,
+        requestId: String,
+    ): Boolean = queueCommand(viewId, requestId, "removeStaticPositions") {
+        it.removeStaticPositions(groupId)
+    }
+
+    fun drawRoad(
+        viewId: Int,
+        roadId: String,
+        coordinates: DoubleArray,
+        roadColor: Int,
+        roadWidth: Double,
+        borderColor: Int,
+        borderWidth: Double,
+        zoomInto: Boolean,
+        dotted: Boolean,
+        requestId: String,
+    ): Boolean = queueCommand(viewId, requestId, "drawRoad") {
+        it.drawRoad(
+            roadId,
+            coordinates,
+            roadColor,
+            roadWidth,
+            borderColor,
+            borderWidth,
+            zoomInto,
+            dotted,
+        )
+    }
+
+    fun removeRoad(viewId: Int, roadId: String, requestId: String): Boolean =
+        queueCommand(viewId, requestId, "removeRoad") {
+            it.removeRoad(roadId)
+        }
+
+    fun clearRoads(viewId: Int, requestId: String): Boolean =
+        queueCommand(viewId, requestId, "clearRoads") {
+            it.clearRoads()
+        }
+
+    fun setRasterTile(
+        viewId: Int,
+        url: String,
+        sourceName: String,
+        tileExtension: String,
+        minZoom: Int,
+        maxZoom: Int,
+        apiKey: String,
+        apiValue: String,
+        requestId: String,
+    ): Boolean = queueCommand(viewId, requestId, "setTile") {
+        it.setRasterTile(
+            url,
+            sourceName,
+            tileExtension,
+            minZoom,
+            maxZoom,
+            apiKey.ifEmpty { null },
+            apiValue.ifEmpty { null },
+        )
+    }
+
+    fun setVectorTile(
+        viewId: Int,
+        styleUrl: String,
+        sourceName: String,
+        minZoom: Int,
+        maxZoom: Int,
+        requestId: String,
+    ): Boolean = queueCommand(viewId, requestId, "setTile") {
+        it.setVectorTile(styleUrl, sourceName, minZoom, maxZoom)
+    }
+
+    fun resetTile(viewId: Int, requestId: String): Boolean =
+        queueCommand(viewId, requestId, "setTile") {
+            it.resetTile()
+        }
+
+    fun setOverlaysVisible(
+        viewId: Int,
+        visible: Boolean,
+        requestId: String,
+    ): Boolean = queueCommand(viewId, requestId, "setOverlaysVisible") {
+        it.setOverlaysVisible(visible)
+    }
 
     /** Detaches this bridge instance without disposing the platform view. */
     fun close(viewId: Int): Boolean = attachedSessions.remove(viewId) != null
