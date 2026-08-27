@@ -16,6 +16,18 @@ void main() {
     });
   });
 
+  test('overlay IDs use value equality and reject empty values', () {
+    expect(const RoadId('road-1'), const RoadId('road-1'));
+    expect(const ShapeId('shape-1'), const ShapeId('shape-1'));
+    expect(
+      const StaticPositionId('static-1'),
+      const StaticPositionId('static-1'),
+    );
+    expect(() => RoadId(''), throwsAssertionError);
+    expect(() => ShapeId(''), throwsAssertionError);
+    expect(() => StaticPositionId(''), throwsAssertionError);
+  });
+
   test('AndroidMapException includes operation context', () {
     const error = AndroidMapException(
       operation: 'attach',
