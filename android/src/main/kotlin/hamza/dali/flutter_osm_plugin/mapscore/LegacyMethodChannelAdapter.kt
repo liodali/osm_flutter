@@ -77,6 +77,12 @@ internal enum class TypedMapCommand(val methodName: String) {
     CLEAR_ROADS("android#road#clear"),
     SET_TILE("android#tile#set"),
     SET_OVERLAYS_VISIBLE("android#layer#visibility"),
+    SHOW_CURRENT_LOCATION("android#location#show"),
+    GET_CURRENT_LOCATION("android#location#get"),
+    START_LOCATION_UPDATES("android#location#updates#start"),
+    STOP_LOCATION_UPDATES("android#location#updates#stop"),
+    START_LOCATION_TRACKING("android#location#tracking#start"),
+    STOP_LOCATION_TRACKING("android#location#tracking#stop"),
     ;
 
     companion object {

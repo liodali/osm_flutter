@@ -79,6 +79,12 @@ class LegacyMapCommandTest {
             "android#road#clear",
             "android#tile#set",
             "android#layer#visibility",
+            "android#location#show",
+            "android#location#get",
+            "android#location#updates#start",
+            "android#location#updates#stop",
+            "android#location#tracking#start",
+            "android#location#tracking#stop",
         )
 
         assertEquals(expectedNames, TypedMapCommand.values().map { it.methodName }.toSet())
