@@ -12,6 +12,8 @@ final class MethodChannelAndroidMapTransport implements AndroidMapTransport {
 
   MethodChannel? _channel;
   int? _viewId;
+  int _invocationSequence = 0;
+  final Map<int, void Function(AndroidMapException)> _pendingInvocations = {};
   bool _closed = false;
 
   @override
@@ -226,6 +228,53 @@ final class MethodChannelAndroidMapTransport implements AndroidMapTransport {
   Future<void> setOverlaysVisible(bool visible) =>
       _invokeVoid('setOverlaysVisible', 'android#layer#visibility', visible);
 
+  @override
+  Future<void> showCurrentLocation() => _invokeVoid(
+        'showCurrentLocation',
+        'android#location#show',
+      );
+
+  @override
+  Future<GeoPoint> getCurrentLocation() async {
+    final value = await _invokeValue<Map>(
+      'getCurrentLocation',
+      'android#location#get',
+    );
+    return GeoPoint.fromMap(value);
+  }
+
+  @override
+  Future<void> startLocationUpdates() => _invokeVoid(
+        'startLocationUpdates',
+        'android#location#updates#start',
+      );
+
+  @override
+  Future<void> stopLocationUpdates() => _invokeVoid(
+        'stopLocationUpdates',
+        'android#location#updates#stop',
+      );
+
+  @override
+  Future<void> startLocationTracking({
+    required bool stopFollowOnDrag,
+    required bool disableMarkerRotation,
+    required bool useDirectionMarker,
+    required Anchor anchor,
+  }) =>
+      _invokeVoid('startLocationTracking', 'android#location#tracking#start', {
+        'stopFollowOnDrag': stopFollowOnDrag,
+        'disableMarkerRotation': disableMarkerRotation,
+        'useDirectionMarker': useDirectionMarker,
+        'anchor': anchor.toMap(),
+      });
+
+  @override
+  Future<void> stopLocationTracking() => _invokeVoid(
+        'stopLocationTracking',
+        'android#location#tracking#stop',
+      );
+
   Future<bool> _handleMethodCall(MethodCall call) async {
     final viewId = _viewId;
     if (viewId == null || _closed) return false;
@@ -238,50 +287,84 @@ final class MethodChannelAndroidMapTransport implements AndroidMapTransport {
     String operation,
     String method, [
     Object? arguments,
-  ]) async {
-    final channel = _requireChannel(operation);
-    try {
-      await channel.invokeMethod<void>(method, arguments);
-    } on PlatformException catch (error) {
-      throw _platformException(operation, error);
-    } on MissingPluginException catch (error) {
-      throw AndroidMapException(
-        operation: operation,
-        code: 'missing_plugin',
-        viewId: _viewId,
-        message: error.message,
-        cause: error,
-      );
-    }
-  }
+  ]) =>
+      _trackInvocation(operation, () async {
+        final channel = _requireChannel(operation);
+        try {
+          await channel.invokeMethod<void>(method, arguments);
+        } on PlatformException catch (error) {
+          throw _platformException(operation, error);
+        } on MissingPluginException catch (error) {
+          throw AndroidMapException(
+            operation: operation,
+            code: 'missing_plugin',
+            viewId: _viewId,
+            message: error.message,
+            cause: error,
+          );
+        }
+      });
 
   Future<T> _invokeValue<T>(
     String operation,
     String method, [
     Object? arguments,
-  ]) async {
-    final channel = _requireChannel(operation);
-    try {
-      final value = await channel.invokeMethod<T>(method, arguments);
-      if (value == null) {
-        throw AndroidMapException(
-          operation: operation,
-          code: 'null_result',
-          viewId: _viewId,
+  ]) =>
+      _trackInvocation(operation, () async {
+        final channel = _requireChannel(operation);
+        try {
+          final value = await channel.invokeMethod<T>(method, arguments);
+          if (value == null) {
+            throw AndroidMapException(
+              operation: operation,
+              code: 'null_result',
+              viewId: _viewId,
+            );
+          }
+          return value;
+        } on PlatformException catch (error) {
+          throw _platformException(operation, error);
+        } on MissingPluginException catch (error) {
+          throw AndroidMapException(
+            operation: operation,
+            code: 'missing_plugin',
+            viewId: _viewId,
+            message: error.message,
+            cause: error,
+          );
+        }
+      });
+
+  Future<T> _trackInvocation<T>(
+    String operation,
+    Future<T> Function() invoke,
+  ) {
+    final invocationId = _invocationSequence++;
+    final completer = Completer<T>();
+    _pendingInvocations[invocationId] = (error) {
+      if (!completer.isCompleted) {
+        completer.completeError(
+          AndroidMapException(
+            operation: operation,
+            code: error.code,
+            viewId: error.viewId,
+            message: error.message,
+            cause: error,
+          ),
         );
       }
-      return value;
-    } on PlatformException catch (error) {
-      throw _platformException(operation, error);
-    } on MissingPluginException catch (error) {
-      throw AndroidMapException(
-        operation: operation,
-        code: 'missing_plugin',
-        viewId: _viewId,
-        message: error.message,
-        cause: error,
-      );
-    }
+    };
+    Future<T>.sync(invoke).then(
+      (value) {
+        _pendingInvocations.remove(invocationId);
+        if (!completer.isCompleted) completer.complete(value);
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        _pendingInvocations.remove(invocationId);
+        if (!completer.isCompleted) completer.completeError(error, stackTrace);
+      },
+    );
+    return completer.future;
   }
 
   AndroidMapException _platformException(
@@ -312,6 +395,17 @@ final class MethodChannelAndroidMapTransport implements AndroidMapTransport {
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
+    final viewId = _viewId;
+    final error = AndroidMapException(
+      operation: 'close',
+      code: 'transport_closed',
+      viewId: viewId,
+    );
+    final cancellations = _pendingInvocations.values.toList(growable: false);
+    _pendingInvocations.clear();
+    for (final cancel in cancellations) {
+      cancel(error);
+    }
     _channel?.setMethodCallHandler(null);
     _channel = null;
     _viewId = null;

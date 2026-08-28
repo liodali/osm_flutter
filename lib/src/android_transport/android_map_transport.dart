@@ -82,6 +82,25 @@ abstract interface class AndroidMapTransport {
 
   Future<void> setOverlaysVisible(bool visible);
 
+  /// Location commands intentionally remain on the MethodChannel command
+  /// plane even when [backend] is JNI.
+  Future<void> showCurrentLocation();
+
+  Future<GeoPoint> getCurrentLocation();
+
+  Future<void> startLocationUpdates();
+
+  Future<void> stopLocationUpdates();
+
+  Future<void> startLocationTracking({
+    required bool stopFollowOnDrag,
+    required bool disableMarkerRotation,
+    required bool useDirectionMarker,
+    required Anchor anchor,
+  });
+
+  Future<void> stopLocationTracking();
+
   Future<void> close();
 }
 

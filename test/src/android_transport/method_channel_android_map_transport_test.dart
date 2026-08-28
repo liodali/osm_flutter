@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
@@ -16,6 +18,9 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
       calls.add(call);
+      if (call.method == 'android#location#get') {
+        return {'lat': 48.85, 'lon': 2.35};
+      }
       return null;
     });
     transport = MethodChannelAndroidMapTransport();
@@ -58,6 +63,97 @@ void main() {
     expect(
       (calls[1].arguments as Map)['coordinates'],
       [48.85, 2.35, 48.86, 2.36],
+    );
+  });
+
+  test('keeps typed location commands on MethodChannel', () async {
+    await transport.showCurrentLocation();
+    final location = await transport.getCurrentLocation();
+    await transport.startLocationUpdates();
+    await transport.stopLocationUpdates();
+    await transport.startLocationTracking(
+      stopFollowOnDrag: true,
+      disableMarkerRotation: true,
+      useDirectionMarker: false,
+      anchor: Anchor.bottom,
+    );
+    await transport.stopLocationTracking();
+
+    expect(location, GeoPoint(latitude: 48.85, longitude: 2.35));
+    expect(calls.map((call) => call.method), [
+      'android#location#show',
+      'android#location#get',
+      'android#location#updates#start',
+      'android#location#updates#stop',
+      'android#location#tracking#start',
+      'android#location#tracking#stop',
+    ]);
+    expect((calls[4].arguments as Map)['stopFollowOnDrag'], isTrue);
+    expect((calls[4].arguments as Map)['anchor'], [0.5, 0.0]);
+  });
+
+  test('close cancels a pending location request', () async {
+    final response = Completer<Object?>();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (_) => response.future);
+
+    final request = expectLater(
+      transport.getCurrentLocation(),
+      throwsA(
+        isA<AndroidMapException>()
+            .having(
+                (error) => error.operation, 'operation', 'getCurrentLocation')
+            .having((error) => error.code, 'code', 'transport_closed'),
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    await transport.close();
+    await request;
+    response.complete({'lat': 48.85, 'lon': 2.35});
+  });
+
+  test('rejects a null current-location response', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (_) async => null);
+
+    await expectLater(
+      transport.getCurrentLocation(),
+      throwsA(
+        isA<AndroidMapException>()
+            .having(
+                (error) => error.operation, 'operation', 'getCurrentLocation')
+            .having((error) => error.code, 'code', 'null_result'),
+      ),
+    );
+  });
+
+  test('maps native location errors with operation context', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+      channel,
+      (_) async => throw PlatformException(
+        code: 'location_service_disabled',
+        message: 'Location services are disabled.',
+      ),
+    );
+
+    await expectLater(
+      transport.showCurrentLocation(),
+      throwsA(
+        isA<AndroidMapException>()
+            .having(
+                (error) => error.operation, 'operation', 'showCurrentLocation')
+            .having(
+              (error) => error.code,
+              'code',
+              'location_service_disabled',
+            )
+            .having(
+              (error) => error.message,
+              'message',
+              'Location services are disabled.',
+            ),
+      ),
     );
   });
 

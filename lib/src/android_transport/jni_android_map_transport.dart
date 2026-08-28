@@ -18,11 +18,14 @@ final class JniAndroidMapTransport implements AndroidMapTransport {
   final StreamController<AndroidMapEvent> _events =
       StreamController<AndroidMapEvent>.broadcast(sync: true);
   final Map<String, Completer<void>> _pending = {};
+  final Map<int, void Function(AndroidMapException)>
+      _pendingChannelInvocations = {};
 
   OsmAndroidBridge? _bridge;
   MethodChannel? _eventChannel;
   int? _viewId;
   int _requestSequence = 0;
+  int _channelInvocationSequence = 0;
   bool _closed = false;
 
   @override
@@ -451,6 +454,165 @@ final class JniAndroidMapTransport implements AndroidMapTransport {
         return bridge.setOverlaysVisible(viewId, visible, requestId);
       });
 
+  @override
+  Future<void> showCurrentLocation() => _invokeChannelVoid(
+        'showCurrentLocation',
+        'android#location#show',
+      );
+
+  @override
+  Future<GeoPoint> getCurrentLocation() async {
+    final value = await _invokeChannelValue<Map>(
+      'getCurrentLocation',
+      'android#location#get',
+    );
+    return GeoPoint.fromMap(value);
+  }
+
+  @override
+  Future<void> startLocationUpdates() => _invokeChannelVoid(
+        'startLocationUpdates',
+        'android#location#updates#start',
+      );
+
+  @override
+  Future<void> stopLocationUpdates() => _invokeChannelVoid(
+        'stopLocationUpdates',
+        'android#location#updates#stop',
+      );
+
+  @override
+  Future<void> startLocationTracking({
+    required bool stopFollowOnDrag,
+    required bool disableMarkerRotation,
+    required bool useDirectionMarker,
+    required Anchor anchor,
+  }) =>
+      _invokeChannelVoid(
+        'startLocationTracking',
+        'android#location#tracking#start',
+        {
+          'stopFollowOnDrag': stopFollowOnDrag,
+          'disableMarkerRotation': disableMarkerRotation,
+          'useDirectionMarker': useDirectionMarker,
+          'anchor': anchor.toMap(),
+        },
+      );
+
+  @override
+  Future<void> stopLocationTracking() => _invokeChannelVoid(
+        'stopLocationTracking',
+        'android#location#tracking#stop',
+      );
+
+  Future<void> _invokeChannelVoid(
+    String operation,
+    String method, [
+    Object? arguments,
+  ]) =>
+      _trackChannelInvocation(operation, () async {
+        final channel = _requireEventChannel(operation);
+        try {
+          await channel.invokeMethod<void>(method, arguments);
+        } on PlatformException catch (error) {
+          throw _channelException(operation, error);
+        } on MissingPluginException catch (error) {
+          throw AndroidMapException(
+            operation: operation,
+            code: 'missing_plugin',
+            viewId: _viewId,
+            message: error.message,
+            cause: error,
+          );
+        }
+      });
+
+  Future<T> _invokeChannelValue<T>(
+    String operation,
+    String method, [
+    Object? arguments,
+  ]) =>
+      _trackChannelInvocation(operation, () async {
+        final channel = _requireEventChannel(operation);
+        try {
+          final value = await channel.invokeMethod<T>(method, arguments);
+          if (value == null) {
+            throw AndroidMapException(
+              operation: operation,
+              code: 'null_result',
+              viewId: _viewId,
+            );
+          }
+          return value;
+        } on PlatformException catch (error) {
+          throw _channelException(operation, error);
+        } on MissingPluginException catch (error) {
+          throw AndroidMapException(
+            operation: operation,
+            code: 'missing_plugin',
+            viewId: _viewId,
+            message: error.message,
+            cause: error,
+          );
+        }
+      });
+
+  Future<T> _trackChannelInvocation<T>(
+    String operation,
+    Future<T> Function() invoke,
+  ) {
+    final invocationId = _channelInvocationSequence++;
+    final completer = Completer<T>();
+    _pendingChannelInvocations[invocationId] = (error) {
+      if (!completer.isCompleted) {
+        completer.completeError(
+          AndroidMapException(
+            operation: operation,
+            code: error.code,
+            viewId: error.viewId,
+            message: error.message,
+            cause: error,
+          ),
+        );
+      }
+    };
+    Future<T>.sync(invoke).then(
+      (value) {
+        _pendingChannelInvocations.remove(invocationId);
+        if (!completer.isCompleted) completer.complete(value);
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        _pendingChannelInvocations.remove(invocationId);
+        if (!completer.isCompleted) completer.completeError(error, stackTrace);
+      },
+    );
+    return completer.future;
+  }
+
+  MethodChannel _requireEventChannel(String operation) {
+    final channel = _eventChannel;
+    if (_closed || channel == null || _viewId == null) {
+      throw AndroidMapException(
+        operation: operation,
+        code: 'not_attached',
+        viewId: _viewId,
+      );
+    }
+    return channel;
+  }
+
+  AndroidMapException _channelException(
+    String operation,
+    PlatformException error,
+  ) =>
+      AndroidMapException(
+        operation: operation,
+        code: error.code,
+        viewId: _viewId,
+        message: error.message,
+        cause: error,
+      );
+
   Future<void> _enqueue(
     String operation,
     bool Function(OsmAndroidBridge bridge, int viewId, JString requestId)
@@ -564,6 +726,12 @@ final class JniAndroidMapTransport implements AndroidMapTransport {
       if (!completer.isCompleted) completer.completeError(error);
     }
     _pending.clear();
+    final channelCancellations =
+        _pendingChannelInvocations.values.toList(growable: false);
+    _pendingChannelInvocations.clear();
+    for (final cancel in channelCancellations) {
+      cancel(error);
+    }
 
     if (bridge != null) {
       try {
