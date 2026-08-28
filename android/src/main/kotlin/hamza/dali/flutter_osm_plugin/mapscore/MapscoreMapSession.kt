@@ -9,6 +9,9 @@ import android.location.LocationManager
 import android.location.LocationManager.GPS_PROVIDER
 import android.location.LocationManager.NETWORK_PROVIDER
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -112,6 +115,15 @@ internal class MapscoreMapSession(
     private lateinit var locationNewOverlay: CustomLocationManager
     private lateinit var legacyChannel: LegacyMethodChannelAdapter
     private var eventSink: MapEventSink = NoopMapEventSink
+    private val eventCoalescer = MapEventCoalescer(
+        intervalsMillis = mapOf(
+            "receiveRegionIsChanging" to REGION_EVENT_INTERVAL_MILLIS,
+            "receiveUserLocation" to LOCATION_EVENT_INTERVAL_MILLIS,
+        ),
+        clockMillis = SystemClock::elapsedRealtime,
+        scheduler = HandlerMapEventScheduler(Handler(Looper.getMainLooper())),
+        emitter = { method, arguments -> eventSink.emit(method, arguments) },
+    )
     private var released = false
     @Volatile private var zoomSnapshot: Double? = null
 
@@ -131,9 +143,10 @@ internal class MapscoreMapSession(
 
     private var scope: CoroutineScope? = null
     private var job: Job? = null
-    private var resultFlutter: MethodChannel.Result? = null
-    private var skipCheckLocation = false
+    private var pendingUserPositionResult: MethodChannel.Result? = null
+    private var pendingEnableLocationSettings = false
     private var activity: Activity? = null
+    private val locationRequestCodes = LocationActivityRequestCodes.forViewId(id)
 
     override val viewId: Int
         get() = id
@@ -178,6 +191,18 @@ internal class MapscoreMapSession(
     }
 
     override fun setActivity(activity: Activity?) {
+        if (activity == null && this.activity != null) {
+            cancelPendingActivityLocationRequest(
+                code = "activity_detached",
+                message = "The host Activity detached before the location request completed.",
+            )
+            if (::locationNewOverlay.isInitialized) {
+                locationNewOverlay.cancelPendingPositionRequest(
+                    code = "activity_detached",
+                    message = "The host Activity detached before a location fix arrived.",
+                )
+            }
+        }
         this.activity = activity
     }
 
@@ -248,7 +273,7 @@ internal class MapscoreMapSession(
                 map2["lat"] = lat
                 map2["lon"] = lon
                 map2["heading"] = heading
-                eventSink.emit("receiveUserLocation", map2)
+                eventCoalescer.emit("receiveUserLocation", map2)
             }
         }
     }
@@ -354,7 +379,7 @@ internal class MapscoreMapSession(
                 val center = mapView?.getCamera()?.getCenterPosition()
                 h["center"] = center?.toHashMap(helper)
                 scope?.launch(Dispatchers.Main) {
-                    eventSink.emit("receiveRegionIsChanging", h)
+                    eventCoalescer.emit("receiveRegionIsChanging", h)
                 }
             }
 
@@ -439,13 +464,20 @@ internal class MapscoreMapSession(
                 }
 
                 LegacyMapCommand.CURRENT_LOCATION -> {
-                    if (gpsServiceManager.isProviderEnabled(GPS_PROVIDER) || gpsServiceManager.isProviderEnabled(
-                            NETWORK_PROVIDER
-                        )
-                    ) {
+                    if (isLocationServiceEnabled()) {
                         enableUserLocation()
                     } else {
-                        activity?.let { openSettingLocation(MapscoreConstants.currentUserLocationReqCode, it) }
+                        val currentActivity = activity
+                        if (currentActivity == null) {
+                            result.error(
+                                "activity_unavailable",
+                                "A foreground Activity is required to open location settings.",
+                                null,
+                            )
+                            return
+                        }
+                        pendingEnableLocationSettings = true
+                        openSettingLocation(locationRequestCodes.currentUserLocation, currentActivity)
                     }
                     result.success(isEnabled)
                 }
@@ -482,17 +514,7 @@ internal class MapscoreMapSession(
                 }
 
                 LegacyMapCommand.MAP_BOUNDS -> getMapBounds(result)
-                LegacyMapCommand.USER_POSITION -> {
-                    if (gpsServiceManager.isProviderEnabled(GPS_PROVIDER) || gpsServiceManager.isProviderEnabled(
-                            NETWORK_PROVIDER
-                        )
-                    ) {
-                        getUserLocation(result)
-                    } else {
-                        resultFlutter = result
-                        activity?.let { openSettingLocation(MapscoreConstants.getUserLocationReqCode, it) }
-                    }
-                }
+                LegacyMapCommand.USER_POSITION -> requestUserLocation(result)
 
                 LegacyMapCommand.MOVE_TO_POSITION -> moveToSpecificPosition(call, result)
                 LegacyMapCommand.USER_REMOVE_MARKER_POSITION -> {
@@ -544,6 +566,38 @@ internal class MapscoreMapSession(
         result: MethodChannel.Result,
     ) {
         try {
+            when (command) {
+                TypedMapCommand.SHOW_CURRENT_LOCATION -> {
+                    showTypedCurrentLocation(result)
+                    return
+                }
+
+                TypedMapCommand.GET_CURRENT_LOCATION -> {
+                    requestUserLocation(result)
+                    return
+                }
+
+                TypedMapCommand.START_LOCATION_TRACKING -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    val anchor = (args["anchor"] as List<Number>).map(Number::toDouble)
+                    locationNewOverlay.setAnchor(anchor)
+                    trackUserLocation(
+                        enableStopFollow = args["stopFollowOnDrag"] as Boolean,
+                        useDirectionMarker = args["useDirectionMarker"] as Boolean,
+                        disableRotation = args["disableMarkerRotation"] as Boolean,
+                        result = result,
+                    )
+                    return
+                }
+
+                TypedMapCommand.STOP_LOCATION_TRACKING -> {
+                    deactivateTrackMe(result)
+                    return
+                }
+
+                else -> Unit
+            }
+
             val accepted = when (command) {
                 TypedMapCommand.SET_ZOOM -> setZoom(
                     zoomLevel = (call.arguments as Number).toDouble(),
@@ -631,6 +685,22 @@ internal class MapscoreMapSession(
                 TypedMapCommand.SET_TILE -> setTypedChannelTile(call.arguments)
                 TypedMapCommand.SET_OVERLAYS_VISIBLE ->
                     setOverlaysVisible(call.arguments as Boolean)
+
+                TypedMapCommand.START_LOCATION_UPDATES -> {
+                    locationNewOverlay.startLocationUpdating()
+                    true
+                }
+
+                TypedMapCommand.STOP_LOCATION_UPDATES -> {
+                    locationNewOverlay.stopLocationUpdating()
+                    true
+                }
+
+                TypedMapCommand.SHOW_CURRENT_LOCATION,
+                TypedMapCommand.GET_CURRENT_LOCATION,
+                TypedMapCommand.START_LOCATION_TRACKING,
+                TypedMapCommand.STOP_LOCATION_TRACKING,
+                -> error("Location command should have returned before generic dispatch")
             }
             if (accepted) result.success(null)
             else result.error(
@@ -1269,8 +1339,66 @@ internal class MapscoreMapSession(
         isEnabled = true
     }
 
+    private fun isLocationServiceEnabled(): Boolean =
+        gpsServiceManager.isProviderEnabled(GPS_PROVIDER) ||
+            gpsServiceManager.isProviderEnabled(NETWORK_PROVIDER)
+
+    private fun showTypedCurrentLocation(result: MethodChannel.Result) {
+        if (isLocationServiceEnabled()) {
+            enableUserLocation()
+            result.success(null)
+            return
+        }
+        val currentActivity = activity
+        if (currentActivity == null) {
+            result.error(
+                "activity_unavailable",
+                "A foreground Activity is required to open location settings.",
+                null,
+            )
+            return
+        }
+        if (!pendingEnableLocationSettings) {
+            pendingEnableLocationSettings = true
+            openSettingLocation(locationRequestCodes.currentUserLocation, currentActivity)
+        }
+        result.success(null)
+    }
+
+    private fun requestUserLocation(result: MethodChannel.Result) {
+        if (isLocationServiceEnabled()) {
+            getUserLocation(result)
+            return
+        }
+        if (pendingUserPositionResult != null) {
+            result.error(
+                "location_request_in_progress",
+                "Another location settings request is already pending for this map.",
+                null,
+            )
+            return
+        }
+        val currentActivity = activity
+        if (currentActivity == null) {
+            result.error(
+                "activity_unavailable",
+                "A foreground Activity is required to open location settings.",
+                null,
+            )
+            return
+        }
+        pendingUserPositionResult = result
+        openSettingLocation(locationRequestCodes.getUserLocation, currentActivity)
+    }
+
     private fun getUserLocation(result: MethodChannel.Result) {
-        locationNewOverlay.currentUserPosition(result, scope!!)
+        locationNewOverlay.currentUserPosition(result)
+    }
+
+    private fun cancelPendingActivityLocationRequest(code: String, message: String) {
+        pendingUserPositionResult?.error(code, message, null)
+        pendingUserPositionResult = null
+        pendingEnableLocationSettings = false
     }
 
     private fun trackUserLocation(
@@ -1701,13 +1829,17 @@ internal class MapscoreMapSession(
         if (released) return
         released = true
 
+        cancelPendingActivityLocationRequest(
+            code = "location_request_cancelled",
+            message = "The map session was disposed before the location request completed.",
+        )
         if (::locationNewOverlay.isInitialized) {
             locationNewOverlay.onDestroy()
         }
+        eventCoalescer.close()
         mapView?.requireMapInterface()?.getTouchHandler()?.removeListener(mapTouchListener)
         job?.let { if (it.isActive) it.cancel() }
         job = null
-        resultFlutter = null
         val activeEventSink = eventSink
         activeEventSink.close()
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
@@ -1774,7 +1906,6 @@ internal class MapscoreMapSession(
 
     internal fun onPause() {
         locationNewOverlay.onPause()
-        skipCheckLocation = false
     }
 
     internal fun onStop() {
@@ -1784,25 +1915,35 @@ internal class MapscoreMapSession(
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         when (requestCode) {
-            MapscoreConstants.getUserLocationReqCode -> {
-                skipCheckLocation = true
-                if (gpsServiceManager.isProviderEnabled(GPS_PROVIDER) || gpsServiceManager.isProviderEnabled(
-                        NETWORK_PROVIDER
+            locationRequestCodes.getUserLocation -> {
+                val pendingResult = pendingUserPositionResult ?: return false
+                pendingUserPositionResult = null
+                if (isLocationServiceEnabled()) {
+                    getUserLocation(pendingResult)
+                } else {
+                    pendingResult.error(
+                        "location_service_disabled",
+                        "Location services are still disabled.",
+                        null,
                     )
-                ) {
-                    resultFlutter?.let { getUserLocation(it); resultFlutter = null }
                 }
+                return true
             }
 
-            MapscoreConstants.currentUserLocationReqCode -> {
-                skipCheckLocation = true
-                if (gpsServiceManager.isProviderEnabled(GPS_PROVIDER)) enableUserLocation()
+            locationRequestCodes.currentUserLocation -> {
+                if (!pendingEnableLocationSettings) return false
+                pendingEnableLocationSettings = false
+                if (isLocationServiceEnabled()) enableUserLocation()
+                return true
             }
+
+            else -> return false
         }
-        return true
     }
 
     companion object {
         const val DEFAULT_OSM_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        private const val REGION_EVENT_INTERVAL_MILLIS = 100L
+        private const val LOCATION_EVENT_INTERVAL_MILLIS = 1_000L
     }
 }
