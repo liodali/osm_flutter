@@ -20,9 +20,6 @@ import io.openmobilemaps.mapscore.shared.map.layers.icon.IconFactory
 import io.openmobilemaps.mapscore.shared.map.layers.icon.IconInfoInterface
 import io.openmobilemaps.mapscore.shared.map.layers.icon.IconLayerInterface
 import io.openmobilemaps.mapscore.shared.map.layers.icon.IconType
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.LinkedList
 
 typealias OnChangedLocationMapscore = (lat: Double, lon: Double, heading: Double) -> Unit
@@ -41,13 +38,17 @@ class CustomLocationManager(
 ) {
     private val provider = OsmLocationProvider(context)
     private val handler = Handler(Looper.getMainLooper())
+    private val subscription = ResumableLocationSubscription(
+        startUpdates = provider::start,
+        stopUpdates = provider::stop,
+    )
 
     var disableRotateDirection = false
     var useDirectionMarker = false
     var mIsFollowing = false
         private set
-    var mIsLocationEnabled = false
-        private set
+    val mIsLocationEnabled: Boolean
+        get() = subscription.isRequested
 
     var mGeoPointLat: Double = 0.0
         private set
@@ -57,6 +58,14 @@ class CustomLocationManager(
     private var currentLocation: Location? = null
     private var onChangedLocationCallback: OnChangedLocationMapscore? = null
     private val runOnFirstFixQueue = LinkedList<Runnable>()
+    private var pendingPositionResult: MethodChannel.Result? = null
+    private var stopAfterPositionResult = false
+    private val positionTimeout = Runnable {
+        cancelPendingPositionRequest(
+            code = "location_timeout",
+            message = "Timed out waiting for a foreground location fix.",
+        )
+    }
 
     private var personBitmap: Bitmap? = null
     private var directionBitmap: Bitmap? = null
@@ -80,8 +89,7 @@ class CustomLocationManager(
     }
 
     fun enableMyLocation() {
-        provider.start()
-        mIsLocationEnabled = true
+        subscription.start()
         provider.lastKnownLocation()?.let { onLocationChanged(it) }
     }
 
@@ -93,9 +101,11 @@ class CustomLocationManager(
 
     fun onStopLocation() {
         mIsFollowing = false
-        mIsLocationEnabled = false
-        provider.stop()
-        handler.removeCallbacksAndMessages(null)
+        cancelPendingPositionRequest(
+            code = "location_request_cancelled",
+            message = "Location acquisition was stopped.",
+        )
+        subscription.stop()
         clearMarkerIcons()
     }
 
@@ -151,37 +161,70 @@ class CustomLocationManager(
         }
     }
 
-    fun currentUserPosition(result: MethodChannel.Result, scope: CoroutineScope) {
-        if (!mIsLocationEnabled) enableMyLocation()
-        runOnFirstFix(Runnable {
-            val loc = currentLocation
-            if (loc != null) {
-                scope.launch(Dispatchers.Main) {
-                    val map = HashMap<String, Double>()
-                    map["lat"] = loc.latitude
-                    map["lon"] = loc.longitude
-                    result.success(map)
-                }
-                mIsLocationEnabled = false
-                provider.stop()
+    fun currentUserPosition(result: MethodChannel.Result) {
+        val request = {
+            if (pendingPositionResult != null) {
+                result.error(
+                    "location_request_in_progress",
+                    "Another location request is already pending for this map.",
+                    null,
+                )
             } else {
-                scope.launch(Dispatchers.Main) {
-                    result.error("400", "we cannot get the current position!", "")
+                val location = currentLocation
+                if (location != null) {
+                    result.success(location.toPositionMap())
+                } else {
+                    stopAfterPositionResult = !mIsLocationEnabled
+                    pendingPositionResult = result
+                    handler.postDelayed(positionTimeout, LOCATION_FIX_TIMEOUT_MILLIS)
+                    try {
+                        if (!mIsLocationEnabled) enableMyLocation()
+                    } catch (error: Exception) {
+                        cancelPendingPositionRequest(
+                            code = "location_start_failed",
+                            message = error.message ?: "Unable to start location updates.",
+                        )
+                    }
                 }
             }
-        })
+        }
+        if (Looper.myLooper() == Looper.getMainLooper()) request() else handler.post(request)
+    }
+
+    fun cancelPendingPositionRequest(code: String, message: String) {
+        val cancel = {
+            val result = pendingPositionResult
+            if (result != null) {
+                pendingPositionResult = null
+                handler.removeCallbacks(positionTimeout)
+                result.error(code, message, null)
+                if (stopAfterPositionResult) subscription.stop()
+                stopAfterPositionResult = false
+            }
+        }
+        if (Looper.myLooper() == Looper.getMainLooper()) cancel() else handler.post(cancel)
     }
 
     fun onResume() {
-        if (mIsLocationEnabled) provider.start()
+        subscription.onResume()
     }
 
     fun onPause() {
-        provider.stop()
+        cancelPendingPositionRequest(
+            code = "location_request_paused",
+            message = "The host Activity paused before a location fix arrived.",
+        )
+        subscription.onPause()
     }
 
     fun onDestroy() {
-        provider.stop()
+        cancelPendingPositionRequest(
+            code = "location_request_cancelled",
+            message = "The map session was disposed before a location fix arrived.",
+        )
+        subscription.close()
+        runOnFirstFixQueue.clear()
+        onChangedLocationCallback = null
         handler.removeCallbacksAndMessages(null)
         clearMarkerIcons()
     }
@@ -193,6 +236,7 @@ class CustomLocationManager(
         onChangedLocationCallback?.invoke(loc.latitude, loc.longitude, loc.bearing.toDouble())
 
         val apply = Runnable {
+            completePendingPositionRequest(loc)
             if (!controlMapFromOutSide) {
                 updateMarker(loc, mIsFollowing)
             }
@@ -208,6 +252,18 @@ class CustomLocationManager(
             handler.post(apply)
         }
     }
+
+    private fun completePendingPositionRequest(location: Location) {
+        val result = pendingPositionResult ?: return
+        pendingPositionResult = null
+        handler.removeCallbacks(positionTimeout)
+        result.success(location.toPositionMap())
+        if (stopAfterPositionResult) subscription.stop()
+        stopAfterPositionResult = false
+    }
+
+    private fun Location.toPositionMap(): HashMap<String, Double> =
+        hashMapOf("lat" to latitude, "lon" to longitude)
 
     private fun updateMarker(loc: Location, follow: Boolean) {
         val coordinate = latLonToCoord(loc.latitude, loc.longitude)
@@ -290,5 +346,9 @@ class CustomLocationManager(
     @Suppress("unused")
     fun setEnabled(e: Boolean) {
         enabled = e
+    }
+
+    private companion object {
+        const val LOCATION_FIX_TIMEOUT_MILLIS = 15_000L
     }
 }
