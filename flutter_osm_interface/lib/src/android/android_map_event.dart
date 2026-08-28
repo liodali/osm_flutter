@@ -63,6 +63,17 @@ final class AndroidRegionChanged extends AndroidMapEvent {
   final Region region;
 }
 
+/// Foreground user-location update delivered through the MethodChannel event
+/// plane for both Android backends.
+final class AndroidUserLocationChanged extends AndroidMapEvent {
+  const AndroidUserLocationChanged({
+    required super.viewId,
+    required this.location,
+  });
+
+  final UserLocation location;
+}
+
 final class AndroidMapError extends AndroidMapEvent {
   const AndroidMapError({
     required super.viewId,

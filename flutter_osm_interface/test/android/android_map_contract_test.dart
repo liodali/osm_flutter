@@ -43,14 +43,25 @@ void main() {
 
   test('typed events retain their view and payload', () {
     final position = GeoPoint(latitude: 48.85, longitude: 2.35);
-    final event = AndroidMarkerTap(
+    final markerEvent = AndroidMarkerTap(
       viewId: 7,
       markerId: const MarkerId('marker-7'),
       position: position,
     );
+    final location = UserLocation(
+      latitude: 48.86,
+      longitude: 2.36,
+      angle: 0.5,
+    );
+    final locationEvent = AndroidUserLocationChanged(
+      viewId: 7,
+      location: location,
+    );
 
-    expect(event.viewId, 7);
-    expect(event.markerId, const MarkerId('marker-7'));
-    expect(event.position, same(position));
+    expect(markerEvent.viewId, 7);
+    expect(markerEvent.markerId, const MarkerId('marker-7'));
+    expect(markerEvent.position, same(position));
+    expect(locationEvent.viewId, 7);
+    expect(locationEvent.location, same(location));
   });
 }
