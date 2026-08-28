@@ -17,6 +17,7 @@ export 'package:flutter_osm_interface/flutter_osm_interface.dart'
         AndroidMapTapKind,
         AndroidMarkerTap,
         AndroidRegionChanged,
+        AndroidUserLocationChanged,
         MarkerId,
         RoadId,
         ShapeId,
@@ -31,9 +32,11 @@ export 'src/android_transport/method_channel_android_map_transport.dart'
     show MethodChannelAndroidMapTransport;
 export 'src/controller/android_map_controller.dart'
     show
+        AndroidLocationPermissionRequester,
         AndroidMapCamera,
         AndroidMapController,
         AndroidMapLayers,
+        AndroidMapLocation,
         AndroidMapMarkers,
         AndroidMapRoads,
         AndroidMapShapes,

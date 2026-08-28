@@ -256,6 +256,144 @@ void main() {
       await controller.dispose();
     });
 
+    test('routes Phase 5 location commands after foreground permission',
+        () async {
+      final transport = FakeAndroidMapTransport(
+        backend: AndroidMapBackend.jni,
+      );
+      var permissionRequests = 0;
+      final controller = AndroidMapController.withPosition(
+        initPosition: GeoPoint(latitude: 1, longitude: 2),
+        backend: AndroidMapBackend.jni,
+        transportFactory: (_) => transport,
+        locationPermissionRequester: () async {
+          permissionRequests += 1;
+          return true;
+        },
+      );
+      await controller.attachAndroidMap(26);
+      transport.emit(const AndroidMapReady(viewId: 26, isReady: true));
+      await controller.ready;
+
+      await controller.location.showCurrentLocation();
+      expect(
+        await controller.location.getCurrentLocation(),
+        GeoPoint(latitude: 48.85, longitude: 2.35),
+      );
+      await controller.location.startUpdates();
+      await controller.location.stopUpdates();
+      await controller.location.startTracking(
+        stopFollowOnDrag: true,
+        disableMarkerRotation: true,
+        anchor: Anchor.bottom,
+      );
+      await controller.location.stopTracking();
+
+      expect(permissionRequests, 4);
+      expect(transport.showCurrentLocationCount, 1);
+      expect(transport.locationUpdatesStarted, isFalse);
+      expect(transport.locationTrackingStarted, isFalse);
+      expect(transport.stopFollowOnDrag, isTrue);
+      expect(transport.locationAnchor, Anchor.bottom);
+
+      await controller.dispose();
+    });
+
+    test('rejects location acquisition when permission is denied', () async {
+      final transport = FakeAndroidMapTransport(
+        backend: AndroidMapBackend.methodChannel,
+      );
+      final controller = AndroidMapController.withPosition(
+        initPosition: GeoPoint(latitude: 1, longitude: 2),
+        backend: AndroidMapBackend.methodChannel,
+        transportFactory: (_) => transport,
+        locationPermissionRequester: () async => false,
+      );
+      await controller.attachAndroidMap(27);
+      transport.emit(const AndroidMapReady(viewId: 27, isReady: true));
+      await controller.ready;
+
+      await expectLater(
+        controller.location.startUpdates(),
+        throwsA(
+          isA<AndroidMapException>().having(
+            (error) => error.code,
+            'code',
+            'location_permission_denied',
+          ),
+        ),
+      );
+      expect(transport.locationUpdatesStarted, isFalse);
+
+      await controller.dispose();
+    });
+
+    test('maps permission requester failures without invoking transport',
+        () async {
+      final transport = FakeAndroidMapTransport(
+        backend: AndroidMapBackend.jni,
+      );
+      final failure = StateError('permission activity unavailable');
+      final controller = AndroidMapController.withPosition(
+        initPosition: GeoPoint(latitude: 1, longitude: 2),
+        backend: AndroidMapBackend.jni,
+        transportFactory: (_) => transport,
+        locationPermissionRequester: () async => throw failure,
+      );
+      await controller.attachAndroidMap(28);
+      transport.emit(const AndroidMapReady(viewId: 28, isReady: true));
+      await controller.ready;
+
+      await expectLater(
+        controller.location.getCurrentLocation(),
+        throwsA(
+          isA<AndroidMapException>()
+              .having(
+                (error) => error.operation,
+                'operation',
+                'getCurrentLocation',
+              )
+              .having(
+                (error) => error.code,
+                'code',
+                'location_permission_request_failed',
+              )
+              .having((error) => error.cause, 'cause', same(failure)),
+        ),
+      );
+      expect(transport.getCurrentLocationCount, 0);
+
+      await controller.dispose();
+    });
+
+    test('stop location commands never request permission', () async {
+      final transport = FakeAndroidMapTransport(
+        backend: AndroidMapBackend.methodChannel,
+      );
+      var permissionRequests = 0;
+      final controller = AndroidMapController.withPosition(
+        initPosition: GeoPoint(latitude: 1, longitude: 2),
+        backend: AndroidMapBackend.methodChannel,
+        transportFactory: (_) => transport,
+        locationPermissionRequester: () async {
+          permissionRequests += 1;
+          return false;
+        },
+      );
+      await controller.attachAndroidMap(29);
+      transport.emit(const AndroidMapReady(viewId: 29, isReady: true));
+      await controller.ready;
+
+      await controller.location.stopUpdates();
+      await controller.location.stopTracking();
+
+      expect(permissionRequests, 0);
+      expect(transport.stopLocationUpdatesCount, 1);
+      expect(transport.stopLocationTrackingCount, 1);
+
+      await controller.dispose();
+    });
+
     test('validates Phase 4 geometry and duplicate stable IDs', () async {
       final transport = FakeAndroidMapTransport(
         backend: AndroidMapBackend.methodChannel,
@@ -382,6 +520,14 @@ final class FakeAndroidMapTransport implements AndroidMapTransport {
   final Map<RoadId, List<GeoPoint>> roads = {};
   CustomTile? tile;
   bool overlaysVisible = true;
+  int showCurrentLocationCount = 0;
+  int getCurrentLocationCount = 0;
+  int stopLocationUpdatesCount = 0;
+  int stopLocationTrackingCount = 0;
+  bool locationUpdatesStarted = false;
+  bool locationTrackingStarted = false;
+  bool? stopFollowOnDrag;
+  Anchor? locationAnchor;
   bool _closed = false;
 
   @override
@@ -538,6 +684,46 @@ final class FakeAndroidMapTransport implements AndroidMapTransport {
   @override
   Future<void> setOverlaysVisible(bool visible) async {
     overlaysVisible = visible;
+  }
+
+  @override
+  Future<void> showCurrentLocation() async {
+    showCurrentLocationCount += 1;
+  }
+
+  @override
+  Future<GeoPoint> getCurrentLocation() async {
+    getCurrentLocationCount += 1;
+    return GeoPoint(latitude: 48.85, longitude: 2.35);
+  }
+
+  @override
+  Future<void> startLocationUpdates() async {
+    locationUpdatesStarted = true;
+  }
+
+  @override
+  Future<void> stopLocationUpdates() async {
+    stopLocationUpdatesCount += 1;
+    locationUpdatesStarted = false;
+  }
+
+  @override
+  Future<void> startLocationTracking({
+    required bool stopFollowOnDrag,
+    required bool disableMarkerRotation,
+    required bool useDirectionMarker,
+    required Anchor anchor,
+  }) async {
+    locationTrackingStarted = true;
+    this.stopFollowOnDrag = stopFollowOnDrag;
+    locationAnchor = anchor;
+  }
+
+  @override
+  Future<void> stopLocationTracking() async {
+    stopLocationTrackingCount += 1;
+    locationTrackingStarted = false;
   }
 
   @override

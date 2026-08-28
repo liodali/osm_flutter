@@ -5,6 +5,9 @@ import 'package:flutter/material.dart' show Color;
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/android_transport/android_map_transport.dart';
 import 'package:flutter_osm_plugin/src/android_transport/android_transport_factory.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+typedef AndroidLocationPermissionRequester = Future<bool> Function();
 
 /// Opt-in Android controller introduced alongside the legacy map controller.
 ///
@@ -18,7 +21,10 @@ final class AndroidMapController extends BaseMapController
     BoundingBox areaLimit = const BoundingBox.world(),
     super.customTile,
     AndroidMapTransportFactory? transportFactory,
+    AndroidLocationPermissionRequester? locationPermissionRequester,
   })  : _transportFactory = transportFactory ?? createAndroidMapTransport,
+        _locationPermissionRequester =
+            locationPermissionRequester ?? _requestForegroundLocation,
         super(
           initMapWithUserPosition: null,
           initPosition: initPosition,
@@ -30,12 +36,14 @@ final class AndroidMapController extends BaseMapController
     staticPositions = AndroidMapStaticPositions._(this);
     roads = AndroidMapRoads._(this);
     layers = AndroidMapLayers._(this);
+    location = AndroidMapLocation._(this);
     // Prevent a disposal/attach failure from becoming an unhandled async error
     // when callers only await attach. Awaiting [ready] still receives it.
     _readyCompleter.future.ignore();
   }
 
   final AndroidMapTransportFactory _transportFactory;
+  final AndroidLocationPermissionRequester _locationPermissionRequester;
   final Completer<void> _readyCompleter = Completer<void>();
   final StreamController<AndroidMapEvent> _events =
       StreamController<AndroidMapEvent>.broadcast(sync: true);
@@ -57,6 +65,7 @@ final class AndroidMapController extends BaseMapController
   late final AndroidMapStaticPositions staticPositions;
   late final AndroidMapRoads roads;
   late final AndroidMapLayers layers;
+  late final AndroidMapLocation location;
 
   @override
   final AndroidMapBackend backend;
@@ -228,6 +237,34 @@ final class AndroidMapController extends BaseMapController
       throw AndroidMapException(
         operation: 'command',
         code: 'controller_disposed',
+        viewId: _viewId,
+      );
+    }
+    return transport;
+  }
+
+  Future<AndroidMapTransport> _locationTransport(
+    String operation, {
+    required bool requestPermission,
+  }) async {
+    final transport = await _readyTransport();
+    if (!requestPermission) return transport;
+
+    bool granted;
+    try {
+      granted = await _locationPermissionRequester();
+    } catch (error) {
+      throw AndroidMapException(
+        operation: operation,
+        code: 'location_permission_request_failed',
+        viewId: _viewId,
+        cause: error,
+      );
+    }
+    if (!granted) {
+      throw AndroidMapException(
+        operation: operation,
+        code: 'location_permission_denied',
         viewId: _viewId,
       );
     }
@@ -600,6 +637,80 @@ final class AndroidMapLayers {
     final transport = await _controller._readyTransport();
     await transport.setOverlaysVisible(visible);
   }
+}
+
+/// Foreground Android location capability.
+///
+/// Permission requests and every location command remain on MethodChannel for
+/// both backends. Location subscriptions pause with the host Activity and
+/// resume only when they were explicitly requested by the caller.
+final class AndroidMapLocation {
+  AndroidMapLocation._(this._controller);
+
+  final AndroidMapController _controller;
+
+  Future<void> showCurrentLocation() async {
+    final transport = await _controller._locationTransport(
+      'showCurrentLocation',
+      requestPermission: true,
+    );
+    await transport.showCurrentLocation();
+  }
+
+  Future<GeoPoint> getCurrentLocation() async {
+    final transport = await _controller._locationTransport(
+      'getCurrentLocation',
+      requestPermission: true,
+    );
+    return transport.getCurrentLocation();
+  }
+
+  Future<void> startUpdates() async {
+    final transport = await _controller._locationTransport(
+      'startLocationUpdates',
+      requestPermission: true,
+    );
+    await transport.startLocationUpdates();
+  }
+
+  Future<void> stopUpdates() async {
+    final transport = await _controller._locationTransport(
+      'stopLocationUpdates',
+      requestPermission: false,
+    );
+    await transport.stopLocationUpdates();
+  }
+
+  Future<void> startTracking({
+    bool stopFollowOnDrag = false,
+    bool disableMarkerRotation = false,
+    bool useDirectionMarker = false,
+    Anchor anchor = Anchor.center,
+  }) async {
+    final transport = await _controller._locationTransport(
+      'startLocationTracking',
+      requestPermission: true,
+    );
+    await transport.startLocationTracking(
+      stopFollowOnDrag: stopFollowOnDrag,
+      disableMarkerRotation: disableMarkerRotation,
+      useDirectionMarker: useDirectionMarker,
+      anchor: anchor,
+    );
+  }
+
+  Future<void> stopTracking() async {
+    final transport = await _controller._locationTransport(
+      'stopLocationTracking',
+      requestPermission: false,
+    );
+    await transport.stopLocationTracking();
+  }
+}
+
+Future<bool> _requestForegroundLocation() async {
+  final status = await Permission.locationWhenInUse.request();
+  return status.isGranted || status.isLimited;
 }
 
 AndroidMapException _argumentException(
