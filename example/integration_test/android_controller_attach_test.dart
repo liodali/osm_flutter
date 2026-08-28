@@ -189,6 +189,56 @@ void main() {
     await controller.dispose();
   });
 
+  testWidgets('runs Phase 5 location commands on the channel event plane', (
+    tester,
+  ) async {
+    final controller = AndroidMapController.withPosition(
+      initPosition: GeoPoint(latitude: 48.8566, longitude: 2.3522),
+      backend: AndroidMapBackend.jni,
+    );
+    final locationEvents = <AndroidUserLocationChanged>[];
+    final subscription = controller.events.listen((event) {
+      if (event is AndroidUserLocationChanged) locationEvents.add(event);
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: OSMFlutter(
+            controller: controller,
+            osmOption: const OSMOption(),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 5));
+    await controller.ready.timeout(const Duration(seconds: 10));
+
+    await controller.location.showCurrentLocation();
+    await controller.location.startUpdates();
+    final current = await controller.location.getCurrentLocation().timeout(
+      const Duration(seconds: 20),
+    );
+    expect(current.latitude, inInclusiveRange(-90, 90));
+    expect(current.longitude, inInclusiveRange(-180, 180));
+    await controller.location.stopUpdates();
+    await controller.location.startTracking(
+      stopFollowOnDrag: true,
+      disableMarkerRotation: false,
+      useDirectionMarker: false,
+    );
+    await tester.pump(const Duration(seconds: 2));
+    await controller.location.stopTracking();
+
+    expect(controller.activeBackend, AndroidMapBackend.jni);
+    expect(locationEvents, isNotEmpty);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 300));
+    await subscription.cancel();
+    await controller.dispose();
+  });
+
   testWidgets('isolates JNI commands for two platform-view IDs', (
     tester,
   ) async {
@@ -350,6 +400,20 @@ void main() {
     ]);
     await controller.layers.setOverlaysVisible(false);
     await controller.layers.setOverlaysVisible(true);
+    await controller.location.showCurrentLocation();
+    await controller.location.startUpdates();
+    final current = await controller.location.getCurrentLocation().timeout(
+      const Duration(seconds: 20),
+    );
+    expect(current.latitude, inInclusiveRange(-90, 90));
+    expect(current.longitude, inInclusiveRange(-180, 180));
+    await controller.location.stopUpdates();
+    await controller.location.startTracking(
+      stopFollowOnDrag: true,
+      disableMarkerRotation: false,
+      useDirectionMarker: false,
+    );
+    await controller.location.stopTracking();
     await controller.markers.removeAll(bulkMarkers);
     await controller.markers.remove(markerId);
     await controller.shapes.remove(shape);
