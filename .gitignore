@@ -69,3 +69,4 @@ __pycache__
 !assets/default_pin.png
 !android/src/main/assets/fonts/*.png
 jenkins
+.commandcode
