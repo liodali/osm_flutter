@@ -65,6 +65,55 @@ void main() {
       expect(markerTap.position.longitude, 2.35);
     });
 
+    test('decodes foreground user-location events', () {
+      final event = decodeAndroidMapEvent(
+        10,
+        const MethodCall('receiveUserLocation', {
+          'lat': 48.85,
+          'lon': 2.35,
+          'heading': 90.0,
+        }),
+      );
+
+      final location = event! as AndroidUserLocationChanged;
+      expect(location.viewId, 10);
+      expect(location.location.latitude, 48.85);
+      expect(location.location.longitude, 2.35);
+      expect(location.location.angle, 90.0);
+    });
+
+    test('drops malformed callbacks instead of throwing', () {
+      expect(
+        decodeAndroidMapEvent(
+          11,
+          const MethodCall('receiveRegionIsChanging', {'center': null}),
+        ),
+        isNull,
+      );
+      expect(
+        decodeAndroidMapEvent(
+          11,
+          const MethodCall('android#event', {
+            'version': 1,
+            'type': 'markerTap',
+            'payload': {'markerId': 'marker', 'lat': 'bad', 'lon': 2},
+          }),
+        ),
+        isNull,
+      );
+      expect(
+        decodeAndroidMapEvent(
+          11,
+          const MethodCall('receiveUserLocation', {
+            'lat': 48.85,
+            'lon': null,
+            'heading': 'north',
+          }),
+        ),
+        isNull,
+      );
+    });
+
     test('ignores unsupported envelope versions', () {
       final event = decodeAndroidMapEvent(
         10,
