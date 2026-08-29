@@ -1,7 +1,7 @@
 /// Optional Android JNI command transport for `flutter_osm_plugin`.
 ///
-/// The host plugin continues to own the Android platform view, native map
-/// session, MethodChannel event plane, location, permissions, and lifecycle.
+/// The endorsed Android package owns the platform view, native map session,
+/// MethodChannel event plane, location, permissions, and lifecycle.
 library flutter_osm_android_jni;
 
 export 'src/android_jni/probe.dart'

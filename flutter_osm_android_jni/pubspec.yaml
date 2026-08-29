@@ -14,10 +14,10 @@ dependencies:
   flutter_osm_interface:
     # ignore: invalid_dependency
     path: ../flutter_osm_interface/
-  # Host plugin that supplies the Android platform view and Kotlin bridge.
-  flutter_osm_plugin:
+  # Endorsed host package that supplies the platform view and Kotlin bridge.
+  flutter_osm_android:
     # ignore: invalid_dependency
-    path: ../
+    path: ../flutter_osm_android/
   jni: ^1.0.3
 
 dev_dependencies:
