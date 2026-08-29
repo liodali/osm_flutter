@@ -1,7 +1,7 @@
-/// Android-only APIs for the JNI-backed controller migration.
+/// Typed Android controller and MethodChannel fallback APIs.
 ///
-/// This entry point is intentionally separate from `flutter_osm_plugin.dart`
-/// so existing iOS and web imports do not initialize Android JNI bindings.
+/// The optional JNI command transport is provided by
+/// `package:flutter_osm_android_jni`.
 library flutter_osm_plugin_android;
 
 export 'package:flutter_osm_interface/flutter_osm_interface.dart'
@@ -15,6 +15,8 @@ export 'package:flutter_osm_interface/flutter_osm_interface.dart'
         AndroidMapReady,
         AndroidMapTap,
         AndroidMapTapKind,
+        AndroidMapTransport,
+        AndroidMapTransportFactory,
         AndroidMarkerTap,
         AndroidRegionChanged,
         AndroidUserLocationChanged,
@@ -22,12 +24,8 @@ export 'package:flutter_osm_interface/flutter_osm_interface.dart'
         RoadId,
         ShapeId,
         StaticPositionId;
-export 'src/android_jni/probe.dart'
-    show AndroidJniProbeResult, runAndroidJniProbe;
-export 'src/android_transport/android_map_transport.dart'
-    show AndroidMapTransport, AndroidMapTransportFactory;
-export 'src/android_transport/jni_android_map_transport.dart'
-    show JniAndroidMapTransport;
+export 'src/android_transport/android_transport_factory.dart'
+    show createDefaultAndroidMapTransport;
 export 'src/android_transport/method_channel_android_map_transport.dart'
     show MethodChannelAndroidMapTransport;
 export 'src/controller/android_map_controller.dart'

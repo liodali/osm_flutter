@@ -15,7 +15,7 @@ void main() {
       ),
       androidSdkConfig: AndroidSdkConfig(
         addGradleDeps: true,
-        androidExample: packageRoot.resolve('example/').toFilePath(),
+        androidExample: packageRoot.resolve('../example/').toFilePath(),
       ),
       classes: const [
         'hamza.dali.flutter_osm_plugin.jni.OsmAndroidBridge',

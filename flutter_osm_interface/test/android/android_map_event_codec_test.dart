@@ -1,6 +1,5 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_plugin/src/android_transport/android_event_decoder.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

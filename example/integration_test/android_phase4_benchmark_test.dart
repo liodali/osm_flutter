@@ -2,10 +2,15 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_osm_android_jni/flutter_osm_android_jni.dart';
 import 'package:flutter_osm_plugin/android.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+
+final _jniTransportFactory = createAndroidJniTransportFactory(
+  fallback: createDefaultAndroidMapTransport,
+);
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +19,7 @@ void main() {
     final jni = AndroidMapController.withPosition(
       initPosition: GeoPoint(latitude: 48.8566, longitude: 2.3522),
       backend: AndroidMapBackend.jni,
+      transportFactory: _jniTransportFactory,
     );
     final methodChannel = AndroidMapController.withPosition(
       initPosition: GeoPoint(latitude: 48.8566, longitude: 2.3522),

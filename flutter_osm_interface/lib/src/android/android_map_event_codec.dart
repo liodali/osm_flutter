@@ -1,5 +1,8 @@
 import 'package:flutter/services.dart';
-import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_interface/src/android/android_map_event.dart';
+import 'package:flutter_osm_interface/src/android/android_map_exception.dart';
+import 'package:flutter_osm_interface/src/android/android_map_id.dart';
+import 'package:flutter_osm_interface/src/types/types.dart';
 
 /// Decodes the legacy callback names and the versioned typed event envelope
 /// shared by JNI commands and the MethodChannel event plane.

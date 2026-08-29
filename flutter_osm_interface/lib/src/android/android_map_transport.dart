@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_interface/src/android/android_map_event.dart';
+import 'package:flutter_osm_interface/src/android/android_map_id.dart';
+import 'package:flutter_osm_interface/src/android/android_map_platform.dart';
+import 'package:flutter_osm_interface/src/types/types.dart';
 
 /// Command/event boundary used by the opt-in Android controller.
 ///

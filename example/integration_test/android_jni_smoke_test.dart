@@ -1,4 +1,4 @@
-import 'package:flutter_osm_plugin/android.dart';
+import 'package:flutter_osm_android_jni/flutter_osm_android_jni.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 

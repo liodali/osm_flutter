@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart' show Color;
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_plugin/src/android_transport/android_map_transport.dart';
 import 'package:flutter_osm_plugin/src/android_transport/android_transport_factory.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -11,18 +10,20 @@ typedef AndroidLocationPermissionRequester = Future<bool> Function();
 
 /// Opt-in Android controller introduced alongside the legacy map controller.
 ///
-/// JNI mutations are queued onto Android's main thread and complete from
-/// MethodChannel acknowledgements. Backend fallback remains attach-only.
+/// Commands execute through the selected Android transport and complete from
+/// MethodChannel acknowledgements. Optional backend fallback remains
+/// attach-only.
 final class AndroidMapController extends BaseMapController
     implements AndroidMapPlatform {
   AndroidMapController.withPosition({
     required GeoPoint initPosition,
-    this.backend = AndroidMapBackend.auto,
+    this.backend = AndroidMapBackend.methodChannel,
     BoundingBox areaLimit = const BoundingBox.world(),
     super.customTile,
     AndroidMapTransportFactory? transportFactory,
     AndroidLocationPermissionRequester? locationPermissionRequester,
-  })  : _transportFactory = transportFactory ?? createAndroidMapTransport,
+  })  : _transportFactory =
+            transportFactory ?? createDefaultAndroidMapTransport,
         _locationPermissionRequester =
             locationPermissionRequester ?? _requestForegroundLocation,
         super(

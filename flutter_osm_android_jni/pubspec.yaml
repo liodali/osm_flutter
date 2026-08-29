@@ -1,0 +1,27 @@
+name: flutter_osm_android_jni
+description: Optional JNI command transport for flutter_osm_plugin on Android.
+version: 0.1.0
+homepage: https://github.com/liodali/osm_flutter
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.41.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Path dependencies are used only while developing the federated packages.
+  flutter_osm_interface:
+    # ignore: invalid_dependency
+    path: ../flutter_osm_interface/
+  # Host plugin that supplies the Android platform view and Kotlin bridge.
+  flutter_osm_plugin:
+    # ignore: invalid_dependency
+    path: ../
+  jni: ^1.0.3
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+  flutter_test:
+    sdk: flutter
+  jnigen: ^0.17.0

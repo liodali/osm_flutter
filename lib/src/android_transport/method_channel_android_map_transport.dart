@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_plugin/src/android_transport/android_event_decoder.dart';
-import 'package:flutter_osm_plugin/src/android_transport/android_map_transport.dart';
 
 /// Typed compatibility transport over the existing per-view channel.
 final class MethodChannelAndroidMapTransport implements AndroidMapTransport {

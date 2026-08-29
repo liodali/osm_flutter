@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_osm_android_jni/flutter_osm_android_jni.dart';
 import 'package:flutter_osm_plugin/android.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+
+final _jniTransportFactory = createAndroidJniTransportFactory(
+  fallback: createDefaultAndroidMapTransport,
+);
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +21,8 @@ void main() {
     final observer = _ReadyObserver();
     final controller = AndroidMapController.withPosition(
       initPosition: GeoPoint(latitude: 48.8566, longitude: 2.3522),
+      backend: AndroidMapBackend.auto,
+      transportFactory: _jniTransportFactory,
     );
     controller.addObserver(observer);
     final subscription = controller.events.listen(events.add);
@@ -86,6 +93,7 @@ void main() {
     final controller = AndroidMapController.withPosition(
       initPosition: GeoPoint(latitude: 48.8566, longitude: 2.3522),
       backend: AndroidMapBackend.jni,
+      transportFactory: _jniTransportFactory,
     );
     final subscription = controller.events.listen(events.add);
 
@@ -195,6 +203,7 @@ void main() {
     final controller = AndroidMapController.withPosition(
       initPosition: GeoPoint(latitude: 48.8566, longitude: 2.3522),
       backend: AndroidMapBackend.jni,
+      transportFactory: _jniTransportFactory,
     );
     final locationEvents = <AndroidUserLocationChanged>[];
     final subscription = controller.events.listen((event) {
@@ -245,10 +254,12 @@ void main() {
     final first = AndroidMapController.withPosition(
       initPosition: GeoPoint(latitude: 48.8566, longitude: 2.3522),
       backend: AndroidMapBackend.jni,
+      transportFactory: _jniTransportFactory,
     );
     final second = AndroidMapController.withPosition(
       initPosition: GeoPoint(latitude: 51.5072, longitude: -0.1276),
       backend: AndroidMapBackend.jni,
+      transportFactory: _jniTransportFactory,
     );
 
     await tester.pumpWidget(

@@ -1,3 +1,9 @@
+### Unreleased:
+
+- extract the opt-in Dart JNI transport into `flutter_osm_android_jni`
+- keep MethodChannel as the typed Android controller's bundled default
+- expose a composable default Android transport factory
+
 ### 2.0.1+1:
 
 - fix loading assets for web (wasm)

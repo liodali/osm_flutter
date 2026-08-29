@@ -13,10 +13,13 @@ void main() {
       final transport = FakeAndroidMapTransport(
         backend: AndroidMapBackend.methodChannel,
       );
+      AndroidMapBackend? requestedBackend;
       final controller = AndroidMapController.withPosition(
         initPosition: GeoPoint(latitude: 48.85, longitude: 2.35),
-        backend: AndroidMapBackend.methodChannel,
-        transportFactory: (_) => transport,
+        transportFactory: (backend) {
+          requestedBackend = backend;
+          return transport;
+        },
       );
       final observed = <AndroidMapEvent>[];
       final subscription = controller.events.listen(observed.add);
@@ -32,6 +35,7 @@ void main() {
 
       expect(transport.attachedViewId, 42);
       expect(transport.initialPosition?.latitude, 48.85);
+      expect(requestedBackend, AndroidMapBackend.methodChannel);
       expect(controller.activeBackend, AndroidMapBackend.methodChannel);
       expect(observed, hasLength(2));
 
@@ -50,6 +54,7 @@ void main() {
       );
       final controller = AndroidMapController.withPosition(
         initPosition: GeoPoint(latitude: 1, longitude: 2),
+        backend: AndroidMapBackend.auto,
         transportFactory: (backend) => switch (backend) {
           AndroidMapBackend.jni => jni,
           AndroidMapBackend.methodChannel => methodChannel,
@@ -80,6 +85,7 @@ void main() {
       );
       final controller = AndroidMapController.withPosition(
         initPosition: GeoPoint(latitude: 1, longitude: 2),
+        backend: AndroidMapBackend.auto,
         transportFactory: (backend) => switch (backend) {
           AndroidMapBackend.jni => jni,
           AndroidMapBackend.methodChannel => methodChannel,
@@ -447,6 +453,7 @@ void main() {
       );
       final controller = AndroidMapController.withPosition(
         initPosition: GeoPoint(latitude: 1, longitude: 2),
+        backend: AndroidMapBackend.auto,
         transportFactory: (backend) => switch (backend) {
           AndroidMapBackend.jni => jni,
           AndroidMapBackend.methodChannel => methodChannel,
