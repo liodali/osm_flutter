@@ -13,18 +13,20 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   plugin_platform_interface: ^2.1.8
-  flutter_plugin_android_lifecycle: ^2.0.23
   permission_handler: ^12.0.3
   url_launcher: ^6.3.2
   dio: ^5.10.0
   uuid: ^4.5.3
   routing_client_dart: ^0.5.5
   google_polyline_algorithm: ^3.1.0
-  # flutter_osm_interface: ^1.4.0
-  # flutter_osm_web: ^1.4.4
-  # path dependency for local development
+  # flutter_osm_interface: ^1.5.0
+  # flutter_osm_android: ^0.1.0
+  # flutter_osm_web: ^2.0.1
+  # Path dependencies are used only while developing the federated packages.
   flutter_osm_interface:
     path: flutter_osm_interface/
+  flutter_osm_android:
+    path: flutter_osm_android/
   flutter_osm_web:
     path: flutter_osm_web/
 dev_dependencies:
@@ -49,8 +51,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: hamza.dali.flutter_osm_plugin
-        pluginClass: FlutterOsmPlugin
+        default_package: flutter_osm_android
       ios:
         pluginClass: FlutterOsmPlugin
       web:

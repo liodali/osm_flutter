@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart' show Color;
+import 'package:flutter_osm_android/flutter_osm_android.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:flutter_osm_plugin/src/android_transport/android_transport_factory.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 typedef AndroidLocationPermissionRequester = Future<bool> Function();

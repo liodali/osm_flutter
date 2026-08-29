@@ -70,3 +70,4 @@ __pycache__
 !android/src/main/assets/fonts/*.png
 jenkins
 .commandcode
+old_android

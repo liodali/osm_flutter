@@ -24,10 +24,8 @@ export 'package:flutter_osm_interface/flutter_osm_interface.dart'
         RoadId,
         ShapeId,
         StaticPositionId;
-export 'src/android_transport/android_transport_factory.dart'
-    show createDefaultAndroidMapTransport;
-export 'src/android_transport/method_channel_android_map_transport.dart'
-    show MethodChannelAndroidMapTransport;
+export 'package:flutter_osm_android/flutter_osm_android.dart'
+    show createDefaultAndroidMapTransport, MethodChannelAndroidMapTransport;
 export 'src/controller/android_map_controller.dart'
     show
         AndroidLocationPermissionRequester,
