@@ -26,10 +26,12 @@ rootProject.allprojects {
 
 apply plugin: 'com.android.library'
 
-// AGP 9+ provides built-in Kotlin. Retain KGP only for consuming apps on
-// earlier AGP versions.
+// Use built-in Kotlin when enabled (the AGP 9+ default); otherwise retain KGP
+// for older AGP versions and consuming apps that explicitly opt out.
 def agpMajor = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.tokenize('.')[0] as int
-if (agpMajor < 9) {
+def builtInKotlin = providers.gradleProperty('android.builtInKotlin').orNull
+def usesBuiltInKotlin = agpMajor >= 9 && (builtInKotlin == null || builtInKotlin.toBoolean())
+if (!usesBuiltInKotlin) {
     apply plugin: 'kotlin-android'
 }
 
@@ -58,6 +60,11 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    if (!usesBuiltInKotlin) {
+        kotlinOptions {
+            jvmTarget = JavaVersion.VERSION_17.toString()
+        }
+    }
     packagingOptions {
         pickFirst 'lib/x86/libc++_shared.so'
         pickFirst 'lib/x86_64/libc++_shared.so'
@@ -66,9 +73,11 @@ android {
     }
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+if (usesBuiltInKotlin) {
+    kotlin {
+        compilerOptions {
+            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        }
     }
 }
 
