@@ -1,3 +1,10 @@
+### 2.0.2:
+
+- fix(android): support AGP 9+ built-in Kotlin without applying the Kotlin Gradle plugin
+- fix(android): conditionally apply `kotlin-android` only for AGP < 9 to avoid conflicts
+- chore: use local path dependency for `flutter_osm_interface` during development
+- chore: exclude `build/` and platform dirs from analyzer
+
 ### 2.0.1+1:
 
 - fix loading assets for web (wasm)
