@@ -1,9 +1,15 @@
+### Unreleased:
+
+- extract the opt-in Dart JNI transport into `flutter_osm_android_jni`
+- keep MethodChannel as the typed Android controller's bundled default
+- expose a composable default Android transport factory
 ### 2.0.2:
 
 - fix(android): support AGP 9+ built-in Kotlin without applying the Kotlin Gradle plugin
 - fix(android): conditionally apply `kotlin-android` only for AGP < 9 to avoid conflicts
 - chore: use local path dependency for `flutter_osm_interface` during development
 - chore: exclude `build/` and platform dirs from analyzer
+
 
 ### 2.0.1+1:
 

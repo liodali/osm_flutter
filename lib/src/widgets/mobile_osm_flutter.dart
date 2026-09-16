@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -73,6 +75,7 @@ class MobileOsmFlutter extends StatefulWidget {
 class MobileOsmFlutterState extends State<MobileOsmFlutter>
     with WidgetsBindingObserver, AndroidLifecycleMixin {
   MobileOSMController? _osmController;
+  StreamSubscription<AndroidMapEvent>? _androidEventSubscription;
 
   GlobalKey get defaultMarkerKey => widget.globalKeys[0];
 
@@ -105,6 +108,8 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    unawaited(_androidEventSubscription?.cancel());
+    _androidEventSubscription = null;
     super.dispose();
   }
 
@@ -119,6 +124,12 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.controller is AndroidMapPlatform &&
+        defaultTargetPlatform != TargetPlatform.android) {
+      throw UnsupportedError(
+        'AndroidMapController can only be attached to an Android platform view.',
+      );
+    }
     return PlatformView(
       onPlatformCreatedView: _onPlatformViewCreated,
       uuidMapCache: keyUUID,
@@ -150,17 +161,73 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   //   return await _osmController!.checkServiceLocation();
   // }
 
-  void _onPlatformViewCreated(int id) async {
+  Future<void> _onPlatformViewCreated(int id) async {
+    final controller = widget.controller;
+    if (controller is AndroidMapPlatform) {
+      final androidController = controller as AndroidMapPlatform;
+      _androidEventSubscription =
+          androidController.events.listen(_onAndroidMapEvent);
+      try {
+        await androidController.attachAndroidMap(id);
+      } catch (_) {
+        await _androidEventSubscription?.cancel();
+        _androidEventSubscription = null;
+        rethrow;
+      }
+      controller.init();
+      isFirstLaunched.value = true;
+      return;
+    }
+
     _osmController = await MobileOSMController.init(id, this);
     _osmController!.addObserver(this);
-    widget.controller.setBaseOSMController(_osmController!);
-    if ((widget.controller).initMapWithUserPosition != null) {
+    controller.setBaseOSMController(_osmController!);
+    if (controller.initMapWithUserPosition != null) {
       await requestPermission();
     }
-    widget.controller.init();
+    controller.init();
     _osmController!.onListenChannel();
     if (!isFirstLaunched.value) {
       isFirstLaunched.value = true;
+    }
+  }
+
+  void _onAndroidMapEvent(AndroidMapEvent event) {
+    switch (event) {
+      case AndroidMapReady(:final isReady):
+        mapIsReady(isReady);
+        widget.mapIsReadyListener.value = isReady;
+        widget.onMapIsReady?.call(isReady);
+        widget.controller.setValueListenerMapIsReady(isReady);
+        break;
+      case AndroidMapTap(:final position, :final kind):
+        if (kind == AndroidMapTapKind.long) {
+          widget.controller.setValueListenerMapLongTapping(position);
+          for (final osmMixin in widget.controller.osMMixins) {
+            osmMixin.onLongTap(position);
+          }
+        } else {
+          widget.controller.setValueListenerMapSingleTapping(position);
+          for (final osmMixin in widget.controller.osMMixins) {
+            osmMixin.onSingleTap(position);
+          }
+        }
+        break;
+      case AndroidMarkerTap(:final position):
+        widget.onGeoPointClicked?.call(position);
+        for (final osmMixin in widget.controller.osMMixins) {
+          osmMixin.onMarkerClicked(position);
+        }
+        break;
+      case AndroidRegionChanged(:final region):
+        widget.onMapMoved?.call(region);
+        widget.controller.setValueListenerRegionIsChanging(region);
+        for (final osmMixin in widget.controller.osMMixins) {
+          osmMixin.onRegionChanged(region);
+        }
+        break;
+      default:
+        break;
     }
   }
 }

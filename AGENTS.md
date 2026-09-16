@@ -2,31 +2,43 @@
 
 ## Overview
 
-Flutter plugin for OpenStreetMap supporting **Android**, **iOS**, and **Web**. Uses a **federated plugin architecture** with 3 packages.
+Flutter plugin for OpenStreetMap supporting **Android**, **iOS**, and **Web**. Uses a **federated plugin architecture** with 5 packages.
 
 | Package | Role | Current Version |
 |---|---|---|
-| `flutter_osm_plugin` | Main plugin, re-exports interface + platform-specific implementations | 1.4.5 |
-| `flutter_osm_interface` | Platform interface (abstract classes, types, channel definitions) | 1.4.0 |
-| `flutter_osm_web` | Web platform implementation (HTML/JS interop) | 1.4.4 |
+| `flutter_osm_plugin` | Main plugin, shared widgets/controllers, and iOS host implementation | 2.0.1+1 |
+| `flutter_osm_interface` | Platform interface, typed transports, events, and shared types | 1.5.0 |
+| `flutter_osm_android` | Endorsed Android host and MethodChannel transport | 0.1.0 |
+| `flutter_osm_android_jni` | Optional Dart JNI command transport for the Android host | 0.1.0 |
+| `flutter_osm_web` | Web platform implementation (HTML/JS interop) | 2.0.1 |
 
 ## Architecture
 
 ### Federated Plugin Pattern
 
 ```
-flutter_osm_plugin (main)
-  ├── depends on flutter_osm_interface  ^1.4.0
-  ├── depends on flutter_osm_web      ^1.4.4
-  ├── android/    → native Android (Kotlin)
+flutter_osm_plugin (main/app-facing)
+  ├── depends on flutter_osm_interface
+  ├── endorses and depends on flutter_osm_android
+  ├── endorses and depends on flutter_osm_web
   ├── ios/        → native iOS (Swift)
-  └── lib/        → shared Dart + widget layer
+  └── lib/        → shared widgets/controllers
 
 flutter_osm_interface
-  └── lib/src/    → OSMPlatform abstract, types, events, method channel
+  └── lib/src/    → platform contracts, typed Android transport/events, types
+
+flutter_osm_android (endorsed Android host)
+  ├── depends on flutter_osm_interface
+  ├── android/    → platform view, sessions, Kotlin JNI bridge
+  └── lib/        → MethodChannel Android transport
+
+flutter_osm_android_jni (optional add-on)
+  ├── depends on flutter_osm_interface + flutter_osm_android host
+  ├── lib/        → JNI transport + checked-in jnigen bindings
+  └── tool/       → JNI binding generator
 
 flutter_osm_web
-  └── depends on flutter_osm_interface ^1.4.0
+  ├── depends on flutter_osm_interface
   └── lib/src/    → Web implementation via HtmlElementView + JS interop
 ```
 
@@ -34,15 +46,16 @@ flutter_osm_web
 
 - `OSMPlatform` (`flutter_osm_interface`) — base platform interface using `plugin_platform_interface`
 - `MobileOSMPlatform` extends `OSMPlatform` — adds mobile-only methods (markers, roads, tracking, shapes)
-- `MethodChannelOSM` — default Android/iOS implementation via `MethodChannel`
+- `MethodChannelOSM` — legacy/default Android/iOS implementation via `MethodChannel`
+- `AndroidMapTransport` — typed Android command/event boundary owned by the interface package
+- `AndroidMapController` — typed controller; defaults to MethodChannel and accepts an injected transport factory
+- `JniAndroidMapTransport` — optional JNI command plane; events/location remain on MethodChannel
 - `WebOsmController` / `OsmWebPlatform` — web implementation via JS interop
 
 ## Directory Structure
 
 ```
 osm_flutter/
-├── android/                  # Native Android (Kotlin)
-│   └── src/main/kotlin/...   # FlutterOsmPlugin, OSM views, lifecycle
 ├── ios/                      # Native iOS (Swift)
 │   └── flutter_osm_plugin/   # Swift plugin, map views
 ├── lib/
@@ -73,6 +86,14 @@ osm_flutter/
 │       ├── map_controller/               # BaseMapController, IBaseMapController
 │       ├── osm_controller/               # Abstract OSMController
 │       └── mixin/                        # Android lifecycle, OSM mixins
+├── flutter_osm_android/
+│   ├── android/                         # Native Android host and Kotlin tests
+│   ├── lib/src/android_transport/       # MethodChannel transport + factory
+│   └── test/                            # Dart transport tests
+├── flutter_osm_android_jni/
+│   ├── lib/src/android_jni/             # Probe + checked-in jnigen output
+│   ├── lib/src/android_transport/       # Optional JNI transport + factory
+│   └── tool/generate_jni.dart           # Binding regeneration
 ├── flutter_osm_web/
 │   └── lib/src/
 │       ├── web_platform.dart             # OsmWebPlatform registration
@@ -97,7 +118,8 @@ osm_flutter/
 - **Language**: Kotlin
 - **Map Engine**: Native OSM views (osmdroid or similar)
 - **Compile SDK**: 36
-- **Min SDK**: 32
+- **Host Min SDK**: 21 (**example app Min SDK**: 32)
+- **Ownership**: `flutter_osm_android/android/`
 - **Key Classes**: `FlutterOsmPlugin`, `OsmFactory`, lifecycle management
 - **Build**: Kotlin Gradle Plugin (KGP), Java 17
 
@@ -118,9 +140,11 @@ osm_flutter/
 
 1. **Never use `dart:io`** for platform checks. Use `defaultTargetPlatform` from `package:flutter/foundation.dart` instead (Android/iOS/web-safe).
 2. **Web compatibility**: Any widget using `Platform.isAndroid` or `Platform.isIOS` will crash on web. Always guard with `defaultTargetPlatform` or `kIsWeb`.
-3. **Federated plugin changes**: When modifying platform APIs, update `flutter_osm_interface` first, then `flutter_osm_web`, then the main plugin.
-4. **Path vs published deps**: During development, packages use `path:` dependencies. For release, switch to caret (`^`) constraints.
-5. **Asset loading**: Web assets (JS/HTML) are loaded from `packages/flutter_osm_web/src/asset/` via Flutter asset system.
+3. **Federated plugin changes**: Update `flutter_osm_interface` first, then host implementations, optional direct transports (`flutter_osm_android_jni`), Web when relevant, and finally the main public API.
+4. **JNI ownership**: `flutter_osm_android` owns `OsmAndroidBridge.kt` and native sessions. `flutter_osm_android_jni` owns only the Dart JNI runtime integration, generated bindings, and transport.
+5. **Fallback safety**: Select JNI/MethodChannel during attach. Never replay a state-changing command through another backend after initialization starts.
+6. **Path vs published deps**: During development, packages use `path:` dependencies. For release, switch to caret (`^`) constraints.
+7. **Asset loading**: Web assets (JS/HTML) are loaded from `packages/flutter_osm_web/src/asset/` via Flutter asset system.
 
 ## Release Scripts
 
@@ -133,36 +157,44 @@ osm_flutter/
 ### update_versions.py usage
 
 ```bash
-python3 update_versions.py --mode all          # update web + root pubspecs
-python3 update_versions.py --mode osm          # update only root pubspec
-python3 update_versions.py --mode web          # update only web pubspec
-python3 update_versions.py --mode all --version-type upperbound   # use >=min <max
+python3 update_versions.py --mode all
+python3 update_versions.py --mode android
+python3 update_versions.py --mode jni
+python3 update_versions.py --mode osm --version-type upperbound
 ```
 
 Modes:
-- `web` — updates `flutter_osm_web`'s dependency on `flutter_osm_interface`
-- `osm` — updates root `pubspec.yaml` dependencies (smart: skips if up-to-date, converts path to version)
-- `all` — both
+- `interface` — validates the no-internal-dependency package as a no-op
+- `web` — updates Web → interface
+- `android` — updates Android → interface
+- `jni` — updates JNI → interface + Android
+- `osm` — updates root → interface + Android + Web and rejects a root JNI dependency
+- `all` — runs Web, Android, JNI, then root in dependency order
 
 Version types:
-- `caret` (default) — `^1.4.0`
-- `upperbound` — `">=1.4.0 <1.5.0"`
+- `caret` (default) — `^1.5.0`
+- `upperbound` — `">=1.5.0 <1.6.0"`
 
 ### check_pubspec_release.py usage
 
 ```bash
-python3 check_pubspec_release.py              # check versions, fail if missing
-python3 check_pubspec_release.py --publish    # publish missing packages, then update deps
+python3 check_pubspec_release.py --scope root-release
+python3 check_pubspec_release.py --scope inner
+python3 check_pubspec_release.py --scope inner --include-optional-jni --publish
 ```
+
+`root-release` requires interface, Web, Android, and JNI to exist on pub.dev, then updates only root hosted constraints. `inner --publish` requires dependency constraints to be prepared and committed before publishing missing packages.
 
 ## GitHub Actions Workflows
 
 | Workflow | Trigger | Purpose |
 |---|---|---|
 | `publish.yaml` | `vX.Y.Z` tag | Publish main plugin to pub.dev |
-| `build_packages.yaml` | `flutter_osm_interface-vX.Y.Z` / `flutter_osm_web-vX.Y.Z` tags | Publish inner packages |
+| `build_packages.yaml` | `flutter_osm_interface-vX.Y.Z` / `flutter_osm_web-vX.Y.Z` tags | Publish established inner packages |
 | `base_publish_pcks.yaml` | Reusable | OIDC-based pub.dev publishing |
 | `deploy_example_android.yaml` | `app-vX.Y.Z` tag or manual | Build AAB + deploy to Google Play |
+
+> `flutter_osm_android_jni` release automation is not wired yet; publish it manually until the workflows and version scripts are extended.
 
 ### Deploy Example Android
 - **Trigger**: `git tag app-v1.2.3 && git push origin app-v1.2.3` → auto-deploys to **internal** track
@@ -185,6 +217,14 @@ python3 check_pubspec_release.py --publish    # publish missing packages, then u
 2. Implement in `MethodChannelOSM` (Android/iOS)
 3. Implement in `WebOsmController` / `OsmWebPlatform` (web)
 4. Expose via `MapController` in main plugin
+
+### Adding a typed Android command
+1. Add the typed method/model to `flutter_osm_interface`.
+2. Implement MethodChannel serialization in the host plugin.
+3. Add the operation to `MapSession` and `MapscoreMapSession`.
+4. Add the flat JNI façade method in `OsmAndroidBridge.kt` when JNI is useful.
+5. Regenerate bindings from `flutter_osm_android_jni/tool/generate_jni.dart`.
+6. Implement the JNI transport method and run interface, host, JNI, and device parity tests.
 
 ### Updating versions for release
 ```bash
@@ -209,20 +249,25 @@ flutter build appbundle --release
 ## Dependencies
 
 ### Main Plugin
-- `flutter_osm_interface: ^1.4.0`
-- `flutter_osm_web: ^1.4.4`
-- `dio: ^5.9.2`, `routing_client_dart: ^0.5.5`, `google_polyline_algorithm: ^3.1.0`
-- `permission_manager: ^2.0.9`, `url_launcher: ^6.3.2`
+- `flutter_osm_interface: ^1.5.0`
+- `flutter_osm_web: ^2.0.1`
+- `dio: ^5.10.0`, `routing_client_dart: ^0.5.5`, `google_polyline_algorithm: ^3.1.0`
+- `permission_handler: ^12.0.3`, `url_launcher: ^6.3.2`
 
 ### Interface
 - `plugin_platform_interface: ^2.1.8`
-- `stream_transform: ^2.1.0`
+- `stream_transform: ^2.1.1`
 - `google_polyline_algorithm: ^3.1.0`
-- `dio: ^5.8.0+1`
+- `dio: ^5.10.0`
+
+### Android JNI add-on
+- `jni: ^1.0.3`
+- `jnigen: ^0.17.0` (development only)
+- `flutter_osm_interface` and `flutter_osm_plugin` host dependencies
 
 ### Web
 - `web: ^1.1.1`
 - `stream_transform: ^2.1.0`
 - `routing_client_dart: ^0.5.5`
 - `dio: ^5.9.0`
-- `flutter_osm_interface: ^1.4.0`
+- `flutter_osm_interface: ^1.5.0`
