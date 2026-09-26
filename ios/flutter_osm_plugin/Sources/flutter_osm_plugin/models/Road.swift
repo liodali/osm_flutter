@@ -49,20 +49,20 @@ struct RoadData {
     }
     init(json: [String: Any]) {
 
-        if json.keys.contains("roadColor") {
-            roadColor = json["roadColor"] as! String
+        if let color = json["roadColor"] as? String {
+            roadColor = color
         }
-        if json.keys.contains("roadBorderColor") {
-            roadBorderColor = json["roadBorderColor"] as! String?
+        if let borderColor = json["roadBorderColor"] as? String {
+            roadBorderColor = borderColor
         }
-        if json.keys.contains("roadWidth") {
-            roadWidth = json["roadWidth"] as! Double
+        if let width = json["roadWidth"] as? Double {
+            roadWidth = width
         }
-        if json.keys.contains("roadBorderWidth") {
-            roadBorderWidth = json["roadBorderWidth"] as? Double
+        if let borderWidth = json["roadBorderWidth"] as? Double {
+            roadBorderWidth = borderWidth
         }
-        if json.keys.contains("isDotted") {
-            isDotted = json["isDotted"] as! Bool
+        if let dotted = json["isDotted"] as? Bool {
+            isDotted = dotted
         }
     }
 }

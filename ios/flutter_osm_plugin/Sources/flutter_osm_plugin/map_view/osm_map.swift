@@ -824,12 +824,12 @@ extension MapCoreOSMView {
             roadType = PolylineType.DOT
         }
         var roadBoardColor: UIColor? = UIColor(hexString: "#f55b5b")
-        if args.keys.contains("roadBorderColor") {
-            roadBoardColor = UIColor(hexString: args["roadBorderColor"] as! String)
+        if let borderColor = args["roadBorderColor"] as? String {
+            roadBoardColor = UIColor(hexString: borderColor)
         }
         var roadBoardWidth: CFloat? = nil
-        if args.keys.contains("roadBorderWidth") {
-            roadBoardWidth = CFloat((args["roadBorderWidth"] as? Double ?? 5.0) + roadWidth)
+        if let borderWidth = args["roadBorderWidth"] as? Double {
+            roadBoardWidth = CFloat(borderWidth + roadWidth)
         }
         var road = Road()
         road.mRouteHigh = roadEncoded
