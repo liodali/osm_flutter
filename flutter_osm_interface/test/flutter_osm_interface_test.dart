@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_interface/src/common/utilities.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 
@@ -126,5 +128,40 @@ void main() {
     Color color = Colors.red;
     expect(color.toHexColor(), "#fff44336");
     expect(color.toHexColorWeb(), "#f44336");
+  });
+
+  test('manual road channel call omits absent border options', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    const channel = MethodChannel('plugins.dali.hamza/osmview_614');
+    MethodCall? capturedCall;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+      capturedCall = call;
+      return null;
+    });
+    addTearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    final platform = MethodChannelOSM();
+    await platform.init(614);
+    await platform.drawRoadManually(
+      614,
+      'road-key',
+      [
+        GeoPoint(latitude: 48.8566, longitude: 2.3522),
+        GeoPoint(latitude: 48.8606, longitude: 2.3376),
+      ],
+      const RoadOption(roadColor: Colors.blue),
+    );
+
+    final args = capturedCall!.arguments as Map;
+    expect(capturedCall!.method, 'drawRoad#manually');
+    expect(args.containsKey('roadBorderColor'), isFalse);
+    expect(args.containsKey('roadBorderWidth'), isFalse);
+    expect(args.values, everyElement(isNotNull));
   });
 }
