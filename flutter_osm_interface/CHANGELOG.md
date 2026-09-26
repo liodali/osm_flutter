@@ -1,3 +1,4 @@
+## 1.5.1:
 ## 1.5.0:
 
 - add `styleURL` field to `CustomTile` for vector tile support
