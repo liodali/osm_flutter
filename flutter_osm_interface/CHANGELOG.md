@@ -4,6 +4,7 @@
   interface so optional JNI and future FFI transports can implement a shared
   boundary.
 
+## 1.5.1:
 ## 1.5.0:
 
 - add `styleURL` field to `CustomTile` for vector tile support

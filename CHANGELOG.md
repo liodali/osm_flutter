@@ -3,6 +3,10 @@
 - extract the opt-in Dart JNI transport into `flutter_osm_android_jni`
 - keep MethodChannel as the typed Android controller's bundled default
 - expose a composable default Android transport factory
+### 2.0.3:
+
+- fix(ios): prevent `drawRoad()` crashes when optional road border options are unset (#614)
+
 ### 2.0.2:
 
 - fix(android): support AGP 9+ built-in Kotlin without applying the Kotlin Gradle plugin
