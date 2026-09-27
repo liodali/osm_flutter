@@ -34,6 +34,8 @@ jobs:
           rm -rf assets/dynamic-styles.zip
           rm -rf assets/osm-style.zip
           rm -rf flutter_osm_interface
+          rm -rf flutter_osm_android
+          rm -rf flutter_osm_android_jni
           rm -rf flutter_osm_web
           rm -f check_pubspec_release.py
       - name: fomarting files

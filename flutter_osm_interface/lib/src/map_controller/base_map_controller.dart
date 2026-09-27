@@ -15,7 +15,7 @@ import 'package:flutter_osm_interface/src/map_controller/i_base_map_controller.d
 abstract class BaseMapController extends IBaseMapController {
   late IBaseOSMController _osmBaseController;
   final CustomTile? customTile;
-  late Timer? _timer;
+  Timer? _timer;
   var _layerIsVisible = true;
   IBaseOSMController get osmBaseController => _osmBaseController;
   final bool useExternalTracking;
@@ -38,8 +38,7 @@ abstract class BaseMapController extends IBaseMapController {
     super.dispose();
   }
 
-  /// implement this method,should be start with super.init()
-  @mustCallSuper
+  /// Initializes the legacy IBaseOSMController-backed map path.
   @override
   void init() {
     _timer = Timer(const Duration(milliseconds: 1250), () async {
