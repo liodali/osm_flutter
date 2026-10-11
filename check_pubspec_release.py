@@ -13,7 +13,6 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 from release_packages import (
-    INNER_PACKAGE_KEYS,
     PACKAGE_REGISTRY,
     REPOSITORY_ROOT,
     assert_root_excludes_jni,
@@ -96,8 +95,15 @@ def publish_package(package_key: str, repository_root: Path = REPOSITORY_ROOT) -
 
 
 def selected_package_keys(scope: str, include_optional_jni: bool) -> tuple[str, ...]:
-    if scope == "root-release":
-        return INNER_PACKAGE_KEYS
+    """Return the inner package keys a release scope validates.
+
+    Both scopes check only the root's real dependencies (``interface``,
+    ``web``, ``android``). The optional ``jni`` add-on is included only
+    when ``include_optional_jni`` is set, because the root package never
+    depends on it and it can be released separately.
+    """
+    if scope not in ("inner", "root-release"):
+        raise ValueError(f"Unknown scope: {scope}")
     keys = ["interface", "web", "android"]
     if include_optional_jni:
         keys.append("jni")
@@ -195,7 +201,10 @@ def main() -> int:
     parser.add_argument(
         "--include-optional-jni",
         action="store_true",
-        help="Include JNI in inner scope; root-release always requires it",
+        help=(
+            "Also validate the optional flutter_osm_android_jni add-on "
+            "(off by default in every scope)"
+        ),
     )
     parser.add_argument(
         "--visibility-timeout",

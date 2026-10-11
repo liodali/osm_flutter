@@ -45,15 +45,29 @@ class CheckPubspecReleaseTest(unittest.TestCase):
         with self.assertRaises(PubDevError):
             package_version_exists("fixture", "1.0.0", opener=network_error)
 
-    def test_root_release_always_requires_jni(self):
+    def test_root_release_checks_root_dependencies_only(self):
         self.assertEqual(
             selected_package_keys("root-release", False),
+            ("interface", "web", "android"),
+        )
+        self.assertEqual(
+            selected_package_keys("inner", False),
+            ("interface", "web", "android"),
+        )
+
+    def test_optional_jni_is_included_only_when_requested(self):
+        self.assertEqual(
+            selected_package_keys("root-release", True),
             ("interface", "web", "android", "jni"),
         )
         self.assertEqual(
             selected_package_keys("inner", True),
             ("interface", "web", "android", "jni"),
         )
+
+    def test_unknown_scope_is_rejected(self):
+        with self.assertRaises(ValueError):
+            selected_package_keys("unknown", False)
 
 
 if __name__ == "__main__":
