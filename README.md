@@ -4,7 +4,7 @@
 
 # flutter_osm_plugin
 
-![pub](https://img.shields.io/badge/pub-v2.0.3-blue)
+![pub](https://img.shields.io/badge/pub-v2.1.0-blue)
 
 ## Platform Support
 
@@ -53,7 +53,12 @@
 Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^2.0.3
+      flutter_osm_plugin: ^2.1.0
+
+> **Android (from 2.1.0):** the Android implementation ships as the endorsed
+> package `flutter_osm_android` and is pulled in automatically — no extra
+> dependency or code change is required. Native plugin class, channels and the
+> platform view type are unchanged.
 
 ## Integration with Hooks
 

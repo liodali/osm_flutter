@@ -1,4 +1,18 @@
-## 1.5.1:
+## 1.6.0
+
+- Move the typed Android transport contract and event codec into the platform
+  interface so optional JNI and future FFI transports can implement a shared
+  boundary.
+- fix(ios): strip the `{z}/{x}/{y}` tile template (and any trailing tile
+  extension) from tile server urls in `TileURLs.toMapiOS()`. iOS appends the
+  template itself, so sending the full template url produced doubled
+  `{z}/{x}/{y}` placeholders and broken custom tile urls.
+
+## 1.5.1
+
+- omit absent `roadBorderColor`/`roadBorderWidth` entries from the manual
+  road channel payload when the road option leaves them unset (#614)
+
 ## 1.5.0:
 
 - add `styleURL` field to `CustomTile` for vector tile support

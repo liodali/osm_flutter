@@ -1,0 +1,29 @@
+name: flutter_osm_android
+description: Endorsed Android implementation for flutter_osm_plugin.
+version: 0.1.0
+homepage: https://github.com/liodali/osm_flutter
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.41.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_plugin_android_lifecycle: ^2.0.23
+  flutter_osm_interface:
+    # ignore: invalid_dependency
+    path: ../flutter_osm_interface/
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    implements: flutter_osm_plugin
+    platforms:
+      android:
+        package: hamza.dali.flutter_osm_plugin
+        pluginClass: FlutterOsmPlugin

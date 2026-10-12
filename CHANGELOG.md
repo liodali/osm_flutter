@@ -1,3 +1,21 @@
+### 2.1.0:
+
+- Android host implementation moved into the endorsed federated package
+  `flutter_osm_android` (transparent migration: native plugin class, Android
+  package name, platform view type and channel names are unchanged; no code
+  changes needed)
+- new opt-in `AndroidMapController` typed Android controller; MethodChannel
+  stays the default backend
+- expose a composable default Android transport factory
+- extract the opt-in Dart JNI transport into `flutter_osm_android_jni`
+  (optional add-on, not a dependency of this package)
+- behaviour change (Android): map region-change events are now delivered at
+  most once every 100 ms and user location events at most once every 1 s
+  (newest value wins) — listeners of `onMapMoved`/user location will receive
+  throttled updates
+- fix(ios): strip `{z}/{x}/{y}` tile template from custom tile urls for iOS
+  (from `flutter_osm_interface 1.6.0`)
+
 ### 2.0.3:
 
 - fix(ios): prevent `drawRoad()` crashes when optional road border options are unset (#614)
@@ -8,6 +26,7 @@
 - fix(android): conditionally apply `kotlin-android` only for AGP < 9 to avoid conflicts
 - chore: use local path dependency for `flutter_osm_interface` during development
 - chore: exclude `build/` and platform dirs from analyzer
+
 
 ### 2.0.1+1:
 

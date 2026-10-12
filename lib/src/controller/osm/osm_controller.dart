@@ -41,6 +41,7 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   /// dispose: close stream in osmPlatform,remove references
+  @override
   void dispose() {
     if (_timer != null && _timer!.isActive) {
       _timer?.cancel();

@@ -1,6 +1,8 @@
 import 'package:flutter_osm_interface/src/types/types.dart';
 
 abstract class IBaseOSMController {
+  void dispose();
+
   Future<void> initPositionMap({
     GeoPoint? initPosition,
     bool useExternalTracking = false,
