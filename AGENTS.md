@@ -194,7 +194,7 @@ python3 check_pubspec_release.py --scope inner --include-optional-jni --publish
 | `base_publish_pcks.yaml` | Reusable | OIDC-based pub.dev publishing |
 | `deploy_example_android.yaml` | `app-vX.Y.Z` tag or manual | Build AAB + deploy to Google Play |
 
-> `flutter_osm_android_jni` release automation is not wired yet; publish it manually until the workflows and version scripts are extended.
+> `flutter_osm_android_jni` and `flutter_osm_android` were first published manually (0.1.0, 2026-10-12) because pub.dev OIDC cannot create a new package. Automated publishing must be enabled once on each package's pub.dev admin page; after that the `flutter_osm_android(-_jni)?-vX.Y.Z` tags in `build_packages.yaml` release them via OIDC.
 
 ### Deploy Example Android
 - **Trigger**: `git tag app-v1.2.3 && git push origin app-v1.2.3` → auto-deploys to **internal** track

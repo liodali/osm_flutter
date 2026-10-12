@@ -6,6 +6,7 @@ on:
       - 'flutter_osm_interface-v[0-9]+.[0-9]+.[0-9]+*'
       - 'flutter_osm_web-v[0-9]+.[0-9]+.[0-9]+*'
       - 'flutter_osm_android-v[0-9]+.[0-9]+.[0-9]+*'
+      - 'flutter_osm_android_jni-v[0-9]+.[0-9]+.[0-9]+*'
 
 jobs:
     find-package:
