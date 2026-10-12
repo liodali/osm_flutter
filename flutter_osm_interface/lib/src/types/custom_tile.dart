@@ -167,8 +167,15 @@ class TileURLs {
   }
 
   Map<String, dynamic> toMapiOS() {
+    // iOS appends `{z}/{x}/{y}` (+ tile extension) itself when it builds the
+    // tile overlay template, so the template (and any extension baked into
+    // the url) must be stripped to avoid a doubled `{z}/{x}/{y}`.
+    final iOSUrl = url.replaceFirst(
+      RegExp(r'/\{z\}/\{x\}/\{y\}(\.[a-zA-Z0-9]+)?/?$'),
+      '',
+    );
     final Map<String, dynamic> map = {
-      "url": url,
+      "url": iOSUrl,
     };
     if (subdomains.isNotEmpty) {
       map.putIfAbsent("subdomains", () => subdomains);
