@@ -42,11 +42,28 @@
 
 ## Getting Started
 
-<img src="https://github.com/liodali/osm_flutter/blob/master/osm.gif?raw=true" alt="openStreetMap flutter examples"><br>
+[<img src="https://raw.githubusercontent.com/liodali/osm_flutter/master/.github/readme/osm_demo.jpg" width="520" alt="OSM map demo: markers, roads and user location" title="Watch the full demo (gif)">](https://github.com/liodali/osm_flutter/blob/master/osm.gif)
 <br>
-<img src="https://github.com/liodali/osm_flutter/blob/0.41.0/tileLayerRuntime.gif?raw=true" alt="openStreetMap flutter examples" width=260><br>
+[<img src="https://raw.githubusercontent.com/liodali/osm_flutter/master/.github/readme/tile_runtime_demo.jpg" width="360" alt="Changing custom tile layers at runtime" title="Watch the tile layer demo (gif)">](https://github.com/liodali/osm_flutter/blob/master/tileLayerRuntime.gif)
 <br>
-<img src="https://github.com/liodali/osm_flutter/blob/master/dialogSimplePickerLocation.gif?raw=true" alt="openStreetMap flutter examples"><br>
+<img src="https://raw.githubusercontent.com/liodali/osm_flutter/master/dialogSimplePickerLocation.gif" width="360" alt="Simple location picker dialog">
+
+## Contents
+
+- [Platform Support](#platform-support)
+- [Installing](#installing)
+- [Android Integration](#android-integration) (endorsed package, typed controller, JNI opt-in)
+- [Integration with Hooks](#integration-with-hooks)
+- [Migrations](#migration-to-210) (2.1.0, 2.0.0)
+- [Web Integration](#web-integration) (PointerInterceptor)
+- [Simple Usage](#simple-usage)
+- [MapController](#mapcontroller) — initialisation, layers, markers, roads, shapes, listeners
+- [OSMFlutter / OSMOption / ZoomOption](#osmflutter)
+- [Custom Controller](#custom-controller)
+- [Static Map](#static-map)
+- [Static Methods](#static-methods) (distance, address suggestions)
+- [Location pickers](#show-dialog-picker) (dialog + custom)
+- [Notice](#notice) (HTTP cleartext, OSM copyright)
 
 ## Installing
 
@@ -134,6 +151,13 @@ Notes:
 > https://pub.dev/packages/osm_flutter_hooks
 > many thanks for @ben-xD
 
+### Migration to `2.1.0`
+
+> Transparent: the Android implementation moved to the endorsed
+> `flutter_osm_android` package and is resolved automatically from the
+> `flutter_osm_plugin` dependency. No code or configuration changes are
+> needed — see [Android Integration](#android-integration).
+
 ### Migration to `2.0.0`
 
 > **Breaking**: Android map engine switched from osmdroid to mapscore (openmobilemaps).
@@ -164,38 +188,7 @@ Notes:
 - Improved location permission handling with explicit checks and user-friendly errors
 - `myLocation()` now requests location permission on Android if not granted
 
-### Migration to `0.41.2` (Android Only)
-
-> open file build.gradle inside android file
-
-    * change kotlin version from `1.5.21` to `1.7.20`
-    * change gradle version from `7.0.4` to `7.1.3`
-    * change compileSdkVersion to 33
-
-### Migration to `0.34.0` (Android Only)
-
-> if you are using this plugin before Flutter 3
-
-> you should make some modification in build.gradle before that run flutter clean && flutter pub get
-
-> open file build.gradle inside android file
-
-    * change kotlin version from `1.5.21` to `1.6.21`
-    * change gradle version from `7.0.2` to `7.1.3` or `7.0.4`
-    * change compileSdkVersion to 32
-
-### Migration to `0.16.0` (Android Only)
-
-> if you are using this plugin before Flutter 2
-
-> you should make some modification in build.gradle before that run flutter clean && flutter pub get
-
-> open file build.gradle inside android file
-
-    * change kotlin version from `1.4.21` to `1.5.21`
-    * change gradle version from `4.1.1` to `7.0.2`
-
-### Web Integration
+## Web Integration
 
 #### Technical Issue: Event Capture in Web
 
@@ -360,7 +353,7 @@ final controller = MapController.withUserPosition(
 | `initMapWithUserPosition` | (UserTrackingOption?) initialize map with user position                                                                                   |
 | `initPosition`            | (GeoPoint) if it isn't null, the map will be pointed at this position                                                                     |
 | `areaLimit`               | (Bounding) set area limit of the map (default BoundingBox.world())                                                                        |
-| `customLayer`             | (CustomTile) set customer layer using different osm server , this attribute used only with named constructor `customLayer`                |
+| `customLayer`             | (CustomTile) set custom layer using different osm server , this attribute used only with named constructor `customLayer`                 |
 | `useExternalTracking`     | (bool) if true, we will disable our logic to show userLocation marker or to move to the user position, only receive user location updates |
 
 <b> 3.1) Custom Layers with `MapController` </b>
@@ -477,7 +470,7 @@ await controller.zoomToBoundingBox(BoundingBox(),paddingInPixel:0)
 
 - For the box attribute ,If you don't have bounding box,you can use list of geopoint like this `BoundingBox.fromGeoPoints`
 
-<b> 6) get current zoom level </b>b>
+<b> 6) get current zoom level </b>
 
 ```dart
 await controller.getZoom();
@@ -682,11 +675,11 @@ await controller.setMarkerIcon(GeoPoint,MarkerIcon);
 | `roadColor`       | (Color) required Field, change the default color of the route in runtime                       |
 | `roadWidth`       | (double) change the road width, default value 5.0                                              |
 | `roadBorderColor` | (Color?) set color of border polyline                                                          |
-| `roadBorderWidth` | (double?) set border width of polyline, if width null or 0,polyline will drawed without border |
+| `roadBorderWidth` | (double?) set border width of polyline, if width null or 0,polyline will be drawn without border |
 | `zoomInto`        | (bool) change zoom level to make the all the road visible (default:true)                       |
 | `isDotted`        | (bool) to draw dotted polyline (default: false)                                                |
 
-**Note** drawing dotted polyline has limitation on web where we cannot draw dotted poyline with borderWidth > 0
+**Note** drawing dotted polyline has limitation on web where we cannot draw dotted polyline with borderWidth > 0
 
 <b> 16.b) draw road manually </b>
 
@@ -839,12 +832,12 @@ final configs = [
  await controller.removeAllShapes();
 ```
 
-### Interfaces:
+### Interfaces
 
 - OSMMixinObserver :
   > contain listener methods to get event from native map view like when mapIsReady,mapRestored
 
-> you should add ths line `controller.addObserver(this);` in initState
+> you should add this line `controller.addObserver(this);` in initState
 
 > override mapIsReady to implement your own logic after initialisation of the map
 
@@ -932,13 +925,12 @@ class YourOwnStateWidget extends State<YourWidget> with OSMMixinObserver {
 
 | Properties                   | Description                                                                 |
 | ---------------------------- | --------------------------------------------------------------------------- |
-| `mapIsLoading`               | (Widget) show custom widget when the map finish initialization              |
 | `trackMyPosition`            | enable tracking user position.                                              |
 | `showZoomController`         | show default zoom controller.                                               |
 | `userLocationMarker`         | change user marker or direction marker icon in tracking location            |
 | `markerOption`               | configure marker of osm map                                                 |
 | `zoomOption`                 | set configuration for zoom in the Map                                       |
-| `roadConfiguration`          | (RoadOption) set default color,width,borderColor,borderWdith for polylines  |
+| `roadConfiguration`          | (RoadOption) set default color,width,borderColor,borderWidth for polylines  |
 | `staticPoints`               | List of Markers you want to show always ,should every marker have unique id |
 | `showContributorBadgeForOSM` | (bool) enable to show copyright widget of osm in the map                    |
 | `enableRotationByGesture`    | (bool) enable to rotation gesture for map, default: false                   |
@@ -996,8 +988,8 @@ OSMViewer(
         zoomOption: const ZoomOption(
         initZoom: 16,
         minZoomLevel: 11,
-    )
-
+    ),
+)
 ```
 
 ## STATIC METHODS:
@@ -1047,7 +1039,7 @@ GeoPoint p = await showSimplePickerLocation(
 | `topWidgetPicker`    | (Widget?) widget will be show on top of osm map,for example to show address suggestion                                    |
 | `bottomWidgetPicker` | (Widget?) widget will be show at bottom of screen for example to show more details about selected location or more action |
 
-## NOTICE:
+## Notice
 
 > `The map supports Android, iOS, and Web.`
 
@@ -1061,14 +1053,6 @@ GeoPoint p = await showSimplePickerLocation(
           ...
           android:usesCleartextTraffic="true">
           `
-
-  > if you faced build error in fresh project you need to follow those instruction [#40](https://github.com/liodali/osm_flutter/issues/40)
-
-      1) remove flutter_osm_plugin from pubspec, after that pub get
-      2) open android module in android studio ( right click in name of project -> flutter-> open android module in android studio)
-      3) update gradle version to 4.1.1 ( IDE will show popup to make update)
-      4) update kotlin version to 1.4.21 & re-build the project
-      5) re-add flutter_osm_plugin in pubspec , pub get ( or flutter clean & pub get )
 
 > Before you publish your application using this library,
 > you should take care about copyright of openStreetMap Data,
