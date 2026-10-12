@@ -42,9 +42,9 @@
 
 ## Getting Started
 
-[<img src="https://raw.githubusercontent.com/liodali/osm_flutter/master/.github/readme/osm_demo.jpg" width="520" alt="OSM map demo: markers, roads and user location" title="Watch the full demo (gif)">](https://github.com/liodali/osm_flutter/blob/master/osm.gif)
-<br>
-[<img src="https://raw.githubusercontent.com/liodali/osm_flutter/master/.github/readme/tile_runtime_demo.jpg" width="360" alt="Changing custom tile layers at runtime" title="Watch the tile layer demo (gif)">](https://github.com/liodali/osm_flutter/blob/master/tileLayerRuntime.gif)
+<img src="https://raw.githubusercontent.com/liodali/osm_flutter/master/.github/readme/osm_demo.gif" width="400" alt="Demo: searching start and destination, drawing the road, and switching to vector tiles">
+
+[<img src="https://raw.githubusercontent.com/liodali/osm_flutter/master/.github/readme/tile_runtime_demo.jpg" width="360" alt="Satellite tile preset (ArcGIS World Imagery)" title="Watch the full tile layer demo (gif)">](https://github.com/liodali/osm_flutter/blob/master/tileLayerRuntime.gif)
 <br>
 <img src="https://raw.githubusercontent.com/liodali/osm_flutter/master/dialogSimplePickerLocation.gif" width="360" alt="Simple location picker dialog">
 
