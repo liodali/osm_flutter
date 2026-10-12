@@ -58,7 +58,75 @@ Add the following to your `pubspec.yaml` file:
 > **Android (from 2.1.0):** the Android implementation ships as the endorsed
 > package `flutter_osm_android` and is pulled in automatically — no extra
 > dependency or code change is required. Native plugin class, channels and the
-> platform view type are unchanged.
+> platform view type are unchanged. See [Android Integration](#android-integration)
+> for the optional typed controller and the experimental JNI transport.
+
+## Android Integration
+
+### Endorsed Android package
+
+Since `2.1.0` the Android implementation lives in the endorsed package
+[`flutter_osm_android`](https://pub.dev/packages/flutter_osm_android). Flutter
+resolves it automatically from the `flutter_osm_plugin` dependency — there is
+nothing to add, and migration is transparent (plugin class, Android package
+name, platform view type and channel names are unchanged).
+
+### Typed `AndroidMapController` (opt-in)
+
+The classic `MapController` keeps working unchanged. For a typed, lower-level
+Android API you can opt into `AndroidMapController`:
+
+```dart
+import 'package:flutter_osm_plugin/android.dart';
+
+final controller = AndroidMapController.withPosition(
+  initPosition: GeoPoint(latitude: 48.8566, longitude: 2.3522),
+);
+```
+
+By default it uses the **MethodChannel** transport — no extra package is needed.
+Commands complete from native acknowledgements, and map/user-location events are
+exposed as typed streams (`controller.events`).
+
+> **Throttling:** region-change events are delivered at most once every
+> **100 ms** and user-location events at most once every **1 s** (newest value
+> wins) — including on the classic controller path.
+
+### Experimental JNI transport (optional)
+
+For lower-latency command dispatch you can add the experimental
+[`flutter_osm_android_jni`](https://pub.dev/packages/flutter_osm_android_jni)
+add-on. It routes typed map commands (markers, shapes, roads, camera, tiles)
+through generated JNI bindings into the Kotlin bridge of the Android host.
+Events, acknowledgements, location and lifecycle stay on MethodChannel.
+
+```yaml
+dependencies:
+  flutter_osm_plugin: ^2.1.0
+  flutter_osm_android_jni: ^0.1.0
+```
+
+```dart
+import 'package:flutter_osm_android_jni/flutter_osm_android_jni.dart';
+import 'package:flutter_osm_plugin/android.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+
+final controller = AndroidMapController.withPosition(
+  initPosition: GeoPoint(latitude: 48.8566, longitude: 2.3522),
+  backend: AndroidMapBackend.auto,
+  transportFactory: createAndroidJniTransportFactory(
+    fallback: createDefaultAndroidMapTransport,
+  ),
+);
+```
+
+Notes:
+
+- Android-only; on iOS/web keep using the default transports.
+- JNI fallback is **attach-only**: once initialization starts on a backend,
+  commands are never replayed through another backend.
+- Requesting the JNI backend without `flutter_osm_android_jni` installed throws
+  a clear `UnsupportedError`.
 
 ## Integration with Hooks
 

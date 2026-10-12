@@ -45,7 +45,7 @@ Add the package alongside the main plugin:
 
 ```yaml
 dependencies:
-  flutter_osm_plugin: ^2.0.1
+  flutter_osm_plugin: ^2.1.0
   flutter_osm_android_jni: ^0.1.0
 ```
 
@@ -135,13 +135,10 @@ non-Android platform will fail at runtime.
 
 ## Versioning and release
 
-This package is released independently of the main plugin. Until dedicated
-GitHub Actions workflows are wired, publish it manually:
-
-```bash
-cd flutter_osm_android_jni
-flutter pub publish -f
-```
+This package is released independently of the main plugin. The first version
+(`0.1.0`) was published manually; once automated (OIDC) publishing is enabled
+on its pub.dev admin page, releases are triggered by pushing a
+`flutter_osm_android_jni-vX.Y.Z` tag (`build_packages.yaml`).
 
 See the root `AGENTS.md` for the full release pipeline and version-update
 scripts.
