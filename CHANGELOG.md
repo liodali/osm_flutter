@@ -1,3 +1,9 @@
+### 2.1.0+1:
+
+- docs: new Screenshots showcase table (R2-hosted device captures), animated
+  on-device demo GIF, README restructure (table of contents, Android
+  Integration section, removed obsolete migration guides)
+
 ### 2.1.0:
 
 - Android host implementation moved into the endorsed federated package

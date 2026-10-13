@@ -6,7 +6,7 @@ Flutter plugin for OpenStreetMap supporting **Android**, **iOS**, and **Web**. U
 
 | Package | Role | Current Version |
 |---|---|---|
-| `flutter_osm_plugin` | Main plugin, shared widgets/controllers, and iOS host implementation | 2.1.0 |
+| `flutter_osm_plugin` | Main plugin, shared widgets/controllers, and iOS host implementation | 2.1.0+1 |
 | `flutter_osm_interface` | Platform interface, typed transports, events, and shared types | 1.6.0 |
 | `flutter_osm_android` | Endorsed Android host and MethodChannel transport | 0.1.0 |
 | `flutter_osm_android_jni` | Optional Dart JNI command transport for the Android host | 0.1.0 |
