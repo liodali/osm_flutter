@@ -40,17 +40,22 @@
 - vector tiles support via styleURL (Android/iOS/Web)
 - external tracking control (Android/iOS/Web)
 
-## Getting Started
 
-<img src="https://raw.githubusercontent.com/liodali/osm_flutter/master/.github/readme/osm_demo.gif" width="400" alt="Demo: searching start and destination, drawing the road, and switching to vector tiles">
+## Screenshots
 
-[<img src="https://raw.githubusercontent.com/liodali/osm_flutter/master/.github/readme/tile_runtime_demo.jpg" width="360" alt="Satellite tile preset (ArcGIS World Imagery)" title="Watch the full tile layer demo (gif)">](https://github.com/liodali/osm_flutter/blob/master/tileLayerRuntime.gif)
-<br>
-<img src="https://raw.githubusercontent.com/liodali/osm_flutter/master/dialogSimplePickerLocation.gif" width="360" alt="Simple location picker dialog">
+| Feature | Feature |
+|:---:|:---:|
+| <img src="https://pub-beed1fbf56b445158e95110d87549d14.r2.dev/osm_screenshots/showcase_04_road_basic.png" width="270" alt="Draw roads with distance and duration"> | <img src="https://pub-beed1fbf56b445158e95110d87549d14.r2.dev/osm_screenshots/showcase_05_vector_tiles.png" width="270" alt="Vector map tiles"> |
+| **Draw Roads** — routes with distance & duration | **Vector Maps** — OpenFreeMap styles |
+| <img src="https://pub-beed1fbf56b445158e95110d87549d14.r2.dev/osm_screenshots/showcase_02_satellite_tiles.png" width="270" alt="Satellite tile layer"> | <img src="https://pub-beed1fbf56b445158e95110d87549d14.r2.dev/osm_screenshots/showcase_06_cycle_tiles.png" width="270" alt="Custom cycle tile layer"> |
+| **Satellite View** — ArcGIS World Imagery | **Custom Tiles** — cycle, transport, your own |
+| <img src="https://pub-beed1fbf56b445158e95110d87549d14.r2.dev/osm_screenshots/showcase_08_search_suggestions.png" width="270" alt="Address search suggestions"> | <img src="https://pub-beed1fbf56b445158e95110d87549d14.r2.dev/osm_screenshots/showcase_03_road.png" width="270" alt="Route over satellite imagery"> |
+| **Address Search** — live OSM suggestions | **Routes Anywhere** — plan over satellite |
 
 ## Contents
 
 - [Platform Support](#platform-support)
+- [Screenshots](#screenshots)
 - [Installing](#installing)
 - [Android Integration](#android-integration) (endorsed package, typed controller, JNI opt-in)
 - [Integration with Hooks](#integration-with-hooks)
