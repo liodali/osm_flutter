@@ -11,9 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_plugin_android_lifecycle: ^2.0.23
-  flutter_osm_interface:
-    # ignore: invalid_dependency
-    path: ../flutter_osm_interface/
+  # hosted dependency for the release tag; flip back to path after tagging
+  flutter_osm_interface: ^1.6.0
 
 dev_dependencies:
   flutter_lints: ^4.0.0
