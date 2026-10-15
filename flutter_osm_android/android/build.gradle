@@ -108,11 +108,15 @@ dependencies {
     implementation 'com.google.android.material:material:1.12.0'
 
     // mapscore (openmobilemaps) - new OpenGL-based map engine (migration target)
-    implementation 'io.openmobilemaps:mapscore:3.7.1'
-    // mapscore transitive deps (ensured explicitly for the plugin module)
-    implementation 'androidx.activity:activity-ktx:1.8.2'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
-    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    // 4.0.0: GPU tessellation, Kotlin 2.4 metadata (consumers need Kotlin >= 2.3),
+    // Java 21 bytecode (consumers need AGP with Java-21 classfile support, ~8.4+),
+    // Compose runtime on the classpath, minSdk 26 (unchanged since 3.7.1).
+    implementation 'io.openmobilemaps:mapscore:4.0.0'
+    // mapscore transitive deps (ensured explicitly for the plugin module,
+    // kept in sync with mapscore 4.0.0's POM)
+    implementation 'androidx.activity:activity-ktx:1.10.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.10.0'
+    implementation 'com.squareup.okhttp3:okhttp:5.1.0'
 
     testImplementation 'junit:junit:4.13.2'
 

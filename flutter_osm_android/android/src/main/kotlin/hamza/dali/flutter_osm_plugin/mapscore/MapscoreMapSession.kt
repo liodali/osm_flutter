@@ -187,6 +187,10 @@ internal class MapscoreMapSession(
         override fun onTwoFingerClick(posScreen1: Vec2F, posScreen2: Vec2F) = false
         override fun onTwoFingerMove(posScreenOld: ArrayList<Vec2F>, posScreenNew: ArrayList<Vec2F>) = false
         override fun onTwoFingerMoveComplete() = false
+        // Added in mapscore 4.0.0 (hover + scroll gestures); unused by this plugin.
+        override fun onHover(posScreen: Vec2F) = false
+        override fun onHoverComplete() = false
+        override fun onScroll(posScreen: Vec2F, scrollDelta: Float) = false
         override fun clearTouch() {}
     }
 
