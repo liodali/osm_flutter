@@ -21,10 +21,10 @@
     {
       "identity" : "maps-core",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/openmobilemaps/maps-core.git",
+      "location" : "https://github.com/liodali/maps-core.git",
       "state" : {
-        "revision" : "ca002b84cd9031032452592791a502c71fd268af",
-        "version" : "3.7.1"
+        "revision" : "62ca996063bc0338d4e3a3a978b5ec5c24a9c4b0",
+        "version" : "4.0.1-spm.2"
       }
     },
     {
@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/liodali/OSMMapCoreIOSFramework.git",
       "state" : {
-        "revision" : "d6330a88b2aff17e9cb77fda55a9a82c07ce52e5",
-        "version" : null
+        "revision" : "07bcb39430e84aad6367d9f424ac4841e074f569",
+        "version" : "0.9.0"
       }
     },
     {

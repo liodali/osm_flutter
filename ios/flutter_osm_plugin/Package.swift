@@ -18,9 +18,7 @@ let package = Package(
         .package(url: "https://github.com/jpsim/Yams.git", from: "6.2.2"),
         .package(
             url: "https://github.com/liodali/OSMMapCoreIOSFramework.git",
-            revision: "e8688369f747c0614b4bc2b083279a6d4b1f2899"),
-        //.exact("0.8.7")),
-
+            .exact("0.9.0")),
     ],
     targets: [
         .target(
