@@ -1,3 +1,15 @@
+### Unreleased:
+
+- feat(ios)!: bump `OSMFlutterFramework` to 0.9.0 (MapCore 4.0.0) — both
+  platforms now sit on MapCore 4.0.0 (Android via `mapscore` 4.0.0, iOS via
+  the framework fork); plugin Swift sources needed zero changes
+- deprecation (ios): CocoaPods support is deprecated and the podspec will not
+  be updated anymore — `OSMFlutterFramework` suspended CocoaPods at 0.9.0, so
+  the podspec stays frozen on the legacy 0.8.x engine (maps-core 3.7.x era);
+  the plugin is **SPM-only** going forward
+  (`ios/flutter_osm_plugin/Package.swift`, pinned to `OSMMapCoreIOSFramework`
+  0.9.0)
+
 ### 2.1.0+1:
 
 - docs: new Screenshots showcase table (R2-hosted device captures), animated

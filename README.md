@@ -83,6 +83,14 @@ Add the following to your `pubspec.yaml` file:
 > platform view type are unchanged. See [Android Integration](#android-integration)
 > for the optional typed controller and the experimental JNI transport.
 
+> **iOS (CocoaPods deprecated):** `OSMFlutterFramework` suspended CocoaPods
+> distribution at 0.9.0 (MapCore 4.0.0), so the plugin podspec is frozen on the
+> legacy **0.8.x** engine (maps-core 3.7.x) and **will not be updated anymore**.
+> The plugin is **SPM-only** going forward — the native iOS integration ships
+> via `ios/flutter_osm_plugin/Package.swift` (pinned to
+> `OSMMapCoreIOSFramework` 0.9.0). CocoaPods consumers stay knowingly on the
+> old engine and should plan a migration to Swift Package Manager.
+
 ## Android Integration
 
 ### Endorsed Android package
@@ -179,7 +187,9 @@ Notes:
 **iOS:**
 
 - Minimum iOS version is now **15.6**
-- Swift Package Manager (SPM) is the preferred dependency manager
+- Swift Package Manager (SPM) is the supported dependency manager — CocoaPods
+  support is deprecated: the podspec is frozen on the legacy 0.8.x engine and
+  future releases are SPM-only (see [Installing](#installing))
 - The `OSMMapCoreIOSFramework` dependency has been updated to the latest revision
 
 **What's new:**
