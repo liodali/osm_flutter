@@ -74,8 +74,11 @@ final class MobileOSMController extends IBaseOSMController {
       _osmFlutterState.widget.onMapIsReady!(false);
     }
 
-    /// load config map scene for iOS
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
+    /// load config map scene for iOS/macOS (shared Apple sequencing: the
+    /// native host answers `init#ios#map` with one `map#init#ios` event,
+    /// which triggers the map initialization exactly once)
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
       osmPlatform.onIosMapInit(_idMap).listen((event) async {
         if (event.value) {
           await initMap(
