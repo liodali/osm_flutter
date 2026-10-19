@@ -87,9 +87,10 @@ Add the following to your `pubspec.yaml` file:
 > distribution at 0.9.0 (MapCore 4.0.0), so the plugin podspec is frozen on the
 > legacy **0.8.x** engine (maps-core 3.7.x) and **will not be updated anymore**.
 > The plugin is **SPM-only** going forward — the native iOS integration ships
-> via `ios/flutter_osm_plugin/Package.swift` (pinned to
-> `OSMMapCoreIOSFramework` 0.9.0). CocoaPods consumers stay knowingly on the
-> old engine and should plan a migration to Swift Package Manager.
+> via `darwin/flutter_osm_plugin/Package.swift` (shared Darwin source, pinned to
+> `OSMMapCoreIOSFramework` 0.9.1). The frozen podspec and a never-edit source
+> snapshot remain under `ios/` for legacy CocoaPods consumers (see
+> `ios/README.md`); they should plan a migration to Swift Package Manager.
 
 ## Android Integration
 

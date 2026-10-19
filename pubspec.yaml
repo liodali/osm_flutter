@@ -54,6 +54,7 @@ flutter:
         default_package: flutter_osm_android
       ios:
         pluginClass: FlutterOsmPlugin
+        sharedDarwinSource: true
       web:
         default_package: flutter_osm_web
 

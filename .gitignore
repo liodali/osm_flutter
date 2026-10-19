@@ -33,6 +33,10 @@ build/
 **/ios/**/Pods/
 **/ios/**/.symlinks/
 **/ios/**/profile
+# Darwin/SPM related
+**/darwin/**/DerivedData/
+**/darwin/**/.swiftpm/
+**/darwin/**/*.xcscheme
 **/ios/**/xcuserdata
 **/ios/.generated/
 **/ios/Flutter/App.framework

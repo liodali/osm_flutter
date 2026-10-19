@@ -21,8 +21,9 @@ flutter_osm_plugin (main/app-facing)
   ├── depends on flutter_osm_interface
   ├── endorses and depends on flutter_osm_android
   ├── endorses and depends on flutter_osm_web
-  ├── ios/        → native iOS (Swift)
-  └── lib/        → shared widgets/controllers
+  ├── darwin/      → shared iOS/macOS Swift package (SPM, sharedDarwinSource)
+  ├── ios/         → frozen CocoaPods legacy snapshot (never edit)
+  └── lib/         → shared widgets/controllers
 
 flutter_osm_interface
   └── lib/src/    → platform contracts, typed Android transport/events, types
@@ -56,8 +57,13 @@ flutter_osm_web
 
 ```
 osm_flutter/
-├── ios/                      # Native iOS (Swift)
-│   └── flutter_osm_plugin/   # Swift plugin, map views
+├── darwin/                    # Shared iOS/macOS Swift package (SPM)
+│   └── flutter_osm_plugin/    # Package.swift, Sources/flutter_osm_plugin
+├── ios/                       # Frozen CocoaPods legacy snapshot (never edit)
+│   ├── flutter_osm_plugin.podspec
+│   ├── flutter_osm_plugin/Sources/  # Source snapshot for the podspec
+│   ├── Assets/en.json
+│   └── README.md
 ├── lib/
 │   ├── flutter_osm_plugin.dart           # Library exports
 │   └── src/
@@ -123,12 +129,17 @@ osm_flutter/
 - **Key Classes**: `FlutterOsmPlugin`, `OsmFactory`, lifecycle management
 - **Build**: Kotlin Gradle Plugin (KGP), Java 17
 
-### iOS
+### iOS (shared Darwin)
 - **Language**: Swift
-- **Map Engine**: Native iOS map views
-- **Min iOS**: 13
-- **Package Manager**: SPM (Swift Package Manager) support added in v1.4.4
-- **Key Classes**: Swift plugin, map view controllers
+- **Map Engine**: OSMFlutterFramework (SPM, pinned `OSMMapCoreIOSFramework` 0.9.1 / MapCore 4.0.0)
+- **Min iOS**: 15.6 (framework requires iOS 14)
+- **Toolchain**: Xcode 26+ / Swift 6.2+ (framework uses `swift-tools-version:6.2`)
+- **Location**: `darwin/flutter_osm_plugin/` (one SPM package, selected by
+  `sharedDarwinSource: true` in the root `pubspec.yaml`; macOS support lands there too)
+- **Package/target**: `flutter_osm_plugin`, product `flutter-osm-plugin`,
+  plugin class `FlutterOsmPlugin`, view ID `plugins.dali.hamza/osmview`
+- **CocoaPods**: frozen at `ios/flutter_osm_plugin.podspec` + never-edit source
+  snapshot in `ios/` (see `ios/README.md`); never edit `ios/`
 
 ### Web
 - **Rendering**: `HtmlElementView` embedding an HTML/JS map

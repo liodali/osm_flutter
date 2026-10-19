@@ -6,6 +6,13 @@
   zero changes — only the SPM pin and `Package.resolved` changed). Building the
   iOS host now requires Xcode 26+ / Swift 6.2+; the plugin's iOS deployment
   minimum stays 15.6 and `maps-core` stays at `4.0.1-spm.2`
+- refactor(ios)!: move the SPM package to `darwin/flutter_osm_plugin/` and set
+  `sharedDarwinSource: true` (shared Darwin source layout for the upcoming
+  macOS support). Flutter resolves the iOS integration from `darwin/`; the
+  deprecated podspec stays frozen with a never-edit legacy source snapshot
+  under `ios/` (see `ios/README.md`) for hand-wired CocoaPods consumers.
+  Flutter-managed CocoaPods builds no longer pick up the podspec, so apps
+  disabling SPM must stay on `2.1.x`
 - feat(ios)!: bump `OSMFlutterFramework` to 0.9.0 (MapCore 4.0.0) — both
   platforms now sit on MapCore 4.0.0 (Android via `mapscore` 4.0.0, iOS via
   the framework fork); plugin Swift sources needed zero changes
