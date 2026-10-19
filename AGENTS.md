@@ -115,6 +115,8 @@ osm_flutter/
     ├── android/
     │   └── app/build.gradle.kts    # compileSdk 36, minSdk 32
     ├── ios/
+    ├── macos/                      # macOS runner (12.0+, SPM, network +
+    │                               # location entitlements in the host only)
     └── lib/                        # Example UI
 ```
 

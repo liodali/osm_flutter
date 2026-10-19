@@ -8,9 +8,14 @@
 
 ## Platform Support
 
-|           Android            |                           iOS                           |             Web              |
-| :--------------------------: | :-----------------------------------------------------: | :--------------------------: |
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 15.6) | supported :heavy_check_mark: |
+|           Android            |                           iOS                           |             macOS              |             Web              |
+| :--------------------------: | :-----------------------------------------------------: | :----------------------------: | :--------------------------: |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 15.6) | supported :heavy_check_mark: (min macOS supported : 12.0) | supported :heavy_check_mark: |
+
+> **macOS (native):** runs on the shared Darwin implementation with iOS (SPM
+> package `darwin/flutter_osm_plugin`, `OSMFlutterFramework` 0.9.1). See
+> [macOS Integration](#macos-integration) for requirements, host-app setup and
+> the current capability limits.
 
 <b>osm plugin for flutter apps </b>
 
@@ -203,6 +208,50 @@ Notes:
 - Dotted road style and border customization in `drawRoadManually` (iOS)
 - Improved location permission handling with explicit checks and user-friendly errors
 - `myLocation()` now requests location permission on Android if not granted
+
+## macOS Integration
+
+`flutter_osm_plugin` supports native macOS through the **same shared Darwin
+implementation as iOS** (`darwin/flutter_osm_plugin`, Swift Package Manager,
+`OSMFlutterFramework` 0.9.1 / MapCore 4.0.0). Commands, payloads and events are
+identical to the iOS wire protocol.
+
+**Requirements**
+
+- macOS 12.0 or newer
+- Xcode 26+ / Swift 6.2+ (the pinned framework uses `swift-tools-version:6.2`)
+- Swift Package Manager integration (the default in current Flutter);
+  CocoaPods is not supported
+
+**Host app setup**
+
+Permissions live in the host app — the plugin package ships none:
+
+- outbound network (`com.apple.security.network.client`) for tile and routing
+  requests
+- optional location features need `NSLocationUsageDescription` plus the
+  `com.apple.security.personal-information.location` sandbox entitlement;
+  authorization is requested by the native implementation when tracking
+  starts, and a denied permission fails `myLocation()` with a `permission`
+  error instead of hanging
+
+See `example/macos` for a complete setup; the example app exercises tiles,
+markers, roads, shapes, camera controls, static maps and the picker flows.
+
+**Verified behavior** (Apple silicon, Xcode 26.5 / Swift 6.3.2,
+Flutter 3.47.1): map startup and readiness, raster tile loading, camera moves
+and zoom, and the shared marker/road/shape/picker command paths.
+
+**Known limits** (upstream MapCore AppKit adapter in the pinned framework):
+
+- no heading/compass data: user-location updates report heading `0` and the
+  direction marker is disabled on macOS
+- native rotation gestures, hover and long-press are not provided by the
+  pinned MapCore AppKit adapter; programmatic rotation (`map#orientation`) is
+  unverified on macOS
+- Intel/AMD GPU rendering and mixed-display scale changes are unverified until
+  checked on suitable hardware (the plugin already re-applies marker, POI and
+  user-location icon sizes when the hosting window changes displays)
 
 ## Web Integration
 

@@ -1,5 +1,16 @@
 ### Unreleased:
 
+- feat(example): add a native macOS runner for the example app (macOS 12.0+,
+  SPM integration) with host-only entitlements — outbound network for
+  tiles/routing and optional location (usage description + sandbox
+  entitlement); the existing example UI (tiles, markers, roads, shapes,
+  camera, static maps, pickers) runs unchanged on macOS. README gains a
+  macOS platform entry and an honest "macOS Integration" section:
+  requirements (Xcode 26+/Swift 6.2+, macOS 12+), host setup, verified
+  behavior (Apple silicon, Xcode 26.5/Flutter 3.47.1), and known upstream
+  limits — no heading/compass, no native rotation gestures/hover/long-press
+  from the pinned MapCore AppKit adapter; Intel/AMD GPUs and mixed-display
+  scaling unverified
 - feat(macos): extend the Dart integration to macOS — the platform view is
   embedded through `AppKitView` (same `plugins.dali.hamza/osmview` id,
   creation params and codec as iOS; unsupported desktop platforms now throw
