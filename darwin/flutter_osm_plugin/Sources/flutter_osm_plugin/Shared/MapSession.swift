@@ -57,8 +57,10 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
     var lastUserLocationMarkersArgs: [String: Any]? = nil
     /// Logical (Dart-side, pre-scale) data retained to re-apply pixel sizes
     /// of regular markers when the hosting window moves between displays.
-    /// Keyed by `"lat;lon"` of the marker location.
+    /// The dictionary key is only a rounded lookup key; the exact coordinate
+    /// lives in the record so refreshes and deletions never move a marker.
     private struct MarkerScaleRecord {
+        var coordinate: CLLocationCoordinate2D
         var iconBase64: String?
         var logicalSize: [Int]?
         var angle: Float
@@ -77,7 +79,8 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
         angle: Float, anchorArgs: [String: Any]?
     ) {
         markerScaleRecords[Self.markerScaleKey(coordinate)] = MarkerScaleRecord(
-            iconBase64: iconBase64, logicalSize: logicalSize, angle: angle, anchorArgs: anchorArgs)
+            coordinate: coordinate, iconBase64: iconBase64, logicalSize: logicalSize,
+            angle: angle, anchorArgs: anchorArgs)
     }
 
     func moveMarkerScaleRecord(
@@ -87,6 +90,7 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
         let existing = markerScaleRecords.removeValue(
             forKey: Self.markerScaleKey(oldCoordinate))
         markerScaleRecords[Self.markerScaleKey(newCoordinate)] = MarkerScaleRecord(
+            coordinate: newCoordinate,
             iconBase64: iconBase64 ?? existing?.iconBase64,
             logicalSize: logicalSize ?? existing?.logicalSize,
             angle: angle,
@@ -115,6 +119,10 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
 
     func recordStaticPoiIcon(id: String, bitmapArgs: [String: Any]) {
         staticPoiIconArgs[id] = bitmapArgs
+    }
+
+    func storedStaticPoiIconArgs(id: String) -> [String: Any]? {
+        staticPoiIconArgs[id]
     }
     #endif
 
@@ -241,16 +249,11 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
                     arguments: ["id": id, "bitmap": bitmapArg]))
         }
 
-        // 3. Regular markers: refresh icon size in place (same location).
-        for (key, record) in markerScaleRecords {
-            let parts = key.split(separator: ";")
-            guard parts.count == 2,
-                let lat = Double(parts[0]),
-                let lon = Double(parts[1])
-            else {
-                continue
-            }
-            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        // 3. Regular markers: refresh icon size in place, using the exact
+        //    stored coordinate (never reconstructed from the lookup key, so
+        //    the marker location — and later deletions — are unaffected).
+        for record in markerScaleRecords.values {
+            let coordinate = record.coordinate
             var icon = record.iconBase64.flatMap { convertImage(codeImage: $0) }
             if icon == nil {
                 if let defaultMarker = defaultMarker {

@@ -505,6 +505,19 @@ extension MapSession {
         }
 
         self.mapOSM.poisManager.setMarkersPoi(id: id, markers: listPois)
+        #if os(macOS)
+        // `Poi.setMarkers` recreates every marker from the icon configuration
+        // captured when the Poi was created (`markerIcon` is immutable and
+        // `setIconMarker` cannot update it), so positions replaced after a
+        // display-scale change would revert to the stale size. Re-apply the
+        // last icon arguments to redraw at the current scale.
+        if let bitmapArg = storedStaticPoiIconArgs(id: id) {
+            setMarkerStaticGeoPIcon(
+                call: FlutterMethodCall(
+                    methodName: "staticPosition#IconMarker",
+                    arguments: ["id": id, "bitmap": bitmapArg]))
+        }
+        #endif
 
     }
     func configureUserLocation(call: FlutterMethodCall) {

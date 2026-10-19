@@ -39,6 +39,14 @@
   the hosting window's backing scale (not `NSScreen.main`) and macOS
   re-applies user-location icons when the window changes displays via
   `viewDidChangeBackingProperties()`
+- fix(darwin): keep marker coordinates exact and stop POIs reverting to
+  their old size — marker scale records now store the exact
+  `CLLocationCoordinate2D` (the dictionary key is a rounded lookup key
+  only), so a scale refresh never moves a marker or breaks deletion with
+  the original coordinates; and because the framework's `Poi.markerIcon`
+  is immutable (setIconMarker cannot update it), `setStaticGeoPoint`
+  re-applies the stored icon arguments after replacing POI positions so
+  they do not fall back to the creation-time size
 - fix(darwin): refresh every scale-dependent icon on display changes and
   keep the tracking anchor — the backing-scale callback now also re-applies
   regular markers (logical sizes retained per coordinate across
