@@ -7,12 +7,11 @@ import OSMFlutterFramework
 import Polyline
 import MapKit
 
-func convertImage(codeImage: String) -> UIImage? {
-    let dataImage = Data(base64Encoded: codeImage)
-    if dataImage == nil, #available(iOS 13.0, *){
-            return UIImage(systemName: "mappin")
+func convertImage(codeImage: String) -> OSMPlatformImage? {
+    guard let dataImage = Data(base64Encoded: codeImage) else {
+        return ApplePlatformUtilities.systemImage(named: "mappin")
     }
-    return UIImage(data: dataImage!)// Note it's optional. Don't force unwrap!!!
+    return OSMPlatformImage(data: dataImage)// Note it's optional. Don't force unwrap!!!
 }
 
 
@@ -21,22 +20,6 @@ extension OSMRoadManager  {
     func hasPoylines() -> [RoadFolder] {
         return roads.filter({roadF in roadF.polyline.coordinates != nil })
     }
-}
-
-extension UIImage {
-
-    func imageResize (sizeChange:CGSize)-> UIImage{
-
-        let hasAlpha = true
-        let scale: CGFloat = 0.0 // Use scale factor of main screen
-
-        UIGraphicsBeginImageContextWithOptions(sizeChange, !hasAlpha, scale)
-        self.draw(in: CGRect(origin: CGPoint.zero, size: sizeChange))
-
-        let scaledImage = UIGraphicsGetImageFromCurrentImageContext()
-        return scaledImage!
-    }
-
 }
 
 
@@ -51,9 +34,9 @@ extension GeoPoint {
 extension RoadData {
     func toRoadConfiguration() -> RoadConfiguration {
         RoadConfiguration(width: Float(roadWidth ),
-                          color: UIColor(hexString: roadColor) ?? .green,
+                          color: OSMPlatformColor(hexString: roadColor) ?? .green,
                           borderWidth: roadBorderWidth.toFloat(),
-                          borderColor: UIColor(hexString: roadBorderColor),
+                          borderColor: OSMPlatformColor(hexString: roadBorderColor),
                           lineCap: LineCapType.ROUND,
                           polylineType: getPolylineType()
         )
@@ -409,8 +392,8 @@ extension Polyline {
 }
 
 extension Array where Element == Int {
-    func toUIColor() -> UIColor {
-        UIColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
+    func toOSMPlatformColor() -> OSMPlatformColor {
+        OSMPlatformColor.init(absoluteRed: self.first!, green: self.last!, blue: self[1], alpha: 255)
     }
 }
 
@@ -441,30 +424,6 @@ extension CLLocationCoordinate2D {
     }
 }
 
-extension UIImage {
-    func rotate(radians: Float) -> UIImage {
-        var newSize = CGRect(origin: CGPoint.zero, size: self.size).applying(CGAffineTransform(rotationAngle: CGFloat(radians))).size
-        // Trim off the extremely small float value to prevent core graphics from rounding it up
-        newSize.width = floor(newSize.width)
-        newSize.height = floor(newSize.height)
-
-        UIGraphicsBeginImageContextWithOptions(newSize, false, self.scale)
-        let context = UIGraphicsGetCurrentContext()!
-
-        // Move origin to middle
-        context.translateBy(x: newSize.width / 2, y: newSize.height / 2)
-        // Rotate around middle
-        context.rotate(by: CGFloat(radians))
-        // Draw the image at its center
-        self.draw(in: CGRect(x: -self.size.width / 2, y: -self.size.height / 2, width: self.size.width, height: self.size.height))
-
-        let newImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-
-        return newImage ?? self
-    }
-}
-
 extension String {
     var toRoadType: RoadType {
         switch self {
@@ -489,7 +448,7 @@ extension CGFloat {
     }
 }
 
-extension UIColor {
+extension OSMPlatformColor {
 
     /// Create color from RGB(A)
     ///
@@ -499,7 +458,7 @@ extension UIColor {
     ///  - blue:        Blue value (between 0 - 255)
     ///  - alpha:       Blue value (between 0 - 255)
     ///
-    /// Returns: UIColor instance.
+    /// Returns: OSMPlatformColor instance.
     convenience init(absoluteRed red: Int, green: Int, blue: Int, alpha: Int = 255) {
         let normalizedRed = CGFloat(red) / 255.0
         let normalizedGreen = CGFloat(green) / 255.0
@@ -540,12 +499,12 @@ extension RectShapeOSM {
     static func fromMap(json:[String:Any])->RectShapeOSM {
        let center = CLLocationCoordinate2D(latitude: json["lat"] as! Double, longitude: json["lon"] as! Double)
         let colorFilledJs = json["color"] as! [Any]
-        let filledCOlor = UIColor(absoluteRed: colorFilledJs[0] as! Int, green:  colorFilledJs[2] as! Int,
+        let filledCOlor = OSMPlatformColor(absoluteRed: colorFilledJs[0] as! Int, green:  colorFilledJs[2] as! Int,
                                 blue:  colorFilledJs[1] as! Int, alpha:  colorFilledJs[3] as! Int)
         var borderColor = filledCOlor
         if json.keys.contains("colorBorder") {
             let colorBorderJson = json["colorBorder"] as! [Any]
-            borderColor = UIColor(absoluteRed: colorBorderJson[0] as! Int, green:  colorBorderJson[2] as! Int,
+            borderColor = OSMPlatformColor(absoluteRed: colorBorderJson[0] as! Int, green:  colorBorderJson[2] as! Int,
                                     blue:  colorBorderJson[1] as! Int, alpha:  colorBorderJson[3] as! Int)
         }
         let borderWidth = json["strokeWidth"] as! Double
@@ -557,12 +516,12 @@ extension CircleOSM {
     static func fromMap(json:[String:Any])->CircleOSM {
        let center = CLLocationCoordinate2D(latitude: json["lat"] as! Double, longitude: json["lon"] as! Double)
         let colorFilledJs = json["color"] as! [Any]
-        let filledCOlor = UIColor(absoluteRed: colorFilledJs[0] as! Int, green:  colorFilledJs[2] as! Int,
+        let filledCOlor = OSMPlatformColor(absoluteRed: colorFilledJs[0] as! Int, green:  colorFilledJs[2] as! Int,
                                 blue:  colorFilledJs[1] as! Int, alpha:  colorFilledJs[3] as! Int)
         var borderColor = filledCOlor
         if json.keys.contains("colorBorder") {
             let colorBorderJson = json["colorBorder"] as! [Any]
-            borderColor = UIColor(absoluteRed: colorBorderJson[0] as! Int, green:  colorBorderJson[2] as! Int,
+            borderColor = OSMPlatformColor(absoluteRed: colorBorderJson[0] as! Int, green:  colorBorderJson[2] as! Int,
                                     blue:  colorBorderJson[1] as! Int, alpha:  colorBorderJson[3] as! Int)
         }
         let borderWidth = json["strokeWidth"] as! Double
@@ -665,10 +624,10 @@ extension Double {
 }
 extension Array where Element == Int {
     func toMarkerSize()-> MarkerIconSize {
-        (x:Int(CGFloat(self.first!) * UIScreen.main.scale),y:Int(CGFloat(self.last!) * UIScreen.main.scale))
+        (x:Int(CGFloat(self.first!) * ApplePlatformUtilities.displayScale),y:Int(CGFloat(self.last!) * ApplePlatformUtilities.displayScale))
     }
 }
-extension UIColor {
+extension OSMPlatformColor {
     convenience init?(hexString: String?) {
         if hexString == nil {
             return nil

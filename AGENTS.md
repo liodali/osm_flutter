@@ -136,6 +136,10 @@ osm_flutter/
 - **Toolchain**: Xcode 26+ / Swift 6.2+ (framework uses `swift-tools-version:6.2`)
 - **Location**: `darwin/flutter_osm_plugin/` (one SPM package, selected by
   `sharedDarwinSource: true` in the root `pubspec.yaml`; macOS support lands there too)
+  — internal layout: `Shared/` (MapSession + MapMethodHandler + models + RoadManager),
+  `Platform/ApplePlatformUtilities.swift`, `iOS/IOSMapViewFactory.swift`,
+  `macOS/MacOSMapViewFactory.swift`; guard platform code with
+  `#if canImport(Flutter)` / `#if canImport(FlutterMacOS)`
 - **Package/target**: `flutter_osm_plugin`, product `flutter-osm-plugin`,
   plugin class `FlutterOsmPlugin`, view ID `plugins.dali.hamza/osmview`
 - **CocoaPods**: frozen at `ios/flutter_osm_plugin.podspec` + never-edit source

@@ -6,14 +6,8 @@
 //
 
 import Foundation
-import UIKit
 
 typealias GeoPoint = [String: Double]
-
-struct MarkerIconData {
-    let image: UIImage?
-    var size: [Int]? = nil
-}
 
 struct CartesianPoint {
     static let zero: CartesianPoint = CartesianPoint(x: 0, y: 0)

@@ -1,35 +1,37 @@
+//
+//  FlutterOsmPlugin.swift
+//  flutter_osm_plugin
+//
+
+// Import the correct Flutter module for each platform.
+#if canImport(Flutter)
 import Flutter
-import UIKit
+#elseif canImport(FlutterMacOS)
+import FlutterMacOS
+#endif
+import Foundation
 
 nonisolated public class FlutterOsmPlugin: NSObject, FlutterPlugin {
- 
+
   nonisolated public static func register(with registrar: FlutterPluginRegistrar) {
-    let window = UIApplication.shared.delegate?.window
+    // The registrar's `messenger` is a method on iOS and a property on macOS.
+    #if canImport(Flutter)
+    let messenger = registrar.messenger()
+    #else
+    let messenger = registrar.messenger
+    #endif
 
     let keyDefaultPin = registrar.lookupKey(
       forAsset: "packages/flutter_osm_plugin/assets/default_pin.png")
     let mainBundle = Bundle.main
     let pathDefaultPin = mainBundle.path(forResource: keyDefaultPin, ofType: nil)
-    let mapViewFactory = MapviewFactory(
-      messenger: registrar.messenger(),
-      defaultPin: pathDefaultPin
-    )
+    #if canImport(Flutter)
+    let mapViewFactory = IOSMapViewFactory(messenger: messenger, defaultPin: pathDefaultPin)
+    #else
+    let mapViewFactory = MacOSMapViewFactory(messenger: messenger, defaultPin: pathDefaultPin)
+    #endif
 
     registrar.register(mapViewFactory, withId: "plugins.dali.hamza/osmview")
 
   }
-  /* public static func register(with registrar: FlutterPluginRegistrar) {
-     let channel = FlutterMethodChannel(name: "flutter_osm_plugin", binaryMessenger: registrar.messenger())
-     let instance = FlutterOsmPlugin()
-     registrar.addMethodCallDelegate(instance, channel: channel)
-   }
-
-   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-     switch call.method {
-     case "getPlatformVersion":
-       result("iOS " + UIDevice.current.systemVersion)
-     default:
-       result(FlutterMethodNotImplemented)
-     }
-   }*/
 }

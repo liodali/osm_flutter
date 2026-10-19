@@ -6,7 +6,8 @@ import PackageDescription
 let package = Package(
     name: "flutter_osm_plugin",
     platforms: [
-        .iOS("15.6")
+        .iOS("15.6"),
+        .macOS("12.0")
     ],
     products: [
         .library(name: "flutter-osm-plugin", targets: ["flutter_osm_plugin"])

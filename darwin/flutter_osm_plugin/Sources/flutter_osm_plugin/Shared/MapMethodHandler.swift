@@ -1,113 +1,24 @@
 //
-//  osm_map.swift
+//  MapMethodHandler.swift
 //  flutter_osm_plugin
 //
-//  Created by Dali Hamza on 19.11.23.
+//  Command dispatch and command implementations for the shared `MapSession`.
 //
 
 import CoreLocation
+#if canImport(Flutter)
 import Flutter
+#elseif canImport(FlutterMacOS)
+import FlutterMacOS
+#endif
 import Foundation
 @preconcurrency import OSMFlutterFramework
 
 @_implementationOnly import Polyline
 
-@MainActor
-class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, OnMapGesture,
-    OnMapMoved, MapMarkerHandler, OSMUserLocationHandler, PoylineHandler
-{
+extension MapSession {
 
-    let mapOSM: OSMView
-    var isStaticMap: Bool = false
-    var homeMarker: UIImage? = nil
-    var customTiles: CustomTiles? = nil
-    var boundingbox: BoundingBox? = nil
-    let channel: FlutterMethodChannel
-    var zoomConfig: ZoomConfiguration = ZoomConfiguration(
-        initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
-    lazy var roadManager: OSMRoadManager = OSMRoadManager()
-    let roadColor: String = "#ff0000ff"
-    var lastRoadKey: String? = nil
-    var resultFlutter: FlutterResult? = nil
-    @MainActor
-    var storedRoads: [String: StoredRoad] = [:]
-    var isMovedToLocation: Bool = false
-    var canSkipFollow: Bool = false
-    var userLocationWithoutControl: Bool = false
-    var mapInitialized: Bool = false
-    let defaultMarker: String?
-    private(set) var latestUserLocation: CLLocationCoordinate2D? = nil
-    //let containerMapView:MapViewUIView
-    init(
-        _ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?,
-        defaultPin: String?
-    ) {
-        var initLocation: CLLocationCoordinate2D?
-        var enableRotationGesture = false
-        defaultMarker = defaultPin
-        if (args as? [String: Any]) != nil {
-            if (args as! [String: Any]).keys.contains("customTile") {
-                customTiles = CustomTiles(
-                    ((args as! [String: Any])["customTile"] as? [String: Any])!)
-
-            }
-            if (args as! [String: Any]).keys.contains("bounds") {
-                let boundArgs = (args as! [String: Any])["bounds"] as? [Double]
-                boundingbox = BoundingBox(boundingBoxs: boundArgs!)
-            }
-            if (args as! [String: Any]).keys.contains("zoomOption") {
-                let zoomArgs = (args as! [String: Any])["zoomOption"] as? [String: Int]
-                self.zoomConfig = ZoomConfiguration(zoomArgs!)
-            }
-            if (args as! [String: Any]).keys.contains("location") {
-                let locationArgs = (args as! [String: Any])["location"] as? [String: Double]
-                initLocation = CLLocationCoordinate2D(
-                    latitude: (locationArgs!["lat"])!, longitude: locationArgs!["lon"]!)
-            }
-
-            if (args as! [String: Any]).keys.contains("enableRotationGesture") {
-                enableRotationGesture = (args as! [String: Any])["enableRotationGesture"] as! Bool
-
-            }
-        }
-        isStaticMap = (args as! [String: Any])["isStaticMap"] as? Bool ?? false
-
-        let configuration = OSMMapConfiguration(
-            zoomLevelScaleFactor: 0.65, adaptScaleToScreen: true)
-        self.mapOSM = OSMView(
-            rect: frame, location: initLocation, zoomConfig: self.zoomConfig,
-            mapTileConfiguration: configuration)
-        self.channel = channel
-        //containerMapView = MapViewUIView(frame: frame)
-        //controllerMainView = MapViewUIVController(frame: frame, map: self.mapOSM)
-        super.init()
-        //controllerMainView.view.addSubview(self.mapOSM)
-        //self.addSubview(self.mapOSM)
-        self.mapOSM.enableRotation(enable: enableRotationGesture)
-        channel.setMethodCallHandler({
-            (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
-            self.onListenMethodChannel(call: call, result: result)
-        })
-        self.mapOSM.onMapGestureDelegate = self
-        self.mapOSM.mapHandlerDelegate = self
-        self.mapOSM.userLocationDelegate = self
-        self.mapOSM.roadTapHandlerDelegate = self
-        self.mapOSM.onMapMove = self
-        self.mapOSM.enableRotation(enable: enableRotationGesture)
-        if self.isStaticMap {
-            self.mapOSM.disableTouch()
-        }
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    public func view() -> UIView {
-        return mapOSM
-    }
-
-    private func onListenMethodChannel(call: FlutterMethodCall, result: @escaping FlutterResult) {
+    func onListenMethodChannel(call: FlutterMethodCall, result: @escaping FlutterResult) {
         print(call.method)
         switch call.method {
         case "init#ios#map":
@@ -224,19 +135,15 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
             break
         case "road":
             drawRoadMCOSM(call: call) {
-                [unowned self] roadInfo, road, roadData, boundingbox, polyline, error in
+                [weak self] roadInfo, road, roadData, boundingbox, polyline, error in
+                guard let self else {
+                    return
+                }
                 if error != nil {
                     result(FlutterError(code: "400", message: "error to draw road", details: nil))
                 } else {
                     lastRoadKey = roadInfo?.id
                     let roadConfiguration = roadData.toRoadConfiguration()
-                    /*RoadConfiguration(width: Float(roadData?.roadWidth ?? 5),
-                                                              color: UIColor(hexString: roadData?.roadColor ?? roadColor) ?? .green,
-                                                              borderWidth: roadData?.roadBorderWidth.toFloat(),
-                                                              borderColor: UIColor(hexString: roadData?.roadBorderColor),
-                                                              lineCap: LineCapType.ROUND
-
-                    )*/
                     let coordinates = polyline?.coordinates
                     self.mapOSM.roadManager.addRoad(
                         id: lastRoadKey!, polylines: coordinates!, configuration: roadConfiguration)
@@ -254,7 +161,10 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
             //result(["distance": 0, "duration": 0])
             break
         case "draw#multi#road":
-            drawMultiRoad(call: call) { [unowned self] roadInfos, roadsAndRoadData, error in
+            drawMultiRoad(call: call) { [weak self] roadInfos, roadsAndRoadData, error in
+                guard let self else {
+                    return
+                }
                 if roadInfos.isEmpty && roadsAndRoadData.isEmpty {
                     result(
                         FlutterError(
@@ -274,9 +184,9 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
                         let polyline = Polyline(encodedPolyline: road.1.mRouteHigh, precision: 1e5)
                         let roadConfig = RoadConfiguration(
                             width: roadData.roadWidth.toFloat(),
-                            color: UIColor(hexString: roadData.roadColor) ?? .green,
+                            color: OSMPlatformColor(hexString: roadData.roadColor) ?? .green,
                             borderWidth: roadData.roadBorderWidth.toFloat(),
-                            borderColor: UIColor(hexString: roadData.roadBorderColor)
+                            borderColor: OSMPlatformColor(hexString: roadData.roadBorderColor)
                         )
                         self.mapOSM.roadManager.addRoad(
                             id: road.0, polylines: polyline.coordinates!, configuration: roadConfig)
@@ -372,16 +282,8 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
         }
     }
 
-    /*func initMap( result: @escaping FlutterResult){
-        //self.mapOSM.initOSMMap(tile: customTiles)
-        self.mapOSM.moveTo(location: CLLocationCoordinate2D(latitude: 0, longitude: 0), zoom: 2, animated: false)
-
-        result(200)
-    }*/
     func initPosition(args: Any?, result: @escaping FlutterResult) {
         let pointInit = args as! [String: Double]
-        //print(pointInit)
-        //let initZoom =
         let location = CLLocationCoordinate2D(
             latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
         self.mapOSM.moveTo(location: location, zoom: zoomConfig.initZoom, animated: false)
@@ -408,7 +310,7 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
     private func addMarkerManually(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
         var iconSizeArg: [Int]? = [32, 32]
-        var icon: UIImage? = nil
+        var icon: OSMPlatformImage? = nil
         if args.keys.contains("icon") {
             let iconArg = args["icon"] as! [String: Any]
             iconSizeArg = iconArg["size"] as? [Int]
@@ -417,10 +319,10 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
         }
         if defaultMarker != nil && icon == nil {
             icon =
-                UIImage(named: defaultMarker!, in: Bundle.main, compatibleWith: nil) ?? UIImage(
-                    systemName: "mappin")!
+                ApplePlatformUtilities.bundledImage(named: defaultMarker!)
+                ?? ApplePlatformUtilities.systemImage(named: "mappin")
         } else if defaultMarker == nil && icon == nil {
-            icon = UIImage(systemName: "mappin")!
+            icon = ApplePlatformUtilities.systemImage(named: "mappin")
         }
 
         let point = args["point"] as! GeoPoint
@@ -435,7 +337,6 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
         if let _anchor = args["iconAnchor"] {
             anchor = AnchorGeoPoint(anchorMap: _anchor as! [String: Any])
         }
-        //GeoPointMap(icon: icon, coordinate: coordinate, angle: angle, anchor: anchor)
         let configuration = MarkerConfiguration(
             icon: icon!, iconSize: sizeIcon, angle: angle, anchor: anchor?.compute(),
             scaleType: MarkerScaleType.invariant)
@@ -446,7 +347,7 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
         let args = call.arguments as! [String: Any]
         let coordinate_old = (args["old_location"] as! GeoPoint).toLocationCoordinate()
         let coordinate_new = (args["new_location"] as! GeoPoint).toLocationCoordinate()
-        var icon: UIImage? = nil
+        var icon: OSMPlatformImage? = nil
         var iconSize: MarkerIconSize? = nil
         var angle = Float(0.0)
         var anchor: AnchorGeoPoint? = nil
@@ -465,16 +366,14 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
             icon: icon,
             iconSize: iconSize,
             angle: Float(angle), anchor: anchor?.compute())
-        //(x:sizeIcon?.first,y:sizeIcon?.last) as? MarkerIconSize
     }
     func updateMarkerIcon(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
-        var icon: UIImage?
+        var icon: OSMPlatformImage?
         var iconSize: MarkerIconSize?
         if args.keys.contains("icon") {
             let iconArg = args["icon"] as! [String: Any]
             icon = convertImage(codeImage: iconArg["icon"] as! String)
-            // MarkerIconData(image: , size:)
             iconSize = (iconArg["size"] as? [Int])!.toMarkerSize()
 
         }
@@ -572,12 +471,12 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
     }
     func configureUserLocation(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
-        var personMarkerIcon: UIImage = UIImage()
-        var directionMarkerIcon: UIImage?
+        var personMarkerIcon: OSMPlatformImage = OSMPlatformImage()
+        var directionMarkerIcon: OSMPlatformImage?
         var personIconConfig: MarkerConfiguration!
         if let personIconString = args["personIcon"] {
             let iconArg = personIconString as! [String: Any]
-            personMarkerIcon = convertImage(codeImage: iconArg["icon"] as! String) ?? UIImage()
+            personMarkerIcon = convertImage(codeImage: iconArg["icon"] as! String) ?? OSMPlatformImage()
             let personIconSize = (iconArg["size"] as? [Int])?.toMarkerSize()
             personIconConfig = MarkerConfiguration(
                 icon: personMarkerIcon, iconSize: personIconSize, angle: nil, anchor: nil)
@@ -643,8 +542,6 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
     }
     func drawShape(args: Any?, result: @escaping FlutterResult, shapeType: ShapeTypes) {
         let rectJson = args as! [String: Any]
-        //print(pointInit)
-        //let initZoom =
         let key = rectJson["key"] as! String
         let shape: PShape
         switch shapeType {
@@ -658,90 +555,9 @@ class MapCoreOSMView: NSObject, FlutterPlatformView, CLLocationManagerDelegate, 
         mapOSM.shapeManager.drawShape(key: key, shape: shape)
         result(200)
     }
-    func onTap(roadId: String) {
-        DispatchQueue.main.async {
-            let roadSelected = self.storedRoads[roadId]
-            if let road = roadSelected {
-                var mapInfo = road.roadInformation?.toMap(instructions: road.instructions) ?? [:]
-                mapInfo["key"] = roadId
-                self.channel.invokeMethod("receiveRoad", arguments: mapInfo)
-            } else {
-                self.channel.invokeMethod("receiveRoad", arguments: ["key": roadId])
-            }
-        }
 
-    }
-    func onMove(center: CLLocationCoordinate2D, bounds: BoundingBox, zoom: Double) {
-        let data: [String: Any] = [
-            "center": center.toGeoPoint(), "bounding": bounds.toMap(), "zoomLevel": zoom,
-        ]
-        if self.mapOSM.locationManager.isTrackingEnabled() && !isMovedToLocation
-            && latestUserLocation != nil && latestUserLocation! - center
-        {
-            isMovedToLocation = true
-        }
-        DispatchQueue.main.async {
-            self.channel.invokeMethod("receiveRegionIsChanging", arguments: data)
-        }
-    }
+    // MARK: - Roads
 
-    func onRotate(angle: Double) {
-
-    }
-    func onMapInteraction() {
-        if self.mapOSM.locationManager.isTrackingEnabled() && isMovedToLocation
-            && latestUserLocation != nil && !canSkipFollow && !userLocationWithoutControl
-        {
-            canSkipFollow = true
-            self.mapOSM.stopCamera()
-        }
-    }
-
-    func locationChanged(userLocation: CLLocationCoordinate2D, heading: Double) {
-        let geoMap = userLocation.toUserLocation(heading: heading)
-        latestUserLocation = userLocation
-        channel.invokeMethod("receiveUserLocation", arguments: geoMap)
-        if (!isMovedToLocation || !canSkipFollow) && !userLocationWithoutControl && mapInitialized {
-            self.mapOSM.locationManager.moveToUserLocation(animated: true)
-        }
-
-        if let result = resultFlutter {
-            result(geoMap)
-            resultFlutter = nil
-        }
-    }
-
-    func handlePermission(state: OSMFlutterFramework.LocationPermission) {
-
-    }
-
-    func onMarkerSingleTap(location: CLLocationCoordinate2D) {
-        DispatchQueue.main.async {
-            self.channel.invokeMethod("receiveGeoPoint", arguments: location.toGeoPoint())
-        }
-    }
-
-    func onMarkerLongPress(location: CLLocationCoordinate2D) {
-        DispatchQueue.main.async {
-            self.channel.invokeMethod("receiveGeoPointLongPress", arguments: location.toGeoPoint())
-        }
-    }
-
-    func onSingleTap(location: CLLocationCoordinate2D) {
-        DispatchQueue.main.async {
-            self.channel.invokeMethod("receiveSinglePress", arguments: location.toGeoPoint())
-        }
-
-    }
-
-    func onLongTap(location: CLLocationCoordinate2D) {
-        DispatchQueue.main.async {
-            self.channel.invokeMethod("receiveLongPress", arguments: location.toGeoPoint())
-        }
-
-    }
-}
-extension MapCoreOSMView {
     func drawRoadMCOSM(
         call: FlutterMethodCall,
         completion:
@@ -823,9 +639,9 @@ extension MapCoreOSMView {
         if isDotted {
             roadType = PolylineType.DOT
         }
-        var roadBoardColor: UIColor? = UIColor(hexString: "#f55b5b")
+        var roadBoardColor: OSMPlatformColor? = OSMPlatformColor(hexString: "#f55b5b")
         if let borderColor = args["roadBorderColor"] as? String {
-            roadBoardColor = UIColor(hexString: borderColor)
+            roadBoardColor = OSMPlatformColor(hexString: borderColor)
         }
         var roadBoardWidth: CFloat? = nil
         if let borderWidth = args["roadBorderWidth"] as? Double {
@@ -838,7 +654,7 @@ extension MapCoreOSMView {
         let roadKey = args["key"] as! String
         if route.coordinates != nil {
             let roadConfiguration = RoadConfiguration(
-                width: Float(roadWidth), color: UIColor(hexString: roadColor) ?? .blue,
+                width: Float(roadWidth), color: OSMPlatformColor(hexString: roadColor) ?? .blue,
                 borderWidth: roadBoardWidth, borderColor: roadBoardColor, polylineType: roadType)
             self.mapOSM.roadManager.addRoad(
                 id: roadKey, polylines: route.coordinates!, configuration: roadConfiguration)
@@ -923,17 +739,4 @@ extension MapCoreOSMView {
         result(200)
     }
 
-}
-class MapViewUIView: UIView {
-    public override init(frame: CGRect) {
-        super.init(frame: frame)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    override func layoutSubviews() {
-
-        super.layoutSubviews()
-    }
 }

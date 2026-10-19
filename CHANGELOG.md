@@ -13,6 +13,20 @@
   under `ios/` (see `ios/README.md`) for hand-wired CocoaPods consumers.
   Flutter-managed CocoaPods builds no longer pick up the podspec, so apps
   disabling SPM must stay on `2.1.x`
+- feat(darwin): share the native map implementation between iOS and macOS —
+  command dispatch, map state and event forwarding extracted from
+  `MapCoreOSMView` into a `MapSession` shared by an iOS
+  `FlutterPlatformView` wrapper and a new macOS `NSView` host
+  (`MacOSMapHostView`); platform imports, registrar messenger access, SF
+  Symbol fallback, bundled pin lookup and display scale are adapted per
+  platform via `ApplePlatformUtilities` and the framework's
+  `OSMPlatformImage`/`OSMPlatformColor` aliases; channel names, payloads and
+  the `plugins.dali.hamza/osmview` view id are unchanged; SPM manifest now
+  declares `.macOS("12.0")` and the pubspec registers macOS with
+  `sharedDarwinSource: true`. Native-only so far — Dart `AppKitView`
+  integration and the macOS example follow. Also adds an idempotent session
+  `dispose()` (handler/delegate/location teardown, pending-result failure)
+  and removes dead UIKit-only helpers
 - feat(ios)!: bump `OSMFlutterFramework` to 0.9.0 (MapCore 4.0.0) — both
   platforms now sit on MapCore 4.0.0 (Android via `mapscore` 4.0.0, iOS via
   the framework fork); plugin Swift sources needed zero changes

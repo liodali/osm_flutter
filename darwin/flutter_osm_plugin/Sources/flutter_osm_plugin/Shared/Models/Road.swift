@@ -224,9 +224,13 @@ extension RoadStep {
 
         var instructionObject =
             (instructionsV5[type] as! [String: Any])["default"] as! [String: Any]
-        var omitSide =
-            type == "off ramp"
-            && ((maneuver.modifier?.index(ofAccessibilityElement: drivingSide) ?? 0) >= 0)
+        // Historically `(maneuver.modifier?.index(ofAccessibilityElement: drivingSide) ?? 0) >= 0`,
+        // which resolved through UIKit's accessibility overlay to a value >= 0 in
+        // every reachable case (found index, not-found, or nil-coalesced 0), so the
+        // condition reduces to the maneuver type. Simplified to keep the shipped
+        // iOS behavior; the AppKit overlay does not expose the same API shape.
+        // TODO: the original intent was likely `modifier?.contains(drivingSide)`.
+        var omitSide = type == "off ramp"
         if maneuver.modifier != nil
             && (instructionsV5[type] as! [String: Any]).keys.contains(maneuver.modifier!)
             && !omitSide

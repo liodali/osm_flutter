@@ -55,6 +55,9 @@ flutter:
       ios:
         pluginClass: FlutterOsmPlugin
         sharedDarwinSource: true
+      macos:
+        pluginClass: FlutterOsmPlugin
+        sharedDarwinSource: true
       web:
         default_package: flutter_osm_web
 
