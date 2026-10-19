@@ -1,5 +1,14 @@
 ### Unreleased:
 
+- feat(macos): extend the Dart integration to macOS — the platform view is
+  embedded through `AppKitView` (same `plugins.dali.hamza/osmview` id,
+  creation params and codec as iOS; unsupported desktop platforms now throw
+  a clear `UnsupportedError` instead of building an `AndroidView`), map
+  initialization reuses the Apple `init#ios#map`/`map#init#ios` readiness
+  sequencing, Apple serialization branches (hex colors, tile urls, icon PNG
+  payloads, default tile reset) accept macOS, and location authorization is
+  delegated to the native implementation like on iOS. Android, Web and the
+  existing iOS wire behavior are unchanged
 - feat(ios): bump `OSMFlutterFramework` to 0.9.1 (upstream adds native macOS 12
   support; on iOS the new `OSMPlatformImage`/`OSMPlatformColor`/`OSMPlatformView`
   aliases resolve to the existing UIKit types, so plugin Swift sources needed
