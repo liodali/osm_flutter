@@ -19,10 +19,14 @@ import UIKit
 /// types on macOS.
 enum ApplePlatformUtilities {
 
-    /// Backing scale of the main display (2.0/3.0 on iOS, Retina scale on macOS).
-    static var displayScale: CGFloat {
+    /// Backing scale used to convert logical marker sizes to pixels: the scale
+    /// of the window hosting the map when available (`NSScreen.main` can be a
+    /// different display), falling back to the main screen, then 1.0. On iOS
+    /// this is the main screen scale, as before.
+    static func displayScale(for view: OSMPlatformView?) -> CGFloat {
         #if os(macOS)
-        return NSScreen.main?.backingScaleFactor ?? 1.0
+        return view?.window?.backingScaleFactor
+            ?? NSScreen.main?.backingScaleFactor ?? 1.0
         #else
         return UIScreen.main.scale
         #endif
@@ -37,11 +41,13 @@ enum ApplePlatformUtilities {
         #endif
     }
 
-    /// Image loaded by name from the application bundle, used for the bundled
-    /// default pin asset.
+    /// Loads the bundled default pin. `name` is a file path produced by the
+    /// Flutter asset lookup key (`Bundle.main.path(forResource:)`), so on macOS
+    /// it must be read with `NSImage(contentsOfFile:)` — `NSImage(named:)` only
+    /// matches asset-catalog names and returns nil for paths.
     static func bundledImage(named name: String) -> OSMPlatformImage? {
         #if os(macOS)
-        return NSImage(named: NSImage.Name(name))
+        return NSImage(contentsOfFile: name)
         #else
         return UIImage(named: name, in: Bundle.main, compatibleWith: nil)
         #endif

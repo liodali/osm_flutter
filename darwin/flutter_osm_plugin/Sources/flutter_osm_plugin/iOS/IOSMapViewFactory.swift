@@ -43,6 +43,9 @@ public class IOSMapViewFactory: NSObject, FlutterPlatformViewFactory {
 }
 
 /// Thin iOS `FlutterPlatformView` wrapper retaining the shared map session.
+/// iOS `FlutterPlatformView` has no dispose callback, so teardown is driven
+/// from here: the delegate proxy breaks the session <-> map retain cycle and
+/// this deinit runs the session disposal when Flutter discards the view.
 @MainActor
 final class IOSMapView: NSObject, FlutterPlatformView {
     let session: MapSession
@@ -53,6 +56,13 @@ final class IOSMapView: NSObject, FlutterPlatformView {
 
     public func view() -> UIView {
         return session.platformView
+    }
+
+    deinit {
+        // The wrapper is only released by the engine on the main thread.
+        MainActor.assumeIsolated {
+            session.dispose()
+        }
     }
 }
 

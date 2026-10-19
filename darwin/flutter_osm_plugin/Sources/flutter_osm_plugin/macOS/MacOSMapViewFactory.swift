@@ -57,6 +57,13 @@ final class MacOSMapHostView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    /// Re-applies scale-dependent icons (user-location markers) when the view
+    /// moves to a display with a different backing scale.
+    override public func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        session.handleDisplayScaleChanged()
+    }
+
     deinit {
         // The host view is only released by the engine on the main thread.
         MainActor.assumeIsolated {

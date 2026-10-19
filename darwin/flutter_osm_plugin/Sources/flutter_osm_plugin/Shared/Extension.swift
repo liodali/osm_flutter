@@ -623,8 +623,8 @@ extension Double {
     }
 }
 extension Array where Element == Int {
-    func toMarkerSize()-> MarkerIconSize {
-        (x:Int(CGFloat(self.first!) * ApplePlatformUtilities.displayScale),y:Int(CGFloat(self.last!) * ApplePlatformUtilities.displayScale))
+    func toMarkerSize(displayScale: CGFloat)-> MarkerIconSize {
+        (x:Int(CGFloat(self.first!) * displayScale),y:Int(CGFloat(self.last!) * displayScale))
     }
 }
 extension OSMPlatformColor {

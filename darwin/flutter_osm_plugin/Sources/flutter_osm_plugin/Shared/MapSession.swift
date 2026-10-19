@@ -47,6 +47,15 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
     let defaultMarker: String?
     private(set) var latestUserLocation: CLLocationCoordinate2D? = nil
     private var isDisposed: Bool = false
+    /// Results of in-flight road commands; completed exactly once and failed
+    /// collectively on disposal so the Dart futures can never hang.
+    private var outstandingRoadResults: [(id: String, result: FlutterResult)] = []
+    #if os(macOS)
+    /// Arguments of the last `user#locationMarkers` call, replayed when the
+    /// hosting window moves between displays so user-location markers re-render
+    /// at the new backing scale.
+    var lastUserLocationMarkersArgs: [String: Any]? = nil
+    #endif
 
     /// The native view to embed: a `UIView` on iOS, an `NSView` on macOS.
     var platformView: OSMPlatformView {
@@ -95,19 +104,54 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
         self.channel = channel
         super.init()
         self.mapOSM.enableRotation(enable: enableRotationGesture)
-        channel.setMethodCallHandler({
+        channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
-            self.onListenMethodChannel(call: call, result: result)
+            self?.onListenMethodChannel(call: call, result: result)
         })
-        self.mapOSM.onMapGestureDelegate = self
-        self.mapOSM.mapHandlerDelegate = self
-        self.mapOSM.userLocationDelegate = self
-        self.mapOSM.roadTapHandlerDelegate = self
-        self.mapOSM.onMapMove = self
+        // Route every framework delegate through a weak proxy so the map view
+        // never retains the session directly (see MapDelegateProxy).
+        let delegateProxy = MapDelegateProxy(session: self)
+        self.mapOSM.onMapGestureDelegate = delegateProxy
+        self.mapOSM.mapHandlerDelegate = delegateProxy
+        self.mapOSM.userLocationDelegate = delegateProxy
+        self.mapOSM.roadTapHandlerDelegate = delegateProxy
+        self.mapOSM.onMapMove = delegateProxy
         self.mapOSM.enableRotation(enable: enableRotationGesture)
         if self.isStaticMap {
             self.mapOSM.disableTouch()
         }
+    }
+
+    /// Wraps a road-command result so it is completed exactly once: either by
+    /// the normal command flow or with a disposal error when the map goes away
+    /// before the routing request finishes.
+    func trackRoadResult(id: String, _ result: @escaping FlutterResult) -> FlutterResult {
+        outstandingRoadResults.append((id, result))
+        return { [weak self] reply in
+            self?.completeRoadResult(id: id, reply: reply)
+        }
+    }
+
+    private func completeRoadResult(id: String, reply: Any?) {
+        guard let index = outstandingRoadResults.firstIndex(where: { $0.id == id }) else {
+            // Already completed (or failed during disposal).
+            return
+        }
+        let entry = outstandingRoadResults.remove(at: index)
+        entry.result(reply)
+    }
+
+    /// macOS hook invoked by the hosting view when its backing properties
+    /// (display scale, color space) change: re-applies the user-location marker
+    /// icons at the new scale.
+    func handleDisplayScaleChanged() {
+        #if os(macOS)
+        guard !isDisposed, let args = lastUserLocationMarkersArgs else {
+            return
+        }
+        configureUserLocation(
+            call: FlutterMethodCall(methodName: "user#locationMarkers", arguments: args))
+        #endif
     }
 
     /// Tears down the session: stops the method-channel handler, detaches every
@@ -130,6 +174,14 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
                 FlutterError(code: "disposed", message: "map was disposed", details: nil))
         }
         resultFlutter = nil
+        let pendingRoads = outstandingRoadResults
+        outstandingRoadResults.removeAll()
+        for entry in pendingRoads {
+            entry.result(
+                FlutterError(
+                    code: "disposed", message: "map was disposed before the road completed",
+                    details: nil))
+        }
     }
 
     deinit {

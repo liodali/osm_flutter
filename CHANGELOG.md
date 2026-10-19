@@ -27,6 +27,18 @@
   integration and the macOS example follow. Also adds an idempotent session
   `dispose()` (handler/delegate/location teardown, pending-result failure)
   and removes dead UIKit-only helpers
+- fix(darwin): harden the shared session after review — iOS teardown now
+  actually runs (the five framework delegate connections route through a
+  weak `MapDelegateProxy`, breaking the session <-> map retain cycle;
+  `IOSMapView.deinit` triggers the idempotent disposal, since iOS
+  `FlutterPlatformView` has no dispose callback); the macOS default pin
+  loads through `NSImage(contentsOfFile:)` (asset lookup keys are file
+  paths, which `NSImage(named:)` never matches); in-flight
+  `road`/`draw#multi#road` results are tracked and failed with a `disposed`
+  error on disposal instead of hanging the Dart future; marker sizes use
+  the hosting window's backing scale (not `NSScreen.main`) and macOS
+  re-applies user-location icons when the window changes displays via
+  `viewDidChangeBackingProperties()`
 - feat(ios)!: bump `OSMFlutterFramework` to 0.9.0 (MapCore 4.0.0) — both
   platforms now sit on MapCore 4.0.0 (Android via `mapscore` 4.0.0, iOS via
   the framework fork); plugin Swift sources needed zero changes

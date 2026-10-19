@@ -134,13 +134,16 @@ extension MapSession {
             result(200)
             break
         case "road":
+            let roadKey = ((call.arguments as? [String: Any])?["key"] as? String) ?? UUID().uuidString
+            let trackedResult = trackRoadResult(id: roadKey, result)
             drawRoadMCOSM(call: call) {
                 [weak self] roadInfo, road, roadData, boundingbox, polyline, error in
                 guard let self else {
+                    // Dispose already failed the tracked result.
                     return
                 }
                 if error != nil {
-                    result(FlutterError(code: "400", message: "error to draw road", details: nil))
+                    trackedResult(FlutterError(code: "400", message: "error to draw road", details: nil))
                 } else {
                     lastRoadKey = roadInfo?.id
                     let roadConfiguration = roadData.toRoadConfiguration()
@@ -154,19 +157,21 @@ extension MapSession {
                     let instructions = road?.toInstruction() ?? [RoadInstruction]()
                     storedRoads[roadInfo!.id] = StoredRoad(
                         id: roadInfo!.id, roadInformation: roadInfo, instructions: instructions)
-                    result(roadInfo!.toMap(instructions: instructions))
+                    trackedResult(roadInfo!.toMap(instructions: instructions))
                 }
 
             }
             //result(["distance": 0, "duration": 0])
             break
         case "draw#multi#road":
+            let trackedResult = trackRoadResult(id: "multi-" + UUID().uuidString, result)
             drawMultiRoad(call: call) { [weak self] roadInfos, roadsAndRoadData, error in
                 guard let self else {
+                    // Dispose already failed the tracked result.
                     return
                 }
                 if roadInfos.isEmpty && roadsAndRoadData.isEmpty {
-                    result(
+                    trackedResult(
                         FlutterError(
                             code: "400", message: "error to draw multiple road", details: nil))
                 } else {
@@ -199,7 +204,7 @@ extension MapSession {
                         let instructions = roads[index].1.toInstruction()
                         return info!.toMap(instructions: instructions)
                     }
-                    result(infos)
+                    trackedResult(infos)
                 }
 
             }
@@ -328,7 +333,7 @@ extension MapSession {
         let point = args["point"] as! GeoPoint
         let coordinate = point.toLocationCoordinate()
 
-        let sizeIcon = iconSizeArg!.toMarkerSize()
+        let sizeIcon = iconSizeArg!.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
         var angle = Float(0.0)
         var anchor: AnchorGeoPoint? = nil
         if let _angle = point["angle"] {
@@ -353,7 +358,7 @@ extension MapSession {
         var anchor: AnchorGeoPoint? = nil
         if let iconStr = args["new_icon"] as? [String: Any] {
             icon = convertImage(codeImage: iconStr["icon"] as! String)
-            iconSize = (iconStr["size"] as? [Int])!.toMarkerSize()
+            iconSize = (iconStr["size"] as? [Int])!.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
         }
         if let _angle = args["angle"] as? Double {
             angle = Float(_angle)
@@ -374,7 +379,7 @@ extension MapSession {
         if args.keys.contains("icon") {
             let iconArg = args["icon"] as! [String: Any]
             icon = convertImage(codeImage: iconArg["icon"] as! String)
-            iconSize = (iconArg["size"] as? [Int])!.toMarkerSize()
+            iconSize = (iconArg["size"] as? [Int])!.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
 
         }
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
@@ -447,7 +452,7 @@ extension MapSession {
         let id = args["id"] as! String
         let bitmapArg = args["bitmap"] as! [String: Any]
         let icon = convertImage(codeImage: bitmapArg["icon"] as! String)
-        let iconSize = (bitmapArg["size"] as? [Int])?.toMarkerSize()
+        let iconSize = (bitmapArg["size"] as? [Int])?.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
         self.mapOSM.poisManager.setOrCreateIconPoi(id: id, icon: icon!, iconSize: iconSize)
     }
 
@@ -471,13 +476,18 @@ extension MapSession {
     }
     func configureUserLocation(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
+        #if os(macOS)
+        // Remember the arguments to re-apply the icons when the window moves
+        // between displays with a different backing scale.
+        lastUserLocationMarkersArgs = args
+        #endif
         var personMarkerIcon: OSMPlatformImage = OSMPlatformImage()
         var directionMarkerIcon: OSMPlatformImage?
         var personIconConfig: MarkerConfiguration!
         if let personIconString = args["personIcon"] {
             let iconArg = personIconString as! [String: Any]
             personMarkerIcon = convertImage(codeImage: iconArg["icon"] as! String) ?? OSMPlatformImage()
-            let personIconSize = (iconArg["size"] as? [Int])?.toMarkerSize()
+            let personIconSize = (iconArg["size"] as? [Int])?.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
             personIconConfig = MarkerConfiguration(
                 icon: personMarkerIcon, iconSize: personIconSize, angle: nil, anchor: nil)
 
@@ -486,7 +496,7 @@ extension MapSession {
         if let arrowDirectionIconString = args["arrowDirectionIcon"] {
             let iconArg = arrowDirectionIconString as! [String: Any]
             directionMarkerIcon = convertImage(codeImage: iconArg["icon"] as! String)
-            let directionIconSize = (iconArg["size"] as? [Int])?.toMarkerSize()
+            let directionIconSize = (iconArg["size"] as? [Int])?.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
             directionMarkerConfiguration = MarkerConfiguration(
                 icon: directionMarkerIcon!,
                 iconSize: directionIconSize,
