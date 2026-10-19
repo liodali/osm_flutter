@@ -83,7 +83,8 @@ extension ColorMap on Color {
   }
 
   Map<String, dynamic> toMapPlatform(String key) {
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
       return toHexMap(key);
     }
     return toMap(key);
@@ -93,7 +94,8 @@ extension ColorMap on Color {
     if (kIsWeb) {
       return toHexColorWeb();
     }
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
       return toHexColor();
     }
     return [
@@ -170,7 +172,8 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
           commonRoadOption.roadType.toString();
       final color = roadConf.roadOptionConfiguration?.roadColor ??
           commonRoadOption.roadColor;
-      if (defaultTargetPlatform == TargetPlatform.iOS) {
+      if (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS) {
         map.addAll(color.toHexMap("roadColor"));
 
         map["roadWidth"] = roadConf.roadOptionConfiguration?.roadWidth ??
@@ -205,7 +208,8 @@ extension ExtTileUrls on TileURLs {
     if (defaultTargetPlatform == TargetPlatform.android) {
       return toMapAndroid();
     }
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
       return toMapiOS();
     }
     if (kIsWeb) {

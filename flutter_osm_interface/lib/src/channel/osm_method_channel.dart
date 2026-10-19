@@ -339,8 +339,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
         globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
 
     ui.Image image;
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      //added pixelRatio : 5 in ios to get clear image
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      //added pixelRatio : 5 in apple platforms to get clear image
       image = await boundary.toImage(pixelRatio: 5);
     } else {
       image = await boundary.toImage();
@@ -349,7 +350,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
     ByteData byteData =
         (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
     Uint8List pngBytes = byteData.buffer.asUint8List();
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
       return {
         "icon": pngBytes.convertToString(),
         "size": globalKey.currentContext != null
@@ -647,7 +649,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> changeTileLayer(int idOSM, CustomTile? tile) async {
     //osmTileURL
     final argTile = tile?.toMap() ??
-        (defaultTargetPlatform == TargetPlatform.iOS
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+                defaultTargetPlatform == TargetPlatform.macOS
             ? CustomTile.osm().toMap()
             : null);
     await _channels[idOSM]!.invokeMethod("change#tile", argTile);
