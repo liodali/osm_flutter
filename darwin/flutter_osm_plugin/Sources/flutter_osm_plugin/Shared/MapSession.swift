@@ -51,10 +51,71 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
     /// collectively on disposal so the Dart futures can never hang.
     private var outstandingRoadResults: [(id: String, result: FlutterResult)] = []
     #if os(macOS)
-    /// Arguments of the last `user#locationMarkers` call, replayed when the
-    /// hosting window moves between displays so user-location markers re-render
-    /// at the new backing scale.
+    /// Arguments of the last `user#locationMarkers` call, retained for the
+    /// logical (pre-scale) icon sizes; refreshed together with all other
+    /// scale-dependent icons when the hosting window changes displays.
     var lastUserLocationMarkersArgs: [String: Any]? = nil
+    /// Logical (Dart-side, pre-scale) data retained to re-apply pixel sizes
+    /// of regular markers when the hosting window moves between displays.
+    /// Keyed by `"lat;lon"` of the marker location.
+    private struct MarkerScaleRecord {
+        var iconBase64: String?
+        var logicalSize: [Int]?
+        var angle: Float
+        var anchorArgs: [String: Any]?
+    }
+    private var markerScaleRecords: [String: MarkerScaleRecord] = [:]
+    /// Bitmap arguments of the last `staticPosition#IconMarker` call per POI id.
+    private var staticPoiIconArgs: [String: [String: Any]] = [:]
+
+    private static func markerScaleKey(_ coordinate: CLLocationCoordinate2D) -> String {
+        String(format: "%F;%F", coordinate.latitude, coordinate.longitude)
+    }
+
+    func recordMarkerScale(
+        coordinate: CLLocationCoordinate2D, iconBase64: String?, logicalSize: [Int]?,
+        angle: Float, anchorArgs: [String: Any]?
+    ) {
+        markerScaleRecords[Self.markerScaleKey(coordinate)] = MarkerScaleRecord(
+            iconBase64: iconBase64, logicalSize: logicalSize, angle: angle, anchorArgs: anchorArgs)
+    }
+
+    func moveMarkerScaleRecord(
+        from oldCoordinate: CLLocationCoordinate2D, to newCoordinate: CLLocationCoordinate2D,
+        iconBase64: String?, logicalSize: [Int]?, angle: Float, anchorArgs: [String: Any]?
+    ) {
+        let existing = markerScaleRecords.removeValue(
+            forKey: Self.markerScaleKey(oldCoordinate))
+        markerScaleRecords[Self.markerScaleKey(newCoordinate)] = MarkerScaleRecord(
+            iconBase64: iconBase64 ?? existing?.iconBase64,
+            logicalSize: logicalSize ?? existing?.logicalSize,
+            angle: angle,
+            anchorArgs: anchorArgs ?? existing?.anchorArgs)
+    }
+
+    func updateMarkerScaleRecord(
+        at coordinate: CLLocationCoordinate2D, iconBase64: String?, logicalSize: [Int]?
+    ) {
+        let key = Self.markerScaleKey(coordinate)
+        guard var record = markerScaleRecords[key] else {
+            return
+        }
+        if let iconBase64 = iconBase64 {
+            record.iconBase64 = iconBase64
+        }
+        if let logicalSize = logicalSize {
+            record.logicalSize = logicalSize
+        }
+        markerScaleRecords[key] = record
+    }
+
+    func removeMarkerScaleRecord(at coordinate: CLLocationCoordinate2D) {
+        markerScaleRecords.removeValue(forKey: Self.markerScaleKey(coordinate))
+    }
+
+    func recordStaticPoiIcon(id: String, bitmapArgs: [String: Any]) {
+        staticPoiIconArgs[id] = bitmapArgs
+    }
     #endif
 
     /// The native view to embed: a `UIView` on iOS, an `NSView` on macOS.
@@ -142,15 +203,71 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
     }
 
     /// macOS hook invoked by the hosting view when its backing properties
-    /// (display scale, color space) change: re-applies the user-location marker
-    /// icons at the new scale.
+    /// (display scale, color space) change: re-applies every scale-dependent
+    /// icon at the new backing scale — user-location markers (sizes only,
+    /// preserving the icon, angle and anchor of the live configuration, e.g.
+    /// the tracking anchor applied by `startTrackUser`), static POI icons, and
+    /// regular markers (updated in place at their location).
     func handleDisplayScaleChanged() {
         #if os(macOS)
-        guard !isDisposed, let args = lastUserLocationMarkersArgs else {
+        guard !isDisposed else {
             return
         }
-        configureUserLocation(
-            call: FlutterMethodCall(methodName: "user#locationMarkers", arguments: args))
+        let displayScale = ApplePlatformUtilities.displayScale(for: mapOSM)
+
+        // 1. User-location icons: recompute pixel sizes from the last logical
+        //    sizes while keeping every other setting of the live configuration.
+        if let userLocationArgs = lastUserLocationMarkersArgs {
+            let personLogical =
+                (userLocationArgs["personIcon"] as? [String: Any])?["size"] as? [Int]
+            let directionLogical =
+                (userLocationArgs["arrowDirectionIcon"] as? [String: Any])?["size"] as? [Int]
+            let current = mapOSM.locationManager.userLocationIconConfiguration
+            let person = current.userIcon.copyWith(
+                iconSize: personLogical?.toMarkerSize(displayScale: displayScale))
+            let direction = current.directionIcon?.copyWith(
+                iconSize: directionLogical?.toMarkerSize(displayScale: displayScale))
+            mapOSM.locationManager.setUserLocationIcons(
+                userLocationIcons: UserLocationConfiguration(
+                    userIcon: person, directionIcon: direction))
+        }
+
+        // 2. Static POI icons: `setOrCreateIconPoi` updates existing POIs
+        //    in place, so replaying the stored icon arguments is enough.
+        for (id, bitmapArg) in staticPoiIconArgs {
+            setMarkerStaticGeoPIcon(
+                call: FlutterMethodCall(
+                    methodName: "staticPosition#IconMarker",
+                    arguments: ["id": id, "bitmap": bitmapArg]))
+        }
+
+        // 3. Regular markers: refresh icon size in place (same location).
+        for (key, record) in markerScaleRecords {
+            let parts = key.split(separator: ";")
+            guard parts.count == 2,
+                let lat = Double(parts[0]),
+                let lon = Double(parts[1])
+            else {
+                continue
+            }
+            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            var icon = record.iconBase64.flatMap { convertImage(codeImage: $0) }
+            if icon == nil {
+                if let defaultMarker = defaultMarker {
+                    icon = ApplePlatformUtilities.bundledImage(named: defaultMarker)
+                        ?? ApplePlatformUtilities.systemImage(named: "mappin")
+                } else {
+                    icon = ApplePlatformUtilities.systemImage(named: "mappin")
+                }
+            }
+            let anchor = record.anchorArgs.map { AnchorGeoPoint(anchorMap: $0).compute() }
+            mapOSM.markerManager.updateMarker(
+                oldlocation: coordinate, newlocation: coordinate,
+                icon: icon,
+                iconSize: record.logicalSize?.toMarkerSize(displayScale: displayScale),
+                angle: record.angle,
+                anchor: anchor)
+        }
         #endif
     }
 

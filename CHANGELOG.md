@@ -39,6 +39,14 @@
   the hosting window's backing scale (not `NSScreen.main`) and macOS
   re-applies user-location icons when the window changes displays via
   `viewDidChangeBackingProperties()`
+- fix(darwin): refresh every scale-dependent icon on display changes and
+  keep the tracking anchor — the backing-scale callback now also re-applies
+  regular markers (logical sizes retained per coordinate across
+  add/change/update/delete commands and refreshed in place) and static POI
+  icons (retained per id), and user-location icons are re-sized via
+  `copyWith(iconSize:)` on the live configuration instead of replaying
+  `configureUserLocation`, so the anchor applied by `startTrackUser` is
+  preserved
 - feat(ios)!: bump `OSMFlutterFramework` to 0.9.0 (MapCore 4.0.0) — both
   platforms now sit on MapCore 4.0.0 (Android via `mapscore` 4.0.0, iOS via
   the framework fork); plugin Swift sources needed zero changes

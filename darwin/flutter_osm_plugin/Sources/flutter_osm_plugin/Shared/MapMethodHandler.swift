@@ -347,6 +347,14 @@ extension MapSession {
             scaleType: MarkerScaleType.invariant)
         let marker = Marker(location: coordinate, markerConfiguration: configuration)
         self.mapOSM.markerManager.addMarker(marker: marker)
+        #if os(macOS)
+        recordMarkerScale(
+            coordinate: coordinate,
+            iconBase64: (args["icon"] as? [String: Any])?["icon"] as? String,
+            logicalSize: iconSizeArg,
+            angle: angle,
+            anchorArgs: args["iconAnchor"] as? [String: Any])
+        #endif
     }
     private func changePositionMarker(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
@@ -371,6 +379,15 @@ extension MapSession {
             icon: icon,
             iconSize: iconSize,
             angle: Float(angle), anchor: anchor?.compute())
+        #if os(macOS)
+        let newIconArg = args["new_icon"] as? [String: Any]
+        moveMarkerScaleRecord(
+            from: coordinate_old, to: coordinate_new,
+            iconBase64: newIconArg?["icon"] as? String,
+            logicalSize: newIconArg?["size"] as? [Int],
+            angle: Float(args["angle"] as? Double ?? 0),
+            anchorArgs: args["iconAnchor"] as? [String: Any])
+        #endif
     }
     func updateMarkerIcon(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
@@ -385,16 +402,29 @@ extension MapSession {
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
         self.mapOSM.markerManager.updateMarker(
             oldlocation: coordinate, newlocation: coordinate, icon: icon, iconSize: iconSize)
+        #if os(macOS)
+        let iconArg = args["icon"] as? [String: Any]
+        updateMarkerScaleRecord(
+            at: coordinate,
+            iconBase64: iconArg?["icon"] as? String,
+            logicalSize: iconArg?["size"] as? [Int])
+        #endif
     }
     func deleteMarkers(call: FlutterMethodCall) {
         let geoPoints = (call.arguments as! [GeoPoint]).map { point -> CLLocationCoordinate2D in
             point.toLocationCoordinate()
         }
         self.mapOSM.markerManager.removeMarkers(locations: geoPoints)
+        #if os(macOS)
+        geoPoints.forEach { removeMarkerScaleRecord(at: $0) }
+        #endif
     }
     func deleteMarker(call: FlutterMethodCall) {
         let location = (call.arguments as! GeoPoint).toLocationCoordinate()
         self.mapOSM.markerManager.removeMarker(location: location)
+        #if os(macOS)
+        removeMarkerScaleRecord(at: location)
+        #endif
     }
     func changePosition(args: Any?, result: @escaping FlutterResult) {
         result(200)
@@ -447,13 +477,16 @@ extension MapSession {
         self.mapOSM.setBoundingBox(bounds: BoundingBox())
         result(200)
     }
-    private func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
+    func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
         let id = args["id"] as! String
         let bitmapArg = args["bitmap"] as! [String: Any]
         let icon = convertImage(codeImage: bitmapArg["icon"] as! String)
         let iconSize = (bitmapArg["size"] as? [Int])?.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
         self.mapOSM.poisManager.setOrCreateIconPoi(id: id, icon: icon!, iconSize: iconSize)
+        #if os(macOS)
+        recordStaticPoiIcon(id: id, bitmapArgs: bitmapArg)
+        #endif
     }
 
     private func setStaticGeoPoint(call: FlutterMethodCall) {
