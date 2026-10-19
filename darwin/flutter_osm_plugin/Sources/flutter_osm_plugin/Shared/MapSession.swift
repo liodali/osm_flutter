@@ -370,7 +370,20 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
     }
 
     func handlePermission(state: OSMFlutterFramework.LocationPermission) {
-
+        if state == LocationPermission.NotGranted {
+            // Authorization denied or restricted: complete any pending
+            // `user#position` request with a permission error so `myLocation()`
+            // — and the withUserPosition initialization waiting on it — fails
+            // clearly instead of hanging forever.
+            if let pendingResult = resultFlutter {
+                resultFlutter = nil
+                pendingResult(
+                    FlutterError(
+                        code: "permission",
+                        message: "location permission was not granted",
+                        details: nil))
+            }
+        }
     }
 
     func onMarkerSingleTap(location: CLLocationCoordinate2D) {
