@@ -1,5 +1,11 @@
 ### Unreleased:
 
+- feat(ios): bump `OSMFlutterFramework` to 0.9.1 (upstream adds native macOS 12
+  support; on iOS the new `OSMPlatformImage`/`OSMPlatformColor`/`OSMPlatformView`
+  aliases resolve to the existing UIKit types, so plugin Swift sources needed
+  zero changes — only the SPM pin and `Package.resolved` changed). Building the
+  iOS host now requires Xcode 26+ / Swift 6.2+; the plugin's iOS deployment
+  minimum stays 15.6 and `maps-core` stays at `4.0.1-spm.2`
 - feat(ios)!: bump `OSMFlutterFramework` to 0.9.0 (MapCore 4.0.0) — both
   platforms now sit on MapCore 4.0.0 (Android via `mapscore` 4.0.0, iOS via
   the framework fork); plugin Swift sources needed zero changes
@@ -7,8 +13,7 @@
   be updated anymore — `OSMFlutterFramework` suspended CocoaPods at 0.9.0, so
   the podspec stays frozen on the legacy 0.8.x engine (maps-core 3.7.x era);
   the plugin is **SPM-only** going forward
-  (`ios/flutter_osm_plugin/Package.swift`, pinned to `OSMMapCoreIOSFramework`
-  0.9.0)
+  (`ios/flutter_osm_plugin/Package.swift`, SPM-pinned to `OSMMapCoreIOSFramework`)
 
 ### 2.1.0+1:
 
