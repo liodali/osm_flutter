@@ -18,26 +18,29 @@ import Foundation
 public class IOSMapViewFactory: NSObject, FlutterPlatformViewFactory {
     let messenger: FlutterBinaryMessenger
     let defaultPinPath: String?
-    nonisolated init(messenger: FlutterBinaryMessenger, defaultPin: String?) {
+    init(messenger: FlutterBinaryMessenger, defaultPin: String?) {
         self.messenger = messenger
         self.defaultPinPath = defaultPin
     }
 
-    public func create(
+    nonisolated public func create(
         withFrame frame: CGRect,
         viewIdentifier viewId: Int64,
         arguments args: Any?
     ) -> FlutterPlatformView {
-        let channel = FlutterMethodChannel(
-            name: "plugins.dali.hamza/osmview_" + String(viewId),
-            binaryMessenger: self.messenger
-        )
-        return IOSMapView(
-            session: MapSession(
-                frame, viewId: viewId, channel: channel, args: args, defaultPin: defaultPinPath))
+        // Flutter creates platform views synchronously on the platform thread.
+        return MainActor.assumeIsolated {
+            let channel = FlutterMethodChannel(
+                name: "plugins.dali.hamza/osmview_" + String(viewId),
+                binaryMessenger: self.messenger
+            )
+            return IOSMapView(
+                session: MapSession(
+                    frame, viewId: viewId, channel: channel, args: args, defaultPin: defaultPinPath))
+        }
     }
 
-    public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+    nonisolated public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
         return FlutterStandardMessageCodec.sharedInstance()
     }
 }
@@ -54,8 +57,8 @@ final class IOSMapView: NSObject, FlutterPlatformView {
         self.session = session
     }
 
-    public func view() -> UIView {
-        return session.platformView
+    nonisolated public func view() -> UIView {
+        MainActor.assumeIsolated { session.platformView }
     }
 
     deinit {

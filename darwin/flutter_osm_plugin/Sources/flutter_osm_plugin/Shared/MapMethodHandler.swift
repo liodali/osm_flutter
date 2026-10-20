@@ -14,7 +14,7 @@ import FlutterMacOS
 import Foundation
 @preconcurrency import OSMFlutterFramework
 
-@_implementationOnly import Polyline
+import Polyline
 
 extension MapSession {
 
@@ -67,7 +67,6 @@ extension MapSession {
             break
         case "map#center":
             result(self.mapOSM.center().toGeoPoint())
-            result(200)
             break
         case "trackMe":
             let args = call.arguments as! [Any]

@@ -16,7 +16,7 @@ import Foundation
 /// would keep the session (and through it the map) alive forever; routing them
 /// through this proxy removes that session <-> map retain cycle.
 ///
-/// The framework protocols are nonisolated requirements, so every witness hops
+/// Some framework delegate requirements are nonisolated, so every witness hops
 /// to the main queue before touching the session (mirroring how the session
 /// itself implements these callbacks); the FIFO queue preserves event order.
 @MainActor
@@ -31,61 +31,64 @@ final class MapDelegateProxy: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandl
         super.init()
     }
 
-    func onSingleTap(location: CLLocationCoordinate2D) {
+    nonisolated func onSingleTap(location: CLLocationCoordinate2D) {
         DispatchQueue.main.async {
             self.session?.onSingleTap(location: location)
         }
     }
 
-    func onLongTap(location: CLLocationCoordinate2D) {
+    nonisolated func onLongTap(location: CLLocationCoordinate2D) {
         DispatchQueue.main.async {
             self.session?.onLongTap(location: location)
         }
     }
 
-    func onMove(center: CLLocationCoordinate2D, bounds: BoundingBox, zoom: Double) {
+    nonisolated func onMove(center: CLLocationCoordinate2D, bounds: BoundingBox, zoom: Double) {
+        let coordinates = [bounds.north, bounds.east, bounds.south, bounds.west]
         DispatchQueue.main.async {
-            self.session?.onMove(center: center, bounds: bounds, zoom: zoom)
+            self.session?.onMove(
+                center: center, bounds: BoundingBox(boundingBoxs: coordinates), zoom: zoom)
         }
     }
 
-    func onRotate(angle: Double) {
+    nonisolated func onRotate(angle: Double) {
         DispatchQueue.main.async {
             self.session?.onRotate(angle: angle)
         }
     }
 
-    func onMapInteraction() {
+    nonisolated func onMapInteraction() {
         DispatchQueue.main.async {
             self.session?.onMapInteraction()
         }
     }
 
-    func onMarkerSingleTap(location: CLLocationCoordinate2D) {
+    nonisolated func onMarkerSingleTap(location: CLLocationCoordinate2D) {
         DispatchQueue.main.async {
             self.session?.onMarkerSingleTap(location: location)
         }
     }
 
-    func onMarkerLongPress(location: CLLocationCoordinate2D) {
+    nonisolated func onMarkerLongPress(location: CLLocationCoordinate2D) {
         DispatchQueue.main.async {
             self.session?.onMarkerLongPress(location: location)
         }
     }
 
-    func locationChanged(userLocation: CLLocationCoordinate2D, heading: Double) {
+    nonisolated func locationChanged(userLocation: CLLocationCoordinate2D, heading: Double) {
         DispatchQueue.main.async {
             self.session?.locationChanged(userLocation: userLocation, heading: heading)
         }
     }
 
-    func handlePermission(state: LocationPermission) {
+    nonisolated func handlePermission(state: LocationPermission) {
+        let granted = state == .Granted
         DispatchQueue.main.async {
-            self.session?.handlePermission(state: state)
+            self.session?.handlePermission(state: granted ? .Granted : .NotGranted)
         }
     }
 
-    func onTap(roadId: String) {
+    nonisolated func onTap(roadId: String) {
         DispatchQueue.main.async {
             self.session?.onTap(roadId: roadId)
         }

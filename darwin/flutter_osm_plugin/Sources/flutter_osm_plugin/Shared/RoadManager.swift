@@ -8,7 +8,9 @@ import MapKit
 import Polyline
 
 typealias ParserJson = ([String: Any?]?) -> Road
-typealias RoadHandler = @Sendable (Road?) -> Void
+// getRoad delivers results on DispatchQueue.main; callers may update map state
+// and aggregate responses there without crossing actor boundaries.
+typealias RoadHandler = @MainActor @Sendable (Road?) -> Void
 
 enum RoadType: String {
     case car = "routed-car"
@@ -16,6 +18,7 @@ enum RoadType: String {
     case foot = "routed-foot"
 }
 
+@MainActor
 protocol PRoadManager {
 
     func getRoad(wayPoints: [String], typeRoad: RoadType, handler: @escaping RoadHandler)
@@ -24,7 +27,7 @@ protocol PRoadManager {
 }
 
 @MainActor
-class OSMRoadManager: PRoadManager, @unchecked Sendable {
+class OSMRoadManager: PRoadManager {
 
     private let contentLangEn: [String: Any]
 

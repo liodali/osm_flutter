@@ -14,7 +14,7 @@ import FlutterMacOS
 import Foundation
 @preconcurrency import OSMFlutterFramework
 
-@_implementationOnly import Polyline
+import Polyline
 
 /// Shared per-map session: owns the native `OSMView`, the method channel,
 /// the map state and the forwarding of framework events to Dart.
@@ -22,9 +22,7 @@ import Foundation
 /// The iOS `FlutterPlatformView` wrapper and the macOS `NSView` host each
 /// retain exactly one session, so every created map stays independent.
 @MainActor
-class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserLocationHandler,
-    PoylineHandler
-{
+class MapSession: NSObject {
 
     let mapOSM: OSMView
     var isStaticMap: Bool = false
@@ -175,7 +173,11 @@ class MapSession: NSObject, OnMapGesture, OnMapMoved, MapMarkerHandler, OSMUserL
         self.mapOSM.enableRotation(enable: enableRotationGesture)
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
-            self?.onListenMethodChannel(call: call, result: result)
+            // The default Flutter channel uses the platform thread. Assert that
+            // contract before accessing the isolated session.
+            MainActor.assumeIsolated {
+                self?.onListenMethodChannel(call: call, result: result)
+            }
         })
         // Route every framework delegate through a weak proxy so the map view
         // never retains the session directly (see MapDelegateProxy).

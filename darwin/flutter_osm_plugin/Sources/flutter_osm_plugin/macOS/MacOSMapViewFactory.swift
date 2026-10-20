@@ -16,22 +16,25 @@ import Foundation
 public class MacOSMapViewFactory: NSObject, FlutterPlatformViewFactory {
     let messenger: FlutterBinaryMessenger
     let defaultPinPath: String?
-    nonisolated init(messenger: FlutterBinaryMessenger, defaultPin: String?) {
+    init(messenger: FlutterBinaryMessenger, defaultPin: String?) {
         self.messenger = messenger
         self.defaultPinPath = defaultPin
     }
 
-    public func create(withViewIdentifier viewId: Int64, arguments args: Any?) -> NSView {
-        let channel = FlutterMethodChannel(
-            name: "plugins.dali.hamza/osmview_" + String(viewId),
-            binaryMessenger: self.messenger
-        )
-        let session = MapSession(
-            .zero, viewId: viewId, channel: channel, args: args, defaultPin: defaultPinPath)
-        return MacOSMapHostView(frame: .zero, session: session)
+    nonisolated public func create(withViewIdentifier viewId: Int64, arguments args: Any?) -> NSView {
+        // Flutter creates platform views synchronously on the platform thread.
+        return MainActor.assumeIsolated {
+            let channel = FlutterMethodChannel(
+                name: "plugins.dali.hamza/osmview_" + String(viewId),
+                binaryMessenger: self.messenger
+            )
+            let session = MapSession(
+                .zero, viewId: viewId, channel: channel, args: args, defaultPin: defaultPinPath)
+            return MacOSMapHostView(frame: .zero, session: session)
+        }
     }
 
-    public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+    nonisolated public func createArgsCodec() -> (FlutterMessageCodec & NSObjectProtocol)? {
         return FlutterStandardMessageCodec.sharedInstance()
     }
 }

@@ -71,6 +71,7 @@ __pycache__
 *.png
 *.svg
 !assets/default_pin.png
+!example/macos/Runner/Assets.xcassets/AppIcon.appiconset/*.png
 !android/src/main/assets/fonts/*.png
 jenkins
 .commandcode
