@@ -28,6 +28,8 @@
 	<string>MainMenu</string>
 	<key>NSLocationUsageDescription</key>
 	<string>The map demo uses your location to show and track your position on the OpenStreetMap.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>The map demo uses your location to show and track your position on the OpenStreetMap.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
