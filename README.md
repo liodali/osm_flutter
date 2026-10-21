@@ -4,7 +4,7 @@
 
 # flutter_osm_plugin
 
-![pub](https://img.shields.io/badge/pub-v2.1.0+1-blue)
+![pub](https://img.shields.io/badge/pub-v3.0.0-blue)
 
 ## Platform Support
 
@@ -64,7 +64,8 @@
 - [Installing](#installing)
 - [Android Integration](#android-integration) (endorsed package, typed controller, JNI opt-in)
 - [Integration with Hooks](#integration-with-hooks)
-- [Migrations](#migration-to-210) (2.1.0, 2.0.0)
+- [Migrations](#migration-to-300) (3.0.0, 2.1.0, 2.0.0)
+- [macOS Integration](#macos-integration)
 - [Web Integration](#web-integration) (PointerInterceptor)
 - [Simple Usage](#simple-usage)
 - [MapController](#mapcontroller) — initialisation, layers, markers, roads, shapes, listeners
@@ -77,10 +78,10 @@
 
 ## Installing
 
-Add the following to your `pubspec.yaml` file:
+Requires **Flutter 3.47.0+**. Add the following to your `pubspec.yaml` file:
 
     dependencies:
-      flutter_osm_plugin: ^2.1.0
+      flutter_osm_plugin: ^3.0.0
 
 > **Android (from 2.1.0):** the Android implementation ships as the endorsed
 > package `flutter_osm_android` and is pulled in automatically — no extra
@@ -138,8 +139,8 @@ Events, acknowledgements, location and lifecycle stay on MethodChannel.
 
 ```yaml
 dependencies:
-  flutter_osm_plugin: ^2.1.0
-  flutter_osm_android_jni: ^0.1.0
+  flutter_osm_plugin: ^3.0.0
+  flutter_osm_android_jni: ^0.2.0
 ```
 
 ```dart
@@ -158,7 +159,7 @@ final controller = AndroidMapController.withPosition(
 
 Notes:
 
-- Android-only; on iOS/web keep using the default transports.
+- Android-only; on iOS/macOS/Web keep using the default transports.
 - JNI fallback is **attach-only**: once initialization starts on a backend,
   commands are never replayed through another backend.
 - Requesting the JNI backend without `flutter_osm_android_jni` installed throws
@@ -169,6 +170,25 @@ Notes:
 > To use our map library with `Flutter_Hooks` library use our new extension library
 > https://pub.dev/packages/osm_flutter_hooks
 > many thanks for @ben-xD
+
+### Migration to `3.0.0`
+
+- Upgrade to **Flutter 3.47.0+**.
+- Apple apps must use **SPM** with **Xcode 26+ / Swift 6.2+**. Keep iOS deployment
+  at **15.6+**; native macOS requires **12.0+**. Flutter discovers the shared
+  package in `darwin/flutter_osm_plugin` through `sharedDarwinSource`.
+- CocoaPods apps should remain on **2.1.x** until migrating to SPM. The frozen
+  `ios/` snapshot does not provide the new native macOS implementation.
+- Android apps use `flutter_osm_android` **0.2.0** / mapscore 4.0.0. Use
+  **Kotlin 2.3+**, **compileSdk 36+**, and **AGP 8.4+** with Java 21 class-file
+  support. Existing Dart controllers and the optional JNI transport remain
+  compatible. Upgrade the optional JNI add-on to **0.2.0**; its 0.1.0 release
+  requires the older Android host and conflicts with this release.
+- Use the same `OSMFlutter` widget and controllers on macOS. Add the host
+  entitlements and location descriptions in [macOS Integration](#macos-integration).
+- The main package requires `flutter_osm_interface` **^1.7.0** for Apple
+  serialization and map-channel cleanup. App authors normally depend only on
+  `flutter_osm_plugin`; the interface is resolved transitively.
 
 ### Migration to `2.1.0`
 
@@ -213,7 +233,7 @@ Notes:
 
 `flutter_osm_plugin` supports native macOS through the **same shared Darwin
 implementation as iOS** (`darwin/flutter_osm_plugin`, Swift Package Manager,
-`OSMFlutterFramework` 0.9.1 / MapCore 4.0.0). Commands, payloads and events are
+`OSMFlutterFramework` 0.9.1 / MapCore 4.0.1-spm.2). Commands, payloads and events are
 identical to the iOS wire protocol.
 
 **Requirements**
