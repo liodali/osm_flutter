@@ -245,8 +245,47 @@ class PlatformView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return UiKitView(
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      final Widget platformView;
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        platformView = UiKitView(
+          viewType: 'plugins.dali.hamza/osmview',
+          onPlatformViewCreated: onPlatformCreatedView,
+          creationParams: getParams(
+            configuration.customTile,
+            bounds: configuration.bounds,
+            enableRotationGesture: configuration.enableRotationGesture,
+            initlocation: configuration.initlocation,
+            userlocation: configuration.userlocation,
+            zoomOption: configuration.zoomOption,
+            isStaticMap: configuration.isStaticMap,
+          ),
+          creationParamsCodec: const StandardMethodCodec().messageCodec,
+        );
+      } else {
+        // macOS shares the iOS creation parameters, codec and view id; the
+        // native factory is registered under the same id by the Darwin host.
+        platformView = AppKitView(
+          viewType: 'plugins.dali.hamza/osmview',
+          onPlatformViewCreated: onPlatformCreatedView,
+          creationParams: getParams(
+            configuration.customTile,
+            bounds: configuration.bounds,
+            enableRotationGesture: configuration.enableRotationGesture,
+            initlocation: configuration.initlocation,
+            userlocation: configuration.userlocation,
+            zoomOption: configuration.zoomOption,
+            isStaticMap: configuration.isStaticMap,
+          ),
+          creationParamsCodec: const StandardMethodCodec().messageCodec,
+        );
+      }
+      return platformView;
+    }
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return AndroidView(
+        //key: androidKey,
         viewType: 'plugins.dali.hamza/osmview',
         onPlatformViewCreated: onPlatformCreatedView,
         creationParams: getParams(
@@ -258,24 +297,13 @@ class PlatformView extends StatelessWidget {
           zoomOption: configuration.zoomOption,
           isStaticMap: configuration.isStaticMap,
         ),
+        //creationParamsCodec: null,
         creationParamsCodec: const StandardMethodCodec().messageCodec,
       );
     }
-    return AndroidView(
-      //key: androidKey,
-      viewType: 'plugins.dali.hamza/osmview',
-      onPlatformViewCreated: onPlatformCreatedView,
-      creationParams: getParams(
-        configuration.customTile,
-        bounds: configuration.bounds,
-        enableRotationGesture: configuration.enableRotationGesture,
-        initlocation: configuration.initlocation,
-        userlocation: configuration.userlocation,
-        zoomOption: configuration.zoomOption,
-        isStaticMap: configuration.isStaticMap,
-      ),
-      //creationParamsCodec: null,
-      creationParamsCodec: const StandardMethodCodec().messageCodec,
+    throw UnsupportedError(
+      'flutter_osm_plugin does not support $defaultTargetPlatform platform '
+      'views; supported platforms are Android, iOS, macOS and Web.',
     );
   }
 

@@ -6,7 +6,8 @@ import PackageDescription
 let package = Package(
     name: "flutter_osm_plugin",
     platforms: [
-        .iOS("15.6")
+        .iOS("15.6"),
+        .macOS("12.0")
     ],
     products: [
         .library(name: "flutter-osm-plugin", targets: ["flutter_osm_plugin"])
@@ -18,9 +19,7 @@ let package = Package(
         .package(url: "https://github.com/jpsim/Yams.git", from: "6.2.2"),
         .package(
             url: "https://github.com/liodali/OSMMapCoreIOSFramework.git",
-            revision: "e8688369f747c0614b4bc2b083279a6d4b1f2899"),
-        //.exact("0.8.7")),
-
+            .exact("0.9.1")),
     ],
     targets: [
         .target(

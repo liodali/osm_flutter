@@ -33,6 +33,10 @@ build/
 **/ios/**/Pods/
 **/ios/**/.symlinks/
 **/ios/**/profile
+# Darwin/SPM related
+**/darwin/**/DerivedData/
+**/darwin/**/.swiftpm/
+**/darwin/**/*.xcscheme
 **/ios/**/xcuserdata
 **/ios/.generated/
 **/ios/Flutter/App.framework
@@ -67,6 +71,7 @@ __pycache__
 *.png
 *.svg
 !assets/default_pin.png
+!example/macos/Runner/Assets.xcassets/AppIcon.appiconset/*.png
 !android/src/main/assets/fonts/*.png
 jenkins
 .commandcode

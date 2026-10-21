@@ -362,7 +362,12 @@ class MapController extends BaseMapController {
     Anchor anchor = Anchor.center,
     bool useDirectionMarker = false,
   }) async {
-    if (kIsWeb || defaultTargetPlatform == TargetPlatform.iOS) {
+    // On iOS/macOS the authorization request is handled by the native
+    // implementation when tracking starts; on Android it must be requested
+    // from Dart through permission_handler first.
+    if (kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
       await osmBaseController.startLocationUpdating();
       return;
     }

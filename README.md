@@ -8,9 +8,14 @@
 
 ## Platform Support
 
-|           Android            |                           iOS                           |             Web              |
-| :--------------------------: | :-----------------------------------------------------: | :--------------------------: |
-| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 15.6) | supported :heavy_check_mark: |
+|           Android            |                           iOS                           |             macOS              |             Web              |
+| :--------------------------: | :-----------------------------------------------------: | :----------------------------: | :--------------------------: |
+| supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 15.6) | supported :heavy_check_mark: (min macOS supported : 12.0) | supported :heavy_check_mark: |
+
+> **macOS (native):** runs on the shared Darwin implementation with iOS (SPM
+> package `darwin/flutter_osm_plugin`, `OSMFlutterFramework` 0.9.1). See
+> [macOS Integration](#macos-integration) for requirements, host-app setup and
+> the current capability limits.
 
 <b>osm plugin for flutter apps </b>
 
@@ -82,6 +87,15 @@ Add the following to your `pubspec.yaml` file:
 > dependency or code change is required. Native plugin class, channels and the
 > platform view type are unchanged. See [Android Integration](#android-integration)
 > for the optional typed controller and the experimental JNI transport.
+
+> **iOS (CocoaPods deprecated):** `OSMFlutterFramework` suspended CocoaPods
+> distribution at 0.9.0 (MapCore 4.0.0), so the plugin podspec is frozen on the
+> legacy **0.8.x** engine (maps-core 3.7.x) and **will not be updated anymore**.
+> The plugin is **SPM-only** going forward — the native iOS integration ships
+> via `darwin/flutter_osm_plugin/Package.swift` (shared Darwin source, pinned to
+> `OSMMapCoreIOSFramework` 0.9.1). The frozen podspec and a never-edit source
+> snapshot remain under `ios/` for legacy CocoaPods consumers (see
+> `ios/README.md`); they should plan a migration to Swift Package Manager.
 
 ## Android Integration
 
@@ -179,7 +193,9 @@ Notes:
 **iOS:**
 
 - Minimum iOS version is now **15.6**
-- Swift Package Manager (SPM) is the preferred dependency manager
+- Swift Package Manager (SPM) is the supported dependency manager — CocoaPods
+  support is deprecated: the podspec is frozen on the legacy 0.8.x engine and
+  future releases are SPM-only (see [Installing](#installing))
 - The `OSMMapCoreIOSFramework` dependency has been updated to the latest revision
 
 **What's new:**
@@ -192,6 +208,58 @@ Notes:
 - Dotted road style and border customization in `drawRoadManually` (iOS)
 - Improved location permission handling with explicit checks and user-friendly errors
 - `myLocation()` now requests location permission on Android if not granted
+
+## macOS Integration
+
+`flutter_osm_plugin` supports native macOS through the **same shared Darwin
+implementation as iOS** (`darwin/flutter_osm_plugin`, Swift Package Manager,
+`OSMFlutterFramework` 0.9.1 / MapCore 4.0.0). Commands, payloads and events are
+identical to the iOS wire protocol.
+
+**Requirements**
+
+- Flutter 3.47.0 or newer (validated with 3.47.1)
+- macOS 12.0 or newer
+- Xcode 26+ / Swift 6.2+ (the pinned framework uses `swift-tools-version:6.2`)
+- Swift Package Manager integration (the default in current Flutter);
+  CocoaPods is not supported
+
+**Host app setup**
+
+Permissions live in the host app — the plugin package ships none:
+
+- outbound network (`com.apple.security.network.client`) for tile and routing
+  requests
+- optional location features need `NSLocationUsageDescription` and
+  `NSLocationWhenInUseUsageDescription` plus the
+  `com.apple.security.personal-information.location` sandbox entitlement;
+  authorization is requested by the native implementation when tracking
+  starts, and a denied permission fails `myLocation()` with a `permission`
+  error instead of hanging
+
+See `example/macos` for a complete setup; the example app exercises tiles,
+markers, roads, shapes, camera controls, static maps and the picker flows.
+Host applications own permission UX and live-location availability. macOS uses
+the native permission check/request path, like iOS.
+
+Run regression tests locally with `flutter test` in the root and
+`flutter_osm_interface` packages. From `example/`, validate the Apple hosts with
+`flutter build macos --debug` and `flutter build ios --simulator --debug`.
+
+**Verified behavior** (Apple silicon, Xcode 26.5 / Swift 6.3.2,
+Flutter 3.47.1): map startup and readiness, raster tile loading, camera moves
+and zoom, and the shared marker/road/shape/picker command paths.
+
+**Known limits** (upstream MapCore AppKit adapter in the pinned framework):
+
+- no heading/compass data: user-location updates report heading `0` and the
+  direction marker is disabled on macOS
+- native rotation gestures, hover and long-press are not provided by the
+  pinned MapCore AppKit adapter; programmatic rotation (`map#orientation`) is
+  unverified on macOS
+- Intel/AMD GPU rendering and mixed-display scale changes are unverified until
+  checked on suitable hardware (the plugin already re-applies marker, POI and
+  user-location icon sizes when the hosting window changes displays)
 
 ## Web Integration
 

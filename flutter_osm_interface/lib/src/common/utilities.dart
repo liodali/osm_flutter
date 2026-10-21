@@ -83,7 +83,12 @@ extension ColorMap on Color {
   }
 
   Map<String, dynamic> toMapPlatform(String key) {
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
+    // In a browser, defaultTargetPlatform mirrors the host OS, so native
+    // Apple serialization must be guarded with !kIsWeb to keep the Web list
+    // encoding on macOS/iOS browsers.
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS)) {
       return toHexMap(key);
     }
     return toMap(key);
@@ -93,7 +98,8 @@ extension ColorMap on Color {
     if (kIsWeb) {
       return toHexColorWeb();
     }
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
       return toHexColor();
     }
     return [
@@ -170,7 +176,11 @@ extension ListMultiRoadConf on List<MultiRoadConfiguration> {
           commonRoadOption.roadType.toString();
       final color = roadConf.roadOptionConfiguration?.roadColor ??
           commonRoadOption.roadColor;
-      if (defaultTargetPlatform == TargetPlatform.iOS) {
+      // Keep the Web RGB encoding in browsers (defaultTargetPlatform mirrors
+      // the host OS there); Apple platforms use the hex encoding natively.
+      if (!kIsWeb &&
+          (defaultTargetPlatform == TargetPlatform.iOS ||
+              defaultTargetPlatform == TargetPlatform.macOS)) {
         map.addAll(color.toHexMap("roadColor"));
 
         map["roadWidth"] = roadConf.roadOptionConfiguration?.roadWidth ??
@@ -205,7 +215,12 @@ extension ExtTileUrls on TileURLs {
     if (defaultTargetPlatform == TargetPlatform.android) {
       return toMapAndroid();
     }
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
+    // Guard with !kIsWeb: in a browser on an Apple machine,
+    // defaultTargetPlatform reports the host OS and would otherwise take
+    // this native branch instead of the Web tile list.
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS)) {
       return toMapiOS();
     }
     if (kIsWeb) {

@@ -1,3 +1,89 @@
+### Unreleased:
+
+- feat(example): add a native macOS runner for the example app (macOS 12.0+,
+  SPM integration) with host-only entitlements — outbound network for
+  tiles/routing and optional location (usage description + sandbox
+  entitlement); the existing example UI (tiles, markers, roads, shapes,
+  camera, static maps, pickers) runs unchanged on macOS. README gains a
+  macOS platform entry and an honest "macOS Integration" section:
+  requirements (Xcode 26+/Swift 6.2+, macOS 12+), host setup, verified
+  behavior (Apple silicon, Xcode 26.5/Flutter 3.47.1), and known upstream
+  limits — no heading/compass, no native rotation gestures/hover/long-press
+  from the pinned MapCore AppKit adapter; Intel/AMD GPUs and mixed-display
+  scaling unverified
+- feat(macos): extend the Dart integration to macOS — the platform view is
+  embedded through `AppKitView` (same `plugins.dali.hamza/osmview` id,
+  creation params and codec as iOS; unsupported desktop platforms now throw
+  a clear `UnsupportedError` instead of building an `AndroidView`), map
+  initialization reuses the Apple `init#ios#map`/`map#init#ios` readiness
+  sequencing, Apple serialization branches (hex colors, tile urls, icon PNG
+  payloads, default tile reset) accept macOS, and location authorization is
+  delegated to the native implementation like on iOS. Android, Web and the
+  existing iOS wire behavior are unchanged
+- feat(ios): bump `OSMFlutterFramework` to 0.9.1 (upstream adds native macOS 12
+  support; on iOS the new `OSMPlatformImage`/`OSMPlatformColor`/`OSMPlatformView`
+  aliases resolve to the existing UIKit types, so plugin Swift sources needed
+  zero changes — only the SPM pin and `Package.resolved` changed). Building the
+  iOS host now requires Xcode 26+ / Swift 6.2+; the plugin's iOS deployment
+  minimum stays 15.6 and `maps-core` stays at `4.0.1-spm.2`
+- refactor(ios)!: move the SPM package to `darwin/flutter_osm_plugin/` and set
+  `sharedDarwinSource: true` (shared Darwin source layout for the upcoming
+  macOS support). Flutter resolves the iOS integration from `darwin/`; the
+  deprecated podspec stays frozen with a never-edit legacy source snapshot
+  under `ios/` (see `ios/README.md`) for hand-wired CocoaPods consumers.
+  Flutter-managed CocoaPods builds no longer pick up the podspec, so apps
+  disabling SPM must stay on `2.1.x`
+- feat(darwin): share the native map implementation between iOS and macOS —
+  command dispatch, map state and event forwarding extracted from
+  `MapCoreOSMView` into a `MapSession` shared by an iOS
+  `FlutterPlatformView` wrapper and a new macOS `NSView` host
+  (`MacOSMapHostView`); platform imports, registrar messenger access, SF
+  Symbol fallback, bundled pin lookup and display scale are adapted per
+  platform via `ApplePlatformUtilities` and the framework's
+  `OSMPlatformImage`/`OSMPlatformColor` aliases; channel names, payloads and
+  the `plugins.dali.hamza/osmview` view id are unchanged; SPM manifest now
+  declares `.macOS("12.0")` and the pubspec registers macOS with
+  `sharedDarwinSource: true`. Native-only so far — Dart `AppKitView`
+  integration and the macOS example follow. Also adds an idempotent session
+  `dispose()` (handler/delegate/location teardown, pending-result failure)
+  and removes dead UIKit-only helpers
+- fix(darwin): harden the shared session after review — iOS teardown now
+  actually runs (the five framework delegate connections route through a
+  weak `MapDelegateProxy`, breaking the session <-> map retain cycle;
+  `IOSMapView.deinit` triggers the idempotent disposal, since iOS
+  `FlutterPlatformView` has no dispose callback); the macOS default pin
+  loads through `NSImage(contentsOfFile:)` (asset lookup keys are file
+  paths, which `NSImage(named:)` never matches); in-flight
+  `road`/`draw#multi#road` results are tracked and failed with a `disposed`
+  error on disposal instead of hanging the Dart future; marker sizes use
+  the hosting window's backing scale (not `NSScreen.main`) and macOS
+  re-applies user-location icons when the window changes displays via
+  `viewDidChangeBackingProperties()`
+- fix(darwin): keep marker coordinates exact and stop POIs reverting to
+  their old size — marker scale records now store the exact
+  `CLLocationCoordinate2D` (the dictionary key is a rounded lookup key
+  only), so a scale refresh never moves a marker or breaks deletion with
+  the original coordinates; and because the framework's `Poi.markerIcon`
+  is immutable (setIconMarker cannot update it), `setStaticGeoPoint`
+  re-applies the stored icon arguments after replacing POI positions so
+  they do not fall back to the creation-time size
+- fix(darwin): refresh every scale-dependent icon on display changes and
+  keep the tracking anchor — the backing-scale callback now also re-applies
+  regular markers (logical sizes retained per coordinate across
+  add/change/update/delete commands and refreshed in place) and static POI
+  icons (retained per id), and user-location icons are re-sized via
+  `copyWith(iconSize:)` on the live configuration instead of replaying
+  `configureUserLocation`, so the anchor applied by `startTrackUser` is
+  preserved
+- feat(ios)!: bump `OSMFlutterFramework` to 0.9.0 (MapCore 4.0.0) — both
+  platforms now sit on MapCore 4.0.0 (Android via `mapscore` 4.0.0, iOS via
+  the framework fork); plugin Swift sources needed zero changes
+- deprecation (ios): CocoaPods support is deprecated and the podspec will not
+  be updated anymore — `OSMFlutterFramework` suspended CocoaPods at 0.9.0, so
+  the podspec stays frozen on the legacy 0.8.x engine (maps-core 3.7.x era);
+  the plugin is **SPM-only** going forward
+  (`ios/flutter_osm_plugin/Package.swift`, SPM-pinned to `OSMMapCoreIOSFramework`)
+
 ### 2.1.0+1:
 
 - docs: new Screenshots showcase table (R2-hosted device captures), animated
