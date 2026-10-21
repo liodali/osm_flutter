@@ -7,6 +7,33 @@ import XCTest
 
 class RunnerTests: XCTestCase {
 
+  func testRoadDestinationInstructionsDoNotContainOptionalDescriptions() {
+    let instructions: [String: Any] = [
+      "v5": [
+        "turn": ["default": ["default": "Continue", "destination": "Continue toward {destination}"]],
+        "constants": ["modifier": [String: String](), "ordinalize": [String: String]()],
+      ]
+    ]
+    let cases = [
+      ("A1:Berlin", "Continue toward A1: Berlin"),
+      ("A1,A2:Berlin,Paris", "Continue toward A1: Berlin"),
+      (",:Berlin", "Continue toward Berlin"),
+      ("A1:,", "Continue toward A1"),
+      (":", "Continue toward "),
+      ("Berlin", "Continue toward Berlin"),
+    ]
+    for (destination, expected) in cases {
+      let step = RoadStep(json: [
+        "name": "", "duration": 0.0, "distance": 0.0, "driving_side": "right",
+        "destinations": destination, "intersections": [[String: Any]](),
+        "maneuver": ["type": "turn", "location": [8.0, 47.0],
+                     "bearing_before": 0.0, "bearing_after": 0.0],
+      ])
+      XCTAssertEqual(step.buildInstruction(instructions: instructions,
+        options: ["legIndex": 0, "legCount": 0]), expected, destination)
+    }
+  }
+
   @MainActor
   private func session(_ messenger: RecordingMessenger, id: Int64 = 1) -> MapSession {
     MapSession(.zero, viewId: id,

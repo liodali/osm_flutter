@@ -230,7 +230,7 @@ extension RoadStep {
         // condition reduces to the maneuver type. Simplified to keep the shipped
         // iOS behavior; the AppKit overlay does not expose the same API shape.
         // TODO: the original intent was likely `modifier?.contains(drivingSide)`.
-        var omitSide = type == "off ramp"
+        let omitSide = type == "off ramp"
         if maneuver.modifier != nil
             && (instructionsV5[type] as! [String: Any]).keys.contains(maneuver.modifier!)
             && !omitSide
@@ -282,28 +282,16 @@ extension RoadStep {
             instruction = instructionObject["name"] as! String
         }
         var firstDestination: String? = nil
-        do {
-            if destinations != nil {
-                let destinationSplits = destinations!.split(separator: ":")
-                let destinationRef = try destinationSplits.first?.split(separator: ",").first
-                if destinationSplits.count > 1 {
-                    let destination = try destinationSplits[1].split(separator: ",").first
-                    firstDestination = "\(destinationRef ?? destination ?? "")"
-                    if let destination = destination, let destinationRef = destinationRef {
-                        firstDestination = "\(destinationRef): \(destination)"
-                    } else {
-                        if let destination = destination {
-                            firstDestination = "\(destinationRef): \(destination)"
-                        } else if let destinationRef = destinationRef {
-                            firstDestination = "\(destinationRef)"
-                        }
-                    }
-                } else {
-                    firstDestination = String("\(destinationRef ?? "")")
-                }
+        if let destinations {
+            let destinationSplits = destinations.split(separator: ":")
+            let destinationRef = destinationSplits.first?.split(separator: ",").first
+            let destination = destinationSplits.count > 1
+                ? destinationSplits[1].split(separator: ",").first : nil
+            if let destinationRef, let destination {
+                firstDestination = "\(destinationRef): \(destination)"
+            } else {
+                firstDestination = String(destinationRef ?? destination ?? "")
             }
-        } catch let e {
-            print(e)
         }
 
         var modifierInstruction = ""

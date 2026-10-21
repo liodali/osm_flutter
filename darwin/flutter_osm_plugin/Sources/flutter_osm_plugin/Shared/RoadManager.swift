@@ -134,9 +134,9 @@ class OSMRoadManager: PRoadManager {
             DispatchQueue.main.async {
 
                 if let data = data {
-                    let json = Self.parse(jsonData: data) as? [String: Any?]
+                    let json = Self.parse(jsonData: data)
                     let road = self.parserRoad(
-                        json: json ?? [:], instructionResource: self.contentLangEn)
+                        json: json, instructionResource: self.contentLangEn)
                     self.road = road
                     handler(road)
                 } else {
