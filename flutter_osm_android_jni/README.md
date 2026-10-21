@@ -16,7 +16,7 @@ lifecycle.
 - You want lower-latency command dispatch than MethodChannel JSON encoding.
 - You are comfortable shipping checked-in `jnigen` bindings that target a
   specific Kotlin façade.
-- You do **not** need JNI on iOS or web (this package is Android-only).
+- You do **not** need JNI on iOS, macOS, or Web (this package is Android-only).
 
 If you only need the default MethodChannel transport, you do not need this
 package — `flutter_osm_android` already provides it.
@@ -27,7 +27,7 @@ package — `flutter_osm_android` already provides it.
 flutter_osm_plugin (app-facing)
   └── endorses flutter_osm_android (host: platform view + Kotlin bridge)
                           ▲
-                          │ path dependency
+                          │ host dependency
                           │
 flutter_osm_android_jni ──┘
   ├── lib/src/android_jni/        → jnigen probe + generated bindings
@@ -39,14 +39,21 @@ The JNI transport implements the `AndroidMapTransport` contract from
 `flutter_osm_interface`. Backend selection happens once during `attach`; after
 that, state-changing commands are never replayed across transports.
 
+## Compatibility
+
+Version 0.2.0 targets `flutter_osm_android` ^0.2.0 and
+`flutter_osm_interface` ^1.7.0, matching `flutter_osm_plugin` 3.0.0.
+The public transport API and bindings are unchanged. Version 0.1.0 requires the
+older Android host ^0.1.0 and cannot resolve alongside the 3.0.0 plugin's host.
+
 ## Setup
 
 Add the package alongside the main plugin:
 
 ```yaml
 dependencies:
-  flutter_osm_plugin: ^2.1.0
-  flutter_osm_android_jni: ^0.1.0
+  flutter_osm_plugin: ^3.0.0
+  flutter_osm_android_jni: ^0.2.0
 ```
 
 During local development of the federated workspace, use `path:` dependencies:
