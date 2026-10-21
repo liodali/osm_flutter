@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_osm_plugin/src/common/location_permission.dart';
 import 'package:routing_client_dart/routing_client_dart.dart' as routing;
 
 /// class [MapController] : map controller that will control map by select position,enable current location,
@@ -381,17 +381,20 @@ class MapController extends BaseMapController {
 
   Future<bool> _requestLocationPermission() async {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      final locationStatus = await Permission.locationWhenInUse.request();
+      final locationStatus =
+          await requestLocationPermission(Permission.locationWhenInUse);
       if (!_isPermissionGranted(locationStatus)) {
         return false;
       }
 
-      final locationAlwaysStatus = await Permission.locationAlways.request();
+      final locationAlwaysStatus =
+          await requestLocationPermission(Permission.locationAlways);
       return _isPermissionGranted(locationStatus) ||
           _isPermissionGranted(locationAlwaysStatus);
     }
 
-    final locationStatus = await Permission.locationWhenInUse.request();
+    final locationStatus =
+        await requestLocationPermission(Permission.locationWhenInUse);
     return _isPermissionGranted(locationStatus);
   }
 

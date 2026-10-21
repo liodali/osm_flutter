@@ -4,7 +4,7 @@
 
 # flutter_osm_plugin
 
-![pub](https://img.shields.io/badge/pub-v3.0.0-blue)
+![pub](https://img.shields.io/badge/pub-v3.0.0%2B1-blue)
 
 ## Platform Support
 
@@ -100,6 +100,12 @@ Requires **Flutter 3.47.0+**. Add the following to your `pubspec.yaml` file:
 
 ## Android Integration
 
+Requirements for 3.0.0+1: `compileSdk` **37+**, Kotlin **2.3+**,
+**AGP 9.1.1+**, and **Gradle 9.3.1+**. permission_handler **13.0.2** requires
+SDK 37; location requests continue to use the request result to handle denial.
+The Android host supports built-in Kotlin on AGP 9+ and uses
+`kotlin.compilerOptions` with JVM target 17.
+
 ### Endorsed Android package
 
 Since `2.1.0` the Android implementation lives in the endorsed package
@@ -130,6 +136,11 @@ exposed as typed streams (`controller.events`).
 > wins) — including on the classic controller path.
 
 ### Experimental JNI transport (optional)
+
+The published JNI 0.2.0 add-on targets Android host 0.2.0 and the main plugin
+3.0.0. Version 3.0.0+1 uses Android host 0.3.0; use the default MethodChannel
+transport until a compatible JNI add-on is released. The example below targets
+the earlier 3.0.0 / JNI 0.2.0 combination.
 
 For lower-latency command dispatch you can add the experimental
 [`flutter_osm_android_jni`](https://pub.dev/packages/flutter_osm_android_jni)

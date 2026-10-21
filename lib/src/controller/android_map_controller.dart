@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart' show Color;
 import 'package:flutter_osm_android/flutter_osm_android.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_osm_plugin/src/common/location_permission.dart';
 
 typedef AndroidLocationPermissionRequester = Future<bool> Function();
 
@@ -710,7 +710,7 @@ final class AndroidMapLocation {
 }
 
 Future<bool> _requestForegroundLocation() async {
-  final status = await Permission.locationWhenInUse.request();
+  final status = await requestLocationPermission(Permission.locationWhenInUse);
   return status.isGranted || status.isLimited;
 }
 

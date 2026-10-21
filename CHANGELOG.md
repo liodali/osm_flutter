@@ -1,3 +1,15 @@
+### 3.0.0+1:
+
+- Update Dio to 5.11.1.
+- Update permission_handler to 13.0.2 and its platform interface to 4.4.0+.
+  Android apps must use compileSdk 37+; the example and host now compile with 37.
+  Update AGP to 9.1.1+ and Gradle to 9.3.1+ for SDK 37 support.
+- Migrate the Android host to built-in Kotlin and the modern compiler-options
+  DSL; the host now requires Flutter 3.44+ / Dart 3.12+.
+- Fix pub.dev macOS support detection by using the platform-neutral permission
+  interface in shared Dart code. Android retains its native permission plugin;
+  iOS/macOS authorization remains handled by the native map implementation.
+
 ### 3.0.0:
 
 Breaking requirements:
