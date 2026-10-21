@@ -1,3 +1,13 @@
+## 1.7.0
+
+- Add macOS to the shared Apple serialization paths for colors, tile URLs,
+  marker PNG payloads, and default tile resets.
+- Preserve Web payload formats in browsers running on iOS or macOS.
+- Unregister a map's method-channel handler when it closes, including when
+  other maps remain active or a map is recreated.
+- Add Apple channel/event isolation and native-versus-Web serialization tests.
+- Keep existing platform interfaces and Android transport contracts compatible.
+
 ## 1.6.0
 
 - Move the typed Android transport contract and event codec into the platform
