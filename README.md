@@ -218,6 +218,7 @@ identical to the iOS wire protocol.
 
 **Requirements**
 
+- Flutter 3.47.0 or newer (validated with 3.47.1)
 - macOS 12.0 or newer
 - Xcode 26+ / Swift 6.2+ (the pinned framework uses `swift-tools-version:6.2`)
 - Swift Package Manager integration (the default in current Flutter);
@@ -229,7 +230,8 @@ Permissions live in the host app — the plugin package ships none:
 
 - outbound network (`com.apple.security.network.client`) for tile and routing
   requests
-- optional location features need `NSLocationUsageDescription` plus the
+- optional location features need `NSLocationUsageDescription` and
+  `NSLocationWhenInUseUsageDescription` plus the
   `com.apple.security.personal-information.location` sandbox entitlement;
   authorization is requested by the native implementation when tracking
   starts, and a denied permission fails `myLocation()` with a `permission`
@@ -237,6 +239,12 @@ Permissions live in the host app — the plugin package ships none:
 
 See `example/macos` for a complete setup; the example app exercises tiles,
 markers, roads, shapes, camera controls, static maps and the picker flows.
+Host applications own permission UX and live-location availability. macOS uses
+the native permission check/request path, like iOS.
+
+Run regression tests locally with `flutter test` in the root and
+`flutter_osm_interface` packages. From `example/`, validate the Apple hosts with
+`flutter build macos --debug` and `flutter build ios --simulator --debug`.
 
 **Verified behavior** (Apple silicon, Xcode 26.5 / Swift 6.3.2,
 Flutter 3.47.1): map startup and readiness, raster tile loading, camera moves
