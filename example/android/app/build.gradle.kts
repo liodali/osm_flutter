@@ -25,7 +25,7 @@ if (flutterVersionName == null) {
 }
 android {
     namespace = "hamza.dali.flutter_osm_plugin_example"
-    compileSdk = 36
+    compileSdk = 37
     ndkVersion = "28.2.13676358"
     if (keystorePropertiesFile.exists()) {
         signingConfigs {

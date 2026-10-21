@@ -1,3 +1,11 @@
+## 0.3.0
+
+- Compile with Android SDK 37, matching permission_handler 13 in the main plugin.
+- Require AGP 9.1.1+ / Gradle 9.3.1+ for SDK 37 support.
+- Migrate to built-in Kotlin and `kotlin.compilerOptions`, removing explicit
+  KGP application and the legacy `android.kotlinOptions` block.
+- Require Flutter 3.44+ / Dart 3.12+ for Flutter's KGP compatibility handling.
+
 ## 0.2.0
 
 - Update `io.openmobilemaps:mapscore` from 3.7.1 to 4.0.0 (GPU tessellation, rotated icons in `IconLayer`, animated dashed lines, CRS support in vector layer styles, circles for point features).
