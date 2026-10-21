@@ -604,8 +604,6 @@ extension MapSession {
             shape = RectShapeOSM.fromMap(json: rectJson)
         case .Circle:
             shape = CircleOSM.fromMap(json: rectJson)
-        default:
-            shape = RectShapeOSM.fromMap(json: rectJson)
         }
         mapOSM.shapeManager.drawShape(key: key, shape: shape)
         result(200)
