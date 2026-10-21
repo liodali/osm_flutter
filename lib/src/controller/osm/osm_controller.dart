@@ -14,6 +14,9 @@ final class MobileOSMController extends IBaseOSMController {
       OSMPlatform.instance as MobileOSMPlatform;
   final duration = const Duration(milliseconds: 300);
   Timer? _timer;
+  StreamSubscription<IosMapInit>? _appleInitSubscription;
+  final _eventSubscriptions = <StreamSubscription<dynamic>>[];
+  bool _listening = false;
 
   late double stepZoom = 1;
   late double minZoomLevel = 2;
@@ -47,6 +50,12 @@ final class MobileOSMController extends IBaseOSMController {
       _timer?.cancel();
     }
     _androidOSMLifecycle = null;
+    unawaited(_appleInitSubscription?.cancel());
+    _appleInitSubscription = null;
+    for (final subscription in _eventSubscriptions) {
+      unawaited(subscription.cancel());
+    }
+    _eventSubscriptions.clear();
     osmPlatform.close(_idMap);
   }
 
@@ -79,7 +88,11 @@ final class MobileOSMController extends IBaseOSMController {
     /// which triggers the map initialization exactly once)
     if (defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.macOS) {
-      osmPlatform.onIosMapInit(_idMap).listen((event) async {
+      _appleInitSubscription = osmPlatform
+          .onIosMapInit(_idMap)
+          .where((event) => event.value)
+          .take(1)
+          .listen((event) async {
         if (event.value) {
           await initMap(
             initPosition,
@@ -118,15 +131,21 @@ final class MobileOSMController extends IBaseOSMController {
   }
 
   /// listen to data send from native map
+  void _listen<T>(Stream<T> stream, void Function(T) onData) {
+    _eventSubscriptions.add(stream.listen(onData));
+  }
+
   void onListenChannel() {
-    osmPlatform.onLongPressMapClickListener(_idMap).listen((event) {
+    if (_listening) return;
+    _listening = true;
+    _listen(osmPlatform.onLongPressMapClickListener(_idMap), (event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapLongTapping(event.value);
       for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onLongTap(event.value);
       }
     });
-    osmPlatform.onSinglePressMapClickListener(_idMap).listen((event) {
+    _listen(osmPlatform.onSinglePressMapClickListener(_idMap), (event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapSingleTapping(event.value);
       for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
@@ -134,14 +153,14 @@ final class MobileOSMController extends IBaseOSMController {
       }
     });
 
-    osmPlatform.onRoadMapClickListener(_idMap).listen((event) {
+    _listen(osmPlatform.onRoadMapClickListener(_idMap), (event) {
       _osmFlutterState.widget.controller
           .setValueListenerMapRoadTapping(event.value);
       for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onRoadTap(event.value);
       }
     });
-    osmPlatform.onMapIsReady(_idMap).listen((event) async {
+    _listen(osmPlatform.onMapIsReady(_idMap), (event) async {
       if (_androidOSMLifecycle != null &&
           _osmFlutterState.widget.mapIsReadyListener.value != event.value) {
         _androidOSMLifecycle!.mapIsReady(event.value);
@@ -160,7 +179,7 @@ final class MobileOSMController extends IBaseOSMController {
           .setValueListenerMapIsReady(event.value);
     });
 
-    osmPlatform.onRegionIsChangingListener(_idMap).listen((event) {
+    _listen(osmPlatform.onRegionIsChangingListener(_idMap), (event) {
       if (_osmFlutterState.widget.onMapMoved != null) {
         _osmFlutterState.widget.onMapMoved!(event.value);
       }
@@ -172,7 +191,7 @@ final class MobileOSMController extends IBaseOSMController {
       }
     });
 
-    osmPlatform.onMapRestored(_idMap).listen((event) {
+    _listen(osmPlatform.onMapRestored(_idMap), (event) {
       Future.delayed(duration, () {
         if (!_osmFlutterState.widget.mapIsReadyListener.value) {
           _osmFlutterState.widget.mapIsReadyListener.value = true;
@@ -183,7 +202,7 @@ final class MobileOSMController extends IBaseOSMController {
       });
     });
 
-    osmPlatform.onGeoPointClickListener(_idMap).listen((event) {
+    _listen(osmPlatform.onGeoPointClickListener(_idMap), (event) {
       if (_osmFlutterState.widget.onGeoPointClicked != null) {
         _osmFlutterState.widget.onGeoPointClicked!(event.value);
       }
@@ -192,14 +211,14 @@ final class MobileOSMController extends IBaseOSMController {
       }
     });
 
-    osmPlatform.onGeoPointLongPressListener(_idMap).listen((event) {
+    _listen(osmPlatform.onGeoPointLongPressListener(_idMap), (event) {
       _osmFlutterState.widget.onGeoPointLongPress?.call(event.value);
       for (var osmMixin in _osmFlutterState.widget.controller.osMMixins) {
         osmMixin.onMarkerLongPress(event.value);
       }
     });
 
-    osmPlatform.onUserPositionListener(_idMap).listen((event) {
+    _listen(osmPlatform.onUserPositionListener(_idMap), (event) {
       if (_osmFlutterState.widget.onLocationChanged != null) {
         _osmFlutterState.widget.onLocationChanged!(event.value);
       }
