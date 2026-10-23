@@ -2,14 +2,14 @@
 
 ## Overview
 
-Flutter plugin for OpenStreetMap supporting **Android**, **iOS**, and **Web**. Uses a **federated plugin architecture** with 5 packages.
+Flutter plugin for OpenStreetMap supporting **Android**, **iOS**, **macOS**, and **Web**. Uses a **federated plugin architecture** with 5 packages.
 
 | Package | Role | Current Version |
 |---|---|---|
-| `flutter_osm_plugin` | Main plugin, shared widgets/controllers, and iOS host implementation | 2.1.0+1 |
-| `flutter_osm_interface` | Platform interface, typed transports, events, and shared types | 1.6.0 |
-| `flutter_osm_android` | Endorsed Android host and MethodChannel transport | 0.1.0 |
-| `flutter_osm_android_jni` | Optional Dart JNI command transport for the Android host | 0.1.0 |
+| `flutter_osm_plugin` | Main plugin, shared widgets/controllers, and shared iOS/macOS Darwin host | 3.0.0 |
+| `flutter_osm_interface` | Platform interface, typed transports, events, and shared types | 1.7.0 |
+| `flutter_osm_android` | Endorsed Android host and MethodChannel transport | 0.2.0 |
+| `flutter_osm_android_jni` | Optional Dart JNI command transport for the Android host | 0.2.0 |
 | `flutter_osm_web` | Web platform implementation (HTML/JS interop) | 2.0.1 |
 
 ## Architecture
@@ -132,6 +132,7 @@ osm_flutter/
 - **Build**: Kotlin Gradle Plugin (KGP), Java 17
 
 ### iOS (shared Darwin)
+- **Flutter baseline**: 3.47.0+ for the main plugin and example; validated with 3.47.1
 - **Language**: Swift
 - **Map Engine**: OSMFlutterFramework (SPM, pinned `OSMMapCoreIOSFramework` 0.9.1 / MapCore 4.0.0)
 - **Min iOS**: 15.6 (framework requires iOS 14)
@@ -204,6 +205,14 @@ python3 check_pubspec_release.py --scope inner --include-optional-jni --publish
 
 ## GitHub Actions Workflows
 
+Apple validation runs locally: Dart/browser regression tests, macOS session
+XCTest, and macOS/iOS simulator example builds. Hosted Apple CI and native cache
+optimization are excluded from the current macOS work.
+See `APPLE_TESTING.md` for local commands and concurrency boundaries. Keep Apple
+builds sequential when sharing an Xcode derived-data directory. Location uses
+native permission checks/requests on both Apple platforms; host applications own
+usage descriptions, entitlements, permission UX, and live-location validation.
+
 | Workflow | Trigger | Purpose |
 |---|---|---|
 | `publish.yaml` | `vX.Y.Z` tag | Publish main plugin to pub.dev |
@@ -266,7 +275,7 @@ flutter build appbundle --release
 ## Dependencies
 
 ### Main Plugin
-- `flutter_osm_interface: ^1.6.0`
+- `flutter_osm_interface: ^1.7.0`
 - `flutter_osm_web: ^2.0.1`
 - `dio: ^5.10.0`, `routing_client_dart: ^0.5.5`, `google_polyline_algorithm: ^3.1.0`
 - `permission_handler: ^12.0.3`, `url_launcher: ^6.3.2`
