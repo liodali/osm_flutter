@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_interface/src/common/utilities.dart';
 import 'package:flutter/services.dart';
@@ -125,7 +125,7 @@ void main() {
     expect(p1.isEqual(p3), false);
   });
   test("test color", () {
-    Color color = Colors.red;
+    const Color color = Color(0xFFF44336);
     expect(color.toHexColor(), "#fff44336");
     expect(color.toHexColorWeb(), "#f44336");
   });
@@ -155,7 +155,7 @@ void main() {
         GeoPoint(latitude: 48.8566, longitude: 2.3522),
         GeoPoint(latitude: 48.8606, longitude: 2.3376),
       ],
-      const RoadOption(roadColor: Colors.blue),
+      const RoadOption(roadColor: Color(0xFF2196F3)),
     );
 
     final args = capturedCall!.arguments as Map;

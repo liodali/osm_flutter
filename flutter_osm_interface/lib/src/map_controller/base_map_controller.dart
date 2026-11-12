@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_osm_interface/src/osm_controller/osm_controller.dart';
 import 'package:flutter_osm_interface/src/types/types.dart';
 import 'package:flutter_osm_interface/src/map_controller/i_base_map_controller.dart';

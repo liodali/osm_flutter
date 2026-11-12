@@ -1,3 +1,16 @@
+## Unreleased
+
+- Remove `package:flutter/material.dart` and `package:flutter/cupertino.dart`
+  imports in favor of `package:flutter/widgets.dart` (and `foundation.dart` for
+  lifecycle annotations), making the platform interface independent from the
+  design-system libraries deprecated in Flutter 3.50 — no `material_ui` or
+  `cupertino_ui` migration needed.
+- `MarkerIcon.icon` is now typed `Widget?` instead of `Icon?`
+  (source-compatible widening; any widget works as a marker icon).
+- Add `defaultRoadColor` (`Color(0xFF4CAF50)`, same value as the legacy
+  `Colors.green`) used by `RoadOption.empty()`, `MultiRoadOption.empty()`, and
+  multi-road configuration defaults.
+
 ## 1.7.0
 
 - Add macOS to the shared Apple serialization paths for colors, tile URLs,

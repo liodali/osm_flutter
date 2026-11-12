@@ -1,6 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_osm_interface/src/common/utilities.dart';
 import 'geo_point.dart';
+
+/// default road color used when no color is provided.
+/// Same value as the legacy `MaterialColors.green` (green 500).
+const Color defaultRoadColor = Color(0xFF4CAF50);
 
 enum RoadType {
   car,
@@ -43,7 +47,7 @@ class RoadOption {
 
   const RoadOption.empty()
       : roadWidth = 5,
-        roadColor = Colors.green,
+        roadColor = defaultRoadColor,
         zoomInto = false,
         isDotted = false,
         roadBorderWidth = 0,
@@ -104,7 +108,7 @@ class MultiRoadOption extends RoadOption {
   const MultiRoadOption.empty()
       : roadType = RoadType.car,
         super(
-          roadColor: Colors.green,
+          roadColor: defaultRoadColor,
           zoomInto: false,
         );
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -19,7 +19,8 @@ void main() {
         expect(result['urls'], [
           ['https://{s}.tiles.test/{z}/{x}/{y}.png', 'ab']
         ]);
-        expect(Colors.blue.toMapPlatform('color'), Colors.blue.toMap('color'));
+        const color = Color(0xFF2196F3);
+        expect(color.toMapPlatform('color'), color.toMap('color'));
       } else {
         expect(result['urls'], [
           {
@@ -27,7 +28,8 @@ void main() {
             'subdomains': ['a', 'b']
           }
         ]);
-        expect(Colors.blue.toMapPlatform('color'), {'color': '#ff2196f3'});
+        expect(const Color(0xFF2196F3).toMapPlatform('color'),
+            {'color': '#ff2196f3'});
       }
     });
   }

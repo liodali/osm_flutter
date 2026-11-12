@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 typedef IconAnchorOffset = ({double x, double y});
 
@@ -119,7 +119,8 @@ class AssetMarker {
 }
 
 class MarkerIcon extends StatelessWidget {
-  final Icon? icon;
+  /// any widget can be used as marker icon (e.g: `Icon`, custom widgets).
+  final Widget? icon;
   final AssetMarker? assetMarker;
   final Widget? iconWidget;
 

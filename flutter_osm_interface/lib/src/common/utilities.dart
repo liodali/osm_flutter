@@ -3,7 +3,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 
@@ -159,7 +159,7 @@ extension Uint8ListConvert on Uint8List {
 extension ListMultiRoadConf on List<MultiRoadConfiguration> {
   List<Map<String, dynamic>> toListMap({
     MultiRoadOption commonRoadOption = const MultiRoadOption(
-      roadColor: Colors.green,
+      roadColor: defaultRoadColor,
       roadType: RoadType.car,
     ),
   }) {
