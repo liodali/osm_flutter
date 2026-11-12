@@ -1,11 +1,9 @@
-//import 'dart:html' as html;
-//import 'dart:html';
 import 'dart:js_interop';
 import 'package:web/web.dart' as web; // Add
 import 'dart:math';
 import 'dart:ui_web' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 
@@ -288,11 +286,18 @@ final class WebOsmController with WebMixin implements IBaseOSMController {
     double? angle,
     IconAnchor? iconAnchor,
   }) async {
-    Widget? icon = markerIcon ??
-        const Icon(
-          Icons.location_on,
-          size: 32,
-          color: Colors.red,
+    if (markerIcon == null) {
+      // Marker widgets are captured to PNG; decode the asset before capture.
+      await precacheImage(
+        const AssetImage('packages/flutter_osm_web/src/asset/default_pin.png'),
+        osmWebFlutterState.context,
+      );
+    }
+    final Widget icon = markerIcon ??
+        Image.asset(
+          'packages/flutter_osm_web/src/asset/default_pin.png',
+          width: 32,
+          height: 32,
         );
     osmWebFlutterState.widget.dynamicMarkerWidgetNotifier.value = icon;
     await Future.delayed(duration, () async {

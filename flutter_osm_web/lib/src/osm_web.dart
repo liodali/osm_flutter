@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_osm_web/src/widgets/map_loading_indicator.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/flutter_osm_web.dart';
@@ -135,7 +136,7 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
             onPlatformViewCreated: onPlatformViewCreated,
           );
         }
-        return const Center(child: CircularProgressIndicator.adaptive());
+        return const Center(child: MapLoadingIndicator());
       },
     );
   }
