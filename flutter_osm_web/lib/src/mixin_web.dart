@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_web/src/interop/models/bounding_box_js.dart';
 import 'package:flutter_osm_web/src/interop/models/custom_tile_js.dart';
@@ -14,7 +14,7 @@ import 'osm_web.dart';
 
 mixin WebMixin {
   late int mapIdMixin;
-  final manager = routing.OSRMManager();
+  final manager = routing.RoutingManager();
 
   late OsmWebWidgetState _osmWebFlutterState;
   RoadOption? defaultRoadOption;
@@ -302,13 +302,19 @@ mixin WebMixin {
       geoPoints.insertAll(1, interestPoints);
     }
     final waypoints = geoPoints.toLngLatList();
-    final road = await manager.getRoad(
-      waypoints: waypoints,
-      roadType: routing.RoadType.values[roadType.index],
-      alternative: false,
-      geometries: routing.Geometries.geojson,
+    final road = await manager.getRoute(
+      request: routing.OSRMRequest.route(
+        waypoints: waypoints,
+        routingType: switch (roadType) {
+          RoadType.car => routing.RoutingType.car,
+          RoadType.foot => routing.RoutingType.foot,
+          RoadType.bike => routing.RoutingType.bike,
+        },
+        geometries: routing.Geometries.geojson,
+      ),
     );
-    final routeJs = road.polyline!.mapToListGeoJS();
+    final path = road.polyline ?? const <routing.LngLat>[];
+    final routeJs = path.mapToListGeoJS();
 
     var roadInfo = RoadInfo();
     final roadConfig =
@@ -322,7 +328,7 @@ mixin WebMixin {
       (interestPoints?.toListGeoPointJs() ?? []).toJS,
       roadConfig.toRoadOptionJS,
     );
-    final instructions = await manager.buildInstructions(road);
+    final instructions = road.instructions;
     roadInfo = roadInfo.copyWith(
       duration: road.duration,
       distance: road.distance,
@@ -332,7 +338,7 @@ mixin WebMixin {
                 geoPoint: e.location.toGeoPoint(),
               ))
           .toList(),
-      route: road.polyline!.mapToListGeoPoints(),
+      route: path.mapToListGeoPoints(),
     );
     roadsWebCache[roadInfo.key] = roadInfo;
     return roadInfo;
