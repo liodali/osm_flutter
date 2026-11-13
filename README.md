@@ -4,7 +4,7 @@
 
 # flutter_osm_plugin
 
-![pub](https://img.shields.io/badge/pub-v3.0.0%2B1-blue)
+![pub](https://img.shields.io/badge/pub-v4.0.0-blue)
 
 ## Platform Support
 
@@ -100,11 +100,14 @@ Requires **Flutter 3.47.0+**. Add the following to your `pubspec.yaml` file:
 
 ## Android Integration
 
-Requirements for 3.0.0+1: `compileSdk` **37+**, Kotlin **2.3+**,
-**AGP 9.1.1+**, and **Gradle 9.3.1+**. permission_handler **13.0.2** requires
+Requirements for 4.0.0: `minSdk` **26+** (Android 8.0), `compileSdk` **37+**, Kotlin **2.3+**,
+**AGP 9.3.1+**, and **Gradle 9.5.0+**. permission_handler **13.0.2** requires
 SDK 37; location requests continue to use the request result to handle denial.
 The Android host supports built-in Kotlin on AGP 9+ and uses
-`kotlin.compilerOptions` with JVM target 17.
+`kotlin.compilerOptions` with JVM target 17. The example enables the new AGP
+DSL explicitly and runs with `minSdk = 26`; mapscore is an unconditional native
+dependency, so API 26 is required with both MethodChannel and JNI transports.
+See [ANDROID_TESTING.md](ANDROID_TESTING.md) for minified release/JNI validation.
 
 ### Endorsed Android package
 
@@ -137,10 +140,9 @@ exposed as typed streams (`controller.events`).
 
 ### Experimental JNI transport (optional)
 
-The published JNI 0.2.0 add-on targets Android host 0.2.0 and the main plugin
-3.0.0. Version 3.0.0+1 uses Android host 0.3.0; use the default MethodChannel
-transport until a compatible JNI add-on is released. The example below targets
-the earlier 3.0.0 / JNI 0.2.0 combination.
+The published JNI **0.3.0** add-on targets Android host **0.4.0** and the
+main plugin **4.0.0** (minSdk 26, AGP 9.3.1+ / Gradle 9.5.0+). Earlier JNI
+releases require older hosts and conflict with this release.
 
 For lower-latency command dispatch you can add the experimental
 [`flutter_osm_android_jni`](https://pub.dev/packages/flutter_osm_android_jni)
@@ -190,11 +192,11 @@ Notes:
   package in `darwin/flutter_osm_plugin` through `sharedDarwinSource`.
 - CocoaPods apps should remain on **2.1.x** until migrating to SPM. The frozen
   `ios/` snapshot does not provide the new native macOS implementation.
-- Android apps use `flutter_osm_android` **0.2.0** / mapscore 4.0.0. Use
-  **Kotlin 2.3+**, **compileSdk 36+**, and **AGP 8.4+** with Java 21 class-file
-  support. Existing Dart controllers and the optional JNI transport remain
-  compatible. Upgrade the optional JNI add-on to **0.2.0**; its 0.1.0 release
-  requires the older Android host and conflicts with this release.
+- Android apps use `flutter_osm_android` **0.4.0** / mapscore 4.0.0 with
+  **minSdk 26**. Use **Kotlin 2.3+**, **compileSdk 37+**, and **AGP 9.3.1+** /
+  **Gradle 9.5.0+** with JDK 17 (JDK 21 recommended). Existing Dart controllers
+  remain compatible. Upgrade the optional JNI add-on to **0.3.0**; earlier
+  releases require an older Android host and conflict with this release.
 - Use the same `OSMFlutter` widget and controllers on macOS. Add the host
   entitlements and location descriptions in [macOS Integration](#macos-integration).
 - The main package requires `flutter_osm_interface` **^1.7.0** for Apple
@@ -1117,6 +1119,13 @@ OSMViewer(
 
 > simple dialog location picker to selected user location
 
+The plugin's widgets use `package:flutter/widgets.dart`, not Material or
+Cupertino. They can be hosted by `WidgetsApp`, `MaterialApp`, or `CupertinoApp`.
+The picker dialog uses neutral styling: supply `textConfirmPicker` and
+`textCancelPicker` for translated labels (defaults are `OK` and `Cancel`).
+`isDismissible` controls both barrier taps and back navigation; the Cancel
+button remains available when it is false.
+
 ```dart
 GeoPoint p = await showSimplePickerLocation(
                       context: context,
@@ -1139,9 +1148,22 @@ GeoPoint p = await showSimplePickerLocation(
 | Properties           | Description                                                                                                               |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `controller`         | (PickerMapController) controller of the widget                                                                            |
-| `appBarPicker`       | (AppBar) appbar for the widget                                                                                            |
+| `appBarPicker`       | (PreferredSizeWidget?) toolbar; existing AppBar instances remain accepted. The picker does not create a Material Scaffold.                                                                                            |
 | `topWidgetPicker`    | (Widget?) widget will be show on top of osm map,for example to show address suggestion                                    |
 | `bottomWidgetPicker` | (Widget?) widget will be show at bottom of screen for example to show more details about selected location or more action |
+
+## Routing client migration
+
+Routing now uses `routing_client_dart: ^1.0.8` (Dart 3.7+). The plugin's
+`drawRoad` API and `RoadInfo` units remain unchanged: distance is in kilometres,
+duration in seconds. GeoJSON is requested explicitly to retain coordinate
+precision.
+
+Applications using `MapController.osrmManager` directly must migrate
+`OSRMManager` to `RoutingManager`, `getRoad(...)` to
+`getRoute(request: OSRMRequest.route(...))`, and `RoadType` to `RoutingType`
+**in routing_client_dart** (the plugin's `RoadType` is unchanged). Instructions
+are now on `route.instructions`; do not call `buildInstructions`.
 
 ## Notice
 

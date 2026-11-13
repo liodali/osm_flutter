@@ -6,11 +6,11 @@ Flutter plugin for OpenStreetMap supporting **Android**, **iOS**, **macOS**, and
 
 | Package | Role | Current Version |
 |---|---|---|
-| `flutter_osm_plugin` | Main plugin, shared widgets/controllers, and shared iOS/macOS Darwin host | 3.0.0 |
-| `flutter_osm_interface` | Platform interface, typed transports, events, and shared types | 1.7.0 |
-| `flutter_osm_android` | Endorsed Android host and MethodChannel transport | 0.2.0 |
-| `flutter_osm_android_jni` | Optional Dart JNI command transport for the Android host | 0.2.0 |
-| `flutter_osm_web` | Web platform implementation (HTML/JS interop) | 2.0.1 |
+| `flutter_osm_plugin` | Main plugin, shared widgets/controllers, and shared iOS/macOS Darwin host | 4.0.0 |
+| `flutter_osm_interface` | Platform interface, typed transports, events, and shared types | 1.8.0 |
+| `flutter_osm_android` | Endorsed Android host and MethodChannel transport | 0.4.0 |
+| `flutter_osm_android_jni` | Optional Dart JNI command transport for the Android host | 0.3.0 |
+| `flutter_osm_web` | Web platform implementation (HTML/JS interop) | 2.1.0 |
 
 ## Architecture
 
@@ -113,7 +113,7 @@ osm_flutter/
 │       └── mixin_web.dart                # Web-specific controller mixin
 └── example/                  # Demo app
     ├── android/
-    │   └── app/build.gradle.kts    # compileSdk 36, minSdk 32
+    │   └── app/build.gradle.kts    # compileSdk 37, minSdk 26
     ├── ios/
     ├── macos/                      # macOS runner (12.0+, SPM, network +
     │                               # location entitlements in the host only)
@@ -125,11 +125,11 @@ osm_flutter/
 ### Android
 - **Language**: Kotlin
 - **Map Engine**: Native OSM views (osmdroid or similar)
-- **Compile SDK**: 36
-- **Host Min SDK**: 21 (**example app Min SDK**: 32)
+- **Compile SDK**: 37
+- **Host Min SDK**: 26 (**example app Min SDK**: 26); mapscore is unconditional
 - **Ownership**: `flutter_osm_android/android/`
 - **Key Classes**: `FlutterOsmPlugin`, `OsmFactory`, lifecycle management
-- **Build**: Kotlin Gradle Plugin (KGP), Java 17
+- **Build**: AGP 9.3.1+ / Gradle 9.5.0+, built-in Kotlin / public AGP DSL, JVM target 17
 
 ### iOS (shared Darwin)
 - **Flutter baseline**: 3.47.0+ for the main plugin and example; validated with 3.47.1
@@ -230,8 +230,8 @@ usage descriptions, entitlements, permission UX, and live-location validation.
 ## Example App
 
 - **Package**: `hamza.dali.flutter_osm_plugin_example`
-- **Compile SDK**: 36
-- **Min SDK**: 32
+- **Compile SDK**: 37
+- **Min SDK**: 26
 - **NDK**: 28.2.13676358
 - **Signing**: Reads `android/key.properties` for release signing
 - **Build**: `flutter build appbundle --release` (in `example/`)
@@ -275,25 +275,27 @@ flutter build appbundle --release
 ## Dependencies
 
 ### Main Plugin
-- `flutter_osm_interface: ^1.7.0`
-- `flutter_osm_web: ^2.0.1`
-- `dio: ^5.10.0`, `routing_client_dart: ^0.5.5`, `google_polyline_algorithm: ^3.1.0`
+- `flutter_osm_interface: ^1.8.0`
+- `flutter_osm_web: ^2.1.0`
+- `flutter_osm_android: ^0.4.0` (endorsed)
+- `dio: ^5.11.1`, `routing_client_dart: ^1.0.8`, `google_polyline_algorithm: ^3.1.0`
 - `permission_handler: ^12.0.3`, `url_launcher: ^6.3.2`
 
 ### Interface
 - `plugin_platform_interface: ^2.1.8`
 - `stream_transform: ^2.1.1`
 - `google_polyline_algorithm: ^3.1.0`
-- `dio: ^5.10.0`
+- `dio: ^5.11.1`
 
 ### Android JNI add-on
 - `jni: ^1.0.3`
 - `jnigen: ^0.17.0` (development only)
-- `flutter_osm_interface` and `flutter_osm_plugin` host dependencies
+- `flutter_osm_interface: ^1.8.0`
+- `flutter_osm_android: ^0.4.0`
 
 ### Web
-- `web: ^1.1.1`
+- `web: ^1.1.2`
 - `stream_transform: ^2.1.0`
-- `routing_client_dart: ^0.5.5`
+- `routing_client_dart: ^1.0.8`
 - `dio: ^5.9.0`
-- `flutter_osm_interface: ^1.5.0`
+- `flutter_osm_interface: ^1.8.0`

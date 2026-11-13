@@ -1,3 +1,32 @@
+## 4.0.0
+
+Breaking requirements and changes:
+
+- Require Dart 3.13+ (widget/config classes now use primary constructor
+  syntax) on top of the Flutter 3.47+ baseline.
+- The Android minimum is now API 26 (Android 8.0) through the endorsed
+  `flutter_osm_android` 0.4.0; mapscore is an unconditional native dependency.
+  Consuming apps must also use AGP 9.3.1+ / Gradle 9.5.0+.
+- `routing_client_dart` moves to ^1.0.8. `MapController.osrmManager` is now a
+  `RoutingManager`; direct users must migrate `getRoad(...)` to
+  `getRoute(request: OSRMRequest.route(...))` and read instructions from
+  `route.instructions`. The public `drawRoad` API and `RoadInfo` units are
+  unchanged (km / seconds, GeoJSON precision preserved).
+- Plugin libraries no longer import Material/Cupertino: widgets work under
+  `WidgetsApp`, `MaterialApp`, or `CupertinoApp` without icon fonts.
+  `showSimplePickerLocation` uses neutral styling with English default OK/Cancel
+  labels (pass `textConfirmPicker`/`textCancelPicker` to localize) and honors
+  `isDismissible` for barrier taps; `CustomPickerLocation.appBarPicker` now
+  accepts any `PreferredSizeWidget` and the picker no longer provides a
+  Material Scaffold.
+- Federated packages: `flutter_osm_interface` ^1.8.0, `flutter_osm_android`
+  ^0.4.0, `flutter_osm_web` ^2.1.0 (optional JNI add-on: 0.3.0).
+- Guard controller dispose so a controller never attached to a map view no
+  longer throws.
+- Example app: minSdk 26, AGP 9.3.1 / Gradle 9.5.0, new AGP DSL, R8 release
+  instrumentation harness, migrated to `material_ui`, and removal of the
+  unused direct routing dependency.
+
 ### 3.0.0+1:
 
 - Update Dio to 5.11.1.
