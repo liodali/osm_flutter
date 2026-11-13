@@ -1,3 +1,14 @@
+## Unreleased
+
+- Upgrade the host AGP buildscript to 9.3.1 and wrapper configuration to Gradle
+  9.5.0. Consuming applications must also use AGP 9.3.1+ / Gradle 9.5.0+; the
+  plugin's wrapper does not control application builds.
+
+- Declare Android API 26 as the host minimum, matching the unconditional mapscore
+  dependency instead of advertising unsupported API 21 consumers.
+- Use the public AGP DSL for SDK configuration and native library packaging;
+  remove the empty legacy lint block and redundant multidex setting.
+
 ## 0.3.0
 
 - Compile with Android SDK 37, matching permission_handler 13 in the main plugin.
