@@ -14,6 +14,16 @@ import 'package:flutter_osm_interface/src/map_controller/i_base_map_controller.d
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 abstract class BaseMapController extends IBaseMapController {
   late IBaseOSMController _osmBaseController;
+
+  /// Whether a platform map controller attached itself to this instance.
+  ///
+  /// A controller can be created and disposed without ever being attached to
+  /// a live map view (e.g. in widget tests); disposing in that state must not
+  /// reach for the platform side.
+  bool _osmBaseControllerAttached = false;
+
+  @protected
+  bool get baseOSMControllerAttached => _osmBaseControllerAttached;
   final CustomTile? customTile;
   Timer? _timer;
   var _layerIsVisible = true;
@@ -65,5 +75,6 @@ abstract class BaseMapController extends IBaseMapController {
 extension OSMControllerOfBaseMapController on BaseMapController {
   void setBaseOSMController(IBaseOSMController controller) {
     _osmBaseController = controller;
+    _osmBaseControllerAttached = true;
   }
 }
