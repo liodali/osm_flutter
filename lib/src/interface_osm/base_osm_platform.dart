@@ -27,30 +27,28 @@ Widget buildWidget({
   ZoomOption zoomOption = const ZoomOption(),
   UserLocationMaker? userLocationMarker,
   bool enableRotationByGesture = false,
-}) =>
-    getWidget(
-      controller: controller,
-      userTrackingOption:
-          userTrackingOption ?? controller.initMapWithUserPosition,
-      mapIsReadyListener: mapIsReadyListener,
-      dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
-      globalKeys: globalKeys,
-      staticIconGlobalKeys: staticIconGlobalKeys,
-      isPicker: isPicker,
-      showContributorBadgeForOSM: showContributorBadgeForOSM,
-      showDefaultInfoWindow: showDefaultInfoWindow,
-      mapIsLoading: mapIsLoading,
-      onGeoPointClicked: onGeoPointClicked,
-      onLocationChanged: onLocationChanged,
-      onMapMoved: onMapMoved,
-      roadConfiguration: roadConfiguration,
-      zoomOption: zoomOption,
-      userLocationMarker: userLocationMarker,
-      onMapIsReady: onMapIsReady,
-      showZoomController: showZoomController,
-      staticPoints: staticPoints,
-      enableRotationByGesture: enableRotationByGesture,
-    );
+}) => getWidget(
+  controller: controller,
+  userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
+  mapIsReadyListener: mapIsReadyListener,
+  dynamicMarkerWidgetNotifier: dynamicMarkerWidgetNotifier,
+  globalKeys: globalKeys,
+  staticIconGlobalKeys: staticIconGlobalKeys,
+  isPicker: isPicker,
+  showContributorBadgeForOSM: showContributorBadgeForOSM,
+  showDefaultInfoWindow: showDefaultInfoWindow,
+  mapIsLoading: mapIsLoading,
+  onGeoPointClicked: onGeoPointClicked,
+  onLocationChanged: onLocationChanged,
+  onMapMoved: onMapMoved,
+  roadConfiguration: roadConfiguration,
+  zoomOption: zoomOption,
+  userLocationMarker: userLocationMarker,
+  onMapIsReady: onMapIsReady,
+  showZoomController: showZoomController,
+  staticPoints: staticPoints,
+  enableRotationByGesture: enableRotationByGesture,
+);
 
 class OSMMap extends StatefulWidget {
   const OSMMap({

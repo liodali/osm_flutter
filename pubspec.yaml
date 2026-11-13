@@ -5,7 +5,7 @@ version: 3.0.0+1
 
 homepage: https://github.com/liodali/osm_flutter
 environment:
-  sdk: '>=3.5.0 <4.0.0'
+  sdk: '>=3.13.0 <4.0.0'
   flutter: ">=3.47.0"
 dependencies:
   flutter:
@@ -19,7 +19,7 @@ dependencies:
   url_launcher: ^6.3.2
   dio: ^5.11.1
   uuid: ^4.5.3
-  routing_client_dart: ^0.5.5
+  routing_client_dart: ^1.0.8
   google_polyline_algorithm: ^3.1.0
   # flutter_osm_interface: ^1.5.0
   # flutter_osm_android: ^0.1.0
@@ -37,6 +37,9 @@ dev_dependencies:
     sdk: flutter
 
 dependency_overrides:
+      # Keep the Android host's hosted interface constraint on the local copy.
+      flutter_osm_interface:
+        path: flutter_osm_interface/
 
       url_launcher_android: ^6.3.30
       url_launcher_ios: ^6.4.1

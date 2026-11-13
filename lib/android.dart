@@ -26,6 +26,7 @@ export 'package:flutter_osm_interface/flutter_osm_interface.dart'
         StaticPositionId;
 export 'package:flutter_osm_android/flutter_osm_android.dart'
     show createDefaultAndroidMapTransport, MethodChannelAndroidMapTransport;
+
 export 'src/controller/android_map_controller.dart'
     show
         AndroidLocationPermissionRequester,

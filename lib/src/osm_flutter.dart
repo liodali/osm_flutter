@@ -21,7 +21,17 @@ import 'widgets/copyright_osm_widget.dart';
 /// [onMapMoved] : (callback) it's fired when you activate tracking and  user position has been changed
 ///
 /// [onMapIsReady] : (callabck) it's fired when map initialization is complet
-class OSMFlutter extends StatefulWidget {
+class const OSMFlutter({
+  super.key,
+  required this.controller,
+  required this.osmOption,
+  this.mapIsLoading,
+  this.onGeoPointClicked,
+  this.onGeoPointLongPress,
+  this.onLocationChanged,
+  this.onMapMoved,
+  this.onMapIsReady,
+}) extends StatefulWidget {
   final BaseMapController controller;
   final Widget? mapIsLoading;
   final OnGeoPointClicked? onGeoPointClicked;
@@ -30,18 +40,6 @@ class OSMFlutter extends StatefulWidget {
   final OnMapMoved? onMapMoved;
   final Function(bool)? onMapIsReady;
   final OSMOption osmOption;
-  const OSMFlutter({
-    super.key,
-    required this.controller,
-    required this.osmOption,
-    this.mapIsLoading,
-    this.onGeoPointClicked,
-    this.onGeoPointLongPress,
-    this.onLocationChanged,
-    this.onMapMoved,
-    this.onMapIsReady,
-  });
-
   @override
   State<OSMFlutter> createState() => _OSMFlutterState();
 }
@@ -171,10 +169,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                       child: ValueListenableBuilder<bool>(
                         valueListenable: mapIsReadyListener,
                         builder: (ctx, isReady, child) {
-                          return Visibility(
-                            visible: !isReady,
-                            child: child!,
-                          );
+                          return Visibility(visible: !isReady, child: child!);
                         },
                         child: Container(
                           color: const Color(0xFFFFFFFF),
@@ -220,18 +215,29 @@ class _OSMFlutterState extends State<OSMFlutter> {
                 ),
         ),
         if (widget.osmOption.showContributorBadgeForOSM && !kIsWeb) ...[
-          const Positioned(
-            bottom: 0,
-            right: 5,
-            child: CopyrightOSMWidget(),
-          ),
+          const Positioned(bottom: 0, right: 5, child: CopyrightOSMWidget()),
         ],
       ],
     );
   }
 }
 
-class MapConfiguration extends StatelessWidget {
+class const MapConfiguration({
+  super.key,
+  required this.dynamicMarkerWidgetNotifier,
+  this.markerOption,
+  this.userLocationMarker,
+  required this.staticPoints,
+  required this.dynamicMarkerKey,
+  required this.defaultMarkerKey,
+  required this.advancedPickerMarker,
+  required this.startIconKey,
+  required this.endIconKey,
+  required this.middleIconKey,
+  required this.personIconMarkerKey,
+  required this.arrowDirectionMarkerKey,
+  required this.staticMarkersKeys,
+}) extends StatelessWidget {
   final ValueNotifier<Widget?> dynamicMarkerWidgetNotifier;
 
   final MarkerOption? markerOption;
@@ -246,24 +252,6 @@ class MapConfiguration extends StatelessWidget {
   final Map<String, GlobalKey> staticMarkersKeys;
   final List<StaticPositionGeoPoint> staticPoints;
   final UserLocationMaker? userLocationMarker;
-
-  const MapConfiguration({
-    super.key,
-    required this.dynamicMarkerWidgetNotifier,
-    this.markerOption,
-    this.userLocationMarker,
-    required this.staticPoints,
-    required this.dynamicMarkerKey,
-    required this.defaultMarkerKey,
-    required this.advancedPickerMarker,
-    required this.startIconKey,
-    required this.endIconKey,
-    required this.middleIconKey,
-    required this.personIconMarkerKey,
-    required this.arrowDirectionMarkerKey,
-    required this.staticMarkersKeys,
-  });
-
   @override
   Widget build(BuildContext context) {
     return Positioned(
@@ -279,10 +267,7 @@ class MapConfiguration extends StatelessWidget {
               if (widget == null) {
                 return SizedBox.fromSize();
               }
-              return RepaintBoundary(
-                key: dynamicMarkerKey,
-                child: widget,
-              );
+              return RepaintBoundary(key: dynamicMarkerKey, child: widget);
             },
           ),
           if ((markerOption?.defaultMarker != null)) ...[
@@ -297,7 +282,7 @@ class MapConfiguration extends StatelessWidget {
                 key: staticMarkersKeys[staticPoints[i].id],
                 child: staticPoints[i].markerIcon,
               ),
-            ]
+            ],
           ],
           if (userLocationMarker?.personMarker != null) ...[
             RepaintBoundary(

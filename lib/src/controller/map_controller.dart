@@ -19,21 +19,17 @@ class MapController extends BaseMapController {
     super.initPosition,
     super.areaLimit = const BoundingBox.world(),
     super.useExternalTracking,
-  })  : assert(
-          (initMapWithUserPosition != null) ^ (initPosition != null),
-        ),
-        super(
-          customTile: null,
-        );
+  }) : assert((initMapWithUserPosition != null) ^ (initPosition != null)),
+       super(customTile: null);
 
   MapController.withPosition({
     required GeoPoint initPosition,
     super.areaLimit = const BoundingBox.world(),
   }) : super(
-          initMapWithUserPosition: null,
-          initPosition: initPosition,
-          customTile: null,
-        );
+         initMapWithUserPosition: null,
+         initPosition: initPosition,
+         customTile: null,
+       );
 
   MapController.withUserPosition({
     super.areaLimit = const BoundingBox.world(),
@@ -43,10 +39,10 @@ class MapController extends BaseMapController {
       unFollowUser: false,
     ),
   }) : super(
-          initMapWithUserPosition: trackUserLocation,
-          initPosition: null,
-          customTile: null,
-        );
+         initMapWithUserPosition: trackUserLocation,
+         initPosition: null,
+         customTile: null,
+       );
 
   MapController.customLayer({
     super.initMapWithUserPosition,
@@ -54,77 +50,60 @@ class MapController extends BaseMapController {
     super.areaLimit = const BoundingBox.world(),
     super.useExternalTracking,
     required CustomTile customTile,
-  })  : assert(
-          (initMapWithUserPosition != null) || initPosition != null,
-        ),
-        super(
-          customTile: customTile,
-        );
+  }) : assert((initMapWithUserPosition != null) || initPosition != null),
+       super(customTile: customTile);
 
   MapController.cyclOSMLayer({
     super.initMapWithUserPosition,
     super.initPosition,
     super.areaLimit = const BoundingBox.world(),
-  })  : assert(
-          (initMapWithUserPosition != null) || initPosition != null,
-        ),
-        super(
-          customTile: CustomTile(
-            urlsServers: [
-              TileURLs(
-                url: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/",
-                subdomains: [
-                  "a",
-                  "b",
-                  "c",
-                ],
-              ),
-            ],
-            tileExtension: ".png",
-            sourceName: "cycleMapnik",
-            tileSize: 256,
-          ),
-        );
+  }) : assert((initMapWithUserPosition != null) || initPosition != null),
+       super(
+         customTile: CustomTile(
+           urlsServers: [
+             TileURLs(
+               url: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/",
+               subdomains: ["a", "b", "c"],
+             ),
+           ],
+           tileExtension: ".png",
+           sourceName: "cycleMapnik",
+           tileSize: 256,
+         ),
+       );
   MapController.publicTransportationLayer({
     super.initMapWithUserPosition,
     super.initPosition,
     super.areaLimit = const BoundingBox.world(),
-  })  : assert(
-          (initMapWithUserPosition != null) || initPosition != null,
-        ),
-        super(
-          customTile: CustomTile(
-            urlsServers: [
-              TileURLs(url: "https://tile.memomaps.de/tilegen/"),
-            ],
-            tileExtension: ".png",
-            sourceName: "memomapsMapnik",
-            tileSize: 256,
-          ),
-        );
+  }) : assert((initMapWithUserPosition != null) || initPosition != null),
+       super(
+         customTile: CustomTile(
+           urlsServers: [TileURLs(url: "https://tile.memomaps.de/tilegen/")],
+           tileExtension: ".png",
+           sourceName: "memomapsMapnik",
+           tileSize: 256,
+         ),
+       );
 
   MapController.satelliteLayer({
     super.initMapWithUserPosition,
     super.initPosition,
     super.areaLimit = const BoundingBox.world(),
     super.useExternalTracking,
-  })  : assert(
-          (initMapWithUserPosition != null) || initPosition != null,
-        ),
-        super(
-          customTile: CustomTile(
-            urlsServers: [
-              TileURLs(
-                url:
-                    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-              ),
-            ],
-            tileExtension: "",
-            sourceName: "arcgisWorldImagery",
-            tileSize: 256,
-            maxZoomLevel: 19,
-          ),
-        );
+  }) : assert((initMapWithUserPosition != null) || initPosition != null),
+       super(
+         customTile: CustomTile(
+           urlsServers: [
+             TileURLs(
+               url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+             ),
+           ],
+           tileExtension: "",
+           sourceName: "arcgisWorldImagery",
+           tileSize: 256,
+           maxZoomLevel: 19,
+         ),
+       );
 
   /// [dispose]
   ///
@@ -142,9 +121,7 @@ class MapController extends BaseMapController {
   /// this method used to change tiles of map.
   /// raster tiles are supported on all platforms; vector tile styles
   /// (via [CustomTile.styleURL]) are also supported on all platforms.
-  Future<void> changeTileLayer({
-    CustomTile? tileLayer,
-  }) async {
+  Future<void> changeTileLayer({CustomTile? tileLayer}) async {
     await osmBaseController.changeTileLayer(tileLayer: tileLayer);
   }
 
@@ -248,12 +225,7 @@ class MapController extends BaseMapController {
   Future<void> setMarkerOfStaticPoint({
     required String id,
     required MarkerIcon markerIcon,
-  }) =>
-      osmBaseController.setIconStaticPositions(
-        id,
-        markerIcon,
-        refresh: true,
-      );
+  }) => osmBaseController.setIconStaticPositions(id, markerIcon, refresh: true);
 
   /// [getZoom]
   ///
@@ -276,10 +248,7 @@ class MapController extends BaseMapController {
   ///
   /// [stepZoom] : (double) step zoom that will be added to current zoom
   Future<void> setZoom({double? zoomLevel, double? stepZoom}) async {
-    await osmBaseController.setZoom(
-      zoomLevel: zoomLevel,
-      stepZoom: stepZoom,
-    );
+    await osmBaseController.setZoom(zoomLevel: zoomLevel, stepZoom: stepZoom);
   }
 
   /// [zoomIn]
@@ -344,10 +313,11 @@ class MapController extends BaseMapController {
     bool useDirectionMarker = false,
   }) async {
     await osmBaseController.enableTracking(
-        enableStopFollow: enableStopFollow,
-        disableMarkerRotation: disableUserMarkerRotation,
-        anchor: anchor,
-        useDirectionMarker: useDirectionMarker);
+      enableStopFollow: enableStopFollow,
+      disableMarkerRotation: disableUserMarkerRotation,
+      anchor: anchor,
+      useDirectionMarker: useDirectionMarker,
+    );
   }
 
   /// [startLocationUpdating]
@@ -381,20 +351,23 @@ class MapController extends BaseMapController {
 
   Future<bool> _requestLocationPermission() async {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      final locationStatus =
-          await requestLocationPermission(Permission.locationWhenInUse);
+      final locationStatus = await requestLocationPermission(
+        Permission.locationWhenInUse,
+      );
       if (!_isPermissionGranted(locationStatus)) {
         return false;
       }
 
-      final locationAlwaysStatus =
-          await requestLocationPermission(Permission.locationAlways);
+      final locationAlwaysStatus = await requestLocationPermission(
+        Permission.locationAlways,
+      );
       return _isPermissionGranted(locationStatus) ||
           _isPermissionGranted(locationAlwaysStatus);
     }
 
-    final locationStatus =
-        await requestLocationPermission(Permission.locationWhenInUse);
+    final locationStatus = await requestLocationPermission(
+      Permission.locationWhenInUse,
+    );
     return _isPermissionGranted(locationStatus);
   }
 
@@ -445,8 +418,9 @@ class MapController extends BaseMapController {
       request: routing.OSRMRequest.route(
         waypoints: [
           routing.LngLat(lng: start.longitude, lat: start.latitude),
-          ...?intersectPoint
-              ?.map((e) => routing.LngLat(lng: e.longitude, lat: e.latitude)),
+          ...?intersectPoint?.map(
+            (e) => routing.LngLat(lng: e.longitude, lat: e.latitude),
+          ),
           routing.LngLat(lng: end.longitude, lat: end.latitude),
         ],
         routingType: switch (roadType) {
@@ -463,23 +437,27 @@ class MapController extends BaseMapController {
         .toList();
     final roadInfo = RoadInfo(
       instructions: instructions
-          .map((e) => Instruction(
-                geoPoint: GeoPoint(
-                  latitude: e.location.lat,
-                  longitude: e.location.lng,
-                ),
-                instruction: e.instruction,
-              ))
+          .map(
+            (e) => Instruction(
+              geoPoint: GeoPoint(
+                latitude: e.location.lat,
+                longitude: e.location.lng,
+              ),
+              instruction: e.instruction,
+            ),
+          )
           .toList(),
       distance: road.distance,
       duration: road.duration,
       route: geoPoints ?? [],
     );
-    unawaited(osmBaseController.drawRoadManually(
-      roadInfo.key,
-      geoPoints ?? [],
-      roadOption ?? const RoadOption.empty(),
-    ));
+    unawaited(
+      osmBaseController.drawRoadManually(
+        roadInfo.key,
+        geoPoints ?? [],
+        roadOption ?? const RoadOption.empty(),
+      ),
+    );
     return roadInfo;
     // return await osmBaseController.drawRoad(
     //   start,
@@ -587,10 +565,7 @@ class MapController extends BaseMapController {
   ///  [path] : (list of GeoPoint) path of the road
   ///
   ///  [roadOption] : (RoadOption) define styles of the road
-  Future<void> drawRoadManually(
-    List<GeoPoint> path,
-    RoadOption roadOption,
-  ) =>
+  Future<void> drawRoadManually(List<GeoPoint> path, RoadOption roadOption) =>
       osmBaseController.drawRoadManually(
         UniqueKey().toString(),
         path,
@@ -605,7 +580,9 @@ class MapController extends BaseMapController {
   }) async {
     if (angle != null) {
       assert(
-          angle >= 0 && angle <= 2 * pi, "angle should be between 0 and 2*pi");
+        angle >= 0 && angle <= 2 * pi,
+        "angle should be between 0 and 2*pi",
+      );
     }
     await osmBaseController.addMarker(
       p,

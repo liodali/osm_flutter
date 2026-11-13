@@ -14,10 +14,7 @@ class PickerMapController extends BaseMapController {
   ValueListenable<String> get searchableText => _searchableText;
   ValueListenable<bool> get isMapMovingNotifier => _isMovingNotifier;
 
-  PickerMapController({
-    super.initMapWithUserPosition,
-    super.initPosition,
-  });
+  PickerMapController({super.initMapWithUserPosition, super.initPosition});
 
   void setSearchableText(String text) {
     _searchableText.value = text;

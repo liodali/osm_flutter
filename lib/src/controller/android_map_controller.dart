@@ -22,15 +22,14 @@ final class AndroidMapController extends BaseMapController
     super.customTile,
     AndroidMapTransportFactory? transportFactory,
     AndroidLocationPermissionRequester? locationPermissionRequester,
-  })  : _transportFactory =
-            transportFactory ?? createDefaultAndroidMapTransport,
-        _locationPermissionRequester =
-            locationPermissionRequester ?? _requestForegroundLocation,
-        super(
-          initMapWithUserPosition: null,
-          initPosition: initPosition,
-          areaLimit: areaLimit,
-        ) {
+  }) : _transportFactory = transportFactory ?? createDefaultAndroidMapTransport,
+       _locationPermissionRequester =
+           locationPermissionRequester ?? _requestForegroundLocation,
+       super(
+         initMapWithUserPosition: null,
+         initPosition: initPosition,
+         areaLimit: areaLimit,
+       ) {
     camera = AndroidMapCamera._(this);
     markers = AndroidMapMarkers._(this);
     shapes = AndroidMapShapes._(this);
@@ -109,10 +108,7 @@ final class AndroidMapController extends BaseMapController
     _attaching = true;
     try {
       final candidates = backend == AndroidMapBackend.auto
-          ? const [
-              AndroidMapBackend.jni,
-              AndroidMapBackend.methodChannel,
-            ]
+          ? const [AndroidMapBackend.jni, AndroidMapBackend.methodChannel]
           : [backend];
 
       for (final candidateBackend in candidates) {
@@ -134,7 +130,8 @@ final class AndroidMapController extends BaseMapController
             operation: 'attach',
             viewId: viewId,
           );
-          final mayFallback = _disposeFuture == null &&
+          final mayFallback =
+              _disposeFuture == null &&
               backend == AndroidMapBackend.auto &&
               candidateBackend == AndroidMapBackend.jni;
           if (mayFallback) {
@@ -202,11 +199,7 @@ final class AndroidMapController extends BaseMapController
   void _onTransportError(Object error, StackTrace stackTrace) {
     final viewId = _viewId;
     if (viewId == null || _disposeFuture != null) return;
-    final exception = _asException(
-      error,
-      operation: 'event',
-      viewId: viewId,
-    );
+    final exception = _asException(error, operation: 'event', viewId: viewId);
     _onTransportEvent(AndroidMapError(viewId: viewId, error: exception));
     _completeReadyError(exception, stackTrace);
   }
@@ -279,8 +272,8 @@ final class AndroidMapController extends BaseMapController
       ShapeId('android-shape-${_viewId ?? 'pending'}-${_shapeSequence++}');
 
   StaticPositionId _nextStaticPositionId() => StaticPositionId(
-        'android-static-${_viewId ?? 'pending'}-${_staticPositionSequence++}',
-      );
+    'android-static-${_viewId ?? 'pending'}-${_staticPositionSequence++}',
+  );
 
   RoadId _nextRoadId() =>
       RoadId('android-road-${_viewId ?? 'pending'}-${_roadSequence++}');
@@ -540,11 +533,7 @@ final class AndroidMapStaticPositions {
       );
     }
     if (iconBytes?.isEmpty ?? false) {
-      throw _argumentException(
-        _controller,
-        'setStaticPositions',
-        'empty_icon',
-      );
+      throw _argumentException(_controller, 'setStaticPositions', 'empty_icon');
     }
     final id = groupId ?? _controller._nextStaticPositionId();
     final wasIssued = _issuedIds.contains(id);
@@ -718,12 +707,11 @@ AndroidMapException _argumentException(
   AndroidMapController controller,
   String operation,
   String code,
-) =>
-    AndroidMapException(
-      operation: operation,
-      code: code,
-      viewId: controller.viewId,
-    );
+) => AndroidMapException(
+  operation: operation,
+  code: code,
+  viewId: controller.viewId,
+);
 
 int _signedArgb(Color color) {
   final value = color.toARGB32();

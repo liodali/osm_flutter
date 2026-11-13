@@ -21,7 +21,30 @@ typedef MobileInitConfiguration = ({
   bool isStaticMap,
 });
 
-class MobileOsmFlutter extends StatefulWidget {
+class const MobileOsmFlutter({
+  super.key,
+  required this.controller,
+  this.userTrackingOption,
+  this.onGeoPointClicked,
+  this.onGeoPointLongPress,
+  this.onLocationChanged,
+  this.onMapMoved,
+  required this.mapIsReadyListener,
+  required this.dynamicMarkerWidgetNotifier,
+  this.staticPoints = const [],
+  this.mapIsLoading,
+  required this.globalKeys,
+  required this.staticIconGlobalKeys,
+  this.roadConfig,
+  this.showZoomController = false,
+  this.showDefaultInfoWindow = false,
+  this.isPicker = false,
+  this.showContributorBadgeForOSM = false,
+  this.zoomOption = const ZoomOption(),
+  this.onMapIsReady,
+  this.userLocationMarker,
+  this.enableRotationByGesture = false,
+}) extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
@@ -43,31 +66,6 @@ class MobileOsmFlutter extends StatefulWidget {
   final UserLocationMaker? userLocationMarker;
   final bool enableRotationByGesture;
   final ZoomOption zoomOption;
-  const MobileOsmFlutter({
-    super.key,
-    required this.controller,
-    this.userTrackingOption,
-    this.onGeoPointClicked,
-    this.onGeoPointLongPress,
-    this.onLocationChanged,
-    this.onMapMoved,
-    required this.mapIsReadyListener,
-    required this.dynamicMarkerWidgetNotifier,
-    this.staticPoints = const [],
-    this.mapIsLoading,
-    required this.globalKeys,
-    required this.staticIconGlobalKeys,
-    this.roadConfig,
-    this.showZoomController = false,
-    this.showDefaultInfoWindow = false,
-    this.isPicker = false,
-    this.showContributorBadgeForOSM = false,
-    this.zoomOption = const ZoomOption(),
-    this.onMapIsReady,
-    this.userLocationMarker,
-    this.enableRotationByGesture = false,
-  });
-
   @override
   MobileOsmFlutterState createState() => MobileOsmFlutterState();
 }
@@ -151,8 +149,9 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   /// for iOS it's done manually
   Future<bool> requestPermission() async {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      final status =
-          await requestLocationPermission(Permission.locationWhenInUse);
+      final status = await requestLocationPermission(
+        Permission.locationWhenInUse,
+      );
       return status.isGranted || status.isLimited;
     }
     return true;
@@ -166,8 +165,9 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
     final controller = widget.controller;
     if (controller is AndroidMapPlatform) {
       final androidController = controller as AndroidMapPlatform;
-      _androidEventSubscription =
-          androidController.events.listen(_onAndroidMapEvent);
+      _androidEventSubscription = androidController.events.listen(
+        _onAndroidMapEvent,
+      );
       try {
         await androidController.attachAndroidMap(id);
       } catch (_) {
@@ -233,16 +233,16 @@ class MobileOsmFlutterState extends State<MobileOsmFlutter>
   }
 }
 
-class PlatformView extends StatelessWidget {
+class const PlatformView({
+  super.key,
+  required this.onPlatformCreatedView,
+  required this.uuidMapCache,
+  required this.configuration,
+}) extends StatelessWidget {
   final Function(int) onPlatformCreatedView;
   final String uuidMapCache;
   final MobileInitConfiguration configuration;
-  const PlatformView({
-    super.key,
-    required this.onPlatformCreatedView,
-    required this.uuidMapCache,
-    required this.configuration,
-  }); //: super(key: mobileKey);
+  //: super(key: mobileKey);
 
   @override
   Widget build(BuildContext context) {
@@ -317,9 +317,7 @@ class PlatformView extends StatelessWidget {
     bool userlocation = false,
     ZoomOption zoomOption = const ZoomOption(),
   }) {
-    final Map<String, dynamic> params = {
-      "uuid": uuidMapCache,
-    };
+    final Map<String, dynamic> params = {"uuid": uuidMapCache};
     if (customTile != null) {
       params.putIfAbsent("customTile", () => customTile.toMap());
     }

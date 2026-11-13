@@ -3,14 +3,11 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-class CopyrightOSMWidget extends StatelessWidget {
+class const CopyrightOSMWidget({
+  this.internationalContributorName = "contributors",
+  super.key,
+}) extends StatelessWidget {
   final String internationalContributorName;
-
-  const CopyrightOSMWidget({
-    this.internationalContributorName = "contributors",
-    super.key,
-  });
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -48,12 +45,10 @@ class CopyrightOSMWidget extends StatelessWidget {
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
-        style: const TextStyle(
-          fontSize: 9,
-        ),
+        style: const TextStyle(fontSize: 9),
       ),
     );
   }

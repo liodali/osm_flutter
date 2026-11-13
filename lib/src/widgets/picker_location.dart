@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/common/osm_option.dart';
@@ -83,10 +84,9 @@ Future<GeoPoint?> showSimplePickerLocation({
                     if (title != null || titleWidget != null)
                       Padding(
                         padding: const EdgeInsets.all(16),
-                        child:
-                            title != null
-                                ? Text(title, style: titleStyle)
-                                : titleWidget,
+                        child: title != null
+                            ? Text(title, style: titleStyle)
+                            : titleWidget,
                       ),
                     Padding(
                       padding: contentPadding,
@@ -113,19 +113,16 @@ Future<GeoPoint?> showSimplePickerLocation({
                                   ),
                                 ),
                                 Positioned(
-                                  child:
-                                      pickMarkerWidget != null
-                                          ? pickMarkerWidget(
-                                            context,
-                                            center != null && old != null
-                                                ? center!.isEqual(old!)
-                                                : center != null && old == null
-                                                ? true
-                                                : false,
-                                          )
-                                          : AnimatedCenterMarker(
-                                            center: center,
-                                          ),
+                                  child: pickMarkerWidget != null
+                                      ? pickMarkerWidget(
+                                          context,
+                                          center != null && old != null
+                                              ? center!.isEqual(old!)
+                                              : center != null && old == null
+                                              ? true
+                                              : false,
+                                        )
+                                      : AnimatedCenterMarker(center: center),
                                 ),
                               ],
                             );
@@ -166,9 +163,8 @@ Future<GeoPoint?> showSimplePickerLocation({
   return point;
 }
 
-class _PickerButton extends StatefulWidget {
-  const _PickerButton({required this.onPressed, required this.child,});
-
+class const _PickerButton({required this.onPressed, required this.child})
+    extends StatefulWidget {
   final VoidCallback onPressed;
   final Widget child;
 
@@ -200,10 +196,9 @@ class _PickerButtonState extends State<_PickerButton> {
         child: DecoratedBox(
           decoration: BoxDecoration(
             border: Border.all(
-              color:
-                  _showFocus
-                      ? const Color(0xFF2196F3)
-                      : const Color(0x00000000),
+              color: _showFocus
+                  ? const Color(0xFF2196F3)
+                  : const Color(0x00000000),
             ),
           ),
           child: Padding(
@@ -216,9 +211,9 @@ class _PickerButtonState extends State<_PickerButton> {
   );
 }
 
-class AnimatedCenterMarker extends StatefulWidget {
+class const AnimatedCenterMarker({super.key, this.center})
+    extends StatefulWidget {
   final GeoPoint? center;
-  const AnimatedCenterMarker({super.key, this.center});
   @override
   State<StatefulWidget> createState() => _AnimatedCenterMarker();
 }

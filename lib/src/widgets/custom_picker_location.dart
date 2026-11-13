@@ -6,19 +6,14 @@ import 'package:flutter_osm_plugin/src/controller/picker_map_controller.dart';
 import 'package:flutter_osm_plugin/src/osm_flutter.dart';
 import 'package:flutter_osm_plugin/src/widgets/picker_location.dart';
 
-class CustomPickerLocationConfig {
+class const CustomPickerLocationConfig({
+  this.loadingWidget,
+  this.advancedMarkerPicker,
+  this.zoomOption = const ZoomOption(maxZoomLevel: 18, minZoomLevel: 2),
+}) {
   final Widget? loadingWidget;
   final MarkerIcon? advancedMarkerPicker;
   final ZoomOption zoomOption;
-
-  const CustomPickerLocationConfig({
-    this.loadingWidget,
-    this.advancedMarkerPicker,
-    this.zoomOption = const ZoomOption(
-      maxZoomLevel: 18,
-      minZoomLevel: 2,
-    ),
-  });
 }
 
 /// CustomPickerLocation
@@ -36,7 +31,16 @@ class CustomPickerLocationConfig {
 /// [bottomWidgetPicker] :  widget on bottom of screen and above the osm flutter widget to show another information or action widget for the picker
 ///
 /// [pickerConfig]      : (CustomPickerLocationConfig) configure the inner OSMFlutter
-class CustomPickerLocation extends StatefulWidget {
+class const CustomPickerLocation({
+  required this.controller,
+  this.appBarPicker,
+  this.bottomWidgetPicker,
+  this.topWidgetPicker,
+  this.pickerConfig = const CustomPickerLocationConfig(),
+  this.onMapReady,
+  this.showDefaultMarkerPickWidget = false,
+  super.key,
+}) extends StatefulWidget {
   final PickerMapController controller;
   final PreferredSizeWidget? appBarPicker;
   final Widget? topWidgetPicker;
@@ -44,36 +48,22 @@ class CustomPickerLocation extends StatefulWidget {
   final CustomPickerLocationConfig pickerConfig;
   final Function(bool)? onMapReady;
   final bool showDefaultMarkerPickWidget;
-
-  const CustomPickerLocation({
-    required this.controller,
-    this.appBarPicker,
-    this.bottomWidgetPicker,
-    this.topWidgetPicker,
-    this.pickerConfig = const CustomPickerLocationConfig(),
-    this.onMapReady,
-    this.showDefaultMarkerPickWidget = false,
-    super.key,
-  });
-
   static PickerMapController of<T>(
     BuildContext context, {
     bool nullOk = false,
   }) {
-    final _CustomPickerLocationState? result =
-        context.findAncestorStateOfType<_CustomPickerLocationState>();
+    final _CustomPickerLocationState? result = context
+        .findAncestorStateOfType<_CustomPickerLocationState>();
     if (nullOk || result != null) return result!.widget.controller;
-    throw FlutterError.fromParts(
-      <DiagnosticsNode>[
-        ErrorSummary(
-          'CustomPickerLocation.of() called with a context that does not contain an MapController.',
-        ),
-        ErrorDescription(
-          'No CustomPickerLocation ancestor could be found starting from the context that was passed to CustomPickerLocation.of().',
-        ),
-        context.describeElement('The context used was')
-      ],
-    );
+    throw FlutterError.fromParts(<DiagnosticsNode>[
+      ErrorSummary(
+        'CustomPickerLocation.of() called with a context that does not contain an MapController.',
+      ),
+      ErrorDescription(
+        'No CustomPickerLocation ancestor could be found starting from the context that was passed to CustomPickerLocation.of().',
+      ),
+      context.describeElement('The context used was'),
+    ]);
   }
 
   @override
@@ -111,54 +101,53 @@ class _CustomPickerLocationState extends State<CustomPickerLocation> {
                   ),
                 ),
               Expanded(
-                  child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: OSMFlutter(
-                      controller: widget.controller,
-                      mapIsLoading: widget.pickerConfig.loadingWidget,
-                      onMapMoved: (region) {
-                        if (lastCenterMap == null ||
-                            lastCenterMap != region.center) {
-                          widget.controller.setMapMoving(true);
-                        } else {
-                          widget.controller.setMapMoving(false);
-                        }
-                        setState(() {
-                          lastCenterMap = region.center;
-                        });
-                      },
-                      osmOption: OSMOption(
-                        isPicker: true,
-                        zoomOption: widget.pickerConfig.zoomOption,
-                      ),
-                      onMapIsReady: widget.onMapReady,
-                    ),
-                  ),
-                  if (widget.showDefaultMarkerPickWidget) ...[
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: AnimatedCenterMarker(
-                        center: lastCenterMap,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: OSMFlutter(
+                        controller: widget.controller,
+                        mapIsLoading: widget.pickerConfig.loadingWidget,
+                        onMapMoved: (region) {
+                          if (lastCenterMap == null ||
+                              lastCenterMap != region.center) {
+                            widget.controller.setMapMoving(true);
+                          } else {
+                            widget.controller.setMapMoving(false);
+                          }
+                          setState(() {
+                            lastCenterMap = region.center;
+                          });
+                        },
+                        osmOption: OSMOption(
+                          isPicker: true,
+                          zoomOption: widget.pickerConfig.zoomOption,
+                        ),
+                        onMapIsReady: widget.onMapReady,
                       ),
                     ),
+                    if (widget.showDefaultMarkerPickWidget) ...[
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: AnimatedCenterMarker(center: lastCenterMap),
+                      ),
+                    ],
+                    if (widget.topWidgetPicker != null) ...[
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: widget.topWidgetPicker!,
+                      ),
+                    ],
+                    if (widget.bottomWidgetPicker != null) ...[
+                      widget.bottomWidgetPicker!,
+                    ],
                   ],
-                  if (widget.topWidgetPicker != null) ...[
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: widget.topWidgetPicker!,
-                    ),
-                  ],
-                  if (widget.bottomWidgetPicker != null) ...[
-                    widget.bottomWidgetPicker!,
-                  ],
-                ],
-              )),
+                ),
+              ),
             ],
           ),
         );

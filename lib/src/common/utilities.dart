@@ -53,13 +53,9 @@ Future<List<SearchInfo>> addressSuggestion(
     queryParameters: {
       "q": searchText,
       "limit": limitInformation == 0 ? "" : "$limitInformation",
-      "lang": locale
+      "lang": locale,
     },
-    options: Options(
-      headers: {
-        "User-Agent": "FlutterOSMPlugin/1.0",
-      },
-    ),
+    options: Options(headers: {"User-Agent": "FlutterOSMPlugin/1.0"}),
   );
   final json = response.data;
 

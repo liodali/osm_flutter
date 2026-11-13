@@ -9,6 +9,7 @@ export 'package:flutter_osm_interface/src/types/types.dart';
 
 export 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
 export 'package:flutter_osm_interface/src/common/road_exception.dart';
+
 export 'src/common/utilities.dart';
 export 'src/controller/map_controller.dart';
 export 'src/controller/picker_map_controller.dart';

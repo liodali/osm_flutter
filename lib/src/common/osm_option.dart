@@ -64,9 +64,9 @@ class ZoomOption {
     this.initZoom = 2,
     this.minZoomLevel = 2,
     this.maxZoomLevel = 19,
-  })  : assert(maxZoomLevel <= 19),
-        assert(minZoomLevel >= 2),
-        assert(initZoom >= minZoomLevel || initZoom <= maxZoomLevel);
+  }) : assert(maxZoomLevel <= 19),
+       assert(minZoomLevel >= 2),
+       assert(initZoom >= minZoomLevel || initZoom <= maxZoomLevel);
 
   /// the default step zoom of map when zoomIn or zoomOut (default = 1)
   final double stepZoom;
@@ -81,9 +81,9 @@ class ZoomOption {
   final double maxZoomLevel;
 
   Map<String, int> get toMap => {
-        "stepZoom": stepZoom.toInt(),
-        "initZoom": initZoom.toInt(),
-        "minZoom": minZoomLevel.toInt(),
-        "maxZoom": maxZoomLevel.toInt(),
-      };
+    "stepZoom": stepZoom.toInt(),
+    "initZoom": initZoom.toInt(),
+    "minZoom": minZoomLevel.toInt(),
+    "maxZoom": maxZoomLevel.toInt(),
+  };
 }

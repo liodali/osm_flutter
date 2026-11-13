@@ -10,14 +10,9 @@ class SimpleMapController extends BaseMapController {
   void init() {
     super.init();
     Future.delayed(const Duration(seconds: 1), () async {
-      await osmBaseController.addMarker(
-        initPosition!,
-        markerIcon: markerHome,
-      );
+      await osmBaseController.addMarker(initPosition!, markerIcon: markerHome);
       final limtArea = BoundingBox.fromCenter(initPosition!, 0.1);
-      await osmBaseController.limitArea(
-        limtArea,
-      );
+      await osmBaseController.limitArea(limtArea);
     });
   }
 }

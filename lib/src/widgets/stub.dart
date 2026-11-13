@@ -25,36 +25,34 @@ Widget getWidget({
   bool isPicker = false,
   bool showContributorBadgeForOSM = false,
   bool enableRotationByGesture = false,
-}) =>
-    throw UnsupportedError("");
+}) => throw UnsupportedError("");
 
-class OSMMapWidget extends StatelessWidget {
-  const OSMMapWidget({
-    super.key,
-    required this.controller,
-    this.userTrackingOption,
-    this.onGeoPointClicked,
-    this.onGeoPointLongPressed,
-    this.onLocationChanged,
-    this.onMapMoved,
-    required this.mapIsReadyListener,
-    required this.dynamicMarkerWidgetNotifier,
-    this.onMapIsReady,
-    this.staticPoints = const [],
-    this.mapIsLoading,
-    this.userLocationMarker,
-    required this.globalKeys,
-    required this.staticIconGlobalKeys,
-    this.markerOption,
-    this.roadConfiguration,
-    this.showZoomController = false,
-    this.zoomOption = const ZoomOption(),
-    this.showDefaultInfoWindow = false,
-    this.isPicker = false,
-    this.showContributorBadgeForOSM = false,
-    this.enableRotationByGesture = false,
-   this.useWebMapLibre = false,
-  });
+class const OSMMapWidget({
+  super.key,
+  required this.controller,
+  this.userTrackingOption,
+  this.onGeoPointClicked,
+  this.onGeoPointLongPressed,
+  this.onLocationChanged,
+  this.onMapMoved,
+  required this.mapIsReadyListener,
+  required this.dynamicMarkerWidgetNotifier,
+  this.onMapIsReady,
+  this.staticPoints = const [],
+  this.mapIsLoading,
+  this.userLocationMarker,
+  required this.globalKeys,
+  required this.staticIconGlobalKeys,
+  this.markerOption,
+  this.roadConfiguration,
+  this.showZoomController = false,
+  this.zoomOption = const ZoomOption(),
+  this.showDefaultInfoWindow = false,
+  this.isPicker = false,
+  this.showContributorBadgeForOSM = false,
+  this.enableRotationByGesture = false,
+  this.useWebMapLibre = false,
+}) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
   final OnGeoPointClicked? onGeoPointClicked;
