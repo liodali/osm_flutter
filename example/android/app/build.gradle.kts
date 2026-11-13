@@ -27,6 +27,8 @@ android {
     namespace = "hamza.dali.flutter_osm_plugin_example"
     compileSdk = 37
     ndkVersion = "28.2.13676358"
+    // Run the same integration harness against debug or the R8-shrunk release.
+    testBuildType = providers.gradleProperty("integrationTestBuildType").orElse("debug").get()
     if (keystorePropertiesFile.exists()) {
         signingConfigs {
             create("release") {
@@ -46,25 +48,27 @@ android {
         applicationId = "hamza.dali.flutter_osm_plugin_example"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 32
+        minSdk = 26
         targetSdk = 36
         versionCode = flutterVersionCode.toInt()
         versionName = flutterVersionName
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
-        if(keystorePropertiesFile.exists()){
-            release {
-                isMinifyEnabled = true
-                isShrinkResources = true
-                signingConfig = signingConfigs.getByName("release")
+        release {
+            // Exercise R8 and resource shrinking even without release credentials.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            if (testBuildType == "release") {
+                // Instrumentation loads the runner by its manifest class name.
+                proguardFiles("integration-test-rules.pro")
+                testProguardFiles("src/androidTest/proguard-rules.pro")
             }
-        }else {
-            release {
-                signingConfig = signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName(
+                if (keystorePropertiesFile.exists()) "release" else "debug"
+            )
         }
-
     }
 }
 
@@ -72,6 +76,12 @@ kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
+}
+
+dependencies {
+    // Reuse Flutter's runner/rules/JUnit versions in both APKs. AGP requires
+    // consistent dependency resolution between the app and instrumentation.
+    androidTestImplementation(project(":integration_test"))
 }
 
 flutter {
