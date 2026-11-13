@@ -11,9 +11,14 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
-  forui: ^0.21.3
+  # Flutter excludes dev-only native plugins from release builds. Keep this in
+  # the example's dependencies so instrumentation can collect release results.
+  integration_test:
+    sdk: flutter
+  forui: ^0.27.7
+  material_ui: ^1.0.0
   auto_route: ^10.1.2
-  forui_assets: ^0.21.0
+  forui_assets: ^0.25.0
   flex_color_picker: ^3.7.1
 
   flutter_osm_plugin:
@@ -26,7 +31,6 @@ dependencies:
   flutter_hooks: ^0.18.5+1
   #osm_flutter_hooks: ^1.4.0
   pointer_interceptor: ^0.10.1+2
-  routing_client_dart: ^0.5.5
   flutter_bloc: ^8.1.5
   equatable: ^2.0.5
   hive_ce: ^2.19.2
@@ -37,8 +41,6 @@ dependencies:
 dev_dependencies:
   flutter_lints: ^4.0.0
   flutter_test:
-    sdk: flutter
-  integration_test:
     sdk: flutter
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.1
@@ -98,7 +100,7 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: ../osm_logo_new.png
-  min_sdk_android: 21
+  min_sdk_android: 26
   remove_alpha_ios: true
 
 flutter_native_splash:
