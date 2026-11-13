@@ -1,5 +1,24 @@
 # ChangeLog
 
+## 2.1.0
+
+- Migrate routing_client_dart to ^1.0.8 (Dart 3.7+): routing goes through
+  `RoutingManager.getRoute(request: OSRMRequest.route(...))` and reads
+  instructions from `route.instructions` instead of `buildInstructions`.
+  Routes explicitly request GeoJSON geometry to preserve coordinate
+  precision, and road-type mapping (`RoadType` → `RoutingType`) is preserved.
+- Handle a missing/null route geometry without a null assertion: `drawRoad`
+  returns an empty route instead of crashing.
+- Require Dart 3.7+ / Flutter 3.47+ and update `web` to ^1.1.2.
+- Use `widgets.dart` only: bundle a default pin asset and provide a neutral,
+  animated loading indicator, so no Material/Cupertino icon fonts are
+  required on web.
+- Apply `RoadOptionJS` defaults in Dart before crossing the JS/WASM boundary
+  (dart2wasm ignores defaults on external JS constructors) and type
+  `roadBorderColor` as nullable.
+- Move `flutter_test` to `dev_dependencies` and add Chrome JS/WASM regression
+  tests for routing, JS defaults, and the loading indicator.
+
 ## 2.0.1:
 
 - fix Flutter Web WASM build: load map HTML/JS from Flutter assets instead of Dio/CDN
