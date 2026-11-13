@@ -13,7 +13,7 @@ import 'package:routing_client_dart/routing_client_dart.dart' as routing;
 ///
 /// [initPosition] : (GeoPoint) if it isn't null, the map will be pointed at this position
 class MapController extends BaseMapController {
-  late final osrmManager = routing.OSRMManager();
+  late final osrmManager = routing.RoutingManager();
   MapController({
     super.initMapWithUserPosition,
     super.initPosition,
@@ -131,7 +131,7 @@ class MapController extends BaseMapController {
   /// this method used to dispose controller in the map
   @override
   void dispose() {
-    if (!kIsWeb) {
+    if (!kIsWeb && baseOSMControllerAttached) {
       osmBaseController.dispose();
     }
     super.dispose();
@@ -441,20 +441,23 @@ class MapController extends BaseMapController {
     List<GeoPoint>? intersectPoint,
     RoadOption? roadOption,
   }) async {
-    final road = await osrmManager.getRoad(
-      waypoints: [
-        routing.LngLat(lng: start.longitude, lat: start.latitude),
-        ...?intersectPoint
-            ?.map((e) => routing.LngLat(lng: e.longitude, lat: e.latitude)),
-        routing.LngLat(lng: end.longitude, lat: end.latitude),
-      ],
-      roadType: switch (roadType) {
-        RoadType.car => routing.RoadType.car,
-        RoadType.bike => routing.RoadType.bike,
-        RoadType.foot => routing.RoadType.foot,
-      },
+    final road = await osrmManager.getRoute(
+      request: routing.OSRMRequest.route(
+        waypoints: [
+          routing.LngLat(lng: start.longitude, lat: start.latitude),
+          ...?intersectPoint
+              ?.map((e) => routing.LngLat(lng: e.longitude, lat: e.latitude)),
+          routing.LngLat(lng: end.longitude, lat: end.latitude),
+        ],
+        routingType: switch (roadType) {
+          RoadType.car => routing.RoutingType.car,
+          RoadType.bike => routing.RoutingType.bike,
+          RoadType.foot => routing.RoutingType.foot,
+        },
+        geometries: routing.Geometries.geojson,
+      ),
     );
-    final instructions = await osrmManager.buildInstructions(road);
+    final instructions = road.instructions;
     final geoPoints = road.polyline
         ?.map((e) => GeoPoint(latitude: e.lat, longitude: e.lng))
         .toList();

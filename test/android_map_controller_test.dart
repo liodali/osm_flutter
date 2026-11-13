@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_osm_plugin/android.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -222,12 +222,12 @@ void main() {
       final circle = await controller.shapes.addCircle(
         center: firstPosition,
         radius: 25,
-        color: Colors.blue,
+        color: const Color(0xFF2196F3),
       );
       final rectangle = await controller.shapes.addRectangle(
         center: firstPosition,
         distance: 40,
-        color: Colors.green,
+        color: const Color(0xFF4CAF50),
       );
       expect(transport.shapes, {circle, rectangle});
       await controller.shapes.remove(circle);
@@ -417,14 +417,14 @@ void main() {
       await controller.shapes.addCircle(
         center: GeoPoint(latitude: 1, longitude: 2),
         radius: 10,
-        color: Colors.red,
+        color: const Color(0xFFF44336),
         shapeId: shapeId,
       );
       await expectLater(
         controller.shapes.addCircle(
           center: GeoPoint(latitude: 1, longitude: 2),
           radius: 10,
-          color: Colors.red,
+          color: const Color(0xFFF44336),
           shapeId: shapeId,
         ),
         throwsA(isA<AndroidMapException>()),

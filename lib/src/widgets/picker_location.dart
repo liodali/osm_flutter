@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 
@@ -21,6 +21,9 @@ typedef PickerMarkerBuilder = Widget Function(BuildContext, bool);
 /// [textConfirmPicker] : (String) text confirm button widget of the dialog
 ///
 /// [textCancelPicker] : (String) text cancel button widget of the dialog
+///
+/// The dialog is design-system neutral. Labels default to English ('OK' and
+/// 'Cancel'); pass translated labels for other locales.
 ///
 /// [radius] : (double) rounded radius of the dialog
 ///
@@ -45,97 +48,115 @@ Future<GeoPoint?> showSimplePickerLocation({
   UserTrackingOption? initCurrentUserPosition,
 }) async {
   assert(title == null || titleWidget == null);
-  assert(((initCurrentUserPosition != null) && initPosition == null) ||
-      ((initCurrentUserPosition == null) && initPosition != null));
+  assert(
+    ((initCurrentUserPosition != null) && initPosition == null) ||
+        ((initCurrentUserPosition == null) && initPosition != null),
+  );
   final MapController controller = MapController(
     initMapWithUserPosition: initCurrentUserPosition,
     initPosition: initPosition,
   );
   GeoPoint? center;
   GeoPoint? old;
-  GeoPoint? point = await showDialog(
+  // Labels are caller-localizable; no MaterialLocalizations are required.
+  GeoPoint? point = await showGeneralDialog<GeoPoint>(
+    barrierDismissible: isDismissible,
+    barrierLabel: textCancelPicker ?? 'Cancel',
     context: context,
-    builder: (ctx) {
+    pageBuilder: (ctx, animation, secondaryAnimation) {
       return PopScope(
         canPop: isDismissible,
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height / 2.4,
-          width: MediaQuery.of(context).size.height / 2,
-          child: AlertDialog(
-            title: title != null
-                ? Text(
-                    title,
-                    style: titleStyle,
-                  )
-                : titleWidget,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(
-                Radius.circular(radius),
+        child: SafeArea(
+          child: Center(
+            child: Container(
+              margin: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFFFF),
+                borderRadius: BorderRadius.circular(radius),
               ),
-            ),
-            contentPadding: contentPadding,
-            content: SizedBox(
-              height: MediaQuery.of(context).size.height / 2.5,
-              width: MediaQuery.of(context).size.height / 2,
-              child: StatefulBuilder(
-                builder: (context, setState) {
-                  return Stack(
-                    children: [
-                      Positioned.fill(
-                        child: OSMFlutter(
-                          controller: controller,
-                          onMapMoved: (regsion) {
-                            setState(
-                              () {
-                                old = center;
-                                center = regsion.center;
-                              },
+              clipBehavior: Clip.antiAlias,
+              child: DefaultTextStyle(
+                style: const TextStyle(color: Color(0xFF000000), fontSize: 14),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (title != null || titleWidget != null)
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child:
+                            title != null
+                                ? Text(title, style: titleStyle)
+                                : titleWidget,
+                      ),
+                    Padding(
+                      padding: contentPadding,
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height / 2.5,
+                        width: MediaQuery.of(context).size.height / 2,
+                        child: StatefulBuilder(
+                          builder: (context, setState) {
+                            return Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: OSMFlutter(
+                                    controller: controller,
+                                    onMapMoved: (regsion) {
+                                      setState(() {
+                                        old = center;
+                                        center = regsion.center;
+                                      });
+                                    },
+                                    osmOption: OSMOption(
+                                      zoomOption: zoomOption,
+                                      isPicker: true,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  child:
+                                      pickMarkerWidget != null
+                                          ? pickMarkerWidget(
+                                            context,
+                                            center != null && old != null
+                                                ? center!.isEqual(old!)
+                                                : center != null && old == null
+                                                ? true
+                                                : false,
+                                          )
+                                          : AnimatedCenterMarker(
+                                            center: center,
+                                          ),
+                                ),
+                              ],
                             );
                           },
-                          osmOption: OSMOption(
-                            zoomOption: zoomOption,
-                            isPicker: true,
-                          ),
                         ),
                       ),
-                      Positioned(
-                        child: pickMarkerWidget != null
-                            ? pickMarkerWidget(
-                                context,
-                                center != null && old != null
-                                    ? center!.isEqual(old!)
-                                    : center != null && old == null
-                                        ? true
-                                        : false)
-                            : AnimatedCenterMarker(
-                                center: center,
-                              ),
-                      )
-                    ],
-                  );
-                },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Wrap(
+                        alignment: WrapAlignment.end,
+                        children: [
+                          _PickerButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text(textCancelPicker ?? 'Cancel'),
+                          ),
+                          _PickerButton(
+                            onPressed: () async {
+                              final center = await controller.centerMap;
+                              if (!ctx.mounted) return;
+                              Navigator.pop(ctx, center);
+                            },
+                            child: Text(textConfirmPicker ?? 'OK'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(
-                  textCancelPicker ??
-                      MaterialLocalizations.of(context).cancelButtonLabel,
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final center = await controller.centerMap;
-                  if (!ctx.mounted) return;
-                  Navigator.pop(ctx, center);
-                },
-                child: Text(
-                  textConfirmPicker ??
-                      MaterialLocalizations.of(context).okButtonLabel,
-                ),
-              ),
-            ],
           ),
         ),
       );
@@ -145,12 +166,59 @@ Future<GeoPoint?> showSimplePickerLocation({
   return point;
 }
 
+class _PickerButton extends StatefulWidget {
+  const _PickerButton({required this.onPressed, required this.child,});
+
+  final VoidCallback onPressed;
+  final Widget child;
+
+  @override
+  State<_PickerButton> createState() => _PickerButtonState();
+}
+
+class _PickerButtonState extends State<_PickerButton> {
+  bool _showFocus = false;
+
+  @override
+  Widget build(BuildContext context) => FocusableActionDetector(
+    mouseCursor: SystemMouseCursors.click,
+    onShowFocusHighlight: (show) => setState(() => _showFocus = show),
+    actions: {
+      ActivateIntent: CallbackAction<ActivateIntent>(
+        onInvoke: (_) {
+          widget.onPressed();
+          return null;
+        },
+      ),
+    },
+    child: Semantics(
+      button: true,
+      onTap: widget.onPressed,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onPressed,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color:
+                  _showFocus
+                      ? const Color(0xFF2196F3)
+                      : const Color(0x00000000),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: widget.child,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 class AnimatedCenterMarker extends StatefulWidget {
   final GeoPoint? center;
-  const AnimatedCenterMarker({
-    super.key,
-    this.center,
-  });
+  const AnimatedCenterMarker({super.key, this.center});
   @override
   State<StatefulWidget> createState() => _AnimatedCenterMarker();
 }
@@ -161,10 +229,10 @@ class _AnimatedCenterMarker extends State<AnimatedCenterMarker> {
   Timer? timer;
 
   Timer createTimer() => Timer(const Duration(seconds: 2), () {
-        setState(() {
-          isMoving = false;
-        });
-      });
+    setState(() {
+      isMoving = false;
+    });
+  });
   @override
   void didUpdateWidget(covariant AnimatedCenterMarker oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -201,22 +269,11 @@ class _AnimatedCenterMarker extends State<AnimatedCenterMarker> {
         Center(
           child: Container(
             decoration: const BoxDecoration(
-              color: Colors.black,
+              color: Color(0xFF000000),
               shape: BoxShape.circle,
             ),
             width: 5,
             height: 5,
-            /* child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-              child: Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),*/
           ),
         ),
         AnimatedPositioned(
@@ -225,10 +282,12 @@ class _AnimatedCenterMarker extends State<AnimatedCenterMarker> {
           left: 0,
           right: 0,
           duration: const Duration(milliseconds: 300),
-          child: const Icon(
-            Icons.location_on_rounded,
-            size: 32,
-            color: Colors.red,
+          child: Center(
+            child: Image.asset(
+              'packages/flutter_osm_plugin/assets/default_pin.png',
+              width: 32,
+              height: 32,
+            ),
           ),
         ),
       ],

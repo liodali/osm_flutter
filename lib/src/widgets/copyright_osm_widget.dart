@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -14,7 +14,7 @@ class CopyrightOSMWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.grey[300],
+      color: const Color(0xFFE0E0E0),
       height: 24,
       padding: const EdgeInsets.all(3.0),
       child: Text.rich(
@@ -24,7 +24,7 @@ class CopyrightOSMWidget extends StatelessWidget {
             TextSpan(
               text: "OpenStreetMap",
               style: const TextStyle(
-                color: Colors.blue,
+                color: Color(0xFF2196F3),
                 decoration: TextDecoration.underline,
               ),
               recognizer: TapGestureRecognizer()
@@ -43,7 +43,7 @@ class CopyrightOSMWidget extends StatelessWidget {
                 TextSpan(
                   text: " $internationalContributorName",
                   style: const TextStyle(
-                    color: Colors.black,
+                    color: Color(0xFF000000),
                     decoration: TextDecoration.none,
                   ),
                 ),

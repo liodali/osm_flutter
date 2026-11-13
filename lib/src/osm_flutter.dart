@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/src/common/osm_option.dart';
 
@@ -123,12 +123,12 @@ class _OSMFlutterState extends State<OSMFlutter> {
           staticMarkersKeys: staticMarkersKeys,
         ),
         Container(
-          color: Colors.white,
+          color: const Color(0xFFFFFFFF),
           child: widget.mapIsLoading != null
               ? Stack(
                   children: [
                     Container(
-                      color: Colors.white,
+                      color: const Color(0xFFFFFFFF),
                       child: OSMMap(
                         controller: widget.controller,
                         userTrackingOption: widget.osmOption.userTrackingOption,
@@ -177,7 +177,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                           );
                         },
                         child: Container(
-                          color: Colors.white,
+                          color: const Color(0xFFFFFFFF),
                           child: widget.mapIsLoading!,
                         ),
                       ),

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
@@ -8,6 +8,15 @@ import 'package:flutter_osm_plugin/android.dart';
 import 'package:flutter_osm_plugin/src/widgets/mobile_osm_flutter.dart';
 import 'package:flutter_osm_plugin/src/controller/osm/osm_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+Widget _app({required Widget home}) => WidgetsApp(
+      color: const Color(0xFFFFFFFF),
+      pageRouteBuilder: <T>(settings, builder) => PageRouteBuilder<T>(
+        settings: settings,
+        pageBuilder: (context, _, __) => builder(context),
+      ),
+      home: home,
+    );
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -75,7 +84,7 @@ void main() {
         }
         return null;
       });
-      await tester.pumpWidget(MaterialApp(
+      await tester.pumpWidget(_app(
           home: OSMFlutter(
               controller: controller,
               osmOption: const OSMOption(),
@@ -113,7 +122,7 @@ void main() {
         '$target creates the correct native view and forwards its id once',
         (tester) async {
       final ids = <int>[];
-      await tester.pumpWidget(MaterialApp(home: view(ids.add)));
+      await tester.pumpWidget(_app(home: view(ids.add)));
       await tester.pump();
       expect(find.byType(UiKitView),
           target == TargetPlatform.iOS ? findsOneWidget : findsNothing);
@@ -142,7 +151,7 @@ void main() {
           initPosition: GeoPoint(latitude: 47, longitude: 8));
       final ready = ValueNotifier(false);
       final marker = ValueNotifier<Widget?>(null);
-      await tester.pumpWidget(MaterialApp(
+      await tester.pumpWidget(_app(
           home: MobileOsmFlutter(
         controller: controller,
         mapIsReadyListener: ready,
@@ -161,7 +170,7 @@ void main() {
 
   testWidgets('unsupported desktop fails clearly before native creation',
       (tester) async {
-    await tester.pumpWidget(MaterialApp(home: view((_) {})));
+    await tester.pumpWidget(_app(home: view((_) {})));
     expect(tester.takeException(), isA<UnsupportedError>());
     expect(creates, isEmpty);
   }, variant: const TargetPlatformVariant({TargetPlatform.linux}));
