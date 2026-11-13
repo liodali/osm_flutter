@@ -1,4 +1,4 @@
-## Unreleased
+## 1.8.0
 
 - Remove `package:flutter/material.dart` and `package:flutter/cupertino.dart`
   imports in favor of `package:flutter/widgets.dart` (and `foundation.dart` for
@@ -10,6 +10,12 @@
 - Add `defaultRoadColor` (`Color(0xFF4CAF50)`, same value as the legacy
   `Colors.green`) used by `RoadOption.empty()`, `MultiRoadOption.empty()`, and
   multi-road configuration defaults.
+- Guard `BaseMapController.dispose()` so disposing a controller that was never
+  attached to a platform map (e.g. in widget tests) no longer touches the
+  platform side.
+- Raise the Dart floor to 3.7 and the Flutter floor to 3.47.0, matching the
+  main plugin and web baseline after the routing_client_dart 1.0.8 migration;
+  align dio to ^5.11.1.
 
 ## 1.7.0
 
