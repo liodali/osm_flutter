@@ -61,6 +61,10 @@ pubspec.lock
 **/ios/Frameworks/**
 **/ios/flutter/ephemeral
 CLAUDE.md
+APPLE_TESTING.md
+ANDROID_TESTING.md
+MACOS_MANUAL_CHECKS.md
+PHASE6_VALIDATION.md
 .windsurf
 .kilo
 .kilocode
@@ -72,6 +76,7 @@ __pycache__
 *.png
 *.svg
 !assets/default_pin.png
+!flutter_osm_web/lib/src/asset/default_pin.png
 !example/macos/Runner/Assets.xcassets/AppIcon.appiconset/*.png
 !android/src/main/assets/fonts/*.png
 jenkins
