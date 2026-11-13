@@ -1,13 +1,16 @@
-## Unreleased
+## 0.4.0
 
-- Upgrade the host AGP buildscript to 9.3.1 and wrapper configuration to Gradle
-  9.5.0. Consuming applications must also use AGP 9.3.1+ / Gradle 9.5.0+; the
-  plugin's wrapper does not control application builds.
-
-- Declare Android API 26 as the host minimum, matching the unconditional mapscore
-  dependency instead of advertising unsupported API 21 consumers.
-- Use the public AGP DSL for SDK configuration and native library packaging;
-  remove the empty legacy lint block and redundant multidex setting.
+- **Breaking for consuming apps**: the host declares API 26 (Android 8.0) as
+  its minimum. mapscore is an unconditional dependency and requires API 26;
+  the previous advertised API 21 minimum was never actually usable. Do not
+  use `tools:overrideLibrary` to bypass this.
+- Upgrade the host AGP buildscript to 9.3.1 and the wrapper configuration to
+  Gradle 9.5.0. Consuming applications must also use AGP 9.3.1+ / Gradle
+  9.5.0+; the plugin's wrapper does not control application builds.
+- Use the public AGP DSL for SDK configuration (`namespace =`, `compileSdk =`,
+  `minSdk =`) and native library packaging (`packaging.jniLibs.pickFirsts`);
+  remove the empty legacy `lintOptions` block and the redundant multidex
+  setting.
 
 ## 0.3.0
 
