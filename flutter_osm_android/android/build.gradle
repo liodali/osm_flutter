@@ -9,7 +9,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:9.1.1'
+        classpath 'com.android.tools.build:gradle:9.3.1'
 
     }
 }
@@ -25,20 +25,17 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
-    namespace "hamza.dali.flutter_osm_plugin"
-    compileSdkVersion 37
+    namespace = "hamza.dali.flutter_osm_plugin"
+    compileSdk = 37
 
     sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
+        main.java.srcDir 'src/main/kotlin'
     }
 
     defaultConfig {
-        minSdkVersion 21
-        multiDexEnabled true
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-    lintOptions {
-       // disable 'InvalidPackage'
+        // mapscore is an unconditional dependency and requires Android 8.0+.
+        minSdk = 26
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures {
         viewBinding  true
@@ -49,11 +46,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    packagingOptions {
-        pickFirst 'lib/x86/libc++_shared.so'
-        pickFirst 'lib/x86_64/libc++_shared.so'
-        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
-        pickFirst 'lib/arm64-v8a/libc++_shared.so'
+    packaging {
+        jniLibs {
+            pickFirsts += [
+                'lib/x86/libc++_shared.so',
+                'lib/x86_64/libc++_shared.so',
+                'lib/armeabi-v7a/libc++_shared.so',
+                'lib/arm64-v8a/libc++_shared.so',
+            ]
+        }
     }
 }
 
