@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/component/route_history_empty.dart';
 import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
 import 'package:forui/forui.dart';
@@ -98,7 +98,7 @@ class HistoryDirectionItem extends StatelessWidget {
                 children: [
                   TextSpan(
                     text: '${entry.startAddress}\n',
-                    style: FTheme.of(context).typography.sm.copyWith(
+                    style: FTheme.of(context).typography.body.sm.copyWith(
                       color: FTheme.of(context).colors.foreground,
                       fontWeight: FontWeight.w600,
                       fontSize: 18,
@@ -106,7 +106,7 @@ class HistoryDirectionItem extends StatelessWidget {
                   ),
                   TextSpan(
                     text: 'to\n',
-                    style: FTheme.of(context).typography.sm.copyWith(
+                    style: FTheme.of(context).typography.body.sm.copyWith(
                       color: FTheme.of(context).colors.foreground,
                       fontWeight: FontWeight.w400,
                       fontSize: 14,
@@ -114,14 +114,14 @@ class HistoryDirectionItem extends StatelessWidget {
                   ),
                   TextSpan(
                     text: entry.destinationAddress,
-                    style: FTheme.of(context).typography.sm.copyWith(
+                    style: FTheme.of(context).typography.body.sm.copyWith(
                       color: FTheme.of(context).colors.foreground,
                       fontWeight: FontWeight.w600,
                       fontSize: 18,
                     ),
                   ),
                 ],
-                style: FTheme.of(context).typography.sm.copyWith(
+                style: FTheme.of(context).typography.body.sm.copyWith(
                   color: FTheme.of(context).colors.foreground,
                   fontWeight: FontWeight.w400,
                   fontSize: 14,
@@ -129,7 +129,7 @@ class HistoryDirectionItem extends StatelessWidget {
               ),
               maxLines: 6,
               overflow: TextOverflow.ellipsis,
-              style: FTheme.of(context).typography.sm.copyWith(
+              style: FTheme.of(context).typography.body.sm.copyWith(
                 color: FTheme.of(context).colors.foreground,
                 fontWeight: FontWeight.w600,
               ),
@@ -144,7 +144,7 @@ class HistoryDirectionItem extends StatelessWidget {
                     '${Duration(seconds: entry.durationSeconds!.round()).inMinutes} min',
                   entry.createdAt.toLocal().toString().split('.').first,
                 ].join(' • '),
-                style: FTheme.of(context).typography.xs.copyWith(
+                style: FTheme.of(context).typography.body.xs.copyWith(
                   color: FTheme.of(context).colors.secondaryForeground,
                 ),
               ),

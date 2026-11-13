@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/component/seach_map.dart'
     show SearchInMap;
@@ -63,7 +63,7 @@ class RouteSearchPanelContent extends StatelessWidget {
               statusMessage,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: FTheme.of(context).typography.sm.copyWith(
+              style: FTheme.of(context).typography.body.sm.copyWith(
                 color: isError ? Colors.red : colors.secondaryForeground,
               ),
             ),
@@ -95,7 +95,7 @@ class RouteSearchPanelContent extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
                 onPressed: onToggleCollapsed,
                 icon: Icon(
-                  collapsed ? FIcons.chevronDown : FIcons.chevronUp,
+                  collapsed ? FLucideIcons.chevronDown : FLucideIcons.chevronUp,
                   color: colors.mutedForeground,
                 ),
               ),

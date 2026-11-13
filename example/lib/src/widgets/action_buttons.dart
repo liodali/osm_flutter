@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart' show ElevatedButton, ButtonStyle;
-import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:forui/forui.dart';
 
 final defaultStyle = ElevatedButton.styleFrom(

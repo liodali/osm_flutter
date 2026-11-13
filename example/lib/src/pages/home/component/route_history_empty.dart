@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:forui/forui.dart';
 
 class RouteHistoryEmpty extends StatelessWidget {
@@ -13,7 +13,7 @@ class RouteHistoryEmpty extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              FIcons.history,
+              FLucideIcons.history,
               size: 40,
               color: FTheme.of(context).colors.mutedForeground,
             ),
@@ -21,7 +21,7 @@ class RouteHistoryEmpty extends StatelessWidget {
               padding: const EdgeInsets.only(top: 12),
               child: Text(
                 'No direction history yet',
-                style: FTheme.of(context).typography.sm.copyWith(
+                style: FTheme.of(context).typography.body.sm.copyWith(
                   color: FTheme.of(context).colors.secondaryForeground,
                   fontWeight: FontWeight.w500,
                 ),
@@ -31,7 +31,7 @@ class RouteHistoryEmpty extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 'Your recent searches will appear here',
-                style: FTheme.of(context).typography.xs.copyWith(
+                style: FTheme.of(context).typography.body.xs.copyWith(
                   color: FTheme.of(context).colors.mutedForeground,
                 ),
               ),

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_style_configuration.dart';
 import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
@@ -72,8 +72,8 @@ class SearchInMap extends StatelessWidget {
     final horizontalPadding = compact ? 12.0 : 14.0;
     final verticalPadding = compact ? 10.0 : 12.0;
     final subtitleStyle = compact
-        ? FTheme.of(context).typography.sm
-        : FTheme.of(context).typography.md;
+        ? FTheme.of(context).typography.body.sm
+        : FTheme.of(context).typography.body.md;
     return Material(
       color: colors.background,
       child: InkWell(
@@ -95,7 +95,7 @@ class SearchInMap extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Icon(
-                  FIcons.search,
+                  FLucideIcons.search,
                   size: compact ? 16 : 18,
                   color: colors.foreground,
                 ),
@@ -109,7 +109,7 @@ class SearchInMap extends StatelessWidget {
                       placeholder,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: FTheme.of(context).typography.sm.copyWith(
+                      style: FTheme.of(context).typography.body.sm.copyWith(
                         color: colors.secondaryForeground,
                       ),
                     ),
@@ -292,7 +292,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
               alignment: Alignment.centerLeft,
               child: Text(
                 widget.placeholder,
-                style: typography.lg,
+                style: typography.display.lg,
               ),
             ),
           ),
@@ -341,7 +341,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                         const SizedBox(width: 12),
                         Text(
                           'Use current location',
-                          style: typography.md.copyWith(
+                          style: typography.body.md.copyWith(
                             color: colors.foreground,
                           ),
                         ),
@@ -359,7 +359,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Latest searched locations',
-                  style: typography.sm.copyWith(
+                  style: typography.body.sm.copyWith(
                     color: colors.secondaryForeground,
                   ),
                 ),
@@ -408,7 +408,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                               key: const ValueKey('empty-query'),
                               child: Text(
                                 'Type at least 3 characters to search.',
-                                style: typography.sm.copyWith(
+                                style: typography.body.sm.copyWith(
                                   color: colors.secondaryForeground,
                                 ),
                                 textAlign: TextAlign.center,
@@ -424,7 +424,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                         key: const ValueKey('error'),
                         child: Text(
                           _error!,
-                          style: typography.sm.copyWith(
+                          style: typography.body.sm.copyWith(
                             color: Colors.red,
                           ),
                           textAlign: TextAlign.center,
@@ -435,7 +435,7 @@ class _LocationSearchSheetState extends State<_LocationSearchSheet> {
                         key: const ValueKey('no-results'),
                         child: Text(
                           'No locations found.',
-                          style: typography.sm.copyWith(
+                          style: typography.body.sm.copyWith(
                             color: colors.secondaryForeground,
                           ),
                         ),

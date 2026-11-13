@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_style_configuration.dart';
@@ -215,7 +215,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
             },
             child: Text(
               'proceed',
-              style: context.theme.typography.md,
+              style: context.theme.typography.body.md,
             ),
           ),
         ),
@@ -398,7 +398,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
                           ),
                         ),
                         child: Icon(
-                          FIcons.menu,
+                          FLucideIcons.menu,
                           size: 18,
                           color: FTheme.of(context).colors.foreground,
                         ),
@@ -499,7 +499,7 @@ class _MainState extends State<Main> with OSMMixinObserver {
                       ),
                     ),
                     child: Icon(
-                      FIcons.menu,
+                      FLucideIcons.menu,
                       size: 18,
                       color: FTheme.of(context).colors.foreground,
                     ),
@@ -601,7 +601,7 @@ class ZoomNavigation extends StatelessWidget {
             ),
             child: Center(
               child: Icon(
-                FIcons.plus,
+                FLucideIcons.plus,
                 color: FTheme.of(context).colors.foreground,
               ),
             ),
@@ -624,7 +624,7 @@ class ZoomNavigation extends StatelessWidget {
             ),
             child: Center(
               child: Icon(
-                FIcons.minus,
+                FLucideIcons.minus,
                 color: FTheme.of(context).colors.foreground,
               ),
             ),
@@ -787,7 +787,7 @@ class ActivationUserLocation extends StatelessWidget {
                 );
               }
               return Icon(
-                FIcons.navigation,
+                FLucideIcons.navigation,
                 size: 18,
                 color: FTheme.of(context).colors.foreground,
               );
@@ -921,7 +921,7 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                   Expanded(
                     child: Text(
                       'Select Layer',
-                      style: FTheme.of(context).typography.lg,
+                      style: FTheme.of(context).typography.display.lg,
                     ),
                   ),
                   PointerInterceptor(
@@ -959,7 +959,7 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                               ],
                               title: Text(
                                 '${layer.name} layer',
-                                style: FTheme.of(context).typography.md,
+                                style: FTheme.of(context).typography.body.md,
                               ),
                             );
                           }
@@ -976,7 +976,7 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
                               Expanded(
                                 child: Text(
                                   layer.name,
-                                  style: FTheme.of(context).typography.md,
+                                  style: FTheme.of(context).typography.body.md,
                                 ),
                               ),
                             ],
@@ -1021,7 +1021,7 @@ class _ChangeTileButtonState extends State<ChangeTileButton> {
         },
         child: Center(
           child: Icon(
-            FIcons.layers,
+            FLucideIcons.layers,
             color: FTheme.of(context).colors.foreground,
           ),
         ),

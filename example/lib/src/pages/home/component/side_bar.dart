@@ -1,5 +1,5 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_plugin_example/src/common/router_config.dart';
 import 'package:flutter_osm_plugin_example/src/pages/home/component/route_history_list.dart';
 import 'package:flutter_osm_plugin_example/src/services/location_storage.dart'
@@ -46,7 +46,7 @@ class _SideBarState extends State<SideBar> {
               children: [
                 Text(
                   'Direction search history',
-                  style: FTheme.of(context).typography.lg.copyWith(
+                  style: FTheme.of(context).typography.display.lg.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -77,26 +77,37 @@ class _SideBarState extends State<SideBar> {
         builder: (context, style, animation) => FDialog(
           style: style,
           animation: animation,
-          title: const Text('Direction search history'),
-          actions: [
-            FButton(
-              variant: .ghost,
-              onPress: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Close'),
-            ),
-          ],
-          body: SizedBox(
-            width: 400,
-            child: RouteHistoryList(
-              onTapItem: (entry) async {
-                await widget.onHistoryItemTap?.call(entry);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
+          builder: (context, style) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Direction search history', style: style.titleTextStyle),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: 400,
+                child: RouteHistoryList(
+                  onTapItem: (entry) async {
+                    await widget.onHistoryItemTap?.call(entry);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  FButton(
+                    variant: .ghost,
+                    onPress: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Close'),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       );
@@ -120,7 +131,7 @@ class _SideBarState extends State<SideBar> {
               Expanded(
                 child: Text(
                   'OSM Plugin',
-                  style: FTheme.of(context).typography.lg.copyWith(
+                  style: FTheme.of(context).typography.display.lg.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -129,7 +140,7 @@ class _SideBarState extends State<SideBar> {
                 FTappable(
                   onPress: () => widget.onToggleCallback(),
                   child: Icon(
-                    FIcons.arrowLeftToLine,
+                    FLucideIcons.arrowLeftToLine,
                     size: 18,
                     color: FTheme.of(context).colors.mutedForeground,
                   ),
@@ -159,7 +170,7 @@ class _SideBarState extends State<SideBar> {
         child: Row(
           children: [
             Icon(
-              FIcons.settings,
+              FLucideIcons.settings,
               size: 18,
               color: FTheme.of(context).colors.mutedForeground,
             ),
@@ -167,7 +178,7 @@ class _SideBarState extends State<SideBar> {
               padding: const EdgeInsets.only(left: 10),
               child: Text(
                 'Settings',
-                style: FTheme.of(context).typography.sm.copyWith(
+                style: FTheme.of(context).typography.body.sm.copyWith(
                   color: FTheme.of(context).colors.mutedForeground,
                 ),
               ),
@@ -187,7 +198,7 @@ class _SideBarState extends State<SideBar> {
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: FSidebarItem(
-                icon: const Icon(FIcons.history),
+                icon: const Icon(FLucideIcons.history),
                 label: const Text('Direction History'),
                 selected: false,
                 onPress: () => _showHistory(context),
@@ -197,13 +208,13 @@ class _SideBarState extends State<SideBar> {
               label: const Text('Navigation'),
               children: [
                 FSidebarItem(
-                  icon: const Icon(FIcons.house),
+                  icon: const Icon(FLucideIcons.house),
                   label: const Text('Home'),
                   selected: true,
                   onPress: () {},
                 ),
                 FSidebarItem(
-                  icon: const Icon(FIcons.bookOpen),
+                  icon: const Icon(FLucideIcons.bookOpen),
                   label: const Text('Examples'),
                   initiallyExpanded: true,
                   children: [

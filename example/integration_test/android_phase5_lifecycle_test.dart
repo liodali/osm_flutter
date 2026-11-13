@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_android_jni/flutter_osm_android_jni.dart';
 import 'package:flutter_osm_plugin/android.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';

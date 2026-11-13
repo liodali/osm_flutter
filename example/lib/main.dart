@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_plugin_example/src/common/router_config.dart';
 import 'package:flutter_osm_plugin_example/src/common/url_strategy/url_strategy.dart'
     show usePathUrlStrategy;
 import 'package:flutter_osm_plugin_example/src/services/location_storage.dart';
+import 'package:flutter_osm_plugin_example/src/widgets/themed_widget.dart'
+    show appTheme;
 import 'package:forui/forui.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:marionette_flutter/marionette_flutter.dart';
@@ -37,9 +39,17 @@ class MyApp extends StatelessWidget {
       localizationsDelegates: const [
         ...FLocalizations.localizationsDelegates,
       ],
-      builder: (context, child) => PointerInterceptor(
-        child: FToaster(
-          child: child!,
+      builder: (context, child) => FTheme(
+        // FToaster lives above the per-route FTheme widgets (ThemedWidget), so it
+        // needs a theme + FAccessibilityScope of its own. Without it, ToasterStack's
+        // didChangeDependencies hits a null FAccessibilityScope when a toast mounts.
+        // Toasts capture their style from the calling context's theme (the
+        // route-level appTheme), so this root theme shares it for consistency.
+        data: appTheme,
+        child: PointerInterceptor(
+          child: FToaster(
+            child: child!,
+          ),
         ),
       ),
     );

@@ -36,7 +36,7 @@ class HeaderHome extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Text(
           'home',
-          style: FTheme.of(context).typography.lg,
+          style: FTheme.of(context).typography.display.lg,
         ),
       ),
       suffixes: [
@@ -71,7 +71,7 @@ class MainNavigation extends StatelessWidget {
         elevation: .all(0),
       ),
       child: Icon(
-        FIcons.menu,
+        FLucideIcons.menu,
         size: 18,
         color: FTheme.of(context).colors.secondaryForeground,
       ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:forui/forui.dart';
 
@@ -95,21 +95,21 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
     TilePreset(
       id: 'basic',
       name: 'Basic',
-      icon: FIcons.map,
+      icon: FLucideIcons.map,
       tile: CustomTile.osm(),
       isBuiltIn: true,
     ),
     TilePreset(
       id: 'cycle',
       name: 'Cycle',
-      icon: FIcons.bike,
+      icon: FLucideIcons.bike,
       tile: CustomTile.cycleOSM(),
       isBuiltIn: true,
     ),
     TilePreset(
       id: 'transport',
       name: 'Transport',
-      icon: FIcons.bus,
+      icon: FLucideIcons.bus,
       tile: CustomTile.publicTransportationOSM(),
       isBuiltIn: true,
     ),
@@ -211,7 +211,7 @@ class ExampleMapStyleConfiguration extends ChangeNotifier {
       TilePreset(
         id: id,
         name: name,
-        icon: FIcons.map,
+        icon: FLucideIcons.map,
         tile: CustomTile(
           urlsServers: <TileURLs>[TileURLs(url: url)],
           tileExtension: tileExtension,

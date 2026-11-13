@@ -43,7 +43,7 @@ class HomeMoreActionDesktop extends StatelessWidget {
         ),
       ],
       builder: (context, controller, child) => FHeaderAction(
-        icon: const Icon(FIcons.cog),
+        icon: const Icon(FLucideIcons.cog),
         onPress: controller.toggle,
       ),
     );
@@ -130,7 +130,7 @@ class _HomeMoreActionMobileState extends State<HomeMoreActionMobile>
                         widget.configuration.geos.value.clear();
                       });
                     },
-                    child: const Icon(FIcons.trash),
+                    child: const Icon(FLucideIcons.trash),
                   ),
                 ),
                 Positioned(
@@ -147,7 +147,7 @@ class _HomeMoreActionMobileState extends State<HomeMoreActionMobile>
         FButton(
           onPress: _toggle,
           child: Icon(
-            _expanded ? FIcons.settings : FIcons.x,
+            _expanded ? FLucideIcons.settings : FLucideIcons.x,
           ),
         ),
       ],

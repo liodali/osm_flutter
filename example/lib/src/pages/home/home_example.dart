@@ -3,11 +3,10 @@ import 'dart:math';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/common/router_config.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
-import 'package:routing_client_dart/routing_client_dart.dart' as routing;
 
 class OldMainExample extends StatefulWidget {
   const OldMainExample({super.key});
@@ -31,7 +30,6 @@ class _MainExampleState extends State<OldMainExample>
   ValueNotifier<GeoPoint?> lastGeoPoint = ValueNotifier(null);
   ValueNotifier<bool> beginDrawRoad = ValueNotifier(false);
   List<GeoPoint> pointsRoad = [];
-  late final manager = routing.OSRMManager();
   Timer? timer;
   int x = 0;
   late AnimationController animationController;
@@ -699,34 +697,6 @@ class _MainExampleState extends State<OldMainExample>
       await bottomPersistant.closed.then((roadType) async {
         showFab.value = true;
         beginDrawRoad.value = false;
-        /* final road = await manager.getRoad(
-            waypoints: [pointsRoad.first, pointsRoad.last]
-                .map(
-                  (e) => routing.LngLat(
-                    lat: e.latitude,
-                    lng: e.longitude,
-                  ),
-                )
-                .toList());
-        final lnglats = road.polyline
-                ?.map(
-                  (e) => GeoPoint(
-                    latitude: e.lat,
-                    longitude: e.lng,
-                  ),
-                )
-                .toList() ??
-            <GeoPoint>[];
-        await controller.drawRoadManually(
-          lnglats,
-          RoadOption(
-            roadWidth: 20,
-            roadColor: Colors.red,
-            zoomInto: true,
-            roadBorderWidth: 30,
-            roadBorderColor: Colors.green,
-          ),
-        );*/
         RoadInfo roadInformation = await controller.drawRoad(
           pointsRoad.first,
           pointsRoad.last,

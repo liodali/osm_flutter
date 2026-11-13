@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_style_configuration.dart';
 import 'package:flutter_osm_plugin_example/src/widgets/tile_layer_settings.dart';
@@ -9,6 +9,31 @@ class SettingsPage extends StatefulWidget {
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
+}
+
+/// Header (title + subtitle) for an [FCard]; forui 0.27 removed FCard's title/subtitle parameters.
+class _CardHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  const _CardHeader({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: theme.typography.display.sm),
+        Text(
+          subtitle,
+          style: theme.typography.body.sm.copyWith(
+            color: theme.colors.mutedForeground,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _SettingsPageState extends State<SettingsPage> {
@@ -56,11 +81,13 @@ class _SettingsPageState extends State<SettingsPage> {
         child: ListView(
           children: [
             FCard(
-              title: const Text('Marker Styling'),
-              subtitle: const Text('Choose how example markers should look.'),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const _CardHeader(
+                    title: 'Marker Styling',
+                    subtitle: 'Choose how example markers should look.',
+                  ),
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Column(
@@ -449,13 +476,14 @@ class _SettingsPageState extends State<SettingsPage> {
             Padding(
               padding: const EdgeInsets.only(top: 16),
               child: FCard(
-                title: const Text('Road Styling'),
-                subtitle: const Text(
-                  'Configure the route line color, border, and road type.',
-                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const _CardHeader(
+                      title: 'Road Styling',
+                      subtitle:
+                          'Configure the route line color, border, and road type.',
+                    ),
                     Padding(
                       padding: const EdgeInsets.only(top: 12),
                       child: Column(
@@ -686,192 +714,214 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
+            const Padding(
+              padding: EdgeInsets.only(top: 16),
               child: FCard(
-                title: const Text('Tile Layers'),
-                subtitle: const Text(
-                  'Set the default tile and manage custom tile sources.',
-                ),
-                child: const Padding(
-                  padding: EdgeInsets.only(top: 12),
-                  child: TileLayerSettings(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _CardHeader(
+                      title: 'Tile Layers',
+                      subtitle:
+                          'Set the default tile and manage custom tile sources.',
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 12),
+                      child: TileLayerSettings(),
+                    ),
+                  ],
                 ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 16),
               child: FCard(
-                title: const Text('Search Settings'),
-                subtitle: const Text('Language used for location suggestions.'),
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Suggestion locale'),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: FPopoverMenu.tiles(
-                          builder: (context, controller, child) => FButton(
-                            variant: .outline,
-                            onPress: controller.toggle,
-                            child: child,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _CardHeader(
+                      title: 'Search Settings',
+                      subtitle: 'Language used for location suggestions.',
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Suggestion locale'),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: FPopoverMenu.tiles(
+                              builder: (context, controller, child) => FButton(
+                                variant: .outline,
+                                onPress: controller.toggle,
+                                child: child,
+                              ),
+                              menu: [
+                                FTileGroup(
+                                  children: ExampleMapStyleConfiguration
+                                      .supportedSearchLocales
+                                      .entries
+                                      .map(
+                                        (entry) => FTile(
+                                          title: Text(entry.value),
+                                          onPress: () => setState(
+                                            () => _config.searchLocale =
+                                                entry.key,
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                              ],
+                              child: Text(
+                                ExampleMapStyleConfiguration
+                                        .supportedSearchLocales[_config
+                                        .searchLocale] ??
+                                    'English',
+                              ),
+                            ),
                           ),
-                          menu: [
-                            FTileGroup(
-                              children: ExampleMapStyleConfiguration
-                                  .supportedSearchLocales
-                                  .entries
-                                  .map(
-                                    (entry) => FTile(
-                                      title: Text(entry.value),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: FCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _CardHeader(
+                      title: 'Location Button',
+                      subtitle:
+                          'Choose how the location button reacts to taps and long presses.',
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Single click'),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: FPopoverMenu.tiles(
+                              builder: (context, controller, child) => FButton(
+                                variant: .outline,
+                                onPress: controller.toggle,
+                                child: child,
+                              ),
+                              menu: [
+                                FTileGroup(
+                                  children: [
+                                    FTile(
+                                      title: const Text(
+                                        'Start tracking, then center',
+                                      ),
+                                      subtitle: const Text(
+                                        'Starts tracking and moves the map to your location.',
+                                      ),
                                       onPress: () => setState(
-                                        () => _config.searchLocale = entry.key,
+                                        () => _config.singleClickMode =
+                                            LocationButtonSingleClickMode
+                                                .startTrackingThenCenter,
                                       ),
                                     ),
-                                  )
-                                  .toList(),
-                            ),
-                          ],
-                          child: Text(
-                            ExampleMapStyleConfiguration
-                                    .supportedSearchLocales[_config
-                                    .searchLocale] ??
-                                'English',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: FCard(
-                title: const Text('Location Button'),
-                subtitle: const Text(
-                  'Choose how the location button reacts to taps and long presses.',
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Single click'),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: FPopoverMenu.tiles(
-                          builder: (context, controller, child) => FButton(
-                            variant: .outline,
-                            onPress: controller.toggle,
-                            child: child,
-                          ),
-                          menu: [
-                            FTileGroup(
-                              children: [
-                                FTile(
-                                  title: const Text(
+                                    FTile(
+                                      title: const Text('Toggle tracking'),
+                                      subtitle: const Text(
+                                        'Turns tracking on or off.',
+                                      ),
+                                      onPress: () => setState(
+                                        () => _config.singleClickMode =
+                                            LocationButtonSingleClickMode
+                                                .toggleTracking,
+                                      ),
+                                    ),
+                                    FTile(
+                                      title: const Text('Center only'),
+                                      subtitle: const Text(
+                                        'Every tap moves the map to your location.',
+                                      ),
+                                      onPress: () => setState(
+                                        () => _config.singleClickMode =
+                                            LocationButtonSingleClickMode
+                                                .centerOnly,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              child: Text(
+                                switch (_config.singleClickMode) {
+                                  LocationButtonSingleClickMode
+                                      .startTrackingThenCenter =>
                                     'Start tracking, then center',
-                                  ),
-                                  subtitle: const Text(
-                                    'Starts tracking and moves the map to your location.',
-                                  ),
-                                  onPress: () => setState(
-                                    () => _config.singleClickMode =
-                                        LocationButtonSingleClickMode
-                                            .startTrackingThenCenter,
-                                  ),
-                                ),
-                                FTile(
-                                  title: const Text('Toggle tracking'),
-                                  subtitle: const Text(
-                                    'Turns tracking on or off.',
-                                  ),
-                                  onPress: () => setState(
-                                    () => _config.singleClickMode =
-                                        LocationButtonSingleClickMode
-                                            .toggleTracking,
-                                  ),
-                                ),
-                                FTile(
-                                  title: const Text('Center only'),
-                                  subtitle: const Text(
-                                    'Every tap moves the map to your location.',
-                                  ),
-                                  onPress: () => setState(
-                                    () => _config.singleClickMode =
-                                        LocationButtonSingleClickMode
-                                            .centerOnly,
-                                  ),
+                                  LocationButtonSingleClickMode
+                                      .toggleTracking =>
+                                    'Toggle tracking',
+                                  LocationButtonSingleClickMode.centerOnly =>
+                                    'Center only',
+                                },
+                              ),
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(top: 16),
+                            child: Text('Long click'),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: FPopoverMenu.tiles(
+                              builder: (context, controller, child) => FButton(
+                                variant: .outline,
+                                onPress: controller.toggle,
+                                child: child,
+                              ),
+                              menu: [
+                                FTileGroup(
+                                  children: [
+                                    FTile(
+                                      title: const Text('Stop tracking'),
+                                      subtitle: const Text(
+                                        'Stops tracking when active.',
+                                      ),
+                                      onPress: () => setState(
+                                        () => _config.longClickMode =
+                                            LocationButtonLongClickMode
+                                                .stopTracking,
+                                      ),
+                                    ),
+                                    FTile(
+                                      title: const Text('Center'),
+                                      subtitle: const Text(
+                                        'Moves the map to your location.',
+                                      ),
+                                      onPress: () => setState(
+                                        () => _config.longClickMode =
+                                            LocationButtonLongClickMode.center,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
+                              child: Text(
+                                switch (_config.longClickMode) {
+                                  LocationButtonLongClickMode.stopTracking =>
+                                    'Stop tracking',
+                                  LocationButtonLongClickMode.center =>
+                                    'Center',
+                                },
+                              ),
                             ),
-                          ],
-                          child: Text(
-                            switch (_config.singleClickMode) {
-                              LocationButtonSingleClickMode
-                                  .startTrackingThenCenter =>
-                                'Start tracking, then center',
-                              LocationButtonSingleClickMode.toggleTracking =>
-                                'Toggle tracking',
-                              LocationButtonSingleClickMode.centerOnly =>
-                                'Center only',
-                            },
                           ),
-                        ),
+                        ],
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(top: 16),
-                        child: Text('Long click'),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: FPopoverMenu.tiles(
-                          builder: (context, controller, child) => FButton(
-                            variant: .outline,
-                            onPress: controller.toggle,
-                            child: child,
-                          ),
-                          menu: [
-                            FTileGroup(
-                              children: [
-                                FTile(
-                                  title: const Text('Stop tracking'),
-                                  subtitle: const Text(
-                                    'Stops tracking when active.',
-                                  ),
-                                  onPress: () => setState(
-                                    () => _config.longClickMode =
-                                        LocationButtonLongClickMode
-                                            .stopTracking,
-                                  ),
-                                ),
-                                FTile(
-                                  title: const Text('Center'),
-                                  subtitle: const Text(
-                                    'Moves the map to your location.',
-                                  ),
-                                  onPress: () => setState(
-                                    () => _config.longClickMode =
-                                        LocationButtonLongClickMode.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                          child: Text(
-                            switch (_config.longClickMode) {
-                              LocationButtonLongClickMode.stopTracking =>
-                                'Stop tracking',
-                              LocationButtonLongClickMode.center => 'Center',
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),

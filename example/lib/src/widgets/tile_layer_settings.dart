@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_plugin_example/src/models/map_style_configuration.dart';
 import 'package:forui/forui.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -44,86 +44,97 @@ class _TileLayerSettingsState extends State<TileLayerSettings> {
       builder: (context, style, animation) => FDialog(
         style: style,
         animation: animation,
-        title: const Text('Add custom tile'),
-        body: PointerInterceptor(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FTextField(
-                control: FTextFieldControl.managed(
-                  controller: nameController,
-                ),
-                hint: 'Tile name',
-                autofocus: true,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: FTextField(
-                  control: FTextFieldControl.managed(
-                    controller: urlController,
+        builder: (context, style) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Add custom tile', style: style.titleTextStyle),
+            const SizedBox(height: 12),
+            PointerInterceptor(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FTextField(
+                    control: FTextFieldControl.managed(
+                      controller: nameController,
+                    ),
+                    hint: 'Tile name',
+                    autofocus: true,
                   ),
-                  hint: 'Tile URL (e.g. https://example.com/{z}/{x}/{y})',
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: FTextField(
-                  control: FTextFieldControl.managed(
-                    controller: extensionController,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: FTextField(
+                      control: FTextFieldControl.managed(
+                        controller: urlController,
+                      ),
+                      hint: 'Tile URL (e.g. https://example.com/{z}/{x}/{y})',
+                    ),
                   ),
-                  hint: 'Extension (e.g. .png)',
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: FTextField(
-                  control: FTextFieldControl.managed(
-                    controller: tileSizeController,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: FTextField(
+                      control: FTextFieldControl.managed(
+                        controller: extensionController,
+                      ),
+                      hint: 'Extension (e.g. .png)',
+                    ),
                   ),
-                  hint: 'Tile size',
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: FTextField(
-                  control: FTextFieldControl.managed(
-                    controller: maxZoomController,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: FTextField(
+                      control: FTextFieldControl.managed(
+                        controller: tileSizeController,
+                      ),
+                      hint: 'Tile size',
+                      keyboardType: TextInputType.number,
+                    ),
                   ),
-                  hint: 'Max zoom level',
-                  keyboardType: TextInputType.number,
-                ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: FTextField(
+                      control: FTextFieldControl.managed(
+                        controller: maxZoomController,
+                      ),
+                      hint: 'Max zoom level',
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FButton(
+                  variant: .ghost,
+                  onPress: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FButton(
+                  onPress: () {
+                    final name = nameController.text.trim();
+                    final url = urlController.text.trim();
+                    if (name.isEmpty || url.isEmpty) {
+                      return;
+                    }
+                    final tileSize = int.tryParse(tileSizeController.text) ?? 256;
+                    final maxZoom = int.tryParse(maxZoomController.text) ?? 19;
+                    _config.addCustomTile(
+                      name: name,
+                      url: url,
+                      tileExtension: extensionController.text.trim(),
+                      tileSize: tileSize,
+                      maxZoomLevel: maxZoom,
+                    );
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            ),
+          ],
         ),
-        actions: [
-          FButton(
-            variant: .ghost,
-            onPress: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          FButton(
-            onPress: () {
-              final name = nameController.text.trim();
-              final url = urlController.text.trim();
-              if (name.isEmpty || url.isEmpty) {
-                return;
-              }
-              final tileSize = int.tryParse(tileSizeController.text) ?? 256;
-              final maxZoom = int.tryParse(maxZoomController.text) ?? 19;
-              _config.addCustomTile(
-                name: name,
-                url: url,
-                tileExtension: extensionController.text.trim(),
-                tileSize: tileSize,
-                maxZoomLevel: maxZoom,
-              );
-              Navigator.of(context).pop();
-            },
-            child: const Text('Add'),
-          ),
-        ],
       ),
     );
   }
@@ -180,7 +191,7 @@ class _TileLayerSettingsState extends State<TileLayerSettings> {
               Expanded(
                 child: Text(
                   'Custom tiles',
-                  style: FTheme.of(context).typography.sm.copyWith(
+                  style: FTheme.of(context).typography.body.sm.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -198,7 +209,7 @@ class _TileLayerSettingsState extends State<TileLayerSettings> {
             padding: const EdgeInsets.only(top: 8),
             child: Text(
               'No custom tiles. Built-in tiles are always available.',
-              style: FTheme.of(context).typography.sm.copyWith(
+              style: FTheme.of(context).typography.body.sm.copyWith(
                 color: FTheme.of(context).colors.mutedForeground,
               ),
             ),
@@ -217,7 +228,7 @@ class _TileLayerSettingsState extends State<TileLayerSettings> {
                         onPress: canRemove
                             ? () => _config.removeCustomTile(tile.id)
                             : null,
-                        child: const Icon(FIcons.trash),
+                        child: const Icon(FLucideIcons.trash),
                       ),
                     ),
                   )
