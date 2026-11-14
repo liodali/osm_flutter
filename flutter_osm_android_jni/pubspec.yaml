@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   # Compatible release dependencies for flutter_osm_plugin 3.0.0.
-  flutter_osm_interface: ^1.8.0
+  flutter_osm_interface: ^1.9.0
   # Endorsed host package that supplies the platform view and Kotlin bridge.
   flutter_osm_android: ^0.4.0
   jni: ^1.0.3

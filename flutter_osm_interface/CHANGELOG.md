@@ -1,3 +1,10 @@
+## 1.9.0
+
+- `RoadOption` gains optional `roadGradientColors` (at least 2 colors):
+  draws the road with a start-to-end color gradient across the line.
+  Currently rendered by the web engine (MapLibre `line-gradient`);
+  native hosts ignore the field.
+
 ## 1.8.0
 
 - Remove `package:flutter/material.dart` and `package:flutter/cupertino.dart`

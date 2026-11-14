@@ -1,4 +1,4 @@
-## 4.1.0 (unreleased)
+## 4.1.0
 
 - **Breaking**: `OSMOption.useWebMapLibre` is removed; web rendering is
   always MapLibre GL JS (requires `flutter_osm_web` 2.2.0).
