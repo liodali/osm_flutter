@@ -1,7 +1,7 @@
 # flutter_osm_web
 
-The endorsed web implementation of `flutter_osm_plugin`, with Leaflet and
-MapLibre rendering through `HtmlElementView` and Dart JS interop.
+The endorsed web implementation of `flutter_osm_plugin`, with MapLibre GL JS
+rendering through `HtmlElementView` and Dart JS interop.
 
 ## Getting started
 
@@ -38,7 +38,28 @@ From this package directory:
 flutter analyze lib test
 flutter test --platform chrome
 flutter test --platform chrome --wasm
+node --test test/js/maplibre_tile_layer_test.cjs
 ```
 
 The browser tests cover route type mapping, waypoint order, coordinate precision,
 metadata, route caching, nullable geometry, JS defaults and the loading indicator.
+The Node tests exercise the iframe's actual JavaScript against a map fake,
+covering tile URL/referrer configuration, style-load ordering, basemap placement,
+gradient restoration, and reset/recovery without requesting public tiles.
+
+After changing the map HTML/JavaScript assets, restart the Flutter app and reload
+the browser page. Hot reload retains an existing blob iframe and can leave the
+previous renderer running. A `removeUnecessaryStaff` stack trace comes from an
+older asset; the MapLibre renderer no longer includes that DOM cleanup.
+
+When developing this repository, the example must override `flutter_osm_web`
+to `../flutter_osm_web/`, alongside the local interface/Android packages. The
+root's hosted dependency constraints otherwise resolve the published web package
+instead of the edited checkout. Run `flutter pub get` from `example/` after
+changing overrides. Published web 2.1.0 still defaults to Leaflet; local 2.2.0
+uses MapLibre for both raster tiles and vector styles.
+
+Standard OSM raster tiles use `https://tile.openstreetmap.org/{z}/{x}/{y}.png`.
+The iframe preserves visible attribution and sends the actual site referrer
+using `strict-origin-when-cross-origin`; hosting must also allow this referrer.
+See the [OSM tile usage policy](https://operations.osmfoundation.org/policies/tiles/).

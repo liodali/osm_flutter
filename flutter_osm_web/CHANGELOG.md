@@ -1,5 +1,22 @@
 # ChangeLog
 
+## 2.2.0
+
+- Use the canonical OSM raster endpoint, send an explicit browser referrer
+  policy and retain visible provider attribution. Normalize legacy OSM
+  a/b/c subdomain URLs without changing other providers.
+- Serialize tile-layer changes, await replacement styles, keep raster basemaps
+  below overlays and restore gradient road metrics after style changes.
+  Failed style loads reject their caller and allow a later reset to recover.
+- **Breaking**: remove the Leaflet engine; MapLibre GL JS is now the only web
+  rendering engine. The `map.html` asset and the `useMapLibre` flag on
+  `OsmWebWidget` are removed (the map iframe always loads
+  `index_maplibre.html`).
+- add gradient road support: `RoadOption.roadGradientColors` (at least 2
+  colors) draws the road with a start-to-end color gradient using MapLibre's
+  `line-gradient` (road sources now enable `lineMetrics`). Gradient roads
+  skip the dotted dash pattern on the main line; borders still apply.
+
 ## 2.1.0
 
 - Migrate routing_client_dart to ^1.0.8 (Dart 3.7+): routing goes through

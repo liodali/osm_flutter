@@ -29,7 +29,6 @@ class OsmWebWidget extends StatefulWidget {
   final Function(bool)? onMapIsReady;
   final UserLocationMaker? userLocationMarker;
   final bool isStatic;
-  final bool useMapLibre;
   const OsmWebWidget({
     super.key,
     required this.controller,
@@ -54,7 +53,6 @@ class OsmWebWidget extends StatefulWidget {
     this.onMapIsReady,
     this.userLocationMarker,
     this.isStatic = false,
-    this.useMapLibre = false,
   });
 
   @override
@@ -97,11 +95,7 @@ class OsmWebWidgetState extends State<OsmWebWidget> {
     final results = await Future.wait([
       rootBundle.loadString('$packageBase/map.js'),
       rootBundle.loadString('$packageBase/osm_interop.js'),
-      rootBundle.loadString(
-        widget.useMapLibre
-            ? '$packageBase/index_maplibre.html'
-            : '$packageBase/map.html',
-      ),
+      rootBundle.loadString('$packageBase/index_maplibre.html'),
     ]);
     dataScripts.value = (
       mapScript: results[0],
