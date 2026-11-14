@@ -693,7 +693,6 @@ class Map extends StatelessWidget {
         debugPrint(location.toString());
       },
       osmOption: OSMOption(
-        useWebMapLibre: true,
         enableRotationByGesture: true,
         zoomOption: const ZoomOption(
           initZoom: 16,

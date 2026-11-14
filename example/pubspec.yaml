@@ -45,13 +45,15 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.1
 
-# Keep the optional JNI add-on's hosted constraints on the local development
-# packages used by the main plugin.
+# Resolve the federated implementations from this checkout during development.
+# The root's hosted constraints otherwise select an older published web engine.
 dependency_overrides:
   flutter_osm_interface:
     path: ../flutter_osm_interface/
   flutter_osm_android:
     path: ../flutter_osm_android/
+  flutter_osm_web:
+    path: ../flutter_osm_web/
   
 
 # For information on the generic Dart part of this file, see the
