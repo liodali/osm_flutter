@@ -26,6 +26,8 @@ enum RoadType {
 ///
 /// [roadBorderWidth]      : (double) if null the road will be without border,else we will show border but if [roadBorderColor] null road border color will be the same as [roadColor]
 ///
+/// [roadGradientColors]   : (List<Color>) optional, at least 2 colors, draw the road with a start-to-end color gradient across the line (web only for now; ignored by native hosts)
+///
 /// [zoomInto]             : (bool) to zoomIn/Out that will make all the road visible in the map (default false)
 class RoadOption {
   final Color roadColor;
@@ -34,6 +36,7 @@ class RoadOption {
   final Color? roadBorderColor;
   final double? roadBorderWidth;
   final bool isDotted;
+  final List<Color>? roadGradientColors;
 
   const RoadOption({
     required this.roadColor,
@@ -42,8 +45,13 @@ class RoadOption {
     this.zoomInto = true,
     this.isDotted = false,
     this.roadBorderWidth,
+    this.roadGradientColors,
   })  : assert(roadBorderWidth == null || roadBorderWidth > 0),
-        assert(roadWidth > 0);
+        assert(roadWidth > 0),
+        assert(
+          roadGradientColors == null || roadGradientColors.length >= 2,
+          'roadGradientColors requires at least 2 colors',
+        );
 
   const RoadOption.empty()
       : roadWidth = 5,
@@ -51,7 +59,8 @@ class RoadOption {
         zoomInto = false,
         isDotted = false,
         roadBorderWidth = 0,
-        roadBorderColor = null;
+        roadBorderColor = null,
+        roadGradientColors = null;
 
   Map toMap() {
     Map args = {};
@@ -80,6 +89,12 @@ class RoadOption {
       args.putIfAbsent(
         "roadBorderColor",
         () => (roadBorderColor!).toPlatform(),
+      );
+    }
+    if (roadGradientColors != null && roadGradientColors!.length >= 2) {
+      args.putIfAbsent(
+        "roadGradientColors",
+        () => roadGradientColors!.map((color) => color.toPlatform()).toList(),
       );
     }
 
