@@ -1,3 +1,9 @@
+## 0.4.1
+
+- Align `flutter_osm_interface` dependency with the 1.9.0 release
+  (`RoadOption.roadGradientColors`, ignored by this Android host).
+  No code changes.
+
 ## 0.4.0
 
 - **Breaking for consuming apps**: the host declares API 26 (Android 8.0) as

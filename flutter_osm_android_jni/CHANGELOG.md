@@ -1,3 +1,8 @@
+## 0.3.1
+
+- Align `flutter_osm_interface` (^1.9.0) and `flutter_osm_android`
+  (^0.4.1) constraints with the current releases. No code changes.
+
 ## 0.3.0
 
 - Target flutter_osm_android 0.4.0 and flutter_osm_interface ^1.8.0.
