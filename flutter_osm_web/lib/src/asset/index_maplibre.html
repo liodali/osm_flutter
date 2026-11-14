@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta http-equiv="Cross-Origin-Resource-Policy" content="cross-origin">
   <meta http-equiv="Cross-Origin-Embedder-Policy" content="credentialless">
   <meta http-equiv="Cross-Origin-Opener-Policy" content="credentialless">
@@ -70,7 +71,7 @@
       sources: {
         'osm-raster': {
           type: 'raster',
-          tiles: ['https://tile.openstreetmap.de/{z}/{x}/{y}.png'],
+          tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
           tileSize: 256,
           attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           maxzoom: 19,
@@ -91,9 +92,20 @@
       style: defaultStyle,
       center: [0, 0],
       zoom: 2,
-      attributionControl: false,
+      attributionControl: { compact: false },
+      // MapLibre derives the referrer from the parent for our same-origin blob
+      // iframe. Keep the real site origin on tile requests, including workers.
+      transformRequest: function (url) {
+        return { url: url, referrerPolicy: 'strict-origin-when-cross-origin' };
+      },
     });
 
+    // Calls can arrive before the initial style has loaded. Keep layer switches
+    // in order and resolve each command only after its replacement is usable.
+    var initialStyleReady = mymap.isStyleLoaded() ? Promise.resolve() :
+      new Promise(function (resolve) { mymap.once('style.load', resolve); });
+    var tileLayerChange = initialStyleReady;
+    var rasterSourceSequence = 0;
     var currentCustomSourceId = null;
     var usingCustomStyle = false;
 
@@ -172,71 +184,127 @@
       return 200;
     }
 
-    async function changeTileLayer(tile) {
-      if (tile == undefined && customTile != undefined) {
-        if (usingCustomStyle) {
-          mymap.setStyle(defaultStyle);
-          usingCustomStyle = false;
-          mymap.once('style.load', function () {
-            restoreShapesAndRoads();
-          });
-        } else if (currentCustomSourceId) {
+    function changeTileLayer(tile) {
+      var change = tileLayerChange.then(function () {
+        return applyTileLayer(tile);
+      });
+      // A rejected change must reach its caller without poisoning later calls.
+      tileLayerChange = change.catch(function () { });
+      return change;
+    }
+
+    function replaceBaseStyle(style) {
+      return new Promise(function (resolve, reject) {
+        function cleanup() {
+          clearTimeout(timeout);
+          mymap.off('style.load', onStyleLoaded);
+          mymap.off('error', onError);
+        }
+        function onStyleLoaded() {
+          cleanup();
           try {
-            mymap.removeLayer(currentCustomSourceId + '-layer');
-            mymap.removeSource(currentCustomSourceId);
-          } catch (e) { }
+            restoreShapesAndRoads();
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        }
+        function onError(event) {
+          // A failed tile is not a failed style. Only reject a load error for
+          // the requested style document, not unrelated source/tile errors.
+          if (typeof style === 'string' && event.error && event.error.url === style) {
+            cleanup();
+            reject(event.error);
+          }
+        }
+        var timeout = setTimeout(function () {
+          cleanup();
+          reject(new Error('Map style did not load within 15 seconds'));
+        }, 15000);
+        mymap.once('style.load', onStyleLoaded);
+        mymap.on('error', onError);
+        try {
+          mymap.setStyle(style);
+        } catch (error) {
+          cleanup();
+          reject(error);
+        }
+      });
+    }
+
+    function removeCustomRaster() {
+      if (currentCustomSourceId) {
+        var layerId = currentCustomSourceId + '-layer';
+        if (mymap.getLayer(layerId)) mymap.removeLayer(layerId);
+        if (mymap.getSource(currentCustomSourceId)) mymap.removeSource(currentCustomSourceId);
+        currentCustomSourceId = null;
+      }
+    }
+
+    function addBaseRaster(layer) {
+      // Basemaps must stay below roads/shapes already added by the application.
+      var firstLayer = mymap.getStyle().layers[0];
+      mymap.addLayer(layer, firstLayer ? firstLayer.id : undefined);
+    }
+
+    async function applyTileLayer(tile) {
+      if (tile == null) {
+        if (usingCustomStyle) {
+          await replaceBaseStyle(defaultStyle);
+          usingCustomStyle = false;
           currentCustomSourceId = null;
+        } else {
+          removeCustomRaster();
           if (!mymap.getSource('osm-raster')) {
             mymap.addSource('osm-raster', defaultStyle.sources['osm-raster']);
-            mymap.addLayer(defaultStyle.layers[0]);
+          }
+          if (!mymap.getLayer('osm-raster-layer')) {
+            addBaseRaster(defaultStyle.layers[0]);
           }
         }
         customTile = undefined;
-      } else if (tile != undefined) {
-        if (tile.styleURL) {
-          mymap.setStyle(tile.styleURL);
-          usingCustomStyle = true;
-          customTile = tile;
-          mymap.once('style.load', function () {
-            restoreShapesAndRoads();
-          });
-        } else {
-          var tiles = buildTileUrls(tile);
-
-          if (currentCustomSourceId) {
-            try {
-              mymap.removeLayer(currentCustomSourceId + '-layer');
-              mymap.removeSource(currentCustomSourceId);
-            } catch (e) { }
-          }
-
-          var sourceId = 'custom-raster-' + Date.now();
-          currentCustomSourceId = sourceId;
-
-          try { mymap.removeLayer('osm-raster-layer'); } catch (e) { }
-          try { mymap.removeSource('osm-raster'); } catch (e) { }
-
-          mymap.addSource(sourceId, {
-            type: 'raster',
-            tiles: tiles,
-            tileSize: tile.tileSize || 256,
-            maxzoom: tile.maxZoom || 19,
-            minzoom: tile.minZoom || 2,
-            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          });
-          mymap.addLayer({
-            id: sourceId + '-layer',
-            type: 'raster',
-            source: sourceId,
-          });
-          customTile = tile;
+      } else if (tile.styleURL) {
+        // Remember the style route even if its load fails, so a later reset
+        // can replace the failed document with the default style.
+        usingCustomStyle = true;
+        currentCustomSourceId = null;
+        await replaceBaseStyle(tile.styleURL);
+        customTile = tile;
+      } else {
+        // A raster selection replaces a vector style rather than covering its
+        // labels/roads with a new layer while leaving the old style active.
+        if (usingCustomStyle) {
+          await replaceBaseStyle(defaultStyle);
+          usingCustomStyle = false;
+          currentCustomSourceId = null;
         }
+        removeCustomRaster();
+        if (mymap.getLayer('osm-raster-layer')) mymap.removeLayer('osm-raster-layer');
+        if (mymap.getSource('osm-raster')) mymap.removeSource('osm-raster');
+
+        var sourceId = 'custom-raster-' + (++rasterSourceSequence);
+        mymap.addSource(sourceId, {
+          type: 'raster',
+          tiles: buildTileUrls(tile),
+          tileSize: tile.tileSize || 256,
+          maxzoom: tile.maxZoom ?? 19,
+          minzoom: tile.minZoom ?? 2,
+          attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        });
+        currentCustomSourceId = sourceId;
+        addBaseRaster({ id: sourceId + '-layer', type: 'raster', source: sourceId });
+        customTile = tile;
       }
       return 200;
     }
 
     function buildTileUrls(tile) {
-      var baseUrl = tile.url;
+      // CustomTile.osm() in older interface versions still supplies a/b/c.
+      // OSM now documents one canonical endpoint; keep other providers intact.
+      var baseUrl = tile.url.replace(
+        /^https:\/\/(?:\{s\}|[abc])\.tile\.openstreetmap\.org\//,
+        'https://tile.openstreetmap.org/'
+      );
       if (!baseUrl.includes('{z}') && !baseUrl.includes('{x}') && !baseUrl.includes('{y}')) {
         baseUrl = baseUrl + '{z}/{x}/{y}';
       }
@@ -259,7 +327,7 @@
         if (roadData.geojson) {
           var sourceId = 'road-' + key;
           if (!mymap.getSource(sourceId)) {
-            mymap.addSource(sourceId, { type: 'geojson', data: roadData.geojson });
+            mymap.addSource(sourceId, { type: 'geojson', data: roadData.geojson, lineMetrics: true });
             if (roadData.borderLayerId) {
               mymap.addLayer({
                 id: roadData.borderLayerId,
@@ -714,11 +782,14 @@
 
       mymap.addSource(sourceId, {
         type: 'geojson',
-        data: geojson
+        data: geojson,
+        lineMetrics: true
       });
 
       var roadWidth = roadOption.roadWidth || 5;
       var roadBorderWidth = roadOption.roadBorderWidth || 0;
+      var gradientColors = roadOption.gradientColors;
+      var hasGradient = !!(gradientColors && gradientColors.length > 1);
 
       var layout = {};
       if (roadOption.isDotted) {
@@ -745,12 +816,25 @@
       }
 
       var paint = {
-        'line-color': roadOption.color || '#3388ff',
         'line-width': roadWidth,
         'line-opacity': 1,
       };
-      if (roadOption.isDotted) {
-        paint['line-dasharray'] = [0, 2];
+      if (hasGradient) {
+        // line-gradient requires lineMetrics: true on the source and cannot be
+        // combined with line-dasharray, so dotted styling is skipped for
+        // gradient roads (the border layer keeps its own dash pattern).
+        var stops = ['interpolate', ['linear'], ['line-progress']];
+        var count = gradientColors.length;
+        for (var i = 0; i < count; i++) {
+          stops.push(i / (count - 1));
+          stops.push(gradientColors[i]);
+        }
+        paint['line-gradient'] = stops;
+      } else {
+        paint['line-color'] = roadOption.color || '#3388ff';
+        if (roadOption.isDotted) {
+          paint['line-dasharray'] = [0, 2];
+        }
       }
 
       mymap.addLayer({
@@ -1189,17 +1273,6 @@
           .addTo(mymap);
       } else {
         homeMarker.setLngLat([point.lon, point.lat]);
-      }
-    }
-
-    function removeUnecessaryStaff() {
-      try {
-        var attrEl = document.querySelector('.maplibregl-control-attribution');
-        if (attrEl && attrEl.firstElementChild) {
-          attrEl.removeChild(attrEl.firstElementChild);
-        }
-      } catch (error) {
-        console.error(error);
       }
     }
 

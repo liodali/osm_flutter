@@ -117,5 +117,7 @@ extension ExtRoadOption on RoadOption {
       zoomInto: zoomInto,
       roadBorderColor: roadBorderColor?.toHexColor(),
       roadBorderWidth: roadBorderWidth?.toDouble() ?? 0.0,
-      isDotted: isDotted);
+      isDotted: isDotted,
+      gradientColors:
+          roadGradientColors?.map((color) => color.toHexColor()).toList());
 }

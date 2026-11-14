@@ -14,6 +14,7 @@ extension type RoadOptionJS._(JSObject _) implements JSObject {
   external double roadBorderWidth;
   external bool isDotted;
   external String? iconInterestPoints;
+  external JSArray<JSString>? gradientColors;
 
   factory RoadOptionJS({
     required String color,
@@ -23,6 +24,7 @@ extension type RoadOptionJS._(JSObject _) implements JSObject {
     double roadBorderWidth = 0.0,
     bool isDotted = false,
     String? iconInterestPoints,
+    List<String>? gradientColors,
   }) => RoadOptionJS._create(
     color: color,
     roadWidth: roadWidth,
@@ -31,6 +33,8 @@ extension type RoadOptionJS._(JSObject _) implements JSObject {
     roadBorderWidth: roadBorderWidth,
     isDotted: isDotted,
     iconInterestPoints: iconInterestPoints,
+    gradientColors:
+        gradientColors?.map((color) => color.toJS).toList().toJS,
   );
 
   // Dart defaults must be applied before crossing the JS/WASM boundary.
@@ -42,5 +46,6 @@ extension type RoadOptionJS._(JSObject _) implements JSObject {
     required double roadBorderWidth,
     required bool isDotted,
     String? iconInterestPoints,
+    required JSArray<JSString>? gradientColors,
   });
 }
