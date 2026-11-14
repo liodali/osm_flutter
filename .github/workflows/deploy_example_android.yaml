@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set track from input or default to internal for tags
         id: track
@@ -38,15 +38,15 @@ jobs:
           fi
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: flutter-actions/setup-flutter@0e3ac53a5126c46be01612423cf26b5d59018adc # v5
         with:
-          flutter-version: '3.47.1'
+          version: '3.47.1'
           channel: 'stable'
 
       - name: Get dependencies
@@ -173,7 +173,7 @@ jobs:
         run: flutter build appbundle --release --no-tree-shake-icons
 
       - name: Upload to Google Play (Internal Testing)
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           # serviceAccountJson: example/android/fastlane/service-account.json

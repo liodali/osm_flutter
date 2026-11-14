@@ -23,10 +23,10 @@ jobs:
     publish:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: dart-lang/setup-dart@v1
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+            - uses: dart-lang/setup-dart@2286a0c042b44434fe26d292bbce8d34f7ec662b # v1
             - name: Install Flutter SDK
-              uses: britannio/action-install-flutter@v1
+              uses: flutter-actions/setup-flutter@0e3ac53a5126c46be01612423cf26b5d59018adc # v5
             - run: dart --version
               working-directory: ${{ inputs.working-directory }}
             - run: flutter --version
