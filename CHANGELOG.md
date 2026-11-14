@@ -1,3 +1,10 @@
+## 4.1.0 (unreleased)
+
+- **Breaking**: `OSMOption.useWebMapLibre` is removed; web rendering is
+  always MapLibre GL JS (requires `flutter_osm_web` 2.2.0).
+- web: add `RoadOption.roadGradientColors` (at least 2 colors) to draw roads
+  with a start-to-end gradient (web engine only; ignored by native hosts).
+
 ## 4.0.0
 
 Breaking requirements and changes:

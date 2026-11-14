@@ -162,7 +162,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         onMapIsReady: widget.onMapIsReady,
                         enableRotationByGesture:
                             widget.osmOption.enableRotationByGesture,
-                        useWebMapLibre: widget.osmOption.useWebMapLibre,
                       ),
                     ),
                     Positioned.fill(
@@ -211,7 +210,6 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   onMapIsReady: widget.onMapIsReady,
                   enableRotationByGesture:
                       widget.osmOption.enableRotationByGesture,
-                  useWebMapLibre: widget.osmOption.useWebMapLibre,
                 ),
         ),
         if (widget.osmOption.showContributorBadgeForOSM && !kIsWeb) ...[

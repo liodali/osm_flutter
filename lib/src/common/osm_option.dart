@@ -32,7 +32,6 @@ class OSMOption {
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
     this.userTrackingOption,
-    this.useWebMapLibre = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -44,7 +43,6 @@ class OSMOption {
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final UserTrackingOption? userTrackingOption;
-  final bool useWebMapLibre;
 }
 
 /// [ZoomOption]

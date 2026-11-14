@@ -71,7 +71,6 @@ class const OSMMapWidget({
   this.isPicker = false,
   this.showContributorBadgeForOSM = false,
   this.enableRotationByGesture = false,
-  this.useWebMapLibre = false,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -93,7 +92,6 @@ class const OSMMapWidget({
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final bool enableRotationByGesture;
-  final bool useWebMapLibre;
   @override
   Widget build(BuildContext context) {
     return MobileOsmFlutter(

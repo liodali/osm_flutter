@@ -74,7 +74,6 @@ class OSMMap extends StatefulWidget {
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
     this.enableRotationByGesture = false,
-    this.useWebMapLibre = false,
   });
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -97,7 +96,6 @@ class OSMMap extends StatefulWidget {
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final bool enableRotationByGesture;
-  final bool useWebMapLibre;
 
   @override
   State<StatefulWidget> createState() => _OSMMapState();
@@ -134,7 +132,6 @@ class _OSMMapState extends State<OSMMap> {
       userLocationMarker: widget.userLocationMarker,
       userTrackingOption: widget.userTrackingOption,
       enableRotationByGesture: widget.enableRotationByGesture,
-      useWebMapLibre: widget.useWebMapLibre,
     );
   }
 }
