@@ -135,6 +135,7 @@ class _OSMMapState extends State<OSMMap> {
       userLocationMarker: widget.userLocationMarker,
       userTrackingOption: widget.userTrackingOption,
       enableRotationByGesture: widget.enableRotationByGesture,
+      useTypedCameraRoute: widget.useTypedCameraRoute,
     );
   }
 }
