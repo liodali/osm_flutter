@@ -32,6 +32,7 @@ class OSMOption {
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
     this.userTrackingOption,
+    this.useTypedCameraRoute = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -43,6 +44,12 @@ class OSMOption {
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final UserTrackingOption? userTrackingOption;
+
+  /// Opt-in to route camera commands (absolute zoom, movement, rotation and
+  /// the center query) through the typed generated channel when the native
+  /// host advertises support at attachment time. Default keeps the legacy
+  /// route. Relative zoom steps are always sent through the legacy route.
+  final bool useTypedCameraRoute;
 }
 
 /// [ZoomOption]

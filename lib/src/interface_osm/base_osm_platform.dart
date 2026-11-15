@@ -74,6 +74,7 @@ class OSMMap extends StatefulWidget {
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
     this.enableRotationByGesture = false,
+    this.useTypedCameraRoute = false,
   });
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -96,6 +97,8 @@ class OSMMap extends StatefulWidget {
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final bool enableRotationByGesture;
+  /// Opt-in routing of camera commands through the typed generated channel.
+  final bool useTypedCameraRoute;
 
   @override
   State<StatefulWidget> createState() => _OSMMapState();

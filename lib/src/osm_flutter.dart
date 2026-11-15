@@ -162,6 +162,8 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         onMapIsReady: widget.onMapIsReady,
                         enableRotationByGesture:
                             widget.osmOption.enableRotationByGesture,
+                        useTypedCameraRoute:
+                            widget.osmOption.useTypedCameraRoute,
                       ),
                     ),
                     Positioned.fill(
@@ -210,6 +212,8 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   onMapIsReady: widget.onMapIsReady,
                   enableRotationByGesture:
                       widget.osmOption.enableRotationByGesture,
+                  useTypedCameraRoute:
+                      widget.osmOption.useTypedCameraRoute,
                 ),
         ),
         if (widget.osmOption.showContributorBadgeForOSM && !kIsWeb) ...[
