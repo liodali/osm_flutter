@@ -116,7 +116,7 @@ extension MapSession {
             result(200)
             break
         case "get#Zoom":
-            result(self.mapOSM.zoom())
+            result(self.typedZoom())
             break
         case "change#stepZoom":
 
@@ -304,19 +304,15 @@ extension MapSession {
     }
     func moveToSpecificLocation(call: FlutterMethodCall, result: FlutterResult) {
         let args = call.arguments as! [String: Any]
-        let point = CLLocationCoordinate2D(
-            latitude: args["lat"] as! Double, longitude: args["lon"] as! Double)
-        let animate = args["animate"] as! Bool? ?? false
-        var currentZoom = self.mapOSM.zoom()
-        if currentZoom == 0 || !mapInitialized {
-            currentZoom = zoomConfig.initZoom
-        }
-        self.mapOSM.moveTo(location: point, zoom: currentZoom, animated: animate)
+        self.typedMoveTo(
+            latitude: args["lat"] as! Double,
+            longitude: args["lon"] as! Double,
+            animated: args["animate"] as! Bool? ?? false)
         result(200)
     }
     func rotateMap(call: FlutterMethodCall) {
         let angle = call.arguments as! Double
-        self.mapOSM.setRotation(angle: angle)
+        self.typedSetRotation(angle, animated: false)
     }
     private func addMarkerManually(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
@@ -453,7 +449,7 @@ extension MapSession {
         } else {
             let levelZoom = args["zoomLevel"] as! Double
 
-            self.mapOSM.setZoom(zoom: Int(levelZoom))
+            self.typedSetZoom(levelZoom, animated: false)
 
         }
     }
