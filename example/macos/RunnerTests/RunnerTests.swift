@@ -38,6 +38,7 @@ class RunnerTests: XCTestCase {
   private func session(_ messenger: RecordingMessenger, id: Int64 = 1) -> MapSession {
     MapSession(.zero, viewId: id,
       channel: FlutterMethodChannel(name: "map_\(id)", binaryMessenger: messenger),
+      binaryMessenger: messenger,
       args: ["isStaticMap": false], defaultPin: nil)
   }
 

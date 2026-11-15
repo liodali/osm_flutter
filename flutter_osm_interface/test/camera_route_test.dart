@@ -268,6 +268,62 @@ void main() {
         hasLength(1),
       );
     });
+
+    test('a replacement attachment probes its own host after disposal',
+        () async {
+      // Reproduction: the first attachment's probe is still in flight when
+      // the map is closed and re-created. The replacement must not join the
+      // disposed probe — it probes its own host and decides on its answer.
+      final staleProbe = Completer<Object?>();
+      var probesSeen = 0;
+      await mockLegacy((call) async {
+        probesSeen += 1;
+        invocations.add('probe-$probesSeen');
+        return probesSeen == 1 ? staleProbe.future : cameraBootstrap;
+      });
+
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      final stale = osm.attachCameraRoute(7, optIn: true);
+      osm.close(7); // must drop the pending job
+      await osm.init(7);
+
+      final selection = await osm.attachCameraRoute(7, optIn: true);
+      expect(selection, CameraRouteSelection.generated);
+      expect(probesSeen, 2, reason: 'replacement must probe its own host');
+      expect(osm.cameraClientFor(7), isNotNull);
+
+      // The disposed attachment's decision stays discarded even when its
+      // probe finally answers.
+      staleProbe.complete(cameraBootstrap);
+      expect(await stale, CameraRouteSelection.legacy);
+      expect(osm.cameraClientFor(7), isNotNull);
+    });
+
+    test('a late disposed probe cannot overwrite a replacement decision',
+        () async {
+      final staleProbe = Completer<Object?>();
+      var probesSeen = 0;
+      await mockLegacy((call) async {
+        probesSeen += 1;
+        return probesSeen == 1 ? staleProbe.future : cameraBootstrap;
+      });
+      await mockPigeon('getZoom', (_) => pigeonReply(1.0));
+
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      final stale = osm.attachCameraRoute(7, optIn: true);
+      osm.close(7);
+      await osm.init(7);
+      expect(await osm.attachCameraRoute(7, optIn: true),
+          CameraRouteSelection.generated);
+
+      // Now the disposed attachment's probe resolves: it must not store
+      // anything over the replacement's frozen decision.
+      staleProbe.complete(cameraBootstrap);
+      expect(await stale, CameraRouteSelection.legacy);
+      expect(osm.cameraClientFor(7), isNotNull);
+    });
   });
 
   group('camera facade interception', () {

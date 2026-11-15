@@ -170,8 +170,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
       _channels.remove(idOSM)?.setMethodCallHandler(null);
     }
     // Invalidate any in-flight attach decision for this map and unfreeze
-    // the route so a replacement attachment decides freshly.
+    // the route so a replacement attachment decides freshly. Dropping the
+    // pending job prevents a replacement from joining (and blocking on) the
+    // disposed attachment's probe.
     _cameraRouteEpochs[idOSM] = (_cameraRouteEpochs[idOSM] ?? 0) + 1;
+    _cameraRouteAttachJobs.remove(idOSM);
     _cameraRoutes.remove(idOSM);
     if (_channels.isEmpty) {
       _streamController.close();
@@ -235,7 +238,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
     try {
       return await job;
     } finally {
-      _cameraRouteAttachJobs.remove(idOSM);
+      // Conditional cleanup: a replacement attachment may have registered
+      // its own job under this id while this one was awaiting; only remove
+      // the entry if it is still ours.
+      if (identical(_cameraRouteAttachJobs[idOSM], job)) {
+        _cameraRouteAttachJobs.remove(idOSM);
+      }
     }
   }
 
@@ -253,7 +261,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
     // Capture the attachment identity before the async probe; a close (or a
     // close + re-init of a replacement map) invalidates this decision.
     final epoch = _cameraRouteEpochs[idOSM] ?? 0;
-    final probe = await probeNativeProtocol(idOSM);
+    // The probe is a trivial local channel call; bound it so a host that
+    // never answers cannot hang attachment. A timeout conservatively keeps
+    // the legacy route (it is not old-host compatibility: the decision is
+    // simply not activated).
+    final probe = await probeNativeProtocol(idOSM).timeout(
+      const Duration(seconds: 2),
+      onTimeout: () => const NativeProtocolLegacyHost(),
+    );
     final attachmentChanged = !_channels.containsKey(idOSM) ||
         (_cameraRouteEpochs[idOSM] ?? 0) != epoch;
     if (attachmentChanged) {
