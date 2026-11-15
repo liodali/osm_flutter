@@ -694,6 +694,9 @@ class Map extends StatelessWidget {
       },
       osmOption: OSMOption(
         enableRotationByGesture: true,
+        // Exercise the typed generated-camera channel on this page: probe
+        // decides at attach; hosts without support keep the legacy route.
+        useTypedCameraRoute: true,
         zoomOption: const ZoomOption(
           initZoom: 16,
           minZoomLevel: 3,
