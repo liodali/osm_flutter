@@ -21,6 +21,13 @@ extension MapSession {
     func onListenMethodChannel(call: FlutterMethodCall, result: @escaping FlutterResult) {
         print(call.method)
         switch call.method {
+        case "map#bootstrap#protocol":
+            // Read-only protocol probe answered before any map mutation so
+            // the Dart side can freeze the routing table during attach. An
+            // old Dart client never sends it; a new client on an old host
+            // gets notImplemented, which the probe maps to legacy routing.
+            result(PigeonCameraBridge.bootstrapPayload(
+                sessionToken: sessionToken, generation: generation))
         case "init#ios#map":
             //channel.invokeMethod("map#init", arguments: true)
             if let tile = customTiles {

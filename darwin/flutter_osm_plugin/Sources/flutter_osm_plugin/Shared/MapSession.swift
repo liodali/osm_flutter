@@ -30,6 +30,17 @@ class MapSession: NSObject {
     var customTiles: CustomTiles? = nil
     var boundingbox: BoundingBox? = nil
     let channel: FlutterMethodChannel
+    /// Platform view id (also used to derive per-map generated channel suffixes).
+    let viewId: Int64
+    /// Minted per session; guards generated routes against reused view ids.
+    let sessionToken: String = UUID().uuidString
+    /// Bumped when the underlying view is replaced; C1 keeps it at 0.
+    let generation: Int64 = 0
+    /// Last rotation applied through the typed service or legacy decode.
+    /// OSMView exposes no rotation getter, so the session tracks its own.
+    var lastAppliedRotation: Double = 0
+    /// Generated camera route living alongside the legacy channel handler.
+    private(set) var cameraBridge: PigeonCameraBridge?
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -169,8 +180,14 @@ class MapSession: NSObject {
             rect: frame, location: initLocation, zoomConfig: self.zoomConfig,
             mapTileConfiguration: configuration)
         self.channel = channel
+        self.viewId = viewId
         super.init()
         self.mapOSM.enableRotation(enable: enableRotationGesture)
+        // Generated camera endpoints live alongside the legacy channel
+        // handler; they never replace it (C1 skeleton: registered, not routed).
+        let bridge = PigeonCameraBridge(session: self)
+        bridge.register(messenger: channel.messenger, viewId: viewId)
+        cameraBridge = bridge
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -284,6 +301,8 @@ class MapSession: NSObject {
             return
         }
         isDisposed = true
+        cameraBridge?.unregister(messenger: channel.messenger, viewId: viewId)
+        cameraBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil
