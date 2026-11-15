@@ -21,7 +21,7 @@ internal class PigeonNativeCameraBridge(
     override fun getZoom(session: NativeCameraSession): Double {
         validateSession(session)
         return this.session.getZoom()
-            ?: throw IllegalStateException("camera_not_ready")
+            ?: throw FlutterError(CODE_CAMERA_NOT_READY, "camera zoom is not available yet", null)
     }
 
     override fun setZoom(
@@ -32,7 +32,6 @@ internal class PigeonNativeCameraBridge(
         validateSession(session)
         requireState(this.session.setZoom(zoomLevel = zoom, animated = animated))
     }
-
     override fun moveTo(
         session: NativeCameraSession,
         latitude: Double,
@@ -55,7 +54,7 @@ internal class PigeonNativeCameraBridge(
     override fun getCameraPosition(session: NativeCameraSession): NativeCameraPosition {
         validateSession(session)
         val snapshot = this.session.getCameraPositionSnapshot()
-            ?: throw IllegalStateException("camera_not_ready")
+            ?: throw FlutterError(CODE_CAMERA_NOT_READY, "camera is not ready for a snapshot", null)
         return NativeCameraPosition(
             latitude = snapshot[0],
             longitude = snapshot[1],
@@ -66,12 +65,14 @@ internal class PigeonNativeCameraBridge(
 
     private fun validateSession(s: NativeCameraSession) {
         if (s.sessionToken != sessionToken || s.generation != generation) {
-            throw IllegalStateException("stale_session")
+            throw FlutterError(CODE_STALE_SESSION, "session does not match this map view", null)
         }
     }
 
     private fun requireState(applied: Boolean) {
-        if (!applied) throw IllegalStateException("camera_not_ready")
+        if (!applied) {
+            throw FlutterError(CODE_CAMERA_NOT_READY, "camera is not ready for this operation", null)
+        }
     }
 
     /** Registers this bridge for one map view, alongside legacy endpoints. */
@@ -85,6 +86,10 @@ internal class PigeonNativeCameraBridge(
     }
 
     companion object {
+        /** Typed error codes carried to the Dart facade verbatim. */
+        const val CODE_STALE_SESSION = "stale_session"
+        const val CODE_CAMERA_NOT_READY = "camera_not_ready"
+
         /** Protocol revision answered by the read-only bootstrap probe. */
         const val NATIVE_PROTOCOL_REVISION = 1
 
