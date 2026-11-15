@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'channel/osm_method_channel.dart';
+import 'channel/pigeon/native_camera_bootstrap.dart';
 import 'common/osm_event.dart';
 import 'types/types.dart';
 
@@ -42,6 +43,11 @@ abstract class OSMPlatform extends PlatformInterface {
   );
 
   void close(int idOSM);
+
+  /// Read-only attach-time probe of the generated-channel protocol.
+  /// Must not initialize or mutate the map; implementations run it on the
+  /// legacy channel before routing decisions are frozen.
+  Future<NativeProtocolProbeResult> probeNativeProtocol(int idOSM);
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {

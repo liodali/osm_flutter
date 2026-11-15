@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:stream_transform/stream_transform.dart';
 
+import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_bootstrap.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
 import 'package:flutter_osm_interface/src/common/osm_event.dart';
 import 'package:flutter_osm_interface/src/common/road_exception.dart';
@@ -152,6 +153,34 @@ class MethodChannelOSM extends MobileOSMPlatform {
     if (_channels.isEmpty) {
       _streamController.close();
     }
+  }
+
+  /// Read-only attach-time probe of the generated-channel protocol.
+  ///
+  /// Runs on the existing legacy channel (primitive codec) before any map
+  /// mutation. A missing probe on an old host maps to legacy selection;
+  /// malformed answers are reported as [NativeProtocolInvalid] and are never
+  /// silently treated as old-host compatibility.
+  @override
+  Future<NativeProtocolProbeResult> probeNativeProtocol(int idOSM) async {
+    final channel = _channels[idOSM];
+    if (channel == null) {
+      return const NativeProtocolLegacyHost();
+    }
+    final Object? payload;
+    try {
+      payload = await channel.invokeMethod<Object>(kNativeBootstrapMethod);
+    } on MissingPluginException {
+      // Host predates the probe: supported legacy selection.
+      return const NativeProtocolLegacyHost();
+    } on PlatformException catch (error) {
+      if (error.code == 'not_implemented' || error.code == 'notImplemented') {
+        return const NativeProtocolLegacyHost();
+      }
+      // Unexpected channel failure: not old-host compatibility.
+      return NativeProtocolInvalid(reason: 'probe failed: ${error.code}');
+    }
+    return NativeProtocolBootstrap.parse(payload);
   }
 
   @override
