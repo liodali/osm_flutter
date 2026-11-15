@@ -463,3 +463,143 @@ interface NativeMapCameraApi {
     }
   }
 }
+/**
+ * Generated markers command route for one map session.
+ *
+ * Mirrors the typed Android marker contract: stable string ids, coordinates
+ * in degrees, and icon bytes prepared in Dart (Flutter widget rendering
+ * stays asynchronous on the Dart side; only encoded PNG bytes cross the
+ * channel). A null icon means the native default marker.
+ *
+ * Generated interface from Pigeon that represents a handler of messages from Flutter.
+ */
+interface NativeMapMarkersApi {
+  /**
+   * Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
+   * platform default icon.
+   */
+  fun addMarker(session: NativeCameraSession, markerId: String, latitude: Double, longitude: Double, iconBytes: ByteArray?)
+  /**
+   * Bulk-adds markers with default icons: parallel id list and
+   * [lat, lon, lat, lon, ...] coordinates.
+   */
+  fun addMarkers(session: NativeCameraSession, markerIds: List<String>, coordinates: DoubleArray)
+  /** Replaces one marker's icon with new encoded bytes. */
+  fun updateMarkerIcon(session: NativeCameraSession, markerId: String, iconBytes: ByteArray)
+  /** Removes one marker by stable id. */
+  fun removeMarker(session: NativeCameraSession, markerId: String)
+  /** Removes many markers by stable ids. */
+  fun removeMarkers(session: NativeCameraSession, markerIds: List<String>)
+
+  companion object {
+    /** The codec used by NativeMapMarkersApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      NativeMapCameraPigeonCodec()
+    }
+    /** Sets up an instance of `NativeMapMarkersApi` to handle messages through the `binaryMessenger`. */
+    @JvmOverloads
+    fun setUp(binaryMessenger: BinaryMessenger, api: NativeMapMarkersApi?, messageChannelSuffix: String = "") {
+      val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.addMarker$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val markerIdArg = args[1] as String
+            val latitudeArg = args[2] as Double
+            val longitudeArg = args[3] as Double
+            val iconBytesArg = args[4] as ByteArray?
+            val wrapped: List<Any?> = try {
+              api.addMarker(sessionArg, markerIdArg, latitudeArg, longitudeArg, iconBytesArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.addMarkers$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val markerIdsArg = args[1] as List<String>
+            val coordinatesArg = args[2] as DoubleArray
+            val wrapped: List<Any?> = try {
+              api.addMarkers(sessionArg, markerIdsArg, coordinatesArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.updateMarkerIcon$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val markerIdArg = args[1] as String
+            val iconBytesArg = args[2] as ByteArray
+            val wrapped: List<Any?> = try {
+              api.updateMarkerIcon(sessionArg, markerIdArg, iconBytesArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.removeMarker$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val markerIdArg = args[1] as String
+            val wrapped: List<Any?> = try {
+              api.removeMarker(sessionArg, markerIdArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.removeMarkers$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val markerIdsArg = args[1] as List<String>
+            val wrapped: List<Any?> = try {
+              api.removeMarkers(sessionArg, markerIdsArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+    }
+  }
+}

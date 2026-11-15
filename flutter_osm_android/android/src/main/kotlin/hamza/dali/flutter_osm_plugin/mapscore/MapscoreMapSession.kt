@@ -76,6 +76,7 @@ import io.openmobilemaps.mapscore.shared.map.layers.line.LineLayerInterface
 import io.openmobilemaps.mapscore.shared.map.layers.line.LineStyle
 import io.openmobilemaps.mapscore.shared.map.layers.polygon.PolygonLayerInterface
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeCameraBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeMarkersBridge
 import io.openmobilemaps.mapscore.shared.map.camera.MapCameraListenerInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -116,6 +117,7 @@ internal class MapscoreMapSession(
     private lateinit var locationNewOverlay: CustomLocationManager
     private lateinit var legacyChannel: LegacyMethodChannelAdapter
     private var pigeonCameraBridge: PigeonNativeCameraBridge? = null
+    private var pigeonMarkersBridge: PigeonNativeMarkersBridge? = null
 
     /** Minted per session; guards generated routes against reused view ids. */
     internal val sessionToken: String = UUID.randomUUID().toString()
@@ -1865,6 +1867,8 @@ internal class MapscoreMapSession(
         activeEventSink.close()
         pigeonCameraBridge?.unregister(binaryMessenger, id)
         pigeonCameraBridge = null
+        pigeonMarkersBridge?.unregister(binaryMessenger, id)
+        pigeonMarkersBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -1924,6 +1928,10 @@ internal class MapscoreMapSession(
         val bridge = PigeonNativeCameraBridge(this, sessionToken, generation)
         bridge.register(binaryMessenger, id)
         pigeonCameraBridge = bridge
+        // Generated markers endpoints live alongside the legacy ones too.
+        val markersBridge = PigeonNativeMarkersBridge(this, sessionToken, generation)
+        markersBridge.register(binaryMessenger, id)
+        pigeonMarkersBridge = markersBridge
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")

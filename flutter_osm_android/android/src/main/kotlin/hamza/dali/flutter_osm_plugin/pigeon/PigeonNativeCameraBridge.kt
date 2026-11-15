@@ -96,8 +96,12 @@ internal class PigeonNativeCameraBridge(
         /** Schema identifier answered by the bootstrap probe. */
         const val NATIVE_CAMERA_SCHEMA_ID = "flutter_osm.native.camera.v1"
 
-        /** Capability family advertised by this bridge. */
+        /** Capability families advertised by the Android host. */
         const val CAPABILITY_CAMERA = "camera"
+        const val CAPABILITY_MARKERS = "markers"
+
+        /** Typed error code for the markers family. */
+        const val CODE_MARKERS_NOT_READY = "markers_not_ready"
 
         fun viewChannelSuffix(viewId: Int): String = "view_$viewId"
 
@@ -112,7 +116,7 @@ internal class PigeonNativeCameraBridge(
         ): Map<String, Any?> = mapOf(
             "revision" to NATIVE_PROTOCOL_REVISION,
             "schemaId" to NATIVE_CAMERA_SCHEMA_ID,
-            "capabilities" to listOf(CAPABILITY_CAMERA),
+            "capabilities" to listOf(CAPABILITY_CAMERA, CAPABILITY_MARKERS),
             "sessionToken" to sessionToken,
             "generation" to generation,
         )
