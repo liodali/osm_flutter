@@ -447,3 +447,126 @@ class NativeMapCameraApiSetup {
     }
   }
 }
+/// Generated markers command route for one map session.
+///
+/// Mirrors the typed Android marker contract: stable string ids, coordinates
+/// in degrees, and icon bytes prepared in Dart (Flutter widget rendering
+/// stays asynchronous on the Dart side; only encoded PNG bytes cross the
+/// channel). A null icon means the native default marker.
+///
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol NativeMapMarkersApi {
+  /// Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
+  /// platform default icon.
+  func addMarker(session: NativeCameraSession, markerId: String, latitude: Double, longitude: Double, iconBytes: FlutterStandardTypedData?) throws
+  /// Bulk-adds markers with default icons: parallel id list and
+  /// [lat, lon, lat, lon, ...] coordinates.
+  func addMarkers(session: NativeCameraSession, markerIds: [String], coordinates: FlutterStandardTypedData) throws
+  /// Replaces one marker's icon with new encoded bytes.
+  func updateMarkerIcon(session: NativeCameraSession, markerId: String, iconBytes: FlutterStandardTypedData) throws
+  /// Removes one marker by stable id.
+  func removeMarker(session: NativeCameraSession, markerId: String) throws
+  /// Removes many markers by stable ids.
+  func removeMarkers(session: NativeCameraSession, markerIds: [String]) throws
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class NativeMapMarkersApiSetup {
+  static var codec: FlutterStandardMessageCodec { NativeMapCameraPigeonCodec.shared }
+  /// Sets up an instance of `NativeMapMarkersApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: NativeMapMarkersApi?, messageChannelSuffix: String = "") {
+    let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    /// Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
+    /// platform default icon.
+    let addMarkerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.addMarker\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      addMarkerChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let markerIdArg = args[1] as! String
+        let latitudeArg = args[2] as! Double
+        let longitudeArg = args[3] as! Double
+        let iconBytesArg: FlutterStandardTypedData? = nilOrValue(args[4])
+        do {
+          try api.addMarker(session: sessionArg, markerId: markerIdArg, latitude: latitudeArg, longitude: longitudeArg, iconBytes: iconBytesArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      addMarkerChannel.setMessageHandler(nil)
+    }
+    /// Bulk-adds markers with default icons: parallel id list and
+    /// [lat, lon, lat, lon, ...] coordinates.
+    let addMarkersChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.addMarkers\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      addMarkersChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let markerIdsArg = args[1] as! [String]
+        let coordinatesArg = args[2] as! FlutterStandardTypedData
+        do {
+          try api.addMarkers(session: sessionArg, markerIds: markerIdsArg, coordinates: coordinatesArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      addMarkersChannel.setMessageHandler(nil)
+    }
+    /// Replaces one marker's icon with new encoded bytes.
+    let updateMarkerIconChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.updateMarkerIcon\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      updateMarkerIconChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let markerIdArg = args[1] as! String
+        let iconBytesArg = args[2] as! FlutterStandardTypedData
+        do {
+          try api.updateMarkerIcon(session: sessionArg, markerId: markerIdArg, iconBytes: iconBytesArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      updateMarkerIconChannel.setMessageHandler(nil)
+    }
+    /// Removes one marker by stable id.
+    let removeMarkerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.removeMarker\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      removeMarkerChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let markerIdArg = args[1] as! String
+        do {
+          try api.removeMarker(session: sessionArg, markerId: markerIdArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      removeMarkerChannel.setMessageHandler(nil)
+    }
+    /// Removes many markers by stable ids.
+    let removeMarkersChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.removeMarkers\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      removeMarkersChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let markerIdsArg = args[1] as! [String]
+        do {
+          try api.removeMarkers(session: sessionArg, markerIds: markerIdsArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      removeMarkersChannel.setMessageHandler(nil)
+    }
+  }
+}

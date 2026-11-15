@@ -129,7 +129,9 @@ class RunnerTests: XCTestCase {
     autoreleasepool {
       var host: MacOSMapHostView? = MacOSMapHostView(frame: .zero, session: session(messenger))
       released = host?.session
-      XCTAssertEqual(messenger.handlers.count, 2)
+      // Two sessions on one messenger: each registers its legacy channel
+      // plus the five generated camera channels (alongside, never replacing).
+      XCTAssertEqual(messenger.handlers.count, 12)
       host = nil
     }
     // AppKit autoreleases views and the framework can have queued callbacks.
@@ -138,7 +140,16 @@ class RunnerTests: XCTestCase {
       try await Task.sleep(nanoseconds: 50_000_000)
     }
     XCTAssertNil(released)
-    XCTAssertEqual(Set(messenger.handlers.keys), ["map_2"])
+    // Disposal removes exactly this session's legacy channel and its five
+    // generated channels; the other live map keeps its full set.
+    XCTAssertEqual(messenger.handlers.count, 6)
+    XCTAssertEqual(messenger.handlers.keys.filter { $0.hasPrefix("map_") }, ["map_2"])
+    XCTAssertFalse(
+      messenger.handlers.keys.contains { $0.contains(".view_1") },
+      "disposed session's generated channels must be unregistered")
+    XCTAssertTrue(
+      messenger.handlers.keys.contains { $0.hasSuffix(".view_2") },
+      "the surviving session keeps its generated channels")
     var count = 0
     other.onListenMethodChannel(call: FlutterMethodCall(methodName: "map#center", arguments: nil)) { _ in count += 1 }
     XCTAssertEqual(count, 1)

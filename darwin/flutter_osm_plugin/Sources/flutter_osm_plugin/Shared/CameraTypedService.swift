@@ -15,7 +15,7 @@ extension MapSession {
 
     /// Current absolute zoom level (last applied, not an animation target).
     func typedZoom() -> Double {
-        mapOSM.zoom()
+        Double(mapOSM.zoom())
     }
 
     /// Sets an absolute zoom level. `animated` is accepted for schema parity;
@@ -60,7 +60,7 @@ extension MapSession {
         return (
             latitude: center.latitude,
             longitude: center.longitude,
-            zoom: mapOSM.zoom(),
+            zoom: Double(mapOSM.zoom()),
             rotation: lastAppliedRotation
         )
     }
