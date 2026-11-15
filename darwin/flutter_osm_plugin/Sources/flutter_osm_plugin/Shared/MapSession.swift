@@ -30,6 +30,8 @@ class MapSession: NSObject {
     var customTiles: CustomTiles? = nil
     var boundingbox: BoundingBox? = nil
     let channel: FlutterMethodChannel
+    /// Factory-provided messenger retained for generated-route registration.
+    let binaryMessenger: FlutterBinaryMessenger
     /// Platform view id (also used to derive per-map generated channel suffixes).
     let viewId: Int64
     /// Minted per session; guards generated routes against reused view ids.
@@ -141,9 +143,11 @@ class MapSession: NSObject {
     }
 
     init(
-        _ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?,
+        _ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel,
+        binaryMessenger: FlutterBinaryMessenger, args: Any?,
         defaultPin: String?
     ) {
+        self.binaryMessenger = binaryMessenger
         var initLocation: CLLocationCoordinate2D?
         var enableRotationGesture = false
         defaultMarker = defaultPin
@@ -186,7 +190,7 @@ class MapSession: NSObject {
         // Generated camera endpoints live alongside the legacy channel
         // handler; they never replace it (C1 skeleton: registered, not routed).
         let bridge = PigeonCameraBridge(session: self)
-        bridge.register(messenger: channel.messenger, viewId: viewId)
+        bridge.register(messenger: binaryMessenger, viewId: viewId)
         cameraBridge = bridge
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
@@ -301,7 +305,7 @@ class MapSession: NSObject {
             return
         }
         isDisposed = true
-        cameraBridge?.unregister(messenger: channel.messenger, viewId: viewId)
+        cameraBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
         cameraBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil

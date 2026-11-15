@@ -39,7 +39,7 @@ final class PigeonCameraBridge: NativeMapCameraApi {
     func setZoom(session: NativeCameraSession, zoom: Double, animated: Bool) throws {
         try MainActor.assumeIsolated {
             try validate(session)
-            requireSession().typedSetZoom(zoom, animated: animated)
+            try requireSession().typedSetZoom(zoom, animated: animated)
         }
     }
 
@@ -48,21 +48,21 @@ final class PigeonCameraBridge: NativeMapCameraApi {
     ) throws {
         try MainActor.assumeIsolated {
             try validate(session)
-            requireSession().typedMoveTo(latitude: latitude, longitude: longitude, animated: animated)
+            try requireSession().typedMoveTo(latitude: latitude, longitude: longitude, animated: animated)
         }
     }
 
     func setRotation(session: NativeCameraSession, angle: Double, animated: Bool) throws {
         try MainActor.assumeIsolated {
             try validate(session)
-            requireSession().typedSetRotation(angle, animated: animated)
+            try requireSession().typedSetRotation(angle, animated: animated)
         }
     }
 
     func getCameraPosition(session: NativeCameraSession) throws -> NativeCameraPosition {
         try MainActor.assumeIsolated {
             try validate(session)
-            guard let position = requireSession().typedCameraPosition() else {
+            guard let position = try requireSession().typedCameraPosition() else {
                 throw PigeonError(code: "camera_not_ready", message: nil, details: nil)
             }
             return NativeCameraPosition(
@@ -76,14 +76,14 @@ final class PigeonCameraBridge: NativeMapCameraApi {
     // MARK: registration
 
     func register(messenger: FlutterBinaryMessenger, viewId: Int64) {
-        NativeMapCameraApi.setUp(
+        NativeMapCameraApiSetup.setUp(
             binaryMessenger: messenger, api: self,
             messageChannelSuffix: Self.viewChannelSuffix(viewId))
     }
 
     /// Removes this bridge's handlers without touching legacy endpoints.
     func unregister(messenger: FlutterBinaryMessenger, viewId: Int64) {
-        NativeMapCameraApi.setUp(
+        NativeMapCameraApiSetup.setUp(
             binaryMessenger: messenger, api: nil,
             messageChannelSuffix: Self.viewChannelSuffix(viewId))
     }
