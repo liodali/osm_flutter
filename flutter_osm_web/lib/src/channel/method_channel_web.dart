@@ -44,6 +44,21 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
+  Future<NativeProtocolProbeResult> probeNativeProtocol(int idOSM) async {
+    // Web never speaks the native generated-channel protocol.
+    return const NativeProtocolLegacyHost();
+  }
+
+  @override
+  Future<CameraRouteSelection> attachCameraRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native camera routing does not apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
     return _events(idMap).whereType<SingleTapEvent>();
   }
