@@ -2,6 +2,8 @@ library flutter_osm_interface;
 
 export 'src/android/android.dart';
 export 'src/channel/osm_method_channel.dart' show MethodChannelOSM, ConfigExt;
+export 'src/channel/pigeon/native_camera_bootstrap.dart';
+export 'src/channel/pigeon/native_camera_client.dart';
 export 'src/osm_interface.dart';
 export 'src/map_controller/base_map_controller.dart';
 export 'src/types/types.dart';

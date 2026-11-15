@@ -10,6 +10,7 @@ import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_bootstrap.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_client.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
 import 'package:flutter_osm_interface/src/common/osm_event.dart';
 import 'package:flutter_osm_interface/src/common/road_exception.dart';
@@ -19,6 +20,16 @@ import 'package:flutter_osm_interface/src/types/types.dart';
 
 class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, MethodChannel> _channels = {};
+
+  /// Frozen at attachment: null entry means legacy camera route; absent key
+  /// means the decision has not run yet (also legacy during C1 behavior).
+  final Map<int, PigeonCameraClient?> _cameraRoutes = {};
+
+  /// Active generated-camera client for [idOSM], or null when the frozen
+  /// decision selected the legacy route. Exposed for tests and internal
+  /// routing consumers; applications keep using the public controllers.
+  @visibleForTesting
+  PigeonCameraClient? cameraClientFor(int idOSM) => _cameraRoutes[idOSM];
 
   //final Map<int, List<EventChannel>> _eventsChannels = {};
   var _streamController = StreamController<EventOSM>.broadcast();
@@ -150,6 +161,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     if (_channels.containsKey(idOSM)) {
       _channels.remove(idOSM)?.setMethodCallHandler(null);
     }
+    _cameraRoutes.remove(idOSM);
     if (_channels.isEmpty) {
       _streamController.close();
     }
@@ -181,6 +193,41 @@ class MethodChannelOSM extends MobileOSMPlatform {
       return NativeProtocolInvalid(reason: 'probe failed: ${error.code}');
     }
     return NativeProtocolBootstrap.parse(payload);
+  }
+
+  /// Freezes the camera routing decision for one map attachment.
+  ///
+  /// Runs the read-only probe before any map mutation: the generated route
+  /// activates only when the application opted in AND the host advertises a
+  /// matching revision and the camera capability. Everything else — old
+  /// hosts, malformed probes, non-opt-in — keeps the legacy route. The
+  /// decision is never revisited for the life of the attachment (no replay
+  /// through the other route after failures).
+  @override
+  Future<CameraRouteSelection> attachCameraRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    if (!_cameraRoutes.containsKey(idOSM) && _channels.containsKey(idOSM)) {
+      if (!optIn) {
+        _cameraRoutes[idOSM] = null;
+        return CameraRouteSelection.legacy;
+      }
+      final probe = await probeNativeProtocol(idOSM);
+      if (probe is NativeProtocolSupported &&
+          probe.bootstrap.isSupportedRevision &&
+          probe.bootstrap.advertises(kCameraCapability)) {
+        _cameraRoutes[idOSM] = PigeonCameraClient(
+          viewId: idOSM,
+          bootstrap: probe.bootstrap,
+        );
+        return CameraRouteSelection.generated;
+      }
+      _cameraRoutes[idOSM] = null;
+    }
+    return _cameraRoutes[idOSM] != null
+        ? CameraRouteSelection.generated
+        : CameraRouteSelection.legacy;
   }
 
   @override
@@ -435,6 +482,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GeoPoint p, {
     bool animate = false,
   }) async {
+    final client = _cameraRoutes[idOSM];
+    if (client != null) {
+      return client.moveTo(
+        p.latitude,
+        p.longitude,
+        animated: animate,
+      );
+    }
     Map requestData = {
       "lon": p.longitude,
       "lat": p.latitude,
@@ -475,6 +530,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
     int idOSM,
     double degree,
   ) async {
+    final client = _cameraRoutes[idOSM];
+    if (client != null) {
+      return client.setRotation(degree);
+    }
     await _channels[idOSM]?.invokeMethod(
       "map#orientation",
       degree,
@@ -546,6 +605,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<double> getZoom(int idOSM) async {
+    final client = _cameraRoutes[idOSM];
+    if (client != null) {
+      return client.getZoom();
+    }
     final zoom = await _channels[idOSM]?.invokeMethod('get#Zoom');
     return zoom.toDouble();
   }
@@ -556,6 +619,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
     double? zoomLevel,
     double? stepZoom,
   }) async {
+    final client = _cameraRoutes[idOSM];
+    if (client != null && zoomLevel != null) {
+      // Absolute zoom matches the generated contract (animated, mirroring
+      // the legacy host default); relative steps stay on the legacy route.
+      return client.setZoom(zoomLevel);
+    }
     var args = {};
     if (zoomLevel != null) {
       args["zoomLevel"] = zoomLevel;
@@ -567,6 +636,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<GeoPoint> getMapCenter(int idMap) async {
+    final client = _cameraRoutes[idMap];
+    if (client != null) {
+      final position = await client.getCameraPosition();
+      return GeoPoint(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+    }
     final result = await _channels[idMap]?.invokeMethod('map#center', []);
     return GeoPoint.fromMap(result);
   }

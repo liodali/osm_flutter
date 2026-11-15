@@ -3,6 +3,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'channel/osm_method_channel.dart';
 import 'channel/pigeon/native_camera_bootstrap.dart';
+import 'channel/pigeon/native_camera_client.dart';
 import 'common/osm_event.dart';
 import 'types/types.dart';
 
@@ -48,6 +49,14 @@ abstract class OSMPlatform extends PlatformInterface {
   /// Must not initialize or mutate the map; implementations run it on the
   /// legacy channel before routing decisions are frozen.
   Future<NativeProtocolProbeResult> probeNativeProtocol(int idOSM);
+
+  /// Freezes the camera routing decision for one map attachment.
+  /// Called once after [init] and before the first mutation; the decision
+  /// never changes for the life of the attachment (no protocol replay).
+  Future<CameraRouteSelection> attachCameraRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {
