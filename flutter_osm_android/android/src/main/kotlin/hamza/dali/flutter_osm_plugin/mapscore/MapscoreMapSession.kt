@@ -75,6 +75,7 @@ import io.openmobilemaps.mapscore.shared.map.layers.line.LineLayerCallbackInterf
 import io.openmobilemaps.mapscore.shared.map.layers.line.LineLayerInterface
 import io.openmobilemaps.mapscore.shared.map.layers.line.LineStyle
 import io.openmobilemaps.mapscore.shared.map.layers.polygon.PolygonLayerInterface
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeCameraBridge
 import io.openmobilemaps.mapscore.shared.map.camera.MapCameraListenerInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -114,6 +115,13 @@ internal class MapscoreMapSession(
 
     private lateinit var locationNewOverlay: CustomLocationManager
     private lateinit var legacyChannel: LegacyMethodChannelAdapter
+    private var pigeonCameraBridge: PigeonNativeCameraBridge? = null
+
+    /** Minted per session; guards generated routes against reused view ids. */
+    internal val sessionToken: String = UUID.randomUUID().toString()
+
+    /** Bumped when the underlying view is replaced; C1 keeps it at 0. */
+    internal val generation: Long = 0L
     private var eventSink: MapEventSink = NoopMapEventSink
     private val eventCoalescer = MapEventCoalescer(
         intervalsMillis = mapOf(
@@ -851,6 +859,15 @@ internal class MapscoreMapSession(
         camera.setRotation(angle.toFloat(), animate)
         return true
     }
+
+    override fun getCameraPositionSnapshot(): DoubleArray? {
+        val camera = mapView?.getCamera() ?: return null
+        val helper = mapView?.getCoordinateConversionHelper() ?: return null
+        val center = camera.getCenterPosition()?.toLatLon(helper) ?: return null
+        val zoom = MapscoreConstants.mapscoreToOsmZoom(camera.getZoom())
+        val rotation = camera.getRotation().toDouble()
+        return doubleArrayOf(center.first, center.second, zoom, rotation)
+ }
 
     override fun addMarker(
         markerId: String,
@@ -1846,6 +1863,8 @@ internal class MapscoreMapSession(
         job = null
         val activeEventSink = eventSink
         activeEventSink.close()
+        pigeonCameraBridge?.unregister(binaryMessenger, id)
+        pigeonCameraBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -1895,14 +1914,23 @@ internal class MapscoreMapSession(
             viewId = id,
             dispatch = ::handleLegacyCommand,
             typedDispatch = ::handleTypedChannelCommand,
+            bootstrapProvider = ::pigeonBootstrapInfo,
         )
         if (eventSink === NoopMapEventSink) {
             eventSink = legacyChannel
         }
+        // Generated camera endpoints live alongside the legacy ones; they
+        // never replace them (C1 skeleton: registered, not yet routed).
+        val bridge = PigeonNativeCameraBridge(this, sessionToken, generation)
+        bridge.register(binaryMessenger, id)
+        pigeonCameraBridge = bridge
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")
     }
+
+    private fun pigeonBootstrapInfo(): Map<String, Any?> =
+        PigeonNativeCameraBridge.bootstrapPayload(sessionToken, generation)
 
     internal fun onResume() {
         locationNewOverlay.onResume()

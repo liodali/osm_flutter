@@ -26,6 +26,12 @@ interface MapSession : PluginRegistry.ActivityResultListener {
     /** Thread-safe camera snapshot for non-main-thread JNI queries. */
     fun getZoomSnapshot(): Double?
 
+    /**
+     * Absolute camera snapshot `[lat, lon, osmZoom, rotationDegrees]`, or
+     * null when the engine is not ready. Used by the generated camera route.
+     */
+    fun getCameraPositionSnapshot(): DoubleArray?
+
     fun moveTo(latitude: Double, longitude: Double, animate: Boolean): Boolean
 
     fun setRotation(angle: Double, animate: Boolean): Boolean

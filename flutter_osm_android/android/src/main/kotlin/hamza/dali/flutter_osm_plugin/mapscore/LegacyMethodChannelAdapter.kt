@@ -104,6 +104,7 @@ internal class LegacyMethodChannelAdapter(
     viewId: Int,
     private val dispatch: (LegacyMapCommand, MethodCall, MethodChannel.Result) -> Unit,
     private val typedDispatch: (TypedMapCommand, MethodCall, MethodChannel.Result) -> Unit,
+    private val bootstrapProvider: (() -> Map<String, Any?>)? = null,
 ) : MapEventSink, MethodChannel.MethodCallHandler {
     private val channel = MethodChannel(messenger, "plugins.dali.hamza/osmview_$viewId")
     private val eventSink = MethodChannelMapEventSink(channel)
@@ -113,6 +114,18 @@ internal class LegacyMethodChannelAdapter(
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        if (call.method == NATIVE_BOOTSTRAP_METHOD) {
+            // Read-only protocol probe: answered before any map mutation so
+            // the Dart side can freeze the routing table during attach. An
+            // old host without the probe stays at notImplemented.
+            val payload = bootstrapProvider?.invoke()
+            if (payload == null) {
+                result.notImplemented()
+            } else {
+                result.success(payload)
+            }
+            return
+        }
         val command = LegacyMapCommand.fromMethodName(call.method)
         if (command != null) {
             dispatch(command, call, result)
@@ -133,5 +146,10 @@ internal class LegacyMethodChannelAdapter(
     override fun close() {
         eventSink.close()
         channel.setMethodCallHandler(null)
+    }
+
+    companion object {
+        /** Read-only attach-time probe. Additive; legacy commands are untouched. */
+        const val NATIVE_BOOTSTRAP_METHOD = "map#bootstrap#protocol"
     }
 }
