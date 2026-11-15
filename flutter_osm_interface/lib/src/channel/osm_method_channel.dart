@@ -25,6 +25,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// means the decision has not run yet (also legacy during C1 behavior).
   final Map<int, PigeonCameraClient?> _cameraRoutes = {};
 
+  /// Bumped on disposal so a probe completing after close (or during a
+  /// replacement attachment) is recognized as stale and discarded.
+  final Map<int, int> _cameraRouteEpochs = {};
+
+  /// In-flight attach decisions, so concurrent calls for one map converge
+  /// on a single probe instead of racing two decisions.
+  final Map<int, Future<CameraRouteSelection>> _cameraRouteAttachJobs = {};
+
   /// Active generated-camera client for [idOSM], or null when the frozen
   /// decision selected the legacy route. Exposed for tests and internal
   /// routing consumers; applications keep using the public controllers.
@@ -161,6 +169,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     if (_channels.containsKey(idOSM)) {
       _channels.remove(idOSM)?.setMethodCallHandler(null);
     }
+    // Invalidate any in-flight attach decision for this map and unfreeze
+    // the route so a replacement attachment decides freshly.
+    _cameraRouteEpochs[idOSM] = (_cameraRouteEpochs[idOSM] ?? 0) + 1;
     _cameraRoutes.remove(idOSM);
     if (_channels.isEmpty) {
       _streamController.close();
@@ -208,26 +219,65 @@ class MethodChannelOSM extends MobileOSMPlatform {
     int idOSM, {
     bool optIn = false,
   }) async {
-    if (!_cameraRoutes.containsKey(idOSM) && _channels.containsKey(idOSM)) {
-      if (!optIn) {
-        _cameraRoutes[idOSM] = null;
-        return CameraRouteSelection.legacy;
-      }
-      final probe = await probeNativeProtocol(idOSM);
-      if (probe is NativeProtocolSupported &&
-          probe.bootstrap.isSupportedRevision &&
-          probe.bootstrap.advertises(kCameraCapability)) {
-        _cameraRoutes[idOSM] = PigeonCameraClient(
-          viewId: idOSM,
-          bootstrap: probe.bootstrap,
-        );
-        return CameraRouteSelection.generated;
-      }
-      _cameraRoutes[idOSM] = null;
+    // Decision already frozen for this attachment: never re-decide.
+    if (_cameraRoutes.containsKey(idOSM)) {
+      return _cameraRoutes[idOSM] != null
+          ? CameraRouteSelection.generated
+          : CameraRouteSelection.legacy;
     }
-    return _cameraRoutes[idOSM] != null
-        ? CameraRouteSelection.generated
-        : CameraRouteSelection.legacy;
+    // Converge concurrent attach calls on one probe for this map.
+    final running = _cameraRouteAttachJobs[idOSM];
+    if (running != null) {
+      return running;
+    }
+    final job = _decideCameraRoute(idOSM, optIn: optIn);
+    _cameraRouteAttachJobs[idOSM] = job;
+    try {
+      return await job;
+    } finally {
+      _cameraRouteAttachJobs.remove(idOSM);
+    }
+  }
+
+  Future<CameraRouteSelection> _decideCameraRoute(
+    int idOSM, {
+    required bool optIn,
+  }) async {
+    if (!_channels.containsKey(idOSM)) {
+      return CameraRouteSelection.legacy;
+    }
+    if (!optIn) {
+      _cameraRoutes[idOSM] = null;
+      return CameraRouteSelection.legacy;
+    }
+    // Capture the attachment identity before the async probe; a close (or a
+    // close + re-init of a replacement map) invalidates this decision.
+    final epoch = _cameraRouteEpochs[idOSM] ?? 0;
+    final probe = await probeNativeProtocol(idOSM);
+    final attachmentChanged = !_channels.containsKey(idOSM) ||
+        (_cameraRouteEpochs[idOSM] ?? 0) != epoch;
+    if (attachmentChanged) {
+      // Stale probe for a disposed/replaced attachment: discard without
+      // storing anything; the replacement attachment decides freshly.
+      return CameraRouteSelection.legacy;
+    }
+    if (_cameraRoutes.containsKey(idOSM)) {
+      return _cameraRoutes[idOSM] != null
+          ? CameraRouteSelection.generated
+          : CameraRouteSelection.legacy;
+    }
+    if (probe is NativeProtocolSupported &&
+        probe.bootstrap.isSupportedRevision &&
+        probe.bootstrap.schemaId == kNativeCameraSchemaId &&
+        probe.bootstrap.advertises(kCameraCapability)) {
+      _cameraRoutes[idOSM] = PigeonCameraClient(
+        viewId: idOSM,
+        bootstrap: probe.bootstrap,
+      );
+      return CameraRouteSelection.generated;
+    }
+    _cameraRoutes[idOSM] = null;
+    return CameraRouteSelection.legacy;
   }
 
   @override

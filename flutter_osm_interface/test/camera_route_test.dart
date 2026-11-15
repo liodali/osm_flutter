@@ -1,9 +1,12 @@
 // C2 parity scenarios for the camera vertical slice: the frozen routing
-// decision (opt-in x host capability) and the facade error mapping.
+// decision (opt-in x host capability), probe/disposal races, and the facade
+// error mapping.
 //
 // The probe runs on the legacy method-channel fixture; generated camera
 // channels are BasicMessageChannels speaking the pigeon wire envelope
 // (StandardMessageCodec list-of-one success / [code, message, details] error).
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
@@ -196,6 +199,74 @@ void main() {
       // Undecided again: a fresh attachment for the same id selects legacy.
       final selection = await osm.attachCameraRoute(7, optIn: false);
       expect(selection, CameraRouteSelection.legacy);
+    });
+
+    test('an incompatible schema never activates the generated route',
+        () async {
+      // Same revision + capability but a different schema generation:
+      // the v1 client codec must not be pointed at a v99 host payload.
+      await mockLegacy((call) async => {
+            ...cameraBootstrap,
+            'schemaId': 'flutter_osm.native.camera.v99',
+          });
+      await mockPigeon(
+        'getZoom',
+        (_) => throw Exception('generated route must never be used'),
+      );
+
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      final selection = await osm.attachCameraRoute(7, optIn: true);
+      expect(selection, CameraRouteSelection.legacy);
+    });
+
+    test('a probe completing after disposal is discarded, not stored',
+        () async {
+      // Probe response is delayed until after close: the decision must not
+      // attach to a dead (or replaced) attachment.
+      final probeCompleter = Completer<Object?>();
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}');
+        return probeCompleter.future;
+      });
+
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      final pending = osm.attachCameraRoute(7, optIn: true);
+      osm.close(7);
+      probeCompleter.complete(cameraBootstrap);
+      expect(await pending, CameraRouteSelection.legacy);
+
+      // A replacement attachment must decide freshly, not inherit the stale
+      // probe result.
+      await osm.init(7);
+      await mockLegacy((call) async {
+        invocations.add('legacy2:${call.method}');
+        return {'revision': 'one'}; // malformed: forces legacy
+      });
+      final selection = await osm.attachCameraRoute(7, optIn: true);
+      expect(selection, CameraRouteSelection.legacy);
+      expect(osm.cameraClientFor(7), isNull);
+    });
+
+    test('concurrent attach calls share one probe decision', () async {
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}');
+        return cameraBootstrap;
+      });
+      await mockPigeon('getZoom', (_) => pigeonReply(1.0));
+
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      final first = osm.attachCameraRoute(7, optIn: true);
+      final second = osm.attachCameraRoute(7, optIn: true);
+      final selections = await Future.wait([first, second]);
+      expect(selections, everyElement(CameraRouteSelection.generated));
+      // One probe only.
+      expect(
+        invocations.where((m) => m == 'legacy:$bootstrapMethod'),
+        hasLength(1),
+      );
     });
   });
 
