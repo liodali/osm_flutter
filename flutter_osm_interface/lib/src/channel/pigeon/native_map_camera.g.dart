@@ -366,3 +366,119 @@ class NativeMapCameraApi {
     return pigeonVar_replyValue! as NativeCameraPosition;
   }
 }
+
+/// Generated markers command route for one map session.
+///
+/// Mirrors the typed Android marker contract: stable string ids, coordinates
+/// in degrees, and icon bytes prepared in Dart (Flutter widget rendering
+/// stays asynchronous on the Dart side; only encoded PNG bytes cross the
+/// channel). A null icon means the native default marker.
+class NativeMapMarkersApi {
+  /// Constructor for [NativeMapMarkersApi]. The [binaryMessenger] named argument is
+  /// available for dependency injection. If it is left null, the default
+  /// BinaryMessenger will be used which routes to the host platform.
+  NativeMapMarkersApi({
+      BinaryMessenger? binaryMessenger, 
+      String messageChannelSuffix = '', 
+      })
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+
+  final BinaryMessenger? pigeonVar_binaryMessenger;
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  final String pigeonVar_messageChannelSuffix;
+
+
+  /// Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
+  /// platform default icon.
+  Future<void> addMarker(NativeCameraSession session, String markerId, double latitude, double longitude, Uint8List? iconBytes) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.addMarker$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, latitude, longitude, iconBytes]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Bulk-adds markers with default icons: parallel id list and
+  /// [lat, lon, lat, lon, ...] coordinates.
+  Future<void> addMarkers(NativeCameraSession session, List<String> markerIds, Float64List coordinates) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.addMarkers$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerIds, coordinates]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Replaces one marker's icon with new encoded bytes.
+  Future<void> updateMarkerIcon(NativeCameraSession session, String markerId, Uint8List iconBytes) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.updateMarkerIcon$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, iconBytes]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Removes one marker by stable id.
+  Future<void> removeMarker(NativeCameraSession session, String markerId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.removeMarker$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Removes many markers by stable ids.
+  Future<void> removeMarkers(NativeCameraSession session, List<String> markerIds) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.removeMarkers$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerIds]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+}

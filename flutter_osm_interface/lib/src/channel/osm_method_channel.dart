@@ -11,6 +11,7 @@ import 'package:stream_transform/stream_transform.dart';
 
 import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_bootstrap.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
 import 'package:flutter_osm_interface/src/common/osm_event.dart';
 import 'package:flutter_osm_interface/src/common/road_exception.dart';
@@ -29,9 +30,13 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// replacement attachment) is recognized as stale and discarded.
   final Map<int, int> _cameraRouteEpochs = {};
 
-  /// In-flight attach decisions, so concurrent calls for one map converge
-  /// on a single probe instead of racing two decisions.
-  final Map<int, Future<CameraRouteSelection>> _cameraRouteAttachJobs = {};
+  /// Frozen markers-route decision (null = legacy), same lifecycle rules.
+  final Map<int, PigeonMarkersClient?> _markersRoutes = {};
+
+  /// In-flight attach decisions keyed by `<viewId>:<capability>`, so
+  /// concurrent calls for one map+family converge on a single probe instead
+  /// of racing two decisions.
+  final Map<String, Future<CameraRouteSelection>> _routeAttachJobs = {};
 
   /// Active generated-camera client for [idOSM], or null when the frozen
   /// decision selected the legacy route. Exposed for tests and internal
@@ -174,8 +179,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
     // pending job prevents a replacement from joining (and blocking on) the
     // disposed attachment's probe.
     _cameraRouteEpochs[idOSM] = (_cameraRouteEpochs[idOSM] ?? 0) + 1;
-    _cameraRouteAttachJobs.remove(idOSM);
+    _routeAttachJobs.remove('$idOSM:$kCameraCapability');
+    _routeAttachJobs.remove('$idOSM:$kMarkersCapability');
     _cameraRoutes.remove(idOSM);
+    _markersRoutes.remove(idOSM);
     if (_channels.isEmpty) {
       _streamController.close();
     }
@@ -221,41 +228,92 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<CameraRouteSelection> attachCameraRoute(
     int idOSM, {
     bool optIn = false,
-  }) async {
+  }) {
+    return _attachRoute(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kCameraCapability,
+      routes: _cameraRoutes,
+      createClient: (bootstrap) => PigeonCameraClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+      ),
+    );
+  }
+
+  @override
+  Future<CameraRouteSelection> attachMarkersRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonMarkersClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kMarkersCapability,
+      routes: _markersRoutes,
+      createClient: (bootstrap) => PigeonMarkersClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+      ),
+    );
+  }
+
+  /// Active generated client for [idOSM]'s markers family, or null when the
+  /// frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonMarkersClient? markersClientFor(int idOSM) => _markersRoutes[idOSM];
+
+  /// Shared attach machinery: freeze-once per attachment+family, single
+  /// in-flight probe per id+family, disposal-epoch invalidation.
+  Future<CameraRouteSelection> _attachRoute<C extends Object>({
+    required int idOSM,
+    required bool optIn,
+    required String capability,
+    required Map<int, C?> routes,
+    required C Function(NativeProtocolBootstrap bootstrap) createClient,
+  }) {
+    final jobKey = '$idOSM:$capability';
     // Decision already frozen for this attachment: never re-decide.
-    if (_cameraRoutes.containsKey(idOSM)) {
-      return _cameraRoutes[idOSM] != null
-          ? CameraRouteSelection.generated
-          : CameraRouteSelection.legacy;
+    if (routes.containsKey(idOSM)) {
+      return routes[idOSM] != null
+          ? Future.value(CameraRouteSelection.generated)
+          : Future.value(CameraRouteSelection.legacy);
     }
-    // Converge concurrent attach calls on one probe for this map.
-    final running = _cameraRouteAttachJobs[idOSM];
+    // Converge concurrent attach calls on one probe for this map+family.
+    final running = _routeAttachJobs[jobKey];
     if (running != null) {
       return running;
     }
-    final job = _decideCameraRoute(idOSM, optIn: optIn);
-    _cameraRouteAttachJobs[idOSM] = job;
-    try {
-      return await job;
-    } finally {
+    final job = _decideRoute(
+      idOSM,
+      optIn: optIn,
+      capability: capability,
+      routes: routes,
+      createClient: createClient,
+    );
+    _routeAttachJobs[jobKey] = job;
+    return job.whenComplete(() {
       // Conditional cleanup: a replacement attachment may have registered
-      // its own job under this id while this one was awaiting; only remove
+      // its own job under this key while this one was awaiting; only remove
       // the entry if it is still ours.
-      if (identical(_cameraRouteAttachJobs[idOSM], job)) {
-        _cameraRouteAttachJobs.remove(idOSM);
+      if (identical(_routeAttachJobs[jobKey], job)) {
+        _routeAttachJobs.remove(jobKey);
       }
-    }
+    });
   }
 
-  Future<CameraRouteSelection> _decideCameraRoute(
+  Future<CameraRouteSelection> _decideRoute<C extends Object>(
     int idOSM, {
     required bool optIn,
+    required String capability,
+    required Map<int, C?> routes,
+    required C Function(NativeProtocolBootstrap bootstrap) createClient,
   }) async {
     if (!_channels.containsKey(idOSM)) {
       return CameraRouteSelection.legacy;
     }
     if (!optIn) {
-      _cameraRoutes[idOSM] = null;
+      routes[idOSM] = null;
       return CameraRouteSelection.legacy;
     }
     // Capture the attachment identity before the async probe; a close (or a
@@ -276,22 +334,19 @@ class MethodChannelOSM extends MobileOSMPlatform {
       // storing anything; the replacement attachment decides freshly.
       return CameraRouteSelection.legacy;
     }
-    if (_cameraRoutes.containsKey(idOSM)) {
-      return _cameraRoutes[idOSM] != null
+    if (routes.containsKey(idOSM)) {
+      return routes[idOSM] != null
           ? CameraRouteSelection.generated
           : CameraRouteSelection.legacy;
     }
     if (probe is NativeProtocolSupported &&
         probe.bootstrap.isSupportedRevision &&
         probe.bootstrap.schemaId == kNativeCameraSchemaId &&
-        probe.bootstrap.advertises(kCameraCapability)) {
-      _cameraRoutes[idOSM] = PigeonCameraClient(
-        viewId: idOSM,
-        bootstrap: probe.bootstrap,
-      );
+        probe.bootstrap.advertises(capability)) {
+      routes[idOSM] = createClient(probe.bootstrap);
       return CameraRouteSelection.generated;
     }
-    _cameraRoutes[idOSM] = null;
+    routes[idOSM] = null;
     return CameraRouteSelection.legacy;
   }
 

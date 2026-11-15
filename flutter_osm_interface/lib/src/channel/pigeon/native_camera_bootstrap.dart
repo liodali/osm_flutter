@@ -23,6 +23,9 @@ const String kNativeCameraSchemaId = 'flutter_osm.native.camera.v1';
 /// Capability family carried by the camera schema.
 const String kCameraCapability = 'camera';
 
+/// Capability family carried by the markers schema.
+const String kMarkersCapability = 'markers';
+
 /// Per-map message-channel suffix for generated Pigeon routes.
 ///
 /// Generated channel names become

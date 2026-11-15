@@ -4,6 +4,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'channel/osm_method_channel.dart';
 import 'channel/pigeon/native_camera_bootstrap.dart';
 import 'channel/pigeon/native_camera_client.dart';
+import 'channel/pigeon/native_markers_client.dart';
 import 'common/osm_event.dart';
 import 'types/types.dart';
 
@@ -54,6 +55,14 @@ abstract class OSMPlatform extends PlatformInterface {
   /// Called once after [init] and before the first mutation; the decision
   /// never changes for the life of the attachment (no protocol replay).
   Future<CameraRouteSelection> attachCameraRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the markers routing decision for one map attachment.
+  /// Same contract as [attachCameraRoute]: one probe, one decision, frozen
+  /// before the first mutation.
+  Future<CameraRouteSelection> attachMarkersRoute(
     int idOSM, {
     bool optIn = false,
   });

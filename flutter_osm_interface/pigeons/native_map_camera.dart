@@ -1,12 +1,14 @@
-// Canonical camera/session channel schema (Pigeon channel profile).
+// Canonical camera/markers channel schema (Pigeon channel profile).
 //
 // This file is the single source of truth for the generated Dart, Kotlin and
-// Swift camera contracts. Regenerate with `dart run pigeon` from this package
+// Swift contracts. Regenerate with `dart run pigeon` from this package
 // root (pigeon 30.0.2 pinned in pubspec dev_dependencies). Never hand-edit
 // the `.g.` outputs; never export generated types from public APIs.
 //
-// Scope (C1): camera-family operations only, session-scoped. Events and other
-// command families are later phases (C4/C3) and live in separate schemas.
+// Scope: camera family + markers family (typed, stable ids), session-scoped.
+// Events and location are later phases (C4) and live in separate schemas.
+// Note: the Apple host advertises only [camera] for now; typed marker ops
+// there are a declared C3 follow-up.
 import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(
@@ -83,4 +85,44 @@ abstract class NativeMapCameraApi {
 
   /// Snapshot of the full camera state (center, zoom, rotation).
   NativeCameraPosition getCameraPosition(NativeCameraSession session);
+}
+
+/// Generated markers command route for one map session.
+///
+/// Mirrors the typed Android marker contract: stable string ids, coordinates
+/// in degrees, and icon bytes prepared in Dart (Flutter widget rendering
+/// stays asynchronous on the Dart side; only encoded PNG bytes cross the
+/// channel). A null icon means the native default marker.
+@HostApi()
+abstract class NativeMapMarkersApi {
+  /// Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
+  /// platform default icon.
+  void addMarker(
+    NativeCameraSession session,
+    String markerId,
+    double latitude,
+    double longitude,
+    Uint8List? iconBytes,
+  );
+
+  /// Bulk-adds markers with default icons: parallel id list and
+  /// [lat, lon, lat, lon, ...] coordinates.
+  void addMarkers(
+    NativeCameraSession session,
+    List<String> markerIds,
+    Float64List coordinates,
+  );
+
+  /// Replaces one marker's icon with new encoded bytes.
+  void updateMarkerIcon(
+    NativeCameraSession session,
+    String markerId,
+    Uint8List iconBytes,
+  );
+
+  /// Removes one marker by stable id.
+  void removeMarker(NativeCameraSession session, String markerId);
+
+  /// Removes many markers by stable ids.
+  void removeMarkers(NativeCameraSession session, List<String> markerIds);
 }
