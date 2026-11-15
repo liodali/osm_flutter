@@ -4,6 +4,9 @@ import 'dart:typed_data';
 import 'package:flutter/widgets.dart' show Color;
 import 'package:flutter_osm_android/flutter_osm_android.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_bootstrap.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_transport.dart';
 import 'package:flutter_osm_plugin/src/common/location_permission.dart';
 
 typedef AndroidLocationPermissionRequester = Future<bool> Function();
@@ -22,6 +25,7 @@ final class AndroidMapController extends BaseMapController
     super.customTile,
     AndroidMapTransportFactory? transportFactory,
     AndroidLocationPermissionRequester? locationPermissionRequester,
+    this.useTypedMarkers = false,
   }) : _transportFactory = transportFactory ?? createDefaultAndroidMapTransport,
        _locationPermissionRequester =
            locationPermissionRequester ?? _requestForegroundLocation,
@@ -61,6 +65,11 @@ final class AndroidMapController extends BaseMapController
 
   late final AndroidMapCamera camera;
   late final AndroidMapMarkers markers;
+
+  /// Opt-in: route marker commands through the typed generated channel when
+  /// the host advertises the markers capability at attach time. Default keeps
+  /// the selected transport's handwritten marker commands.
+  final bool useTypedMarkers;
   late final AndroidMapShapes shapes;
   late final AndroidMapStaticPositions staticPositions;
   late final AndroidMapRoads roads;
@@ -141,9 +150,30 @@ final class AndroidMapController extends BaseMapController
           throw exception;
         }
 
-        _transport = candidate;
+        var selected = candidate;
+        // Attach-time family routing: probe the read-only bootstrap before
+        // any mutation and wrap the selected transport for the markers
+        // family when supported and opted in. The decision is frozen for
+        // this attachment; initialize still runs exactly once through the
+        // selected backend.
+        if (useTypedMarkers && _disposeFuture == null) {
+          final probe = await OSMPlatform.instance.probeNativeProtocol(viewId);
+          if (probe is NativeProtocolSupported &&
+              probe.bootstrap.isSupportedRevision &&
+              probe.bootstrap.schemaId == kNativeCameraSchemaId &&
+              probe.bootstrap.advertises(kMarkersCapability)) {
+            selected = PigeonMarkersTransport(
+              base: candidate,
+              markersClient: PigeonMarkersClient(
+                viewId: viewId,
+                bootstrap: probe.bootstrap,
+              ),
+            );
+          }
+        }
+        _transport = selected;
         _viewId = viewId;
-        _transportEvents = candidate.events.listen(
+        _transportEvents = selected.events.listen(
           _onTransportEvent,
           onError: _onTransportError,
         );
