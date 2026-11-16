@@ -633,6 +633,13 @@ internal class MapscoreMapSession(
                         latitude = (args["lat"] as Number).toDouble(),
                         longitude = (args["lon"] as Number).toDouble(),
                         icon = args["icon"] as? ByteArray,
+                        angleDegrees = (args["angle"] as? Number)?.toDouble() ?: 0.0,
+                        anchor = (args["iconAnchor"] as? List<*>)?.let { anchorList ->
+                            Anchor(
+                                (anchorList[0] as Number).toFloat(),
+                                (anchorList[1] as Number).toFloat(),
+                            )
+                        },
                     )
                 }
 
@@ -651,6 +658,35 @@ internal class MapscoreMapSession(
                     updateMarkerIcon(
                         markerId = args["markerId"] as String,
                         icon = args["icon"] as ByteArray,
+                    )
+                }
+
+                TypedMapCommand.MOVE_MARKER -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    moveMarker(
+                        markerId = args["markerId"] as String,
+                        latitude = (args["lat"] as Number).toDouble(),
+                        longitude = (args["lon"] as Number).toDouble(),
+                    )
+                }
+
+                TypedMapCommand.ROTATE_MARKER -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    rotateMarker(
+                        markerId = args["markerId"] as String,
+                        angleDegrees = (args["angle"] as Number).toDouble(),
+                    )
+                }
+
+                TypedMapCommand.SET_MARKER_ANCHOR -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    val anchorList = args["iconAnchor"] as List<*>
+                    setMarkerAnchor(
+                        markerId = args["markerId"] as String,
+                        anchor = Anchor(
+                            (anchorList[0] as Number).toFloat(),
+                            (anchorList[1] as Number).toFloat(),
+                        ),
                     )
                 }
 
@@ -876,11 +912,16 @@ internal class MapscoreMapSession(
         latitude: Double,
         longitude: Double,
         icon: ByteArray?,
+        angleDegrees: Double,
+        anchor: Anchor?,
     ): Boolean {
         if (released || mapView == null || !::iconLayer.isInitialized) return false
         if (markerId.isEmpty() || markers.containsKey(markerId)) return false
         if (!isValidLatLon(latitude, longitude)) return false
-        val bitmap = icon?.let(::decodeBitmap) ?: if (icon == null) null else return false
+        if (!angleDegrees.isFinite()) return false
+        // A null icon keeps the app-configured default marker (legacy parity);
+        // non-null bytes that fail to decode are a hard rejection.
+        val bitmap = icon?.let(::decodeBitmap) ?: if (icon == null) customMarkerIcon else return false
         val zoom = mapView?.getCamera()?.getZoom()?.let {
             MapscoreConstants.mapscoreToOsmZoom(it)
         } ?: initZoom
@@ -891,8 +932,12 @@ internal class MapscoreMapSession(
             identifier = markerId,
             dynamicMarkerBitmap = bitmap,
             animateTo = false,
+            // Typed marker contract carries degrees; marker state stores radians.
+            angle = angleDegrees * PI / 180.0,
+            anchor = anchor,
         )
-        if (icon != null) markerIconsCache["$latitude,$longitude"] = icon
+        val cachedBytes = icon ?: customMarkerIcon?.toByteArray()
+        if (cachedBytes != null) markerIconsCache["$latitude,$longitude"] = cachedBytes
         return true
     }
 
@@ -922,6 +967,38 @@ internal class MapscoreMapSession(
         val bitmap = decodeBitmap(icon) ?: return false
         marker.setIconMaker(bitmap = bitmap)
         markerIconsCache["${marker.lat},${marker.lon}"] = icon
+        return true
+    }
+
+    override fun moveMarker(markerId: String, latitude: Double, longitude: Double): Boolean {
+        if (released || mapView == null || !::iconLayer.isInitialized) return false
+        if (!isValidLatLon(latitude, longitude)) return false
+        val marker = markers[markerId] ?: return false
+        val oldKey = "${marker.lat},${marker.lon}"
+        val iconBytes = markerIconsCache[oldKey]
+        marker.setPosition(latitude, longitude)
+        if (markerIconsCache.containsKey(oldKey)) {
+            markerIconsCache.remove(oldKey)
+            markerIconsCache["$latitude,$longitude"] = iconBytes
+        }
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun rotateMarker(markerId: String, angleDegrees: Double): Boolean {
+        if (released || mapView == null || !::iconLayer.isInitialized) return false
+        if (!angleDegrees.isFinite()) return false
+        val marker = markers[markerId] ?: return false
+        marker.setAngle(angleDegrees * PI / 180.0)
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun setMarkerAnchor(markerId: String, anchor: Anchor): Boolean {
+        if (released || mapView == null || !::iconLayer.isInitialized) return false
+        val marker = markers[markerId] ?: return false
+        marker.updateAnchor(anchor)
+        mapView?.requestRender()
         return true
     }
 
@@ -1031,7 +1108,12 @@ internal class MapscoreMapSession(
         val bitmap = icon?.let(::decodeBitmap) ?: if (icon == null) null else return false
 
         staticPoints[groupId] = coordinates.asList().chunked(3).map { values ->
-            MapscoreGeoPoint(lat = values[0], lon = values[1], angle = values[2])
+            MapscoreGeoPoint(
+                lat = values[0],
+                lon = values[1],
+                // Typed static coordinates carry degrees; state stores radians.
+                angle = values[2] * PI / 180.0,
+            )
         }.toMutableList()
         if (bitmap == null) staticMarkerIcon.remove(groupId)
         else staticMarkerIcon[groupId] = bitmap
@@ -1798,7 +1880,7 @@ internal class MapscoreMapSession(
             val texBmp = bitmap
             val iconInfo = if (texBmp != null && !texBmp.isRecycled) {
                 val source =
-                    if (geoPoint.angle > 0.0) texBmp.rotate((geoPoint.angle * 180.0 / PI).toFloat()) else texBmp
+                    if (geoPoint.angle != 0.0) texBmp.rotate((geoPoint.angle * 180.0 / PI).toFloat()) else texBmp
                 val (holder, size) = source.toTextureHolder()
                 io.openmobilemaps.mapscore.shared.map.layers.icon.IconFactory.createIconWithAnchor(
                     identifier = "static_${id}_$index",

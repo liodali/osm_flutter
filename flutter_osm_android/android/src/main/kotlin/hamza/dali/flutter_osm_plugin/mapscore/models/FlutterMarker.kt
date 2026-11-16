@@ -59,6 +59,16 @@ class FlutterMarker(
         applyIcon(color)
     }
 
+    /**
+     * Replaces only the icon rotation, keeping the current icon bitmap.
+     * [angle] is radians, matching [setIconMaker]; re-applies the icon so
+     * the layer renders the rotated texture.
+     */
+    fun setAngle(angle: Double) {
+        this.angle = angle
+        applyIcon(null)
+    }
+
     fun setIconMarkerFromURL(imageURL: String, angle: Double = 0.0) {
         Picasso.Builder(context).build().load(imageURL).fetch(object : Callback {
             override fun onError(t: Throwable) {
@@ -98,7 +108,9 @@ class FlutterMarker(
         if (base == null) return
 
         var bmp = base.scaleBy(density)
-        if (angle > 0.0) {
+        // Rotate for any nonzero angle, negative included: angles arrive in
+        // radians on the full circle, so sign carries direction.
+        if (angle != 0.0) {
             bmp = bmp.rotate((angle * (180.0 / PI)).toFloat())
         }
 

@@ -1,8 +1,10 @@
 // C3 markers-family slice: capability-gated attach, wire assertions through
 // the generated channel, and typed-transport delegation (non-marker commands
 // never leave the selected base transport).
+import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
@@ -31,6 +33,9 @@ class _TestPigeonCodec extends StandardMessageCodec {
   Object? readValueOfType(int type, ReadBuffer buffer) {
     if (type == 129) {
       return generated.NativeCameraSession.decode(readValue(buffer)!);
+    }
+    if (type == 131) {
+      return generated.NativeMarkerAnchor.decode(readValue(buffer)!);
     }
     return super.readValueOfType(type, buffer);
   }
@@ -81,6 +86,11 @@ void main() {
       'addMarker',
       'addMarkers',
       'updateMarkerIcon',
+      'moveMarker',
+      'rotateMarker',
+      'setMarkerAnchor',
+      'setStaticPositions',
+      'removeStaticPositions',
       'removeMarker',
       'removeMarkers',
     ]) {
@@ -243,6 +253,491 @@ void main() {
       expect(transport.backend, AndroidMapBackend.methodChannel);
     });
   });
+
+  group('typed movement, rotation, anchors, and static groups', () {
+    PigeonMarkersClient client() => PigeonMarkersClient(
+          viewId: 9,
+          bootstrap: NativeProtocolBootstrap(
+            revision: 1,
+            schemaId: 'flutter_osm.native.camera.v1',
+            capabilities: const ['markers'],
+            sessionToken: 'token-9',
+            generation: 0,
+          ),
+        );
+
+    test('move and rotate cross the generated channel with the session',
+        () async {
+      final codec = const _TestPigeonCodec();
+      final captured = <String, List<Object?>>{};
+      await mockMarkers('moveMarker', (message) {
+        final args = codec.decodeMessage(message)! as List<Object?>;
+        captured['moveMarker'] = args.sublist(1);
+        return pigeonReply(null);
+      });
+      await mockMarkers('rotateMarker', (message) {
+        final args = codec.decodeMessage(message)! as List<Object?>;
+        captured['rotateMarker'] = args.sublist(1);
+        return pigeonReply(null);
+      });
+
+      await client().moveMarker('m-1', 48.11, 2.22);
+      await client().rotateMarker('m-1', 45.5);
+
+      expect(captured['moveMarker'], ['m-1', 48.11, 2.22]);
+      expect(captured['rotateMarker'], ['m-1', 45.5]);
+    });
+
+    test('anchor crossing keeps normalized x/y pairs', () async {
+      final codec = const _TestPigeonCodec();
+      Object? decodedAnchor;
+      await mockMarkers('setMarkerAnchor', (message) {
+        final args = codec.decodeMessage(message)! as List<Object?>;
+        decodedAnchor = args[2];
+        return pigeonReply(null);
+      });
+
+      await client().setMarkerAnchor(
+        'm-1',
+        IconAnchor(anchor: Anchor.bottom).toGenerated(),
+      );
+
+      expect(decodedAnchor, isA<generated.NativeMarkerAnchor>());
+      final anchor = decodedAnchor as generated.NativeMarkerAnchor;
+      expect(anchor.x, 0.5);
+      expect(anchor.y, 0.0);
+    });
+
+    test('add marker carries icon bytes, degrees, and anchor together',
+        () async {
+      final codec = const _TestPigeonCodec();
+      Object? decodedIcon;
+      Object? decodedAngle;
+      Object? decodedAnchor;
+      await mockMarkers('addMarker', (message) {
+        final args = codec.decodeMessage(message)! as List<Object?>;
+        decodedIcon = args[4];
+        decodedAngle = args[5];
+        decodedAnchor = args[6];
+        return pigeonReply(null);
+      });
+
+      await client().addMarker(
+        'm-1',
+        48.85,
+        2.35,
+        iconBytes: Uint8List.fromList([1, 2, 3, 4]),
+        angleDegrees: 90,
+        anchor: IconAnchor(anchor: Anchor.bottom).toGenerated(),
+      );
+
+      expect(decodedIcon, [1, 2, 3, 4]);
+      expect(decodedAngle, 90.0);
+      expect((decodedAnchor as generated.NativeMarkerAnchor).y, 0.0);
+    });
+
+    test('static groups send degree triples and shared icon bytes', () async {
+      final codec = const _TestPigeonCodec();
+      final captured = <String, List<Object?>>{};
+      await mockMarkers('setStaticPositions', (message) {
+        final args = codec.decodeMessage(message)! as List<Object?>;
+        captured['setStaticPositions'] = args.sublist(1);
+        return pigeonReply(null);
+      });
+      await mockMarkers('removeStaticPositions', (message) {
+        final args = codec.decodeMessage(message)! as List<Object?>;
+        captured['removeStaticPositions'] = args.sublist(1);
+        return pigeonReply(null);
+      });
+
+      await client().setStaticPositions(
+        'group-1',
+        Float64List.fromList([48.1, 2.2, 30, 48.3, 2.4, 60]),
+        iconBytes: Uint8List.fromList([5, 6]),
+      );
+      await client().removeStaticPositions('group-1');
+
+      expect(captured['setStaticPositions'], [
+        'group-1',
+        [48.1, 2.2, 30.0, 48.3, 2.4, 60.0],
+        [5, 6],
+      ]);
+      expect(captured['removeStaticPositions'], ['group-1']);
+    });
+
+    test('transport routes static groups and movement through the markers',
+        () async {
+      await mockMarkers('moveMarker', (_) {
+        invocations.add('pigeon:moveMarker');
+        return pigeonReply(null);
+      });
+      await mockMarkers('setStaticPositions', (_) {
+        invocations.add('pigeon:setStaticPositions');
+        return pigeonReply(null);
+      });
+      await mockMarkers('removeStaticPositions', (_) {
+        invocations.add('pigeon:removeStaticPositions');
+        return pigeonReply(null);
+      });
+
+      final transport = PigeonMarkersTransport(
+        base: _RecordingBaseTransport(invocations),
+        markersClient: client(),
+      );
+
+      await transport.moveMarker(
+        const MarkerId('m-1'),
+        GeoPoint(latitude: 1, longitude: 2),
+      );
+      await transport.setStaticPositions(
+        const StaticPositionId('group-1'),
+        [
+          GeoPointWithOrientation(
+            angle: 180,
+            latitude: 48.1,
+            longitude: 2.2,
+          ),
+        ],
+      );
+      await transport.removeStaticPositions(const StaticPositionId('group-1'));
+
+      expect(invocations, [
+        'pigeon:moveMarker',
+        'pigeon:setStaticPositions',
+        'pigeon:removeStaticPositions',
+      ]);
+    });
+  });
+
+  group('default controller marker routing', () {
+    Future<MethodChannelOSM> attachedGenerated() async {
+      await mockLegacy((call) async =>
+          call.method == 'map#bootstrap#protocol'
+              ? bootstrapWith(['camera', 'markers'])
+              : null);
+      final osm = MethodChannelOSM();
+      await osm.init(9);
+      final selection = await osm.attachMarkersRoute(9, optIn: true);
+      expect(selection, CameraRouteSelection.generated);
+      return osm;
+    }
+
+    test('addMarker without icon mints a stable id on the typed route',
+        () async {
+      final osm = await attachedGenerated();
+      Object? decodedId;
+      Object? decodedLat;
+      await mockMarkers('addMarker', (message) {
+        final args =
+            const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+        decodedId = args[1];
+        decodedLat = args[2] as double;
+        return pigeonReply(null);
+      });
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}');
+        return null;
+      });
+
+      await osm.addMarker(9, GeoPoint(latitude: 48.85, longitude: 2.35));
+
+      expect(decodedId, 'osm-9-0');
+      expect(decodedLat, 48.85);
+      expect(invocations, isEmpty);
+    });
+
+    testWidgets('addMarker captures widget bytes asynchronously',
+        (tester) async {
+      final osm = await attachedGenerated();
+      final iconKey = GlobalKey();
+      Object? decodedIcon;
+      await mockMarkers('addMarker', (message) {
+        final args =
+            const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+        decodedIcon = args[4];
+        return pigeonReply(null);
+      });
+
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: iconKey,
+          child: const ColoredBox(color: Color(0xFF00FF00), child: SizedBox()),
+        ),
+      );
+      await tester.runAsync(() async {
+        await osm.addMarker(
+          9,
+          GeoPoint(latitude: 48.85, longitude: 2.35),
+          globalKeyIcon: iconKey,
+        );
+      });
+
+      expect(decodedIcon, isA<Uint8List>());
+      expect((decodedIcon as Uint8List).isNotEmpty, isTrue);
+    });
+
+    testWidgets('changeMarker decomposes into move, icon, rotate, anchor',
+        (tester) async {
+      final osm = await attachedGenerated();
+      final iconKey = GlobalKey();
+      final calls = <Map<String, Object?>>[];
+      ByteData? Function(ByteData?) record(String method) =>
+          (ByteData? message) {
+            final args =
+                const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+            calls.add({method: args.sublist(1)});
+            return pigeonReply(null);
+          };
+      await mockMarkers('moveMarker', record('moveMarker'));
+      await mockMarkers('updateMarkerIcon', record('updateMarkerIcon'));
+      await mockMarkers('rotateMarker', record('rotateMarker'));
+      await mockMarkers('setMarkerAnchor', record('setMarkerAnchor'));
+
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: iconKey,
+          child: const ColoredBox(color: Color(0xFF0000FF), child: SizedBox()),
+        ),
+      );
+      // First add on the typed route so the position table knows the id.
+      await tester.runAsync(() async {
+        await mockMarkers('addMarker', (message) {
+          return pigeonReply(null);
+        });
+        await osm.addMarker(
+          9,
+          GeoPoint(latitude: 1, longitude: 2),
+          globalKeyIcon: iconKey,
+        );
+      });
+      calls.clear();
+
+      await tester.runAsync(() async {
+        await osm.changeMarker(
+          9,
+          GeoPoint(latitude: 1, longitude: 2),
+          GeoPoint(latitude: 3, longitude: 4),
+          globalKeyIcon: iconKey,
+          angle: math.pi / 2,
+          iconAnchor: IconAnchor(anchor: Anchor.left),
+        );
+      });
+
+      expect(calls, hasLength(4));
+      expect(calls[0], containsPair('moveMarker', ['osm-9-0', 3.0, 4.0]));
+      expect(calls[1]['updateMarkerIcon'], hasLength(2));
+      expect(calls[2]['rotateMarker'], ['osm-9-0', 90.0]);
+      final anchor = (calls[3]['setMarkerAnchor'] as List<Object?>)[1]
+          as generated.NativeMarkerAnchor;
+      expect(anchor.x, 1.0);
+    });
+
+    test('removeMarkers resolves typed ids for known positions', () async {
+      final osm = await attachedGenerated();
+      await mockMarkers('addMarker', (_) => pigeonReply(null));
+      await osm.addMarker(9, GeoPoint(latitude: 1, longitude: 2));
+      await osm.addMarker(9, GeoPoint(latitude: 3, longitude: 4));
+      Object? decodedIds;
+      await mockMarkers('removeMarkers', (message) {
+        final args =
+            const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+        decodedIds = args[1];
+        return pigeonReply(null);
+      });
+
+      await osm.removeMarkers(9, [
+        GeoPoint(latitude: 1, longitude: 2),
+        GeoPoint(latitude: 3, longitude: 4),
+      ]);
+
+      expect(decodedIds, ['osm-9-0', 'osm-9-1']);
+    });
+
+    test('unknown positions fall back to the legacy marker plane', () async {
+      final osm = await attachedGenerated();
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}');
+        return null;
+      });
+
+      await osm.removeMarkers(
+        9,
+        [GeoPoint(latitude: 1, longitude: 2)],
+      );
+
+      expect(invocations, ['legacy:delete#markers']);
+    });
+
+    test('duplicate coordinates track every id and remove them together',
+        () async {
+      final osm = await attachedGenerated();
+      await mockMarkers('addMarker', (_) => pigeonReply(null));
+      await osm.addMarker(9, GeoPoint(latitude: 1, longitude: 2));
+      await osm.addMarker(9, GeoPoint(latitude: 1, longitude: 2));
+
+      Object? decodedIds;
+      await mockMarkers('removeMarkers', (message) {
+        final args =
+            const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+        decodedIds = args[1];
+        return pigeonReply(null);
+      });
+      await osm.removeMarkers(9, [GeoPoint(latitude: 1, longitude: 2)]);
+
+      // Legacy coordinate removal deletes every marker at the position.
+      expect(decodedIds, ['osm-9-0', 'osm-9-1']);
+    });
+
+    testWidgets('icon updates target the first marker at duplicates',
+        (tester) async {
+      final osm = await attachedGenerated();
+      await mockMarkers('addMarker', (_) => pigeonReply(null));
+      await osm.addMarker(9, GeoPoint(latitude: 1, longitude: 2));
+      await osm.addMarker(9, GeoPoint(latitude: 1, longitude: 2));
+
+      Object? decodedId;
+      await mockMarkers('updateMarkerIcon', (message) {
+        final args =
+            const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+        decodedId = args[1];
+        return pigeonReply(null);
+      });
+
+      final iconKey = GlobalKey();
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: iconKey,
+          child: const ColoredBox(color: Color(0xFFFF0000), child: SizedBox()),
+        ),
+      );
+      await tester.runAsync(() async {
+        await osm.setIconMarker(9, GeoPoint(latitude: 1, longitude: 2), iconKey);
+      });
+
+      // Legacy icon updates resolve the first marker at the position.
+      expect(decodedId, 'osm-9-0');
+    });
+
+    test('movement updates identity before icon work is attempted', () async {
+      final osm = await attachedGenerated();
+      await mockMarkers('addMarker', (_) => pigeonReply(null));
+      await osm.addMarker(9, GeoPoint(latitude: 1, longitude: 2));
+      invocations.clear();
+      await mockMarkers('moveMarker', (_) {
+        invocations.add('pigeon:moveMarker');
+        return pigeonReply(null);
+      });
+
+      // A context-less key makes the icon capture throw after the movement
+      // succeeded — the identity table must already reflect the new position.
+      final staleKey = GlobalKey();
+      await expectLater(
+        osm.changeMarker(
+          9,
+          GeoPoint(latitude: 1, longitude: 2),
+          GeoPoint(latitude: 3, longitude: 4),
+          globalKeyIcon: staleKey,
+        ),
+        throwsA(isA<Exception>()),
+      );
+      expect(invocations, ['pigeon:moveMarker']);
+
+      // The new position is typed; the old one is forgotten.
+      invocations.clear();
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}');
+        return null;
+      });
+      await mockMarkers('removeMarkers', (_) => pigeonReply(null));
+      await osm.removeMarkers(9, [GeoPoint(latitude: 3, longitude: 4)]);
+      expect(invocations, isEmpty);
+      invocations.clear();
+      await osm.removeMarkers(9, [GeoPoint(latitude: 1, longitude: 2)]);
+      expect(invocations, ['legacy:delete#markers']);
+    });
+
+    test('removal completing after close does not crash on the table',
+        () async {
+      final osm = await attachedGenerated();
+      await mockMarkers('addMarker', (_) => pigeonReply(null));
+      await osm.addMarker(9, GeoPoint(latitude: 1, longitude: 2));
+
+      await mockMarkers('removeMarkers', (message) {
+        // close() clears the identity table while the command is in flight.
+        osm.close(9);
+        return pigeonReply(null);
+      });
+      await osm.removePosition(9, GeoPoint(latitude: 1, longitude: 2));
+    });
+
+    test('add completing after close does not resurrect the table', () async {
+      final osm = await attachedGenerated();
+      await mockMarkers('addMarker', (message) {
+        osm.close(9);
+        return pigeonReply(null);
+      });
+
+      await osm.addMarker(9, GeoPoint(latitude: 1, longitude: 2));
+
+      // The next decision for the map must start from a clean state.
+      await mockLegacy((call) async =>
+          call.method == 'map#bootstrap#protocol'
+              ? bootstrapWith(['camera'])
+              : null);
+      await osm.init(9);
+      expect(
+        await osm.attachMarkersRoute(9, optIn: true),
+        CameraRouteSelection.legacy,
+      );
+    });
+
+    test('staticPosition carries cached group icons without legacy calls',
+        () async {
+      final osm = await attachedGenerated();
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}');
+        return null;
+      });
+      await mockMarkers('setStaticPositions', (_) => pigeonReply(null));
+
+      await osm.staticPosition(9, [
+        GeoPoint(latitude: 1, longitude: 2),
+        GeoPoint(latitude: 3, longitude: 4),
+      ], 'group-1');
+
+      expect(invocations, isEmpty);
+    });
+
+    test('close drops the position table so a reattach starts fresh',
+        () async {
+      final osm = await attachedGenerated();
+      await mockMarkers('addMarker', (_) => pigeonReply(null));
+      await osm.addMarker(9, GeoPoint(latitude: 1, longitude: 2));
+
+      osm.close(9);
+      invocations.clear();
+      await mockLegacy((call) async {
+        if (call.method == 'map#bootstrap#protocol') {
+          return bootstrapWith(['camera', 'markers']);
+        }
+        invocations.add('legacy:${call.method}');
+        return null;
+      });
+      await osm.init(9);
+      // Replacement attachment decides freshly and stays legacy.
+      expect(
+        await osm.attachMarkersRoute(9, optIn: false),
+        CameraRouteSelection.legacy,
+      );
+
+      await osm.removeMarkers(
+        9,
+        [GeoPoint(latitude: 1, longitude: 2)],
+      );
+
+      expect(invocations, ['legacy:delete#markers']);
+    });
+  });
 }
 
 /// Minimal base-transport double recording delegated commands.
@@ -290,6 +785,8 @@ class _RecordingBaseTransport implements AndroidMapTransport {
     MarkerId markerId,
     GeoPoint position, {
     Uint8List? iconBytes,
+    double angleDegrees = 0,
+    IconAnchor? anchor,
   }) async {
     invocations.add('base:addMarker');
   }
@@ -302,6 +799,21 @@ class _RecordingBaseTransport implements AndroidMapTransport {
   @override
   Future<void> updateMarkerIcon(MarkerId markerId, Uint8List iconBytes) async {
     invocations.add('base:updateMarkerIcon');
+  }
+
+  @override
+  Future<void> moveMarker(MarkerId markerId, GeoPoint position) async {
+    invocations.add('base:moveMarker');
+  }
+
+  @override
+  Future<void> rotateMarker(MarkerId markerId, double angleDegrees) async {
+    invocations.add('base:rotateMarker');
+  }
+
+  @override
+  Future<void> setMarkerAnchor(MarkerId markerId, IconAnchor anchor) async {
+    invocations.add('base:setMarkerAnchor');
   }
 
   @override

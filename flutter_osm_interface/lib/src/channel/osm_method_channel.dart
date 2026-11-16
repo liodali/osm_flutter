@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -32,6 +33,21 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   /// Frozen markers-route decision (null = legacy), same lifecycle rules.
   final Map<int, PigeonMarkersClient?> _markersRoutes = {};
+
+  /// GeoPoint key → typed marker ids for maps frozen on the generated
+  /// markers route. The legacy public API addresses markers by position;
+  /// the typed route addresses them by stable id, so additions mint ids
+  /// here and position-keyed mutations resolve through this table.
+  /// Legacy coordinate semantics allow (and remove) every marker at one
+  /// position, so each key tracks every id added at that coordinate.
+  final Map<int, Map<String, List<String>>> _typedMarkerKeys = {};
+  final Map<int, int> _typedMarkerSequences = {};
+
+  /// Static-group icon cache: the legacy icon-only command (icon without
+  /// points) cannot be expressed by the generated replace-group command,
+  /// so icons captured in Dart are replayed with the cached coordinates.
+  final Map<int, Map<String, Uint8List>> _typedStaticGroupIcons = {};
+  final Map<int, Map<String, Float64List>> _typedStaticGroupPoints = {};
 
   /// In-flight attach decisions keyed by `<viewId>:<capability>`, so
   /// concurrent calls for one map+family converge on a single probe instead
@@ -183,6 +199,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _routeAttachJobs.remove('$idOSM:$kMarkersCapability');
     _cameraRoutes.remove(idOSM);
     _markersRoutes.remove(idOSM);
+    _typedMarkerKeys.remove(idOSM);
+    _typedMarkerSequences.remove(idOSM);
+    _typedStaticGroupIcons.remove(idOSM);
+    _typedStaticGroupPoints.remove(idOSM);
     if (_channels.isEmpty) {
       _streamController.close();
     }
@@ -262,6 +282,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// frozen decision selected the legacy route.
   @visibleForTesting
   PigeonMarkersClient? markersClientFor(int idOSM) => _markersRoutes[idOSM];
+
+  static String _geoKey(GeoPoint p) => '${p.latitude},${p.longitude}';
+
+  String _nextTypedMarkerId(int idOSM) {
+    final sequence = _typedMarkerSequences[idOSM] ?? 0;
+    _typedMarkerSequences[idOSM] = sequence + 1;
+    return 'osm-$idOSM-$sequence';
+  }
 
   /// Shared attach machinery: freeze-once per attachment+family, single
   /// in-flight probe per id+family, disposal-epoch invalidation.
@@ -399,6 +427,22 @@ class MethodChannelOSM extends MobileOSMPlatform {
     String id, {
     bool refresh = false,
   }) async {
+    final client = _markersRoutes[idOSM];
+    if (client != null) {
+      if (globalKey?.currentContext == null) return;
+      // Widget rendering is asynchronous: the capture can outlive a
+      // close(), so identity-check the attachment before touching state or
+      // sending the replacement group.
+      final icon = await _capturePng(globalKey!) as Uint8List;
+      if (!identical(_markersRoutes[idOSM], client)) return;
+      (_typedStaticGroupIcons[idOSM] ??= {})[id] = icon;
+      final points = _typedStaticGroupPoints[idOSM]?[id];
+      if (points != null) {
+        await client.setStaticPositions(id, points, iconBytes: icon);
+      }
+      return;
+    }
+
     if (globalKey?.currentContext != null) {
       final icon = await _capturePng(globalKey!);
 
@@ -494,6 +538,19 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> removePosition(int idOSM, GeoPoint p) async {
+    final client = _markersRoutes[idOSM];
+    final keys = _typedMarkerKeys[idOSM];
+    final ids = keys?[_geoKey(p)];
+    if (client != null && keys != null && ids != null && ids.isNotEmpty) {
+      // Legacy coordinate removal deletes every marker at the position.
+      await client.removeMarkers(ids);
+      // close() may have cleared the table while removal was in flight;
+      // only update identity when this is still the attachment's table.
+      if (identical(_typedMarkerKeys[idOSM], keys)) {
+        keys.remove(_geoKey(p));
+      }
+      return;
+    }
     await _channels[idOSM]
         ?.invokeMethod("user#removeMarkerPosition", p.toMap());
   }
@@ -513,6 +570,24 @@ class MethodChannelOSM extends MobileOSMPlatform {
     List<GeoPoint> pList,
     String id,
   ) async {
+    final client = _markersRoutes[idOSM];
+    if (client != null) {
+      final coordinates = Float64List.fromList([
+        for (final p in pList) ...[
+          p.latitude,
+          p.longitude,
+          p is GeoPointWithOrientation ? p.angle * 180 / math.pi : 0.0,
+        ],
+      ]);
+      await client.setStaticPositions(
+        id,
+        coordinates,
+        iconBytes: _typedStaticGroupIcons[idOSM]?[id],
+      );
+      (_typedStaticGroupPoints[idOSM] ??= {})[id] = coordinates;
+      return;
+    }
+
     try {
       List<Map<String, double>> listGeos = [];
       for (GeoPoint p in pList) {
@@ -698,6 +773,34 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GlobalKey? globalKeyIcon,
     IconAnchor? iconAnchor,
   }) async {
+    final client = _markersRoutes[idOSM];
+    if (client != null) {
+      // Flutter widget rendering stays asynchronous on the Dart side; only
+      // the resulting PNG bytes cross the generated channel.
+      Uint8List? iconBytes;
+      if (globalKeyIcon != null) {
+        iconBytes = await _capturePng(globalKeyIcon) as Uint8List;
+      }
+      final markerId = _nextTypedMarkerId(idOSM);
+      await client.addMarker(
+        markerId,
+        p.latitude,
+        p.longitude,
+        iconBytes: iconBytes,
+        // GeoPointWithOrientation carries radians; the typed contract is degrees.
+        angleDegrees:
+            p is GeoPointWithOrientation ? p.angle * 180 / math.pi : 0,
+        anchor: iconAnchor?.toGenerated(),
+      );
+      // The attachment may have been closed while the add was in flight;
+      // only extend identity when this client is still the frozen route.
+      if (identical(_markersRoutes[idOSM], client)) {
+        final keys = _typedMarkerKeys[idOSM] ??= {};
+        (keys[_geoKey(p)] ??= []).add(markerId);
+      }
+      return;
+    }
+
     Map<String, dynamic> args = {
       "point": p.toMap(),
     };
@@ -795,6 +898,15 @@ class MethodChannelOSM extends MobileOSMPlatform {
     GeoPoint point,
     GlobalKey<State<StatefulWidget>> globalKeyIcon,
   ) async {
+    final client = _markersRoutes[idOSM];
+    final ids = _typedMarkerKeys[idOSM]?[_geoKey(point)];
+    if (client != null && ids != null && ids.isNotEmpty) {
+      // Legacy icon update targets the first marker found at the position.
+      final icon = await _capturePng(globalKeyIcon) as Uint8List;
+      await client.updateMarkerIcon(ids.first, icon);
+      return;
+    }
+
     Map<String, dynamic> args = {"point": point.toMap()};
 
     args["icon"] = await _capturePng(globalKeyIcon);
@@ -856,6 +968,41 @@ class MethodChannelOSM extends MobileOSMPlatform {
     double? angle,
     IconAnchor? iconAnchor,
   }) async {
+    final client = _markersRoutes[idOSM];
+    final keys = _typedMarkerKeys[idOSM];
+    final ids = keys?[_geoKey(oldLocation)];
+    if (client != null && keys != null && ids != null && ids.isNotEmpty) {
+      // Legacy change targets the first marker found at the old position.
+      final markerId = ids.first;
+      await client.moveMarker(
+        markerId,
+        newLocation.latitude,
+        newLocation.longitude,
+      );
+      // Re-key identity immediately after the movement succeeded: a later
+      // icon/rotation/anchor failure must not leave the old position
+      // registered for a marker that already moved.
+      if (identical(_typedMarkerKeys[idOSM], keys)) {
+        final trackedIds = keys[_geoKey(oldLocation)];
+        if (trackedIds != null) {
+          trackedIds.remove(markerId);
+          if (trackedIds.isEmpty) keys.remove(_geoKey(oldLocation));
+          (keys[_geoKey(newLocation)] ??= []).add(markerId);
+        }
+      }
+      if (globalKeyIcon != null) {
+        final icon = await _capturePng(globalKeyIcon) as Uint8List;
+        await client.updateMarkerIcon(markerId, icon);
+      }
+      if (angle != null) {
+        await client.rotateMarker(markerId, angle * 180 / math.pi);
+      }
+      if (iconAnchor != null) {
+        await client.setMarkerAnchor(markerId, iconAnchor.toGenerated());
+      }
+      return;
+    }
+
     Map<String, dynamic> args = {
       "new_location": newLocation.toMap(),
       "old_location": oldLocation.toMap(),
@@ -889,6 +1036,25 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> removeMarkers(int idOSM, List<GeoPoint> markers) async {
+    final client = _markersRoutes[idOSM];
+    final keys = _typedMarkerKeys[idOSM];
+    if (client != null &&
+        keys != null &&
+        markers.isNotEmpty &&
+        markers.every((point) => keys.containsKey(_geoKey(point)))) {
+      // Legacy removal deletes every marker at each coordinate; the typed
+      // table tracks every id per coordinate so removal matches it.
+      final ids = [
+        for (final point in markers) ...keys[_geoKey(point)]!,
+      ];
+      await client.removeMarkers(ids);
+      if (identical(_typedMarkerKeys[idOSM], keys)) {
+        for (final point in markers) {
+          keys.remove(_geoKey(point));
+        }
+      }
+      return;
+    }
     await _channels[idOSM]!.invokeMethod(
       "delete#markers",
       markers.map((e) => e.toMap()).toList(),

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import hamza.dali.flutter_osm_plugin.mapscore.MapEventSink
 import hamza.dali.flutter_osm_plugin.mapscore.MapSession
+import hamza.dali.flutter_osm_plugin.mapscore.models.Anchor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -180,6 +181,8 @@ private class FakeMapSession(
 
     override fun getZoomSnapshot(): Double? = null
 
+    override fun getCameraPositionSnapshot(): DoubleArray? = null
+
     override fun moveTo(latitude: Double, longitude: Double, animate: Boolean): Boolean {
         lastLatitude = latitude
         lastMoveAnimation = animate
@@ -193,6 +196,8 @@ private class FakeMapSession(
         latitude: Double,
         longitude: Double,
         icon: ByteArray?,
+        angleDegrees: Double,
+        anchor: Anchor?,
     ): Boolean {
         lastMarkerId = markerId
         return true
@@ -204,6 +209,12 @@ private class FakeMapSession(
     }
 
     override fun updateMarkerIcon(markerId: String, icon: ByteArray): Boolean = true
+
+    override fun moveMarker(markerId: String, latitude: Double, longitude: Double): Boolean = true
+
+    override fun rotateMarker(markerId: String, angleDegrees: Double): Boolean = true
+
+    override fun setMarkerAnchor(markerId: String, anchor: Anchor): Boolean = true
 
     override fun removeMarker(markerId: String): Boolean = false
 

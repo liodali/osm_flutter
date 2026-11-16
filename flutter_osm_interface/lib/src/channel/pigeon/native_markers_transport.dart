@@ -3,6 +3,7 @@
 // transport (MethodChannel or JNI). Attach-time selection only: the wrapper
 // never re-routes after initialization, and it changes no backend choice.
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter_osm_interface/src/android/android_map_event.dart';
@@ -12,8 +13,8 @@ import 'package:flutter_osm_interface/src/android/android_map_transport.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
 import 'package:flutter_osm_interface/src/types/types.dart';
 
-/// Delegating transport: marker commands go through the generated channel,
-/// everything else through [base].
+/// Delegating transport: marker commands (including static-position groups)
+/// go through the generated channel, everything else through [base].
 class PigeonMarkersTransport implements AndroidMapTransport {
   final AndroidMapTransport base;
   final PigeonMarkersClient markersClient;
@@ -52,12 +53,16 @@ class PigeonMarkersTransport implements AndroidMapTransport {
     MarkerId markerId,
     GeoPoint position, {
     Uint8List? iconBytes,
+    double angleDegrees = 0,
+    IconAnchor? anchor,
   }) {
     return markersClient.addMarker(
       markerId.value,
       position.latitude,
       position.longitude,
       iconBytes: iconBytes,
+      angleDegrees: angleDegrees,
+      anchor: anchor?.toGenerated(),
     );
   }
 
@@ -76,6 +81,22 @@ class PigeonMarkersTransport implements AndroidMapTransport {
   @override
   Future<void> updateMarkerIcon(MarkerId markerId, Uint8List iconBytes) =>
       markersClient.updateMarkerIcon(markerId.value, iconBytes);
+
+  @override
+  Future<void> moveMarker(MarkerId markerId, GeoPoint position) =>
+      markersClient.moveMarker(
+        markerId.value,
+        position.latitude,
+        position.longitude,
+      );
+
+  @override
+  Future<void> rotateMarker(MarkerId markerId, double angleDegrees) =>
+      markersClient.rotateMarker(markerId.value, angleDegrees);
+
+  @override
+  Future<void> setMarkerAnchor(MarkerId markerId, IconAnchor anchor) =>
+      markersClient.setMarkerAnchor(markerId.value, anchor.toGenerated());
 
   @override
   Future<void> removeMarker(MarkerId markerId) =>
@@ -132,12 +153,25 @@ class PigeonMarkersTransport implements AndroidMapTransport {
     StaticPositionId groupId,
     List<GeoPoint> positions, {
     Uint8List? iconBytes,
-  }) =>
-      base.setStaticPositions(groupId, positions, iconBytes: iconBytes);
+  }) {
+    return markersClient.setStaticPositions(
+      groupId.value,
+      Float64List.fromList([
+        for (final point in positions) ...[
+          point.latitude,
+          point.longitude,
+          // Typed marker contract carries degrees; GeoPointWithOrientation
+          // stores radians internally.
+          point is GeoPointWithOrientation ? point.angle * 180 / math.pi : 0.0,
+        ],
+      ]),
+      iconBytes: iconBytes,
+    );
+  }
 
   @override
   Future<void> removeStaticPositions(StaticPositionId groupId) =>
-      base.removeStaticPositions(groupId);
+      markersClient.removeStaticPositions(groupId.value);
 
   @override
   Future<void> drawRoad(RoadId roadId, List<GeoPoint> geometry, RoadOption option) =>

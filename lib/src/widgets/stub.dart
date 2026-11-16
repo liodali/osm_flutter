@@ -52,6 +52,7 @@ class const OSMMapWidget({
   this.showContributorBadgeForOSM = false,
   this.enableRotationByGesture = false,
   this.useTypedCameraRoute = false,
+  this.useTypedMarkers = false,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -78,6 +79,9 @@ class const OSMMapWidget({
   /// Accepted for signature compatibility; native generated routes do not
   /// apply to this platform.
   final bool useTypedCameraRoute;
+  /// Accepted for signature compatibility; native generated routes do not
+  /// apply to this platform.
+  final bool useTypedMarkers;
 
   @override
   Widget build(BuildContext context) {

@@ -37,12 +37,16 @@ final class MobileOSMController extends IBaseOSMController {
     MobileOsmFlutterState osmState,
   ) async {
     await osmPlatform.init(id);
-    // Freeze the camera routing decision before any map mutation happens:
-    // the probe runs on the legacy channel and the selection never changes
+    // Freeze both routing decisions before any map mutation happens:
+    // the probes run on the legacy channel and the selections never change
     // for the life of this attachment (no protocol replay after failures).
     await osmPlatform.attachCameraRoute(
       id,
       optIn: osmState.widget.useTypedCameraRoute,
+    );
+    await osmPlatform.attachMarkersRoute(
+      id,
+      optIn: osmState.widget.useTypedMarkers,
     );
     return MobileOSMController._(id, osmState);
   }

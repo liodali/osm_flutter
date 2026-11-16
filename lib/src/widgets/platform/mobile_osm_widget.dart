@@ -26,6 +26,7 @@ Widget getWidget({
   Function(bool)? onMapIsReady,
   bool enableRotationByGesture = false,
   bool useTypedCameraRoute = false,
+  bool useTypedMarkers = false,
 }) => MobileOsmFlutter(
   controller: controller,
   userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
@@ -48,6 +49,7 @@ Widget getWidget({
   userLocationMarker: userLocationMarker,
   zoomOption: zoomOption,
   enableRotationByGesture: enableRotationByGesture,
+  useTypedMarkers: useTypedMarkers,
 );
 
 class const OSMMapWidget({
@@ -73,6 +75,7 @@ class const OSMMapWidget({
   this.showContributorBadgeForOSM = false,
   this.enableRotationByGesture = false,
     this.useTypedCameraRoute = false,
+    this.useTypedMarkers = false,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -95,6 +98,7 @@ class const OSMMapWidget({
   final bool showContributorBadgeForOSM;
   final bool enableRotationByGesture;
   final bool useTypedCameraRoute;
+  final bool useTypedMarkers;
   @override
   Widget build(BuildContext context) {
     return MobileOsmFlutter(
@@ -120,6 +124,7 @@ class const OSMMapWidget({
       zoomOption: zoomOption,
       enableRotationByGesture: enableRotationByGesture,
       useTypedCameraRoute: useTypedCameraRoute,
+      useTypedMarkers: useTypedMarkers,
     );
   }
 }

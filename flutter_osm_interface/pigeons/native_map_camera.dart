@@ -7,8 +7,8 @@
 //
 // Scope: camera family + markers family (typed, stable ids), session-scoped.
 // Events and location are later phases (C4) and live in separate schemas.
-// Note: the Apple host advertises only [camera] for now; typed marker ops
-// there are a declared C3 follow-up.
+// Note: the Apple host advertises [camera, markers]; its typed marker ops
+// live in `PigeonMarkersBridge` on the shared darwin session.
 import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(
@@ -87,22 +87,37 @@ abstract class NativeMapCameraApi {
   NativeCameraPosition getCameraPosition(NativeCameraSession session);
 }
 
+/// Normalized icon anchor in icon-relative units.
+///
+/// `(0.5, 0.5)` centers the icon on the coordinate; `(0.5, 1.0)` pins the
+/// classic pin tip. Mirrors the legacy `IconAnchor` semantics.
+class NativeMarkerAnchor {
+  final double x;
+  final double y;
+
+  const NativeMarkerAnchor({required this.x, required this.y});
+}
+
 /// Generated markers command route for one map session.
 ///
 /// Mirrors the typed Android marker contract: stable string ids, coordinates
 /// in degrees, and icon bytes prepared in Dart (Flutter widget rendering
 /// stays asynchronous on the Dart side; only encoded PNG bytes cross the
-/// channel). A null icon means the native default marker.
+/// channel). A null icon means the native default marker. Marker `angle`
+/// is in degrees, clockwise, matching the camera rotation unit.
 @HostApi()
 abstract class NativeMapMarkersApi {
   /// Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
-  /// platform default icon.
+  /// platform default icon. `angleDegrees` pre-rotates the icon;
+  /// `anchor` selects the icon pivot (null = centered).
   void addMarker(
     NativeCameraSession session,
     String markerId,
     double latitude,
     double longitude,
     Uint8List? iconBytes,
+    double angleDegrees,
+    NativeMarkerAnchor? anchor,
   );
 
   /// Bulk-adds markers with default icons: parallel id list and
@@ -119,6 +134,41 @@ abstract class NativeMapMarkersApi {
     String markerId,
     Uint8List iconBytes,
   );
+
+  /// Moves one marker to new coordinates without recreating it.
+  void moveMarker(
+    NativeCameraSession session,
+    String markerId,
+    double latitude,
+    double longitude,
+  );
+
+  /// Replaces one marker's icon rotation in degrees, clockwise.
+  void rotateMarker(
+    NativeCameraSession session,
+    String markerId,
+    double angleDegrees,
+  );
+
+  /// Replaces one marker's icon anchor.
+  void setMarkerAnchor(
+    NativeCameraSession session,
+    String markerId,
+    NativeMarkerAnchor anchor,
+  );
+
+  /// Creates or replaces a static-position group: flat
+  /// `[lat, lon, angleDegrees, lat, lon, angleDegrees, ...]` coordinates
+  /// sharing one icon (`iconBytes` null = platform default icon).
+  void setStaticPositions(
+    NativeCameraSession session,
+    String groupId,
+    Float64List coordinates,
+    Uint8List? iconBytes,
+  );
+
+  /// Removes one static-position group by id.
+  void removeStaticPositions(NativeCameraSession session, String groupId);
 
   /// Removes one marker by stable id.
   void removeMarker(NativeCameraSession session, String markerId);

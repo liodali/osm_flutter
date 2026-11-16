@@ -217,6 +217,60 @@ class NativeCameraPosition {
   }
 }
 
+/// Normalized icon anchor in icon-relative units.
+///
+/// `(0.5, 0.5)` centers the icon on the coordinate; `(0.5, 1.0)` pins the
+/// classic pin tip. Mirrors the legacy `IconAnchor` semantics.
+class NativeMarkerAnchor {
+  NativeMarkerAnchor({
+    required this.x,
+    required this.y,
+  });
+
+  double x;
+
+  double y;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      x,
+      y,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeMarkerAnchor decode(Object result) {
+    result as List<Object?>;
+    return NativeMarkerAnchor(
+      x: result[0]! as double,
+      y: result[1]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeMarkerAnchor || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(x, other.x) && _deepEquals(y, other.y);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeMarkerAnchor(x: $x, y: $y)';
+  }
+}
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -231,6 +285,9 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is NativeCameraPosition) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
+    }    else if (value is NativeMarkerAnchor) {
+      buffer.putUint8(131);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -243,6 +300,8 @@ class _PigeonCodec extends StandardMessageCodec {
         return NativeCameraSession.decode(readValue(buffer)!);
       case 130:
         return NativeCameraPosition.decode(readValue(buffer)!);
+      case 131:
+        return NativeMarkerAnchor.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -372,7 +431,8 @@ class NativeMapCameraApi {
 /// Mirrors the typed Android marker contract: stable string ids, coordinates
 /// in degrees, and icon bytes prepared in Dart (Flutter widget rendering
 /// stays asynchronous on the Dart side; only encoded PNG bytes cross the
-/// channel). A null icon means the native default marker.
+/// channel). A null icon means the native default marker. Marker `angle`
+/// is in degrees, clockwise, matching the camera rotation unit.
 class NativeMapMarkersApi {
   /// Constructor for [NativeMapMarkersApi]. The [binaryMessenger] named argument is
   /// available for dependency injection. If it is left null, the default
@@ -391,15 +451,16 @@ class NativeMapMarkersApi {
 
 
   /// Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
-  /// platform default icon.
-  Future<void> addMarker(NativeCameraSession session, String markerId, double latitude, double longitude, Uint8List? iconBytes) async {
+  /// platform default icon. `angleDegrees` pre-rotates the icon;
+  /// `anchor` selects the icon pivot (null = centered).
+  Future<void> addMarker(NativeCameraSession session, String markerId, double latitude, double longitude, Uint8List? iconBytes, double angleDegrees, NativeMarkerAnchor? anchor) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.addMarker$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, latitude, longitude, iconBytes]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, latitude, longitude, iconBytes, angleDegrees, anchor]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
     _extractReplyValueOrThrow(
         pigeonVar_replyList,
@@ -437,6 +498,98 @@ class NativeMapMarkersApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, iconBytes]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Moves one marker to new coordinates without recreating it.
+  Future<void> moveMarker(NativeCameraSession session, String markerId, double latitude, double longitude) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.moveMarker$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, latitude, longitude]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Replaces one marker's icon rotation in degrees, clockwise.
+  Future<void> rotateMarker(NativeCameraSession session, String markerId, double angleDegrees) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.rotateMarker$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, angleDegrees]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Replaces one marker's icon anchor.
+  Future<void> setMarkerAnchor(NativeCameraSession session, String markerId, NativeMarkerAnchor anchor) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.setMarkerAnchor$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, anchor]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Creates or replaces a static-position group: flat
+  /// `[lat, lon, angleDegrees, lat, lon, angleDegrees, ...]` coordinates
+  /// sharing one icon (`iconBytes` null = platform default icon).
+  Future<void> setStaticPositions(NativeCameraSession session, String groupId, Float64List coordinates, Uint8List? iconBytes) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.setStaticPositions$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, groupId, coordinates, iconBytes]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Removes one static-position group by id.
+  Future<void> removeStaticPositions(NativeCameraSession session, String groupId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.removeStaticPositions$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, groupId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
     _extractReplyValueOrThrow(
         pigeonVar_replyList,

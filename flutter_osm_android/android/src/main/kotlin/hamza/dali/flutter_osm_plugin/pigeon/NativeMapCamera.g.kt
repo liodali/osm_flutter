@@ -297,6 +297,54 @@ data class NativeCameraPosition (
     return "NativeCameraPosition(latitude=$latitude, longitude=$longitude, zoom=$zoom, rotation=$rotation)"
   }
 }
+
+/**
+ * Normalized icon anchor in icon-relative units.
+ *
+ * `(0.5, 0.5)` centers the icon on the coordinate; `(0.5, 1.0)` pins the
+ * classic pin tip. Mirrors the legacy `IconAnchor` semantics.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class NativeMarkerAnchor (
+  val x: Double,
+  val y: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): NativeMarkerAnchor {
+      val x = pigeonVar_list[0] as Double
+      val y = pigeonVar_list[1] as Double
+      return NativeMarkerAnchor(x, y)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      x,
+      y,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as NativeMarkerAnchor
+    return NativeMapCameraPigeonUtils.deepEquals(this.x, other.x) && NativeMapCameraPigeonUtils.deepEquals(this.y, other.y)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.x)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.y)
+    return result
+  }
+  override fun toString(): String {
+    return "NativeMarkerAnchor(x=$x, y=$y)"
+  }
+}
 private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
@@ -310,6 +358,11 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
           NativeCameraPosition.fromList(it)
         }
       }
+      131.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          NativeMarkerAnchor.fromList(it)
+        }
+      }
       else -> super.readValueOfType(type, buffer)
     }
   }
@@ -321,6 +374,10 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
       }
       is NativeCameraPosition -> {
         stream.write(130)
+        writeValue(stream, value.toList())
+      }
+      is NativeMarkerAnchor -> {
+        stream.write(131)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -469,16 +526,18 @@ interface NativeMapCameraApi {
  * Mirrors the typed Android marker contract: stable string ids, coordinates
  * in degrees, and icon bytes prepared in Dart (Flutter widget rendering
  * stays asynchronous on the Dart side; only encoded PNG bytes cross the
- * channel). A null icon means the native default marker.
+ * channel). A null icon means the native default marker. Marker `angle`
+ * is in degrees, clockwise, matching the camera rotation unit.
  *
  * Generated interface from Pigeon that represents a handler of messages from Flutter.
  */
 interface NativeMapMarkersApi {
   /**
    * Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
-   * platform default icon.
+   * platform default icon. `angleDegrees` pre-rotates the icon;
+   * `anchor` selects the icon pivot (null = centered).
    */
-  fun addMarker(session: NativeCameraSession, markerId: String, latitude: Double, longitude: Double, iconBytes: ByteArray?)
+  fun addMarker(session: NativeCameraSession, markerId: String, latitude: Double, longitude: Double, iconBytes: ByteArray?, angleDegrees: Double, anchor: NativeMarkerAnchor?)
   /**
    * Bulk-adds markers with default icons: parallel id list and
    * [lat, lon, lat, lon, ...] coordinates.
@@ -486,6 +545,20 @@ interface NativeMapMarkersApi {
   fun addMarkers(session: NativeCameraSession, markerIds: List<String>, coordinates: DoubleArray)
   /** Replaces one marker's icon with new encoded bytes. */
   fun updateMarkerIcon(session: NativeCameraSession, markerId: String, iconBytes: ByteArray)
+  /** Moves one marker to new coordinates without recreating it. */
+  fun moveMarker(session: NativeCameraSession, markerId: String, latitude: Double, longitude: Double)
+  /** Replaces one marker's icon rotation in degrees, clockwise. */
+  fun rotateMarker(session: NativeCameraSession, markerId: String, angleDegrees: Double)
+  /** Replaces one marker's icon anchor. */
+  fun setMarkerAnchor(session: NativeCameraSession, markerId: String, anchor: NativeMarkerAnchor)
+  /**
+   * Creates or replaces a static-position group: flat
+   * `[lat, lon, angleDegrees, lat, lon, angleDegrees, ...]` coordinates
+   * sharing one icon (`iconBytes` null = platform default icon).
+   */
+  fun setStaticPositions(session: NativeCameraSession, groupId: String, coordinates: DoubleArray, iconBytes: ByteArray?)
+  /** Removes one static-position group by id. */
+  fun removeStaticPositions(session: NativeCameraSession, groupId: String)
   /** Removes one marker by stable id. */
   fun removeMarker(session: NativeCameraSession, markerId: String)
   /** Removes many markers by stable ids. */
@@ -510,8 +583,10 @@ interface NativeMapMarkersApi {
             val latitudeArg = args[2] as Double
             val longitudeArg = args[3] as Double
             val iconBytesArg = args[4] as ByteArray?
+            val angleDegreesArg = args[5] as Double
+            val anchorArg = args[6] as NativeMarkerAnchor?
             val wrapped: List<Any?> = try {
-              api.addMarker(sessionArg, markerIdArg, latitudeArg, longitudeArg, iconBytesArg)
+              api.addMarker(sessionArg, markerIdArg, latitudeArg, longitudeArg, iconBytesArg, angleDegreesArg, anchorArg)
               listOf(null)
             } catch (exception: Throwable) {
               NativeMapCameraPigeonUtils.wrapError(exception)
@@ -552,6 +627,107 @@ interface NativeMapMarkersApi {
             val iconBytesArg = args[2] as ByteArray
             val wrapped: List<Any?> = try {
               api.updateMarkerIcon(sessionArg, markerIdArg, iconBytesArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.moveMarker$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val markerIdArg = args[1] as String
+            val latitudeArg = args[2] as Double
+            val longitudeArg = args[3] as Double
+            val wrapped: List<Any?> = try {
+              api.moveMarker(sessionArg, markerIdArg, latitudeArg, longitudeArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.rotateMarker$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val markerIdArg = args[1] as String
+            val angleDegreesArg = args[2] as Double
+            val wrapped: List<Any?> = try {
+              api.rotateMarker(sessionArg, markerIdArg, angleDegreesArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.setMarkerAnchor$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val markerIdArg = args[1] as String
+            val anchorArg = args[2] as NativeMarkerAnchor
+            val wrapped: List<Any?> = try {
+              api.setMarkerAnchor(sessionArg, markerIdArg, anchorArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.setStaticPositions$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val groupIdArg = args[1] as String
+            val coordinatesArg = args[2] as DoubleArray
+            val iconBytesArg = args[3] as ByteArray?
+            val wrapped: List<Any?> = try {
+              api.setStaticPositions(sessionArg, groupIdArg, coordinatesArg, iconBytesArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.removeStaticPositions$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val groupIdArg = args[1] as String
+            val wrapped: List<Any?> = try {
+              api.removeStaticPositions(sessionArg, groupIdArg)
               listOf(null)
             } catch (exception: Throwable) {
               NativeMapCameraPigeonUtils.wrapError(exception)

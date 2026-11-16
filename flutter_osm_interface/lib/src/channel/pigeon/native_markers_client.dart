@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'native_camera_bootstrap.dart';
 import 'native_camera_client.dart';
 import 'native_map_camera.g.dart' as generated;
+import 'package:flutter_osm_interface/src/types/types.dart';
 
 /// Typed error thrown when the native engine cannot accept a marker command
 /// yet (icon layer not initialized) or the engine rejected the mutation.
@@ -49,9 +50,19 @@ class PigeonMarkersClient {
     double latitude,
     double longitude, {
     Uint8List? iconBytes,
+    double angleDegrees = 0,
+    generated.NativeMarkerAnchor? anchor,
   }) {
     return _guard(
-      () => _api.addMarker(_wireSession, markerId, latitude, longitude, iconBytes),
+      () => _api.addMarker(
+        _wireSession,
+        markerId,
+        latitude,
+        longitude,
+        iconBytes,
+        angleDegrees,
+        anchor,
+      ),
     );
   }
 
@@ -64,6 +75,38 @@ class PigeonMarkersClient {
 
   Future<void> updateMarkerIcon(String markerId, Uint8List iconBytes) {
     return _guard(() => _api.updateMarkerIcon(_wireSession, markerId, iconBytes));
+  }
+
+  Future<void> moveMarker(
+    String markerId,
+    double latitude,
+    double longitude,
+  ) {
+    return _guard(
+      () => _api.moveMarker(_wireSession, markerId, latitude, longitude),
+    );
+  }
+
+  Future<void> rotateMarker(String markerId, double angleDegrees) {
+    return _guard(() => _api.rotateMarker(_wireSession, markerId, angleDegrees));
+  }
+
+  Future<void> setMarkerAnchor(String markerId, generated.NativeMarkerAnchor anchor) {
+    return _guard(() => _api.setMarkerAnchor(_wireSession, markerId, anchor));
+  }
+
+  Future<void> setStaticPositions(
+    String groupId,
+    Float64List coordinates, {
+    Uint8List? iconBytes,
+  }) {
+    return _guard(
+      () => _api.setStaticPositions(_wireSession, groupId, coordinates, iconBytes),
+    );
+  }
+
+  Future<void> removeStaticPositions(String groupId) {
+    return _guard(() => _api.removeStaticPositions(_wireSession, groupId));
   }
 
   Future<void> removeMarker(String markerId) {
@@ -91,4 +134,12 @@ class PigeonMarkersClient {
       rethrow;
     }
   }
+}
+
+/// Maps the marker-domain anchor to the generated wire pair.
+extension IconAnchorNativeWire on IconAnchor {
+  generated.NativeMarkerAnchor toGenerated() => generated.NativeMarkerAnchor(
+        x: anchor.value.$1,
+        y: anchor.value.$2,
+      );
 }

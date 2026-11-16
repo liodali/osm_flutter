@@ -164,6 +164,8 @@ class _OSMFlutterState extends State<OSMFlutter> {
                             widget.osmOption.enableRotationByGesture,
                         useTypedCameraRoute:
                             widget.osmOption.useTypedCameraRoute,
+                        useTypedMarkers:
+                            widget.osmOption.useTypedMarkers,
                       ),
                     ),
                     Positioned.fill(
@@ -214,6 +216,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                       widget.osmOption.enableRotationByGesture,
                   useTypedCameraRoute:
                       widget.osmOption.useTypedCameraRoute,
+                  useTypedMarkers: widget.osmOption.useTypedMarkers,
                 ),
         ),
         if (widget.osmOption.showContributorBadgeForOSM && !kIsWeb) ...[

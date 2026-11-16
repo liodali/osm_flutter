@@ -1,6 +1,7 @@
 package hamza.dali.flutter_osm_plugin.mapscore
 
 import android.app.Activity
+import hamza.dali.flutter_osm_plugin.mapscore.models.Anchor
 import io.flutter.plugin.common.PluginRegistry
 
 /** Typed command and lifecycle boundary shared by Android transports. */
@@ -41,11 +42,22 @@ interface MapSession : PluginRegistry.ActivityResultListener {
         latitude: Double,
         longitude: Double,
         icon: ByteArray? = null,
+        angleDegrees: Double = 0.0,
+        anchor: Anchor? = null,
     ): Boolean
 
     fun addMarkers(markerIds: Array<String>, coordinates: DoubleArray): Boolean
 
     fun updateMarkerIcon(markerId: String, icon: ByteArray): Boolean
+
+    /** Moves one marker without recreating it; fails when the id is unknown. */
+    fun moveMarker(markerId: String, latitude: Double, longitude: Double): Boolean
+
+    /** Replaces one marker's icon rotation; [angleDegrees] clockwise. */
+    fun rotateMarker(markerId: String, angleDegrees: Double): Boolean
+
+    /** Replaces one marker's icon anchor. */
+    fun setMarkerAnchor(markerId: String, anchor: Anchor): Boolean
 
     fun removeMarker(markerId: String): Boolean
 

@@ -45,6 +45,7 @@ class const MobileOsmFlutter({
   this.userLocationMarker,
   this.enableRotationByGesture = false,
   this.useTypedCameraRoute = false,
+  this.useTypedMarkers = false,
 }) extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -68,6 +69,8 @@ class const MobileOsmFlutter({
   final bool enableRotationByGesture;
   /// Opt-in routing of camera commands through the typed generated channel.
   final bool useTypedCameraRoute;
+  /// Opt-in routing of marker commands through the typed generated channel.
+  final bool useTypedMarkers;
   final ZoomOption zoomOption;
   @override
   MobileOsmFlutterState createState() => MobileOsmFlutterState();

@@ -375,10 +375,13 @@ final class AndroidMapMarkers {
   final Set<MarkerId> _issuedIds = {};
 
   /// Adds one marker. [iconBytes] must contain encoded image bytes such as PNG.
+  /// [angleDegrees] pre-rotates the icon; [anchor] selects its pivot.
   Future<MarkerId> add(
     GeoPoint position, {
     MarkerId? markerId,
     Uint8List? iconBytes,
+    double angleDegrees = 0,
+    IconAnchor? anchor,
   }) async {
     if (iconBytes?.isEmpty ?? false) {
       throw _argumentException(_controller, 'addMarker', 'empty_icon');
@@ -394,7 +397,13 @@ final class AndroidMapMarkers {
     }
     try {
       final transport = await _controller._readyTransport();
-      await transport.addMarker(id, position, iconBytes: iconBytes);
+      await transport.addMarker(
+        id,
+        position,
+        iconBytes: iconBytes,
+        angleDegrees: angleDegrees,
+        anchor: anchor,
+      );
       return id;
     } catch (_) {
       _issuedIds.remove(id);
@@ -427,6 +436,24 @@ final class AndroidMapMarkers {
     }
     final transport = await _controller._readyTransport();
     await transport.updateMarkerIcon(markerId, iconBytes);
+  }
+
+  /// Moves an existing marker without recreating it.
+  Future<void> move(MarkerId markerId, GeoPoint position) async {
+    final transport = await _controller._readyTransport();
+    await transport.moveMarker(markerId, position);
+  }
+
+  /// Sets an existing marker's icon rotation in degrees, clockwise.
+  Future<void> rotate(MarkerId markerId, double angleDegrees) async {
+    final transport = await _controller._readyTransport();
+    await transport.rotateMarker(markerId, angleDegrees);
+  }
+
+  /// Replaces an existing marker's icon anchor.
+  Future<void> setAnchor(MarkerId markerId, IconAnchor anchor) async {
+    final transport = await _controller._readyTransport();
+    await transport.setMarkerAnchor(markerId, anchor);
   }
 
   Future<void> remove(MarkerId markerId) async {

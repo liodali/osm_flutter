@@ -75,6 +75,7 @@ class OSMMap extends StatefulWidget {
     this.showContributorBadgeForOSM = false,
     this.enableRotationByGesture = false,
     this.useTypedCameraRoute = false,
+    this.useTypedMarkers = false,
   });
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -99,6 +100,8 @@ class OSMMap extends StatefulWidget {
   final bool enableRotationByGesture;
   /// Opt-in routing of camera commands through the typed generated channel.
   final bool useTypedCameraRoute;
+  /// Opt-in routing of marker commands through the typed generated channel.
+  final bool useTypedMarkers;
 
   @override
   State<StatefulWidget> createState() => _OSMMapState();
@@ -136,6 +139,7 @@ class _OSMMapState extends State<OSMMap> {
       userTrackingOption: widget.userTrackingOption,
       enableRotationByGesture: widget.enableRotationByGesture,
       useTypedCameraRoute: widget.useTypedCameraRoute,
+      useTypedMarkers: widget.useTypedMarkers,
     );
   }
 }

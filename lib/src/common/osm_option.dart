@@ -33,6 +33,7 @@ class OSMOption {
     this.showContributorBadgeForOSM = false,
     this.userTrackingOption,
     this.useTypedCameraRoute = false,
+    this.useTypedMarkers = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -50,6 +51,12 @@ class OSMOption {
   /// host advertises support at attachment time. Default keeps the legacy
   /// route. Relative zoom steps are always sent through the legacy route.
   final bool useTypedCameraRoute;
+
+  /// Opt-in to route marker commands (add, move, rotation, anchors, icon
+  /// updates, removal and static-position groups) through the typed
+  /// generated channel when the native host advertises support at
+  /// attachment time. Default keeps the legacy route.
+  final bool useTypedMarkers;
 }
 
 /// [ZoomOption]
