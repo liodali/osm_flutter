@@ -1123,7 +1123,10 @@ internal class MapscoreMapSession(
     }
 
     override fun removeStaticPositions(groupId: String): Boolean {
-        if (!staticPoints.containsKey(groupId)) return false
+        // Clearing is idempotent: repeated empty-list clears and removals
+        // of already-cleared groups succeed like the legacy staticPosition
+        // flow instead of surfacing a not-ready error.
+        if (!staticPoints.containsKey(groupId)) return true
         staticIcons.remove(groupId)?.forEach { staticIconLayer.remove(it) }
         staticPoints.remove(groupId)
         staticMarkerIcon.remove(groupId)
@@ -1322,15 +1325,32 @@ internal class MapscoreMapSession(
         )
     }
 
+    override fun configureZoom(
+        initZoom: Double,
+        minZoomLevel: Double,
+        maxZoomLevel: Double,
+        stepZoom: Double,
+    ): Boolean {
+        // Session fields apply unconditionally (legacy parity); min/max
+        // clamps need the camera, which may not exist before initialization.
+        this.stepZoom = stepZoom
+        this.initZoom = initZoom
+        val camera = mapView?.getCamera() ?: return false
+        camera.setMinZoom(MapscoreConstants.osmZoomToMapscore(minZoomLevel))
+        camera.setMaxZoom(MapscoreConstants.osmZoomToMapscore(maxZoomLevel))
+        return true
+    }
+
     private fun configZoomMap(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as HashMap<*, *>
-        val camera = mapView?.getCamera()
-        val minZoom = (args["minZoomLevel"] as Double)
-        val maxZoom = (args["maxZoomLevel"] as Double)
-        camera?.setMinZoom(MapscoreConstants.osmZoomToMapscore(minZoom))
-        camera?.setMaxZoom(MapscoreConstants.osmZoomToMapscore(maxZoom))
-        stepZoom = args["stepZoom"] as Double
-        initZoom = args["initZoom"] as Double
+        // Legacy never fails this command: fields are stored, camera clamps
+        // apply when the camera exists.
+        configureZoom(
+            initZoom = (args["initZoom"] as Double),
+            minZoomLevel = (args["minZoomLevel"] as Double),
+            maxZoomLevel = (args["maxZoomLevel"] as Double),
+            stepZoom = (args["stepZoom"] as Double),
+        )
         result.success(200)
     }
 
@@ -1352,21 +1372,61 @@ internal class MapscoreMapSession(
         result.success(null)
     }
 
+    override fun zoomToBoundingBox(
+        north: Double,
+        south: Double,
+        east: Double,
+        west: Double,
+        paddingInPixel: Int,
+    ): Boolean {
+        val camera = mapView?.getCamera() ?: return false
+        // Mapscore's moveToBoundingBox expects WGS84 coordinates and converts internally.
+        val topLeft = latLonToCoord(north, west)
+        val bottomRight = latLonToCoord(south, east)
+        val rect = RectCoord(topLeft, bottomRight)
+        val padding = paddingInPixel.toFloat() / 1000f
+        camera.moveToBoundingBox(rect, padding.coerceIn(0.0f, 0.5f), true, null, null)
+        return true
+    }
+
     private fun zoomingMapToBoundingBox(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as Map<String, Any>
-        // Mapscore's moveToBoundingBox expects WGS84 coordinates and converts internally.
-        val topLeft = latLonToCoord(args["north"]!! as Double, args["west"]!! as Double)
-        val bottomRight = latLonToCoord(args["south"]!! as Double, args["east"]!! as Double)
-        val rect = RectCoord(topLeft, bottomRight)
-        val padding = (args["padding"] as? Int ?: 64).toFloat() / 1000f
-        mapView?.getCamera()?.moveToBoundingBox(rect, padding.coerceIn(0.0f, 0.5f), true, null, null)
+        // Legacy never fails this command: a missing camera made the native
+        // call a no-op and still succeeded.
+        zoomToBoundingBox(
+            north = args["north"]!! as Double,
+            south = args["south"]!! as Double,
+            east = args["east"]!! as Double,
+            west = args["west"]!! as Double,
+            paddingInPixel = (args["padding"] as? Int ?: 64),
+        )
         result.success(null)
     }
 
+    override fun getBoundsSnapshot(): DoubleArray? {
+        val helper = mapView?.getCoordinateConversionHelper() ?: return null
+        val rect = mapView?.getCamera()?.getVisibleRect() ?: return null
+        val bounds = rect.toHashMap(helper)
+        return doubleArrayOf(
+            bounds["north"] ?: return null,
+            bounds["south"] ?: return null,
+            bounds["east"] ?: return null,
+            bounds["west"] ?: return null,
+        )
+    }
+
     private fun getMapBounds(result: MethodChannel.Result) {
-        val helper = mapView?.getCoordinateConversionHelper()
-        val rect = mapView?.getCamera()?.getVisibleRect()
-        result.success(rect?.toHashMap(helper!!))
+        result.success(getBoundsSnapshot()?.let(::boundsToLegacyMap))
+    }
+
+    private fun boundsToLegacyMap(bounds: DoubleArray): HashMap<String, Double> {
+        // [north, south, east, west] -> legacy map shape.
+        return hashMapOf(
+            "north" to bounds[0],
+            "south" to bounds[1],
+            "east" to bounds[2],
+            "west" to bounds[3],
+        )
     }
 
     private fun initPosition(call: MethodCall, result: MethodChannel.Result) {
@@ -1385,25 +1445,41 @@ internal class MapscoreMapSession(
         result.success(null)
     }
 
+    override fun setBoundsLimit(
+        north: Double,
+        east: Double,
+        south: Double,
+        west: Double,
+    ): Boolean {
+        val helper = mapView?.getCoordinateConversionHelper() ?: return false
+        val camera = mapView?.getCamera() ?: return false
+        val topLeft = latLonToRender(helper, north, west)
+        val bottomRight = latLonToRender(helper, south, east)
+        camera.setBounds(RectCoord(topLeft, bottomRight))
+        camera.setBoundsRestrictWholeVisibleRect(true)
+        return true
+    }
+
+    override fun removeBoundsLimit(): Boolean {
+        val helper = mapView?.getCoordinateConversionHelper() ?: return false
+        val topLeft = latLonToRender(helper, 85.0, -180.0)
+        val bottomRight = latLonToRender(helper, -85.0, 180.0)
+        mapView?.getCamera()?.setBounds(RectCoord(topLeft, bottomRight))
+        return true
+    }
+
     private fun limitCameraArea(call: MethodCall, result: MethodChannel.Result) {
         val list = call.arguments as List<Double>
-        val helper = mapView?.getCoordinateConversionHelper() ?: return result.success(200)
         // list = [latNorth, lonEast, latSouth, lonWest]
-        val topLeft = latLonToRender(helper, list[0], list[3])
-        val bottomRight = latLonToRender(helper, list[2], list[1])
-        val camera = mapView?.getCamera()
-        camera?.setBounds(RectCoord(topLeft, bottomRight))
-        camera?.setBoundsRestrictWholeVisibleRect(true)
+        if (!setBoundsLimit(list[0], list[1], list[2], list[3])) {
+            result.success(200)
+            return
+        }
         result.success(200)
     }
 
     private fun removeLimitCameraArea(result: MethodChannel.Result) {
-        val helper = mapView?.getCoordinateConversionHelper()
-        if (helper != null) {
-            val topLeft = latLonToRender(helper, 85.0, -180.0)
-            val bottomRight = latLonToRender(helper, -85.0, 180.0)
-            mapView?.getCamera()?.setBounds(RectCoord(topLeft, bottomRight))
-        }
+        removeBoundsLimit()
         result.success(200)
     }
 

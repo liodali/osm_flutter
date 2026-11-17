@@ -44,7 +44,33 @@ class PigeonNativeMarkersBridgeTest {
 
         override fun moveTo(latitude: Double, longitude: Double, animate: Boolean) = true
 
-        override fun setRotation(angle: Double, animate: Boolean) = true
+        override fun setRotation(angle: Double, animate: Boolean): Boolean = true
+
+        override fun getBoundsSnapshot(): DoubleArray? = null
+
+        override fun zoomToBoundingBox(
+            north: Double,
+            south: Double,
+            east: Double,
+            west: Double,
+            paddingInPixel: Int,
+        ): Boolean = true
+
+        override fun setBoundsLimit(
+            north: Double,
+            east: Double,
+            south: Double,
+            west: Double,
+        ): Boolean = true
+
+        override fun removeBoundsLimit(): Boolean = true
+
+        override fun configureZoom(
+            initZoom: Double,
+            minZoomLevel: Double,
+            maxZoomLevel: Double,
+            stepZoom: Double,
+        ): Boolean = true
 
         override fun addMarker(
             markerId: String,
@@ -197,6 +223,7 @@ class PigeonNativeMarkersBridgeTest {
             byteArrayOf(1, 2, 3),
             90.0,
             NativeMarkerAnchor(x = 0.5, y = 1.0),
+            NativeMarkerSize(width = 32, height = 48),
         )
 
         assertEquals(
@@ -215,6 +242,7 @@ class PigeonNativeMarkersBridgeTest {
             2.0,
             null,
             0.0,
+            null,
             null,
         )
 
@@ -238,7 +266,12 @@ class PigeonNativeMarkersBridgeTest {
         val session = RecordingMapSession()
         val marker = bridge(session)
 
-        marker.updateMarkerIcon(wireSession(), "m-1", byteArrayOf(9, 9))
+        marker.updateMarkerIcon(
+            wireSession(),
+            "m-1",
+            byteArrayOf(9, 9),
+            iconLogicalSize = NativeMarkerSize(width = 16, height = 16),
+        )
         marker.moveMarker(wireSession(), "m-1", 10.0, 20.0)
         marker.rotateMarker(wireSession(), "m-1", 45.0)
         marker.setMarkerAnchor(wireSession(), "m-1", NativeMarkerAnchor(x = 1.0, y = 0.0))
@@ -264,6 +297,7 @@ class PigeonNativeMarkersBridgeTest {
             "group-1",
             doubleArrayOf(1.0, 2.0, 30.0, 3.0, 4.0, 60.0),
             byteArrayOf(7),
+            NativeMarkerSize(width = 12, height = 12),
         )
         marker.removeStaticPositions(wireSession(), "group-1")
 
@@ -302,6 +336,7 @@ class PigeonNativeMarkersBridgeTest {
                 null,
                 0.0,
                 null,
+                null,
             )
         }
         assertEquals(PigeonNativeCameraBridge.CODE_STALE_SESSION, error.code)
@@ -330,12 +365,13 @@ class PigeonNativeMarkersBridgeTest {
         val marker = bridge(session)
 
         val addError = assertThrows(FlutterError::class.java) {
-            marker.addMarker(wireSession(), "m-1", 0.0, 0.0, null, 0.0, null)
+            marker.addMarker(wireSession(), "m-1", 0.0, 0.0, null, 0.0, null, null)
         }
         assertEquals(PigeonNativeCameraBridge.CODE_MARKERS_NOT_READY, addError.code)
 
         val staticError = assertThrows(FlutterError::class.java) {
-            marker.setStaticPositions(wireSession(), "g", doubleArrayOf(1.0, 2.0, 0.0), null)
+            marker.setStaticPositions(
+                wireSession(), "g", doubleArrayOf(1.0, 2.0, 0.0), null, null)
         }
         assertEquals(PigeonNativeCameraBridge.CODE_MARKERS_NOT_READY, staticError.code)
 

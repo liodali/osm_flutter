@@ -63,6 +63,73 @@ internal class PigeonNativeCameraBridge(
         )
     }
 
+    override fun getBounds(session: NativeCameraSession): NativeBounds {
+        validateSession(session)
+        val bounds = this.session.getBoundsSnapshot()
+            ?: throw FlutterError(CODE_CAMERA_NOT_READY, "camera bounds are not available yet", null)
+        return NativeBounds(
+            north = bounds[0],
+            south = bounds[1],
+            east = bounds[2],
+            west = bounds[3],
+        )
+    }
+
+    override fun zoomToBoundingBox(
+        session: NativeCameraSession,
+        bounds: NativeBounds,
+        paddingInPixel: Long,
+    ) {
+        validateSession(session)
+        requireCamera(
+            this.session.zoomToBoundingBox(
+                north = bounds.north,
+                south = bounds.south,
+                east = bounds.east,
+                west = bounds.west,
+                paddingInPixel = paddingInPixel.toInt(),
+            )
+        )
+    }
+
+    override fun setBoundsLimit(session: NativeCameraSession, bounds: NativeBounds) {
+        validateSession(session)
+        requireCamera(
+            this.session.setBoundsLimit(
+                north = bounds.north,
+                east = bounds.east,
+                south = bounds.south,
+                west = bounds.west,
+            )
+        )
+    }
+
+    override fun removeBoundsLimit(session: NativeCameraSession) {
+        validateSession(session)
+        requireCamera(this.session.removeBoundsLimit())
+    }
+
+    override fun configureZoom(
+        session: NativeCameraSession,
+        configuration: NativeZoomConfiguration,
+    ) {
+        validateSession(session)
+        requireCamera(
+            this.session.configureZoom(
+                initZoom = configuration.initZoom,
+                minZoomLevel = configuration.minZoomLevel,
+                maxZoomLevel = configuration.maxZoomLevel,
+                stepZoom = configuration.stepZoom,
+            )
+        )
+    }
+
+    private fun requireCamera(applied: Boolean) {
+        if (!applied) {
+            throw FlutterError(CODE_CAMERA_NOT_READY, "camera is not ready for this operation", null)
+        }
+    }
+
     private fun validateSession(s: NativeCameraSession) {
         if (s.sessionToken != sessionToken || s.generation != generation) {
             throw FlutterError(CODE_STALE_SESSION, "session does not match this map view", null)
@@ -100,6 +167,10 @@ internal class PigeonNativeCameraBridge(
         const val CAPABILITY_CAMERA = "camera"
         const val CAPABILITY_MARKERS = "markers"
 
+        /// Expanded camera surface: bounds queries, zoom-to-bounds, camera
+        /// limits/reset and zoom configuration.
+        const val CAPABILITY_CAMERA_CONFIG = "camera.config"
+
         /** Typed error code for the markers family. */
         const val CODE_MARKERS_NOT_READY = "markers_not_ready"
 
@@ -116,7 +187,11 @@ internal class PigeonNativeCameraBridge(
         ): Map<String, Any?> = mapOf(
             "revision" to NATIVE_PROTOCOL_REVISION,
             "schemaId" to NATIVE_CAMERA_SCHEMA_ID,
-            "capabilities" to listOf(CAPABILITY_CAMERA, CAPABILITY_MARKERS),
+            "capabilities" to listOf(
+                CAPABILITY_CAMERA,
+                CAPABILITY_MARKERS,
+                CAPABILITY_CAMERA_CONFIG,
+            ),
             "sessionToken" to sessionToken,
             "generation" to generation,
         )

@@ -37,6 +37,38 @@ interface MapSession : PluginRegistry.ActivityResultListener {
 
     fun setRotation(angle: Double, animate: Boolean): Boolean
 
+    /** Visible-region bounds `[north, south, east, west]`, or null when the
+     *  engine cannot provide its visible rect yet. */
+    fun getBoundsSnapshot(): DoubleArray?
+
+    /** Zooms/animates the viewport to fit the degree bounding box. */
+    fun zoomToBoundingBox(
+        north: Double,
+        south: Double,
+        east: Double,
+        west: Double,
+        paddingInPixel: Int,
+    ): Boolean
+
+    /** Restricts the camera to the degree bounding box area. */
+    fun setBoundsLimit(
+        north: Double,
+        east: Double,
+        south: Double,
+        west: Double,
+    ): Boolean
+
+    /** Removes the camera area limit, restoring the world view. */
+    fun removeBoundsLimit(): Boolean
+
+    /** Applies the zoom configuration (OSM zoom levels). */
+    fun configureZoom(
+        initZoom: Double,
+        minZoomLevel: Double,
+        maxZoomLevel: Double,
+        stepZoom: Double,
+    ): Boolean
+
     fun addMarker(
         markerId: String,
         latitude: Double,

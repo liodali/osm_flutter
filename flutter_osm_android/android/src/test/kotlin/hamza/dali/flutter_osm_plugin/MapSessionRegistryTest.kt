@@ -191,6 +191,32 @@ private class FakeMapSession(
 
     override fun setRotation(angle: Double, animate: Boolean): Boolean = true
 
+    override fun getBoundsSnapshot(): DoubleArray? = null
+
+    override fun zoomToBoundingBox(
+        north: Double,
+        south: Double,
+        east: Double,
+        west: Double,
+        paddingInPixel: Int,
+    ): Boolean = true
+
+    override fun setBoundsLimit(
+        north: Double,
+        east: Double,
+        south: Double,
+        west: Double,
+    ): Boolean = true
+
+    override fun removeBoundsLimit(): Boolean = true
+
+    override fun configureZoom(
+        initZoom: Double,
+        minZoomLevel: Double,
+        maxZoomLevel: Double,
+        stepZoom: Double,
+    ): Boolean = true
+
     override fun addMarker(
         markerId: String,
         latitude: Double,

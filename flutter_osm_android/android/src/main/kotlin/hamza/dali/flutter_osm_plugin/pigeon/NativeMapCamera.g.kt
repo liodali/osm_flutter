@@ -345,6 +345,163 @@ data class NativeMarkerAnchor (
     return "NativeMarkerAnchor(x=$x, y=$y)"
   }
 }
+
+/**
+ * Logical (pre-scale) icon dimensions in Dart-side units.
+ *
+ * Widget captures render at a device pixel ratio, so the raw PNG pixels do
+ * not describe the marker's display size. Hosts combine these logical
+ * dimensions with the display scale the way the legacy routes do.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class NativeMarkerSize (
+  val width: Long,
+  val height: Long
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): NativeMarkerSize {
+      val width = pigeonVar_list[0] as Long
+      val height = pigeonVar_list[1] as Long
+      return NativeMarkerSize(width, height)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      width,
+      height,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as NativeMarkerSize
+    return NativeMapCameraPigeonUtils.deepEquals(this.width, other.width) && NativeMapCameraPigeonUtils.deepEquals(this.height, other.height)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.width)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.height)
+    return result
+  }
+  override fun toString(): String {
+    return "NativeMarkerSize(width=$width, height=$height)"
+  }
+}
+
+/**
+ * WGS84 bounding box in degrees, matching the legacy `BoundingBox` map
+ * shape (`north`, `south`, `east`, `west`).
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class NativeBounds (
+  val north: Double,
+  val south: Double,
+  val east: Double,
+  val west: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): NativeBounds {
+      val north = pigeonVar_list[0] as Double
+      val south = pigeonVar_list[1] as Double
+      val east = pigeonVar_list[2] as Double
+      val west = pigeonVar_list[3] as Double
+      return NativeBounds(north, south, east, west)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      north,
+      south,
+      east,
+      west,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as NativeBounds
+    return NativeMapCameraPigeonUtils.deepEquals(this.north, other.north) && NativeMapCameraPigeonUtils.deepEquals(this.south, other.south) && NativeMapCameraPigeonUtils.deepEquals(this.east, other.east) && NativeMapCameraPigeonUtils.deepEquals(this.west, other.west)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.north)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.south)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.east)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.west)
+    return result
+  }
+  override fun toString(): String {
+    return "NativeBounds(north=$north, south=$south, east=$east, west=$west)"
+  }
+}
+
+/**
+ * Zoom configuration applied at attachment time, mirroring the legacy
+ * `config#Zoom` payload. Values are OSM zoom levels.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class NativeZoomConfiguration (
+  val initZoom: Double,
+  val minZoomLevel: Double,
+  val maxZoomLevel: Double,
+  val stepZoom: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): NativeZoomConfiguration {
+      val initZoom = pigeonVar_list[0] as Double
+      val minZoomLevel = pigeonVar_list[1] as Double
+      val maxZoomLevel = pigeonVar_list[2] as Double
+      val stepZoom = pigeonVar_list[3] as Double
+      return NativeZoomConfiguration(initZoom, minZoomLevel, maxZoomLevel, stepZoom)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      initZoom,
+      minZoomLevel,
+      maxZoomLevel,
+      stepZoom,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as NativeZoomConfiguration
+    return NativeMapCameraPigeonUtils.deepEquals(this.initZoom, other.initZoom) && NativeMapCameraPigeonUtils.deepEquals(this.minZoomLevel, other.minZoomLevel) && NativeMapCameraPigeonUtils.deepEquals(this.maxZoomLevel, other.maxZoomLevel) && NativeMapCameraPigeonUtils.deepEquals(this.stepZoom, other.stepZoom)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.initZoom)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.minZoomLevel)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.maxZoomLevel)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.stepZoom)
+    return result
+  }
+  override fun toString(): String {
+    return "NativeZoomConfiguration(initZoom=$initZoom, minZoomLevel=$minZoomLevel, maxZoomLevel=$maxZoomLevel, stepZoom=$stepZoom)"
+  }
+}
 private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
@@ -363,6 +520,21 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
           NativeMarkerAnchor.fromList(it)
         }
       }
+      132.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          NativeMarkerSize.fromList(it)
+        }
+      }
+      133.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          NativeBounds.fromList(it)
+        }
+      }
+      134.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          NativeZoomConfiguration.fromList(it)
+        }
+      }
       else -> super.readValueOfType(type, buffer)
     }
   }
@@ -378,6 +550,18 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
       }
       is NativeMarkerAnchor -> {
         stream.write(131)
+        writeValue(stream, value.toList())
+      }
+      is NativeMarkerSize -> {
+        stream.write(132)
+        writeValue(stream, value.toList())
+      }
+      is NativeBounds -> {
+        stream.write(133)
+        writeValue(stream, value.toList())
+      }
+      is NativeZoomConfiguration -> {
+        stream.write(134)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -412,6 +596,25 @@ interface NativeMapCameraApi {
   fun setRotation(session: NativeCameraSession, angle: Double, animated: Boolean)
   /** Snapshot of the full camera state (center, zoom, rotation). */
   fun getCameraPosition(session: NativeCameraSession): NativeCameraPosition
+  /**
+   * Visible-region bounding box snapshot (degrees). Errors with
+   * `camera_not_ready` when the view cannot provide its visible rect yet.
+   */
+  fun getBounds(session: NativeCameraSession): NativeBounds
+  /**
+   * Moves/animates the viewport to fit the bounding box with pixel padding.
+   * `paddingInPixel` is advisory; hosts may clamp it to engine limits.
+   */
+  fun zoomToBoundingBox(session: NativeCameraSession, bounds: NativeBounds, paddingInPixel: Long)
+  /** Restricts the camera to the bounding box area. */
+  fun setBoundsLimit(session: NativeCameraSession, bounds: NativeBounds)
+  /** Removes the camera area limit, restoring the world view. */
+  fun removeBoundsLimit(session: NativeCameraSession)
+  /**
+   * Applies the zoom configuration (init/min/max/step), mirroring the
+   * legacy `config#Zoom` semantics.
+   */
+  fun configureZoom(session: NativeCameraSession, configuration: NativeZoomConfiguration)
 
   companion object {
     /** The codec used by NativeMapCameraApi. */
@@ -517,6 +720,99 @@ interface NativeMapCameraApi {
           channel.setMessageHandler(null)
         }
       }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.getBounds$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val wrapped: List<Any?> = try {
+              listOf(api.getBounds(sessionArg))
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.zoomToBoundingBox$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val boundsArg = args[1] as NativeBounds
+            val paddingInPixelArg = args[2] as Long
+            val wrapped: List<Any?> = try {
+              api.zoomToBoundingBox(sessionArg, boundsArg, paddingInPixelArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.setBoundsLimit$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val boundsArg = args[1] as NativeBounds
+            val wrapped: List<Any?> = try {
+              api.setBoundsLimit(sessionArg, boundsArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.removeBoundsLimit$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val wrapped: List<Any?> = try {
+              api.removeBoundsLimit(sessionArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.configureZoom$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val configurationArg = args[1] as NativeZoomConfiguration
+            val wrapped: List<Any?> = try {
+              api.configureZoom(sessionArg, configurationArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
     }
   }
 }
@@ -535,16 +831,20 @@ interface NativeMapMarkersApi {
   /**
    * Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
    * platform default icon. `angleDegrees` pre-rotates the icon;
-   * `anchor` selects the icon pivot (null = centered).
+   * `anchor` selects the icon pivot (null = centered). `iconLogicalSize`
+   * carries the pre-scale widget dimensions for display scaling.
    */
-  fun addMarker(session: NativeCameraSession, markerId: String, latitude: Double, longitude: Double, iconBytes: ByteArray?, angleDegrees: Double, anchor: NativeMarkerAnchor?)
+  fun addMarker(session: NativeCameraSession, markerId: String, latitude: Double, longitude: Double, iconBytes: ByteArray?, angleDegrees: Double, anchor: NativeMarkerAnchor?, iconLogicalSize: NativeMarkerSize?)
   /**
    * Bulk-adds markers with default icons: parallel id list and
    * [lat, lon, lat, lon, ...] coordinates.
    */
   fun addMarkers(session: NativeCameraSession, markerIds: List<String>, coordinates: DoubleArray)
-  /** Replaces one marker's icon with new encoded bytes. */
-  fun updateMarkerIcon(session: NativeCameraSession, markerId: String, iconBytes: ByteArray)
+  /**
+   * Replaces one marker's icon with new encoded bytes. `iconLogicalSize`
+   * carries the pre-scale widget dimensions for display scaling.
+   */
+  fun updateMarkerIcon(session: NativeCameraSession, markerId: String, iconBytes: ByteArray, iconLogicalSize: NativeMarkerSize?)
   /** Moves one marker to new coordinates without recreating it. */
   fun moveMarker(session: NativeCameraSession, markerId: String, latitude: Double, longitude: Double)
   /** Replaces one marker's icon rotation in degrees, clockwise. */
@@ -554,9 +854,10 @@ interface NativeMapMarkersApi {
   /**
    * Creates or replaces a static-position group: flat
    * `[lat, lon, angleDegrees, lat, lon, angleDegrees, ...]` coordinates
-   * sharing one icon (`iconBytes` null = platform default icon).
+   * sharing one icon (`iconBytes` null = platform default icon;
+   * `iconLogicalSize` carries the pre-scale widget dimensions).
    */
-  fun setStaticPositions(session: NativeCameraSession, groupId: String, coordinates: DoubleArray, iconBytes: ByteArray?)
+  fun setStaticPositions(session: NativeCameraSession, groupId: String, coordinates: DoubleArray, iconBytes: ByteArray?, iconLogicalSize: NativeMarkerSize?)
   /** Removes one static-position group by id. */
   fun removeStaticPositions(session: NativeCameraSession, groupId: String)
   /** Removes one marker by stable id. */
@@ -585,8 +886,9 @@ interface NativeMapMarkersApi {
             val iconBytesArg = args[4] as ByteArray?
             val angleDegreesArg = args[5] as Double
             val anchorArg = args[6] as NativeMarkerAnchor?
+            val iconLogicalSizeArg = args[7] as NativeMarkerSize?
             val wrapped: List<Any?> = try {
-              api.addMarker(sessionArg, markerIdArg, latitudeArg, longitudeArg, iconBytesArg, angleDegreesArg, anchorArg)
+              api.addMarker(sessionArg, markerIdArg, latitudeArg, longitudeArg, iconBytesArg, angleDegreesArg, anchorArg, iconLogicalSizeArg)
               listOf(null)
             } catch (exception: Throwable) {
               NativeMapCameraPigeonUtils.wrapError(exception)
@@ -625,8 +927,9 @@ interface NativeMapMarkersApi {
             val sessionArg = args[0] as NativeCameraSession
             val markerIdArg = args[1] as String
             val iconBytesArg = args[2] as ByteArray
+            val iconLogicalSizeArg = args[3] as NativeMarkerSize?
             val wrapped: List<Any?> = try {
-              api.updateMarkerIcon(sessionArg, markerIdArg, iconBytesArg)
+              api.updateMarkerIcon(sessionArg, markerIdArg, iconBytesArg, iconLogicalSizeArg)
               listOf(null)
             } catch (exception: Throwable) {
               NativeMapCameraPigeonUtils.wrapError(exception)
@@ -707,8 +1010,9 @@ interface NativeMapMarkersApi {
             val groupIdArg = args[1] as String
             val coordinatesArg = args[2] as DoubleArray
             val iconBytesArg = args[3] as ByteArray?
+            val iconLogicalSizeArg = args[4] as NativeMarkerSize?
             val wrapped: List<Any?> = try {
-              api.setStaticPositions(sessionArg, groupIdArg, coordinatesArg, iconBytesArg)
+              api.setStaticPositions(sessionArg, groupIdArg, coordinatesArg, iconBytesArg, iconLogicalSizeArg)
               listOf(null)
             } catch (exception: Throwable) {
               NativeMapCameraPigeonUtils.wrapError(exception)

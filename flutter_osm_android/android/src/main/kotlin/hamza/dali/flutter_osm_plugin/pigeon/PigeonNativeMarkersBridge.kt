@@ -26,6 +26,7 @@ internal class PigeonNativeMarkersBridge(
         iconBytes: ByteArray?,
         angleDegrees: Double,
         anchor: NativeMarkerAnchor?,
+        iconLogicalSize: NativeMarkerSize?,
     ) {
         validateSession(session)
         requireState(
@@ -58,8 +59,11 @@ internal class PigeonNativeMarkersBridge(
         session: NativeCameraSession,
         markerId: String,
         iconBytes: ByteArray,
+        iconLogicalSize: NativeMarkerSize?,
     ) {
         validateSession(session)
+        // Logical size is unused here: the mapscore engine density-scales
+        // marker bitmaps itself.
         requireState(this.session.updateMarkerIcon(markerId, iconBytes))
     }
 
@@ -101,6 +105,7 @@ internal class PigeonNativeMarkersBridge(
         groupId: String,
         coordinates: DoubleArray,
         iconBytes: ByteArray?,
+        iconLogicalSize: NativeMarkerSize?,
     ) {
         validateSession(session)
         requireState(this.session.setStaticPositions(groupId, coordinates, iconBytes))
