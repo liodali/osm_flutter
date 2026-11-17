@@ -4,6 +4,7 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,6 +37,9 @@ class _TestPigeonCodec extends StandardMessageCodec {
     }
     if (type == 131) {
       return generated.NativeMarkerAnchor.decode(readValue(buffer)!);
+    }
+    if (type == 132) {
+      return generated.NativeMarkerSize.decode(readValue(buffer)!);
     }
     return super.readValueOfType(type, buffer);
   }
@@ -308,17 +312,19 @@ void main() {
       expect(anchor.y, 0.0);
     });
 
-    test('add marker carries icon bytes, degrees, and anchor together',
+    test('add marker carries icon bytes, degrees, anchor, and logical size',
         () async {
       final codec = const _TestPigeonCodec();
       Object? decodedIcon;
       Object? decodedAngle;
       Object? decodedAnchor;
+      Object? decodedSize;
       await mockMarkers('addMarker', (message) {
         final args = codec.decodeMessage(message)! as List<Object?>;
         decodedIcon = args[4];
         decodedAngle = args[5];
         decodedAnchor = args[6];
+        decodedSize = args[7];
         return pigeonReply(null);
       });
 
@@ -329,11 +335,46 @@ void main() {
         iconBytes: Uint8List.fromList([1, 2, 3, 4]),
         angleDegrees: 90,
         anchor: IconAnchor(anchor: Anchor.bottom).toGenerated(),
+        iconLogicalSize: [32, 48],
       );
 
       expect(decodedIcon, [1, 2, 3, 4]);
       expect(decodedAngle, 90.0);
       expect((decodedAnchor as generated.NativeMarkerAnchor).y, 0.0);
+      expect(decodedSize, isA<generated.NativeMarkerSize>());
+      expect((decodedSize as generated.NativeMarkerSize).width, 32);
+      expect((decodedSize as generated.NativeMarkerSize).height, 48);
+    });
+
+    test('anchor offsets fold into the generated coordinates', () {
+      final wire = IconAnchor(
+        anchor: Anchor.bottom,
+        offset: (x: 0.25, y: -0.5),
+      ).toGenerated();
+
+      // Legacy Darwin applies anchor + offset on the native side; the wire
+      // pair must carry the combined pivot.
+      expect(wire.x, 0.75);
+      expect(wire.y, -0.5);
+    });
+
+    test('icon update carries logical dimensions', () async {
+      final codec = const _TestPigeonCodec();
+      Object? decodedSize;
+      await mockMarkers('updateMarkerIcon', (message) {
+        final args = codec.decodeMessage(message)! as List<Object?>;
+        decodedSize = args[3];
+        return pigeonReply(null);
+      });
+
+      await client().updateMarkerIcon(
+        'm-1',
+        Uint8List.fromList([9, 9]),
+        iconLogicalSize: [16, 24],
+      );
+
+      expect(decodedSize, isA<generated.NativeMarkerSize>());
+      expect((decodedSize as generated.NativeMarkerSize).height, 24);
     });
 
     test('static groups send degree triples and shared icon bytes', () async {
@@ -354,6 +395,7 @@ void main() {
         'group-1',
         Float64List.fromList([48.1, 2.2, 30, 48.3, 2.4, 60]),
         iconBytes: Uint8List.fromList([5, 6]),
+        iconLogicalSize: [12, 20],
       );
       await client().removeStaticPositions('group-1');
 
@@ -361,6 +403,7 @@ void main() {
         'group-1',
         [48.1, 2.2, 30.0, 48.3, 2.4, 60.0],
         [5, 6],
+        isA<generated.NativeMarkerSize>(),
       ]);
       expect(captured['removeStaticPositions'], ['group-1']);
     });
@@ -525,7 +568,11 @@ void main() {
 
       expect(calls, hasLength(4));
       expect(calls[0], containsPair('moveMarker', ['osm-9-0', 3.0, 4.0]));
-      expect(calls[1]['updateMarkerIcon'], hasLength(2));
+      expect(calls[1]['updateMarkerIcon'], hasLength(3));
+      expect(
+        (calls[1]['updateMarkerIcon'] as List<Object?>)[2],
+        isA<generated.NativeMarkerSize>(),
+      );
       expect(calls[2]['rotateMarker'], ['osm-9-0', 90.0]);
       final anchor = (calls[3]['setMarkerAnchor'] as List<Object?>)[1]
           as generated.NativeMarkerAnchor;
@@ -706,6 +753,234 @@ void main() {
       ], 'group-1');
 
       expect(invocations, isEmpty);
+    });
+
+    testWidgets('apple captures send raw bytes with logical size, not the'
+        ' legacy size map', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      final osm = await attachedGenerated();
+      final iconKey = GlobalKey();
+      final captured = <Object?>[];
+      await mockMarkers('addMarker', (message) {
+        final args =
+            const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+        captured.addAll(args.sublist(4));
+        return pigeonReply(null);
+      });
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}');
+        return null;
+      });
+
+      await tester.pumpWidget(
+        Center(
+          child: RepaintBoundary(
+            key: iconKey,
+            child: const ColoredBox(
+              color: Color(0xFFFF0000),
+              child: SizedBox(width: 40, height: 24),
+            ),
+          ),
+        ),
+      );
+      await tester.runAsync(() async {
+        await osm.addMarker(
+          9,
+          GeoPoint(latitude: 48.85, longitude: 2.35),
+          globalKeyIcon: iconKey,
+        );
+      });
+
+      // Raw PNG bytes (Apple captures at 5x) plus logical dimensions cross
+      // the typed route; the legacy {icon, size} map must not.
+      expect(captured[0], isA<Uint8List>());
+      final bytes = captured[0] as Uint8List;
+      expect(bytes.length, greaterThan(4));
+      expect(bytes.sublist(0, 4), [137, 80, 78, 71]); // PNG magic
+      final size = captured[3] as generated.NativeMarkerSize;
+      expect(size.width, 40);
+      expect(size.height, 24);
+      expect(invocations, isEmpty);
+    });
+
+    testWidgets('legacy serialization keeps the apple base64 size map',
+        (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      await mockLegacy((call) async =>
+          call.method == 'map#bootstrap#protocol'
+              ? bootstrapWith(['camera'])
+              : null);
+      final osm = MethodChannelOSM();
+      await osm.init(9);
+      await osm.attachMarkersRoute(9, optIn: false);
+      expect(osm.markersClientFor(9), isNull);
+
+      final iconKey = GlobalKey();
+      Map<String, dynamic>? legacyArgs;
+      await mockLegacy((call) async {
+        if (call.method == 'add#Marker') {
+          legacyArgs = (call.arguments as Map).cast<String, dynamic>();
+          return null;
+        }
+        return call.method == 'map#bootstrap#protocol'
+            ? bootstrapWith(['camera'])
+            : null;
+      });
+
+      await tester.pumpWidget(
+        Center(
+          child: RepaintBoundary(
+            key: iconKey,
+            child: const ColoredBox(
+              color: Color(0xFF00FF00),
+              child: SizedBox(width: 30, height: 30),
+            ),
+          ),
+        ),
+      );
+      await tester.runAsync(() async {
+        await osm.addMarker(
+          9,
+          GeoPoint(latitude: 48.85, longitude: 2.35),
+          globalKeyIcon: iconKey,
+        );
+      });
+
+      // The legacy contract keeps the {icon, size} serialization.
+      expect(legacyArgs, isNotNull);
+      expect(legacyArgs!['icon'], isA<Map<dynamic, dynamic>>());
+      final iconPayload =
+          (legacyArgs!['icon'] as Map<dynamic, dynamic>)['icon'];
+      expect(iconPayload, isA<String>());
+      expect((legacyArgs!['icon'] as Map)['size'], [30, 30]);
+    });
+
+    testWidgets('empty clears keep the configured icon and repeat safely',
+        (tester) async {
+      final osm = await attachedGenerated();
+      final wireCalls = <String>[]; // method:payload summary per call
+      Object? firstIconBytes;
+      await mockMarkers('setStaticPositions', (message) {
+        final args =
+            const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+        final icon = args[3];
+        wireCalls.add('set:${icon == null ? 'default' : 'icon'}');
+        firstIconBytes ??= icon;
+        return pigeonReply(null);
+      });
+      await mockMarkers('removeStaticPositions', (message) {
+        final args =
+            const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+        wireCalls.add('remove:${args[1]}');
+        return pigeonReply(null);
+      });
+
+      final iconKey = GlobalKey();
+      await tester.pumpWidget(
+        Center(
+          child: RepaintBoundary(
+            key: iconKey,
+            child: const ColoredBox(
+              color: Color(0xFF00FF00),
+              child: SizedBox(width: 20, height: 20),
+            ),
+          ),
+        ),
+      );
+
+      // Configure the icon, set positions, then clear with an empty list.
+      await tester.runAsync(() async {
+        await osm.customMarkerStaticPosition(9, iconKey, 'group-1');
+        await osm.staticPosition(
+          9,
+          [GeoPoint(latitude: 1, longitude: 2)],
+          'group-1',
+        );
+        await osm.staticPosition(9, [], 'group-1');
+        // Repeated clearing succeeds as well (idempotent host contract).
+        await osm.staticPosition(9, [], 'group-1');
+      });
+
+      // Icon-only configuration caches without sending (no group exists
+      // yet); positions then carry the icon; both clears route removals.
+      expect(wireCalls, [
+        'set:icon',
+        'remove:group-1',
+        'remove:group-1',
+      ]);
+
+      // Refilling replays the preserved icon configuration.
+      await tester.runAsync(() async {
+        await osm.staticPosition(
+          9,
+          [GeoPoint(latitude: 3, longitude: 4)],
+          'group-1',
+        );
+      });
+      expect(wireCalls.last, 'set:icon');
+      expect(firstIconBytes, isA<Uint8List>());
+    });
+
+    testWidgets('moves onto occupied coordinates keep native ordering',
+        (tester) async {
+      final osm = await attachedGenerated();
+      await mockMarkers('addMarker', (_) => pigeonReply(null));
+      final wireCalls = <String>[];
+      await mockMarkers('moveMarker', (message) {
+        final args =
+            const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+        wireCalls.add(args[1] as String);
+        return pigeonReply(null);
+      });
+      await mockMarkers('updateMarkerIcon', (_) => pigeonReply(null));
+      await mockMarkers('rotateMarker', (_) => pigeonReply(null));
+      await mockMarkers('setMarkerAnchor', (_) => pigeonReply(null));
+
+      final iconKey = GlobalKey();
+      await tester.pumpWidget(
+        Center(
+          child: RepaintBoundary(
+            key: iconKey,
+            child: const ColoredBox(
+              color: Color(0xFF0000FF),
+              child: SizedBox(width: 20, height: 20),
+            ),
+          ),
+        ),
+      );
+
+      // Oldest marker at P1; two newer markers share P2.
+      await tester.runAsync(() async {
+        await osm.addMarker(9, GeoPoint(latitude: 1, longitude: 2));
+        await osm.addMarker(9, GeoPoint(latitude: 3, longitude: 4));
+        await osm.addMarker(9, GeoPoint(latitude: 3, longitude: 4));
+      });
+      wireCalls.clear();
+
+      // Move the oldest marker onto the occupied coordinate: Darwin keeps
+      // its original array index, so it stays the native first-match there.
+      await tester.runAsync(() async {
+        await osm.changeMarker(
+          9,
+          GeoPoint(latitude: 1, longitude: 2),
+          GeoPoint(latitude: 3, longitude: 4),
+        );
+      });
+
+      // A coordinate-based update on the occupied coordinate must resolve
+      // the same primary the native layer would pick.
+      await tester.runAsync(() async {
+        await osm.changeMarker(
+          9,
+          GeoPoint(latitude: 3, longitude: 4),
+          GeoPoint(latitude: 5, longitude: 6),
+          globalKeyIcon: iconKey,
+        );
+      });
+
+      expect(wireCalls, ['osm-9-0', 'osm-9-0']);
     });
 
     test('close drops the position table so a reattach starts fresh',

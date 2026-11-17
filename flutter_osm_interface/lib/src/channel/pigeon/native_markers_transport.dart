@@ -79,8 +79,16 @@ class PigeonMarkersTransport implements AndroidMapTransport {
   }
 
   @override
-  Future<void> updateMarkerIcon(MarkerId markerId, Uint8List iconBytes) =>
-      markersClient.updateMarkerIcon(markerId.value, iconBytes);
+  Future<void> updateMarkerIcon(
+    MarkerId markerId,
+    Uint8List iconBytes, {
+    List<int>? iconLogicalSize,
+  }) =>
+      markersClient.updateMarkerIcon(
+        markerId.value,
+        iconBytes,
+        iconLogicalSize: iconLogicalSize,
+      );
 
   @override
   Future<void> moveMarker(MarkerId markerId, GeoPoint position) =>

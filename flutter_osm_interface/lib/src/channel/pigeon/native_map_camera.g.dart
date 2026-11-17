@@ -271,6 +271,185 @@ class NativeMarkerAnchor {
   }
 }
 
+/// Logical (pre-scale) icon dimensions in Dart-side units.
+///
+/// Widget captures render at a device pixel ratio, so the raw PNG pixels do
+/// not describe the marker's display size. Hosts combine these logical
+/// dimensions with the display scale the way the legacy routes do.
+class NativeMarkerSize {
+  NativeMarkerSize({
+    required this.width,
+    required this.height,
+  });
+
+  int width;
+
+  int height;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      width,
+      height,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeMarkerSize decode(Object result) {
+    result as List<Object?>;
+    return NativeMarkerSize(
+      width: result[0]! as int,
+      height: result[1]! as int,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeMarkerSize || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(width, other.width) && _deepEquals(height, other.height);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeMarkerSize(width: $width, height: $height)';
+  }
+}
+
+/// WGS84 bounding box in degrees, matching the legacy `BoundingBox` map
+/// shape (`north`, `south`, `east`, `west`).
+class NativeBounds {
+  NativeBounds({
+    required this.north,
+    required this.south,
+    required this.east,
+    required this.west,
+  });
+
+  double north;
+
+  double south;
+
+  double east;
+
+  double west;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      north,
+      south,
+      east,
+      west,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeBounds decode(Object result) {
+    result as List<Object?>;
+    return NativeBounds(
+      north: result[0]! as double,
+      south: result[1]! as double,
+      east: result[2]! as double,
+      west: result[3]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeBounds || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(north, other.north) && _deepEquals(south, other.south) && _deepEquals(east, other.east) && _deepEquals(west, other.west);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeBounds(north: $north, south: $south, east: $east, west: $west)';
+  }
+}
+
+/// Zoom configuration applied at attachment time, mirroring the legacy
+/// `config#Zoom` payload. Values are OSM zoom levels.
+class NativeZoomConfiguration {
+  NativeZoomConfiguration({
+    required this.initZoom,
+    required this.minZoomLevel,
+    required this.maxZoomLevel,
+    required this.stepZoom,
+  });
+
+  double initZoom;
+
+  double minZoomLevel;
+
+  double maxZoomLevel;
+
+  double stepZoom;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      initZoom,
+      minZoomLevel,
+      maxZoomLevel,
+      stepZoom,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeZoomConfiguration decode(Object result) {
+    result as List<Object?>;
+    return NativeZoomConfiguration(
+      initZoom: result[0]! as double,
+      minZoomLevel: result[1]! as double,
+      maxZoomLevel: result[2]! as double,
+      stepZoom: result[3]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeZoomConfiguration || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(initZoom, other.initZoom) && _deepEquals(minZoomLevel, other.minZoomLevel) && _deepEquals(maxZoomLevel, other.maxZoomLevel) && _deepEquals(stepZoom, other.stepZoom);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeZoomConfiguration(initZoom: $initZoom, minZoomLevel: $minZoomLevel, maxZoomLevel: $maxZoomLevel, stepZoom: $stepZoom)';
+  }
+}
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -288,6 +467,15 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is NativeMarkerAnchor) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
+    }    else if (value is NativeMarkerSize) {
+      buffer.putUint8(132);
+      writeValue(buffer, value.encode());
+    }    else if (value is NativeBounds) {
+      buffer.putUint8(133);
+      writeValue(buffer, value.encode());
+    }    else if (value is NativeZoomConfiguration) {
+      buffer.putUint8(134);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -302,6 +490,12 @@ class _PigeonCodec extends StandardMessageCodec {
         return NativeCameraPosition.decode(readValue(buffer)!);
       case 131:
         return NativeMarkerAnchor.decode(readValue(buffer)!);
+      case 132:
+        return NativeMarkerSize.decode(readValue(buffer)!);
+      case 133:
+        return NativeBounds.decode(readValue(buffer)!);
+      case 134:
+        return NativeZoomConfiguration.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -424,6 +618,100 @@ class NativeMapCameraApi {
     ;
     return pigeonVar_replyValue! as NativeCameraPosition;
   }
+
+  /// Visible-region bounding box snapshot (degrees). Errors with
+  /// `camera_not_ready` when the view cannot provide its visible rect yet.
+  Future<NativeBounds> getBounds(NativeCameraSession session) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.getBounds$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as NativeBounds;
+  }
+
+  /// Moves/animates the viewport to fit the bounding box with pixel padding.
+  /// `paddingInPixel` is advisory; hosts may clamp it to engine limits.
+  Future<void> zoomToBoundingBox(NativeCameraSession session, NativeBounds bounds, int paddingInPixel) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.zoomToBoundingBox$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, bounds, paddingInPixel]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Restricts the camera to the bounding box area.
+  Future<void> setBoundsLimit(NativeCameraSession session, NativeBounds bounds) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.setBoundsLimit$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, bounds]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Removes the camera area limit, restoring the world view.
+  Future<void> removeBoundsLimit(NativeCameraSession session) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.removeBoundsLimit$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Applies the zoom configuration (init/min/max/step), mirroring the
+  /// legacy `config#Zoom` semantics.
+  Future<void> configureZoom(NativeCameraSession session, NativeZoomConfiguration configuration) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.configureZoom$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, configuration]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
 }
 
 /// Generated markers command route for one map session.
@@ -452,15 +740,16 @@ class NativeMapMarkersApi {
 
   /// Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
   /// platform default icon. `angleDegrees` pre-rotates the icon;
-  /// `anchor` selects the icon pivot (null = centered).
-  Future<void> addMarker(NativeCameraSession session, String markerId, double latitude, double longitude, Uint8List? iconBytes, double angleDegrees, NativeMarkerAnchor? anchor) async {
+  /// `anchor` selects the icon pivot (null = centered). `iconLogicalSize`
+  /// carries the pre-scale widget dimensions for display scaling.
+  Future<void> addMarker(NativeCameraSession session, String markerId, double latitude, double longitude, Uint8List? iconBytes, double angleDegrees, NativeMarkerAnchor? anchor, NativeMarkerSize? iconLogicalSize) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.addMarker$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, latitude, longitude, iconBytes, angleDegrees, anchor]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, latitude, longitude, iconBytes, angleDegrees, anchor, iconLogicalSize]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
     _extractReplyValueOrThrow(
         pigeonVar_replyList,
@@ -489,15 +778,16 @@ class NativeMapMarkersApi {
     ;
   }
 
-  /// Replaces one marker's icon with new encoded bytes.
-  Future<void> updateMarkerIcon(NativeCameraSession session, String markerId, Uint8List iconBytes) async {
+  /// Replaces one marker's icon with new encoded bytes. `iconLogicalSize`
+  /// carries the pre-scale widget dimensions for display scaling.
+  Future<void> updateMarkerIcon(NativeCameraSession session, String markerId, Uint8List iconBytes, NativeMarkerSize? iconLogicalSize) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.updateMarkerIcon$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, iconBytes]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerId, iconBytes, iconLogicalSize]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
     _extractReplyValueOrThrow(
         pigeonVar_replyList,
@@ -563,15 +853,16 @@ class NativeMapMarkersApi {
 
   /// Creates or replaces a static-position group: flat
   /// `[lat, lon, angleDegrees, lat, lon, angleDegrees, ...]` coordinates
-  /// sharing one icon (`iconBytes` null = platform default icon).
-  Future<void> setStaticPositions(NativeCameraSession session, String groupId, Float64List coordinates, Uint8List? iconBytes) async {
+  /// sharing one icon (`iconBytes` null = platform default icon;
+  /// `iconLogicalSize` carries the pre-scale widget dimensions).
+  Future<void> setStaticPositions(NativeCameraSession session, String groupId, Float64List coordinates, Uint8List? iconBytes, NativeMarkerSize? iconLogicalSize) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.setStaticPositions$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, groupId, coordinates, iconBytes]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, groupId, coordinates, iconBytes, iconLogicalSize]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
     _extractReplyValueOrThrow(
         pigeonVar_replyList,

@@ -11,6 +11,7 @@ import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_bootstrap.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_map_camera.g.dart' as generated;
 import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
@@ -47,6 +48,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// points) cannot be expressed by the generated replace-group command,
   /// so icons captured in Dart are replayed with the cached coordinates.
   final Map<int, Map<String, Uint8List>> _typedStaticGroupIcons = {};
+  final Map<int, Map<String, List<int>?>> _typedStaticGroupIconSizes = {};
   final Map<int, Map<String, Float64List>> _typedStaticGroupPoints = {};
 
   /// In-flight attach decisions keyed by `<viewId>:<capability>`, so
@@ -201,7 +203,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _markersRoutes.remove(idOSM);
     _typedMarkerKeys.remove(idOSM);
     _typedMarkerSequences.remove(idOSM);
+    _typedMarkerOrder.remove(idOSM);
     _typedStaticGroupIcons.remove(idOSM);
+    _typedStaticGroupIconSizes.remove(idOSM);
     _typedStaticGroupPoints.remove(idOSM);
     if (_channels.isEmpty) {
       _streamController.close();
@@ -283,7 +287,33 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @visibleForTesting
   PigeonMarkersClient? markersClientFor(int idOSM) => _markersRoutes[idOSM];
 
+  /// Global registration order of the stable marker ids per map. Darwin's
+  /// native layer keeps a moved marker's original array index, so "first
+  /// marker at a coordinate" follows registration order, not move order.
+  final Map<int, List<String>> _typedMarkerOrder = {};
+
   static String _geoKey(GeoPoint p) => '${p.latitude},${p.longitude}';
+
+  /// Inserts a moved marker id into its destination bucket at the position
+  /// matching the native insertion order: an older marker landing on a
+  /// coordinate stays the native first-match even though the move happened
+  /// last, and later coordinate-based updates must resolve the same id.
+  void _insertTypedIdByNativeOrder(int idOSM, String key, String markerId) {
+    final bucket = (_typedMarkerKeys[idOSM] ??= {})[key] ??= [];
+    final order = _typedMarkerOrder[idOSM];
+    final movedIndex = order?.indexOf(markerId) ?? -1;
+    var insertAt = bucket.length;
+    if (movedIndex >= 0) {
+      for (var i = 0; i < bucket.length; i++) {
+        final existingIndex = order?.indexOf(bucket[i]) ?? -1;
+        if (existingIndex > movedIndex) {
+          insertAt = i;
+          break;
+        }
+      }
+    }
+    bucket.insert(insertAt, markerId);
+  }
 
   String _nextTypedMarkerId(int idOSM) {
     final sequence = _typedMarkerSequences[idOSM] ?? 0;
@@ -433,12 +463,18 @@ class MethodChannelOSM extends MobileOSMPlatform {
       // Widget rendering is asynchronous: the capture can outlive a
       // close(), so identity-check the attachment before touching state or
       // sending the replacement group.
-      final icon = await _capturePng(globalKey!) as Uint8List;
+      final (icon, iconLogicalSize) = await _captureWidgetIcon(globalKey!);
       if (!identical(_markersRoutes[idOSM], client)) return;
       (_typedStaticGroupIcons[idOSM] ??= {})[id] = icon;
+      (_typedStaticGroupIconSizes[idOSM] ??= {})[id] = iconLogicalSize;
       final points = _typedStaticGroupPoints[idOSM]?[id];
       if (points != null) {
-        await client.setStaticPositions(id, points, iconBytes: icon);
+        await client.setStaticPositions(
+          id,
+          points,
+          iconBytes: icon,
+          iconLogicalSize: iconLogicalSize,
+        );
       }
       return;
     }
@@ -548,6 +584,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
       // only update identity when this is still the attachment's table.
       if (identical(_typedMarkerKeys[idOSM], keys)) {
         keys.remove(_geoKey(p));
+        for (final id in ids) {
+          _typedMarkerOrder[idOSM]?.remove(id);
+        }
       }
       return;
     }
@@ -572,6 +611,17 @@ class MethodChannelOSM extends MobileOSMPlatform {
   ) async {
     final client = _markersRoutes[idOSM];
     if (client != null) {
+      // An empty list clears the group (legacy behavior): the generated
+      // hosts reject empty coordinates, so route through removal instead.
+      // Positions are dropped, but the configured icon is kept — legacy
+      // preserves the group's icon configuration, so a refill replays it.
+      if (pList.isEmpty) {
+        await client.removeStaticPositions(id);
+        if (identical(_markersRoutes[idOSM], client)) {
+          _typedStaticGroupPoints[idOSM]?.remove(id);
+        }
+        return;
+      }
       final coordinates = Float64List.fromList([
         for (final p in pList) ...[
           p.latitude,
@@ -583,6 +633,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
         id,
         coordinates,
         iconBytes: _typedStaticGroupIcons[idOSM]?[id],
+        iconLogicalSize: _typedStaticGroupIconSizes[idOSM]?[id],
       );
       (_typedStaticGroupPoints[idOSM] ??= {})[id] = coordinates;
       return;
@@ -602,7 +653,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
     }
   }
 
-  Future<dynamic> _capturePng(GlobalKey globalKey) async {
+  /// Captures a widget as raw PNG bytes plus its logical (pre-scale)
+  /// dimensions. Typed routes need the raw bytes so each host applies its
+  /// own display scaling; the legacy {_capturePng} wrapper serializes the
+  /// same capture into the legacy channel contract (Apple base64 + size).
+  Future<(Uint8List, List<int>?)> _captureWidgetIcon(GlobalKey globalKey) async {
     if (globalKey.currentContext == null) {
       throw Exception("Error to draw you custom icon");
     }
@@ -621,6 +676,19 @@ class MethodChannelOSM extends MobileOSMPlatform {
     ByteData byteData =
         (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
     Uint8List pngBytes = byteData.buffer.asUint8List();
+    final logicalSize = globalKey.currentContext?.size;
+    return (
+      pngBytes,
+      logicalSize == null
+          ? null
+          : [logicalSize.width.round(), logicalSize.height.round()],
+    );
+  }
+
+  /// Legacy capture serialization: raw bytes on Android, a base64 + logical
+  /// size map on Apple, exactly as the legacy channel expects.
+  Future<dynamic> _capturePng(GlobalKey globalKey) async {
+    final (pngBytes, _) = await _captureWidgetIcon(globalKey);
     if (defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.macOS) {
       return {
@@ -737,6 +805,13 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> limitArea(int idOSM, BoundingBox box) async {
+    final client = _cameraRoutes[idOSM];
+    if (client != null && client.supportsBoundsAndZoomConfig) {
+      await client.setBoundsLimit(
+        generated_bounds(box),
+      );
+      return;
+    }
     await _channels[idOSM]?.invokeMethod("limitArea", [
       box.north,
       box.east,
@@ -745,8 +820,22 @@ class MethodChannelOSM extends MobileOSMPlatform {
     ]);
   }
 
+  /// Maps the domain bounding box to the generated wire shape.
+  generated.NativeBounds generated_bounds(BoundingBox box) =>
+      generated.NativeBounds(
+        north: box.north,
+        south: box.south,
+        east: box.east,
+        west: box.west,
+      );
+
   @override
   Future<void> removeLimitArea(int idOSM) async {
+    final client = _cameraRoutes[idOSM];
+    if (client != null && client.supportsBoundsAndZoomConfig) {
+      await client.removeBoundsLimit();
+      return;
+    }
     await _channels[idOSM]?.invokeMethod("remove#limitArea");
   }
 
@@ -775,11 +864,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
   }) async {
     final client = _markersRoutes[idOSM];
     if (client != null) {
-      // Flutter widget rendering stays asynchronous on the Dart side; only
-      // the resulting PNG bytes cross the generated channel.
+      // Flutter widget rendering stays asynchronous on the Dart side; raw
+      // PNG bytes and logical dimensions cross the generated channel.
       Uint8List? iconBytes;
+      List<int>? iconLogicalSize;
       if (globalKeyIcon != null) {
-        iconBytes = await _capturePng(globalKeyIcon) as Uint8List;
+        (iconBytes, iconLogicalSize) = await _captureWidgetIcon(globalKeyIcon);
       }
       final markerId = _nextTypedMarkerId(idOSM);
       await client.addMarker(
@@ -791,12 +881,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
         angleDegrees:
             p is GeoPointWithOrientation ? p.angle * 180 / math.pi : 0,
         anchor: iconAnchor?.toGenerated(),
+        iconLogicalSize: iconLogicalSize,
       );
       // The attachment may have been closed while the add was in flight;
       // only extend identity when this client is still the frozen route.
       if (identical(_markersRoutes[idOSM], client)) {
         final keys = _typedMarkerKeys[idOSM] ??= {};
         (keys[_geoKey(p)] ??= []).add(markerId);
+        (_typedMarkerOrder[idOSM] ??= []).add(markerId);
       }
       return;
     }
@@ -873,6 +965,16 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<BoundingBox> getBounds(int idOSM) async {
+    final client = _cameraRoutes[idOSM];
+    if (client != null && client.supportsBoundsAndZoomConfig) {
+      final bounds = await client.getBounds();
+      return BoundingBox(
+        north: bounds.north,
+        south: bounds.south,
+        east: bounds.east,
+        west: bounds.west,
+      );
+    }
     final Map mapBounds = await _channels[idOSM]?.invokeMethod('map#bounds');
     return BoundingBox.fromMap(mapBounds);
   }
@@ -883,6 +985,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
     BoundingBox box, {
     int paddinInPixel = 0,
   }) async {
+    final client = _cameraRoutes[idOSM];
+    if (client != null && client.supportsBoundsAndZoomConfig) {
+      await client.zoomToBoundingBox(
+        generated_bounds(box),
+        paddingInPixel: paddinInPixel,
+      );
+      return;
+    }
     final Map<String, dynamic> args = {};
     args.addAll(box.toMap());
     args.putIfAbsent("padding", () => paddinInPixel);
@@ -902,8 +1012,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
     final ids = _typedMarkerKeys[idOSM]?[_geoKey(point)];
     if (client != null && ids != null && ids.isNotEmpty) {
       // Legacy icon update targets the first marker found at the position.
-      final icon = await _capturePng(globalKeyIcon) as Uint8List;
-      await client.updateMarkerIcon(ids.first, icon);
+      final (icon, iconLogicalSize) = await _captureWidgetIcon(globalKeyIcon);
+      await client.updateMarkerIcon(
+        ids.first,
+        icon,
+        iconLogicalSize: iconLogicalSize,
+      );
       return;
     }
 
@@ -987,12 +1101,17 @@ class MethodChannelOSM extends MobileOSMPlatform {
         if (trackedIds != null) {
           trackedIds.remove(markerId);
           if (trackedIds.isEmpty) keys.remove(_geoKey(oldLocation));
-          (keys[_geoKey(newLocation)] ??= []).add(markerId);
+          _insertTypedIdByNativeOrder(idOSM, _geoKey(newLocation), markerId);
         }
       }
       if (globalKeyIcon != null) {
-        final icon = await _capturePng(globalKeyIcon) as Uint8List;
-        await client.updateMarkerIcon(markerId, icon);
+        final (icon, iconLogicalSize) =
+            await _captureWidgetIcon(globalKeyIcon);
+        await client.updateMarkerIcon(
+          markerId,
+          icon,
+          iconLogicalSize: iconLogicalSize,
+        );
       }
       if (angle != null) {
         await client.rotateMarker(markerId, angle * 180 / math.pi);
@@ -1052,6 +1171,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
         for (final point in markers) {
           keys.remove(_geoKey(point));
         }
+        for (final id in ids) {
+          _typedMarkerOrder[idOSM]?.remove(id);
+        }
       }
       return;
     }
@@ -1087,6 +1209,21 @@ extension ConfigExt on MethodChannelOSM {
     double maxZoomLevel,
     double stepZoom,
   ) async {
+    final client = _cameraRoutes[idOSM];
+    if (client != null && client.supportsBoundsAndZoomConfig) {
+      // Negotiated before initialization: an original camera-only host
+      // keeps zoom configuration on the legacy route and initialization
+      // cannot fail on a missing generated method.
+      await client.configureZoom(
+        generated.NativeZoomConfiguration(
+          initZoom: initZoom,
+          minZoomLevel: minZoomLevel,
+          maxZoomLevel: maxZoomLevel,
+          stepZoom: stepZoom,
+        ),
+      );
+      return;
+    }
     var args = {
       "initZoom": initZoom,
       "minZoomLevel": minZoomLevel,

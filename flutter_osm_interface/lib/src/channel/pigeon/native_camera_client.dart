@@ -52,6 +52,14 @@ class PigeonCameraClient {
 
   NativeProtocolBootstrap get bootstrap => _bootstrap;
 
+  /// Whether the negotiated host implements the expanded camera surface
+  /// (bounds queries, zoom-to-bounds, camera limits/reset and zoom
+  /// configuration). Original camera.v1 hosts advertise only the base
+  /// camera capability; expanded-surface commands route to legacy unless
+  /// the host negotiated `camera.config` at attach time.
+  bool get supportsBoundsAndZoomConfig =>
+      _bootstrap.advertises(kCameraConfigCapability);
+
   generated.NativeCameraSession get _wireSession => generated.NativeCameraSession(
         sessionToken: _bootstrap.sessionToken,
         generation: _bootstrap.generation,
@@ -82,6 +90,36 @@ class PigeonCameraClient {
 
   Future<generated.NativeCameraPosition> getCameraPosition() {
     return _guard(() => _api.getCameraPosition(_wireSession));
+  }
+
+  /// Visible-region bounding box in degrees.
+  Future<generated.NativeBounds> getBounds() {
+    return _guard(() => _api.getBounds(_wireSession));
+  }
+
+  /// Moves/animates the viewport to fit the bounding box with pixel padding.
+  Future<void> zoomToBoundingBox(
+    generated.NativeBounds bounds, {
+    int paddingInPixel = 0,
+  }) {
+    return _guard(
+      () => _api.zoomToBoundingBox(_wireSession, bounds, paddingInPixel),
+    );
+  }
+
+  /// Restricts the camera to the bounding box area.
+  Future<void> setBoundsLimit(generated.NativeBounds bounds) {
+    return _guard(() => _api.setBoundsLimit(_wireSession, bounds));
+  }
+
+  /// Removes the camera area limit, restoring the world view.
+  Future<void> removeBoundsLimit() {
+    return _guard(() => _api.removeBoundsLimit(_wireSession));
+  }
+
+  /// Applies the zoom configuration (init/min/max/step).
+  Future<void> configureZoom(generated.NativeZoomConfiguration configuration) {
+    return _guard(() => _api.configureZoom(_wireSession, configuration));
   }
 
   Future<T> _guard<T>(Future<T> Function() operation) async {

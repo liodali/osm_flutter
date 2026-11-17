@@ -52,6 +52,7 @@ class PigeonMarkersClient {
     Uint8List? iconBytes,
     double angleDegrees = 0,
     generated.NativeMarkerAnchor? anchor,
+    List<int>? iconLogicalSize,
   }) {
     return _guard(
       () => _api.addMarker(
@@ -62,6 +63,7 @@ class PigeonMarkersClient {
         iconBytes,
         angleDegrees,
         anchor,
+        iconLogicalSize?.toGeneratedSize(),
       ),
     );
   }
@@ -73,8 +75,19 @@ class PigeonMarkersClient {
     return _guard(() => _api.addMarkers(_wireSession, markerIds, coordinates));
   }
 
-  Future<void> updateMarkerIcon(String markerId, Uint8List iconBytes) {
-    return _guard(() => _api.updateMarkerIcon(_wireSession, markerId, iconBytes));
+  Future<void> updateMarkerIcon(
+    String markerId,
+    Uint8List iconBytes, {
+    List<int>? iconLogicalSize,
+  }) {
+    return _guard(
+      () => _api.updateMarkerIcon(
+        _wireSession,
+        markerId,
+        iconBytes,
+        iconLogicalSize?.toGeneratedSize(),
+      ),
+    );
   }
 
   Future<void> moveMarker(
@@ -99,9 +112,16 @@ class PigeonMarkersClient {
     String groupId,
     Float64List coordinates, {
     Uint8List? iconBytes,
+    List<int>? iconLogicalSize,
   }) {
     return _guard(
-      () => _api.setStaticPositions(_wireSession, groupId, coordinates, iconBytes),
+      () => _api.setStaticPositions(
+        _wireSession,
+        groupId,
+        coordinates,
+        iconBytes,
+        iconLogicalSize?.toGeneratedSize(),
+      ),
     );
   }
 
@@ -136,10 +156,17 @@ class PigeonMarkersClient {
   }
 }
 
-/// Maps the marker-domain anchor to the generated wire pair.
+/// Maps the marker-domain anchor to the generated wire pair, applying the
+/// optional offset the way the legacy Darwin decoder does (anchor + offset).
 extension IconAnchorNativeWire on IconAnchor {
   generated.NativeMarkerAnchor toGenerated() => generated.NativeMarkerAnchor(
-        x: anchor.value.$1,
-        y: anchor.value.$2,
+        x: anchor.value.$1 + (offset?.x ?? 0),
+        y: anchor.value.$2 + (offset?.y ?? 0),
       );
+}
+
+/// Maps logical [width, height] widget dimensions to the generated size.
+extension IconLogicalSizeNativeWire on List<int> {
+  generated.NativeMarkerSize toGeneratedSize() =>
+      generated.NativeMarkerSize(width: first, height: last);
 }

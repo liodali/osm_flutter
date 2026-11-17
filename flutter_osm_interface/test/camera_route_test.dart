@@ -30,6 +30,16 @@ final Map<Object?, Object?> cameraBootstrap = {
   'generation': 0,
 };
 
+/// Host implementing the expanded camera surface (bounds, zoom-to-bounds,
+/// limits and zoom configuration) alongside the original five operations.
+final Map<Object?, Object?> expandedCameraBootstrap = {
+  'revision': 1,
+  'schemaId': 'flutter_osm.native.camera.v1',
+  'capabilities': ['camera', 'camera.config'],
+  'sessionToken': 'token-7',
+  'generation': 0,
+};
+
 ByteData? pigeonReply(Object? value) =>
     const StandardMessageCodec().encodeMessage(<Object?>[value]);
 
@@ -46,6 +56,12 @@ class _TestPigeonCodec extends StandardMessageCodec {
     if (value is generated.NativeCameraPosition) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
+    } else if (value is generated.NativeBounds) {
+      buffer.putUint8(133);
+      writeValue(buffer, value.encode());
+    } else if (value is generated.NativeZoomConfiguration) {
+      buffer.putUint8(134);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -53,8 +69,17 @@ class _TestPigeonCodec extends StandardMessageCodec {
 
   @override
   Object? readValueOfType(int type, ReadBuffer buffer) {
+    if (type == 129) {
+      return generated.NativeCameraSession.decode(readValue(buffer)!);
+    }
     if (type == 130) {
       return generated.NativeCameraPosition.decode(readValue(buffer)!);
+    }
+    if (type == 133) {
+      return generated.NativeBounds.decode(readValue(buffer)!);
+    }
+    if (type == 134) {
+      return generated.NativeZoomConfiguration.decode(readValue(buffer)!);
     }
     return super.readValueOfType(type, buffer);
   }
@@ -99,6 +124,11 @@ void main() {
       'moveTo',
       'setRotation',
       'getCameraPosition',
+      'getBounds',
+      'zoomToBoundingBox',
+      'setBoundsLimit',
+      'removeBoundsLimit',
+      'configureZoom',
     ]) {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMessageHandler(pigeonChannel(method), null);
@@ -361,6 +391,169 @@ void main() {
       await osm.setZoom(7, stepZoom: 2.0);
       expect(invocations, contains('legacy:Zoom'));
       expect(invocations, isNot(contains('pigeon:setZoom')));
+    });
+
+    test('bounds and zoom configuration route through the generated channel',
+        () async {
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}');
+        return call.method == bootstrapMethod ? expandedCameraBootstrap : null;
+      });
+      final codec = const _TestPigeonCodec();
+      final decoded = <String, Object?>{};
+      await mockPigeon('getBounds', (_) {
+        invocations.add('pigeon:getBounds');
+        return codec.encodeMessage(<Object?>[
+          generated.NativeBounds(north: 49, south: 48, east: 3, west: 2),
+        ]);
+      });
+      await mockPigeon('zoomToBoundingBox', (message) {
+        final args = codec.decodeMessage(message)! as List<Object?>;
+        decoded['bounds'] = args[1];
+        decoded['padding'] = args[2];
+        invocations.add('pigeon:zoomToBoundingBox');
+        return pigeonReply(null);
+      });
+      await mockPigeon('setBoundsLimit', (message) {
+        final args = codec.decodeMessage(message)! as List<Object?>;
+        decoded['limit'] = args[1];
+        invocations.add('pigeon:setBoundsLimit');
+        return pigeonReply(null);
+      });
+      await mockPigeon('removeBoundsLimit', (_) {
+        invocations.add('pigeon:removeBoundsLimit');
+        return pigeonReply(null);
+      });
+      await mockPigeon('configureZoom', (message) {
+        final args = codec.decodeMessage(message)! as List<Object?>;
+        decoded['zoomConfig'] = args[1];
+        invocations.add('pigeon:configureZoom');
+        return pigeonReply(null);
+      });
+
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachCameraRoute(7, optIn: true);
+
+      final bounds = await osm.getBounds(7);
+      expect(bounds.north, 49);
+      expect(bounds.south, 48);
+      expect(bounds.east, 3);
+      expect(bounds.west, 2);
+
+      await osm.zoomToBoundingBox(
+        7,
+        BoundingBox(north: 48.9, south: 48.1, east: 2.5, west: 2.1),
+        paddinInPixel: 24,
+      );
+      final boundsArg = decoded['bounds'] as generated.NativeBounds;
+      expect(boundsArg.north, 48.9);
+      expect(boundsArg.south, 48.1);
+      expect(boundsArg.east, 2.5);
+      expect(boundsArg.west, 2.1);
+      expect(decoded['padding'], 24);
+
+      await osm.limitArea(
+        7,
+        BoundingBox(north: 49, south: 47, east: 4, west: 1),
+      );
+      final limitArg = decoded['limit'] as generated.NativeBounds;
+      expect(limitArg.east, 4);
+      expect(limitArg.west, 1);
+
+      await osm.removeLimitArea(7);
+      await (osm as MethodChannelOSM).configureZoomMap(7, 8, 2, 19, 1);
+      final zoomConfig = decoded['zoomConfig'] as generated.NativeZoomConfiguration;
+      expect(zoomConfig.initZoom, 8);
+      expect(zoomConfig.minZoomLevel, 2);
+      expect(zoomConfig.maxZoomLevel, 19);
+      expect(zoomConfig.stepZoom, 1);
+
+      // No legacy camera command for these families ran.
+      expect(
+        invocations.where(
+          (m) => m.contains('map#bounds') ||
+              m.contains('zoomToRegion') ||
+              m.contains('limitArea') ||
+              m.contains('config#Zoom'),
+        ),
+        isEmpty,
+      );
+      expect(
+        invocations,
+        containsAll([
+          'pigeon:getBounds',
+          'pigeon:zoomToBoundingBox',
+          'pigeon:setBoundsLimit',
+          'pigeon:removeBoundsLimit',
+          'pigeon:configureZoom',
+        ]),
+      );
+    });
+
+    test('an original camera-only host keeps expanded commands on legacy',
+        () async {
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}');
+        if (call.method == 'map#bounds') {
+          return {'north': 49.0, 'south': 47.0, 'east': 4.0, 'west': 1.0};
+        }
+        return call.method == bootstrapMethod ? cameraBootstrap : null;
+      });
+      await mockPigeon('getBounds', (_) {
+        throw Exception('bounds route must never activate');
+      });
+      await mockPigeon('configureZoom', (_) {
+        throw Exception('zoom configuration route must never activate');
+      });
+      await mockPigeon('getZoom', (_) {
+        invocations.add('pigeon:getZoom');
+        return pigeonReply(14.0);
+      });
+
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      // Opt-in accepted: the original camera surface activates, but the
+      // expanded commands negotiate separately and stay on legacy because
+      // the host never advertised camera.config.
+      await osm.attachCameraRoute(7, optIn: true);
+
+      // The original surface routes generated on the same host.
+      final zoom = await osm.getZoom(7);
+      expect(zoom, 14.0);
+
+      final bounds = await osm.getBounds(7);
+      expect(bounds, isA<BoundingBox>());
+      await osm.zoomToBoundingBox(
+        7,
+        BoundingBox(north: 49, south: 47, east: 4, west: 1),
+      );
+      await osm.limitArea(
+        7,
+        BoundingBox(north: 49, south: 47, east: 4, west: 1),
+      );
+      await osm.removeLimitArea(7);
+      await (osm as MethodChannelOSM).configureZoomMap(7, 8, 2, 19, 1);
+
+      expect(
+        invocations,
+        containsAll([
+          'legacy:map#bounds',
+          'legacy:zoomToRegion',
+          'legacy:limitArea',
+          'legacy:remove#limitArea',
+          'legacy:config#Zoom',
+        ]),
+      );
+      expect(
+        invocations.where(
+          (m) =>
+              m.startsWith('pigeon:') && !m.startsWith('pigeon:getZoom'),
+        ),
+        isEmpty,
+      );
+      // The original camera surface still activates on the same host.
+      expect(invocations, contains('pigeon:getZoom'));
     });
 
     test('getMapCenter reads the generated camera position', () async {

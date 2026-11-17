@@ -23,6 +23,12 @@ const String kNativeCameraSchemaId = 'flutter_osm.native.camera.v1';
 /// Capability family carried by the camera schema.
 const String kCameraCapability = 'camera';
 
+/// Capability for the expanded camera surface: bounds queries,
+/// zoom-to-bounds, camera limits/reset and zoom configuration. Original
+/// camera hosts advertise only [kCameraCapability]; these commands route to
+/// legacy unless the host negotiated this capability at attach time.
+const String kCameraConfigCapability = 'camera.config';
+
 /// Capability family carried by the markers schema.
 const String kMarkersCapability = 'markers';
 

@@ -85,6 +85,31 @@ abstract class NativeMapCameraApi {
 
   /// Snapshot of the full camera state (center, zoom, rotation).
   NativeCameraPosition getCameraPosition(NativeCameraSession session);
+
+  /// Visible-region bounding box snapshot (degrees). Errors with
+  /// `camera_not_ready` when the view cannot provide its visible rect yet.
+  NativeBounds getBounds(NativeCameraSession session);
+
+  /// Moves/animates the viewport to fit the bounding box with pixel padding.
+  /// `paddingInPixel` is advisory; hosts may clamp it to engine limits.
+  void zoomToBoundingBox(
+    NativeCameraSession session,
+    NativeBounds bounds,
+    int paddingInPixel,
+  );
+
+  /// Restricts the camera to the bounding box area.
+  void setBoundsLimit(NativeCameraSession session, NativeBounds bounds);
+
+  /// Removes the camera area limit, restoring the world view.
+  void removeBoundsLimit(NativeCameraSession session);
+
+  /// Applies the zoom configuration (init/min/max/step), mirroring the
+  /// legacy `config#Zoom` semantics.
+  void configureZoom(
+    NativeCameraSession session,
+    NativeZoomConfiguration configuration,
+  );
 }
 
 /// Normalized icon anchor in icon-relative units.
@@ -98,6 +123,50 @@ class NativeMarkerAnchor {
   const NativeMarkerAnchor({required this.x, required this.y});
 }
 
+/// Logical (pre-scale) icon dimensions in Dart-side units.
+///
+/// Widget captures render at a device pixel ratio, so the raw PNG pixels do
+/// not describe the marker's display size. Hosts combine these logical
+/// dimensions with the display scale the way the legacy routes do.
+class NativeMarkerSize {
+  final int width;
+  final int height;
+
+  const NativeMarkerSize({required this.width, required this.height});
+}
+
+/// WGS84 bounding box in degrees, matching the legacy `BoundingBox` map
+/// shape (`north`, `south`, `east`, `west`).
+class NativeBounds {
+  final double north;
+  final double south;
+  final double east;
+  final double west;
+
+  const NativeBounds({
+    required this.north,
+    required this.south,
+    required this.east,
+    required this.west,
+  });
+}
+
+/// Zoom configuration applied at attachment time, mirroring the legacy
+/// `config#Zoom` payload. Values are OSM zoom levels.
+class NativeZoomConfiguration {
+  final double initZoom;
+  final double minZoomLevel;
+  final double maxZoomLevel;
+  final double stepZoom;
+
+  const NativeZoomConfiguration({
+    required this.initZoom,
+    required this.minZoomLevel,
+    required this.maxZoomLevel,
+    required this.stepZoom,
+  });
+}
+
 /// Generated markers command route for one map session.
 ///
 /// Mirrors the typed Android marker contract: stable string ids, coordinates
@@ -109,7 +178,8 @@ class NativeMarkerAnchor {
 abstract class NativeMapMarkersApi {
   /// Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
   /// platform default icon. `angleDegrees` pre-rotates the icon;
-  /// `anchor` selects the icon pivot (null = centered).
+  /// `anchor` selects the icon pivot (null = centered). `iconLogicalSize`
+  /// carries the pre-scale widget dimensions for display scaling.
   void addMarker(
     NativeCameraSession session,
     String markerId,
@@ -118,6 +188,7 @@ abstract class NativeMapMarkersApi {
     Uint8List? iconBytes,
     double angleDegrees,
     NativeMarkerAnchor? anchor,
+    NativeMarkerSize? iconLogicalSize,
   );
 
   /// Bulk-adds markers with default icons: parallel id list and
@@ -128,11 +199,13 @@ abstract class NativeMapMarkersApi {
     Float64List coordinates,
   );
 
-  /// Replaces one marker's icon with new encoded bytes.
+  /// Replaces one marker's icon with new encoded bytes. `iconLogicalSize`
+  /// carries the pre-scale widget dimensions for display scaling.
   void updateMarkerIcon(
     NativeCameraSession session,
     String markerId,
     Uint8List iconBytes,
+    NativeMarkerSize? iconLogicalSize,
   );
 
   /// Moves one marker to new coordinates without recreating it.
@@ -159,12 +232,14 @@ abstract class NativeMapMarkersApi {
 
   /// Creates or replaces a static-position group: flat
   /// `[lat, lon, angleDegrees, lat, lon, angleDegrees, ...]` coordinates
-  /// sharing one icon (`iconBytes` null = platform default icon).
+  /// sharing one icon (`iconBytes` null = platform default icon;
+  /// `iconLogicalSize` carries the pre-scale widget dimensions).
   void setStaticPositions(
     NativeCameraSession session,
     String groupId,
     Float64List coordinates,
     Uint8List? iconBytes,
+    NativeMarkerSize? iconLogicalSize,
   );
 
   /// Removes one static-position group by id.
