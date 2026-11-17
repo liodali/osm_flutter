@@ -73,6 +73,59 @@ final class PigeonCameraBridge: NativeMapCameraApi {
         }
     }
 
+    func getBounds(session: NativeCameraSession) throws -> NativeBounds {
+        try MainActor.assumeIsolated {
+            try validate(session)
+            guard let bounds = try requireSession().typedBounds() else {
+                throw PigeonError(code: "camera_not_ready", message: nil, details: nil)
+            }
+            return NativeBounds(
+                north: bounds.north, south: bounds.south,
+                east: bounds.east, west: bounds.west)
+        }
+    }
+
+    func zoomToBoundingBox(
+        session: NativeCameraSession, bounds: NativeBounds, paddingInPixel: Int64
+    ) throws {
+        try MainActor.assumeIsolated {
+            try validate(session)
+            try requireSession().typedZoomToBoundingBox(
+                north: bounds.north, south: bounds.south,
+                east: bounds.east, west: bounds.west,
+                paddingInPixel: Int(paddingInPixel))
+        }
+    }
+
+    func setBoundsLimit(session: NativeCameraSession, bounds: NativeBounds) throws {
+        try MainActor.assumeIsolated {
+            try validate(session)
+            try requireSession().typedSetBoundsLimit(
+                north: bounds.north, east: bounds.east,
+                south: bounds.south, west: bounds.west)
+        }
+    }
+
+    func removeBoundsLimit(session: NativeCameraSession) throws {
+        try MainActor.assumeIsolated {
+            try validate(session)
+            try requireSession().typedRemoveBoundsLimit()
+        }
+    }
+
+    func configureZoom(
+        session: NativeCameraSession, configuration: NativeZoomConfiguration
+    ) throws {
+        try MainActor.assumeIsolated {
+            try validate(session)
+            try requireSession().typedConfigureZoom(
+                initZoom: configuration.initZoom,
+                minZoomLevel: configuration.minZoomLevel,
+                maxZoomLevel: configuration.maxZoomLevel,
+                stepZoom: configuration.stepZoom)
+        }
+    }
+
     // MARK: registration
 
     func register(messenger: FlutterBinaryMessenger, viewId: Int64) {
@@ -108,6 +161,11 @@ final class PigeonCameraBridge: NativeMapCameraApi {
     static let nativeProtocolRevision = 1
     static let nativeCameraSchemaId = "flutter_osm.native.camera.v1"
     static let capabilityCamera = "camera"
+    static let capabilityMarkers = "markers"
+
+    /// Expanded camera surface: bounds queries, zoom-to-bounds, camera
+    /// limits/reset and zoom configuration.
+    static let capabilityCameraConfig = "camera.config"
 
     static func viewChannelSuffix(_ viewId: Int64) -> String {
         "view_\(viewId)"
@@ -116,12 +174,16 @@ final class PigeonCameraBridge: NativeMapCameraApi {
     /// Payload of the read-only `map#bootstrap#protocol` legacy-channel probe.
     /// Must stay in sync with the Dart bootstrap contract in
     /// flutter_osm_interface (`native_camera_bootstrap.dart`) and the Kotlin
-    /// `PigeonNativeCameraBridge.bootstrapPayload`.
+    /// `PigeonNativeCameraBridge.bootstrapPayload`. The markers capability is
+    /// advertised only now that the full marker family (add, batch add, icon
+    /// update, movement, rotation, anchors, removal, static groups) is
+    /// implemented in `PigeonMarkersBridge` and covered by the macOS session
+    /// tests.
     static func bootstrapPayload(sessionToken: String, generation: Int64) -> [String: Any] {
         [
             "revision": nativeProtocolRevision,
             "schemaId": nativeCameraSchemaId,
-            "capabilities": [capabilityCamera],
+            "capabilities": [capabilityCamera, capabilityMarkers, capabilityCameraConfig],
             "sessionToken": sessionToken,
             "generation": generation,
         ]

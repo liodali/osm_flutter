@@ -322,7 +322,6 @@ extension MapSession {
             let iconArg = args["icon"] as! [String: Any]
             iconSizeArg = iconArg["size"] as? [Int]
             icon = convertImage(codeImage: iconArg["icon"] as! String)
-
         }
         if defaultMarker != nil && icon == nil {
             icon =
@@ -337,26 +336,23 @@ extension MapSession {
 
         let sizeIcon = iconSizeArg!.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
         var angle = Float(0.0)
-        var anchor: AnchorGeoPoint? = nil
         if let _angle = point["angle"] {
             angle = Float(_angle)
         }
+        var anchor: MarkerAnchor? = nil
         if let _anchor = args["iconAnchor"] {
-            anchor = AnchorGeoPoint(anchorMap: _anchor as! [String: Any])
+            anchor = AnchorGeoPoint(anchorMap: _anchor as! [String: Any]).compute()
         }
-        let configuration = MarkerConfiguration(
-            icon: icon!, iconSize: sizeIcon, angle: angle, anchor: anchor?.compute(),
-            scaleType: MarkerScaleType.invariant)
-        let marker = Marker(location: coordinate, markerConfiguration: configuration)
-        self.mapOSM.markerManager.addMarker(marker: marker)
-        #if os(macOS)
-        recordMarkerScale(
+        // Legacy additions join the same typed registry (UUID id), so the
+        // legacy and generated routes share one coordinate-based identity.
+        _ = typedAddMarker(
+            id: UUID().uuidString,
             coordinate: coordinate,
-            iconBase64: (args["icon"] as? [String: Any])?["icon"] as? String,
+            icon: icon,
             logicalSize: iconSizeArg,
-            angle: angle,
-            anchorArgs: args["iconAnchor"] as? [String: Any])
-        #endif
+            angleRadians: angle,
+            anchor: anchor,
+            iconBase64ForScaleRefresh: (args["icon"] as? [String: Any])?["icon"] as? String)
     }
     private func changePositionMarker(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
@@ -365,7 +361,7 @@ extension MapSession {
         var icon: OSMPlatformImage? = nil
         var iconSize: MarkerIconSize? = nil
         var angle = Float(0.0)
-        var anchor: AnchorGeoPoint? = nil
+        var anchor: MarkerAnchor? = nil
         if let iconStr = args["new_icon"] as? [String: Any] {
             icon = convertImage(codeImage: iconStr["icon"] as! String)
             iconSize = (iconStr["size"] as? [Int])!.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
@@ -374,59 +370,59 @@ extension MapSession {
             angle = Float(_angle)
         }
         if let _anchor = args["iconAnchor"] {
-            anchor = AnchorGeoPoint(anchorMap: _anchor as! [String: Any])
+            anchor = AnchorGeoPoint(anchorMap: _anchor as! [String: Any]).compute()
         }
-        self.mapOSM.markerManager.updateMarker(
-            oldlocation: coordinate_old, newlocation: coordinate_new,
+        let newIconArg = args["new_icon"] as? [String: Any]
+        // Legacy change resets the rotation to 0 when no angle is provided;
+        // keep that exact behavior instead of preserving the old angle.
+        _ = typedChangeMarker(
+            at: coordinate_old,
+            to: coordinate_new,
             icon: icon,
             iconSize: iconSize,
-            angle: Float(angle), anchor: anchor?.compute())
-        #if os(macOS)
-        let newIconArg = args["new_icon"] as? [String: Any]
-        moveMarkerScaleRecord(
-            from: coordinate_old, to: coordinate_new,
-            iconBase64: newIconArg?["icon"] as? String,
-            logicalSize: newIconArg?["size"] as? [Int],
-            angle: Float(args["angle"] as? Double ?? 0),
-            anchorArgs: args["iconAnchor"] as? [String: Any])
-        #endif
+            angleRadians: Float(args["angle"] as? Double ?? 0),
+            anchor: anchor,
+            iconBase64ForScaleRefresh: newIconArg?["icon"] as? String,
+            logicalSizeForScaleRefresh: newIconArg?["size"] as? [Int])
     }
     func updateMarkerIcon(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
         var icon: OSMPlatformImage?
         var iconSize: MarkerIconSize?
+        var iconBase64: String? = nil
         if args.keys.contains("icon") {
             let iconArg = args["icon"] as! [String: Any]
             icon = convertImage(codeImage: iconArg["icon"] as! String)
             iconSize = (iconArg["size"] as? [Int])!.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
-
+            iconBase64 = iconArg["icon"] as? String
         }
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
-        self.mapOSM.markerManager.updateMarker(
-            oldlocation: coordinate, newlocation: coordinate, icon: icon, iconSize: iconSize)
-        #if os(macOS)
-        let iconArg = args["icon"] as? [String: Any]
-        updateMarkerScaleRecord(
-            at: coordinate,
-            iconBase64: iconArg?["icon"] as? String,
-            logicalSize: iconArg?["size"] as? [Int])
-        #endif
+        // Legacy update without an "icon" key is a no-op (nil icon keeps the
+        // existing configuration), so nothing to resolve or apply.
+        guard let icon = icon, let id = typedMarkerId(at: coordinate) else {
+            return
+        }
+        _ = typedUpdateMarkerIcon(
+            id: id,
+            icon: icon,
+            logicalSize: iconBase64 != nil
+                ? (args["icon"] as? [String: Any])?["size"] as? [Int]
+                : nil,
+            iconBase64ForScaleRefresh: iconBase64)
     }
     func deleteMarkers(call: FlutterMethodCall) {
         let geoPoints = (call.arguments as! [GeoPoint]).map { point -> CLLocationCoordinate2D in
             point.toLocationCoordinate()
         }
-        self.mapOSM.markerManager.removeMarkers(locations: geoPoints)
-        #if os(macOS)
-        geoPoints.forEach { removeMarkerScaleRecord(at: $0) }
-        #endif
+        // Every marker registered at each coordinate (duplicate adds share a
+        // coordinate) is removed through the shared service.
+        let ids = geoPoints.flatMap { typedMarkerIds(at: $0) }
+        _ = typedRemoveMarkers(ids: ids)
     }
     func deleteMarker(call: FlutterMethodCall) {
         let location = (call.arguments as! GeoPoint).toLocationCoordinate()
-        self.mapOSM.markerManager.removeMarker(location: location)
-        #if os(macOS)
-        removeMarkerScaleRecord(at: location)
-        #endif
+        let ids = typedMarkerIds(at: location)
+        _ = typedRemoveMarkers(ids: ids)
     }
     func changePosition(args: Any?, result: @escaping FlutterResult) {
         result(200)
@@ -454,8 +450,12 @@ extension MapSession {
         }
     }
     func configZoomMap(call: FlutterMethodCall) {
-        let zoomArgs = (call.arguments as! [String: Double]).mapValues(Int.init)
-        self.zoomConfig = ZoomConfiguration(zoomArgs)
+        let zoomArgs = call.arguments as! [String: Double]
+        typedConfigureZoom(
+            initZoom: zoomArgs["initZoom"] ?? 8,
+            minZoomLevel: zoomArgs["minZoomLevel"] ?? 2,
+            maxZoomLevel: zoomArgs["maxZoomLevel"] ?? 19,
+            stepZoom: zoomArgs["stepZoom"] ?? 1)
     }
     func getMapBounds(result: @escaping FlutterResult) {
         let boundingBox = self.mapOSM.getBoundingBox()
@@ -466,17 +466,19 @@ extension MapSession {
     }
     func zoomMapToBoundingBox(call: FlutterMethodCall) {
         let bbox = call.arguments as! [String: Double]
-        let boundingBox = BoundingBox(
-            north: bbox["north"]!, west: bbox["west"]!, east: bbox["east"]!, south: bbox["south"]!)
-        self.mapOSM.moveToByBoundingBox(bounds: boundingBox, animated: true)
+        typedZoomToBoundingBox(
+            north: bbox["north"]!, south: bbox["south"]!,
+            east: bbox["east"]!, west: bbox["west"]!,
+            paddingInPixel: Int(bbox["padding"] ?? 0))
     }
     func setCameraAreaLimit(call: FlutterMethodCall) {
         let bbox = call.arguments as! [Double]
-        let bounds = BoundingBox(boundingBoxs: bbox)
-        self.mapOSM.setBoundingBox(bounds: bounds)
+        // Legacy list order: [north, east, south, west].
+        typedSetBoundsLimit(
+            north: bbox[0], east: bbox[1], south: bbox[2], west: bbox[3])
     }
     func removeCameraAreaLimit(result: @escaping FlutterResult) {
-        self.mapOSM.setBoundingBox(bounds: BoundingBox())
+        typedRemoveBoundsLimit()
         result(200)
     }
     func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {

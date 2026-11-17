@@ -43,6 +43,8 @@ class MapSession: NSObject {
     var lastAppliedRotation: Double = 0
     /// Generated camera route living alongside the legacy channel handler.
     private(set) var cameraBridge: PigeonCameraBridge?
+    /// Generated markers route living alongside the legacy channel handler.
+    private(set) var markersBridge: PigeonMarkersBridge?
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -58,6 +60,16 @@ class MapSession: NSObject {
     let defaultMarker: String?
     private(set) var latestUserLocation: CLLocationCoordinate2D? = nil
     private var isDisposed: Bool = false
+    /// Stable marker id → current coordinate for the typed markers route.
+    /// Legacy additions mint UUID ids here too, so both routes share one
+    /// identity registry while the native view keeps matching markers by
+    /// coordinate equality (Apple's coordinate-based identity).
+    var typedMarkerCoordinates: [String: CLLocationCoordinate2D] = [:]
+    /// Registration order of the stable ids. Dictionary iteration order is
+    /// unspecified, but the native `MarkerManager` matches markers by array
+    /// order (first inserted wins), so "first id at a coordinate" must be
+    /// resolved through this list to stay consistent with the native view.
+    var typedMarkerOrder: [String] = []
     /// Results of in-flight road commands; completed exactly once and failed
     /// collectively on disposal so the Dart futures can never hang.
     private var outstandingRoadResults: [(id: String, result: FlutterResult)] = []
@@ -128,12 +140,53 @@ class MapSession: NSObject {
         markerScaleRecords.removeValue(forKey: Self.markerScaleKey(coordinate))
     }
 
+    /// Exact record for a coordinate (never reconstructed from the key).
+    private func storedMarkerScaleRecord(at coordinate: CLLocationCoordinate2D) -> MarkerScaleRecord? {
+        markerScaleRecords[Self.markerScaleKey(coordinate)]
+    }
+
+    /// Reads the recorded angle of the marker at a coordinate, keeping the
+    /// scale record consistent when a typed move preserves the angle.
+    func markerScaleRecordAngle(at coordinate: CLLocationCoordinate2D) -> Float? {
+        storedMarkerScaleRecord(at: coordinate)?.angle
+    }
+
+    /// Reads the recorded anchor arguments of the marker at a coordinate.
+    func markerScaleRecordAnchorArgs(at coordinate: CLLocationCoordinate2D) -> [String: Any]? {
+        storedMarkerScaleRecord(at: coordinate)?.anchorArgs
+    }
+
     func recordStaticPoiIcon(id: String, bitmapArgs: [String: Any]) {
         staticPoiIconArgs[id] = bitmapArgs
     }
 
     func storedStaticPoiIconArgs(id: String) -> [String: Any]? {
         staticPoiIconArgs[id]
+    }
+
+    func clearStaticPoiIcon(id: String) {
+        staticPoiIconArgs.removeValue(forKey: id)
+    }
+
+    /// Records a typed rotation into the existing scale record so display
+    /// refreshes re-apply the new angle (the rest of the record is kept).
+    func updateMarkerAngleScaleRecord(at coordinate: CLLocationCoordinate2D, angle: Float) {
+        let key = Self.markerScaleKey(coordinate)
+        guard var record = markerScaleRecords[key] else {
+            return
+        }
+        record.angle = angle
+        markerScaleRecords[key] = record
+    }
+
+    /// Records a typed anchor into the existing scale record.
+    func updateMarkerAnchorScaleRecord(at coordinate: CLLocationCoordinate2D, anchor: MarkerAnchor) {
+        let key = Self.markerScaleKey(coordinate)
+        guard var record = markerScaleRecords[key] else {
+            return
+        }
+        record.anchorArgs = ["x": anchor.x, "y": anchor.y]
+        markerScaleRecords[key] = record
     }
     #endif
 
@@ -187,11 +240,14 @@ class MapSession: NSObject {
         self.viewId = viewId
         super.init()
         self.mapOSM.enableRotation(enable: enableRotationGesture)
-        // Generated camera endpoints live alongside the legacy channel
-        // handler; they never replace it (C1 skeleton: registered, not routed).
+        // Generated camera and markers endpoints live alongside the legacy
+        // channel handler; they never replace it.
         let bridge = PigeonCameraBridge(session: self)
         bridge.register(messenger: binaryMessenger, viewId: viewId)
         cameraBridge = bridge
+        let markers = PigeonMarkersBridge(session: self)
+        markers.register(messenger: binaryMessenger, viewId: viewId)
+        markersBridge = markers
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -307,6 +363,8 @@ class MapSession: NSObject {
         isDisposed = true
         cameraBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
         cameraBridge = nil
+        markersBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        markersBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil

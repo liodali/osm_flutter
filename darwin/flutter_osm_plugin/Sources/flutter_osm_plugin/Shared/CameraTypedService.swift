@@ -10,6 +10,7 @@
 
 import CoreLocation
 import Foundation
+import OSMFlutterFramework
 
 extension MapSession {
 
@@ -63,5 +64,59 @@ extension MapSession {
             zoom: Double(mapOSM.zoom()),
             rotation: lastAppliedRotation
         )
+    }
+
+    // MARK: - Bounds and zoom configuration
+
+    /// Visible-region bounding box in degrees; nil when the view cannot
+    /// provide its visible box yet.
+    func typedBounds() -> (
+        north: Double, south: Double, east: Double, west: Double
+    )? {
+        let box = mapOSM.getBoundingBox()
+        return (
+            north: box.north, south: box.south, east: box.east, west: box.west
+        )
+    }
+
+    /// Moves/animates the viewport to fit the degree bounding box. The
+    /// legacy Apple route ignored the pixel padding (the framework has no
+    /// padding parameter), so it is accepted for schema parity and unused.
+    func typedZoomToBoundingBox(
+        north: Double, south: Double, east: Double, west: Double,
+        paddingInPixel: Int
+    ) {
+        let boundingBox = BoundingBox(
+            north: north, west: west, east: east, south: south)
+        mapOSM.moveToByBoundingBox(bounds: boundingBox, animated: true)
+    }
+
+    /// Restricts the camera to the degree bounding box area.
+    func typedSetBoundsLimit(
+        north: Double, east: Double, south: Double, west: Double
+    ) {
+        // Legacy list order: [north, east, south, west].
+        mapOSM.setBoundingBox(bounds: BoundingBox(boundingBoxs: [
+            north, east, south, west,
+        ]))
+    }
+
+    /// Removes the camera area limit, restoring the world view.
+    func typedRemoveBoundsLimit() {
+        mapOSM.setBoundingBox(bounds: BoundingBox())
+    }
+
+    /// Applies the zoom configuration (OSM zoom levels), matching the
+    /// legacy `config#Zoom` decode.
+    func typedConfigureZoom(
+        initZoom: Double, minZoomLevel: Double, maxZoomLevel: Double,
+        stepZoom: Double
+    ) {
+        zoomConfig = ZoomConfiguration([
+            "initZoom": Int(initZoom),
+            "minZoomLevel": Int(minZoomLevel),
+            "maxZoomLevel": Int(maxZoomLevel),
+            "stepZoom": Int(stepZoom),
+        ])
     }
 }

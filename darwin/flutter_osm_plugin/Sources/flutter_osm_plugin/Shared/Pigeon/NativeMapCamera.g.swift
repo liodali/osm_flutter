@@ -286,6 +286,203 @@ struct NativeCameraPosition: Hashable, CustomStringConvertible {
   }
 }
 
+/// Normalized icon anchor in icon-relative units.
+///
+/// `(0.5, 0.5)` centers the icon on the coordinate; `(0.5, 1.0)` pins the
+/// classic pin tip. Mirrors the legacy `IconAnchor` semantics.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct NativeMarkerAnchor: Hashable, CustomStringConvertible {
+  var x: Double
+  var y: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeMarkerAnchor? {
+    let x = pigeonVar_list[0] as! Double
+    let y = pigeonVar_list[1] as! Double
+
+    return NativeMarkerAnchor(
+      x: x,
+      y: y
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      x,
+      y,
+    ]
+  }
+  static func == (lhs: NativeMarkerAnchor, rhs: NativeMarkerAnchor) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.x, rhs.x) && NativeMapCameraPigeonInternal.deepEquals(lhs.y, rhs.y)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeMarkerAnchor")
+    NativeMapCameraPigeonInternal.deepHash(value: x, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: y, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeMarkerAnchor(x: \(String(describing: x)), y: \(String(describing: y)))"
+  }
+}
+
+/// Logical (pre-scale) icon dimensions in Dart-side units.
+///
+/// Widget captures render at a device pixel ratio, so the raw PNG pixels do
+/// not describe the marker's display size. Hosts combine these logical
+/// dimensions with the display scale the way the legacy routes do.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct NativeMarkerSize: Hashable, CustomStringConvertible {
+  var width: Int64
+  var height: Int64
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeMarkerSize? {
+    let width = pigeonVar_list[0] as! Int64
+    let height = pigeonVar_list[1] as! Int64
+
+    return NativeMarkerSize(
+      width: width,
+      height: height
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      width,
+      height,
+    ]
+  }
+  static func == (lhs: NativeMarkerSize, rhs: NativeMarkerSize) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.width, rhs.width) && NativeMapCameraPigeonInternal.deepEquals(lhs.height, rhs.height)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeMarkerSize")
+    NativeMapCameraPigeonInternal.deepHash(value: width, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: height, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeMarkerSize(width: \(String(describing: width)), height: \(String(describing: height)))"
+  }
+}
+
+/// WGS84 bounding box in degrees, matching the legacy `BoundingBox` map
+/// shape (`north`, `south`, `east`, `west`).
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct NativeBounds: Hashable, CustomStringConvertible {
+  var north: Double
+  var south: Double
+  var east: Double
+  var west: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeBounds? {
+    let north = pigeonVar_list[0] as! Double
+    let south = pigeonVar_list[1] as! Double
+    let east = pigeonVar_list[2] as! Double
+    let west = pigeonVar_list[3] as! Double
+
+    return NativeBounds(
+      north: north,
+      south: south,
+      east: east,
+      west: west
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      north,
+      south,
+      east,
+      west,
+    ]
+  }
+  static func == (lhs: NativeBounds, rhs: NativeBounds) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.north, rhs.north) && NativeMapCameraPigeonInternal.deepEquals(lhs.south, rhs.south) && NativeMapCameraPigeonInternal.deepEquals(lhs.east, rhs.east) && NativeMapCameraPigeonInternal.deepEquals(lhs.west, rhs.west)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeBounds")
+    NativeMapCameraPigeonInternal.deepHash(value: north, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: south, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: east, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: west, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeBounds(north: \(String(describing: north)), south: \(String(describing: south)), east: \(String(describing: east)), west: \(String(describing: west)))"
+  }
+}
+
+/// Zoom configuration applied at attachment time, mirroring the legacy
+/// `config#Zoom` payload. Values are OSM zoom levels.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct NativeZoomConfiguration: Hashable, CustomStringConvertible {
+  var initZoom: Double
+  var minZoomLevel: Double
+  var maxZoomLevel: Double
+  var stepZoom: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeZoomConfiguration? {
+    let initZoom = pigeonVar_list[0] as! Double
+    let minZoomLevel = pigeonVar_list[1] as! Double
+    let maxZoomLevel = pigeonVar_list[2] as! Double
+    let stepZoom = pigeonVar_list[3] as! Double
+
+    return NativeZoomConfiguration(
+      initZoom: initZoom,
+      minZoomLevel: minZoomLevel,
+      maxZoomLevel: maxZoomLevel,
+      stepZoom: stepZoom
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      initZoom,
+      minZoomLevel,
+      maxZoomLevel,
+      stepZoom,
+    ]
+  }
+  static func == (lhs: NativeZoomConfiguration, rhs: NativeZoomConfiguration) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.initZoom, rhs.initZoom) && NativeMapCameraPigeonInternal.deepEquals(lhs.minZoomLevel, rhs.minZoomLevel) && NativeMapCameraPigeonInternal.deepEquals(lhs.maxZoomLevel, rhs.maxZoomLevel) && NativeMapCameraPigeonInternal.deepEquals(lhs.stepZoom, rhs.stepZoom)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeZoomConfiguration")
+    NativeMapCameraPigeonInternal.deepHash(value: initZoom, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: minZoomLevel, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: maxZoomLevel, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: stepZoom, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeZoomConfiguration(initZoom: \(String(describing: initZoom)), minZoomLevel: \(String(describing: minZoomLevel)), maxZoomLevel: \(String(describing: maxZoomLevel)), stepZoom: \(String(describing: stepZoom)))"
+  }
+}
+
 private class NativeMapCameraPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -293,6 +490,14 @@ private class NativeMapCameraPigeonCodecReader: FlutterStandardReader {
       return NativeCameraSession.fromList(self.readValue() as! [Any?])
     case 130:
       return NativeCameraPosition.fromList(self.readValue() as! [Any?])
+    case 131:
+      return NativeMarkerAnchor.fromList(self.readValue() as! [Any?])
+    case 132:
+      return NativeMarkerSize.fromList(self.readValue() as! [Any?])
+    case 133:
+      return NativeBounds.fromList(self.readValue() as! [Any?])
+    case 134:
+      return NativeZoomConfiguration.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -306,6 +511,18 @@ private class NativeMapCameraPigeonCodecWriter: FlutterStandardWriter {
       super.writeValue(value.toList())
     } else if let value = value as? NativeCameraPosition {
       super.writeByte(130)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeMarkerAnchor {
+      super.writeByte(131)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeMarkerSize {
+      super.writeByte(132)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeBounds {
+      super.writeByte(133)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeZoomConfiguration {
+      super.writeByte(134)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -348,6 +565,19 @@ protocol NativeMapCameraApi {
   func setRotation(session: NativeCameraSession, angle: Double, animated: Bool) throws
   /// Snapshot of the full camera state (center, zoom, rotation).
   func getCameraPosition(session: NativeCameraSession) throws -> NativeCameraPosition
+  /// Visible-region bounding box snapshot (degrees). Errors with
+  /// `camera_not_ready` when the view cannot provide its visible rect yet.
+  func getBounds(session: NativeCameraSession) throws -> NativeBounds
+  /// Moves/animates the viewport to fit the bounding box with pixel padding.
+  /// `paddingInPixel` is advisory; hosts may clamp it to engine limits.
+  func zoomToBoundingBox(session: NativeCameraSession, bounds: NativeBounds, paddingInPixel: Int64) throws
+  /// Restricts the camera to the bounding box area.
+  func setBoundsLimit(session: NativeCameraSession, bounds: NativeBounds) throws
+  /// Removes the camera area limit, restoring the world view.
+  func removeBoundsLimit(session: NativeCameraSession) throws
+  /// Applies the zoom configuration (init/min/max/step), mirroring the
+  /// legacy `config#Zoom` semantics.
+  func configureZoom(session: NativeCameraSession, configuration: NativeZoomConfiguration) throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -445,6 +675,93 @@ class NativeMapCameraApiSetup {
     } else {
       getCameraPositionChannel.setMessageHandler(nil)
     }
+    /// Visible-region bounding box snapshot (degrees). Errors with
+    /// `camera_not_ready` when the view cannot provide its visible rect yet.
+    let getBoundsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.getBounds\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getBoundsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        do {
+          let result = try api.getBounds(session: sessionArg)
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      getBoundsChannel.setMessageHandler(nil)
+    }
+    /// Moves/animates the viewport to fit the bounding box with pixel padding.
+    /// `paddingInPixel` is advisory; hosts may clamp it to engine limits.
+    let zoomToBoundingBoxChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.zoomToBoundingBox\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      zoomToBoundingBoxChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let boundsArg = args[1] as! NativeBounds
+        let paddingInPixelArg = args[2] as! Int64
+        do {
+          try api.zoomToBoundingBox(session: sessionArg, bounds: boundsArg, paddingInPixel: paddingInPixelArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      zoomToBoundingBoxChannel.setMessageHandler(nil)
+    }
+    /// Restricts the camera to the bounding box area.
+    let setBoundsLimitChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.setBoundsLimit\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setBoundsLimitChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let boundsArg = args[1] as! NativeBounds
+        do {
+          try api.setBoundsLimit(session: sessionArg, bounds: boundsArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      setBoundsLimitChannel.setMessageHandler(nil)
+    }
+    /// Removes the camera area limit, restoring the world view.
+    let removeBoundsLimitChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.removeBoundsLimit\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      removeBoundsLimitChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        do {
+          try api.removeBoundsLimit(session: sessionArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      removeBoundsLimitChannel.setMessageHandler(nil)
+    }
+    /// Applies the zoom configuration (init/min/max/step), mirroring the
+    /// legacy `config#Zoom` semantics.
+    let configureZoomChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapCameraApi.configureZoom\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      configureZoomChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let configurationArg = args[1] as! NativeZoomConfiguration
+        do {
+          try api.configureZoom(session: sessionArg, configuration: configurationArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      configureZoomChannel.setMessageHandler(nil)
+    }
   }
 }
 /// Generated markers command route for one map session.
@@ -452,18 +769,35 @@ class NativeMapCameraApiSetup {
 /// Mirrors the typed Android marker contract: stable string ids, coordinates
 /// in degrees, and icon bytes prepared in Dart (Flutter widget rendering
 /// stays asynchronous on the Dart side; only encoded PNG bytes cross the
-/// channel). A null icon means the native default marker.
+/// channel). A null icon means the native default marker. Marker `angle`
+/// is in degrees, clockwise, matching the camera rotation unit.
 ///
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol NativeMapMarkersApi {
   /// Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
-  /// platform default icon.
-  func addMarker(session: NativeCameraSession, markerId: String, latitude: Double, longitude: Double, iconBytes: FlutterStandardTypedData?) throws
+  /// platform default icon. `angleDegrees` pre-rotates the icon;
+  /// `anchor` selects the icon pivot (null = centered). `iconLogicalSize`
+  /// carries the pre-scale widget dimensions for display scaling.
+  func addMarker(session: NativeCameraSession, markerId: String, latitude: Double, longitude: Double, iconBytes: FlutterStandardTypedData?, angleDegrees: Double, anchor: NativeMarkerAnchor?, iconLogicalSize: NativeMarkerSize?) throws
   /// Bulk-adds markers with default icons: parallel id list and
   /// [lat, lon, lat, lon, ...] coordinates.
   func addMarkers(session: NativeCameraSession, markerIds: [String], coordinates: FlutterStandardTypedData) throws
-  /// Replaces one marker's icon with new encoded bytes.
-  func updateMarkerIcon(session: NativeCameraSession, markerId: String, iconBytes: FlutterStandardTypedData) throws
+  /// Replaces one marker's icon with new encoded bytes. `iconLogicalSize`
+  /// carries the pre-scale widget dimensions for display scaling.
+  func updateMarkerIcon(session: NativeCameraSession, markerId: String, iconBytes: FlutterStandardTypedData, iconLogicalSize: NativeMarkerSize?) throws
+  /// Moves one marker to new coordinates without recreating it.
+  func moveMarker(session: NativeCameraSession, markerId: String, latitude: Double, longitude: Double) throws
+  /// Replaces one marker's icon rotation in degrees, clockwise.
+  func rotateMarker(session: NativeCameraSession, markerId: String, angleDegrees: Double) throws
+  /// Replaces one marker's icon anchor.
+  func setMarkerAnchor(session: NativeCameraSession, markerId: String, anchor: NativeMarkerAnchor) throws
+  /// Creates or replaces a static-position group: flat
+  /// `[lat, lon, angleDegrees, lat, lon, angleDegrees, ...]` coordinates
+  /// sharing one icon (`iconBytes` null = platform default icon;
+  /// `iconLogicalSize` carries the pre-scale widget dimensions).
+  func setStaticPositions(session: NativeCameraSession, groupId: String, coordinates: FlutterStandardTypedData, iconBytes: FlutterStandardTypedData?, iconLogicalSize: NativeMarkerSize?) throws
+  /// Removes one static-position group by id.
+  func removeStaticPositions(session: NativeCameraSession, groupId: String) throws
   /// Removes one marker by stable id.
   func removeMarker(session: NativeCameraSession, markerId: String) throws
   /// Removes many markers by stable ids.
@@ -477,7 +811,9 @@ class NativeMapMarkersApiSetup {
   static func setUp(binaryMessenger: FlutterBinaryMessenger, api: NativeMapMarkersApi?, messageChannelSuffix: String = "") {
     let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
     /// Adds one marker. `iconBytes` is an encoded image (PNG) or null for the
-    /// platform default icon.
+    /// platform default icon. `angleDegrees` pre-rotates the icon;
+    /// `anchor` selects the icon pivot (null = centered). `iconLogicalSize`
+    /// carries the pre-scale widget dimensions for display scaling.
     let addMarkerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.addMarker\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       addMarkerChannel.setMessageHandler { message, reply in
@@ -487,8 +823,11 @@ class NativeMapMarkersApiSetup {
         let latitudeArg = args[2] as! Double
         let longitudeArg = args[3] as! Double
         let iconBytesArg: FlutterStandardTypedData? = nilOrValue(args[4])
+        let angleDegreesArg = args[5] as! Double
+        let anchorArg: NativeMarkerAnchor? = nilOrValue(args[6])
+        let iconLogicalSizeArg: NativeMarkerSize? = nilOrValue(args[7])
         do {
-          try api.addMarker(session: sessionArg, markerId: markerIdArg, latitude: latitudeArg, longitude: longitudeArg, iconBytes: iconBytesArg)
+          try api.addMarker(session: sessionArg, markerId: markerIdArg, latitude: latitudeArg, longitude: longitudeArg, iconBytes: iconBytesArg, angleDegrees: angleDegreesArg, anchor: anchorArg, iconLogicalSize: iconLogicalSizeArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
@@ -516,7 +855,8 @@ class NativeMapMarkersApiSetup {
     } else {
       addMarkersChannel.setMessageHandler(nil)
     }
-    /// Replaces one marker's icon with new encoded bytes.
+    /// Replaces one marker's icon with new encoded bytes. `iconLogicalSize`
+    /// carries the pre-scale widget dimensions for display scaling.
     let updateMarkerIconChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.updateMarkerIcon\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       updateMarkerIconChannel.setMessageHandler { message, reply in
@@ -524,8 +864,9 @@ class NativeMapMarkersApiSetup {
         let sessionArg = args[0] as! NativeCameraSession
         let markerIdArg = args[1] as! String
         let iconBytesArg = args[2] as! FlutterStandardTypedData
+        let iconLogicalSizeArg: NativeMarkerSize? = nilOrValue(args[3])
         do {
-          try api.updateMarkerIcon(session: sessionArg, markerId: markerIdArg, iconBytes: iconBytesArg)
+          try api.updateMarkerIcon(session: sessionArg, markerId: markerIdArg, iconBytes: iconBytesArg, iconLogicalSize: iconLogicalSizeArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
@@ -533,6 +874,101 @@ class NativeMapMarkersApiSetup {
       }
     } else {
       updateMarkerIconChannel.setMessageHandler(nil)
+    }
+    /// Moves one marker to new coordinates without recreating it.
+    let moveMarkerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.moveMarker\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      moveMarkerChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let markerIdArg = args[1] as! String
+        let latitudeArg = args[2] as! Double
+        let longitudeArg = args[3] as! Double
+        do {
+          try api.moveMarker(session: sessionArg, markerId: markerIdArg, latitude: latitudeArg, longitude: longitudeArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      moveMarkerChannel.setMessageHandler(nil)
+    }
+    /// Replaces one marker's icon rotation in degrees, clockwise.
+    let rotateMarkerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.rotateMarker\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      rotateMarkerChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let markerIdArg = args[1] as! String
+        let angleDegreesArg = args[2] as! Double
+        do {
+          try api.rotateMarker(session: sessionArg, markerId: markerIdArg, angleDegrees: angleDegreesArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      rotateMarkerChannel.setMessageHandler(nil)
+    }
+    /// Replaces one marker's icon anchor.
+    let setMarkerAnchorChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.setMarkerAnchor\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setMarkerAnchorChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let markerIdArg = args[1] as! String
+        let anchorArg = args[2] as! NativeMarkerAnchor
+        do {
+          try api.setMarkerAnchor(session: sessionArg, markerId: markerIdArg, anchor: anchorArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      setMarkerAnchorChannel.setMessageHandler(nil)
+    }
+    /// Creates or replaces a static-position group: flat
+    /// `[lat, lon, angleDegrees, lat, lon, angleDegrees, ...]` coordinates
+    /// sharing one icon (`iconBytes` null = platform default icon;
+    /// `iconLogicalSize` carries the pre-scale widget dimensions).
+    let setStaticPositionsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.setStaticPositions\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setStaticPositionsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let groupIdArg = args[1] as! String
+        let coordinatesArg = args[2] as! FlutterStandardTypedData
+        let iconBytesArg: FlutterStandardTypedData? = nilOrValue(args[3])
+        let iconLogicalSizeArg: NativeMarkerSize? = nilOrValue(args[4])
+        do {
+          try api.setStaticPositions(session: sessionArg, groupId: groupIdArg, coordinates: coordinatesArg, iconBytes: iconBytesArg, iconLogicalSize: iconLogicalSizeArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      setStaticPositionsChannel.setMessageHandler(nil)
+    }
+    /// Removes one static-position group by id.
+    let removeStaticPositionsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.removeStaticPositions\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      removeStaticPositionsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let groupIdArg = args[1] as! String
+        do {
+          try api.removeStaticPositions(session: sessionArg, groupId: groupIdArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      removeStaticPositionsChannel.setMessageHandler(nil)
     }
     /// Removes one marker by stable id.
     let removeMarkerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.removeMarker\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
