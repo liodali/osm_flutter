@@ -20,6 +20,18 @@ object MapscoreColorHelper {
         val b = (argb and 0xFF) / 255.0f
         return Color(r, g, b, a)
     }
+
+    /// Decodes the legacy Dart wire list `[red, blue, green, alpha]` into a
+    /// packed ARGB int. Both the legacy method-channel payload and the
+    /// generated shape route emit this order, so both decode identically
+    /// and toggling the route never changes green/blue rendering.
+    fun legacyWireToArgb(rgb: List<*>): Int {
+        val a = Integer.parseInt(rgb[3].toString())
+        val r = Integer.parseInt(rgb[0].toString())
+        val g = Integer.parseInt(rgb[2].toString())
+        val b = Integer.parseInt(rgb[1].toString())
+        return (a shl 24) or (r shl 16) or (g shl 8) or b
+    }
 }
 
 /**
@@ -43,8 +55,8 @@ class MapscoreShape(
         val colorRgb = args["color"] as List<*>
         val colorBorder = if (args.containsKey("colorBorder")) args["colorBorder"] as List<*> else null
 
-        val fillArgb = argb(colorRgb)
-        val borderArgb = if (colorBorder != null) argb(colorBorder) else fillArgb
+        val fillArgb = MapscoreColorHelper.legacyWireToArgb(colorRgb)
+        val borderArgb = if (colorBorder != null) MapscoreColorHelper.legacyWireToArgb(colorBorder) else fillArgb
 
         val positions: List<Coord> = when (shape) {
             ShapeType.POLYGON -> {
@@ -106,10 +118,4 @@ class MapscoreShape(
         }
     }
 
-    private fun argb(rgb: List<*>): Int = android.graphics.Color.argb(
-        Integer.parseInt(rgb[3].toString()),
-        Integer.parseInt(rgb[0].toString()),
-        Integer.parseInt(rgb[1].toString()),
-        Integer.parseInt(rgb[2].toString()),
-    )
 }

@@ -95,6 +95,7 @@ interface MapSession : PluginRegistry.ActivityResultListener {
 
     fun removeMarkers(markerIds: Array<String>): Boolean
 
+    /** Draws (or replaces) one circle; colors are packed ARGB ints. */
     fun addCircle(
         shapeId: String,
         latitude: Double,
@@ -105,6 +106,7 @@ interface MapSession : PluginRegistry.ActivityResultListener {
         strokeWidth: Double,
     ): Boolean
 
+    /** Draws (or replaces) one rectangle; colors are packed ARGB ints. */
     fun addRectangle(
         shapeId: String,
         latitude: Double,
@@ -115,7 +117,14 @@ interface MapSession : PluginRegistry.ActivityResultListener {
         strokeWidth: Double,
     ): Boolean
 
+    /** Removes one shape by id; false when the id is unknown. */
     fun removeShape(shapeId: String): Boolean
+
+    /** Removes every circle, mirroring the keyless legacy removal. */
+    fun removeCircles(): Boolean
+
+    /** Removes every rectangle, mirroring the keyless legacy removal. */
+    fun removeRectangles(): Boolean
 
     fun clearShapes(): Boolean
 

@@ -76,6 +76,9 @@ import io.openmobilemaps.mapscore.shared.map.layers.line.LineLayerInterface
 import io.openmobilemaps.mapscore.shared.map.layers.line.LineStyle
 import io.openmobilemaps.mapscore.shared.map.layers.polygon.PolygonLayerInterface
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeCameraBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLayersBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeRoadsBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeShapesBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeMarkersBridge
 import io.openmobilemaps.mapscore.shared.map.camera.MapCameraListenerInterface
 import kotlinx.coroutines.CoroutineScope
@@ -118,6 +121,9 @@ internal class MapscoreMapSession(
     private lateinit var legacyChannel: LegacyMethodChannelAdapter
     private var pigeonCameraBridge: PigeonNativeCameraBridge? = null
     private var pigeonMarkersBridge: PigeonNativeMarkersBridge? = null
+    private var pigeonLayersBridge: PigeonNativeLayersBridge? = null
+    private var pigeonShapesBridge: PigeonNativeShapesBridge? = null
+    private var pigeonRoadsBridge: PigeonNativeRoadsBridge? = null
 
     /** Minted per session; guards generated routes against reused view ids. */
     internal val sessionToken: String = UUID.randomUUID().toString()
@@ -1065,9 +1071,16 @@ internal class MapscoreMapSession(
         isCircle: Boolean,
     ): Boolean {
         val map = mapView ?: return false
-        if (!::polygonLayer.isInitialized || shapeId.isEmpty() || shapes.containsKey(shapeId)) return false
+        if (!::polygonLayer.isInitialized || shapeId.isEmpty()) return false
+        // Validate the replacement fully BEFORE touching the existing
+        // shape: a rejected command must preserve current state.
         if (!isValidLatLon(latitude, longitude) || !size.isFinite() || size <= 0.0) return false
-        if (!strokeWidth.isFinite() || strokeWidth <= 0.0) return false
+        // Zero-width shapes are borderless (legacy and Darwin support
+        // them); only negative or nonfinite widths are invalid.
+        if (!strokeWidth.isFinite() || strokeWidth < 0.0) return false
+        // Replace semantics: re-drawing with an existing id swaps the shape
+        // in place, mirroring the legacy draw#circle / draw#rect handlers.
+        shapes.remove(shapeId)?.remove()
         val args = hashMapOf<String, Any>(
             "key" to shapeId,
             "lat" to latitude,
@@ -1085,6 +1098,22 @@ internal class MapscoreMapSession(
     override fun removeShape(shapeId: String): Boolean {
         val shape = shapes.remove(shapeId) ?: return false
         shape.remove()
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun removeCircles(): Boolean {
+        if (released || !::polygonLayer.isInitialized) return false
+        val keys = shapes.entries.filter { it.value.shape == ShapeType.CIRCLE }.map { it.key }
+        keys.forEach { shapes[it]?.remove(); shapes.remove(it) }
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun removeRectangles(): Boolean {
+        if (released || !::polygonLayer.isInitialized) return false
+        val keys = shapes.entries.filter { it.value.shape == ShapeType.POLYGON }.map { it.key }
+        keys.forEach { shapes[it]?.remove(); shapes.remove(it) }
         mapView?.requestRender()
         return true
     }
@@ -1145,9 +1174,13 @@ internal class MapscoreMapSession(
         dotted: Boolean,
     ): Boolean {
         if (released || mapView == null || !::lineLayer.isInitialized) return false
-        if (roadId.isEmpty() || roads.containsKey(roadId)) return false
+        if (roadId.isEmpty()) return false
         if (coordinates.size < 4 || coordinates.size % 2 != 0 || !coordinates.hasValidLatLonPairs(2)) return false
         if (!roadWidth.isFinite() || roadWidth <= 0.0 || !borderWidth.isFinite() || borderWidth < 0.0) return false
+        // Replace semantics, validated before touching the existing road:
+        // a rejected command preserves current state. Mirrors the legacy
+        // drawRoad#manually handler (drawRoadLines removes the old road).
+        roads.remove(roadId)?.remove()
         val points = coordinates.asList().chunked(2).map { it[0] to it[1] }
         drawRoadLines(
             roadId = roadId,
@@ -1252,10 +1285,13 @@ internal class MapscoreMapSession(
         return true
     }
 
+    /// Legacy wire order used by both the Dart legacy payload and the
+    /// generated shape route: [red, blue, green, alpha]. The mapscore
+    /// decoder (MapscoreColorHelper.legacyWireToArgb) reads this order.
     private fun Int.toArgbList(): List<Int> = listOf(
         android.graphics.Color.red(this),
-        android.graphics.Color.green(this),
         android.graphics.Color.blue(this),
+        android.graphics.Color.green(this),
         android.graphics.Color.alpha(this),
     )
 
@@ -2027,6 +2063,12 @@ internal class MapscoreMapSession(
         pigeonCameraBridge = null
         pigeonMarkersBridge?.unregister(binaryMessenger, id)
         pigeonMarkersBridge = null
+        pigeonLayersBridge?.unregister(binaryMessenger, id)
+        pigeonLayersBridge = null
+        pigeonShapesBridge?.unregister(binaryMessenger, id)
+        pigeonShapesBridge = null
+        pigeonRoadsBridge?.unregister(binaryMessenger, id)
+        pigeonRoadsBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -2090,6 +2132,21 @@ internal class MapscoreMapSession(
         val markersBridge = PigeonNativeMarkersBridge(this, sessionToken, generation)
         markersBridge.register(binaryMessenger, id)
         pigeonMarkersBridge = markersBridge
+        // Generated layers endpoints (tile sources, overlay visibility) live
+        // alongside the legacy ones as well.
+        val layersBridge = PigeonNativeLayersBridge(this, sessionToken, generation)
+        layersBridge.register(binaryMessenger, id)
+        pigeonLayersBridge = layersBridge
+        // Generated shapes endpoints (circles, rectangles) live alongside
+        // the legacy ones as well.
+        val shapesBridge = PigeonNativeShapesBridge(this, sessionToken, generation)
+        shapesBridge.register(binaryMessenger, id)
+        pigeonShapesBridge = shapesBridge
+        // Generated roads endpoints (manual drawing, removal, clearing)
+        // live alongside the legacy ones as well.
+        val roadsBridge = PigeonNativeRoadsBridge(this, sessionToken, generation)
+        roadsBridge.register(binaryMessenger, id)
+        pigeonRoadsBridge = roadsBridge
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")

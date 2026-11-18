@@ -273,6 +273,10 @@ private class FakeMapSession(
 
     override fun clearShapes(): Boolean = true
 
+    override fun removeCircles(): Boolean = true
+
+    override fun removeRectangles(): Boolean = true
+
     override fun setStaticPositions(
         groupId: String,
         coordinates: DoubleArray,

@@ -145,6 +145,10 @@ class PigeonNativeMarkersBridgeTest {
 
         override fun clearShapes() = true
 
+        override fun removeCircles() = true
+
+        override fun removeRectangles() = true
+
         override fun setStaticPositions(
             groupId: String,
             coordinates: DoubleArray,

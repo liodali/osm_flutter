@@ -163,6 +163,10 @@ class PigeonNativeCameraBridgeTest {
 
         override fun resetTile() = true
 
+        override fun removeCircles() = true
+
+        override fun removeRectangles() = true
+
         override fun setOverlaysVisible(visible: Boolean) = true
 
         override fun emitAcknowledgement(requestId: String, operation: String) = Unit

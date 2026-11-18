@@ -171,6 +171,15 @@ internal class PigeonNativeCameraBridge(
         /// limits/reset and zoom configuration.
         const val CAPABILITY_CAMERA_CONFIG = "camera.config"
 
+        /// Layers surface: tile-source selection and overlay visibility.
+        const val CAPABILITY_LAYERS = "layers"
+
+        /// Shapes surface: circles and rectangles.
+        const val CAPABILITY_SHAPES = "shapes"
+
+        /// Roads surface: manual drawing, removal, clearing.
+        const val CAPABILITY_ROADS = "roads"
+
         /** Typed error code for the markers family. */
         const val CODE_MARKERS_NOT_READY = "markers_not_ready"
 
@@ -191,6 +200,9 @@ internal class PigeonNativeCameraBridge(
                 CAPABILITY_CAMERA,
                 CAPABILITY_MARKERS,
                 CAPABILITY_CAMERA_CONFIG,
+                CAPABILITY_LAYERS,
+                CAPABILITY_SHAPES,
+                CAPABILITY_ROADS,
             ),
             "sessionToken" to sessionToken,
             "generation" to generation,
