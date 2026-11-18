@@ -131,9 +131,13 @@ class RunnerTests: XCTestCase {
       released = host?.session
       // Two sessions on one messenger: each registers its legacy channel,
       // the ten generated camera channels (five original + five bounds and
-      // zoom-configuration operations), and the ten generated marker
-      // channels (alongside, never replacing legacy endpoints).
-      XCTAssertEqual(messenger.handlers.count, 42)
+      // zoom-configuration operations), the ten generated marker channels,
+      // the two generated layer channels (tile sources, overlay
+      // visibility), the six generated shape channels (circle, rectangle,
+      // remove by id, two kind clears, full clear) and the three generated
+      // road channels (draw, remove, clear) — alongside, never replacing
+      // legacy endpoints.
+      XCTAssertEqual(messenger.handlers.count, 64)
       host = nil
     }
     // AppKit autoreleases views and the framework can have queued callbacks.
@@ -143,9 +147,9 @@ class RunnerTests: XCTestCase {
     }
     XCTAssertNil(released)
     // Disposal removes exactly this session's legacy channel and its
-    // generated camera and marker channels; the other live map keeps its
-    // full set.
-    XCTAssertEqual(messenger.handlers.count, 21)
+    // generated camera, marker, layer, shape and road channels; the other
+    // live map keeps its full set.
+    XCTAssertEqual(messenger.handlers.count, 32)
     XCTAssertEqual(messenger.handlers.keys.filter { $0.hasPrefix("map_") }, ["map_2"])
     XCTAssertFalse(
       messenger.handlers.keys.contains { $0.contains(".view_1") },
@@ -225,6 +229,364 @@ class RunnerTests: XCTestCase {
     ) { error in
       XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
     }
+  }
+
+  // MARK: - Typed layers family (Pigeon route)
+
+  @MainActor
+  func testTypedLayersBridgeTileAndOverlayVisibility() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.layersBridge)
+    let wire = cameraWireSession(map)
+
+    // Raster tile selection applies without crashing.
+    try bridge.changeTileLayer(
+      session: wire,
+      tile: NativeTileConfiguration(
+        urls: [NativeTileServer(
+          url: "https://{s}.tiles.example.org/style/",
+          subdomains: ["a", "b"])],
+        tileExtension: ".png",
+        sourceName: "example-source",
+        tileSize: 256,
+        minZoomLevel: 3,
+        maxZoomLevel: 18,
+        apiKey: "access-token",
+        apiValue: "secret",
+        styleURL: nil))
+
+    // Reset to the default OSM layer (null configuration).
+    try bridge.changeTileLayer(session: wire, tile: nil)
+
+    // Overlay visibility toggles both ways.
+    try bridge.setOverlaysVisible(session: wire, visible: true)
+    try bridge.setOverlaysVisible(session: wire, visible: false)
+  }
+
+  @MainActor
+  func testTypedLayersBridgeRejectsStaleSessions() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.layersBridge)
+    let stale = NativeCameraSession(sessionToken: "wrong", generation: 0)
+    let tile = NativeTileConfiguration(
+      urls: [NativeTileServer(url: "https://tiles.example.org/", subdomains: [])],
+      tileExtension: ".png",
+      sourceName: "example-source",
+      tileSize: 256,
+      minZoomLevel: 2,
+      maxZoomLevel: 19,
+      apiKey: nil,
+      apiValue: nil,
+      styleURL: nil)
+
+    XCTAssertThrowsError(try bridge.changeTileLayer(session: stale, tile: tile)) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
+    }
+    XCTAssertThrowsError(
+      try bridge.setOverlaysVisible(session: stale, visible: true)
+    ) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
+    }
+  }
+
+  @MainActor
+  func testTypedTileTemplateNormalizationMirrorsLegacy() throws {
+    func normalized(_ url: String, extension configured: String = ".png")
+      -> (template: String, effectiveExtension: String) {
+      let tile = NativeTileConfiguration(
+        urls: [NativeTileServer(url: url, subdomains: [])],
+        tileExtension: configured,
+        sourceName: "example-source",
+        tileSize: 256,
+        minZoomLevel: 2,
+        maxZoomLevel: 19,
+        apiKey: nil,
+        apiValue: nil,
+        styleURL: nil)
+      let map = MapSession.legacyTileMap(from: tile)
+      let urls = map["urls"] as! [[String: Any]]
+      return (urls[0]["url"] as! String, map["tileExtension"] as! String)
+    }
+
+    // Regression: a baked-in extension after the template must not reach
+    // the framework alongside the configured one ({y}.png.png).
+    XCTAssertEqual(
+      normalized("https://tiles.example.org/style/{z}/{x}/{y}.png").template,
+      "https://tiles.example.org/style/")
+    // Template without a baked-in extension strips too; the framework
+    // re-appends template + extension identically.
+    XCTAssertEqual(
+      normalized("https://tiles.example.org/style/{z}/{x}/{y}").template,
+      "https://tiles.example.org/style/")
+    // Plain hosts pass through unchanged.
+    XCTAssertEqual(
+      normalized("https://{s}.tiles.example.org/style/").template,
+      "https://{s}.tiles.example.org/style/")
+    // Legacy parity: a template the legacy regex did not match (y/x order)
+    // stays untouched, matching what TileURLs.toMapiOS() forwarded.
+    XCTAssertEqual(
+      normalized("https://server.arcgisonline.com/tile/{z}/{y}/{x}.png").template,
+      "https://server.arcgisonline.com/tile/{z}/{y}/{x}.png")
+
+    // Regression: with no configured extension, the template's embedded
+    // one must survive normalization or tile requests lose their suffix.
+    let preserved = normalized("https://tiles.example.org/style/{z}/{x}/{y}.png", extension: "")
+    XCTAssertEqual(preserved.template, "https://tiles.example.org/style/")
+    XCTAssertEqual(preserved.effectiveExtension, ".png")
+    // No configured and no embedded extension: requests stay extensionless.
+    let extensionless = normalized("https://tiles.example.org/style/{z}/{x}/{y}", extension: "")
+    XCTAssertEqual(extensionless.template, "https://tiles.example.org/style/")
+    XCTAssertEqual(extensionless.effectiveExtension, "")
+    // A configured extension always wins over the embedded one (legacy).
+    let overridden = normalized("https://tiles.example.org/style/{z}/{x}/{y}.png", extension: ".jpg")
+    XCTAssertEqual(overridden.template, "https://tiles.example.org/style/")
+    XCTAssertEqual(overridden.effectiveExtension, ".jpg")
+  }
+
+  @MainActor
+  func testTypedShapesBridgeAddReplaceRemoveClear() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.shapesBridge)
+    let wire = cameraWireSession(map)
+    let style = NativeShapeStyle(
+      fillColorArgb: 0x8E24AAFF,
+      borderColorArgb: 0xFF00D2FF,
+      strokeWidth: 3.5)
+
+    // Add a circle and a rectangle at full coordinate precision.
+    try bridge.addCircle(
+      session: wire, shapeId: "circle-1",
+      latitude: 47.376912345, longitude: 8.541712345,
+      radius: 250.5, style: style)
+    try bridge.addRectangle(
+      session: wire, shapeId: "rect-1",
+      latitude: -33.865143, longitude: 151.2099,
+      distance: 1200.25, style: style)
+
+    // Replace: re-adding the same id must succeed (legacy draw# semantics).
+    try bridge.addCircle(
+      session: wire, shapeId: "circle-1",
+      latitude: 47.1, longitude: 8.1,
+      radius: 200.0, style: style)
+
+    // Targeted removal and silent no-op for unknown ids.
+    try bridge.removeShape(session: wire, shapeId: "rect-1")
+    try bridge.removeShape(session: wire, shapeId: "missing-id")
+
+    // Kind clears and the full clear.
+    try bridge.removeCircles(session: wire)
+    try bridge.removeRectangles(session: wire)
+    try bridge.clearShapes(session: wire)
+  }
+
+  @MainActor
+  func testTypedShapesBridgeRejectsStaleSessions() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.shapesBridge)
+    let stale = NativeCameraSession(sessionToken: "wrong", generation: 0)
+    let style = NativeShapeStyle(
+      fillColorArgb: 0xFF000000, borderColorArgb: nil, strokeWidth: 1)
+
+    XCTAssertThrowsError(
+      try bridge.addCircle(
+        session: stale, shapeId: "circle-1",
+        latitude: 47, longitude: 8, radius: 100, style: style)
+    ) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
+    }
+    XCTAssertThrowsError(
+      try bridge.clearShapes(session: stale)
+    ) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
+    }
+  }
+
+  @MainActor
+  func testTypedShapeColorListReproducesLegacyOrder() {
+    // Packed 0xAARRGGBB must become the legacy [red, blue, green, alpha]
+    // wire order the framework decoder reads.
+    // 0x8E24AAFF: alpha 0x8E, red 0x24, green 0xAA, blue 0xFF →
+    // legacy wire order [red, blue, green, alpha].
+    XCTAssertEqual(
+      MapSession.legacyColorList(0x8E24AAFF),
+      [0x24, 0xFF, 0xAA, 0x8E])
+    let map = MapSession.legacyShapeMap(
+      key: "circle-1",
+      latitude: 47.376912345,
+      longitude: 8.541712345,
+      sizeField: "radius",
+      sizeMeters: 250.5,
+      fillColorArgb: 0x8E24AAFF,
+      borderColorArgb: nil,
+      strokeWidth: 3.5)
+    XCTAssertEqual(map["lat"] as? Double ?? 0, 47.376912345, accuracy: 1e-12)
+    XCTAssertEqual(map["lon"] as? Double ?? 0, 8.541712345, accuracy: 1e-12)
+    XCTAssertEqual(map["radius"] as? Double ?? 0, 250.5, accuracy: 1e-12)
+    XCTAssertEqual(map["strokeWidth"] as? Double ?? 0, 3.5, accuracy: 1e-12)
+    // Missing border falls back to the fill color, like the decoder default.
+    XCTAssertNil(map["colorBorder"])
+  }
+
+  @MainActor
+  func testLegacyTileHandlerRoutesThroughTypedService() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    // The legacy payload keeps its raw map decoding and its
+    // ignore-on-null behavior for Apple hosts.
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(methodName: "change#tile", arguments: nil)
+    ) { _ in }
+    let tileMap: [String: Any] = [
+      "name": "mapnik",
+      "urls": [["url": "https://{s}.tile.openstreetmap.org/", "subdomains": ["a", "b", "c"]]],
+      "tileSize": 256,
+      "tileExtension": ".png",
+      "maxZoomLevel": 19,
+      "minZoomLevel": 2,
+    ]
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(methodName: "change#tile", arguments: tileMap)
+    ) { _ in }
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(methodName: "toggle#Alllayer", arguments: true)
+    ) { _ in }
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(methodName: "toggle#Alllayer", arguments: false)
+    ) { _ in }
+  }
+
+  // MARK: - Typed roads family (Pigeon route)
+
+  @MainActor
+  func testTypedRoadsBridgeDrawReplaceRemoveClear() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.roadsBridge)
+    let wire = cameraWireSession(map)
+    let style = NativeRoadStyle(
+      roadColorArgb: 0xFF4CAF50,
+      roadWidth: 5.0,
+      borderColorArgb: 0xFFFFFFFF,
+      borderWidth: 2.0,
+      dotted: false)
+    let coordinates = Data(
+      ([
+        47.376912345, 8.541712345, 47.1, 8.2, 47.0, 8.0,
+      ] as [Double]).withUnsafeBytes { Data($0) })
+    let typed = FlutterStandardTypedData(float64: coordinates)
+
+    // Draw with and without zoom-to-route.
+    try bridge.drawRoad(session: wire, roadId: "route-1", coordinates: typed, style: style, zoomInto: false)
+    try bridge.drawRoad(session: wire, roadId: "route-1", coordinates: typed, style: style, zoomInto: true)
+
+    // Replacement: re-drawing the same key succeeds (legacy semantics).
+    let dotted = NativeRoadStyle(
+      roadColorArgb: 0xFF2196F3, roadWidth: 3.0,
+      borderColorArgb: nil, borderWidth: nil, dotted: true)
+    try bridge.drawRoad(session: wire, roadId: "route-1", coordinates: typed, style: dotted, zoomInto: false)
+
+    // Targeted removal and the silent unknown-key no-op.
+    try bridge.removeRoad(session: wire, roadId: "route-1")
+    try bridge.removeRoad(session: wire, roadId: "missing-road")
+
+    // Full clear.
+    try bridge.clearRoads(session: wire)
+  }
+
+  @MainActor
+  func testTypedRoadsRemovalSyncsStoredTapMetadata() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.roadsBridge)
+    let wire = cameraWireSession(map)
+
+    // A road drawn through the remaining legacy fetched-road path keeps
+    // tap metadata in the session bookkeeping.
+    map.storedRoads["route-1"] = StoredRoad(
+      id: "route-1", roadInformation: nil, instructions: [])
+    map.storedRoads["route-2"] = StoredRoad(
+      id: "route-2", roadInformation: nil, instructions: [])
+
+    // Targeted removal drops exactly that key's metadata (legacy
+    // delete#road parity), so a reused key cannot emit stale taps.
+    try bridge.removeRoad(session: wire, roadId: "route-1")
+    XCTAssertNil(map.storedRoads["route-1"])
+    XCTAssertNotNil(map.storedRoads["route-2"])
+
+    // Clearing wipes the whole bookkeeping alongside the roads.
+    try bridge.clearRoads(session: wire)
+    XCTAssertTrue(map.storedRoads.isEmpty)
+  }
+
+  @MainActor
+  func testLegacyClearRoadsRoutesThroughTypedService() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    map.storedRoads["route-legacy"] = StoredRoad(
+      id: "route-legacy", roadInformation: nil, instructions: [])
+
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(methodName: "clear#roads", arguments: nil)
+    ) { _ in }
+
+    // The legacy handler shares the typed bookkeeping now.
+    XCTAssertTrue(map.storedRoads.isEmpty)
+  }
+
+  @MainActor
+  func testTypedRoadsBridgeRejectsStaleSessions() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.roadsBridge)
+    let stale = NativeCameraSession(sessionToken: "wrong", generation: 0)
+    let coordinates = Data(
+      ([47.0, 8.0, 47.1, 8.1] as [Double]).withUnsafeBytes { Data($0) })
+    let typed = FlutterStandardTypedData(float64: coordinates)
+    let style = NativeRoadStyle(
+      roadColorArgb: 0xFF000000, roadWidth: 5.0,
+      borderColorArgb: nil, borderWidth: nil, dotted: false)
+
+    XCTAssertThrowsError(
+      try bridge.drawRoad(session: stale, roadId: "route-1", coordinates: typed, style: style, zoomInto: false)
+    ) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
+    }
+    XCTAssertThrowsError(
+      try bridge.clearRoads(session: stale)
+    ) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
+    }
+  }
+
+  @MainActor
+  func testTypedRoadStyleConversionReproducesLegacyQuirks() {
+    // Packed 0xFF4CAF50 → legacy hex keeps the alpha nibble, exactly like
+    // Dart's `value.toRadixString(16)` did for Apple hosts.
+    XCTAssertEqual(MapSession.hexString(fromArgb: 0xFF4CAF50), "#ff4caf50")
+    // Opaque black edge of the formatter.
+    XCTAssertEqual(MapSession.hexString(fromArgb: 0x00000000), "#0")
+
+    // The legacy manual-drawing border width pre-adds the road width.
+    XCTAssertEqual(
+      MapSession.effectiveBorderWidth(2.0, roadWidth: 5.0), CFloat(7.0))
+    // Regression: RoadOption.empty() carries borderWidth = 0; legacy
+    // serialization omits it, so zero must draw borderless (nil) instead
+    // of stroking a road-width border.
+    XCTAssertNil(MapSession.effectiveBorderWidth(0.0, roadWidth: 5.0))
+    XCTAssertNil(MapSession.effectiveBorderWidth(-1.0, roadWidth: 5.0))
+    XCTAssertNil(MapSession.effectiveBorderWidth(nil, roadWidth: 5.0))
+    // The full conversion runs with a zero border and produces a
+    // configuration, proving the decode path accepts it.
+    _ = MapSession.legacyRoadConfiguration(
+      roadColorArgb: 0xFF4CAF50,
+      roadWidth: 5.0,
+      borderColorArgb: 0xFFFFFFFF,
+      borderWidth: 0.0,
+      dotted: true)
   }
 
   // MARK: - Typed markers family (Pigeon route)

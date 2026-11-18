@@ -167,6 +167,15 @@ final class PigeonCameraBridge: NativeMapCameraApi {
     /// limits/reset and zoom configuration.
     static let capabilityCameraConfig = "camera.config"
 
+    /// Layers surface: tile-source selection and overlay visibility.
+    static let capabilityLayers = "layers"
+
+    /// Shapes surface: circles and rectangles.
+    static let capabilityShapes = "shapes"
+
+    /// Roads surface: manual drawing, removal, clearing.
+    static let capabilityRoads = "roads"
+
     static func viewChannelSuffix(_ viewId: Int64) -> String {
         "view_\(viewId)"
     }
@@ -183,7 +192,10 @@ final class PigeonCameraBridge: NativeMapCameraApi {
         [
             "revision": nativeProtocolRevision,
             "schemaId": nativeCameraSchemaId,
-            "capabilities": [capabilityCamera, capabilityMarkers, capabilityCameraConfig],
+            "capabilities": [
+                capabilityCamera, capabilityMarkers, capabilityCameraConfig,
+                capabilityLayers, capabilityShapes, capabilityRoads,
+            ],
             "sessionToken": sessionToken,
             "generation": generation,
         ]

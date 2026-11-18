@@ -483,6 +483,253 @@ struct NativeZoomConfiguration: Hashable, CustomStringConvertible {
   }
 }
 
+/// One tile-server template in platform-neutral form.
+///
+/// The url keeps its `{s}`/`{z}`/`{x}`/`{y}` placeholders exactly as the
+/// application provided them; each host applies its own substitution rules
+/// (Android expands the first subdomain and appends the z/x/y template,
+/// Apple lets the map framework append the template). This mirrors what the
+/// legacy routes encode per platform without baking either rule into the
+/// wire contract.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct NativeTileServer: Hashable, CustomStringConvertible {
+  var url: String
+  var subdomains: [String]
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeTileServer? {
+    let url = pigeonVar_list[0] as! String
+    let subdomains = pigeonVar_list[1] as! [String]
+
+    return NativeTileServer(
+      url: url,
+      subdomains: subdomains
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      url,
+      subdomains,
+    ]
+  }
+  static func == (lhs: NativeTileServer, rhs: NativeTileServer) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.url, rhs.url) && NativeMapCameraPigeonInternal.deepEquals(lhs.subdomains, rhs.subdomains)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeTileServer")
+    NativeMapCameraPigeonInternal.deepHash(value: url, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: subdomains, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeTileServer(url: \(String(describing: url)), subdomains: \(String(describing: subdomains)))"
+  }
+}
+
+/// Tile-source configuration mirroring the legacy `CustomTile.toMap()`
+/// payload. `styleURL` selects a vector style (hosts derive the vector flag
+/// from it, matching the legacy `isVector` encoding). `null` tile in
+/// [NativeMapLayersApi.changeTileLayer] resets the platform default OSM
+/// layer.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct NativeTileConfiguration: Hashable, CustomStringConvertible {
+  var urls: [NativeTileServer]
+  var tileExtension: String
+  var sourceName: String
+  var tileSize: Int64
+  var minZoomLevel: Int64
+  var maxZoomLevel: Int64
+  /// Key name and value for tile servers requiring API-key access; both are
+  /// null when the server needs no key.
+  var apiKey: String? = nil
+  var apiValue: String? = nil
+  /// Vector style URL; null selects the raster path.
+  var styleURL: String? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeTileConfiguration? {
+    let urls = pigeonVar_list[0] as! [NativeTileServer]
+    let tileExtension = pigeonVar_list[1] as! String
+    let sourceName = pigeonVar_list[2] as! String
+    let tileSize = pigeonVar_list[3] as! Int64
+    let minZoomLevel = pigeonVar_list[4] as! Int64
+    let maxZoomLevel = pigeonVar_list[5] as! Int64
+    let apiKey: String? = nilOrValue(pigeonVar_list[6])
+    let apiValue: String? = nilOrValue(pigeonVar_list[7])
+    let styleURL: String? = nilOrValue(pigeonVar_list[8])
+
+    return NativeTileConfiguration(
+      urls: urls,
+      tileExtension: tileExtension,
+      sourceName: sourceName,
+      tileSize: tileSize,
+      minZoomLevel: minZoomLevel,
+      maxZoomLevel: maxZoomLevel,
+      apiKey: apiKey,
+      apiValue: apiValue,
+      styleURL: styleURL
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      urls,
+      tileExtension,
+      sourceName,
+      tileSize,
+      minZoomLevel,
+      maxZoomLevel,
+      apiKey,
+      apiValue,
+      styleURL,
+    ]
+  }
+  static func == (lhs: NativeTileConfiguration, rhs: NativeTileConfiguration) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.urls, rhs.urls) && NativeMapCameraPigeonInternal.deepEquals(lhs.tileExtension, rhs.tileExtension) && NativeMapCameraPigeonInternal.deepEquals(lhs.sourceName, rhs.sourceName) && NativeMapCameraPigeonInternal.deepEquals(lhs.tileSize, rhs.tileSize) && NativeMapCameraPigeonInternal.deepEquals(lhs.minZoomLevel, rhs.minZoomLevel) && NativeMapCameraPigeonInternal.deepEquals(lhs.maxZoomLevel, rhs.maxZoomLevel) && NativeMapCameraPigeonInternal.deepEquals(lhs.apiKey, rhs.apiKey) && NativeMapCameraPigeonInternal.deepEquals(lhs.apiValue, rhs.apiValue) && NativeMapCameraPigeonInternal.deepEquals(lhs.styleURL, rhs.styleURL)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeTileConfiguration")
+    NativeMapCameraPigeonInternal.deepHash(value: urls, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: tileExtension, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: sourceName, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: tileSize, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: minZoomLevel, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: maxZoomLevel, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: apiKey, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: apiValue, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: styleURL, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeTileConfiguration(urls: \(String(describing: urls)), tileExtension: \(String(describing: tileExtension)), sourceName: \(String(describing: sourceName)), tileSize: \(String(describing: tileSize)), minZoomLevel: \(String(describing: minZoomLevel)), maxZoomLevel: \(String(describing: maxZoomLevel)), apiKey: \(String(describing: apiKey)), apiValue: \(String(describing: apiValue)), styleURL: \(String(describing: styleURL)))"
+  }
+}
+
+/// WGS84 shape geometry shared by circles and rectangles.
+///
+/// Coordinates are degrees at full double precision; `radiusMeters` (circle)
+/// and `distanceMeters` (rectangle side span) are meters. Colors are packed
+/// `0xAARRGGBB` integers — the hosts decode them into their native color
+/// representations the same way the legacy color lists did.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct NativeShapeStyle: Hashable, CustomStringConvertible {
+  var fillColorArgb: Int64
+  var borderColorArgb: Int64? = nil
+  var strokeWidth: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeShapeStyle? {
+    let fillColorArgb = pigeonVar_list[0] as! Int64
+    let borderColorArgb: Int64? = nilOrValue(pigeonVar_list[1])
+    let strokeWidth = pigeonVar_list[2] as! Double
+
+    return NativeShapeStyle(
+      fillColorArgb: fillColorArgb,
+      borderColorArgb: borderColorArgb,
+      strokeWidth: strokeWidth
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      fillColorArgb,
+      borderColorArgb,
+      strokeWidth,
+    ]
+  }
+  static func == (lhs: NativeShapeStyle, rhs: NativeShapeStyle) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.fillColorArgb, rhs.fillColorArgb) && NativeMapCameraPigeonInternal.deepEquals(lhs.borderColorArgb, rhs.borderColorArgb) && NativeMapCameraPigeonInternal.deepEquals(lhs.strokeWidth, rhs.strokeWidth)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeShapeStyle")
+    NativeMapCameraPigeonInternal.deepHash(value: fillColorArgb, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: borderColorArgb, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: strokeWidth, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeShapeStyle(fillColorArgb: \(String(describing: fillColorArgb)), borderColorArgb: \(String(describing: borderColorArgb)), strokeWidth: \(String(describing: strokeWidth)))"
+  }
+}
+
+/// Road styling mirroring the legacy manual-drawing payload.
+///
+/// Colors are packed `0xAARRGGBB` integers. A null `borderColorArgb` with a
+/// non-null `borderWidth` lets the host apply its legacy default border
+/// color (Android transparent-black, Apple `#f55b5b`); a null
+/// `borderWidth` draws the road without a border.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct NativeRoadStyle: Hashable, CustomStringConvertible {
+  var roadColorArgb: Int64
+  var roadWidth: Double
+  var borderColorArgb: Int64? = nil
+  var borderWidth: Double? = nil
+  var dotted: Bool
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeRoadStyle? {
+    let roadColorArgb = pigeonVar_list[0] as! Int64
+    let roadWidth = pigeonVar_list[1] as! Double
+    let borderColorArgb: Int64? = nilOrValue(pigeonVar_list[2])
+    let borderWidth: Double? = nilOrValue(pigeonVar_list[3])
+    let dotted = pigeonVar_list[4] as! Bool
+
+    return NativeRoadStyle(
+      roadColorArgb: roadColorArgb,
+      roadWidth: roadWidth,
+      borderColorArgb: borderColorArgb,
+      borderWidth: borderWidth,
+      dotted: dotted
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      roadColorArgb,
+      roadWidth,
+      borderColorArgb,
+      borderWidth,
+      dotted,
+    ]
+  }
+  static func == (lhs: NativeRoadStyle, rhs: NativeRoadStyle) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.roadColorArgb, rhs.roadColorArgb) && NativeMapCameraPigeonInternal.deepEquals(lhs.roadWidth, rhs.roadWidth) && NativeMapCameraPigeonInternal.deepEquals(lhs.borderColorArgb, rhs.borderColorArgb) && NativeMapCameraPigeonInternal.deepEquals(lhs.borderWidth, rhs.borderWidth) && NativeMapCameraPigeonInternal.deepEquals(lhs.dotted, rhs.dotted)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeRoadStyle")
+    NativeMapCameraPigeonInternal.deepHash(value: roadColorArgb, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: roadWidth, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: borderColorArgb, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: borderWidth, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: dotted, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeRoadStyle(roadColorArgb: \(String(describing: roadColorArgb)), roadWidth: \(String(describing: roadWidth)), borderColorArgb: \(String(describing: borderColorArgb)), borderWidth: \(String(describing: borderWidth)), dotted: \(String(describing: dotted)))"
+  }
+}
+
 private class NativeMapCameraPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -498,6 +745,14 @@ private class NativeMapCameraPigeonCodecReader: FlutterStandardReader {
       return NativeBounds.fromList(self.readValue() as! [Any?])
     case 134:
       return NativeZoomConfiguration.fromList(self.readValue() as! [Any?])
+    case 135:
+      return NativeTileServer.fromList(self.readValue() as! [Any?])
+    case 136:
+      return NativeTileConfiguration.fromList(self.readValue() as! [Any?])
+    case 137:
+      return NativeShapeStyle.fromList(self.readValue() as! [Any?])
+    case 138:
+      return NativeRoadStyle.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -523,6 +778,18 @@ private class NativeMapCameraPigeonCodecWriter: FlutterStandardWriter {
       super.writeValue(value.toList())
     } else if let value = value as? NativeZoomConfiguration {
       super.writeByte(134)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeTileServer {
+      super.writeByte(135)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeTileConfiguration {
+      super.writeByte(136)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeShapeStyle {
+      super.writeByte(137)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeRoadStyle {
+      super.writeByte(138)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -761,6 +1028,296 @@ class NativeMapCameraApiSetup {
       }
     } else {
       configureZoomChannel.setMessageHandler(nil)
+    }
+  }
+}
+/// Generated layers command route for one map session (tile-source
+/// selection and overlay visibility).
+///
+/// The host advertises the `layers` capability only when it implements this
+/// surface; older hosts keep these commands on their legacy routes.
+///
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol NativeMapLayersApi {
+  /// Selects the tile source. A null configuration resets the default OSM
+  /// tile layer, mirroring the legacy `change#tile` semantics.
+  func changeTileLayer(session: NativeCameraSession, tile: NativeTileConfiguration?) throws
+  /// Shows or hides the overlay layers (marker overlays), mirroring the
+  /// legacy `toggle#Alllayer` semantics.
+  func setOverlaysVisible(session: NativeCameraSession, visible: Bool) throws
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class NativeMapLayersApiSetup {
+  static var codec: FlutterStandardMessageCodec { NativeMapCameraPigeonCodec.shared }
+  /// Sets up an instance of `NativeMapLayersApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: NativeMapLayersApi?, messageChannelSuffix: String = "") {
+    let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    /// Selects the tile source. A null configuration resets the default OSM
+    /// tile layer, mirroring the legacy `change#tile` semantics.
+    let changeTileLayerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapLayersApi.changeTileLayer\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      changeTileLayerChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let tileArg: NativeTileConfiguration? = nilOrValue(args[1])
+        do {
+          try api.changeTileLayer(session: sessionArg, tile: tileArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      changeTileLayerChannel.setMessageHandler(nil)
+    }
+    /// Shows or hides the overlay layers (marker overlays), mirroring the
+    /// legacy `toggle#Alllayer` semantics.
+    let setOverlaysVisibleChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapLayersApi.setOverlaysVisible\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setOverlaysVisibleChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let visibleArg = args[1] as! Bool
+        do {
+          try api.setOverlaysVisible(session: sessionArg, visible: visibleArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      setOverlaysVisibleChannel.setMessageHandler(nil)
+    }
+  }
+}
+/// Generated shapes command route for one map session (circles and
+/// rectangles).
+///
+/// The host advertises the `shapes` capability only when it implements this
+/// surface; older hosts keep these commands on their legacy routes.
+/// Adding a shape with an existing id replaces it, mirroring the legacy
+/// `draw#circle`/`draw#rect` behavior. Removal is a silent no-op for
+/// unknown ids, like the legacy `remove#circle`/`remove#rect` handlers.
+///
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol NativeMapShapesApi {
+  /// Draws (or replaces) one circle around the coordinate with the radius
+  /// in meters.
+  func addCircle(session: NativeCameraSession, shapeId: String, latitude: Double, longitude: Double, radius: Double, style: NativeShapeStyle) throws
+  /// Draws (or replaces) one rectangle centered on the coordinate with the
+  /// side distance in meters.
+  func addRectangle(session: NativeCameraSession, shapeId: String, latitude: Double, longitude: Double, distance: Double, style: NativeShapeStyle) throws
+  /// Removes one shape by id; unknown ids succeed without effect.
+  func removeShape(session: NativeCameraSession, shapeId: String) throws
+  /// Removes every circle, mirroring the keyless legacy `remove#circle`.
+  func removeCircles(session: NativeCameraSession) throws
+  /// Removes every rectangle, mirroring the keyless legacy `remove#rect`.
+  func removeRectangles(session: NativeCameraSession) throws
+  /// Removes every shape of any kind, mirroring the legacy `clear#shapes`.
+  func clearShapes(session: NativeCameraSession) throws
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class NativeMapShapesApiSetup {
+  static var codec: FlutterStandardMessageCodec { NativeMapCameraPigeonCodec.shared }
+  /// Sets up an instance of `NativeMapShapesApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: NativeMapShapesApi?, messageChannelSuffix: String = "") {
+    let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    /// Draws (or replaces) one circle around the coordinate with the radius
+    /// in meters.
+    let addCircleChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.addCircle\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      addCircleChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let shapeIdArg = args[1] as! String
+        let latitudeArg = args[2] as! Double
+        let longitudeArg = args[3] as! Double
+        let radiusArg = args[4] as! Double
+        let styleArg = args[5] as! NativeShapeStyle
+        do {
+          try api.addCircle(session: sessionArg, shapeId: shapeIdArg, latitude: latitudeArg, longitude: longitudeArg, radius: radiusArg, style: styleArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      addCircleChannel.setMessageHandler(nil)
+    }
+    /// Draws (or replaces) one rectangle centered on the coordinate with the
+    /// side distance in meters.
+    let addRectangleChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.addRectangle\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      addRectangleChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let shapeIdArg = args[1] as! String
+        let latitudeArg = args[2] as! Double
+        let longitudeArg = args[3] as! Double
+        let distanceArg = args[4] as! Double
+        let styleArg = args[5] as! NativeShapeStyle
+        do {
+          try api.addRectangle(session: sessionArg, shapeId: shapeIdArg, latitude: latitudeArg, longitude: longitudeArg, distance: distanceArg, style: styleArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      addRectangleChannel.setMessageHandler(nil)
+    }
+    /// Removes one shape by id; unknown ids succeed without effect.
+    let removeShapeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.removeShape\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      removeShapeChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let shapeIdArg = args[1] as! String
+        do {
+          try api.removeShape(session: sessionArg, shapeId: shapeIdArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      removeShapeChannel.setMessageHandler(nil)
+    }
+    /// Removes every circle, mirroring the keyless legacy `remove#circle`.
+    let removeCirclesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.removeCircles\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      removeCirclesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        do {
+          try api.removeCircles(session: sessionArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      removeCirclesChannel.setMessageHandler(nil)
+    }
+    /// Removes every rectangle, mirroring the keyless legacy `remove#rect`.
+    let removeRectanglesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.removeRectangles\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      removeRectanglesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        do {
+          try api.removeRectangles(session: sessionArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      removeRectanglesChannel.setMessageHandler(nil)
+    }
+    /// Removes every shape of any kind, mirroring the legacy `clear#shapes`.
+    let clearShapesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.clearShapes\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      clearShapesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        do {
+          try api.clearShapes(session: sessionArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      clearShapesChannel.setMessageHandler(nil)
+    }
+  }
+}
+/// Generated roads command route for one map session: manual road drawing,
+/// removal by id and clearing.
+///
+/// The host advertises the `roads` capability only when it implements this
+/// surface; older hosts keep these commands on their legacy routes.
+/// Route fetching/calculation stays asynchronous in Dart — only the
+/// drawing of an already-computed polyline crosses this channel.
+/// Drawing with an existing id replaces the road, mirroring the legacy
+/// `drawRoad#manually` behavior; removal of unknown ids is a silent no-op,
+/// like the legacy `delete#road`.
+///
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol NativeMapRoadsApi {
+  /// Draws (or replaces) one road from flat `[lat, lon, lat, lon, ...]`
+  /// coordinates at full double precision. `zoomInto` moves the camera to
+  /// fit the road, mirroring the legacy `zoomIntoRegion`.
+  func drawRoad(session: NativeCameraSession, roadId: String, coordinates: FlutterStandardTypedData, style: NativeRoadStyle, zoomInto: Bool) throws
+  /// Removes one road by its key; unknown keys succeed without effect.
+  func removeRoad(session: NativeCameraSession, roadId: String) throws
+  /// Removes every road, mirroring the legacy `clear#roads`.
+  func clearRoads(session: NativeCameraSession) throws
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class NativeMapRoadsApiSetup {
+  static var codec: FlutterStandardMessageCodec { NativeMapCameraPigeonCodec.shared }
+  /// Sets up an instance of `NativeMapRoadsApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: NativeMapRoadsApi?, messageChannelSuffix: String = "") {
+    let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    /// Draws (or replaces) one road from flat `[lat, lon, lat, lon, ...]`
+    /// coordinates at full double precision. `zoomInto` moves the camera to
+    /// fit the road, mirroring the legacy `zoomIntoRegion`.
+    let drawRoadChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapRoadsApi.drawRoad\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      drawRoadChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let roadIdArg = args[1] as! String
+        let coordinatesArg = args[2] as! FlutterStandardTypedData
+        let styleArg = args[3] as! NativeRoadStyle
+        let zoomIntoArg = args[4] as! Bool
+        do {
+          try api.drawRoad(session: sessionArg, roadId: roadIdArg, coordinates: coordinatesArg, style: styleArg, zoomInto: zoomIntoArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      drawRoadChannel.setMessageHandler(nil)
+    }
+    /// Removes one road by its key; unknown keys succeed without effect.
+    let removeRoadChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapRoadsApi.removeRoad\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      removeRoadChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let roadIdArg = args[1] as! String
+        do {
+          try api.removeRoad(session: sessionArg, roadId: roadIdArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      removeRoadChannel.setMessageHandler(nil)
+    }
+    /// Removes every road, mirroring the legacy `clear#roads`.
+    let clearRoadsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapRoadsApi.clearRoads\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      clearRoadsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        do {
+          try api.clearRoads(session: sessionArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      clearRoadsChannel.setMessageHandler(nil)
     }
   }
 }

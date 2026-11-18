@@ -38,11 +38,12 @@ extension MapSession {
             result(200)
             break
         case "change#tile":
+            // Same native operations as the generated layers route
+            // (`LayersTypedService`); the legacy payload keeps its raw map
+            // decoding and its ignore-on-null behavior for Apple hosts.
             let args = call.arguments as! [String: Any]?
-
             if let customTileArgs = args {
-                let tile = CustomTiles(customTileArgs)
-                self.mapOSM.setCustomTile(tile: tile)
+                self.typedChangeLegacyTileMap(customTileArgs)
             }
 
             result(200)
@@ -223,7 +224,9 @@ extension MapSession {
             deleteRoad(call: call, result: result)
             break
         case "clear#roads":
-            self.mapOSM.roadManager.removeAllRoads()
+            // Same bookkeeping as the generated roads route: the stored
+            // tap metadata drops with the roads themselves.
+            self.typedClearRoads()
             result(200)
             break
         case "map#orientation":
@@ -255,11 +258,7 @@ extension MapSession {
             break
         case "toggle#Alllayer":
             let isVisible = call.arguments as! Bool
-            if isVisible {
-                self.mapOSM.showAllLayers()
-            } else {
-                self.mapOSM.hideAllLayers()
-            }
+            self.typedSetOverlaysVisible(isVisible)
         case "draw#rect":
             drawShape(args: call.arguments, result: result, shapeType: ShapeTypes.Rect)
             break

@@ -45,6 +45,9 @@ class MapSession: NSObject {
     private(set) var cameraBridge: PigeonCameraBridge?
     /// Generated markers route living alongside the legacy channel handler.
     private(set) var markersBridge: PigeonMarkersBridge?
+    private(set) var layersBridge: PigeonLayersBridge?
+    private(set) var shapesBridge: PigeonShapesBridge?
+    private(set) var roadsBridge: PigeonRoadsBridge?
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -248,6 +251,15 @@ class MapSession: NSObject {
         let markers = PigeonMarkersBridge(session: self)
         markers.register(messenger: binaryMessenger, viewId: viewId)
         markersBridge = markers
+        let layers = PigeonLayersBridge(session: self)
+        layers.register(messenger: binaryMessenger, viewId: viewId)
+        layersBridge = layers
+        let shapes = PigeonShapesBridge(session: self)
+        shapes.register(messenger: binaryMessenger, viewId: viewId)
+        shapesBridge = shapes
+        let roads = PigeonRoadsBridge(session: self)
+        roads.register(messenger: binaryMessenger, viewId: viewId)
+        roadsBridge = roads
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -365,6 +377,12 @@ class MapSession: NSObject {
         cameraBridge = nil
         markersBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
         markersBridge = nil
+        layersBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        layersBridge = nil
+        shapesBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        shapesBridge = nil
+        roadsBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        roadsBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil
