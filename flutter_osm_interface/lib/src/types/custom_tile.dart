@@ -1,3 +1,4 @@
+import 'package:flutter_osm_interface/src/channel/pigeon/native_map_camera.g.dart' as generated;
 import 'package:flutter_osm_interface/src/common/utilities.dart';
 
 /// [CustomTile]
@@ -138,6 +139,31 @@ class CustomTile {
       map.putIfAbsent("isVector", () => true);
     }
     return map;
+  }
+
+  /// Platform-neutral generated wire form: raw url templates with their
+  /// subdomains, letting each host apply its own substitution rules the
+  /// way its legacy decoder does. Never export generated types from the
+  /// public API; used only by the internal typed layers route.
+  dynamic toGenerated() {
+    return generated.NativeTileConfiguration(
+      urls: urlsServers
+          .map(
+            (e) => generated.NativeTileServer(
+              url: e.url,
+              subdomains: e.subdomains,
+            ),
+          )
+          .toList(),
+      tileExtension: tileExtension,
+      sourceName: sourceName,
+      tileSize: tileSize,
+      minZoomLevel: minZoomLevel,
+      maxZoomLevel: maxZoomLevel,
+      apiKey: keyApi?.key,
+      apiValue: keyApi?.value,
+      styleURL: styleURL,
+    );
   }
 }
 

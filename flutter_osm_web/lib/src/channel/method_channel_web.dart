@@ -68,6 +68,33 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
+  Future<CameraRouteSelection> attachLayersRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native layers routing does not apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
+  Future<CameraRouteSelection> attachShapesRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native shape routing does not apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
+  Future<CameraRouteSelection> attachRoadsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native road routing does not apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
     return _events(idMap).whereType<SingleTapEvent>();
   }

@@ -29,6 +29,21 @@ const String kCameraCapability = 'camera';
 /// legacy unless the host negotiated this capability at attach time.
 const String kCameraConfigCapability = 'camera.config';
 
+/// Capability family carried by the layers schema: tile-source selection
+/// and overlay visibility. Hosts without this capability keep those
+/// commands on their legacy routes.
+const String kLayersCapability = 'layers';
+
+/// Capability family carried by the shapes schema: circles and rectangles
+/// (add/replace, removal by id, kind clears, full clear). Hosts without
+/// this capability keep those commands on their legacy routes.
+const String kShapesCapability = 'shapes';
+
+/// Capability family carried by the roads schema: manual road drawing,
+/// removal by id and clearing. Hosts without this capability keep those
+/// commands on their legacy routes.
+const String kRoadsCapability = 'roads';
+
 /// Capability family carried by the markers schema.
 const String kMarkersCapability = 'markers';
 

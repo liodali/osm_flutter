@@ -34,6 +34,9 @@ class OSMOption {
     this.userTrackingOption,
     this.useTypedCameraRoute = false,
     this.useTypedMarkers = false,
+    this.useTypedLayers = false,
+    this.useTypedShapes = false,
+    this.useTypedRoads = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -57,6 +60,20 @@ class OSMOption {
   /// generated channel when the native host advertises support at
   /// attachment time. Default keeps the legacy route.
   final bool useTypedMarkers;
+  /// Opt-in routing of layer commands (tile-source selection and overlay
+  /// visibility) through the typed generated channel when the native host
+  /// advertises the layers capability at attachment time. Default keeps
+  /// the legacy route.
+  final bool useTypedLayers;
+  /// Opt-in routing of shape commands (circles, rectangles) through the
+  /// typed generated channel when the native host advertises the shapes
+  /// capability at attachment time. Default keeps the legacy route.
+  final bool useTypedShapes;
+  /// Opt-in routing of road drawing, removal and clearing through the
+  /// typed generated channel when the native host advertises the roads
+  /// capability at attachment time. Route fetching/calculation stays
+  /// asynchronous in Dart. Default keeps the legacy route.
+  final bool useTypedRoads;
 }
 
 /// [ZoomOption]

@@ -46,6 +46,9 @@ class const MobileOsmFlutter({
   this.enableRotationByGesture = false,
   this.useTypedCameraRoute = false,
   this.useTypedMarkers = false,
+  this.useTypedLayers = false,
+  this.useTypedShapes = false,
+  this.useTypedRoads = false,
 }) extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -71,6 +74,12 @@ class const MobileOsmFlutter({
   final bool useTypedCameraRoute;
   /// Opt-in routing of marker commands through the typed generated channel.
   final bool useTypedMarkers;
+  /// Opt-in routing of layer commands through the typed generated channel.
+  final bool useTypedLayers;
+  /// Opt-in routing of shape commands through the typed generated channel.
+  final bool useTypedShapes;
+  /// Opt-in routing of road commands through the typed generated channel.
+  final bool useTypedRoads;
   final ZoomOption zoomOption;
   @override
   MobileOsmFlutterState createState() => MobileOsmFlutterState();

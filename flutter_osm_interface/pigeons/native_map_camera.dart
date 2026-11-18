@@ -5,10 +5,13 @@
 // root (pigeon 30.0.2 pinned in pubspec dev_dependencies). Never hand-edit
 // the `.g.` outputs; never export generated types from public APIs.
 //
-// Scope: camera family + markers family (typed, stable ids), session-scoped.
+// Scope: camera family + markers family (typed, stable ids) + layers family
+// (tile sources, overlay visibility) + shapes family (circles, rectangles)
+// + roads family (manual drawing, removal, clearing), session-scoped.
 // Events and location are later phases (C4) and live in separate schemas.
-// Note: the Apple host advertises [camera, markers]; its typed marker ops
-// live in `PigeonMarkersBridge` on the shared darwin session.
+// Note: the Apple host advertises [camera, markers, layers]; its typed
+// marker ops live in `PigeonMarkersBridge` and its tile/layer ops in
+// `PigeonLayersBridge` on the shared darwin session.
 import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(
@@ -165,6 +168,186 @@ class NativeZoomConfiguration {
     required this.maxZoomLevel,
     required this.stepZoom,
   });
+}
+
+/// One tile-server template in platform-neutral form.
+///
+/// The url keeps its `{s}`/`{z}`/`{x}`/`{y}` placeholders exactly as the
+/// application provided them; each host applies its own substitution rules
+/// (Android expands the first subdomain and appends the z/x/y template,
+/// Apple lets the map framework append the template). This mirrors what the
+/// legacy routes encode per platform without baking either rule into the
+/// wire contract.
+class NativeTileServer {
+  final String url;
+  final List<String> subdomains;
+
+  const NativeTileServer({required this.url, required this.subdomains});
+}
+
+/// Tile-source configuration mirroring the legacy `CustomTile.toMap()`
+/// payload. `styleURL` selects a vector style (hosts derive the vector flag
+/// from it, matching the legacy `isVector` encoding). `null` tile in
+/// [NativeMapLayersApi.changeTileLayer] resets the platform default OSM
+/// layer.
+class NativeTileConfiguration {
+  final List<NativeTileServer> urls;
+  final String tileExtension;
+  final String sourceName;
+  final int tileSize;
+  final int minZoomLevel;
+  final int maxZoomLevel;
+
+  /// Key name and value for tile servers requiring API-key access; both are
+  /// null when the server needs no key.
+  final String? apiKey;
+  final String? apiValue;
+
+  /// Vector style URL; null selects the raster path.
+  final String? styleURL;
+
+  const NativeTileConfiguration({
+    required this.urls,
+    required this.tileExtension,
+    required this.sourceName,
+    required this.tileSize,
+    required this.minZoomLevel,
+    required this.maxZoomLevel,
+    this.apiKey,
+    this.apiValue,
+    this.styleURL,
+  });
+}
+
+/// Generated layers command route for one map session (tile-source
+/// selection and overlay visibility).
+///
+/// The host advertises the `layers` capability only when it implements this
+/// surface; older hosts keep these commands on their legacy routes.
+@HostApi()
+abstract class NativeMapLayersApi {
+  /// Selects the tile source. A null configuration resets the default OSM
+  /// tile layer, mirroring the legacy `change#tile` semantics.
+  void changeTileLayer(NativeCameraSession session, NativeTileConfiguration? tile);
+
+  /// Shows or hides the overlay layers (marker overlays), mirroring the
+  /// legacy `toggle#Alllayer` semantics.
+  void setOverlaysVisible(NativeCameraSession session, bool visible);
+}
+
+/// WGS84 shape geometry shared by circles and rectangles.
+///
+/// Coordinates are degrees at full double precision; `radiusMeters` (circle)
+/// and `distanceMeters` (rectangle side span) are meters. Colors are packed
+/// `0xAARRGGBB` integers — the hosts decode them into their native color
+/// representations the same way the legacy color lists did.
+class NativeShapeStyle {
+  final int fillColorArgb;
+  final int? borderColorArgb;
+  final double strokeWidth;
+
+  const NativeShapeStyle({
+    required this.fillColorArgb,
+    this.borderColorArgb,
+    required this.strokeWidth,
+  });
+}
+
+/// Generated shapes command route for one map session (circles and
+/// rectangles).
+///
+/// The host advertises the `shapes` capability only when it implements this
+/// surface; older hosts keep these commands on their legacy routes.
+/// Adding a shape with an existing id replaces it, mirroring the legacy
+/// `draw#circle`/`draw#rect` behavior. Removal is a silent no-op for
+/// unknown ids, like the legacy `remove#circle`/`remove#rect` handlers.
+@HostApi()
+abstract class NativeMapShapesApi {
+  /// Draws (or replaces) one circle around the coordinate with the radius
+  /// in meters.
+  void addCircle(
+    NativeCameraSession session,
+    String shapeId,
+    double latitude,
+    double longitude,
+    double radius,
+    NativeShapeStyle style,
+  );
+
+  /// Draws (or replaces) one rectangle centered on the coordinate with the
+  /// side distance in meters.
+  void addRectangle(
+    NativeCameraSession session,
+    String shapeId,
+    double latitude,
+    double longitude,
+    double distance,
+    NativeShapeStyle style,
+  );
+
+  /// Removes one shape by id; unknown ids succeed without effect.
+  void removeShape(NativeCameraSession session, String shapeId);
+
+  /// Removes every circle, mirroring the keyless legacy `remove#circle`.
+  void removeCircles(NativeCameraSession session);
+
+  /// Removes every rectangle, mirroring the keyless legacy `remove#rect`.
+  void removeRectangles(NativeCameraSession session);
+
+  /// Removes every shape of any kind, mirroring the legacy `clear#shapes`.
+  void clearShapes(NativeCameraSession session);
+}
+
+/// Road styling mirroring the legacy manual-drawing payload.
+///
+/// Colors are packed `0xAARRGGBB` integers. A null `borderColorArgb` with a
+/// non-null `borderWidth` lets the host apply its legacy default border
+/// color (Android transparent-black, Apple `#f55b5b`); a null
+/// `borderWidth` draws the road without a border.
+class NativeRoadStyle {
+  final int roadColorArgb;
+  final double roadWidth;
+  final int? borderColorArgb;
+  final double? borderWidth;
+  final bool dotted;
+
+  const NativeRoadStyle({
+    required this.roadColorArgb,
+    required this.roadWidth,
+    this.borderColorArgb,
+    this.borderWidth,
+    required this.dotted,
+  });
+}
+
+/// Generated roads command route for one map session: manual road drawing,
+/// removal by id and clearing.
+///
+/// The host advertises the `roads` capability only when it implements this
+/// surface; older hosts keep these commands on their legacy routes.
+/// Route fetching/calculation stays asynchronous in Dart — only the
+/// drawing of an already-computed polyline crosses this channel.
+/// Drawing with an existing id replaces the road, mirroring the legacy
+/// `drawRoad#manually` behavior; removal of unknown ids is a silent no-op,
+/// like the legacy `delete#road`.
+@HostApi()
+abstract class NativeMapRoadsApi {
+  /// Draws (or replaces) one road from flat `[lat, lon, lat, lon, ...]`
+  /// coordinates at full double precision. `zoomInto` moves the camera to
+  /// fit the road, mirroring the legacy `zoomIntoRegion`.
+  void drawRoad(
+    NativeCameraSession session,
+    String roadId,
+    Float64List coordinates,
+    NativeRoadStyle style,
+    bool zoomInto,
+  );
+
+  /// Removes one road by its key; unknown keys succeed without effect.
+  void removeRoad(NativeCameraSession session, String roadId);
+
+  /// Removes every road, mirroring the legacy `clear#roads`.
+  void clearRoads(NativeCameraSession session);
 }
 
 /// Generated markers command route for one map session.

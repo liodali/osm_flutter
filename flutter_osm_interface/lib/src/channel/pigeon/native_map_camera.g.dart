@@ -450,6 +450,289 @@ class NativeZoomConfiguration {
   }
 }
 
+/// One tile-server template in platform-neutral form.
+///
+/// The url keeps its `{s}`/`{z}`/`{x}`/`{y}` placeholders exactly as the
+/// application provided them; each host applies its own substitution rules
+/// (Android expands the first subdomain and appends the z/x/y template,
+/// Apple lets the map framework append the template). This mirrors what the
+/// legacy routes encode per platform without baking either rule into the
+/// wire contract.
+class NativeTileServer {
+  NativeTileServer({
+    required this.url,
+    required this.subdomains,
+  });
+
+  String url;
+
+  List<String> subdomains;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      url,
+      subdomains,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeTileServer decode(Object result) {
+    result as List<Object?>;
+    return NativeTileServer(
+      url: result[0]! as String,
+      subdomains: (result[1]! as List<Object?>).cast<String>(),
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeTileServer || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(url, other.url) && _deepEquals(subdomains, other.subdomains);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeTileServer(url: $url, subdomains: $subdomains)';
+  }
+}
+
+/// Tile-source configuration mirroring the legacy `CustomTile.toMap()`
+/// payload. `styleURL` selects a vector style (hosts derive the vector flag
+/// from it, matching the legacy `isVector` encoding). `null` tile in
+/// [NativeMapLayersApi.changeTileLayer] resets the platform default OSM
+/// layer.
+class NativeTileConfiguration {
+  NativeTileConfiguration({
+    required this.urls,
+    required this.tileExtension,
+    required this.sourceName,
+    required this.tileSize,
+    required this.minZoomLevel,
+    required this.maxZoomLevel,
+    this.apiKey,
+    this.apiValue,
+    this.styleURL,
+  });
+
+  List<NativeTileServer> urls;
+
+  String tileExtension;
+
+  String sourceName;
+
+  int tileSize;
+
+  int minZoomLevel;
+
+  int maxZoomLevel;
+
+  /// Key name and value for tile servers requiring API-key access; both are
+  /// null when the server needs no key.
+  String? apiKey;
+
+  String? apiValue;
+
+  /// Vector style URL; null selects the raster path.
+  String? styleURL;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      urls,
+      tileExtension,
+      sourceName,
+      tileSize,
+      minZoomLevel,
+      maxZoomLevel,
+      apiKey,
+      apiValue,
+      styleURL,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeTileConfiguration decode(Object result) {
+    result as List<Object?>;
+    return NativeTileConfiguration(
+      urls: (result[0]! as List<Object?>).cast<NativeTileServer>(),
+      tileExtension: result[1]! as String,
+      sourceName: result[2]! as String,
+      tileSize: result[3]! as int,
+      minZoomLevel: result[4]! as int,
+      maxZoomLevel: result[5]! as int,
+      apiKey: result[6] as String?,
+      apiValue: result[7] as String?,
+      styleURL: result[8] as String?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeTileConfiguration || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(urls, other.urls) && _deepEquals(tileExtension, other.tileExtension) && _deepEquals(sourceName, other.sourceName) && _deepEquals(tileSize, other.tileSize) && _deepEquals(minZoomLevel, other.minZoomLevel) && _deepEquals(maxZoomLevel, other.maxZoomLevel) && _deepEquals(apiKey, other.apiKey) && _deepEquals(apiValue, other.apiValue) && _deepEquals(styleURL, other.styleURL);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeTileConfiguration(urls: $urls, tileExtension: $tileExtension, sourceName: $sourceName, tileSize: $tileSize, minZoomLevel: $minZoomLevel, maxZoomLevel: $maxZoomLevel, apiKey: $apiKey, apiValue: $apiValue, styleURL: $styleURL)';
+  }
+}
+
+/// WGS84 shape geometry shared by circles and rectangles.
+///
+/// Coordinates are degrees at full double precision; `radiusMeters` (circle)
+/// and `distanceMeters` (rectangle side span) are meters. Colors are packed
+/// `0xAARRGGBB` integers — the hosts decode them into their native color
+/// representations the same way the legacy color lists did.
+class NativeShapeStyle {
+  NativeShapeStyle({
+    required this.fillColorArgb,
+    this.borderColorArgb,
+    required this.strokeWidth,
+  });
+
+  int fillColorArgb;
+
+  int? borderColorArgb;
+
+  double strokeWidth;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      fillColorArgb,
+      borderColorArgb,
+      strokeWidth,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeShapeStyle decode(Object result) {
+    result as List<Object?>;
+    return NativeShapeStyle(
+      fillColorArgb: result[0]! as int,
+      borderColorArgb: result[1] as int?,
+      strokeWidth: result[2]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeShapeStyle || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(fillColorArgb, other.fillColorArgb) && _deepEquals(borderColorArgb, other.borderColorArgb) && _deepEquals(strokeWidth, other.strokeWidth);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeShapeStyle(fillColorArgb: $fillColorArgb, borderColorArgb: $borderColorArgb, strokeWidth: $strokeWidth)';
+  }
+}
+
+/// Road styling mirroring the legacy manual-drawing payload.
+///
+/// Colors are packed `0xAARRGGBB` integers. A null `borderColorArgb` with a
+/// non-null `borderWidth` lets the host apply its legacy default border
+/// color (Android transparent-black, Apple `#f55b5b`); a null
+/// `borderWidth` draws the road without a border.
+class NativeRoadStyle {
+  NativeRoadStyle({
+    required this.roadColorArgb,
+    required this.roadWidth,
+    this.borderColorArgb,
+    this.borderWidth,
+    required this.dotted,
+  });
+
+  int roadColorArgb;
+
+  double roadWidth;
+
+  int? borderColorArgb;
+
+  double? borderWidth;
+
+  bool dotted;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      roadColorArgb,
+      roadWidth,
+      borderColorArgb,
+      borderWidth,
+      dotted,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeRoadStyle decode(Object result) {
+    result as List<Object?>;
+    return NativeRoadStyle(
+      roadColorArgb: result[0]! as int,
+      roadWidth: result[1]! as double,
+      borderColorArgb: result[2] as int?,
+      borderWidth: result[3] as double?,
+      dotted: result[4]! as bool,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeRoadStyle || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(roadColorArgb, other.roadColorArgb) && _deepEquals(roadWidth, other.roadWidth) && _deepEquals(borderColorArgb, other.borderColorArgb) && _deepEquals(borderWidth, other.borderWidth) && _deepEquals(dotted, other.dotted);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeRoadStyle(roadColorArgb: $roadColorArgb, roadWidth: $roadWidth, borderColorArgb: $borderColorArgb, borderWidth: $borderWidth, dotted: $dotted)';
+  }
+}
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -476,6 +759,18 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is NativeZoomConfiguration) {
       buffer.putUint8(134);
       writeValue(buffer, value.encode());
+    }    else if (value is NativeTileServer) {
+      buffer.putUint8(135);
+      writeValue(buffer, value.encode());
+    }    else if (value is NativeTileConfiguration) {
+      buffer.putUint8(136);
+      writeValue(buffer, value.encode());
+    }    else if (value is NativeShapeStyle) {
+      buffer.putUint8(137);
+      writeValue(buffer, value.encode());
+    }    else if (value is NativeRoadStyle) {
+      buffer.putUint8(138);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -496,6 +791,14 @@ class _PigeonCodec extends StandardMessageCodec {
         return NativeBounds.decode(readValue(buffer)!);
       case 134:
         return NativeZoomConfiguration.decode(readValue(buffer)!);
+      case 135:
+        return NativeTileServer.decode(readValue(buffer)!);
+      case 136:
+        return NativeTileConfiguration.decode(readValue(buffer)!);
+      case 137:
+        return NativeShapeStyle.decode(readValue(buffer)!);
+      case 138:
+        return NativeRoadStyle.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -704,6 +1007,287 @@ class NativeMapCameraApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, configuration]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+}
+
+/// Generated layers command route for one map session (tile-source
+/// selection and overlay visibility).
+///
+/// The host advertises the `layers` capability only when it implements this
+/// surface; older hosts keep these commands on their legacy routes.
+class NativeMapLayersApi {
+  /// Constructor for [NativeMapLayersApi]. The [binaryMessenger] named argument is
+  /// available for dependency injection. If it is left null, the default
+  /// BinaryMessenger will be used which routes to the host platform.
+  NativeMapLayersApi({
+      BinaryMessenger? binaryMessenger, 
+      String messageChannelSuffix = '', 
+      })
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+
+  final BinaryMessenger? pigeonVar_binaryMessenger;
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  final String pigeonVar_messageChannelSuffix;
+
+
+  /// Selects the tile source. A null configuration resets the default OSM
+  /// tile layer, mirroring the legacy `change#tile` semantics.
+  Future<void> changeTileLayer(NativeCameraSession session, NativeTileConfiguration? tile) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapLayersApi.changeTileLayer$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, tile]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Shows or hides the overlay layers (marker overlays), mirroring the
+  /// legacy `toggle#Alllayer` semantics.
+  Future<void> setOverlaysVisible(NativeCameraSession session, bool visible) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapLayersApi.setOverlaysVisible$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, visible]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+}
+
+/// Generated shapes command route for one map session (circles and
+/// rectangles).
+///
+/// The host advertises the `shapes` capability only when it implements this
+/// surface; older hosts keep these commands on their legacy routes.
+/// Adding a shape with an existing id replaces it, mirroring the legacy
+/// `draw#circle`/`draw#rect` behavior. Removal is a silent no-op for
+/// unknown ids, like the legacy `remove#circle`/`remove#rect` handlers.
+class NativeMapShapesApi {
+  /// Constructor for [NativeMapShapesApi]. The [binaryMessenger] named argument is
+  /// available for dependency injection. If it is left null, the default
+  /// BinaryMessenger will be used which routes to the host platform.
+  NativeMapShapesApi({
+      BinaryMessenger? binaryMessenger, 
+      String messageChannelSuffix = '', 
+      })
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+
+  final BinaryMessenger? pigeonVar_binaryMessenger;
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  final String pigeonVar_messageChannelSuffix;
+
+
+  /// Draws (or replaces) one circle around the coordinate with the radius
+  /// in meters.
+  Future<void> addCircle(NativeCameraSession session, String shapeId, double latitude, double longitude, double radius, NativeShapeStyle style) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.addCircle$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, shapeId, latitude, longitude, radius, style]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Draws (or replaces) one rectangle centered on the coordinate with the
+  /// side distance in meters.
+  Future<void> addRectangle(NativeCameraSession session, String shapeId, double latitude, double longitude, double distance, NativeShapeStyle style) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.addRectangle$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, shapeId, latitude, longitude, distance, style]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Removes one shape by id; unknown ids succeed without effect.
+  Future<void> removeShape(NativeCameraSession session, String shapeId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.removeShape$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, shapeId]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Removes every circle, mirroring the keyless legacy `remove#circle`.
+  Future<void> removeCircles(NativeCameraSession session) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.removeCircles$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Removes every rectangle, mirroring the keyless legacy `remove#rect`.
+  Future<void> removeRectangles(NativeCameraSession session) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.removeRectangles$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Removes every shape of any kind, mirroring the legacy `clear#shapes`.
+  Future<void> clearShapes(NativeCameraSession session) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapShapesApi.clearShapes$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+}
+
+/// Generated roads command route for one map session: manual road drawing,
+/// removal by id and clearing.
+///
+/// The host advertises the `roads` capability only when it implements this
+/// surface; older hosts keep these commands on their legacy routes.
+/// Route fetching/calculation stays asynchronous in Dart — only the
+/// drawing of an already-computed polyline crosses this channel.
+/// Drawing with an existing id replaces the road, mirroring the legacy
+/// `drawRoad#manually` behavior; removal of unknown ids is a silent no-op,
+/// like the legacy `delete#road`.
+class NativeMapRoadsApi {
+  /// Constructor for [NativeMapRoadsApi]. The [binaryMessenger] named argument is
+  /// available for dependency injection. If it is left null, the default
+  /// BinaryMessenger will be used which routes to the host platform.
+  NativeMapRoadsApi({
+      BinaryMessenger? binaryMessenger, 
+      String messageChannelSuffix = '', 
+      })
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+
+  final BinaryMessenger? pigeonVar_binaryMessenger;
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  final String pigeonVar_messageChannelSuffix;
+
+
+  /// Draws (or replaces) one road from flat `[lat, lon, lat, lon, ...]`
+  /// coordinates at full double precision. `zoomInto` moves the camera to
+  /// fit the road, mirroring the legacy `zoomIntoRegion`.
+  Future<void> drawRoad(NativeCameraSession session, String roadId, Float64List coordinates, NativeRoadStyle style, bool zoomInto) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapRoadsApi.drawRoad$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, roadId, coordinates, style, zoomInto]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Removes one road by its key; unknown keys succeed without effect.
+  Future<void> removeRoad(NativeCameraSession session, String roadId) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapRoadsApi.removeRoad$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, roadId]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Removes every road, mirroring the legacy `clear#roads`.
+  Future<void> clearRoads(NativeCameraSession session) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapRoadsApi.clearRoads$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
     _extractReplyValueOrThrow(
         pigeonVar_replyList,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -13,6 +14,9 @@ import 'package:stream_transform/stream_transform.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_bootstrap.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_map_camera.g.dart' as generated;
 import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_layers_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_shapes_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_roads_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
 import 'package:flutter_osm_interface/src/common/osm_event.dart';
@@ -34,6 +38,21 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   /// Frozen markers-route decision (null = legacy), same lifecycle rules.
   final Map<int, PigeonMarkersClient?> _markersRoutes = {};
+
+  /// Frozen layers-route decision (null = legacy), same lifecycle rules:
+  /// tile-source selection and overlay visibility stay legacy unless the
+  /// host negotiated the `layers` capability at attach time.
+  final Map<int, PigeonLayersClient?> _layersRoutes = {};
+
+  /// Frozen shapes-route decision (null = legacy), same lifecycle rules:
+  /// circle and rectangle commands stay legacy unless the host negotiated
+  /// the `shapes` capability at attach time.
+  final Map<int, PigeonShapesClient?> _shapesRoutes = {};
+
+  /// Frozen roads-route decision (null = legacy), same lifecycle rules:
+  /// manual road drawing, removal and clearing stay legacy unless the host
+  /// negotiated the `roads` capability at attach time.
+  final Map<int, PigeonRoadsClient?> _roadsRoutes = {};
 
   /// GeoPoint key → typed marker ids for maps frozen on the generated
   /// markers route. The legacy public API addresses markers by position;
@@ -199,8 +218,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _cameraRouteEpochs[idOSM] = (_cameraRouteEpochs[idOSM] ?? 0) + 1;
     _routeAttachJobs.remove('$idOSM:$kCameraCapability');
     _routeAttachJobs.remove('$idOSM:$kMarkersCapability');
+    _routeAttachJobs.remove('$idOSM:$kLayersCapability');
+    _routeAttachJobs.remove('$idOSM:$kShapesCapability');
+    _routeAttachJobs.remove('$idOSM:$kRoadsCapability');
     _cameraRoutes.remove(idOSM);
     _markersRoutes.remove(idOSM);
+    _layersRoutes.remove(idOSM);
+    _shapesRoutes.remove(idOSM);
+    _roadsRoutes.remove(idOSM);
     _typedMarkerKeys.remove(idOSM);
     _typedMarkerSequences.remove(idOSM);
     _typedMarkerOrder.remove(idOSM);
@@ -281,6 +306,72 @@ class MethodChannelOSM extends MobileOSMPlatform {
       ),
     );
   }
+
+  @override
+  Future<CameraRouteSelection> attachLayersRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonLayersClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kLayersCapability,
+      routes: _layersRoutes,
+      createClient: (bootstrap) => PigeonLayersClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+      ),
+    );
+  }
+
+  /// Active generated client for [idOSM]'s layers family, or null when the
+  /// frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonLayersClient? layersClientFor(int idOSM) => _layersRoutes[idOSM];
+
+  @override
+  Future<CameraRouteSelection> attachShapesRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonShapesClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kShapesCapability,
+      routes: _shapesRoutes,
+      createClient: (bootstrap) => PigeonShapesClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+      ),
+    );
+  }
+
+  /// Active generated client for [idOSM]'s shapes family, or null when the
+  /// frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonShapesClient? shapesClientFor(int idOSM) => _shapesRoutes[idOSM];
+
+  @override
+  Future<CameraRouteSelection> attachRoadsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonRoadsClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kRoadsCapability,
+      routes: _roadsRoutes,
+      createClient: (bootstrap) => PigeonRoadsClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+      ),
+    );
+  }
+
+  /// Active generated client for [idOSM]'s roads family, or null when the
+  /// frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonRoadsClient? roadsClientFor(int idOSM) => _roadsRoutes[idOSM];
 
   /// Active generated client for [idOSM]'s markers family, or null when the
   /// frozen decision selected the legacy route.
@@ -704,38 +795,94 @@ class MethodChannelOSM extends MobileOSMPlatform {
     return pngBytes;
   }
 
+  static generated.NativeShapeStyle? _generatedShapeStyle(ShapeOSM shape) {
+    final border = shape.borderColor;
+    return generated.NativeShapeStyle(
+      fillColorArgb: shape.color.toARGB32(),
+      borderColorArgb: border?.toARGB32(),
+      strokeWidth: shape.strokeWidth,
+    );
+  }
+
   @override
   Future<void> drawCircle(int idOSM, CircleOSM circleOSM) async {
+    final client = _shapesRoutes[idOSM];
+    if (client != null) {
+      await client.addCircle(
+        circleOSM.key,
+        circleOSM.centerPoint.latitude,
+        circleOSM.centerPoint.longitude,
+        circleOSM.radius,
+        _generatedShapeStyle(circleOSM)!,
+      );
+      return;
+    }
     await _channels[idOSM]?.invokeMethod("draw#circle", circleOSM.toMap());
   }
 
   @override
   Future<void> removeAllCircle(int idOSM) async {
+    final client = _shapesRoutes[idOSM];
+    if (client != null) {
+      await client.removeCircles();
+      return;
+    }
     await _channels[idOSM]?.invokeMethod("remove#circle", null);
   }
 
   @override
   Future<void> removeCircle(int idOSM, String key) async {
+    final client = _shapesRoutes[idOSM];
+    if (client != null) {
+      await client.removeShape(key);
+      return;
+    }
     await _channels[idOSM]?.invokeMethod("remove#circle", key);
   }
 
   @override
   Future<void> drawRect(int idOSM, RectOSM rectOSM) async {
+    final client = _shapesRoutes[idOSM];
+    if (client != null) {
+      await client.addRectangle(
+        rectOSM.key,
+        rectOSM.centerPoint.latitude,
+        rectOSM.centerPoint.longitude,
+        rectOSM.distance,
+        _generatedShapeStyle(rectOSM)!,
+      );
+      return;
+    }
     await _channels[idOSM]?.invokeMethod("draw#rect", rectOSM.toMap());
   }
 
   @override
   Future<void> removeRect(int idOSM, String key) async {
+    final client = _shapesRoutes[idOSM];
+    if (client != null) {
+      await client.removeShape(key);
+      return;
+    }
     await _channels[idOSM]?.invokeMethod("remove#rect", key);
   }
 
   @override
   Future<void> removeAllRect(int idOSM) async {
+    final client = _shapesRoutes[idOSM];
+    if (client != null) {
+      await client.removeRectangles();
+      return;
+    }
     await _channels[idOSM]?.invokeMethod("remove#rect", null);
   }
 
   @override
   Future<void> removeAllShapes(int idOSM) async {
+    final client = _shapesRoutes[idOSM];
+    if (client != null) {
+      await client.clearShapes();
+      return;
+    }
     await _channels[idOSM]?.invokeMethod("clear#shapes");
   }
 
@@ -771,6 +918,31 @@ class MethodChannelOSM extends MobileOSMPlatform {
     List<GeoPoint> road,
     RoadOption roadOption,
   ) async {
+    final client = _roadsRoutes[idOSM];
+    if (client != null) {
+      // Flat full-precision coordinates; no polyline encoding on the
+      // generated route. Route fetching/calculation stays in Dart — only
+      // the finished polyline crosses the channel.
+      final flat = Float64List(road.length * 2);
+      for (var i = 0; i < road.length; i++) {
+        flat[i * 2] = road[i].latitude;
+        flat[i * 2 + 1] = road[i].longitude;
+      }
+      final border = roadOption.roadBorderColor;
+      await client.drawRoad(
+        roadKey,
+        flat,
+        generated.NativeRoadStyle(
+          roadColorArgb: roadOption.roadColor.toARGB32(),
+          roadWidth: roadOption.roadWidth,
+          borderColorArgb: border?.toARGB32(),
+          borderWidth: roadOption.roadBorderWidth,
+          dotted: roadOption.isDotted,
+        ),
+        zoomInto: roadOption.zoomInto,
+      );
+      return;
+    }
     final coordinates = road.map((e) => e.toListNum()).toList();
     final encodedCoordinates = encodePolyline(coordinates);
     Map<String, dynamic> data = {
@@ -1036,6 +1208,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> clearAllRoads(
     int idOSM,
   ) async {
+    final client = _roadsRoutes[idOSM];
+    if (client != null) {
+      await client.clearRoads();
+      return;
+    }
     await _channels[idOSM]?.invokeMethod("clear#roads");
   }
 
@@ -1139,6 +1316,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> changeTileLayer(int idOSM, CustomTile? tile) async {
+    final client = _layersRoutes[idOSM];
+    if (client != null) {
+      // Platform-neutral wire form: hosts apply their own url template
+      // rules, mirroring their legacy decoders. Null resets the default
+      // OSM layer on every platform.
+      await client.changeTileLayer(tile?.toGenerated());
+      return;
+    }
     //osmTileURL
     final argTile = tile?.toMap() ??
         (defaultTargetPlatform == TargetPlatform.iOS ||
@@ -1150,6 +1335,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> removeRoad(int idOSM, String roadKey) async {
+    final client = _roadsRoutes[idOSM];
+    if (client != null) {
+      await client.removeRoad(roadKey);
+      return;
+    }
     await _channels[idOSM]!.invokeMethod("delete#road", roadKey);
   }
 
@@ -1185,6 +1375,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> toggleLayer(int idOSM, {required bool toggle}) async {
+    final client = _layersRoutes[idOSM];
+    if (client != null) {
+      await client.setOverlaysVisible(toggle);
+      return;
+    }
     await _channels[idOSM]!.invokeMethod("toggle#Alllayer", toggle);
   }
 

@@ -22,6 +22,7 @@ class _RecordingMarkersPlatform extends MethodChannelOSM {
   final events = <String>[];
   final cameraOptIns = <int, bool>{};
   final markerOptIns = <int, bool>{};
+  final layersOptIns = <int, bool>{};
 
   @override
   Future<CameraRouteSelection> attachCameraRoute(
@@ -42,6 +43,16 @@ class _RecordingMarkersPlatform extends MethodChannelOSM {
     markerOptIns[idOSM] = optIn;
     return CameraRouteSelection.legacy;
   }
+
+  @override
+  Future<CameraRouteSelection> attachLayersRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    events.add('layers:$optIn');
+    layersOptIns[idOSM] = optIn;
+    return CameraRouteSelection.legacy;
+  }
 }
 
 void main() {
@@ -53,6 +64,7 @@ void main() {
     required ValueNotifier<Widget?> marker,
     required GlobalKey<MobileOsmFlutterState> stateKey,
     bool useTypedMarkers = false,
+    bool useTypedLayers = false,
   }) async {
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -77,6 +89,7 @@ void main() {
         globalKeys: List.generate(8, (_) => GlobalKey()),
         staticIconGlobalKeys: const {},
         useTypedMarkers: useTypedMarkers,
+        useTypedLayers: useTypedLayers,
       ),
     ));
     await tester.pump();
@@ -103,13 +116,13 @@ void main() {
       useTypedMarkers: true,
     );
 
-    // Production path: the default controller freezes both families before
-    // any map mutation, camera first, then markers.
+    // Production path: the default controller freezes all three families
+    // before any map mutation, camera first, then markers, then layers.
     await MobileOSMController.init(7, state);
     addTearDown(() => platform.close(7));
 
     expect(platform.markerOptIns[7], isTrue);
-    expect(platform.events, ['camera:false', 'markers:true']);
+    expect(platform.events, ['camera:false', 'markers:true', 'layers:false']);
 
     await tester.pumpWidget(const SizedBox());
     ready.dispose();
@@ -138,6 +151,39 @@ void main() {
     addTearDown(() => platform.close(9));
 
     expect(platform.markerOptIns[9], isFalse);
+
+    await tester.pumpWidget(const SizedBox());
+    ready.dispose();
+    marker.dispose();
+  });
+
+  testWidgets('useTypedLayers freezes the layers route after the markers',
+      (tester) async {
+    final previous = MobileOSMController.osmPlatform;
+    final platform = _RecordingMarkersPlatform();
+    MobileOSMController.osmPlatform = platform;
+    addTearDown(() {
+      MobileOSMController.osmPlatform = previous;
+    });
+
+    final ready = ValueNotifier<bool>(false);
+    final marker = ValueNotifier<Widget?>(null);
+    final stateKey = GlobalKey<MobileOsmFlutterState>();
+    final state = await pumpMap(
+      tester,
+      ready: ready,
+      marker: marker,
+      stateKey: stateKey,
+      useTypedLayers: true,
+    );
+
+    // Regression: the layers family must attach before initialization, or
+    // tile and overlay commands would silently stay on the legacy route.
+    await MobileOSMController.init(7, state);
+    addTearDown(() => platform.close(7));
+
+    expect(platform.layersOptIns[7], isTrue);
+    expect(platform.events, ['camera:false', 'markers:false', 'layers:true']);
 
     await tester.pumpWidget(const SizedBox());
     ready.dispose();

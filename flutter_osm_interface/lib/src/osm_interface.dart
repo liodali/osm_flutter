@@ -66,6 +66,36 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM, {
     bool optIn = false,
   });
+
+  /// Freezes the layers routing decision for one map attachment (tile
+  /// sources and overlay visibility). Same contract as [attachCameraRoute]:
+  /// one probe, one decision, frozen before the first mutation. Hosts
+  /// without the `layers` capability keep these commands on the legacy
+  /// route.
+  Future<CameraRouteSelection> attachLayersRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the shapes routing decision for one map attachment (circles
+  /// and rectangles). Same contract as [attachCameraRoute]: one probe, one
+  /// decision, frozen before the first mutation. Hosts without the
+  /// `shapes` capability keep these commands on the legacy route.
+  Future<CameraRouteSelection> attachShapesRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the roads routing decision for one map attachment (manual
+  /// road drawing, removal by id, clearing). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the first
+  /// mutation. Hosts without the `roads` capability keep these commands on
+  /// the legacy route. Route fetching/calculation is unaffected: it stays
+  /// asynchronous in Dart.
+  Future<CameraRouteSelection> attachRoadsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {
