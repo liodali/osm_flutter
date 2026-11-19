@@ -60,6 +60,10 @@ final class MobileOSMController extends IBaseOSMController {
       id,
       optIn: osmState.widget.useTypedRoads,
     );
+    await osmPlatform.attachLocationRoute(
+      id,
+      optIn: osmState.widget.useTypedLocation,
+    );
     return MobileOSMController._(id, osmState);
   }
 

@@ -7,8 +7,10 @@
 //
 // Scope: camera family + markers family (typed, stable ids) + layers family
 // (tile sources, overlay visibility) + shapes family (circles, rectangles)
-// + roads family (manual drawing, removal, clearing), session-scoped.
-// Events and location are later phases (C4) and live in separate schemas.
+// + roads family (manual drawing, removal, clearing) + location family
+// (my-location layer, single-shot fixes), session-scoped. Continuous
+// updates, tracking, custom icons and typed event callbacks are later
+// phases; events and location streams stay on their existing channels.
 // Note: the Apple host advertises [camera, markers, layers]; its typed
 // marker ops live in `PigeonMarkersBridge` and its tile/layer ops in
 // `PigeonLayersBridge` on the shared darwin session.
@@ -348,6 +350,44 @@ abstract class NativeMapRoadsApi {
 
   /// Removes every road, mirroring the legacy `clear#roads`.
   void clearRoads(NativeCameraSession session);
+}
+
+/// Single location fix in degrees.
+class NativeLocationFix {
+  final double latitude;
+  final double longitude;
+
+  const NativeLocationFix({required this.latitude, required this.longitude});
+}
+
+/// Generated location command route for one map session: the my-location
+/// layer toggle and single-shot fixes.
+///
+/// The host advertises the `location` capability only when it implements
+/// this surface; older hosts keep these commands on their legacy routes.
+/// Permission ownership stays with the host application: authorization
+/// prompts and usage descriptions are native concerns, and denial arrives
+/// as a `permission_denied` error, never as a hang.
+///
+/// Completion contract: each pending fix completes exactly once — on fix,
+/// permission denial, timeout, session disposal, activity detachment or
+/// settings denial. Overlapping requests fail immediately with
+/// `location_request_in_progress`; late native callbacks are ignored.
+@HostApi()
+abstract class NativeMapLocationApi {
+  /// Enables the my-location layer, opening the location-settings round
+  /// trip when the provider is off (mirroring the legacy `currentLocation`).
+  /// Completes once the flow is initiated — like the legacy route it does
+  /// not wait for a fix; stream updates keep flowing on their existing
+  /// event channel.
+  @async
+  void showMyLocation(NativeCameraSession session);
+
+  /// Single-shot current position, mirroring the legacy `user#position`:
+  /// the layer starts when needed and stops after the first fix. Completes
+  /// exactly once per the contract above.
+  @async
+  NativeLocationFix getCurrentLocation(NativeCameraSession session);
 }
 
 /// Generated markers command route for one map session.

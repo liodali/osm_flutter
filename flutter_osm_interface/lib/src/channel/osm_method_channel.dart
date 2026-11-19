@@ -16,6 +16,7 @@ import 'package:flutter_osm_interface/src/channel/pigeon/native_map_camera.g.dar
 import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_layers_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_shapes_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_location_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_roads_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
@@ -53,6 +54,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// manual road drawing, removal and clearing stay legacy unless the host
   /// negotiated the `roads` capability at attach time.
   final Map<int, PigeonRoadsClient?> _roadsRoutes = {};
+
+  /// Frozen location-route decision (null = legacy), same lifecycle rules:
+  /// the my-location toggle and single-shot fixes stay legacy unless the
+  /// host negotiated the `location` capability at attach time.
+  final Map<int, PigeonLocationClient?> _locationRoutes = {};
 
   /// GeoPoint key → typed marker ids for maps frozen on the generated
   /// markers route. The legacy public API addresses markers by position;
@@ -221,11 +227,13 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _routeAttachJobs.remove('$idOSM:$kLayersCapability');
     _routeAttachJobs.remove('$idOSM:$kShapesCapability');
     _routeAttachJobs.remove('$idOSM:$kRoadsCapability');
+    _routeAttachJobs.remove('$idOSM:$kLocationCapability');
     _cameraRoutes.remove(idOSM);
     _markersRoutes.remove(idOSM);
     _layersRoutes.remove(idOSM);
     _shapesRoutes.remove(idOSM);
     _roadsRoutes.remove(idOSM);
+    _locationRoutes.remove(idOSM);
     _typedMarkerKeys.remove(idOSM);
     _typedMarkerSequences.remove(idOSM);
     _typedMarkerOrder.remove(idOSM);
@@ -373,6 +381,28 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @visibleForTesting
   PigeonRoadsClient? roadsClientFor(int idOSM) => _roadsRoutes[idOSM];
 
+  @override
+  Future<CameraRouteSelection> attachLocationRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonLocationClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kLocationCapability,
+      routes: _locationRoutes,
+      createClient: (bootstrap) => PigeonLocationClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+      ),
+    );
+  }
+
+  /// Active generated client for [idOSM]'s location family, or null when
+  /// the frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonLocationClient? locationClientFor(int idOSM) => _locationRoutes[idOSM];
+
   /// Active generated client for [idOSM]'s markers family, or null when the
   /// frozen decision selected the legacy route.
   @visibleForTesting
@@ -513,6 +543,17 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> currentLocation(int? idOSM) async {
+    final client = idOSM == null ? null : _locationRoutes[idOSM];
+    if (client != null) {
+      try {
+        await client.showMyLocation();
+      } on LocationFailure catch (e) {
+        throw GeoPointException(msg: e.message);
+      } on StaleMapSessionException {
+        throw GeoPointException(msg: 'the map session was replaced or disposed');
+      }
+      return;
+    }
     try {
       await _channels[idOSM]?.invokeMethod("currentLocation", null);
     } on PlatformException catch (e) {
@@ -522,6 +563,17 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<GeoPoint> myLocation(int idMap) async {
+    final client = _locationRoutes[idMap];
+    if (client != null) {
+      try {
+        final fix = await client.getCurrentLocation();
+        return GeoPoint(latitude: fix.latitude, longitude: fix.longitude);
+      } on LocationFailure catch (e) {
+        throw GeoPointException(msg: e.message);
+      } on StaleMapSessionException {
+        throw GeoPointException(msg: 'the map session was replaced or disposed');
+      }
+    }
     try {
       Map<String, dynamic> map =
           (await _channels[idMap]!.invokeMapMethod("user#position"))!;

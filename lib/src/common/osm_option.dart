@@ -37,6 +37,7 @@ class OSMOption {
     this.useTypedLayers = false,
     this.useTypedShapes = false,
     this.useTypedRoads = false,
+    this.useTypedLocation = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -74,6 +75,11 @@ class OSMOption {
   /// capability at attachment time. Route fetching/calculation stays
   /// asynchronous in Dart. Default keeps the legacy route.
   final bool useTypedRoads;
+  /// Opt-in routing of the my-location layer and single-shot fixes through
+  /// the typed generated channel when the native host advertises the
+  /// location capability at attachment time. Permission ownership stays
+  /// with the host application. Default keeps the legacy route.
+  final bool useTypedLocation;
 }
 
 /// [ZoomOption]

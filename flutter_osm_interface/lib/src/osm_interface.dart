@@ -96,6 +96,18 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM, {
     bool optIn = false,
   });
+
+  /// Freezes the location routing decision for one map attachment (the
+  /// my-location layer and single-shot fixes). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the first
+  /// mutation. Hosts without the `location` capability keep these commands
+  /// on the legacy route. Permission ownership stays with the host
+  /// application; continuous updates and tracking stay on their existing
+  /// channels.
+  Future<CameraRouteSelection> attachLocationRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {

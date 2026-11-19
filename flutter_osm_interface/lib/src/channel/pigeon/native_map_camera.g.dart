@@ -733,6 +733,57 @@ class NativeRoadStyle {
   }
 }
 
+/// Single location fix in degrees.
+class NativeLocationFix {
+  NativeLocationFix({
+    required this.latitude,
+    required this.longitude,
+  });
+
+  double latitude;
+
+  double longitude;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      latitude,
+      longitude,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeLocationFix decode(Object result) {
+    result as List<Object?>;
+    return NativeLocationFix(
+      latitude: result[0]! as double,
+      longitude: result[1]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeLocationFix || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(latitude, other.latitude) && _deepEquals(longitude, other.longitude);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeLocationFix(latitude: $latitude, longitude: $longitude)';
+  }
+}
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -771,6 +822,9 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is NativeRoadStyle) {
       buffer.putUint8(138);
       writeValue(buffer, value.encode());
+    }    else if (value is NativeLocationFix) {
+      buffer.putUint8(139);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -799,6 +853,8 @@ class _PigeonCodec extends StandardMessageCodec {
         return NativeShapeStyle.decode(readValue(buffer)!);
       case 138:
         return NativeRoadStyle.decode(readValue(buffer)!);
+      case 139:
+        return NativeLocationFix.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -1295,6 +1351,80 @@ class NativeMapRoadsApi {
         isNullValid: true,
     )
     ;
+  }
+}
+
+/// Generated location command route for one map session: the my-location
+/// layer toggle and single-shot fixes.
+///
+/// The host advertises the `location` capability only when it implements
+/// this surface; older hosts keep these commands on their legacy routes.
+/// Permission ownership stays with the host application: authorization
+/// prompts and usage descriptions are native concerns, and denial arrives
+/// as a `permission_denied` error, never as a hang.
+///
+/// Completion contract: each pending fix completes exactly once — on fix,
+/// permission denial, timeout, session disposal, activity detachment or
+/// settings denial. Overlapping requests fail immediately with
+/// `location_request_in_progress`; late native callbacks are ignored.
+class NativeMapLocationApi {
+  /// Constructor for [NativeMapLocationApi]. The [binaryMessenger] named argument is
+  /// available for dependency injection. If it is left null, the default
+  /// BinaryMessenger will be used which routes to the host platform.
+  NativeMapLocationApi({
+      BinaryMessenger? binaryMessenger, 
+      String messageChannelSuffix = '', 
+      })
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+
+  final BinaryMessenger? pigeonVar_binaryMessenger;
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  final String pigeonVar_messageChannelSuffix;
+
+
+  /// Enables the my-location layer, opening the location-settings round
+  /// trip when the provider is off (mirroring the legacy `currentLocation`).
+  /// Completes once the flow is initiated — like the legacy route it does
+  /// not wait for a fix; stream updates keep flowing on their existing
+  /// event channel.
+  Future<void> showMyLocation(NativeCameraSession session) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationApi.showMyLocation$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Single-shot current position, mirroring the legacy `user#position`:
+  /// the layer starts when needed and stops after the first fix. Completes
+  /// exactly once per the contract above.
+  Future<NativeLocationFix> getCurrentLocation(NativeCameraSession session) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationApi.getCurrentLocation$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as NativeLocationFix;
   }
 }
 

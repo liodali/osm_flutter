@@ -30,6 +30,7 @@ Widget getWidget({
   bool useTypedLayers = false,
   bool useTypedShapes = false,
   bool useTypedRoads = false,
+  bool useTypedLocation = false,
 }) => MobileOsmFlutter(
   controller: controller,
   userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
@@ -56,6 +57,7 @@ Widget getWidget({
   useTypedLayers: useTypedLayers,
   useTypedShapes: useTypedShapes,
   useTypedRoads: useTypedRoads,
+  useTypedLocation: useTypedLocation,
 );
 
 class const OSMMapWidget({
@@ -85,6 +87,7 @@ class const OSMMapWidget({
     this.useTypedLayers = false,
     this.useTypedShapes = false,
     this.useTypedRoads = false,
+    this.useTypedLocation = false,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -111,6 +114,7 @@ class const OSMMapWidget({
   final bool useTypedLayers;
   final bool useTypedShapes;
   final bool useTypedRoads;
+  final bool useTypedLocation;
   @override
   Widget build(BuildContext context) {
     return MobileOsmFlutter(
@@ -140,6 +144,7 @@ class const OSMMapWidget({
       useTypedLayers: useTypedLayers,
       useTypedShapes: useTypedShapes,
       useTypedRoads: useTypedRoads,
+      useTypedLocation: useTypedLocation,
     );
   }
 }

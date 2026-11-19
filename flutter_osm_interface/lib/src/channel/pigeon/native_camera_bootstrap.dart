@@ -44,6 +44,11 @@ const String kShapesCapability = 'shapes';
 /// commands on their legacy routes.
 const String kRoadsCapability = 'roads';
 
+/// Capability family carried by the location schema: the my-location
+/// layer and single-shot fixes. Hosts without this capability keep those
+/// commands on their legacy routes.
+const String kLocationCapability = 'location';
+
 /// Capability family carried by the markers schema.
 const String kMarkersCapability = 'markers';
 
