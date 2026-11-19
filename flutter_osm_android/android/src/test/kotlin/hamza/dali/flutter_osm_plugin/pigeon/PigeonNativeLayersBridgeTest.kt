@@ -169,6 +169,10 @@ class PigeonNativeLayersBridgeTest {
 
         override fun setOverlaysVisible(visible: Boolean): Boolean = record("setOverlaysVisible:$visible")
 
+        override fun enableUserLocationLayer(): Boolean = record("enableUserLocationLayer")
+
+        override fun requestLocationFix(listener: MapSession.LocationFixListener) = Unit
+
         override fun emitAcknowledgement(requestId: String, operation: String) = Unit
 
         override fun emitError(requestId: String, operation: String, code: String, message: String?) = Unit

@@ -1,6 +1,7 @@
 package hamza.dali.flutter_osm_plugin.mapscore.overlays
 
 import android.content.Context
+import hamza.dali.flutter_osm_plugin.mapscore.MapSession
 import android.graphics.Bitmap
 import android.location.Location
 import android.os.Handler
@@ -58,7 +59,7 @@ class CustomLocationManager(
     private var currentLocation: Location? = null
     private var onChangedLocationCallback: OnChangedLocationMapscore? = null
     private val runOnFirstFixQueue = LinkedList<Runnable>()
-    private var pendingPositionResult: MethodChannel.Result? = null
+    private var pendingPositionListener: MapSession.LocationFixListener? = null
     private var stopAfterPositionResult = false
     private val positionTimeout = Runnable {
         cancelPendingPositionRequest(
@@ -161,21 +162,33 @@ class CustomLocationManager(
         }
     }
 
-    fun currentUserPosition(result: MethodChannel.Result) {
+    /** Whether a fix request is pending on this manager's single slot. */
+    val hasPendingPositionRequest: Boolean
+        get() = pendingPositionListener != null
+
+    /**
+     * Single-shot current position. The listener completes exactly once;
+     * an already-pending request fails the new one with
+     * `location_request_in_progress` instead of overwriting it.
+     */
+    fun currentUserPosition(listener: MapSession.LocationFixListener) {
         val request = {
-            if (pendingPositionResult != null) {
-                result.error(
-                    "location_request_in_progress",
-                    "Another location request is already pending for this map.",
-                    null,
+            if (pendingPositionListener != null) {
+                listener.onOutcome(
+                    MapSession.LocationFixOutcome.Failed(
+                        code = "location_request_in_progress",
+                        message = "Another location request is already pending for this map.",
+                    )
                 )
             } else {
                 val location = currentLocation
                 if (location != null) {
-                    result.success(location.toPositionMap())
+                    listener.onOutcome(
+                        MapSession.LocationFixOutcome.Fixed(location.latitude, location.longitude)
+                    )
                 } else {
                     stopAfterPositionResult = !mIsLocationEnabled
-                    pendingPositionResult = result
+                    pendingPositionListener = listener
                     handler.postDelayed(positionTimeout, LOCATION_FIX_TIMEOUT_MILLIS)
                     try {
                         if (!mIsLocationEnabled) enableMyLocation()
@@ -193,11 +206,11 @@ class CustomLocationManager(
 
     fun cancelPendingPositionRequest(code: String, message: String) {
         val cancel = {
-            val result = pendingPositionResult
-            if (result != null) {
-                pendingPositionResult = null
+            val listener = pendingPositionListener
+            if (listener != null) {
+                pendingPositionListener = null
                 handler.removeCallbacks(positionTimeout)
-                result.error(code, message, null)
+                listener.onOutcome(MapSession.LocationFixOutcome.Failed(code, message))
                 if (stopAfterPositionResult) subscription.stop()
                 stopAfterPositionResult = false
             }
@@ -254,10 +267,12 @@ class CustomLocationManager(
     }
 
     private fun completePendingPositionRequest(location: Location) {
-        val result = pendingPositionResult ?: return
-        pendingPositionResult = null
+        val listener = pendingPositionListener ?: return
+        pendingPositionListener = null
         handler.removeCallbacks(positionTimeout)
-        result.success(location.toPositionMap())
+        listener.onOutcome(
+            MapSession.LocationFixOutcome.Fixed(location.latitude, location.longitude)
+        )
         if (stopAfterPositionResult) subscription.stop()
         stopAfterPositionResult = false
     }

@@ -77,6 +77,7 @@ import io.openmobilemaps.mapscore.shared.map.layers.line.LineStyle
 import io.openmobilemaps.mapscore.shared.map.layers.polygon.PolygonLayerInterface
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeCameraBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLayersBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeRoadsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeShapesBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeMarkersBridge
@@ -124,6 +125,7 @@ internal class MapscoreMapSession(
     private var pigeonLayersBridge: PigeonNativeLayersBridge? = null
     private var pigeonShapesBridge: PigeonNativeShapesBridge? = null
     private var pigeonRoadsBridge: PigeonNativeRoadsBridge? = null
+    private var pigeonLocationBridge: PigeonNativeLocationBridge? = null
 
     /** Minted per session; guards generated routes against reused view ids. */
     internal val sessionToken: String = UUID.randomUUID().toString()
@@ -159,7 +161,19 @@ internal class MapscoreMapSession(
 
     private var scope: CoroutineScope? = null
     private var job: Job? = null
-    private var pendingUserPositionResult: MethodChannel.Result? = null
+    /**
+     * Ownership gate for the settings round trip phase: request → deadline
+     * → draining → drained. Draining survives activity detachment (sessions
+     * survive configuration changes), so a reattached session cannot reuse
+     * the settings code before the old result arrives.
+     */
+    private val settingsGate = LocationSettingsGate()
+
+    /**
+     * Bound for the settings round trip phase of a location request; the
+     * acquisition phase carries its own deadline in the location manager.
+     */
+    private val locationSettingsTimeoutMillis = 15_000L
     private var pendingEnableLocationSettings = false
     private var activity: Activity? = null
     private val locationRequestCodes = LocationActivityRequestCodes.forViewId(id)
@@ -1583,38 +1597,84 @@ internal class MapscoreMapSession(
     }
 
     private fun requestUserLocation(result: MethodChannel.Result) {
-        if (isLocationServiceEnabled()) {
-            getUserLocation(result)
+        requestLocationFix(result.asLocationFixListener())
+    }
+
+    private val settingsHandler = Handler(Looper.getMainLooper())
+
+    private fun MethodChannel.Result.asLocationFixListener() =
+        MapSession.LocationFixListener { outcome ->
+            when (outcome) {
+                is MapSession.LocationFixOutcome.Fixed ->
+                    success(hashMapOf("lat" to outcome.latitude, "lon" to outcome.longitude))
+                is MapSession.LocationFixOutcome.Failed -> error(outcome.code, outcome.message ?: "", null)
+            }
+        }
+
+    /** Deadline runnable bounding the settings round trip. */
+    private val locationSettingsTimeout = Runnable {
+        val listener = settingsGate.markDraining() ?: return@Runnable
+        // Keep draining occupancy: the settings screen is still open and
+        // its result must not be mistaken for a newer attempt's.
+        listener.onOutcome(
+            MapSession.LocationFixOutcome.Failed(
+                code = "location_timeout",
+                message = "Timed out waiting for the location settings round trip.",
+            )
+        )
+    }
+
+    override fun requestLocationFix(listener: MapSession.LocationFixListener) {
+        // One ownership guard across settings and acquisition: a provider
+        // state transition must not start a second request while a first
+        // one is still pending (typed or legacy), and a drained settings
+        // attempt must not let a new request reuse the settings code while
+        // the stale result is still in flight.
+        if (settingsGate.occupied || locationNewOverlay.hasPendingPositionRequest) {
+            listener.onOutcome(
+                MapSession.LocationFixOutcome.Failed(
+                    code = "location_request_in_progress",
+                    message = "Another location request is already pending for this map.",
+                )
+            )
             return
         }
-        if (pendingUserPositionResult != null) {
-            result.error(
-                "location_request_in_progress",
-                "Another location settings request is already pending for this map.",
-                null,
-            )
+        if (isLocationServiceEnabled()) {
+            locationNewOverlay.currentUserPosition(listener)
             return
         }
         val currentActivity = activity
         if (currentActivity == null) {
-            result.error(
-                "activity_unavailable",
-                "A foreground Activity is required to open location settings.",
-                null,
+            listener.onOutcome(
+                MapSession.LocationFixOutcome.Failed(
+                    code = "activity_unavailable",
+                    message = "A foreground Activity is required to open location settings.",
+                )
             )
             return
         }
-        pendingUserPositionResult = result
+        settingsGate.acquire(listener)
+        settingsHandler.postDelayed(locationSettingsTimeout, locationSettingsTimeoutMillis)
         openSettingLocation(locationRequestCodes.getUserLocation, currentActivity)
     }
 
-    private fun getUserLocation(result: MethodChannel.Result) {
-        locationNewOverlay.currentUserPosition(result)
+    override fun enableUserLocationLayer(): Boolean {
+        if (isLocationServiceEnabled()) {
+            enableUserLocation()
+            return true
+        }
+        val currentActivity = activity ?: return false
+        pendingEnableLocationSettings = true
+        openSettingLocation(locationRequestCodes.currentUserLocation, currentActivity)
+        return true
     }
 
     private fun cancelPendingActivityLocationRequest(code: String, message: String) {
-        pendingUserPositionResult?.error(code, message, null)
-        pendingUserPositionResult = null
+        settingsHandler.removeCallbacks(locationSettingsTimeout)
+        // Draining ownership survives detachment: sessions survive
+        // configuration detach/reattach, and the stale result must not be
+        // mistaken for a newer attempt. Only disposal resets the gate.
+        settingsGate.detach()?.onOutcome(MapSession.LocationFixOutcome.Failed(code, message))
         pendingEnableLocationSettings = false
     }
 
@@ -2050,6 +2110,8 @@ internal class MapscoreMapSession(
             code = "location_request_cancelled",
             message = "The map session was disposed before the location request completed.",
         )
+        // Disposal is final: no late result can arrive for this session.
+        settingsGate.release()
         if (::locationNewOverlay.isInitialized) {
             locationNewOverlay.onDestroy()
         }
@@ -2069,6 +2131,8 @@ internal class MapscoreMapSession(
         pigeonShapesBridge = null
         pigeonRoadsBridge?.unregister(binaryMessenger, id)
         pigeonRoadsBridge = null
+        pigeonLocationBridge?.unregister(binaryMessenger, id)
+        pigeonLocationBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -2147,6 +2211,12 @@ internal class MapscoreMapSession(
         val roadsBridge = PigeonNativeRoadsBridge(this, sessionToken, generation)
         roadsBridge.register(binaryMessenger, id)
         pigeonRoadsBridge = roadsBridge
+        // Generated location endpoints (my-location layer, single-shot
+        // fixes) share the legacy pending slots; both never run in
+        // parallel by accident.
+        val locationBridge = PigeonNativeLocationBridge(this, sessionToken, generation)
+        locationBridge.register(binaryMessenger, id)
+        pigeonLocationBridge = locationBridge
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")
@@ -2171,15 +2241,23 @@ internal class MapscoreMapSession(
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         when (requestCode) {
             locationRequestCodes.getUserLocation -> {
-                val pendingResult = pendingUserPositionResult ?: return false
-                pendingUserPositionResult = null
+                // A timed-out attempt keeps occupancy until its result
+                // drains: discard the stale result and hold the guard so a
+                // newer request cannot consume it.
+                if (settingsGate.drain()) {
+                    return true
+                }
+                val pendingListener = settingsGate.current() ?: return false
+                settingsHandler.removeCallbacks(locationSettingsTimeout)
+                settingsGate.release()
                 if (isLocationServiceEnabled()) {
-                    getUserLocation(pendingResult)
+                    locationNewOverlay.currentUserPosition(pendingListener)
                 } else {
-                    pendingResult.error(
-                        "location_service_disabled",
-                        "Location services are still disabled.",
-                        null,
+                    pendingListener.onOutcome(
+                        MapSession.LocationFixOutcome.Failed(
+                            code = "location_service_disabled",
+                            message = "Location services are still disabled.",
+                        )
                     )
                 }
                 return true

@@ -13,6 +13,12 @@ import io.flutter.plugin.common.StandardMethodCodec
 import io.flutter.plugin.common.StandardMessageCodec
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 private object NativeMapCameraPigeonUtils {
 
   fun wrapResult(result: Any?): List<Any?> {
@@ -752,6 +758,51 @@ data class NativeRoadStyle (
     return "NativeRoadStyle(roadColorArgb=$roadColorArgb, roadWidth=$roadWidth, borderColorArgb=$borderColorArgb, borderWidth=$borderWidth, dotted=$dotted)"
   }
 }
+
+/**
+ * Single location fix in degrees.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class NativeLocationFix (
+  val latitude: Double,
+  val longitude: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): NativeLocationFix {
+      val latitude = pigeonVar_list[0] as Double
+      val longitude = pigeonVar_list[1] as Double
+      return NativeLocationFix(latitude, longitude)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      latitude,
+      longitude,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as NativeLocationFix
+    return NativeMapCameraPigeonUtils.deepEquals(this.latitude, other.latitude) && NativeMapCameraPigeonUtils.deepEquals(this.longitude, other.longitude)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.latitude)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.longitude)
+    return result
+  }
+  override fun toString(): String {
+    return "NativeLocationFix(latitude=$latitude, longitude=$longitude)"
+  }
+}
 private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
@@ -805,6 +856,11 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
           NativeRoadStyle.fromList(it)
         }
       }
+      139.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          NativeLocationFix.fromList(it)
+        }
+      }
       else -> super.readValueOfType(type, buffer)
     }
   }
@@ -850,10 +906,15 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
         stream.write(138)
         writeValue(stream, value.toList())
       }
+      is NativeLocationFix -> {
+        stream.write(139)
+        writeValue(stream, value.toList())
+      }
       else -> super.writeValue(stream, value)
     }
   }
 }
+
 
 /**
  * Generated camera command route for one map session.
@@ -1425,6 +1486,90 @@ interface NativeMapRoadsApi {
               NativeMapCameraPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+    }
+  }
+}
+/**
+ * Generated location command route for one map session: the my-location
+ * layer toggle and single-shot fixes.
+ *
+ * The host advertises the `location` capability only when it implements
+ * this surface; older hosts keep these commands on their legacy routes.
+ * Permission ownership stays with the host application: authorization
+ * prompts and usage descriptions are native concerns, and denial arrives
+ * as a `permission_denied` error, never as a hang.
+ *
+ * Completion contract: each pending fix completes exactly once — on fix,
+ * permission denial, timeout, session disposal, activity detachment or
+ * settings denial. Overlapping requests fail immediately with
+ * `location_request_in_progress`; late native callbacks are ignored.
+ *
+ * Generated interface from Pigeon that represents a handler of messages from Flutter.
+ */
+interface NativeMapLocationApi {
+  /**
+   * Enables the my-location layer, opening the location-settings round
+   * trip when the provider is off (mirroring the legacy `currentLocation`).
+   * Completes once the flow is initiated — like the legacy route it does
+   * not wait for a fix; stream updates keep flowing on their existing
+   * event channel.
+   */
+  suspend fun showMyLocation(session: NativeCameraSession)
+  /**
+   * Single-shot current position, mirroring the legacy `user#position`:
+   * the layer starts when needed and stops after the first fix. Completes
+   * exactly once per the contract above.
+   */
+  suspend fun getCurrentLocation(session: NativeCameraSession): NativeLocationFix
+
+  companion object {
+    /** The codec used by NativeMapLocationApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      NativeMapCameraPigeonCodec()
+    }
+    /** Sets up an instance of `NativeMapLocationApi` to handle messages through the `binaryMessenger`. */
+    @JvmOverloads
+    fun setUp(binaryMessenger: BinaryMessenger, api: NativeMapLocationApi?, messageChannelSuffix: String = "") {
+      val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationApi.showMyLocation$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.showMyLocation(sessionArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                NativeMapCameraPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationApi.getCurrentLocation$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.getCurrentLocation(sessionArg))
+              } catch (exception: Throwable) {
+                NativeMapCameraPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
           }
         } else {
           channel.setMessageHandler(null)

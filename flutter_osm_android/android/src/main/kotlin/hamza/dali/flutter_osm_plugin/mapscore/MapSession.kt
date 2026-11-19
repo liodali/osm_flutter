@@ -172,6 +172,35 @@ interface MapSession : PluginRegistry.ActivityResultListener {
 
     fun setOverlaysVisible(visible: Boolean): Boolean
 
+    /**
+     * Outcome of one pending location request. Every request completes
+     * exactly once — [Fixed] on fix, [Failed] on permission denial,
+     * timeout, settings denial, activity detachment or disposal.
+     */
+    sealed interface LocationFixOutcome {
+        data class Fixed(val latitude: Double, val longitude: Double) : LocationFixOutcome
+        data class Failed(val code: String, val message: String?) : LocationFixOutcome
+    }
+
+    fun interface LocationFixListener {
+        fun onOutcome(outcome: LocationFixOutcome)
+    }
+
+    /**
+     * Enables the my-location layer, opening the location-settings round
+     * trip when the provider is off. Completes immediately once the flow
+     * is initiated; returns false only when no foreground Activity exists
+     * to open settings.
+     */
+    fun enableUserLocationLayer(): Boolean
+
+    /**
+     * Single-shot current position. The listener completes exactly once;
+     * an already-pending request fails the new one with
+     * `location_request_in_progress`.
+     */
+    fun requestLocationFix(listener: LocationFixListener)
+
     fun emitAcknowledgement(requestId: String, operation: String)
 
     fun emitError(requestId: String, operation: String, code: String, message: String?)

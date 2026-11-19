@@ -180,6 +180,9 @@ internal class PigeonNativeCameraBridge(
         /// Roads surface: manual drawing, removal, clearing.
         const val CAPABILITY_ROADS = "roads"
 
+        /// Location surface: my-location layer, single-shot fixes.
+        const val CAPABILITY_LOCATION = "location"
+
         /** Typed error code for the markers family. */
         const val CODE_MARKERS_NOT_READY = "markers_not_ready"
 
@@ -203,6 +206,7 @@ internal class PigeonNativeCameraBridge(
                 CAPABILITY_LAYERS,
                 CAPABILITY_SHAPES,
                 CAPABILITY_ROADS,
+                CAPABILITY_LOCATION,
             ),
             "sessionToken" to sessionToken,
             "generation" to generation,

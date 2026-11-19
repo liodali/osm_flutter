@@ -169,6 +169,10 @@ class PigeonNativeCameraBridgeTest {
 
         override fun setOverlaysVisible(visible: Boolean) = true
 
+        override fun enableUserLocationLayer() = true
+
+        override fun requestLocationFix(listener: MapSession.LocationFixListener) = Unit
+
         override fun emitAcknowledgement(requestId: String, operation: String) = Unit
 
         override fun emitError(requestId: String, operation: String, code: String, message: String?) = Unit

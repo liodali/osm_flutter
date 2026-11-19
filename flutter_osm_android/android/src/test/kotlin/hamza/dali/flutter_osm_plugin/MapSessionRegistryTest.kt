@@ -327,6 +327,10 @@ private class FakeMapSession(
         return true
     }
 
+    override fun enableUserLocationLayer(): Boolean = true
+
+    override fun requestLocationFix(listener: MapSession.LocationFixListener) = Unit
+
     override fun emitAcknowledgement(requestId: String, operation: String) = Unit
 
     override fun emitError(
