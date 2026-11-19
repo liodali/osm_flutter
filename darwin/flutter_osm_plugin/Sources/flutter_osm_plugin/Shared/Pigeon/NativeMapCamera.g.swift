@@ -730,6 +730,48 @@ struct NativeRoadStyle: Hashable, CustomStringConvertible {
   }
 }
 
+/// Single location fix in degrees.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct NativeLocationFix: Hashable, CustomStringConvertible {
+  var latitude: Double
+  var longitude: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeLocationFix? {
+    let latitude = pigeonVar_list[0] as! Double
+    let longitude = pigeonVar_list[1] as! Double
+
+    return NativeLocationFix(
+      latitude: latitude,
+      longitude: longitude
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      latitude,
+      longitude,
+    ]
+  }
+  static func == (lhs: NativeLocationFix, rhs: NativeLocationFix) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.latitude, rhs.latitude) && NativeMapCameraPigeonInternal.deepEquals(lhs.longitude, rhs.longitude)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeLocationFix")
+    NativeMapCameraPigeonInternal.deepHash(value: latitude, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: longitude, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeLocationFix(latitude: \(String(describing: latitude)), longitude: \(String(describing: longitude)))"
+  }
+}
+
 private class NativeMapCameraPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -753,6 +795,8 @@ private class NativeMapCameraPigeonCodecReader: FlutterStandardReader {
       return NativeShapeStyle.fromList(self.readValue() as! [Any?])
     case 138:
       return NativeRoadStyle.fromList(self.readValue() as! [Any?])
+    case 139:
+      return NativeLocationFix.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -791,6 +835,9 @@ private class NativeMapCameraPigeonCodecWriter: FlutterStandardWriter {
     } else if let value = value as? NativeRoadStyle {
       super.writeByte(138)
       super.writeValue(value.toList())
+    } else if let value = value as? NativeLocationFix {
+      super.writeByte(139)
+      super.writeValue(value.toList())
     } else {
       super.writeValue(value)
     }
@@ -810,6 +857,7 @@ private class NativeMapCameraPigeonCodecReaderWriter: FlutterStandardReaderWrite
 class NativeMapCameraPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable {
   static let shared = NativeMapCameraPigeonCodec(readerWriter: NativeMapCameraPigeonCodecReaderWriter())
 }
+
 
 /// Generated camera command route for one map session.
 ///
@@ -1318,6 +1366,84 @@ class NativeMapRoadsApiSetup {
       }
     } else {
       clearRoadsChannel.setMessageHandler(nil)
+    }
+  }
+}
+/// Generated location command route for one map session: the my-location
+/// layer toggle and single-shot fixes.
+///
+/// The host advertises the `location` capability only when it implements
+/// this surface; older hosts keep these commands on their legacy routes.
+/// Permission ownership stays with the host application: authorization
+/// prompts and usage descriptions are native concerns, and denial arrives
+/// as a `permission_denied` error, never as a hang.
+///
+/// Completion contract: each pending fix completes exactly once — on fix,
+/// permission denial, timeout, session disposal, activity detachment or
+/// settings denial. Overlapping requests fail immediately with
+/// `location_request_in_progress`; late native callbacks are ignored.
+///
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol NativeMapLocationApi {
+  /// Enables the my-location layer, opening the location-settings round
+  /// trip when the provider is off (mirroring the legacy `currentLocation`).
+  /// Completes once the flow is initiated — like the legacy route it does
+  /// not wait for a fix; stream updates keep flowing on their existing
+  /// event channel.
+  func showMyLocation(session: NativeCameraSession) async throws
+  /// Single-shot current position, mirroring the legacy `user#position`:
+  /// the layer starts when needed and stops after the first fix. Completes
+  /// exactly once per the contract above.
+  func getCurrentLocation(session: NativeCameraSession) async throws -> NativeLocationFix
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class NativeMapLocationApiSetup {
+  static var codec: FlutterStandardMessageCodec { NativeMapCameraPigeonCodec.shared }
+  /// Sets up an instance of `NativeMapLocationApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: NativeMapLocationApi?, messageChannelSuffix: String = "") {
+    let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    /// Enables the my-location layer, opening the location-settings round
+    /// trip when the provider is off (mirroring the legacy `currentLocation`).
+    /// Completes once the flow is initiated — like the legacy route it does
+    /// not wait for a fix; stream updates keep flowing on their existing
+    /// event channel.
+    let showMyLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationApi.showMyLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      showMyLocationChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        Task { @MainActor in
+          do {
+            try await api.showMyLocation(session: sessionArg)
+            reply(wrapResult(nil))
+          } catch {
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      showMyLocationChannel.setMessageHandler(nil)
+    }
+    /// Single-shot current position, mirroring the legacy `user#position`:
+    /// the layer starts when needed and stops after the first fix. Completes
+    /// exactly once per the contract above.
+    let getCurrentLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationApi.getCurrentLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getCurrentLocationChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        Task { @MainActor in
+          do {
+            let result = try await api.getCurrentLocation(session: sessionArg)
+            reply(wrapResult(result))
+          } catch {
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      getCurrentLocationChannel.setMessageHandler(nil)
     }
   }
 }

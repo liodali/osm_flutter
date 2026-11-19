@@ -48,6 +48,7 @@ class MapSession: NSObject {
     private(set) var layersBridge: PigeonLayersBridge?
     private(set) var shapesBridge: PigeonShapesBridge?
     private(set) var roadsBridge: PigeonRoadsBridge?
+    private(set) var locationBridge: PigeonLocationBridge?
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -56,6 +57,33 @@ class MapSession: NSObject {
     var resultFlutter: FlutterResult? = nil
     @MainActor
     var storedRoads: [String: StoredRoad] = [:]
+
+    // MARK: - Typed location state (shared slot with the legacy request)
+
+    /// Outcome of one pending location request; completes exactly once.
+    enum LocationFixOutcome {
+        case fixed(latitude: Double, longitude: Double)
+        case failed(code: String, message: String?)
+    }
+
+    typealias LocationFixCompletion = (LocationFixOutcome) -> Void
+
+    /// Pending generated fix request. Mutual exclusion with the legacy
+    /// `resultFlutter` slot: a legacy and a generated request can never run
+    /// in parallel by accident.
+    var pendingLocationFixCompletion: LocationFixCompletion?
+
+    var locationFixTimeoutWorkItem: DispatchWorkItem?
+
+    /// Parity with the Android manager's `LOCATION_FIX_TIMEOUT_MILLIS`.
+    var locationFixTimeoutSeconds: Double = 15.0
+
+    /// Monotonic identity of the current location request. Deadline work
+    /// items capture the epoch they were armed for and become no-ops when
+    /// a newer request owns the slot, so a stale timer can never expire a
+    /// newer request prematurely. Internal set: tests simulate stale
+    /// timers by rewinding the epoch.
+    internal(set) var locationRequestEpoch = 0
     var isMovedToLocation: Bool = false
     var canSkipFollow: Bool = false
     var userLocationWithoutControl: Bool = false
@@ -260,6 +288,9 @@ class MapSession: NSObject {
         let roads = PigeonRoadsBridge(session: self)
         roads.register(messenger: binaryMessenger, viewId: viewId)
         roadsBridge = roads
+        let location = PigeonLocationBridge(session: self)
+        location.register(messenger: binaryMessenger, viewId: viewId)
+        locationBridge = location
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -383,6 +414,8 @@ class MapSession: NSObject {
         shapesBridge = nil
         roadsBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
         roadsBridge = nil
+        locationBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        locationBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil
@@ -390,11 +423,9 @@ class MapSession: NSObject {
         mapOSM.roadTapHandlerDelegate = nil
         mapOSM.onMapMove = nil
         mapOSM.locationManager.stopLocation()
-        if let pendingResult = resultFlutter {
-            pendingResult(
-                FlutterError(code: "disposed", message: "map was disposed", details: nil))
-        }
-        resultFlutter = nil
+        // Disposal completes any pending location request (typed or
+        // legacy) exactly once.
+        failPendingLocationRequest(code: "disposed", message: "map was disposed")
         let pendingRoads = outstandingRoadResults
         outstandingRoadResults.removeAll()
         for entry in pendingRoads {
@@ -464,7 +495,17 @@ class MapSession: NSObject {
             self.mapOSM.locationManager.moveToUserLocation(animated: true)
         }
 
+        // A pending generated fix wins the single location slot; the
+        // legacy pending result keeps its own completion otherwise.
+        if pendingLocationFixCompletion != nil {
+            completeLocationFix(.fixed(latitude: userLocation.latitude, longitude: userLocation.longitude))
+            return
+        }
         if let result = resultFlutter {
+            // Success cancels the request's deadline; an armed timer left
+            // behind could otherwise expire a newer request prematurely.
+            locationFixTimeoutWorkItem?.cancel()
+            locationFixTimeoutWorkItem = nil
             result(geoMap)
             resultFlutter = nil
         }
@@ -473,18 +514,117 @@ class MapSession: NSObject {
     func handlePermission(state: OSMFlutterFramework.LocationPermission) {
         if state == LocationPermission.NotGranted {
             // Authorization denied or restricted: complete any pending
-            // `user#position` request with a permission error so `myLocation()`
-            // — and the withUserPosition initialization waiting on it — fails
-            // clearly instead of hanging forever.
-            if let pendingResult = resultFlutter {
-                resultFlutter = nil
-                pendingResult(
-                    FlutterError(
-                        code: "permission",
-                        message: "location permission was not granted",
-                        details: nil))
-            }
+            // fix request exactly once with a permission error so
+            // `myLocation()` — and the withUserPosition initialization
+            // waiting on it — fails clearly instead of hanging forever.
+            failPendingLocationRequest(
+                code: "permission_denied",
+                message: "location permission was not granted",
+                legacyCode: "permission")
         }
+    }
+
+    // MARK: - Typed location operations
+
+    /// Enables the my-location layer, mirroring the legacy
+    /// `currentLocation` handler: fire-and-forget enable; the framework
+    /// prompts when authorization requires it. Denial surfaces through the
+    /// permission callback, not as a hang.
+    func typedShowMyLocation() {
+        mapOSM.locationManager.requestEnableLocation()
+    }
+
+    /// Whether a location request is pending, typed or legacy. One guard
+    /// owns both slots: they can never be occupied at the same time.
+    var hasPendingLocationRequest: Bool {
+        pendingLocationFixCompletion != nil || resultFlutter != nil
+    }
+
+    /// Single-shot current position. Completes exactly once — on fix,
+    /// permission denial, timeout, disposal; overlapping requests (typed
+    /// or legacy) fail immediately instead of overwriting the pending
+    /// slot.
+    func typedRequestLocationFix(completion: @escaping LocationFixCompletion) {
+        if hasPendingLocationRequest {
+            completion(.failed(code: "location_request_in_progress", message: nil))
+            return
+        }
+        pendingLocationFixCompletion = completion
+        locationRequestEpoch += 1
+        scheduleLocationFixTimeout()
+        mapOSM.locationManager.requestSingleLocation()
+    }
+
+    /// Legacy `user#position` shares the single ownership guard and the
+    /// deadline with the generated route: an overlapping request fails
+    /// immediately (its FlutterResult receives the error verbatim), the
+    /// stash happens only after the guard passes, and the timeout covers
+    /// legacy waits exactly like typed ones.
+    func beginLegacyLocationFix(_ result: @escaping FlutterResult) {
+        if hasPendingLocationRequest {
+            result(
+                FlutterError(
+                    code: "location_request_in_progress",
+                    message: "Another location request is already pending for this map.",
+                    details: nil))
+            return
+        }
+        resultFlutter = result
+        locationRequestEpoch += 1
+        scheduleLocationFixTimeout()
+        mapOSM.locationManager.requestSingleLocation()
+    }
+
+    /// Fails whichever pending location request exists (typed or legacy)
+    /// exactly once, cancels the deadline, and ignores late calls. The
+    /// legacy route keeps its historical error code when one is provided.
+    @discardableResult
+    func failPendingLocationRequest(
+        code: String, message: String?, legacyCode: String? = nil
+    ) -> Bool {
+        if pendingLocationFixCompletion != nil {
+            completeLocationFix(.failed(code: code, message: message))
+            return true
+        }
+        if let result = resultFlutter {
+            resultFlutter = nil
+            locationFixTimeoutWorkItem?.cancel()
+            locationFixTimeoutWorkItem = nil
+            result(
+                FlutterError(
+                    code: legacyCode ?? code,
+                    message: message ?? "",
+                    details: nil))
+            return true
+        }
+        return false
+    }
+
+    /// Arms the single-shot deadline. Exposed separately so tests can
+    /// exercise the timeout without touching the real location manager.
+    func scheduleLocationFixTimeout() {
+        let armedEpoch = locationRequestEpoch
+        let workItem = DispatchWorkItem { [weak self] in
+            // Request-identity binding: a timer armed for an older request
+            // must never fail a newer one.
+            guard let self = self, self.locationRequestEpoch == armedEpoch else { return }
+            _ = self.failPendingLocationRequest(
+                code: "location_timeout",
+                message: "timed out waiting for a location fix")
+        }
+        locationFixTimeoutWorkItem = workItem
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + locationFixTimeoutSeconds, execute: workItem)
+    }
+
+    /// Completes the pending generated fix exactly once and cancels the
+    /// timeout. Late calls are ignored.
+    func completeLocationFix(_ outcome: LocationFixOutcome) {
+        guard let completion = pendingLocationFixCompletion else { return }
+        pendingLocationFixCompletion = nil
+        locationFixTimeoutWorkItem?.cancel()
+        locationFixTimeoutWorkItem = nil
+        completion(outcome)
     }
 
     func onMarkerSingleTap(location: CLLocationCoordinate2D) {

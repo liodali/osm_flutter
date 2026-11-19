@@ -176,6 +176,9 @@ final class PigeonCameraBridge: NativeMapCameraApi {
     /// Roads surface: manual drawing, removal, clearing.
     static let capabilityRoads = "roads"
 
+    /// Location surface: my-location layer, single-shot fixes.
+    static let capabilityLocation = "location"
+
     static func viewChannelSuffix(_ viewId: Int64) -> String {
         "view_\(viewId)"
     }
@@ -195,6 +198,7 @@ final class PigeonCameraBridge: NativeMapCameraApi {
             "capabilities": [
                 capabilityCamera, capabilityMarkers, capabilityCameraConfig,
                 capabilityLayers, capabilityShapes, capabilityRoads,
+                capabilityLocation,
             ],
             "sessionToken": sessionToken,
             "generation": generation,

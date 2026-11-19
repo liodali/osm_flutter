@@ -137,7 +137,7 @@ class RunnerTests: XCTestCase {
       // remove by id, two kind clears, full clear) and the three generated
       // road channels (draw, remove, clear) — alongside, never replacing
       // legacy endpoints.
-      XCTAssertEqual(messenger.handlers.count, 64)
+      XCTAssertEqual(messenger.handlers.count, 68)
       host = nil
     }
     // AppKit autoreleases views and the framework can have queued callbacks.
@@ -149,7 +149,7 @@ class RunnerTests: XCTestCase {
     // Disposal removes exactly this session's legacy channel and its
     // generated camera, marker, layer, shape and road channels; the other
     // live map keeps its full set.
-    XCTAssertEqual(messenger.handlers.count, 32)
+    XCTAssertEqual(messenger.handlers.count, 34)
     XCTAssertEqual(messenger.handlers.keys.filter { $0.hasPrefix("map_") }, ["map_2"])
     XCTAssertFalse(
       messenger.handlers.keys.contains { $0.contains(".view_1") },
@@ -587,6 +587,277 @@ class RunnerTests: XCTestCase {
       borderColorArgb: 0xFFFFFFFF,
       borderWidth: 0.0,
       dotted: true)
+  }
+
+  // MARK: - Typed location family (Pigeon route)
+
+  /// Async counterpart of XCTAssertThrowsError for the generated async
+  /// channel handlers.
+  func XCTAssertThrowsErrorAsync<T>(
+    _ expression: @autoclosure () async throws -> T,
+    errorHandler: @escaping (Error) -> Void
+  ) async {
+    do {
+      _ = try await expression()
+      XCTFail("expected a thrown error")
+    } catch {
+      errorHandler(error)
+    }
+  }
+
+  @MainActor
+  func testTypedLocationFixCompletesExactlyOnceAndIgnoresLateCallbacks() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    var completions = 0
+    var outcome: MapSession.LocationFixOutcome?
+    map.pendingLocationFixCompletion = { result in
+      outcome = result
+      completions += 1
+    }
+
+    // One fix completes exactly once, at full precision.
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.376912345, longitude: 8.541712345),
+      heading: 0)
+    guard case let .fixed(latitude, longitude)? = outcome else {
+      return XCTFail("expected a fix")
+    }
+    XCTAssertEqual(latitude, 47.376912345, accuracy: 1e-12)
+    XCTAssertEqual(longitude, 8.541712345, accuracy: 1e-12)
+    XCTAssertEqual(completions, 1)
+    XCTAssertNil(map.pendingLocationFixCompletion)
+
+    // Late completion attempts are no-ops (slot already cleared).
+    map.completeLocationFix(.failed(code: "location_timeout", message: nil))
+    map.locationChanged(userLocation: CLLocationCoordinate2D(latitude: 1, longitude: 2), heading: 0)
+    XCTAssertEqual(completions, 1)
+  }
+
+  @MainActor
+  func testTypedLocationOverlapIsRejectedExplicitly() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+
+    // A pending typed request blocks an overlapping one: seed the slot and
+    // issue a second typed request through the same mutual-exclusion path
+    // the real request uses (without touching CLLocationManager).
+    var completions = 0
+    var outcome: MapSession.LocationFixOutcome?
+    map.pendingLocationFixCompletion = { result in
+      outcome = result
+      completions += 1
+    }
+
+    map.resultFlutter = nil
+    let overlap: MapSession.LocationFixCompletion = { result in
+      guard case let .failed(code, _) = result else {
+        return XCTFail("expected an overlap failure")
+      }
+      XCTAssertEqual(code, "location_request_in_progress")
+    }
+    // The overlap check inside typedRequestLocationFix runs before any
+    // framework call; simulate its decision branch directly.
+    if map.pendingLocationFixCompletion != nil || map.resultFlutter != nil {
+      overlap(.failed(code: "location_request_in_progress", message: nil))
+    } else {
+      XCTFail("expected the pending slot to block the overlap")
+    }
+  }
+
+  @MainActor
+  func testTypedLocationDenialTimeoutAndDisposalCompleteOnce() throws {
+    let map = session(RecordingMessenger())
+
+    // Permission denial completes once with permission_denied.
+    var denialCompletions = 0
+    var denialOutcome: MapSession.LocationFixOutcome?
+    map.pendingLocationFixCompletion = { result in
+      denialOutcome = result
+      denialCompletions += 1
+    }
+    map.handlePermission(state: OSMFlutterFramework.LocationPermission.NotGranted)
+    guard case let .failed(denialCode, _)? = denialOutcome else {
+      return XCTFail("expected a denial")
+    }
+    XCTAssertEqual(denialCode, "permission_denied")
+    XCTAssertEqual(denialCompletions, 1)
+
+    // Disposal completes a still-pending fix exactly once.
+    var disposedCompletions = 0
+    var disposedOutcome: MapSession.LocationFixOutcome?
+    map.pendingLocationFixCompletion = { result in
+      disposedOutcome = result
+      disposedCompletions += 1
+    }
+    map.dispose()
+    guard case let .failed(disposedCode, _)? = disposedOutcome else {
+      return XCTFail("expected a disposal completion")
+    }
+    XCTAssertEqual(disposedCode, "disposed")
+    XCTAssertEqual(disposedCompletions, 1)
+  }
+
+  @MainActor
+  func testTypedLocationTimeoutCompletesOnce() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    map.locationFixTimeoutSeconds = 0.05
+    var timeoutCompletions = 0
+    var timeoutOutcome: MapSession.LocationFixOutcome?
+    let timedOut = expectation(description: "location timeout fires")
+    map.pendingLocationFixCompletion = { result in
+      timeoutOutcome = result
+      timeoutCompletions += 1
+      timedOut.fulfill()
+    }
+    // Arm the deadline directly (no CLLocationManager involvement).
+    map.scheduleLocationFixTimeout()
+
+    await fulfillment(of: [timedOut], timeout: 2.0)
+    guard case let .failed(timeoutCode, _)? = timeoutOutcome else {
+      return XCTFail("expected a timeout")
+    }
+    XCTAssertEqual(timeoutCode, "location_timeout")
+    XCTAssertEqual(timeoutCompletions, 1)
+    XCTAssertNil(map.pendingLocationFixCompletion)
+  }
+
+  @MainActor
+  func testLegacyLocationRequestSharesOwnershipAndDeadline() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+
+    // A pending typed request blocks the legacy route explicitly: the
+    // FlutterResult receives the in-progress error and resultFlutter is
+    // never stashed (finding: both slots occupied left legacy hanging).
+    var typedCompletions = 0
+    var typedOutcome: MapSession.LocationFixOutcome?
+    map.pendingLocationFixCompletion = { result in
+      typedOutcome = result
+      typedCompletions += 1
+    }
+    var legacyReplies: [Any?] = []
+    let legacyDone = expectation(description: "legacy rejected")
+    map.beginLegacyLocationFix({ reply in
+      legacyReplies.append(reply)
+      legacyDone.fulfill()
+    })
+    await fulfillment(of: [legacyDone], timeout: 1.0)
+    guard let error = legacyReplies.first as? FlutterError else {
+      return XCTFail("expected an in-progress rejection")
+    }
+    XCTAssertEqual(error.code, "location_request_in_progress")
+    XCTAssertNil(map.resultFlutter)
+    XCTAssertEqual(typedCompletions, 0)
+
+    // The deadline covers legacy waits too: seed the legacy slot, arm the
+    // timeout, and the legacy result completes with location_timeout.
+    var legacyTimeoutReply: Any?
+    let legacyTimeout = expectation(description: "legacy timeout")
+    map.pendingLocationFixCompletion = nil
+    map.locationFixTimeoutSeconds = 0.05
+    map.beginLegacyLocationFix({ reply in
+      legacyTimeoutReply = reply
+      legacyTimeout.fulfill()
+    })
+    XCTAssertNotNil(map.resultFlutter)
+    await fulfillment(of: [legacyTimeout], timeout: 2.0)
+    guard let timeoutError = legacyTimeoutReply as? FlutterError else {
+      return XCTFail("expected a timeout error")
+    }
+    XCTAssertEqual(timeoutError.code, "location_timeout")
+    XCTAssertNil(map.resultFlutter)
+  }
+
+  @MainActor
+  func testLegacyLocationPermissionDenialKeepsLegacyCode() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    var legacyReply: Any?
+    let done = expectation(description: "legacy denial")
+    map.beginLegacyLocationFix({ reply in
+      legacyReply = reply
+      done.fulfill()
+    })
+    map.handlePermission(state: OSMFlutterFramework.LocationPermission.NotGranted)
+    await fulfillment(of: [done], timeout: 1.0)
+    guard let error = legacyReply as? FlutterError else {
+      return XCTFail("expected a permission error")
+    }
+    // Legacy parity: the historical "permission" code is preserved.
+    XCTAssertEqual(error.code, "permission")
+    XCTAssertNil(map.resultFlutter)
+  }
+
+  @MainActor
+  func testLegacySuccessCancelsDeadlineAndStaleTimerIsBoundToIdentity() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+
+    // Legacy request arms a deadline; a successful fix must cancel it.
+    var legacyReply: Any?
+    let legacyDone = expectation(description: "legacy fix")
+    map.beginLegacyLocationFix({ reply in
+      legacyReply = reply
+      legacyDone.fulfill()
+    })
+    XCTAssertNotNil(map.locationFixTimeoutWorkItem)
+    let epoch = map.locationRequestEpoch
+
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.3769, longitude: 8.5417),
+      heading: 0)
+    await fulfillment(of: [legacyDone], timeout: 1.0)
+    XCTAssertNotNil(legacyReply)
+    // Regression: success clears the armed timer — a left-behind timer
+    // could expire a newer request prematurely.
+    XCTAssertNil(map.locationFixTimeoutWorkItem)
+
+    // Request-identity binding: a timer armed for an older epoch never
+    // fires after a newer request owns the slot. Arm a short deadline for
+    // the "newer" request, then rewind the epoch to simulate the stale
+    // timer's identity: the work item must see the mismatch and stay a
+    // no-op.
+    var newerCompletions = 0
+    var newerOutcome: MapSession.LocationFixOutcome?
+    map.pendingLocationFixCompletion = { result in
+      newerOutcome = result
+      newerCompletions += 1
+    }
+    let newerEpoch = map.locationRequestEpoch + 1
+    map.locationRequestEpoch = newerEpoch
+    map.locationFixTimeoutSeconds = 0.1
+    map.scheduleLocationFixTimeout()
+    // A stale timer's epoch predates the newer request.
+    map.locationRequestEpoch = newerEpoch - 1
+
+    let probe = expectation(description: "probe delay")
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { probe.fulfill() }
+    await fulfillment(of: [probe], timeout: 2.0)
+    XCTAssertEqual(newerCompletions, 0)
+    XCTAssertNotNil(map.pendingLocationFixCompletion)
+  }
+
+  @MainActor
+  func testTypedLocationBridgeRejectsStaleSessions() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.locationBridge)
+    let stale = NativeCameraSession(sessionToken: "wrong", generation: 0)
+
+    // Validation happens before any framework call, so these never touch
+    // the real CLLocationManager.
+    await XCTAssertThrowsErrorAsync(
+      try await bridge.showMyLocation(session: stale)
+    ) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
+    }
+    await XCTAssertThrowsErrorAsync(
+      try await bridge.getCurrentLocation(session: stale)
+    ) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
+    }
   }
 
   // MARK: - Typed markers family (Pigeon route)

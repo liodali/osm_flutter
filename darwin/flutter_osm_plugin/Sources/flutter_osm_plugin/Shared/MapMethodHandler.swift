@@ -82,8 +82,11 @@ extension MapSession {
             result(200)
             break
         case "user#position":
-            self.mapOSM.locationManager.requestSingleLocation()
-            resultFlutter = result
+            // Shared ownership with the generated location route: the
+            // guard rejects overlap explicitly, the deadline covers the
+            // legacy wait, and the stash only happens after the guard
+            // passes.
+            self.beginLegacyLocationFix(result)
             break
         case "moveTo#position":
             moveToSpecificLocation(call: call, result: result)
