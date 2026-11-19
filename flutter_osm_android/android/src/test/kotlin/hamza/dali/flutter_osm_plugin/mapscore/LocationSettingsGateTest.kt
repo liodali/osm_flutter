@@ -64,15 +64,30 @@ class LocationSettingsGateTest {
     }
 
     @Test
-    fun `detaching an active request fails it and keeps no draining ownership`() {
+    fun `detaching an active request fails it and keeps draining ownership`() {
         val gate = LocationSettingsGate()
         val (a, aOutcomes) = listener("a")
+        val (b, bOutcomes) = listener("b")
         assertTrue(gate.acquire(a))
 
+        // Detach during the settings round trip: A fails, but occupancy
+        // keeps draining - the settings screen A opened is still out there
+        // and its late result must not be consumed by a newer request.
         val detached = gate.detach()
         assertEquals(a, detached)
-        assertFalse(gate.occupied)
+        assertTrue(gate.occupied)
         assertNull(gate.current())
+
+        // Retry B during draining: rejected.
+        assertFalse(gate.acquire(b))
+        assertTrue(gate.occupied)
+
+        // A's late result drains; B can then retry and succeed.
+        assertTrue(gate.drain())
+        assertFalse(gate.occupied)
+        assertTrue(gate.acquire(b))
+        assertSame(b, gate.current())
+        assertEquals(0, bOutcomes.size)
     }
 
     @Test

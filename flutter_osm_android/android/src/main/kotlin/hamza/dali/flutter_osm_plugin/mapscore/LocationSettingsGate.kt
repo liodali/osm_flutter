@@ -57,13 +57,16 @@ internal class LocationSettingsGate {
 
     /**
      * Activity detachment: the active round trip fails (the wait cannot
-     * continue without a foreground Activity) while outstanding draining
-     * ownership survives, so a reattached session cannot reuse the
-     * settings code before the old result arrives.
+     * continue without a foreground Activity) and moves to draining —
+     * the settings screen opened before detachment is still out there,
+     * so its late result must never be consumed by a newer request, and
+     * ownership survives the configuration detach/reattach cycle. Only
+     * [release] (true disposal) drops outstanding ownership.
      */
     fun detach(): MapSession.LocationFixListener? {
-        val listener = heldListener
+        val listener = heldListener ?: return null
         heldListener = null
+        draining = true
         return listener
     }
 }
