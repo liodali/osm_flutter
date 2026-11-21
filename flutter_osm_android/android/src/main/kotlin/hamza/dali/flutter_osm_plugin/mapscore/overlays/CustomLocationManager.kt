@@ -61,6 +61,9 @@ class CustomLocationManager(
     private val runOnFirstFixQueue = LinkedList<Runnable>()
     private var pendingPositionListener: MapSession.LocationFixListener? = null
     private var stopAfterPositionResult = false
+
+    /** Set when the updates consumer stop is deferred behind a fix. */
+    private var stopUpdatesAfterPositionResult = false
     private val positionTimeout = Runnable {
         cancelPendingPositionRequest(
             code = "location_timeout",
@@ -119,6 +122,36 @@ class CustomLocationManager(
     fun stopLocationUpdating() {
         controlMapFromOutSide = false
         onStopLocation()
+    }
+
+    /**
+     * Ends the continuous-updates consumer without touching pending
+     * one-shot fixes or other consumers (tracking): while a fix is
+     * pending the stop is deferred until the fix completes or cancels,
+     * and follow-me tracking keeps the shared subscription running.
+     * Never triggers an authorization prompt. Idempotent.
+     */
+    fun stopUpdatesConsumer() {
+        controlMapFromOutSide = false
+        if (hasPendingPositionRequest) {
+            stopUpdatesAfterPositionResult = true
+        } else {
+            stopSubscriptionIfUnowned()
+        }
+    }
+
+    /**
+     * Stops the shared subscription only when no other consumer owns it:
+     * follow-me tracking keeps it running, and so does a newer updates
+     * start (`controlMapFromOutSide`) — a pending one-shot's stale stop
+     * intent must never end newly started updates. Completion,
+     * cancellation and the deferred-updates-stop paths all reconcile
+     * current consumers through this helper.
+     */
+    private fun stopSubscriptionIfUnowned() {
+        if (mIsFollowing || controlMapFromOutSide) return
+        subscription.stop()
+        clearMarkerIcons()
     }
 
     fun setMarkerIcon(personIconBmp: Bitmap?, directionIconBmp: Bitmap?) {
@@ -211,8 +244,14 @@ class CustomLocationManager(
                 pendingPositionListener = null
                 handler.removeCallbacks(positionTimeout)
                 listener.onOutcome(MapSession.LocationFixOutcome.Failed(code, message))
-                if (stopAfterPositionResult) subscription.stop()
-                stopAfterPositionResult = false
+                if (stopAfterPositionResult) {
+                    stopAfterPositionResult = false
+                    stopSubscriptionIfUnowned()
+                }
+                if (stopUpdatesAfterPositionResult) {
+                    stopUpdatesAfterPositionResult = false
+                    stopSubscriptionIfUnowned()
+                }
             }
         }
         if (Looper.myLooper() == Looper.getMainLooper()) cancel() else handler.post(cancel)
@@ -273,8 +312,14 @@ class CustomLocationManager(
         listener.onOutcome(
             MapSession.LocationFixOutcome.Fixed(location.latitude, location.longitude)
         )
-        if (stopAfterPositionResult) subscription.stop()
-        stopAfterPositionResult = false
+        if (stopAfterPositionResult) {
+            stopAfterPositionResult = false
+            stopSubscriptionIfUnowned()
+        }
+        if (stopUpdatesAfterPositionResult) {
+            stopUpdatesAfterPositionResult = false
+            stopSubscriptionIfUnowned()
+        }
     }
 
     private fun Location.toPositionMap(): HashMap<String, Double> =

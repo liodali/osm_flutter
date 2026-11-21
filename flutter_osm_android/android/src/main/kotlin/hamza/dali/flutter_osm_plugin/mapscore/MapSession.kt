@@ -201,6 +201,29 @@ interface MapSession : PluginRegistry.ActivityResultListener {
      */
     fun requestLocationFix(listener: LocationFixListener)
 
+    /**
+     * Outcome callback for location commands that can only fail. A null
+     * failure code means success; the callback fires exactly once.
+     */
+    fun interface LocationCommandListener {
+        fun onComplete(failureCode: String?, failureMessage: String?)
+    }
+
+    /**
+     * Starts continuous user-location updates without follow control.
+     * Idempotent; completes exactly once with `location_service_disabled`
+     * when the platform reports the provider off (permission ownership
+     * stays with the host application).
+     */
+    fun startLocationUpdates(listener: LocationCommandListener)
+
+    /**
+     * Ends the continuous-updates consumer. Idempotent, never prompts,
+     * never fails; pending one-shot fixes and tracking keep running.
+     */
+    fun stopLocationUpdates()
+
+
     fun emitAcknowledgement(requestId: String, operation: String)
 
     fun emitError(requestId: String, operation: String, code: String, message: String?)

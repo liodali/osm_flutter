@@ -1579,6 +1579,86 @@ interface NativeMapLocationApi {
   }
 }
 /**
+ * Generated continuous-updates route for one map session.
+ *
+ * The host advertises the `location.updates` capability only when it
+ * implements this surface; older hosts keep these commands on their
+ * legacy routes. Location events keep flowing on the existing event
+ * channel; tracking (follow-me) and custom icons are separate concerns.
+ *
+ * Completion contract: [startLocationUpdates] is idempotent — repeated
+ * starts succeed without restarting the underlying service — and
+ * completes exactly once with `permission_denied` or
+ * `location_service_disabled` when the platform reports denial.
+ * [stopLocationUpdates] is idempotent, never triggers an authorization
+ * prompt, never fails, and preserves pending one-shot fixes and other
+ * location consumers (tracking): it only ends the updates consumer
+ * started by [startLocationUpdates].
+ *
+ * Generated interface from Pigeon that represents a handler of messages from Flutter.
+ */
+interface NativeMapLocationUpdatesApi {
+  /** Starts continuous user-location updates without follow control. */
+  suspend fun startLocationUpdates(session: NativeCameraSession)
+  /**
+   * Ends the continuous-updates consumer without touching pending
+   * one-shot fixes or tracking.
+   */
+  suspend fun stopLocationUpdates(session: NativeCameraSession)
+
+  companion object {
+    /** The codec used by NativeMapLocationUpdatesApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      NativeMapCameraPigeonCodec()
+    }
+    /** Sets up an instance of `NativeMapLocationUpdatesApi` to handle messages through the `binaryMessenger`. */
+    @JvmOverloads
+    fun setUp(binaryMessenger: BinaryMessenger, api: NativeMapLocationUpdatesApi?, messageChannelSuffix: String = "") {
+      val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationUpdatesApi.startLocationUpdates$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.startLocationUpdates(sessionArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                NativeMapCameraPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationUpdatesApi.stopLocationUpdates$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.stopLocationUpdates(sessionArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                NativeMapCameraPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+    }
+  }
+}
+/**
  * Generated markers command route for one map session.
  *
  * Mirrors the typed Android marker contract: stable string ids, coordinates

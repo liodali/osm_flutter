@@ -179,6 +179,13 @@ class PigeonNativeRoadsBridgeTest {
 
         override fun requestLocationFix(listener: MapSession.LocationFixListener) = Unit
 
+        override fun startLocationUpdates(listener: MapSession.LocationCommandListener) {
+            listener.onComplete(null, null)
+        }
+
+        override fun stopLocationUpdates() = Unit
+
+
         override fun emitAcknowledgement(requestId: String, operation: String) = Unit
 
         override fun emitError(requestId: String, operation: String, code: String, message: String?) = Unit

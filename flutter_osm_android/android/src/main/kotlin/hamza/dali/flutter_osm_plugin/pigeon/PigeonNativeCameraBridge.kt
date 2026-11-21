@@ -183,6 +183,10 @@ internal class PigeonNativeCameraBridge(
         /// Location surface: my-location layer, single-shot fixes.
         const val CAPABILITY_LOCATION = "location"
 
+        /// Continuous-updates surface: start/stop location updates.
+        const val CAPABILITY_LOCATION_UPDATES = "location.updates"
+
+
         /** Typed error code for the markers family. */
         const val CODE_MARKERS_NOT_READY = "markers_not_ready"
 
@@ -207,6 +211,7 @@ internal class PigeonNativeCameraBridge(
                 CAPABILITY_SHAPES,
                 CAPABILITY_ROADS,
                 CAPABILITY_LOCATION,
+                CAPABILITY_LOCATION_UPDATES,
             ),
             "sessionToken" to sessionToken,
             "generation" to generation,

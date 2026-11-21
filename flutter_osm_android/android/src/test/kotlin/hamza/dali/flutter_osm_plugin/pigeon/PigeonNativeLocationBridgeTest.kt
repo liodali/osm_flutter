@@ -22,6 +22,8 @@ class PigeonNativeLocationBridgeTest {
 
         val calls = mutableListOf<String>()
         var enableLayerResult = true
+        var startFailureCode: String? = null
+        var startFailureMessage: String? = null
         var fixOutcome: MapSession.LocationFixOutcome? = null
         var fixOutcomeRepeats = 0
         val registeredListeners = mutableListOf<MapSession.LocationFixListener>()
@@ -37,6 +39,16 @@ class PigeonNativeLocationBridgeTest {
             val outcome = fixOutcome ?: return
             listener.onOutcome(outcome)
             repeat(fixOutcomeRepeats) { listener.onOutcome(outcome) }
+        }
+
+        override fun startLocationUpdates(listener: MapSession.LocationCommandListener) {
+            calls += "startLocationUpdates"
+            listener.onComplete(startFailureCode, startFailureMessage)
+        }
+
+        override fun stopLocationUpdates() {
+
+            calls += "stopLocationUpdates"
         }
 
         override fun setActivity(activity: android.app.Activity?) = Unit

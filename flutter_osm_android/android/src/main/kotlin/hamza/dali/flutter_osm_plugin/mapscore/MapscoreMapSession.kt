@@ -78,6 +78,7 @@ import io.openmobilemaps.mapscore.shared.map.layers.polygon.PolygonLayerInterfac
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeCameraBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLayersBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationUpdatesBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeRoadsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeShapesBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeMarkersBridge
@@ -126,6 +127,7 @@ internal class MapscoreMapSession(
     private var pigeonShapesBridge: PigeonNativeShapesBridge? = null
     private var pigeonRoadsBridge: PigeonNativeRoadsBridge? = null
     private var pigeonLocationBridge: PigeonNativeLocationBridge? = null
+    private var pigeonLocationUpdatesBridge: PigeonNativeLocationUpdatesBridge? = null
 
     /** Minted per session; guards generated routes against reused view ids. */
     internal val sessionToken: String = UUID.randomUUID().toString()
@@ -1658,6 +1660,26 @@ internal class MapscoreMapSession(
         openSettingLocation(locationRequestCodes.getUserLocation, currentActivity)
     }
 
+    override fun startLocationUpdates(listener: MapSession.LocationCommandListener) {
+        if (released || !::locationNewOverlay.isInitialized) {
+            listener.onComplete("location_unavailable", "The map session cannot start location updates.")
+            return
+        }
+        if (!isLocationServiceEnabled()) {
+            listener.onComplete("location_service_disabled", "Location services are disabled.")
+            return
+        }
+        locationNewOverlay.startLocationUpdating()
+        listener.onComplete(null, null)
+    }
+
+    override fun stopLocationUpdates() {
+        if (!::locationNewOverlay.isInitialized) return
+        // Consumer-aware stop: pending one-shot fixes and tracking keep
+        // running; never prompts, idempotent.
+        locationNewOverlay.stopUpdatesConsumer()
+    }
+
     override fun enableUserLocationLayer(): Boolean {
         if (isLocationServiceEnabled()) {
             enableUserLocation()
@@ -2133,6 +2155,8 @@ internal class MapscoreMapSession(
         pigeonRoadsBridge = null
         pigeonLocationBridge?.unregister(binaryMessenger, id)
         pigeonLocationBridge = null
+        pigeonLocationUpdatesBridge?.unregister(binaryMessenger, id)
+        pigeonLocationUpdatesBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -2217,6 +2241,11 @@ internal class MapscoreMapSession(
         val locationBridge = PigeonNativeLocationBridge(this, sessionToken, generation)
         locationBridge.register(binaryMessenger, id)
         pigeonLocationBridge = locationBridge
+        // Generated continuous-updates endpoints share the manager's
+        // subscription with the legacy route.
+        val locationUpdatesBridge = PigeonNativeLocationUpdatesBridge(this, sessionToken, generation)
+        locationUpdatesBridge.register(binaryMessenger, id)
+        pigeonLocationUpdatesBridge = locationUpdatesBridge
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")
