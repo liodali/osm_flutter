@@ -784,6 +784,73 @@ class NativeLocationFix {
   }
 }
 
+/// Follow-me tracking configuration, mirroring the legacy `trackMe`
+/// arguments.
+///
+/// `stopFollowInDrag` lets an ending user drag release the follow camera;
+/// `disableMarkerRotation` pins the user marker orientation;
+/// `useDirectionMarker` swaps the marker for a directional arrow;
+/// `anchor` is the normalized icon pivot applied to both markers.
+class NativeTrackingConfiguration {
+  NativeTrackingConfiguration({
+    required this.stopFollowInDrag,
+    required this.disableMarkerRotation,
+    required this.useDirectionMarker,
+    required this.anchor,
+  });
+
+  bool stopFollowInDrag;
+
+  bool disableMarkerRotation;
+
+  bool useDirectionMarker;
+
+  NativeMarkerAnchor anchor;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      stopFollowInDrag,
+      disableMarkerRotation,
+      useDirectionMarker,
+      anchor,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeTrackingConfiguration decode(Object result) {
+    result as List<Object?>;
+    return NativeTrackingConfiguration(
+      stopFollowInDrag: result[0]! as bool,
+      disableMarkerRotation: result[1]! as bool,
+      useDirectionMarker: result[2]! as bool,
+      anchor: result[3]! as NativeMarkerAnchor,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeTrackingConfiguration || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(stopFollowInDrag, other.stopFollowInDrag) && _deepEquals(disableMarkerRotation, other.disableMarkerRotation) && _deepEquals(useDirectionMarker, other.useDirectionMarker) && _deepEquals(anchor, other.anchor);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeTrackingConfiguration(stopFollowInDrag: $stopFollowInDrag, disableMarkerRotation: $disableMarkerRotation, useDirectionMarker: $useDirectionMarker, anchor: $anchor)';
+  }
+}
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -825,6 +892,9 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is NativeLocationFix) {
       buffer.putUint8(139);
       writeValue(buffer, value.encode());
+    }    else if (value is NativeTrackingConfiguration) {
+      buffer.putUint8(140);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -855,6 +925,8 @@ class _PigeonCodec extends StandardMessageCodec {
         return NativeRoadStyle.decode(readValue(buffer)!);
       case 139:
         return NativeLocationFix.decode(readValue(buffer)!);
+      case 140:
+        return NativeTrackingConfiguration.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -1482,6 +1554,73 @@ class NativeMapLocationUpdatesApi {
   /// one-shot fixes or tracking.
   Future<void> stopLocationUpdates(NativeCameraSession session) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationUpdatesApi.stopLocationUpdates$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+}
+
+/// Generated follow-me tracking route for one map session.
+///
+/// The host advertises the `location.tracking` capability only when it
+/// implements this surface; older hosts keep `trackMe` /
+/// `deactivateTrackMe` on their legacy routes. Permission ownership
+/// stays with the host application. Tracking shares the location
+/// subscription with continuous updates and one-shot fixes: starting
+/// tracking never disturbs them, and stopping tracking preserves both.
+class NativeMapTrackingApi {
+  /// Constructor for [NativeMapTrackingApi]. The [binaryMessenger] named argument is
+  /// available for dependency injection. If it is left null, the default
+  /// BinaryMessenger will be used which routes to the host platform.
+  NativeMapTrackingApi({
+      BinaryMessenger? binaryMessenger, 
+      String messageChannelSuffix = '', 
+      })
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+
+  final BinaryMessenger? pigeonVar_binaryMessenger;
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  final String pigeonVar_messageChannelSuffix;
+
+
+  /// Starts follow-me tracking; idempotent, completes exactly once with
+  /// `location_service_disabled` when the platform reports the provider
+  /// off.
+  Future<void> enableTracking(NativeCameraSession session, NativeTrackingConfiguration configuration) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapTrackingApi.enableTracking$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, configuration]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Ends follow-me tracking; idempotent, never prompts, never fails.
+  /// Continuous updates and pending one-shot fixes keep running. Async so
+  /// the Dart facade awaits native session validation and completion
+  /// (stale sessions surface instead of firing into the void).
+  Future<void> disableTracking(NativeCameraSession session) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapTrackingApi.disableTracking$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,

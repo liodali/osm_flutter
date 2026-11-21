@@ -39,6 +39,7 @@ class OSMOption {
     this.useTypedRoads = false,
     this.useTypedLocation = false,
     this.useTypedLocationUpdates = false,
+    this.useTypedTracking = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -85,7 +86,14 @@ class OSMOption {
   /// generated channel when the native host advertises the
   /// `location.updates` capability at attachment time. Default keeps the
   /// legacy route.
-  final bool useTypedLocationUpdates;}
+  final bool useTypedLocationUpdates;
+
+  /// Opt-in routing of follow-me tracking (enable/disable) through the
+  /// typed generated channel when the native host advertises the
+  /// `location.tracking` capability at attachment time. Default keeps the
+  /// legacy route.
+  final bool useTypedTracking;
+}
 
 /// [ZoomOption]
 ///

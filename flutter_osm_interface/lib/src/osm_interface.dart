@@ -119,7 +119,20 @@ abstract class OSMPlatform extends PlatformInterface {
   Future<CameraRouteSelection> attachLocationUpdatesRoute(
     int idOSM, {
     bool optIn = false,
-  });}
+  });
+
+  /// Freezes the follow-me tracking routing decision for one map
+  /// attachment (enable/disable tracking). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the
+  /// first mutation. Hosts without the `location.tracking` capability
+  /// keep these commands on the legacy route. Permission ownership stays
+  /// with the host application; stopping tracking preserves continuous
+  /// updates and pending one-shot fixes.
+  Future<CameraRouteSelection> attachTrackingRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+}
 
 abstract class MobileOSMPlatform extends OSMPlatform {
   Stream<IosMapInit> onIosMapInit(int idMap);

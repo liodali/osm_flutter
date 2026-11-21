@@ -23,6 +23,7 @@ class _RecordingMarkersPlatform extends MethodChannelOSM {
   final cameraOptIns = <int, bool>{};
   final markerOptIns = <int, bool>{};
   final layersOptIns = <int, bool>{};
+  final trackingOptIns = <int, bool>{};
 
   @override
   Future<CameraRouteSelection> attachCameraRoute(
@@ -53,6 +54,16 @@ class _RecordingMarkersPlatform extends MethodChannelOSM {
     layersOptIns[idOSM] = optIn;
     return CameraRouteSelection.legacy;
   }
+
+  @override
+  Future<CameraRouteSelection> attachTrackingRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    events.add('tracking:$optIn');
+    trackingOptIns[idOSM] = optIn;
+    return CameraRouteSelection.legacy;
+  }
 }
 
 void main() {
@@ -65,6 +76,7 @@ void main() {
     required GlobalKey<MobileOsmFlutterState> stateKey,
     bool useTypedMarkers = false,
     bool useTypedLayers = false,
+    bool useTypedTracking = false,
   }) async {
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -90,6 +102,7 @@ void main() {
         staticIconGlobalKeys: const {},
         useTypedMarkers: useTypedMarkers,
         useTypedLayers: useTypedLayers,
+        useTypedTracking: useTypedTracking,
       ),
     ));
     await tester.pump();
@@ -122,7 +135,10 @@ void main() {
     addTearDown(() => platform.close(7));
 
     expect(platform.markerOptIns[7], isTrue);
-    expect(platform.events, ['camera:false', 'markers:true', 'layers:false']);
+    expect(
+      platform.events,
+      ['camera:false', 'markers:true', 'layers:false', 'tracking:false'],
+    );
 
     await tester.pumpWidget(const SizedBox());
     ready.dispose();
@@ -183,7 +199,47 @@ void main() {
     addTearDown(() => platform.close(7));
 
     expect(platform.layersOptIns[7], isTrue);
-    expect(platform.events, ['camera:false', 'markers:false', 'layers:true']);
+    expect(
+      platform.events,
+      ['camera:false', 'markers:false', 'layers:true', 'tracking:false'],
+    );
+
+    await tester.pumpWidget(const SizedBox());
+    ready.dispose();
+    marker.dispose();
+  });
+
+  testWidgets('useTypedTracking freezes the tracking route after the layers',
+      (tester) async {
+    final previous = MobileOSMController.osmPlatform;
+    final platform = _RecordingMarkersPlatform();
+    MobileOSMController.osmPlatform = platform;
+    addTearDown(() {
+      MobileOSMController.osmPlatform = previous;
+    });
+
+    final ready = ValueNotifier<bool>(false);
+    final marker = ValueNotifier<Widget?>(null);
+    final stateKey = GlobalKey<MobileOsmFlutterState>();
+    final state = await pumpMap(
+      tester,
+      ready: ready,
+      marker: marker,
+      stateKey: stateKey,
+      useTypedTracking: true,
+    );
+
+    // Regression: the tracking family must attach before initialization,
+    // or follow-me commands would silently stay on the legacy route even
+    // with the opt-in set.
+    await MobileOSMController.init(7, state);
+    addTearDown(() => platform.close(7));
+
+    expect(platform.trackingOptIns[7], isTrue);
+    expect(
+      platform.events,
+      ['camera:false', 'markers:false', 'layers:false', 'tracking:true'],
+    );
 
     await tester.pumpWidget(const SizedBox());
     ready.dispose();

@@ -52,6 +52,12 @@ const String kLocationCapability = 'location';
 /// Capability family carried by the continuous-updates schema. Hosts
 /// without this capability keep those commands on their legacy routes.
 const String kLocationUpdatesCapability = 'location.updates';
+
+/// Capability family carried by the follow-me tracking schema. Hosts
+/// without this capability keep `trackMe`/`deactivateTrackMe` on their
+/// legacy routes.
+const String kTrackingCapability = 'location.tracking';
+
 /// Capability family carried by the markers schema.
 const String kMarkersCapability = 'markers';
 

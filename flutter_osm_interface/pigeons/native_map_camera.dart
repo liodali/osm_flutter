@@ -416,6 +416,55 @@ abstract class NativeMapLocationUpdatesApi {
   @async
   void stopLocationUpdates(NativeCameraSession session);
 }
+
+/// Follow-me tracking configuration, mirroring the legacy `trackMe`
+/// arguments.
+///
+/// `stopFollowInDrag` lets an ending user drag release the follow camera;
+/// `disableMarkerRotation` pins the user marker orientation;
+/// `useDirectionMarker` swaps the marker for a directional arrow;
+/// `anchor` is the normalized icon pivot applied to both markers.
+class NativeTrackingConfiguration {
+  final bool stopFollowInDrag;
+  final bool disableMarkerRotation;
+  final bool useDirectionMarker;
+  final NativeMarkerAnchor anchor;
+
+  const NativeTrackingConfiguration({
+    required this.stopFollowInDrag,
+    required this.disableMarkerRotation,
+    required this.useDirectionMarker,
+    required this.anchor,
+  });
+}
+
+/// Generated follow-me tracking route for one map session.
+///
+/// The host advertises the `location.tracking` capability only when it
+/// implements this surface; older hosts keep `trackMe` /
+/// `deactivateTrackMe` on their legacy routes. Permission ownership
+/// stays with the host application. Tracking shares the location
+/// subscription with continuous updates and one-shot fixes: starting
+/// tracking never disturbs them, and stopping tracking preserves both.
+@HostApi()
+abstract class NativeMapTrackingApi {
+  /// Starts follow-me tracking; idempotent, completes exactly once with
+  /// `location_service_disabled` when the platform reports the provider
+  /// off.
+  @async
+  void enableTracking(
+    NativeCameraSession session,
+    NativeTrackingConfiguration configuration,
+  );
+
+  /// Ends follow-me tracking; idempotent, never prompts, never fails.
+  /// Continuous updates and pending one-shot fixes keep running. Async so
+  /// the Dart facade awaits native session validation and completion
+  /// (stale sessions surface instead of firing into the void).
+  @async
+  void disableTracking(NativeCameraSession session);
+}
+
 /// Generated markers command route for one map session.
 ///
 /// Mirrors the typed Android marker contract: stable string ids, coordinates

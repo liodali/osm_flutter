@@ -18,6 +18,7 @@ import 'package:flutter_osm_interface/src/channel/pigeon/native_layers_client.da
 import 'package:flutter_osm_interface/src/channel/pigeon/native_shapes_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_location_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_location_updates_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_tracking_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_roads_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
@@ -65,6 +66,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// lifecycle rules: start/stop updates stay legacy unless the host
   /// negotiated the `location.updates` capability at attach time.
   final Map<int, PigeonLocationUpdatesClient?> _locationUpdatesRoutes = {};
+
+  /// Frozen tracking-route decision (null = legacy), same lifecycle
+  /// rules: follow-me start/stop stays legacy unless the host negotiated
+  /// the `location.tracking` capability at attach time.
+  final Map<int, PigeonTrackingClient?> _trackingRoutes = {};
 
   /// GeoPoint key → typed marker ids for maps frozen on the generated
   /// markers route. The legacy public API addresses markers by position;
@@ -235,6 +241,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _routeAttachJobs.remove('$idOSM:$kRoadsCapability');
     _routeAttachJobs.remove('$idOSM:$kLocationCapability');
     _routeAttachJobs.remove('$idOSM:$kLocationUpdatesCapability');
+    _routeAttachJobs.remove('$idOSM:$kTrackingCapability');
     _cameraRoutes.remove(idOSM);
     _markersRoutes.remove(idOSM);
     _layersRoutes.remove(idOSM);
@@ -242,6 +249,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _roadsRoutes.remove(idOSM);
     _locationRoutes.remove(idOSM);
     _locationUpdatesRoutes.remove(idOSM);
+    _trackingRoutes.remove(idOSM);
     _typedMarkerKeys.remove(idOSM);
     _typedMarkerSequences.remove(idOSM);
     _typedMarkerOrder.remove(idOSM);
@@ -435,6 +443,27 @@ class MethodChannelOSM extends MobileOSMPlatform {
       _locationUpdatesRoutes[idOSM];
 
 
+  @override
+  Future<CameraRouteSelection> attachTrackingRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonTrackingClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kTrackingCapability,
+      routes: _trackingRoutes,
+      createClient: (bootstrap) => PigeonTrackingClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+      ),
+    );
+  }
+
+  /// Active generated client for [idOSM]'s follow-me tracking family, or
+  /// null when the frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonTrackingClient? trackingClientFor(int idOSM) => _trackingRoutes[idOSM];
 
   /// Active generated client for [idOSM]'s markers family, or null when the
   /// frozen decision selected the legacy route.
@@ -673,6 +702,15 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Future<void> disableTracking(int idOSM) async {
+    final client = _trackingRoutes[idOSM];
+    if (client != null) {
+      try {
+        await client.disableTracking();
+      } on StaleMapSessionException {
+        throw GeoPointException(msg: 'the map session was replaced or disposed');
+      }
+      return;
+    }
     await _channels[idOSM]?.invokeMethod('deactivateTrackMe', null);
   }
 
@@ -731,6 +769,27 @@ class MethodChannelOSM extends MobileOSMPlatform {
     Anchor anchor = Anchor.center,
     bool useDirectionMarker = false,
   }) async {
+    final client = _trackingRoutes[idOSM];
+    if (client != null) {
+      try {
+        await client.enableTracking(
+          generated.NativeTrackingConfiguration(
+            stopFollowInDrag: stopFollowInDrag,
+            disableMarkerRotation: disableMarkerRotation,
+            useDirectionMarker: useDirectionMarker,
+            anchor: generated.NativeMarkerAnchor(
+              x: anchor.value.$1,
+              y: anchor.value.$2,
+            ),
+          ),
+        );
+      } on LocationFailure catch (e) {
+        throw GeoPointException(msg: e.message);
+      } on StaleMapSessionException {
+        throw GeoPointException(msg: 'the map session was replaced or disposed');
+      }
+      return;
+    }
     final args = <dynamic>[
       stopFollowInDrag,
       disableMarkerRotation,
