@@ -223,6 +223,28 @@ interface MapSession : PluginRegistry.ActivityResultListener {
      */
     fun stopLocationUpdates()
 
+    /**
+     * Starts follow-me tracking with the given configuration.
+     * Idempotent; completes exactly once with `location_service_disabled`
+     * when the platform reports the provider off (permission ownership
+     * stays with the host application).
+     */
+    fun enableTracking(
+        stopFollowInDrag: Boolean,
+        disableMarkerRotation: Boolean,
+        useDirectionMarker: Boolean,
+        anchor: List<Double>,
+        listener: LocationCommandListener,
+    )
+
+    /**
+     * Ends follow-me tracking. Idempotent, never prompts, never fails.
+     * Continuous updates and pending one-shot fixes keep running: both
+     * consumers share the location subscription and reconcile through the
+     * ownership checks.
+     */
+    fun disableTracking()
+
 
     fun emitAcknowledgement(requestId: String, operation: String)
 

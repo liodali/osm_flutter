@@ -79,6 +79,7 @@ import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeCameraBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLayersBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationUpdatesBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeTrackingBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeRoadsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeShapesBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeMarkersBridge
@@ -128,6 +129,8 @@ internal class MapscoreMapSession(
     private var pigeonRoadsBridge: PigeonNativeRoadsBridge? = null
     private var pigeonLocationBridge: PigeonNativeLocationBridge? = null
     private var pigeonLocationUpdatesBridge: PigeonNativeLocationUpdatesBridge? = null
+
+    private var pigeonTrackingBridge: PigeonNativeTrackingBridge? = null
 
     /** Minted per session; guards generated routes against reused view ids. */
     internal val sessionToken: String = UUID.randomUUID().toString()
@@ -1680,6 +1683,42 @@ internal class MapscoreMapSession(
         locationNewOverlay.stopUpdatesConsumer()
     }
 
+    override fun enableTracking(
+        stopFollowInDrag: Boolean,
+        disableMarkerRotation: Boolean,
+        useDirectionMarker: Boolean,
+        anchor: List<Double>,
+        listener: MapSession.LocationCommandListener,
+    ) {
+        if (released || !::locationNewOverlay.isInitialized) {
+            listener.onComplete("location_unavailable", "The map session cannot enable tracking.")
+            return
+        }
+        if (!isLocationServiceEnabled()) {
+            listener.onComplete("location_service_disabled", "Location services are disabled.")
+            return
+        }
+        locationNewOverlay.setAnchor(anchor)
+        trackUserLocation(
+            enableStopFollow = stopFollowInDrag,
+            useDirectionMarker = useDirectionMarker,
+            disableRotation = disableMarkerRotation,
+        )
+        listener.onComplete(null, null)
+    }
+
+    override fun disableTracking() {
+        if (!::locationNewOverlay.isInitialized) return
+        // Consumer-aware stop: pending one-shot fixes and continuous
+        // updates keep running; never prompts, idempotent.
+        isTracking = false
+        locationNewOverlay.useDirectionMarker = false
+        locationNewOverlay.stopTrackingConsumer()
+        // The my-location layer flag stays truthful when another consumer
+        // (continuous updates) keeps the shared subscription running.
+        isEnabled = locationNewOverlay.mIsLocationEnabled
+    }
+
     override fun enableUserLocationLayer(): Boolean {
         if (isLocationServiceEnabled()) {
             enableUserLocation()
@@ -1704,7 +1743,7 @@ internal class MapscoreMapSession(
         enableStopFollow: Boolean,
         useDirectionMarker: Boolean,
         disableRotation: Boolean,
-        result: MethodChannel.Result
+        result: MethodChannel.Result? = null
     ) {
         try {
             homeMarker?.let { markers.remove(it.identifier); it.remove() }
@@ -1712,9 +1751,13 @@ internal class MapscoreMapSession(
             locationNewOverlay.useDirectionMarker = useDirectionMarker
             locationNewOverlay.toggleFollow(enableStopFollow)
             isTracking = locationNewOverlay.mIsFollowing
-            result.success(if (locationNewOverlay.mIsFollowing) true else null)
+            result?.success(if (locationNewOverlay.mIsFollowing) true else null)
         } catch (e: Exception) {
-            result.error("400", e.stackTraceToString(), "")
+            if (result != null) {
+                result.error("400", e.stackTraceToString(), "")
+            } else {
+                throw e
+            }
         }
     }
 
@@ -2157,6 +2200,9 @@ internal class MapscoreMapSession(
         pigeonLocationBridge = null
         pigeonLocationUpdatesBridge?.unregister(binaryMessenger, id)
         pigeonLocationUpdatesBridge = null
+
+        pigeonTrackingBridge?.unregister(binaryMessenger, id)
+        pigeonTrackingBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -2246,6 +2292,12 @@ internal class MapscoreMapSession(
         val locationUpdatesBridge = PigeonNativeLocationUpdatesBridge(this, sessionToken, generation)
         locationUpdatesBridge.register(binaryMessenger, id)
         pigeonLocationUpdatesBridge = locationUpdatesBridge
+
+        // Generated follow-me tracking endpoints share the manager's
+        // subscription with the legacy route.
+        val trackingBridge = PigeonNativeTrackingBridge(this, sessionToken, generation)
+        trackingBridge.register(binaryMessenger, id)
+        pigeonTrackingBridge = trackingBridge
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")

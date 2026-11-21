@@ -64,6 +64,13 @@ class CustomLocationManager(
 
     /** Set when the updates consumer stop is deferred behind a fix. */
     private var stopUpdatesAfterPositionResult = false
+
+    /**
+     * A tracking stop that arrived while a one-shot fix was pending. The
+     * shared subscription keeps running so the fix can deliver; the
+     * shutdown fires when the fix completes, fails or cancels.
+     */
+    private var stopTrackingAfterPositionResult = false
     private val positionTimeout = Runnable {
         cancelPendingPositionRequest(
             code = "location_timeout",
@@ -135,6 +142,25 @@ class CustomLocationManager(
         controlMapFromOutSide = false
         if (hasPendingPositionRequest) {
             stopUpdatesAfterPositionResult = true
+        } else {
+            stopSubscriptionIfUnowned()
+        }
+    }
+
+    /**
+     * Ends the follow-me tracking consumer without touching pending
+     * one-shot fixes or other consumers (continuous updates): the
+     * shared subscription only stops when no consumer owns it anymore.
+     * Unlike the legacy stop this never cancels a pending fix and never
+     * clears marker icons while another consumer keeps the manager
+     * running. Never triggers an authorization prompt. Idempotent.
+     */
+    fun stopTrackingConsumer() {
+        mIsFollowing = false
+        if (hasPendingPositionRequest) {
+            // The pending one-shot keeps the subscription running until
+            // it delivers; the shutdown is deferred behind it.
+            stopTrackingAfterPositionResult = true
         } else {
             stopSubscriptionIfUnowned()
         }
@@ -252,6 +278,11 @@ class CustomLocationManager(
                     stopUpdatesAfterPositionResult = false
                     stopSubscriptionIfUnowned()
                 }
+
+                if (stopTrackingAfterPositionResult) {
+                    stopTrackingAfterPositionResult = false
+                    stopSubscriptionIfUnowned()
+                }
             }
         }
         if (Looper.myLooper() == Looper.getMainLooper()) cancel() else handler.post(cancel)
@@ -318,6 +349,10 @@ class CustomLocationManager(
         }
         if (stopUpdatesAfterPositionResult) {
             stopUpdatesAfterPositionResult = false
+            stopSubscriptionIfUnowned()
+        }
+        if (stopTrackingAfterPositionResult) {
+            stopTrackingAfterPositionResult = false
             stopSubscriptionIfUnowned()
         }
     }

@@ -51,6 +51,21 @@ class PigeonNativeLocationBridgeTest {
             calls += "stopLocationUpdates"
         }
 
+        override fun enableTracking(
+            stopFollowInDrag: Boolean,
+            disableMarkerRotation: Boolean,
+            useDirectionMarker: Boolean,
+            anchor: List<Double>,
+            listener: MapSession.LocationCommandListener,
+        ) {
+            calls += "enableTracking"
+            listener.onComplete(null, null)
+        }
+
+        override fun disableTracking() {
+            calls += "disableTracking"
+        }
+
         override fun setActivity(activity: android.app.Activity?) = Unit
 
         override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?): Boolean =

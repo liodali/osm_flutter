@@ -186,6 +186,8 @@ internal class PigeonNativeCameraBridge(
         /// Continuous-updates surface: start/stop location updates.
         const val CAPABILITY_LOCATION_UPDATES = "location.updates"
 
+        /** Follow-me tracking: enable/disable through the generated route. */
+        const val CAPABILITY_TRACKING = "location.tracking"
 
         /** Typed error code for the markers family. */
         const val CODE_MARKERS_NOT_READY = "markers_not_ready"
@@ -212,6 +214,7 @@ internal class PigeonNativeCameraBridge(
                 CAPABILITY_ROADS,
                 CAPABILITY_LOCATION,
                 CAPABILITY_LOCATION_UPDATES,
+                CAPABILITY_TRACKING,
             ),
             "sessionToken" to sessionToken,
             "generation" to generation,

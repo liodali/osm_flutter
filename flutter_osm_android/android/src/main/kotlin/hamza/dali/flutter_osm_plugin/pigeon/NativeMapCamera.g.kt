@@ -803,6 +803,65 @@ data class NativeLocationFix (
     return "NativeLocationFix(latitude=$latitude, longitude=$longitude)"
   }
 }
+
+/**
+ * Follow-me tracking configuration, mirroring the legacy `trackMe`
+ * arguments.
+ *
+ * `stopFollowInDrag` lets an ending user drag release the follow camera;
+ * `disableMarkerRotation` pins the user marker orientation;
+ * `useDirectionMarker` swaps the marker for a directional arrow;
+ * `anchor` is the normalized icon pivot applied to both markers.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class NativeTrackingConfiguration (
+  val stopFollowInDrag: Boolean,
+  val disableMarkerRotation: Boolean,
+  val useDirectionMarker: Boolean,
+  val anchor: NativeMarkerAnchor
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): NativeTrackingConfiguration {
+      val stopFollowInDrag = pigeonVar_list[0] as Boolean
+      val disableMarkerRotation = pigeonVar_list[1] as Boolean
+      val useDirectionMarker = pigeonVar_list[2] as Boolean
+      val anchor = pigeonVar_list[3] as NativeMarkerAnchor
+      return NativeTrackingConfiguration(stopFollowInDrag, disableMarkerRotation, useDirectionMarker, anchor)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      stopFollowInDrag,
+      disableMarkerRotation,
+      useDirectionMarker,
+      anchor,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as NativeTrackingConfiguration
+    return NativeMapCameraPigeonUtils.deepEquals(this.stopFollowInDrag, other.stopFollowInDrag) && NativeMapCameraPigeonUtils.deepEquals(this.disableMarkerRotation, other.disableMarkerRotation) && NativeMapCameraPigeonUtils.deepEquals(this.useDirectionMarker, other.useDirectionMarker) && NativeMapCameraPigeonUtils.deepEquals(this.anchor, other.anchor)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.stopFollowInDrag)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.disableMarkerRotation)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.useDirectionMarker)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.anchor)
+    return result
+  }
+  override fun toString(): String {
+    return "NativeTrackingConfiguration(stopFollowInDrag=$stopFollowInDrag, disableMarkerRotation=$disableMarkerRotation, useDirectionMarker=$useDirectionMarker, anchor=$anchor)"
+  }
+}
 private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
@@ -861,6 +920,11 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
           NativeLocationFix.fromList(it)
         }
       }
+      140.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          NativeTrackingConfiguration.fromList(it)
+        }
+      }
       else -> super.readValueOfType(type, buffer)
     }
   }
@@ -908,6 +972,10 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
       }
       is NativeLocationFix -> {
         stream.write(139)
+        writeValue(stream, value.toList())
+      }
+      is NativeTrackingConfiguration -> {
+        stream.write(140)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -1644,6 +1712,86 @@ interface NativeMapLocationUpdatesApi {
             CoroutineScope(Dispatchers.Main).launch {
               val wrapped: List<Any?> = try {
                 api.stopLocationUpdates(sessionArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                NativeMapCameraPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+    }
+  }
+}
+/**
+ * Generated follow-me tracking route for one map session.
+ *
+ * The host advertises the `location.tracking` capability only when it
+ * implements this surface; older hosts keep `trackMe` /
+ * `deactivateTrackMe` on their legacy routes. Permission ownership
+ * stays with the host application. Tracking shares the location
+ * subscription with continuous updates and one-shot fixes: starting
+ * tracking never disturbs them, and stopping tracking preserves both.
+ *
+ * Generated interface from Pigeon that represents a handler of messages from Flutter.
+ */
+interface NativeMapTrackingApi {
+  /**
+   * Starts follow-me tracking; idempotent, completes exactly once with
+   * `location_service_disabled` when the platform reports the provider
+   * off.
+   */
+  suspend fun enableTracking(session: NativeCameraSession, configuration: NativeTrackingConfiguration)
+  /**
+   * Ends follow-me tracking; idempotent, never prompts, never fails.
+   * Continuous updates and pending one-shot fixes keep running. Async so
+   * the Dart facade awaits native session validation and completion
+   * (stale sessions surface instead of firing into the void).
+   */
+  suspend fun disableTracking(session: NativeCameraSession)
+
+  companion object {
+    /** The codec used by NativeMapTrackingApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      NativeMapCameraPigeonCodec()
+    }
+    /** Sets up an instance of `NativeMapTrackingApi` to handle messages through the `binaryMessenger`. */
+    @JvmOverloads
+    fun setUp(binaryMessenger: BinaryMessenger, api: NativeMapTrackingApi?, messageChannelSuffix: String = "") {
+      val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapTrackingApi.enableTracking$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val configurationArg = args[1] as NativeTrackingConfiguration
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.enableTracking(sessionArg, configurationArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                NativeMapCameraPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapTrackingApi.disableTracking$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.disableTracking(sessionArg)
                 listOf(null)
               } catch (exception: Throwable) {
                 NativeMapCameraPigeonUtils.wrapError(exception)

@@ -180,6 +180,21 @@ class PigeonNativeCameraBridgeTest {
         override fun stopLocationUpdates() = Unit
 
 
+        override fun enableTracking(
+            stopFollowInDrag: Boolean,
+            disableMarkerRotation: Boolean,
+            useDirectionMarker: Boolean,
+            anchor: List<Double>,
+            listener: MapSession.LocationCommandListener,
+        ) {
+            calls += "enableTracking"
+            listener.onComplete(null, null)
+        }
+
+        override fun disableTracking() {
+            calls += "disableTracking"
+        }
+
         override fun emitAcknowledgement(requestId: String, operation: String) = Unit
 
         override fun emitError(requestId: String, operation: String, code: String, message: String?) = Unit

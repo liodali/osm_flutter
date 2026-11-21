@@ -338,6 +338,18 @@ private class FakeMapSession(
     override fun stopLocationUpdates() = Unit
 
 
+    override fun enableTracking(
+        stopFollowInDrag: Boolean,
+        disableMarkerRotation: Boolean,
+        useDirectionMarker: Boolean,
+        anchor: List<Double>,
+        listener: MapSession.LocationCommandListener,
+    ) {
+        listener.onComplete(null, null)
+    }
+
+    override fun disableTracking() = Unit
+
     override fun emitAcknowledgement(requestId: String, operation: String) = Unit
 
     override fun emitError(
