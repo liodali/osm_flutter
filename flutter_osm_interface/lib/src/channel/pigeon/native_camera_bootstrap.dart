@@ -49,6 +49,9 @@ const String kRoadsCapability = 'roads';
 /// commands on their legacy routes.
 const String kLocationCapability = 'location';
 
+/// Capability family carried by the continuous-updates schema. Hosts
+/// without this capability keep those commands on their legacy routes.
+const String kLocationUpdatesCapability = 'location.updates';
 /// Capability family carried by the markers schema.
 const String kMarkersCapability = 'markers';
 

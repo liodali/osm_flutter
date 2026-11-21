@@ -50,6 +50,7 @@ class const MobileOsmFlutter({
   this.useTypedShapes = false,
   this.useTypedRoads = false,
   this.useTypedLocation = false,
+  this.useTypedLocationUpdates = false,
 }) extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -83,6 +84,9 @@ class const MobileOsmFlutter({
   final bool useTypedRoads;
   /// Opt-in routing of location commands through the typed generated channel.
   final bool useTypedLocation;
+  /// Opt-in routing of continuous-updates commands through the typed
+  /// generated channel.
+  final bool useTypedLocationUpdates;
   final ZoomOption zoomOption;
   @override
   MobileOsmFlutterState createState() => MobileOsmFlutterState();

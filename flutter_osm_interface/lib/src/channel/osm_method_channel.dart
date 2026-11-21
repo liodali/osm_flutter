@@ -17,6 +17,7 @@ import 'package:flutter_osm_interface/src/channel/pigeon/native_camera_client.da
 import 'package:flutter_osm_interface/src/channel/pigeon/native_layers_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_shapes_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_location_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_location_updates_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_roads_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
@@ -59,6 +60,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// the my-location toggle and single-shot fixes stay legacy unless the
   /// host negotiated the `location` capability at attach time.
   final Map<int, PigeonLocationClient?> _locationRoutes = {};
+
+  /// Frozen continuous-updates-route decision (null = legacy), same
+  /// lifecycle rules: start/stop updates stay legacy unless the host
+  /// negotiated the `location.updates` capability at attach time.
+  final Map<int, PigeonLocationUpdatesClient?> _locationUpdatesRoutes = {};
 
   /// GeoPoint key → typed marker ids for maps frozen on the generated
   /// markers route. The legacy public API addresses markers by position;
@@ -228,12 +234,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _routeAttachJobs.remove('$idOSM:$kShapesCapability');
     _routeAttachJobs.remove('$idOSM:$kRoadsCapability');
     _routeAttachJobs.remove('$idOSM:$kLocationCapability');
+    _routeAttachJobs.remove('$idOSM:$kLocationUpdatesCapability');
     _cameraRoutes.remove(idOSM);
     _markersRoutes.remove(idOSM);
     _layersRoutes.remove(idOSM);
     _shapesRoutes.remove(idOSM);
     _roadsRoutes.remove(idOSM);
     _locationRoutes.remove(idOSM);
+    _locationUpdatesRoutes.remove(idOSM);
     _typedMarkerKeys.remove(idOSM);
     _typedMarkerSequences.remove(idOSM);
     _typedMarkerOrder.remove(idOSM);
@@ -402,6 +410,31 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// the frozen decision selected the legacy route.
   @visibleForTesting
   PigeonLocationClient? locationClientFor(int idOSM) => _locationRoutes[idOSM];
+
+  @override
+  Future<CameraRouteSelection> attachLocationUpdatesRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonLocationUpdatesClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kLocationUpdatesCapability,
+      routes: _locationUpdatesRoutes,
+      createClient: (bootstrap) => PigeonLocationUpdatesClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+      ),
+    );
+  }
+
+  /// Active generated client for [idOSM]'s continuous-updates family, or
+  /// null when the frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonLocationUpdatesClient? locationUpdatesClientFor(int idOSM) =>
+      _locationUpdatesRoutes[idOSM];
+
+
 
   /// Active generated client for [idOSM]'s markers family, or null when the
   /// frozen decision selected the legacy route.
@@ -1438,14 +1471,32 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @override
   Future<void> startLocationUpdating(
     int idOSM,
-  ) =>
-      _channels[idOSM]!.invokeMethod("startLocationUpdating");
+  ) async {
+    final client = _locationUpdatesRoutes[idOSM];
+    if (client != null) {
+      try {
+        await client.startLocationUpdates();
+      } on LocationFailure catch (e) {
+        throw GeoPointException(msg: e.message);
+      } on StaleMapSessionException {
+        throw GeoPointException(msg: 'the map session was replaced or disposed');
+      }
+      return;
+    }
+    await _channels[idOSM]!.invokeMethod("startLocationUpdating");
+  }
 
   @override
   Future<void> stopLocationUpdating(
     int idOSM,
-  ) =>
-      _channels[idOSM]!.invokeMethod("stopLocationUpdating");
+  ) async {
+    final client = _locationUpdatesRoutes[idOSM];
+    if (client != null) {
+      await client.stopLocationUpdates();
+      return;
+    }
+    await _channels[idOSM]!.invokeMethod("stopLocationUpdating");
+  }
 }
 
 extension ConfigExt on MethodChannelOSM {

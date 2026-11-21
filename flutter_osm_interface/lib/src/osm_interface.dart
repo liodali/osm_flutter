@@ -108,7 +108,18 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM, {
     bool optIn = false,
   });
-}
+
+  /// Freezes the continuous-updates routing decision for one map
+  /// attachment (start/stop location updates). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the first
+  /// mutation. Hosts without the `location.updates` capability keep these
+  /// commands on the legacy route. Location events keep flowing on their
+  /// existing channel; stop never prompts and preserves pending one-shot
+  /// fixes and tracking.
+  Future<CameraRouteSelection> attachLocationUpdatesRoute(
+    int idOSM, {
+    bool optIn = false,
+  });}
 
 abstract class MobileOSMPlatform extends OSMPlatform {
   Stream<IosMapInit> onIosMapInit(int idMap);

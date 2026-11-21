@@ -80,6 +80,7 @@ class OSMMap extends StatefulWidget {
     this.useTypedShapes = false,
     this.useTypedRoads = false,
     this.useTypedLocation = false,
+    this.useTypedLocationUpdates = false,
   });
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -114,6 +115,8 @@ class OSMMap extends StatefulWidget {
   final bool useTypedRoads;
   /// Opt-in routing of location commands (my-location layer, fixes).
   final bool useTypedLocation;
+  /// Opt-in routing of continuous-updates commands (start/stop).
+  final bool useTypedLocationUpdates;
 
   @override
   State<StatefulWidget> createState() => _OSMMapState();
@@ -156,6 +159,7 @@ class _OSMMapState extends State<OSMMap> {
       useTypedShapes: widget.useTypedShapes,
       useTypedRoads: widget.useTypedRoads,
       useTypedLocation: widget.useTypedLocation,
+      useTypedLocationUpdates: widget.useTypedLocationUpdates,
     );
   }
 }

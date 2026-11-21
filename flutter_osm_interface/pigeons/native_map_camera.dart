@@ -390,6 +390,32 @@ abstract class NativeMapLocationApi {
   NativeLocationFix getCurrentLocation(NativeCameraSession session);
 }
 
+/// Generated continuous-updates route for one map session.
+///
+/// The host advertises the `location.updates` capability only when it
+/// implements this surface; older hosts keep these commands on their
+/// legacy routes. Location events keep flowing on the existing event
+/// channel; tracking (follow-me) and custom icons are separate concerns.
+///
+/// Completion contract: [startLocationUpdates] is idempotent — repeated
+/// starts succeed without restarting the underlying service — and
+/// completes exactly once with `permission_denied` or
+/// `location_service_disabled` when the platform reports denial.
+/// [stopLocationUpdates] is idempotent, never triggers an authorization
+/// prompt, never fails, and preserves pending one-shot fixes and other
+/// location consumers (tracking): it only ends the updates consumer
+/// started by [startLocationUpdates].
+@HostApi()
+abstract class NativeMapLocationUpdatesApi {
+  /// Starts continuous user-location updates without follow control.
+  @async
+  void startLocationUpdates(NativeCameraSession session);
+
+  /// Ends the continuous-updates consumer without touching pending
+  /// one-shot fixes or tracking.
+  @async
+  void stopLocationUpdates(NativeCameraSession session);
+}
 /// Generated markers command route for one map session.
 ///
 /// Mirrors the typed Android marker contract: stable string ids, coordinates

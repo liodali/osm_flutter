@@ -170,6 +170,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         useTypedShapes: widget.osmOption.useTypedShapes,
                         useTypedRoads: widget.osmOption.useTypedRoads,
                         useTypedLocation: widget.osmOption.useTypedLocation,
+                        useTypedLocationUpdates: widget.osmOption.useTypedLocationUpdates,
                       ),
                     ),
                     Positioned.fill(
@@ -225,6 +226,7 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   useTypedShapes: widget.osmOption.useTypedShapes,
                   useTypedRoads: widget.osmOption.useTypedRoads,
                   useTypedLocation: widget.osmOption.useTypedLocation,
+                  useTypedLocationUpdates: widget.osmOption.useTypedLocationUpdates,
                 ),
         ),
         if (widget.osmOption.showContributorBadgeForOSM && !kIsWeb) ...[

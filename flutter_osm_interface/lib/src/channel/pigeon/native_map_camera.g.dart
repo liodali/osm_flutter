@@ -1428,6 +1428,76 @@ class NativeMapLocationApi {
   }
 }
 
+/// Generated continuous-updates route for one map session.
+///
+/// The host advertises the `location.updates` capability only when it
+/// implements this surface; older hosts keep these commands on their
+/// legacy routes. Location events keep flowing on the existing event
+/// channel; tracking (follow-me) and custom icons are separate concerns.
+///
+/// Completion contract: [startLocationUpdates] is idempotent — repeated
+/// starts succeed without restarting the underlying service — and
+/// completes exactly once with `permission_denied` or
+/// `location_service_disabled` when the platform reports denial.
+/// [stopLocationUpdates] is idempotent, never triggers an authorization
+/// prompt, never fails, and preserves pending one-shot fixes and other
+/// location consumers (tracking): it only ends the updates consumer
+/// started by [startLocationUpdates].
+class NativeMapLocationUpdatesApi {
+  /// Constructor for [NativeMapLocationUpdatesApi]. The [binaryMessenger] named argument is
+  /// available for dependency injection. If it is left null, the default
+  /// BinaryMessenger will be used which routes to the host platform.
+  NativeMapLocationUpdatesApi({
+      BinaryMessenger? binaryMessenger, 
+      String messageChannelSuffix = '', 
+      })
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+
+  final BinaryMessenger? pigeonVar_binaryMessenger;
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  final String pigeonVar_messageChannelSuffix;
+
+
+  /// Starts continuous user-location updates without follow control.
+  Future<void> startLocationUpdates(NativeCameraSession session) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationUpdatesApi.startLocationUpdates$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Ends the continuous-updates consumer without touching pending
+  /// one-shot fixes or tracking.
+  Future<void> stopLocationUpdates(NativeCameraSession session) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationUpdatesApi.stopLocationUpdates$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+}
+
 /// Generated markers command route for one map session.
 ///
 /// Mirrors the typed Android marker contract: stable string ids, coordinates

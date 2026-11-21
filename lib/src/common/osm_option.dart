@@ -38,6 +38,7 @@ class OSMOption {
     this.useTypedShapes = false,
     this.useTypedRoads = false,
     this.useTypedLocation = false,
+    this.useTypedLocationUpdates = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -80,7 +81,11 @@ class OSMOption {
   /// location capability at attachment time. Permission ownership stays
   /// with the host application. Default keeps the legacy route.
   final bool useTypedLocation;
-}
+  /// Opt-in routing of start/stop location updates through the typed
+  /// generated channel when the native host advertises the
+  /// `location.updates` capability at attachment time. Default keeps the
+  /// legacy route.
+  final bool useTypedLocationUpdates;}
 
 /// [ZoomOption]
 ///
