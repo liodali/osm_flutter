@@ -179,6 +179,12 @@ final class PigeonCameraBridge: NativeMapCameraApi {
     /// Location surface: my-location layer, single-shot fixes.
     static let capabilityLocation = "location"
 
+    /// Continuous-updates surface: start/stop location updates.
+    static let capabilityLocationUpdates = "location.updates"
+
+    /// Follow-me tracking surface: enable/disable tracking.
+    static let capabilityTracking = "location.tracking"
+
     static func viewChannelSuffix(_ viewId: Int64) -> String {
         "view_\(viewId)"
     }
@@ -198,7 +204,8 @@ final class PigeonCameraBridge: NativeMapCameraApi {
             "capabilities": [
                 capabilityCamera, capabilityMarkers, capabilityCameraConfig,
                 capabilityLayers, capabilityShapes, capabilityRoads,
-                capabilityLocation,
+                capabilityLocation, capabilityLocationUpdates,
+                capabilityTracking,
             ],
             "sessionToken": sessionToken,
             "generation": generation,

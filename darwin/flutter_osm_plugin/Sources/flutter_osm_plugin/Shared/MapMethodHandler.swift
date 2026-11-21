@@ -99,11 +99,13 @@ extension MapSession {
             result(200)
             break
         case "deactivateTrackMe":
+            trackMeActive = false
             stopTracking()
             result(200)
             break
         case "startLocationUpdating":
             userLocationWithoutControl = true
+            updatesActive = true
             if !self.mapOSM.locationManager.isTrackingEnabled() {
                 self.mapOSM.locationManager.toggleTracking(
                     configuration: TrackConfiguration(moveMap: false, controlUserMarker: false))
@@ -111,7 +113,10 @@ extension MapSession {
             result(200)
             break
         case "stopLocationUpdating":
+            // Legacy byte parity: unconditional stop (the historical
+            // behavior), and the updates consumer ownership ends with it.
             userLocationWithoutControl = false
+            updatesActive = false
             stopTracking()
             result(200)
             break
@@ -592,6 +597,7 @@ extension MapSession {
                     disableMarkerRotation: disableRotation
                 ))
         }
+        trackMeActive = true
     }
     func stopTracking() {
         self.mapOSM.locationManager.stopLocation()

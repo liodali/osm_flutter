@@ -1447,6 +1447,76 @@ class NativeMapLocationApiSetup {
     }
   }
 }
+/// Generated continuous-updates route for one map session.
+///
+/// The host advertises the `location.updates` capability only when it
+/// implements this surface; older hosts keep these commands on their
+/// legacy routes. Location events keep flowing on the existing event
+/// channel; tracking (follow-me) and custom icons are separate concerns.
+///
+/// Completion contract: [startLocationUpdates] is idempotent — repeated
+/// starts succeed without restarting the underlying service — and
+/// completes exactly once with `permission_denied` or
+/// `location_service_disabled` when the platform reports denial.
+/// [stopLocationUpdates] is idempotent, never triggers an authorization
+/// prompt, never fails, and preserves pending one-shot fixes and other
+/// location consumers (tracking): it only ends the updates consumer
+/// started by [startLocationUpdates].
+///
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol NativeMapLocationUpdatesApi {
+  /// Starts continuous user-location updates without follow control.
+  func startLocationUpdates(session: NativeCameraSession) async throws
+  /// Ends the continuous-updates consumer without touching pending
+  /// one-shot fixes or tracking.
+  func stopLocationUpdates(session: NativeCameraSession) async throws
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class NativeMapLocationUpdatesApiSetup {
+  static var codec: FlutterStandardMessageCodec { NativeMapCameraPigeonCodec.shared }
+  /// Sets up an instance of `NativeMapLocationUpdatesApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: NativeMapLocationUpdatesApi?, messageChannelSuffix: String = "") {
+    let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    /// Starts continuous user-location updates without follow control.
+    let startLocationUpdatesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationUpdatesApi.startLocationUpdates\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      startLocationUpdatesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        Task { @MainActor in
+          do {
+            try await api.startLocationUpdates(session: sessionArg)
+            reply(wrapResult(nil))
+          } catch {
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      startLocationUpdatesChannel.setMessageHandler(nil)
+    }
+    /// Ends the continuous-updates consumer without touching pending
+    /// one-shot fixes or tracking.
+    let stopLocationUpdatesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationUpdatesApi.stopLocationUpdates\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      stopLocationUpdatesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        Task { @MainActor in
+          do {
+            try await api.stopLocationUpdates(session: sessionArg)
+            reply(wrapResult(nil))
+          } catch {
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      stopLocationUpdatesChannel.setMessageHandler(nil)
+    }
+  }
+}
 /// Generated markers command route for one map session.
 ///
 /// Mirrors the typed Android marker contract: stable string ids, coordinates

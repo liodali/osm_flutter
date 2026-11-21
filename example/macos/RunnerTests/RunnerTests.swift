@@ -137,7 +137,7 @@ class RunnerTests: XCTestCase {
       // remove by id, two kind clears, full clear) and the three generated
       // road channels (draw, remove, clear) — alongside, never replacing
       // legacy endpoints.
-      XCTAssertEqual(messenger.handlers.count, 68)
+      XCTAssertEqual(messenger.handlers.count, 72)
       host = nil
     }
     // AppKit autoreleases views and the framework can have queued callbacks.
@@ -149,7 +149,7 @@ class RunnerTests: XCTestCase {
     // Disposal removes exactly this session's legacy channel and its
     // generated camera, marker, layer, shape and road channels; the other
     // live map keeps its full set.
-    XCTAssertEqual(messenger.handlers.count, 34)
+    XCTAssertEqual(messenger.handlers.count, 36)
     XCTAssertEqual(messenger.handlers.keys.filter { $0.hasPrefix("map_") }, ["map_2"])
     XCTAssertFalse(
       messenger.handlers.keys.contains { $0.contains(".view_1") },
@@ -727,6 +727,8 @@ class RunnerTests: XCTestCase {
   func testLegacyLocationRequestSharesOwnershipAndDeadline() async throws {
     let map = session(RecordingMessenger())
     defer { map.dispose() }
+    // Never touch the real location stack in tests.
+    map.locationSingleShotRequest = {}
 
     // A pending typed request blocks the legacy route explicitly: the
     // FlutterResult receives the in-progress error and resultFlutter is
@@ -774,6 +776,7 @@ class RunnerTests: XCTestCase {
   func testLegacyLocationPermissionDenialKeepsLegacyCode() async throws {
     let map = session(RecordingMessenger())
     defer { map.dispose() }
+    map.locationSingleShotRequest = {}
     var legacyReply: Any?
     let done = expectation(description: "legacy denial")
     map.beginLegacyLocationFix({ reply in
@@ -858,6 +861,286 @@ class RunnerTests: XCTestCase {
     ) { error in
       XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
     }
+  }
+
+  // MARK: - Typed location-updates family (Pigeon route)
+
+  @MainActor
+  func testTypedUpdatesStartStopAreSafeAndPreserveConsumers() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.locationUpdatesBridge)
+    let wire = cameraWireSession(map)
+
+    // Recorder seam: the real CLLocationManager is never touched (no
+    // authorization prompts, no live GPS); simulated fixes arrive at the
+    // fixed Zurich coordinates.
+    var toggles: [Bool] = []
+    map.locationUpdatesToggle = { start in toggles.append(start) }
+
+    // Start completes exactly once; repeated starts stay idempotent and
+    // take updates ownership (location callbacks must not recenter).
+    try await bridge.startLocationUpdates(session: wire)
+    XCTAssertTrue(map.userLocationWithoutControl)
+    XCTAssertTrue(map.updatesActive)
+    try await bridge.startLocationUpdates(session: wire)
+    XCTAssertTrue(map.updatesActive)
+    // A repeated start does not re-toggle the framework.
+    XCTAssertEqual(toggles, [true])
+
+    // A pending one-shot fix survives stop: the updates consumer ends
+    // without touching the fix slot or killing the manager outright.
+    var fixOutcome: MapSession.LocationFixOutcome?
+    var completions = 0
+    map.pendingLocationFixCompletion = { result in
+      fixOutcome = result
+      completions += 1
+    }
+    // With a pending one-shot, the stop defers; a pending fix survives.
+    // With a pending one-shot, the stop defers: no framework toggle yet.
+    try await bridge.stopLocationUpdates(session: wire)
+    try await bridge.stopLocationUpdates(session: wire)
+    XCTAssertFalse(map.updatesActive)
+    XCTAssertFalse(map.userLocationWithoutControl)
+    XCTAssertNotNil(map.pendingLocationFixCompletion)
+    XCTAssertEqual(completions, 0)
+    XCTAssertEqual(toggles, [true])
+
+    // Tracking ownership keeps the manager running through stop.
+    map.trackMeActive = true
+    map.updatesActive = true
+    try await bridge.stopLocationUpdates(session: wire)
+    XCTAssertFalse(map.updatesActive)
+    XCTAssertTrue(map.trackMeActive)
+    XCTAssertEqual(toggles, [true])
+
+    // The deferred stop is armed behind the preserved fix.
+    XCTAssertTrue(map.stopUpdatesWhenFixCompletes)
+
+    // Tracking then ends (its consumer releases the subscription), so by
+    // the time the one-shot completes nothing owns the manager anymore.
+    map.trackMeActive = false
+
+    // The one-shot still completes exactly once after the stop (at the
+    // fixed Zurich coordinates), and the deferred stop then finishes:
+    // the subscription ends unowned exactly once.
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.3769, longitude: 8.5417),
+      heading: 0)
+    XCTAssertEqual(completions, 1)
+    XCTAssertNil(map.pendingLocationFixCompletion)
+    XCTAssertFalse(map.stopUpdatesWhenFixCompletes)
+    XCTAssertEqual(toggles, [true, false])
+  }
+
+  @MainActor
+  func testTypedUpdatesCameraOwnershipAndDenialRollback() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+
+    var toggles: [Bool] = []
+    map.locationUpdatesToggle = { start in toggles.append(start) }
+
+    // Camera ownership regression: updates mode suppresses the session
+    // recenter (userLocationWithoutControl) — the framework knob is armed
+    // with moveMap: true at toggle time so its own recenter stays off too.
+    var started = false
+    let startDone = expectation(description: "start")
+    map.typedStartLocationUpdates { code, _ in
+      if code == nil { started = true }
+      startDone.fulfill()
+    }
+    wait(for: [startDone], timeout: 2.0)
+    XCTAssertTrue(map.userLocationWithoutControl)
+    XCTAssertTrue(map.updatesActive)
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 1.0, longitude: 2.0),
+      heading: 0)
+    // The camera-recenter guard held: no session recenter ran, and the
+    // updates consumer is unchanged.
+    XCTAssertTrue(map.updatesActive)
+
+    // Rollback regression: a denied start must own nothing, or retries
+    // would succeed without ever starting updates. Simulate the in-flight
+    // denied start (the completion slot the synchronous denial routes to).
+    map.updatesActive = true
+    map.userLocationWithoutControl = true
+    var startCode: String?
+    let denialDone = expectation(description: "start denial")
+    map.startingUpdatesCompletion = { code, _ in
+      startCode = code
+      denialDone.fulfill()
+    }
+    map.handlePermission(state: OSMFlutterFramework.LocationPermission.NotGranted)
+    await fulfillment(of: [denialDone], timeout: 1.0)
+    XCTAssertEqual(startCode, "permission_denied")
+    XCTAssertFalse(map.updatesActive)
+    XCTAssertFalse(map.userLocationWithoutControl)
+    // The denial resets the framework tracking state through the seam, so
+    // the native retry runs the toggle again instead of skipping it.
+    XCTAssertEqual(toggles, [true, false])
+  }
+
+  @MainActor
+  func testPromptDenialAfterInitiatedStartResetsOwnership() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+
+    // An initiated start (authorization prompt path) completes success
+    // and clears the completion slot; the user then denies the prompt.
+    // Regression: the ownership reset must not depend on the slot still
+    // being armed, or a retry reports success without restarting.
+    var startCode: String?
+    let started = expectation(description: "start initiated")
+    var promptToggles: [Bool] = []
+    map.locationUpdatesToggle = { start in promptToggles.append(start) }
+    map.typedStartLocationUpdates { code, _ in
+      startCode = code
+      started.fulfill()
+    }
+    await fulfillment(of: [started], timeout: 2.0)
+    XCTAssertNil(startCode)
+    XCTAssertTrue(map.updatesActive)
+    XCTAssertNil(map.startingUpdatesCompletion)
+
+    // The prompt is denied afterwards: ownership resets so the retry
+    // genuinely re-attempts; nothing was started, so the framework is
+    // not stopped.
+    map.handlePermission(state: OSMFlutterFramework.LocationPermission.NotGranted)
+    XCTAssertFalse(map.updatesActive)
+    XCTAssertFalse(map.userLocationWithoutControl)
+    XCTAssertNil(map.startingUpdatesCompletion)
+    // The framework tracking state resets with the session ownership.
+    XCTAssertEqual(promptToggles, [true, false])
+  }
+
+  @MainActor
+  func testSynchronousDenialDuringPendingFixFailsBothConsumers() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+
+    // A pending one-shot and an in-flight start are both denied
+    // synchronously: the fix fails with its denial code AND the start
+    // completes with permission_denied (exactly once) - neither hangs,
+    // and ownership rolls back.
+    var fixCompletions = 0
+    var fixOutcome: MapSession.LocationFixOutcome?
+    map.pendingLocationFixCompletion = { result in
+      fixOutcome = result
+      fixCompletions += 1
+    }
+    var startCode: String?
+    let startDenied = expectation(description: "start denied")
+    map.startingUpdatesCompletion = { code, _ in
+      startCode = code
+      startDenied.fulfill()
+    }
+    // Keep the framework reset hermetic in tests.
+    var denialToggles: [Bool] = []
+    map.locationUpdatesToggle = { start in denialToggles.append(start) }
+
+    map.handlePermission(state: OSMFlutterFramework.LocationPermission.NotGranted)
+    await fulfillment(of: [startDenied], timeout: 1.0)
+
+    XCTAssertEqual(startCode, "permission_denied")
+    guard case let .failed(fixCode, _)? = fixOutcome else {
+      return XCTFail("expected the fix to fail")
+    }
+    XCTAssertEqual(fixCode, "permission_denied")
+    XCTAssertEqual(fixCompletions, 1)
+    XCTAssertFalse(map.updatesActive)
+    XCTAssertFalse(map.userLocationWithoutControl)
+    XCTAssertNil(map.pendingLocationFixCompletion)
+    XCTAssertNil(map.startingUpdatesCompletion)
+    // The framework tracking state resets as part of the cleanup.
+    XCTAssertEqual(denialToggles, [false])
+  }
+
+  @MainActor
+  func testPromptDenialThenRetryRunsNativeToggleAgain() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.locationUpdatesBridge)
+    let wire = cameraWireSession(map)
+
+    // Stateful fake: models the framework tracking flag exactly like the
+    // real toggle - a start while the flag is armed is skipped natively
+    // (the stale-flag bug signature), a stop clears it.
+    var frameworkTracking = false
+    var toggles: [Bool] = []
+    map.locationUpdatesToggle = { start in
+      if start {
+        if frameworkTracking { return }
+        frameworkTracking = true
+        toggles.append(true)
+      } else {
+        frameworkTracking = false
+        toggles.append(false)
+      }
+    }
+
+    // Start runs the native toggle and arms the framework flag.
+    try await bridge.startLocationUpdates(session: wire)
+    XCTAssertTrue(frameworkTracking)
+    XCTAssertEqual(toggles, [true])
+
+    // Prompt/revocation denial: session ownership AND framework state
+    // reset through the seam.
+    map.handlePermission(state: OSMFlutterFramework.LocationPermission.NotGranted)
+    XCTAssertFalse(map.updatesActive)
+    XCTAssertFalse(frameworkTracking)
+    XCTAssertEqual(toggles, [true, false])
+
+    // Retry: the native toggle runs again - updates genuinely restart
+    // instead of a stale-flag success without running updates.
+    try await bridge.startLocationUpdates(session: wire)
+    XCTAssertTrue(frameworkTracking)
+    XCTAssertEqual(toggles, [true, false, true])
+  }
+
+  @MainActor
+  func testTypedUpdatesBridgeRejectsStaleSessions() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.locationUpdatesBridge)
+    let stale = NativeCameraSession(sessionToken: "wrong", generation: 0)
+
+    await XCTAssertThrowsErrorAsync(
+      try await bridge.startLocationUpdates(session: stale)
+    ) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
+    }
+    await XCTAssertThrowsErrorAsync(
+      try await bridge.stopLocationUpdates(session: stale)
+    ) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
+    }
+  }
+
+  @MainActor
+  func testTypedUpdatesDisposalKeepsOtherSessionAlive() async throws {
+    let messenger = RecordingMessenger()
+    let first = session(messenger)
+    let second = session(messenger, id: 2)
+    let firstBridge = try XCTUnwrap(first.locationUpdatesBridge)
+    let secondBridge = try XCTUnwrap(second.locationUpdatesBridge)
+    let firstWire = cameraWireSession(first)
+    let secondWire = cameraWireSession(second)
+
+    var firstToggles: [Bool] = []
+    var secondToggles: [Bool] = []
+    first.locationUpdatesToggle = { start in firstToggles.append(start) }
+    second.locationUpdatesToggle = { start in secondToggles.append(start) }
+
+    try await firstBridge.startLocationUpdates(session: firstWire)
+    // Disposal of the first session must not disturb the second's
+    // updates route.
+    first.dispose()
+    try await secondBridge.startLocationUpdates(session: secondWire)
+    try await secondBridge.stopLocationUpdates(session: secondWire)
+    second.dispose()
+    XCTAssertEqual(firstToggles, [true])
+    XCTAssertEqual(secondToggles, [true, false])
   }
 
   // MARK: - Typed markers family (Pigeon route)
