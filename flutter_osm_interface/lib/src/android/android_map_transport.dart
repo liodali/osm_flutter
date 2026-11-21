@@ -31,11 +31,22 @@ abstract interface class AndroidMapTransport {
     MarkerId markerId,
     GeoPoint position, {
     Uint8List? iconBytes,
+    double angleDegrees = 0,
+    IconAnchor? anchor,
   });
 
   Future<void> addMarkers(Map<MarkerId, GeoPoint> markers);
 
   Future<void> updateMarkerIcon(MarkerId markerId, Uint8List iconBytes);
+
+  /// Moves one existing marker without recreating it.
+  Future<void> moveMarker(MarkerId markerId, GeoPoint position);
+
+  /// Sets one existing marker's icon rotation in degrees, clockwise.
+  Future<void> rotateMarker(MarkerId markerId, double angleDegrees);
+
+  /// Replaces one existing marker's icon anchor.
+  Future<void> setMarkerAnchor(MarkerId markerId, IconAnchor anchor);
 
   Future<void> removeMarker(MarkerId markerId);
 

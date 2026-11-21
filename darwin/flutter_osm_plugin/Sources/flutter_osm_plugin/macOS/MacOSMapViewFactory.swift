@@ -29,7 +29,9 @@ public class MacOSMapViewFactory: NSObject, FlutterPlatformViewFactory {
                 binaryMessenger: self.messenger
             )
             let session = MapSession(
-                .zero, viewId: viewId, channel: channel, args: args, defaultPin: defaultPinPath)
+                .zero, viewId: viewId, channel: channel,
+                binaryMessenger: self.messenger, args: args,
+                defaultPin: defaultPinPath)
             return MacOSMapHostView(frame: .zero, session: session)
         }
     }

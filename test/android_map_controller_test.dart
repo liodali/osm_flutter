@@ -1,12 +1,17 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_osm_interface/flutter_osm_interface.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_map_camera.g.dart'
+    as generated;
 import 'package:flutter_osm_plugin/android.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('AndroidMapController', () {
     test('attaches, initializes, and completes ready from the selected map',
         () async {
@@ -260,6 +265,130 @@ void main() {
       expect(transport.markers, isEmpty);
 
       await controller.dispose();
+    });
+
+    test('markers capability moves, rotates, and anchors stable ids',
+        () async {
+      final transport = FakeAndroidMapTransport(
+        backend: AndroidMapBackend.methodChannel,
+      );
+      final controller = AndroidMapController.withPosition(
+        initPosition: GeoPoint(latitude: 1, longitude: 2),
+        transportFactory: (_) => transport,
+      );
+      await controller.attachAndroidMap(31);
+      transport.emit(const AndroidMapReady(viewId: 31, isReady: true));
+      await controller.ready;
+
+      final marker = await controller.markers.add(
+        GeoPoint(latitude: 48.85, longitude: 2.35),
+        angleDegrees: 90,
+        anchor: IconAnchor(anchor: Anchor.bottom),
+      );
+
+      await controller.markers.move(
+        marker,
+        GeoPoint(latitude: 48.86, longitude: 2.36),
+      );
+      await controller.markers.rotate(marker, 45.5);
+      await controller.markers.setAnchor(
+        marker,
+        IconAnchor(anchor: Anchor.left),
+      );
+
+      expect(
+        transport.markers[marker],
+        GeoPoint(latitude: 48.86, longitude: 2.36),
+      );
+      expect(transport.rotations[marker], 45.5);
+      expect(transport.anchors[marker]?.anchor, Anchor.left);
+
+      await controller.dispose();
+    });
+
+    test('typed markers route carries markers and keeps camera on the base',
+        () async {
+      final transport = FakeAndroidMapTransport(
+        backend: AndroidMapBackend.methodChannel,
+      );
+      const viewId = 32;
+      final baseCalls = <MethodCall>[];
+      final pigeonCalls = <String>[];
+      ByteData? addMarkerMessage;
+      const legacyChannel = MethodChannel('plugins.dali.hamza/osmview_$viewId');
+      final messenger = TestDefaultBinaryMessengerBinding
+          .instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(legacyChannel, (call) async {
+        if (call.method == 'map#bootstrap#protocol') {
+          return {
+            'revision': 1,
+            'schemaId': 'flutter_osm.native.camera.v1',
+            'capabilities': ['camera', 'markers'],
+            'sessionToken': 'token-$viewId',
+            'generation': 0,
+          };
+        }
+        baseCalls.add(call);
+        return null;
+      });
+      ByteData? pigeonReply(Object? value) =>
+          const StandardMessageCodec().encodeMessage(<Object?>[value]);
+      for (final method in ['addMarker', 'updateMarkerIcon']) {
+        messenger.setMockMessageHandler(
+          'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.'
+          '$method.view_$viewId',
+          (message) async {
+            pigeonCalls.add(method);
+            if (method == 'addMarker') addMarkerMessage = message;
+            return pigeonReply(null);
+          },
+        );
+      }
+
+      final controller = AndroidMapController.withPosition(
+        initPosition: GeoPoint(latitude: 1, longitude: 2),
+        transportFactory: (_) => transport,
+        useTypedMarkers: true,
+      );
+      // The attach-time probe runs on the per-view legacy channel, which the
+      // platform registry only knows after init.
+      await (OSMPlatform.instance as MethodChannelOSM).init(viewId);
+      await controller.attachAndroidMap(viewId);
+      transport.emit(AndroidMapReady(viewId: viewId, isReady: true));
+      await controller.ready;
+
+      final icon = Uint8List.fromList([7, 8, 9]);
+      final marker = await controller.markers.add(
+        GeoPoint(latitude: 48.85, longitude: 2.35),
+        iconBytes: icon,
+      );
+      await controller.markers.updateIcon(marker, icon);
+      await controller.camera.setZoom(13);
+
+      // Marker commands cross the generated channel; camera stays on the
+      // selected base transport (the fake records it, not the wire).
+      expect(pigeonCalls, ['addMarker', 'updateMarkerIcon']);
+      expect(transport.zoom, 13);
+      // Wire check: stable id, position, and raw image bytes in one message.
+      final args = const _PigeonSessionCodec()
+          .decodeMessage(addMarkerMessage)! as List<Object?>;
+      expect(args[0], isA<generated.NativeCameraSession>());
+      expect(args[1], marker.value);
+      expect(args[2], 48.85);
+      expect(args[3], 2.35);
+      expect(args[4], icon);
+
+      await controller.dispose();
+      expect(transport.closeCount, 1);
+
+      messenger.setMockMethodCallHandler(legacyChannel, null);
+      for (final method in ['addMarker', 'updateMarkerIcon']) {
+        messenger.setMockMessageHandler(
+          'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkersApi.'
+          '$method.view_$viewId',
+          null,
+        );
+      }
     });
 
     test('routes Phase 5 location commands after foreground permission',
@@ -522,6 +651,8 @@ final class FakeAndroidMapTransport implements AndroidMapTransport {
   double? rotation;
   final Map<MarkerId, GeoPoint> markers = {};
   final Map<MarkerId, Uint8List> markerIcons = {};
+  final Map<MarkerId, double> rotations = {};
+  final Map<MarkerId, IconAnchor> anchors = {};
   final Set<ShapeId> shapes = {};
   final Map<StaticPositionId, List<GeoPoint>> staticPositions = {};
   final Map<RoadId, List<GeoPoint>> roads = {};
@@ -584,6 +715,8 @@ final class FakeAndroidMapTransport implements AndroidMapTransport {
     MarkerId markerId,
     GeoPoint position, {
     Uint8List? iconBytes,
+    double angleDegrees = 0,
+    IconAnchor? anchor,
   }) async {
     markers[markerId] = position;
     if (iconBytes != null) markerIcons[markerId] = iconBytes;
@@ -600,6 +733,21 @@ final class FakeAndroidMapTransport implements AndroidMapTransport {
     Uint8List iconBytes,
   ) async {
     markerIcons[markerId] = iconBytes;
+  }
+
+  @override
+  Future<void> moveMarker(MarkerId markerId, GeoPoint position) async {
+    markers[markerId] = position;
+  }
+
+  @override
+  Future<void> rotateMarker(MarkerId markerId, double angleDegrees) async {
+    rotations[markerId] = angleDegrees;
+  }
+
+  @override
+  Future<void> setMarkerAnchor(MarkerId markerId, IconAnchor anchor) async {
+    anchors[markerId] = anchor;
   }
 
   @override
@@ -739,5 +887,19 @@ final class FakeAndroidMapTransport implements AndroidMapTransport {
     _closed = true;
     closeCount += 1;
     await _events.close();
+  }
+}
+
+/// Test replica of the generated markers codec (session marker 129) to
+/// decode typed-route messages recorded by the mocks above.
+class _PigeonSessionCodec extends StandardMessageCodec {
+  const _PigeonSessionCodec();
+
+  @override
+  Object? readValueOfType(int type, ReadBuffer buffer) {
+    if (type == 129) {
+      return generated.NativeCameraSession.decode(readValue(buffer)!);
+    }
+    return super.readValueOfType(type, buffer);
   }
 }

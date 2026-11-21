@@ -162,6 +162,16 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         onMapIsReady: widget.onMapIsReady,
                         enableRotationByGesture:
                             widget.osmOption.enableRotationByGesture,
+                        useTypedCameraRoute:
+                            widget.osmOption.useTypedCameraRoute,
+                        useTypedMarkers:
+                            widget.osmOption.useTypedMarkers,
+                        useTypedLayers: widget.osmOption.useTypedLayers,
+                        useTypedShapes: widget.osmOption.useTypedShapes,
+                        useTypedRoads: widget.osmOption.useTypedRoads,
+                        useTypedLocation: widget.osmOption.useTypedLocation,
+                        useTypedLocationUpdates: widget.osmOption.useTypedLocationUpdates,
+                  useTypedTracking: widget.osmOption.useTypedTracking,
                       ),
                     ),
                     Positioned.fill(
@@ -210,6 +220,15 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   onMapIsReady: widget.onMapIsReady,
                   enableRotationByGesture:
                       widget.osmOption.enableRotationByGesture,
+                  useTypedCameraRoute:
+                      widget.osmOption.useTypedCameraRoute,
+                  useTypedMarkers: widget.osmOption.useTypedMarkers,
+                  useTypedLayers: widget.osmOption.useTypedLayers,
+                  useTypedShapes: widget.osmOption.useTypedShapes,
+                  useTypedRoads: widget.osmOption.useTypedRoads,
+                  useTypedLocation: widget.osmOption.useTypedLocation,
+                  useTypedLocationUpdates: widget.osmOption.useTypedLocationUpdates,
+                  useTypedTracking: widget.osmOption.useTypedTracking,
                 ),
         ),
         if (widget.osmOption.showContributorBadgeForOSM && !kIsWeb) ...[

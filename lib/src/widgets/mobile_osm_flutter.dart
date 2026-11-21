@@ -44,6 +44,14 @@ class const MobileOsmFlutter({
   this.onMapIsReady,
   this.userLocationMarker,
   this.enableRotationByGesture = false,
+  this.useTypedCameraRoute = false,
+  this.useTypedMarkers = false,
+  this.useTypedLayers = false,
+  this.useTypedShapes = false,
+  this.useTypedRoads = false,
+  this.useTypedLocation = false,
+  this.useTypedLocationUpdates = false,
+  this.useTypedTracking = false,
 }) extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -65,6 +73,25 @@ class const MobileOsmFlutter({
   final Function(bool)? onMapIsReady;
   final UserLocationMaker? userLocationMarker;
   final bool enableRotationByGesture;
+  /// Opt-in routing of camera commands through the typed generated channel.
+  final bool useTypedCameraRoute;
+  /// Opt-in routing of marker commands through the typed generated channel.
+  final bool useTypedMarkers;
+  /// Opt-in routing of layer commands through the typed generated channel.
+  final bool useTypedLayers;
+  /// Opt-in routing of shape commands through the typed generated channel.
+  final bool useTypedShapes;
+  /// Opt-in routing of road commands through the typed generated channel.
+  final bool useTypedRoads;
+  /// Opt-in routing of location commands through the typed generated channel.
+  final bool useTypedLocation;
+  /// Opt-in routing of continuous-updates commands through the typed
+  /// generated channel.
+  final bool useTypedLocationUpdates;
+
+  /// Opt-in routing of follow-me tracking through the generated channel
+  /// when the native host advertises the `location.tracking` capability.
+  final bool useTypedTracking;
   final ZoomOption zoomOption;
   @override
   MobileOsmFlutterState createState() => MobileOsmFlutterState();

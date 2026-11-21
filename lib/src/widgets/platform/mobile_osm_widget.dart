@@ -25,6 +25,14 @@ Widget getWidget({
   UserLocationMaker? userLocationMarker,
   Function(bool)? onMapIsReady,
   bool enableRotationByGesture = false,
+  bool useTypedCameraRoute = false,
+  bool useTypedMarkers = false,
+  bool useTypedLayers = false,
+  bool useTypedShapes = false,
+  bool useTypedRoads = false,
+  bool useTypedLocation = false,
+  bool useTypedLocationUpdates = false,
+  bool useTypedTracking = false,
 }) => MobileOsmFlutter(
   controller: controller,
   userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
@@ -47,6 +55,13 @@ Widget getWidget({
   userLocationMarker: userLocationMarker,
   zoomOption: zoomOption,
   enableRotationByGesture: enableRotationByGesture,
+  useTypedMarkers: useTypedMarkers,
+  useTypedLayers: useTypedLayers,
+  useTypedShapes: useTypedShapes,
+  useTypedRoads: useTypedRoads,
+  useTypedLocation: useTypedLocation,
+  useTypedLocationUpdates: useTypedLocationUpdates,
+  useTypedTracking: useTypedTracking,
 );
 
 class const OSMMapWidget({
@@ -71,6 +86,14 @@ class const OSMMapWidget({
   this.isPicker = false,
   this.showContributorBadgeForOSM = false,
   this.enableRotationByGesture = false,
+    this.useTypedCameraRoute = false,
+    this.useTypedMarkers = false,
+    this.useTypedLayers = false,
+    this.useTypedShapes = false,
+    this.useTypedRoads = false,
+    this.useTypedLocation = false,
+    this.useTypedLocationUpdates = false,
+    this.useTypedTracking = false,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -92,6 +115,14 @@ class const OSMMapWidget({
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final bool enableRotationByGesture;
+  final bool useTypedCameraRoute;
+  final bool useTypedMarkers;
+  final bool useTypedLayers;
+  final bool useTypedShapes;
+  final bool useTypedRoads;
+  final bool useTypedLocation;
+  final bool useTypedLocationUpdates;
+  final bool useTypedTracking;
   @override
   Widget build(BuildContext context) {
     return MobileOsmFlutter(
@@ -116,6 +147,14 @@ class const OSMMapWidget({
       userLocationMarker: userLocationMarker,
       zoomOption: zoomOption,
       enableRotationByGesture: enableRotationByGesture,
+      useTypedCameraRoute: useTypedCameraRoute,
+      useTypedMarkers: useTypedMarkers,
+      useTypedLayers: useTypedLayers,
+      useTypedShapes: useTypedShapes,
+      useTypedRoads: useTypedRoads,
+      useTypedLocation: useTypedLocation,
+      useTypedLocationUpdates: useTypedLocationUpdates,
+      useTypedTracking: useTypedTracking,
     );
   }
 }

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import hamza.dali.flutter_osm_plugin.mapscore.MapEventSink
 import hamza.dali.flutter_osm_plugin.mapscore.MapSession
+import hamza.dali.flutter_osm_plugin.mapscore.models.Anchor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -180,6 +181,8 @@ private class FakeMapSession(
 
     override fun getZoomSnapshot(): Double? = null
 
+    override fun getCameraPositionSnapshot(): DoubleArray? = null
+
     override fun moveTo(latitude: Double, longitude: Double, animate: Boolean): Boolean {
         lastLatitude = latitude
         lastMoveAnimation = animate
@@ -188,11 +191,39 @@ private class FakeMapSession(
 
     override fun setRotation(angle: Double, animate: Boolean): Boolean = true
 
+    override fun getBoundsSnapshot(): DoubleArray? = null
+
+    override fun zoomToBoundingBox(
+        north: Double,
+        south: Double,
+        east: Double,
+        west: Double,
+        paddingInPixel: Int,
+    ): Boolean = true
+
+    override fun setBoundsLimit(
+        north: Double,
+        east: Double,
+        south: Double,
+        west: Double,
+    ): Boolean = true
+
+    override fun removeBoundsLimit(): Boolean = true
+
+    override fun configureZoom(
+        initZoom: Double,
+        minZoomLevel: Double,
+        maxZoomLevel: Double,
+        stepZoom: Double,
+    ): Boolean = true
+
     override fun addMarker(
         markerId: String,
         latitude: Double,
         longitude: Double,
         icon: ByteArray?,
+        angleDegrees: Double,
+        anchor: Anchor?,
     ): Boolean {
         lastMarkerId = markerId
         return true
@@ -204,6 +235,12 @@ private class FakeMapSession(
     }
 
     override fun updateMarkerIcon(markerId: String, icon: ByteArray): Boolean = true
+
+    override fun moveMarker(markerId: String, latitude: Double, longitude: Double): Boolean = true
+
+    override fun rotateMarker(markerId: String, angleDegrees: Double): Boolean = true
+
+    override fun setMarkerAnchor(markerId: String, anchor: Anchor): Boolean = true
 
     override fun removeMarker(markerId: String): Boolean = false
 
@@ -235,6 +272,10 @@ private class FakeMapSession(
     override fun removeShape(shapeId: String): Boolean = true
 
     override fun clearShapes(): Boolean = true
+
+    override fun removeCircles(): Boolean = true
+
+    override fun removeRectangles(): Boolean = true
 
     override fun setStaticPositions(
         groupId: String,
@@ -285,6 +326,29 @@ private class FakeMapSession(
         overlaysVisible = visible
         return true
     }
+
+    override fun enableUserLocationLayer(): Boolean = true
+
+    override fun requestLocationFix(listener: MapSession.LocationFixListener) = Unit
+
+    override fun startLocationUpdates(listener: MapSession.LocationCommandListener) {
+        listener.onComplete(null, null)
+    }
+
+    override fun stopLocationUpdates() = Unit
+
+
+    override fun enableTracking(
+        stopFollowInDrag: Boolean,
+        disableMarkerRotation: Boolean,
+        useDirectionMarker: Boolean,
+        anchor: List<Double>,
+        listener: MapSession.LocationCommandListener,
+    ) {
+        listener.onComplete(null, null)
+    }
+
+    override fun disableTracking() = Unit
 
     override fun emitAcknowledgement(requestId: String, operation: String) = Unit
 

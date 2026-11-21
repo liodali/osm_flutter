@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
@@ -75,12 +76,16 @@ final class MethodChannelAndroidMapTransport implements AndroidMapTransport {
     MarkerId markerId,
     GeoPoint position, {
     Uint8List? iconBytes,
+    double angleDegrees = 0,
+    IconAnchor? anchor,
   }) =>
       _invokeVoid('addMarker', 'android#marker#add', {
         'markerId': markerId.value,
         'lat': position.latitude,
         'lon': position.longitude,
         if (iconBytes != null) 'icon': iconBytes,
+        'angle': angleDegrees,
+        if (anchor != null) 'iconAnchor': [anchor.anchor.value.$1, anchor.anchor.value.$2],
       });
 
   @override
@@ -103,6 +108,28 @@ final class MethodChannelAndroidMapTransport implements AndroidMapTransport {
       _invokeVoid('updateMarkerIcon', 'android#marker#icon', {
         'markerId': markerId.value,
         'icon': iconBytes,
+      });
+
+  @override
+  Future<void> moveMarker(MarkerId markerId, GeoPoint position) =>
+      _invokeVoid('moveMarker', 'android#marker#move', {
+        'markerId': markerId.value,
+        'lat': position.latitude,
+        'lon': position.longitude,
+      });
+
+  @override
+  Future<void> rotateMarker(MarkerId markerId, double angleDegrees) =>
+      _invokeVoid('rotateMarker', 'android#marker#rotate', {
+        'markerId': markerId.value,
+        'angle': angleDegrees,
+      });
+
+  @override
+  Future<void> setMarkerAnchor(MarkerId markerId, IconAnchor anchor) =>
+      _invokeVoid('setMarkerAnchor', 'android#marker#anchor', {
+        'markerId': markerId.value,
+        'iconAnchor': [anchor.anchor.value.$1, anchor.anchor.value.$2],
       });
 
   @override
@@ -170,11 +197,12 @@ final class MethodChannelAndroidMapTransport implements AndroidMapTransport {
   }) =>
       _invokeVoid('setStaticPositions', 'android#static#set', {
         'groupId': groupId.value,
+        // Typed static-position coordinates carry degrees.
         'coordinates': [
           for (final point in positions) ...[
             point.latitude,
             point.longitude,
-            point is GeoPointWithOrientation ? point.angle : 0.0,
+            point is GeoPointWithOrientation ? point.angle * 180 / math.pi : 0.0,
           ],
         ],
         if (iconBytes != null) 'icon': iconBytes,

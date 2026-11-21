@@ -30,6 +30,27 @@ class MapSession: NSObject {
     var customTiles: CustomTiles? = nil
     var boundingbox: BoundingBox? = nil
     let channel: FlutterMethodChannel
+    /// Factory-provided messenger retained for generated-route registration.
+    let binaryMessenger: FlutterBinaryMessenger
+    /// Platform view id (also used to derive per-map generated channel suffixes).
+    let viewId: Int64
+    /// Minted per session; guards generated routes against reused view ids.
+    let sessionToken: String = UUID().uuidString
+    /// Bumped when the underlying view is replaced; C1 keeps it at 0.
+    let generation: Int64 = 0
+    /// Last rotation applied through the typed service or legacy decode.
+    /// OSMView exposes no rotation getter, so the session tracks its own.
+    var lastAppliedRotation: Double = 0
+    /// Generated camera route living alongside the legacy channel handler.
+    private(set) var cameraBridge: PigeonCameraBridge?
+    /// Generated markers route living alongside the legacy channel handler.
+    private(set) var markersBridge: PigeonMarkersBridge?
+    private(set) var layersBridge: PigeonLayersBridge?
+    private(set) var shapesBridge: PigeonShapesBridge?
+    private(set) var roadsBridge: PigeonRoadsBridge?
+    private(set) var locationBridge: PigeonLocationBridge?
+    private(set) var locationUpdatesBridge: PigeonLocationUpdatesBridge?
+    private(set) var trackingBridge: PigeonTrackingBridge?
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -38,6 +59,155 @@ class MapSession: NSObject {
     var resultFlutter: FlutterResult? = nil
     @MainActor
     var storedRoads: [String: StoredRoad] = [:]
+
+    // MARK: - Typed location state (shared slot with the legacy request)
+
+    /// Outcome of one pending location request; completes exactly once.
+    enum LocationFixOutcome {
+        case fixed(latitude: Double, longitude: Double)
+        case failed(code: String, message: String?)
+    }
+
+    typealias LocationFixCompletion = (LocationFixOutcome) -> Void
+
+    /// Pending generated fix request. Mutual exclusion with the legacy
+    /// `resultFlutter` slot: a legacy and a generated request can never run
+    /// in parallel by accident.
+    var pendingLocationFixCompletion: LocationFixCompletion?
+
+    var locationFixTimeoutWorkItem: DispatchWorkItem?
+
+    /// Parity with the Android manager's `LOCATION_FIX_TIMEOUT_MILLIS`.
+    var locationFixTimeoutSeconds: Double = 15.0
+
+    /// Pending continuous-updates start completion: only armed around the
+    /// synchronous toggleTracking call so a denial reported through the
+    /// permission callback routes to the start completion, not to a fix.
+    var startingUpdatesCompletion: LocationCommandCompletion?
+
+    /// Test seam over the framework updates toggle. The default closure
+    /// drives the real CLLocationManager; session tests install a recorder
+    /// so no authorization prompt is ever raised and no live GPS is used —
+    /// simulated fixes arrive at fixed coordinates through locationChanged.
+    internal(set) lazy var locationUpdatesToggle: (Bool) -> Void = { [weak self] start in
+        guard let self = self else { return }
+        if start {
+            if !self.mapOSM.locationManager.isTrackingEnabled() {
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: TrackConfiguration(moveMap: true, controlUserMarker: false))
+            } else {
+                // The framework is already armed by follow-me tracking:
+                // reconcile updates semantics (no framework marker
+                // control) through the stop-and-retoggle cycle instead of
+                // skipping configuration entirely.
+                let updatesConfiguration = TrackConfiguration(
+                    moveMap: true, controlUserMarker: false)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: updatesConfiguration)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: updatesConfiguration)
+            }
+        } else {
+            self.mapOSM.locationManager.stopLocation()
+        }
+    }
+
+    /// Test seam over the framework single-shot request. Default drives
+    /// the real CLLocationManager; tests install a no-op.
+    internal(set) lazy var locationSingleShotRequest: () -> Void = { [weak self] in
+        self?.mapOSM.locationManager.requestSingleLocation()
+    }
+
+    /// Test seam over the framework enable-location entry (authorization
+    /// prompt + my-location layer). Default drives the real
+    /// CLLocationManager; tests install a no-op.
+    internal(set) lazy var locationEnableRequest: () -> Void = { [weak self] in
+        self?.mapOSM.locationManager.requestEnableLocation()
+    }
+
+    /// Test seam over the user-location icon anchor configuration. The
+    /// default closure drives the framework's icon configuration; tests
+    /// install a no-op (the framework rejects configuration in idle
+    /// phase).
+    internal(set) lazy var trackingAnchorConfigurator: (Double, Double) -> Void = { [weak self] x, y in
+        guard let self = self else { return }
+        let markerAnchor = AnchorGeoPoint(anchor: (x: x, y: y)).compute()
+        let icons = self.mapOSM.locationManager.userLocationIconConfiguration
+        self.mapOSM.locationManager.setUserLocationIcons(
+            userLocationIcons: icons.copyWith(
+                userIcon: icons.userIcon.copyWith(anchor: markerAnchor),
+                directionIcon: icons.directionIcon?.copyWith(anchor: markerAnchor)))
+    }
+
+    /// Tracking configuration captured by the typed start; the framework
+    /// toggle seam reads it when it arms tracking.
+    var trackingDisableMarkerRotation = false
+    var trackingUseDirectionMarker = false
+
+    /// Test seam over the framework tracking toggle. The default closure
+    /// drives the real CLLocationManager with the captured tracking
+    /// configuration; session tests install a recorder/stateful fake so
+    /// no authorization prompt is ever raised and no live GPS is used.
+    /// The stop side reconciles consumers: continuous updates and pending
+    /// one-shot fixes keep the manager running (shared subscription).
+    internal(set) lazy var trackingToggle: (Bool) -> Void = { [weak self] start in
+        guard let self = self else { return }
+        if start {
+            if !self.mapOSM.locationManager.isTrackingEnabled() {
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: TrackConfiguration(
+                        moveMap: true,
+                        useDirectionMarker: self.trackingUseDirectionMarker,
+                        disableMarkerRotation: self.trackingDisableMarkerRotation))
+            } else {
+                // The framework is already armed by continuous updates.
+                // Its marker fields are private and toggleTracking
+                // early-outs (stops) while armed, so the only
+                // reconfiguration surface is a stop-and-retoggle cycle:
+                // the first call stops the stream, the second restarts it
+                // (authorization is guaranteed - the framework was
+                // armed) applying tracking's marker configuration.
+                let trackingConfiguration = TrackConfiguration(
+                    moveMap: true,
+                    useDirectionMarker: self.trackingUseDirectionMarker,
+                    disableMarkerRotation: self.trackingDisableMarkerRotation)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: trackingConfiguration)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: trackingConfiguration)
+            }
+        } else {
+            if self.updatesActive {
+                // Continuous updates keep the stream: restore their
+                // marker semantics (no direction marker, no framework
+                // marker control) through the same stop-and-retoggle
+                // cycle instead of stopping the subscription outright.
+                let updatesConfiguration = TrackConfiguration(
+                    moveMap: true, controlUserMarker: false)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: updatesConfiguration)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: updatesConfiguration)
+            } else if !self.hasPendingLocationRequest {
+                self.mapOSM.locationManager.stopLocation()
+            }
+        }
+    }
+
+    /// Continuous-updates consumer ownership (typed and legacy routes).
+    /// The framework's tracking flag cannot distinguish this consumer from
+    /// follow-me tracking, so ownership is tracked here.
+    var updatesActive = false
+
+    /// Follow-me (trackMe) consumer ownership.
+    var trackMeActive = false
+
+    /// Monotonic identity of the current location request. Deadline work
+    /// items capture the epoch they were armed for and become no-ops when
+    /// a newer request owns the slot, so a stale timer can never expire a
+    /// newer request prematurely. Internal set: tests simulate stale
+    /// timers by rewinding the epoch.
+    internal(set) var locationRequestEpoch = 0
     var isMovedToLocation: Bool = false
     var canSkipFollow: Bool = false
     var userLocationWithoutControl: Bool = false
@@ -45,6 +215,16 @@ class MapSession: NSObject {
     let defaultMarker: String?
     private(set) var latestUserLocation: CLLocationCoordinate2D? = nil
     private var isDisposed: Bool = false
+    /// Stable marker id → current coordinate for the typed markers route.
+    /// Legacy additions mint UUID ids here too, so both routes share one
+    /// identity registry while the native view keeps matching markers by
+    /// coordinate equality (Apple's coordinate-based identity).
+    var typedMarkerCoordinates: [String: CLLocationCoordinate2D] = [:]
+    /// Registration order of the stable ids. Dictionary iteration order is
+    /// unspecified, but the native `MarkerManager` matches markers by array
+    /// order (first inserted wins), so "first id at a coordinate" must be
+    /// resolved through this list to stay consistent with the native view.
+    var typedMarkerOrder: [String] = []
     /// Results of in-flight road commands; completed exactly once and failed
     /// collectively on disposal so the Dart futures can never hang.
     private var outstandingRoadResults: [(id: String, result: FlutterResult)] = []
@@ -115,12 +295,53 @@ class MapSession: NSObject {
         markerScaleRecords.removeValue(forKey: Self.markerScaleKey(coordinate))
     }
 
+    /// Exact record for a coordinate (never reconstructed from the key).
+    private func storedMarkerScaleRecord(at coordinate: CLLocationCoordinate2D) -> MarkerScaleRecord? {
+        markerScaleRecords[Self.markerScaleKey(coordinate)]
+    }
+
+    /// Reads the recorded angle of the marker at a coordinate, keeping the
+    /// scale record consistent when a typed move preserves the angle.
+    func markerScaleRecordAngle(at coordinate: CLLocationCoordinate2D) -> Float? {
+        storedMarkerScaleRecord(at: coordinate)?.angle
+    }
+
+    /// Reads the recorded anchor arguments of the marker at a coordinate.
+    func markerScaleRecordAnchorArgs(at coordinate: CLLocationCoordinate2D) -> [String: Any]? {
+        storedMarkerScaleRecord(at: coordinate)?.anchorArgs
+    }
+
     func recordStaticPoiIcon(id: String, bitmapArgs: [String: Any]) {
         staticPoiIconArgs[id] = bitmapArgs
     }
 
     func storedStaticPoiIconArgs(id: String) -> [String: Any]? {
         staticPoiIconArgs[id]
+    }
+
+    func clearStaticPoiIcon(id: String) {
+        staticPoiIconArgs.removeValue(forKey: id)
+    }
+
+    /// Records a typed rotation into the existing scale record so display
+    /// refreshes re-apply the new angle (the rest of the record is kept).
+    func updateMarkerAngleScaleRecord(at coordinate: CLLocationCoordinate2D, angle: Float) {
+        let key = Self.markerScaleKey(coordinate)
+        guard var record = markerScaleRecords[key] else {
+            return
+        }
+        record.angle = angle
+        markerScaleRecords[key] = record
+    }
+
+    /// Records a typed anchor into the existing scale record.
+    func updateMarkerAnchorScaleRecord(at coordinate: CLLocationCoordinate2D, anchor: MarkerAnchor) {
+        let key = Self.markerScaleKey(coordinate)
+        guard var record = markerScaleRecords[key] else {
+            return
+        }
+        record.anchorArgs = ["x": anchor.x, "y": anchor.y]
+        markerScaleRecords[key] = record
     }
     #endif
 
@@ -130,9 +351,11 @@ class MapSession: NSObject {
     }
 
     init(
-        _ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel, args: Any?,
+        _ frame: CGRect, viewId: Int64, channel: FlutterMethodChannel,
+        binaryMessenger: FlutterBinaryMessenger, args: Any?,
         defaultPin: String?
     ) {
+        self.binaryMessenger = binaryMessenger
         var initLocation: CLLocationCoordinate2D?
         var enableRotationGesture = false
         defaultMarker = defaultPin
@@ -169,8 +392,35 @@ class MapSession: NSObject {
             rect: frame, location: initLocation, zoomConfig: self.zoomConfig,
             mapTileConfiguration: configuration)
         self.channel = channel
+        self.viewId = viewId
         super.init()
         self.mapOSM.enableRotation(enable: enableRotationGesture)
+        // Generated camera and markers endpoints live alongside the legacy
+        // channel handler; they never replace it.
+        let bridge = PigeonCameraBridge(session: self)
+        bridge.register(messenger: binaryMessenger, viewId: viewId)
+        cameraBridge = bridge
+        let markers = PigeonMarkersBridge(session: self)
+        markers.register(messenger: binaryMessenger, viewId: viewId)
+        markersBridge = markers
+        let layers = PigeonLayersBridge(session: self)
+        layers.register(messenger: binaryMessenger, viewId: viewId)
+        layersBridge = layers
+        let shapes = PigeonShapesBridge(session: self)
+        shapes.register(messenger: binaryMessenger, viewId: viewId)
+        shapesBridge = shapes
+        let roads = PigeonRoadsBridge(session: self)
+        roads.register(messenger: binaryMessenger, viewId: viewId)
+        roadsBridge = roads
+        let location = PigeonLocationBridge(session: self)
+        location.register(messenger: binaryMessenger, viewId: viewId)
+        locationBridge = location
+        let updates = PigeonLocationUpdatesBridge(session: self)
+        updates.register(messenger: binaryMessenger, viewId: viewId)
+        locationUpdatesBridge = updates
+        let tracking = PigeonTrackingBridge(session: self)
+        tracking.register(messenger: binaryMessenger, viewId: viewId)
+        trackingBridge = tracking
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -284,6 +534,22 @@ class MapSession: NSObject {
             return
         }
         isDisposed = true
+        cameraBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        cameraBridge = nil
+        markersBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        markersBridge = nil
+        layersBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        layersBridge = nil
+        shapesBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        shapesBridge = nil
+        roadsBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        roadsBridge = nil
+        locationBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        locationBridge = nil
+        locationUpdatesBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        locationUpdatesBridge = nil
+        trackingBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        trackingBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil
@@ -291,11 +557,15 @@ class MapSession: NSObject {
         mapOSM.roadTapHandlerDelegate = nil
         mapOSM.onMapMove = nil
         mapOSM.locationManager.stopLocation()
-        if let pendingResult = resultFlutter {
-            pendingResult(
-                FlutterError(code: "disposed", message: "map was disposed", details: nil))
-        }
-        resultFlutter = nil
+        // Disposal completes any pending location request (typed or
+        // legacy) exactly once; deferred stops are moot afterwards.
+        stopUpdatesWhenFixCompletes = false
+        stopTrackingWhenFixCompletes = false
+        updatesActive = false
+        trackMeActive = false
+        startingUpdatesCompletion = nil
+        startingTrackingCompletion = nil
+        failPendingLocationRequest(code: "disposed", message: "map was disposed")
         let pendingRoads = outstandingRoadResults
         outstandingRoadResults.removeAll()
         for entry in pendingRoads {
@@ -365,27 +635,315 @@ class MapSession: NSObject {
             self.mapOSM.locationManager.moveToUserLocation(animated: true)
         }
 
+        // A pending generated fix wins the single location slot; the
+        // legacy pending result keeps its own completion otherwise.
+        if pendingLocationFixCompletion != nil {
+            completeLocationFix(.fixed(latitude: userLocation.latitude, longitude: userLocation.longitude))
+            return
+        }
         if let result = resultFlutter {
+            // Success cancels the request's deadline; an armed timer left
+            // behind could otherwise expire a newer request prematurely.
+            locationFixTimeoutWorkItem?.cancel()
+            locationFixTimeoutWorkItem = nil
             result(geoMap)
             resultFlutter = nil
+            endDeferredUpdatesStopIfNeeded()
+            endDeferredTrackingStopIfNeeded()
         }
     }
 
     func handlePermission(state: OSMFlutterFramework.LocationPermission) {
         if state == LocationPermission.NotGranted {
             // Authorization denied or restricted: complete any pending
-            // `user#position` request with a permission error so `myLocation()`
-            // — and the withUserPosition initialization waiting on it — fails
-            // clearly instead of hanging forever.
-            if let pendingResult = resultFlutter {
-                resultFlutter = nil
-                pendingResult(
-                    FlutterError(
-                        code: "permission",
-                        message: "location permission was not granted",
-                        details: nil))
+            // fix request exactly once with a permission error so
+            // `myLocation()` — and the withUserPosition initialization
+            // waiting on it — fails clearly instead of hanging forever.
+            // Permission denial is handled independently per consumer:
+            //
+            // 1. An in-flight updates start (synchronous framework denial)
+            //    completes with permission_denied and rolls back its
+            //    ownership.
+            // 2. Any pending one-shot fix fails with its own denial code.
+            // 3. Updates ownership resets unconditionally: updates cannot
+            //    run without permission, so a denial of the authorization
+            //    prompt - which arrives after an initiated start already
+            //    completed - still resets ownership and a retry genuinely
+            //    re-attempts instead of reporting stale success.
+            // 4. The framework's tracking flag resets too (through the
+            //    toggle seam): a start that reached toggleTracking arms it,
+            //    and a stale armed flag makes the native retry skip the
+            //    toggle and report success without running updates.
+            updatesActive = false
+            userLocationWithoutControl = false
+            if let startCompletion = startingUpdatesCompletion {
+                startingUpdatesCompletion = nil
+                startCompletion("permission_denied", "location permission was not granted")
             }
+            // 3b. An in-flight tracking start completes with
+            //     permission_denied and rolls back its ownership;
+            //     tracking ownership resets unconditionally because
+            //     permission is a prerequisite for tracking at all.
+            trackMeActive = false
+            if let trackingStart = startingTrackingCompletion {
+                startingTrackingCompletion = nil
+                trackingStart("permission_denied", "location permission was not granted")
+            }
+            failPendingLocationRequest(
+                code: "permission_denied",
+                message: "location permission was not granted",
+                legacyCode: "permission")
+            // The framework tracking state resets through the toggle
+            // seam (shared flag for updates and tracking): a stale armed
+            // flag makes any native retry skip the toggle and report
+            // success without running updates or following.
+            locationUpdatesToggle(false)
         }
+    }
+
+    // MARK: - Typed location operations
+
+    /// Enables the my-location layer, mirroring the legacy
+    /// `currentLocation` handler: fire-and-forget enable; the framework
+    /// prompts when authorization requires it. Denial surfaces through the
+    /// permission callback, not as a hang.
+    func typedShowMyLocation() {
+        mapOSM.locationManager.requestEnableLocation()
+    }
+
+    /// Whether a location request is pending, typed or legacy. One guard
+    /// owns both slots: they can never be occupied at the same time.
+    var hasPendingLocationRequest: Bool {
+        pendingLocationFixCompletion != nil || resultFlutter != nil
+    }
+
+    /// Single-shot current position. Completes exactly once — on fix,
+    /// permission denial, timeout, disposal; overlapping requests (typed
+    /// or legacy) fail immediately instead of overwriting the pending
+    /// slot.
+    func typedRequestLocationFix(completion: @escaping LocationFixCompletion) {
+        if hasPendingLocationRequest {
+            completion(.failed(code: "location_request_in_progress", message: nil))
+            return
+        }
+        pendingLocationFixCompletion = completion
+        locationRequestEpoch += 1
+        scheduleLocationFixTimeout()
+        locationSingleShotRequest()
+    }
+
+    /// Legacy `user#position` shares the single ownership guard and the
+    /// deadline with the generated route: an overlapping request fails
+    /// immediately (its FlutterResult receives the error verbatim), the
+    /// stash happens only after the guard passes, and the timeout covers
+    /// legacy waits exactly like typed ones.
+    func beginLegacyLocationFix(_ result: @escaping FlutterResult) {
+        if hasPendingLocationRequest {
+            result(
+                FlutterError(
+                    code: "location_request_in_progress",
+                    message: "Another location request is already pending for this map.",
+                    details: nil))
+            return
+        }
+        resultFlutter = result
+        locationRequestEpoch += 1
+        scheduleLocationFixTimeout()
+        locationSingleShotRequest()
+    }
+
+    /// Fails whichever pending location request exists (typed or legacy)
+    /// exactly once, cancels the deadline, and ignores late calls. The
+    /// legacy route keeps its historical error code when one is provided.
+    @discardableResult
+    func failPendingLocationRequest(
+        code: String, message: String?, legacyCode: String? = nil
+    ) -> Bool {
+        if pendingLocationFixCompletion != nil {
+            completeLocationFix(.failed(code: code, message: message))
+            return true
+        }
+        if let result = resultFlutter {
+            resultFlutter = nil
+            locationFixTimeoutWorkItem?.cancel()
+            locationFixTimeoutWorkItem = nil
+            result(
+                FlutterError(
+                    code: legacyCode ?? code,
+                    message: message ?? "",
+                    details: nil))
+            endDeferredUpdatesStopIfNeeded()
+            endDeferredTrackingStopIfNeeded()
+            return true
+        }
+        return false
+    }
+
+    /// Arms the single-shot deadline. Exposed separately so tests can
+    /// exercise the timeout without touching the real location manager.
+    func scheduleLocationFixTimeout() {
+        let armedEpoch = locationRequestEpoch
+        let workItem = DispatchWorkItem { [weak self] in
+            // Request-identity binding: a timer armed for an older request
+            // must never fail a newer one.
+            guard let self = self, self.locationRequestEpoch == armedEpoch else { return }
+            _ = self.failPendingLocationRequest(
+                code: "location_timeout",
+                message: "timed out waiting for a location fix")
+        }
+        locationFixTimeoutWorkItem = workItem
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + locationFixTimeoutSeconds, execute: workItem)
+    }
+
+    /// Outcome callback for location commands that can only fail. A nil
+    /// failure code means success; the callback fires exactly once.
+    typealias LocationCommandCompletion = (String?, String?) -> Void
+
+    /// Starts continuous user-location updates without follow control.
+    /// Idempotent; completes exactly once. When authorization is already
+    /// denied, the framework reports it synchronously through the
+    /// permission callback and the completion carries `permission_denied`;
+    /// when a prompt is required, the completion reports the initiated
+    /// flow and the outcome keeps flowing on the existing channels.
+    func typedStartLocationUpdates(completion: @escaping LocationCommandCompletion) {
+        // Idempotent: the updates consumer already owns updates.
+        if updatesActive {
+            completion(nil, nil)
+            return
+        }
+        // Updates mode owns the camera on two levels: the session skips
+        // its recenter (userLocationWithoutControl), and the framework
+        // skips its own recenter — its controlMapFromOutSide knob is
+        // configured from moveMap, so updates mode arms it with true.
+        // (The pinned framework recenters on every update when the knob
+        // is false, independently of userLocationWithoutControl.)
+        userLocationWithoutControl = true
+        updatesActive = true
+        startingUpdatesCompletion = completion
+        locationUpdatesToggle(true)
+        // A synchronous denial was routed by handlePermission and cleared
+        // the slot; otherwise the flow is initiated.
+        if let pending = startingUpdatesCompletion {
+            startingUpdatesCompletion = nil
+            pending(nil, nil)
+        }
+    }
+
+    /// Pending tracking start completion: only armed around the
+    /// synchronous toggle call so a denial reported through the
+    /// permission callback routes to the start completion, not to a fix.
+    var startingTrackingCompletion: LocationCommandCompletion?
+
+    /// Starts follow-me tracking. Idempotent; completes exactly once.
+    /// Mirrors legacy `trackMe`: without stop-follow-on-drag the gesture
+    /// skip resets and the enable-location entry runs (authorization
+    /// prompt included), both user and direction icons take the anchor,
+    /// and the framework toggle arms the captured configuration. A
+    /// synchronous denial routes through the permission callback and the
+    /// completion carries `permission_denied`; a prompt flow reports
+    /// initiated.
+    func typedEnableTracking(
+        stopFollowInDrag: Bool,
+        disableMarkerRotation: Bool,
+        useDirectionMarker: Bool,
+        anchorX: Double,
+        anchorY: Double,
+        completion: @escaping LocationCommandCompletion
+    ) {
+        // Idempotent: tracking already owns the manager.
+        if trackMeActive {
+            completion(nil, nil)
+            return
+        }
+        if !stopFollowInDrag {
+            canSkipFollow = false
+            locationEnableRequest()
+        }
+        trackingAnchorConfigurator(anchorX, anchorY)
+        trackingDisableMarkerRotation = disableMarkerRotation
+        trackingUseDirectionMarker = useDirectionMarker
+        trackMeActive = true
+        startingTrackingCompletion = completion
+        trackingToggle(true)
+        // A synchronous denial was routed by handlePermission and cleared
+        // the slot; otherwise the flow is initiated.
+        if let pending = startingTrackingCompletion {
+            startingTrackingCompletion = nil
+            pending(nil, nil)
+        }
+    }
+
+    /// Whether a typed tracking stop is waiting behind a pending one-shot
+    /// fix. The fix keeps the manager running to deliver its result; the
+    /// now-unowned tracking ends when the request completes.
+    var stopTrackingWhenFixCompletes = false
+
+    /// Ends follow-me tracking. Idempotent, never prompts, never fails.
+    /// Continuous updates and pending one-shot fixes keep the manager
+    /// running: while a fix is pending the stop is deferred until it
+    /// completes or cancels, and updates keep the framework armed.
+    func typedDisableTracking() {
+        trackMeActive = false
+        if hasPendingLocationRequest {
+            stopTrackingWhenFixCompletes = true
+        } else {
+            trackingToggle(false)
+        }
+    }
+
+    /// Finishes a deferred tracking stop once the preserved request has
+    /// completed. Late calls and re-owned managers are no-ops.
+    func endDeferredTrackingStopIfNeeded() {
+        guard stopTrackingWhenFixCompletes else { return }
+        stopTrackingWhenFixCompletes = false
+        if !updatesActive && !trackMeActive && !hasPendingLocationRequest {
+            trackingToggle(false)
+        }
+    }
+
+    /// Whether a typed stop is waiting behind a pending one-shot fix.
+    /// The fix keeps the manager running to deliver its fix; the
+    /// now-unowned updates end when the request completes.
+    var stopUpdatesWhenFixCompletes = false
+
+    /// Ends the continuous-updates consumer. Idempotent, never prompts,
+    /// never fails; pending one-shot fixes and tracking keep running.
+    /// Reconciliation uses session consumer ownership, not the framework
+    /// tracking flag: start arms the framework flag for updates mode too,
+    /// so it can never distinguish the consumers.
+    func typedStopLocationUpdates() {
+        userLocationWithoutControl = false
+        updatesActive = false
+        if hasPendingLocationRequest {
+            // Preserve the pending one-shot; the subscription ends when
+            // the request completes.
+            stopUpdatesWhenFixCompletes = true
+        } else if !trackMeActive {
+            locationUpdatesToggle(false)
+        }
+    }
+
+    /// Finishes a deferred updates stop once the preserved request has
+    /// completed. Late calls and re-owned managers are no-ops.
+    func endDeferredUpdatesStopIfNeeded() {
+        guard stopUpdatesWhenFixCompletes else { return }
+        stopUpdatesWhenFixCompletes = false
+        if !updatesActive && !trackMeActive && !hasPendingLocationRequest {
+            locationUpdatesToggle(false)
+        }
+    }
+
+    /// Completes the pending generated fix exactly once and cancels the
+    /// timeout. Late calls are ignored.
+    func completeLocationFix(_ outcome: LocationFixOutcome) {
+        guard let completion = pendingLocationFixCompletion else { return }
+        pendingLocationFixCompletion = nil
+        locationFixTimeoutWorkItem?.cancel()
+        locationFixTimeoutWorkItem = nil
+        completion(outcome)
+        endDeferredUpdatesStopIfNeeded()
+        endDeferredTrackingStopIfNeeded()
     }
 
     func onMarkerSingleTap(location: CLLocationCoordinate2D) {

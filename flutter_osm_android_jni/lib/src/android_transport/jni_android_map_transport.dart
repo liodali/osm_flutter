@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_osm_interface/flutter_osm_interface.dart';
@@ -137,24 +138,60 @@ final class JniAndroidMapTransport implements AndroidMapTransport {
     MarkerId markerId,
     GeoPoint position, {
     Uint8List? iconBytes,
-  }) =>
-      _enqueue('addMarker', (bridge, viewId, requestId) {
-        final nativeMarkerId = markerId.value.toJString();
-        final nativeIcon = iconBytes == null ? null : _byteArray(iconBytes);
-        try {
-          return bridge.addMarker(
-            viewId,
-            nativeMarkerId,
-            position.latitude,
-            position.longitude,
-            nativeIcon,
-            requestId,
-          );
-        } finally {
-          nativeMarkerId.release();
-          nativeIcon?.release();
-        }
-      });
+    double angleDegrees = 0,
+    IconAnchor? anchor,
+  }) {
+    if (angleDegrees != 0 || anchor != null) {
+      throw AndroidMapException(
+        operation: 'addMarker',
+        code: 'jni_unsupported_marker_option',
+        viewId: _viewId,
+        message: 'The JNI command plane does not expose add-time rotation '
+            'or anchors yet; route markers with angle/anchor through the '
+            'typed generated channel or MethodChannel backend.',
+      );
+    }
+    return _enqueue('addMarker', (bridge, viewId, requestId) {
+      final nativeMarkerId = markerId.value.toJString();
+      final nativeIcon = iconBytes == null ? null : _byteArray(iconBytes);
+      try {
+        return bridge.addMarker(
+          viewId,
+          nativeMarkerId,
+          position.latitude,
+          position.longitude,
+          nativeIcon,
+          requestId,
+        );
+      } finally {
+        nativeMarkerId.release();
+        nativeIcon?.release();
+      }
+    });
+  }
+
+  @override
+  Future<void> moveMarker(MarkerId markerId, GeoPoint position) =>
+      _unsupportedMarkerCommand('moveMarker');
+
+  @override
+  Future<void> rotateMarker(MarkerId markerId, double angleDegrees) =>
+      _unsupportedMarkerCommand('rotateMarker');
+
+  @override
+  Future<void> setMarkerAnchor(MarkerId markerId, IconAnchor anchor) =>
+      _unsupportedMarkerCommand('setMarkerAnchor');
+
+  /// Movement/rotation/anchor JNI façade methods are a declared follow-up;
+  /// failing fast keeps the no-replay guarantee instead of silently
+  /// rerouting a state-changing command through another backend.
+  Future<void> _unsupportedMarkerCommand(String operation) async {
+    throw AndroidMapException(
+      operation: operation,
+      code: 'jni_unsupported_marker_command',
+      viewId: _viewId,
+    );
+  }
 
   @override
   Future<void> addMarkers(Map<MarkerId, GeoPoint> markers) =>
@@ -307,11 +344,12 @@ final class JniAndroidMapTransport implements AndroidMapTransport {
   }) =>
       _enqueue('setStaticPositions', (bridge, viewId, requestId) {
         final nativeGroupId = groupId.value.toJString();
+        // Typed static coordinates carry degrees.
         final coordinates = JDoubleArray.of([
           for (final point in positions) ...[
             point.latitude,
             point.longitude,
-            point is GeoPointWithOrientation ? point.angle : 0.0,
+            point is GeoPointWithOrientation ? point.angle * 180 / math.pi : 0.0,
           ],
         ]);
         final nativeIcon = iconBytes == null ? null : _byteArray(iconBytes);

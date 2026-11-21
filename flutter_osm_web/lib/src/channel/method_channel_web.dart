@@ -44,6 +44,87 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
+  Future<NativeProtocolProbeResult> probeNativeProtocol(int idOSM) async {
+    // Web never speaks the native generated-channel protocol.
+    return const NativeProtocolLegacyHost();
+  }
+
+  @override
+  Future<CameraRouteSelection> attachCameraRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native camera routing does not apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
+  Future<CameraRouteSelection> attachMarkersRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native marker routing does not apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
+  Future<CameraRouteSelection> attachLayersRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native layers routing does not apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
+  Future<CameraRouteSelection> attachShapesRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native shape routing does not apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
+  Future<CameraRouteSelection> attachRoadsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native road routing does not apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
+  Future<CameraRouteSelection> attachLocationRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native location routing does not
+    // apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
+  Future<CameraRouteSelection> attachLocationUpdatesRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native updates routing does not
+    // apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
+  Future<CameraRouteSelection> attachTrackingRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native tracking routing does not
+    // apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
     return _events(idMap).whereType<SingleTapEvent>();
   }

@@ -74,6 +74,14 @@ class OSMMap extends StatefulWidget {
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
     this.enableRotationByGesture = false,
+    this.useTypedCameraRoute = false,
+    this.useTypedMarkers = false,
+    this.useTypedLayers = false,
+    this.useTypedShapes = false,
+    this.useTypedRoads = false,
+    this.useTypedLocation = false,
+    this.useTypedLocationUpdates = false,
+    this.useTypedTracking = false,
   });
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -96,6 +104,22 @@ class OSMMap extends StatefulWidget {
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final bool enableRotationByGesture;
+  /// Opt-in routing of camera commands through the typed generated channel.
+  final bool useTypedCameraRoute;
+  /// Opt-in routing of marker commands through the typed generated channel.
+  final bool useTypedMarkers;
+  /// Opt-in routing of layer commands (tile sources, overlay visibility).
+  final bool useTypedLayers;
+  /// Opt-in routing of shape commands (circles, rectangles).
+  final bool useTypedShapes;
+  /// Opt-in routing of road commands (drawing, removal, clearing).
+  final bool useTypedRoads;
+  /// Opt-in routing of location commands (my-location layer, fixes).
+  final bool useTypedLocation;
+  /// Opt-in routing of continuous-updates commands (start/stop).
+  final bool useTypedLocationUpdates;
+  /// Opt-in routing of follow-me tracking commands (enable/disable).
+  final bool useTypedTracking;
 
   @override
   State<StatefulWidget> createState() => _OSMMapState();
@@ -132,6 +156,14 @@ class _OSMMapState extends State<OSMMap> {
       userLocationMarker: widget.userLocationMarker,
       userTrackingOption: widget.userTrackingOption,
       enableRotationByGesture: widget.enableRotationByGesture,
+      useTypedCameraRoute: widget.useTypedCameraRoute,
+      useTypedMarkers: widget.useTypedMarkers,
+      useTypedLayers: widget.useTypedLayers,
+      useTypedShapes: widget.useTypedShapes,
+      useTypedRoads: widget.useTypedRoads,
+      useTypedLocation: widget.useTypedLocation,
+      useTypedLocationUpdates: widget.useTypedLocationUpdates,
+      useTypedTracking: widget.useTypedTracking,
     );
   }
 }

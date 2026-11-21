@@ -75,6 +75,14 @@ import io.openmobilemaps.mapscore.shared.map.layers.line.LineLayerCallbackInterf
 import io.openmobilemaps.mapscore.shared.map.layers.line.LineLayerInterface
 import io.openmobilemaps.mapscore.shared.map.layers.line.LineStyle
 import io.openmobilemaps.mapscore.shared.map.layers.polygon.PolygonLayerInterface
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeCameraBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLayersBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationUpdatesBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeTrackingBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeRoadsBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeShapesBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeMarkersBridge
 import io.openmobilemaps.mapscore.shared.map.camera.MapCameraListenerInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -114,6 +122,21 @@ internal class MapscoreMapSession(
 
     private lateinit var locationNewOverlay: CustomLocationManager
     private lateinit var legacyChannel: LegacyMethodChannelAdapter
+    private var pigeonCameraBridge: PigeonNativeCameraBridge? = null
+    private var pigeonMarkersBridge: PigeonNativeMarkersBridge? = null
+    private var pigeonLayersBridge: PigeonNativeLayersBridge? = null
+    private var pigeonShapesBridge: PigeonNativeShapesBridge? = null
+    private var pigeonRoadsBridge: PigeonNativeRoadsBridge? = null
+    private var pigeonLocationBridge: PigeonNativeLocationBridge? = null
+    private var pigeonLocationUpdatesBridge: PigeonNativeLocationUpdatesBridge? = null
+
+    private var pigeonTrackingBridge: PigeonNativeTrackingBridge? = null
+
+    /** Minted per session; guards generated routes against reused view ids. */
+    internal val sessionToken: String = UUID.randomUUID().toString()
+
+    /** Bumped when the underlying view is replaced; C1 keeps it at 0. */
+    internal val generation: Long = 0L
     private var eventSink: MapEventSink = NoopMapEventSink
     private val eventCoalescer = MapEventCoalescer(
         intervalsMillis = mapOf(
@@ -143,7 +166,19 @@ internal class MapscoreMapSession(
 
     private var scope: CoroutineScope? = null
     private var job: Job? = null
-    private var pendingUserPositionResult: MethodChannel.Result? = null
+    /**
+     * Ownership gate for the settings round trip phase: request → deadline
+     * → draining → drained. Draining survives activity detachment (sessions
+     * survive configuration changes), so a reattached session cannot reuse
+     * the settings code before the old result arrives.
+     */
+    private val settingsGate = LocationSettingsGate()
+
+    /**
+     * Bound for the settings round trip phase of a location request; the
+     * acquisition phase carries its own deadline in the location manager.
+     */
+    private val locationSettingsTimeoutMillis = 15_000L
     private var pendingEnableLocationSettings = false
     private var activity: Activity? = null
     private val locationRequestCodes = LocationActivityRequestCodes.forViewId(id)
@@ -623,6 +658,13 @@ internal class MapscoreMapSession(
                         latitude = (args["lat"] as Number).toDouble(),
                         longitude = (args["lon"] as Number).toDouble(),
                         icon = args["icon"] as? ByteArray,
+                        angleDegrees = (args["angle"] as? Number)?.toDouble() ?: 0.0,
+                        anchor = (args["iconAnchor"] as? List<*>)?.let { anchorList ->
+                            Anchor(
+                                (anchorList[0] as Number).toFloat(),
+                                (anchorList[1] as Number).toFloat(),
+                            )
+                        },
                     )
                 }
 
@@ -641,6 +683,35 @@ internal class MapscoreMapSession(
                     updateMarkerIcon(
                         markerId = args["markerId"] as String,
                         icon = args["icon"] as ByteArray,
+                    )
+                }
+
+                TypedMapCommand.MOVE_MARKER -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    moveMarker(
+                        markerId = args["markerId"] as String,
+                        latitude = (args["lat"] as Number).toDouble(),
+                        longitude = (args["lon"] as Number).toDouble(),
+                    )
+                }
+
+                TypedMapCommand.ROTATE_MARKER -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    rotateMarker(
+                        markerId = args["markerId"] as String,
+                        angleDegrees = (args["angle"] as Number).toDouble(),
+                    )
+                }
+
+                TypedMapCommand.SET_MARKER_ANCHOR -> {
+                    val args = call.arguments as HashMap<String, Any>
+                    val anchorList = args["iconAnchor"] as List<*>
+                    setMarkerAnchor(
+                        markerId = args["markerId"] as String,
+                        anchor = Anchor(
+                            (anchorList[0] as Number).toFloat(),
+                            (anchorList[1] as Number).toFloat(),
+                        ),
                     )
                 }
 
@@ -852,16 +923,30 @@ internal class MapscoreMapSession(
         return true
     }
 
+    override fun getCameraPositionSnapshot(): DoubleArray? {
+        val camera = mapView?.getCamera() ?: return null
+        val helper = mapView?.getCoordinateConversionHelper() ?: return null
+        val center = camera.getCenterPosition()?.toLatLon(helper) ?: return null
+        val zoom = MapscoreConstants.mapscoreToOsmZoom(camera.getZoom())
+        val rotation = camera.getRotation().toDouble()
+        return doubleArrayOf(center.first, center.second, zoom, rotation)
+ }
+
     override fun addMarker(
         markerId: String,
         latitude: Double,
         longitude: Double,
         icon: ByteArray?,
+        angleDegrees: Double,
+        anchor: Anchor?,
     ): Boolean {
         if (released || mapView == null || !::iconLayer.isInitialized) return false
         if (markerId.isEmpty() || markers.containsKey(markerId)) return false
         if (!isValidLatLon(latitude, longitude)) return false
-        val bitmap = icon?.let(::decodeBitmap) ?: if (icon == null) null else return false
+        if (!angleDegrees.isFinite()) return false
+        // A null icon keeps the app-configured default marker (legacy parity);
+        // non-null bytes that fail to decode are a hard rejection.
+        val bitmap = icon?.let(::decodeBitmap) ?: if (icon == null) customMarkerIcon else return false
         val zoom = mapView?.getCamera()?.getZoom()?.let {
             MapscoreConstants.mapscoreToOsmZoom(it)
         } ?: initZoom
@@ -872,8 +957,12 @@ internal class MapscoreMapSession(
             identifier = markerId,
             dynamicMarkerBitmap = bitmap,
             animateTo = false,
+            // Typed marker contract carries degrees; marker state stores radians.
+            angle = angleDegrees * PI / 180.0,
+            anchor = anchor,
         )
-        if (icon != null) markerIconsCache["$latitude,$longitude"] = icon
+        val cachedBytes = icon ?: customMarkerIcon?.toByteArray()
+        if (cachedBytes != null) markerIconsCache["$latitude,$longitude"] = cachedBytes
         return true
     }
 
@@ -903,6 +992,38 @@ internal class MapscoreMapSession(
         val bitmap = decodeBitmap(icon) ?: return false
         marker.setIconMaker(bitmap = bitmap)
         markerIconsCache["${marker.lat},${marker.lon}"] = icon
+        return true
+    }
+
+    override fun moveMarker(markerId: String, latitude: Double, longitude: Double): Boolean {
+        if (released || mapView == null || !::iconLayer.isInitialized) return false
+        if (!isValidLatLon(latitude, longitude)) return false
+        val marker = markers[markerId] ?: return false
+        val oldKey = "${marker.lat},${marker.lon}"
+        val iconBytes = markerIconsCache[oldKey]
+        marker.setPosition(latitude, longitude)
+        if (markerIconsCache.containsKey(oldKey)) {
+            markerIconsCache.remove(oldKey)
+            markerIconsCache["$latitude,$longitude"] = iconBytes
+        }
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun rotateMarker(markerId: String, angleDegrees: Double): Boolean {
+        if (released || mapView == null || !::iconLayer.isInitialized) return false
+        if (!angleDegrees.isFinite()) return false
+        val marker = markers[markerId] ?: return false
+        marker.setAngle(angleDegrees * PI / 180.0)
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun setMarkerAnchor(markerId: String, anchor: Anchor): Boolean {
+        if (released || mapView == null || !::iconLayer.isInitialized) return false
+        val marker = markers[markerId] ?: return false
+        marker.updateAnchor(anchor)
+        mapView?.requestRender()
         return true
     }
 
@@ -969,9 +1090,16 @@ internal class MapscoreMapSession(
         isCircle: Boolean,
     ): Boolean {
         val map = mapView ?: return false
-        if (!::polygonLayer.isInitialized || shapeId.isEmpty() || shapes.containsKey(shapeId)) return false
+        if (!::polygonLayer.isInitialized || shapeId.isEmpty()) return false
+        // Validate the replacement fully BEFORE touching the existing
+        // shape: a rejected command must preserve current state.
         if (!isValidLatLon(latitude, longitude) || !size.isFinite() || size <= 0.0) return false
-        if (!strokeWidth.isFinite() || strokeWidth <= 0.0) return false
+        // Zero-width shapes are borderless (legacy and Darwin support
+        // them); only negative or nonfinite widths are invalid.
+        if (!strokeWidth.isFinite() || strokeWidth < 0.0) return false
+        // Replace semantics: re-drawing with an existing id swaps the shape
+        // in place, mirroring the legacy draw#circle / draw#rect handlers.
+        shapes.remove(shapeId)?.remove()
         val args = hashMapOf<String, Any>(
             "key" to shapeId,
             "lat" to latitude,
@@ -989,6 +1117,22 @@ internal class MapscoreMapSession(
     override fun removeShape(shapeId: String): Boolean {
         val shape = shapes.remove(shapeId) ?: return false
         shape.remove()
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun removeCircles(): Boolean {
+        if (released || !::polygonLayer.isInitialized) return false
+        val keys = shapes.entries.filter { it.value.shape == ShapeType.CIRCLE }.map { it.key }
+        keys.forEach { shapes[it]?.remove(); shapes.remove(it) }
+        mapView?.requestRender()
+        return true
+    }
+
+    override fun removeRectangles(): Boolean {
+        if (released || !::polygonLayer.isInitialized) return false
+        val keys = shapes.entries.filter { it.value.shape == ShapeType.POLYGON }.map { it.key }
+        keys.forEach { shapes[it]?.remove(); shapes.remove(it) }
         mapView?.requestRender()
         return true
     }
@@ -1012,7 +1156,12 @@ internal class MapscoreMapSession(
         val bitmap = icon?.let(::decodeBitmap) ?: if (icon == null) null else return false
 
         staticPoints[groupId] = coordinates.asList().chunked(3).map { values ->
-            MapscoreGeoPoint(lat = values[0], lon = values[1], angle = values[2])
+            MapscoreGeoPoint(
+                lat = values[0],
+                lon = values[1],
+                // Typed static coordinates carry degrees; state stores radians.
+                angle = values[2] * PI / 180.0,
+            )
         }.toMutableList()
         if (bitmap == null) staticMarkerIcon.remove(groupId)
         else staticMarkerIcon[groupId] = bitmap
@@ -1022,7 +1171,10 @@ internal class MapscoreMapSession(
     }
 
     override fun removeStaticPositions(groupId: String): Boolean {
-        if (!staticPoints.containsKey(groupId)) return false
+        // Clearing is idempotent: repeated empty-list clears and removals
+        // of already-cleared groups succeed like the legacy staticPosition
+        // flow instead of surfacing a not-ready error.
+        if (!staticPoints.containsKey(groupId)) return true
         staticIcons.remove(groupId)?.forEach { staticIconLayer.remove(it) }
         staticPoints.remove(groupId)
         staticMarkerIcon.remove(groupId)
@@ -1041,9 +1193,13 @@ internal class MapscoreMapSession(
         dotted: Boolean,
     ): Boolean {
         if (released || mapView == null || !::lineLayer.isInitialized) return false
-        if (roadId.isEmpty() || roads.containsKey(roadId)) return false
+        if (roadId.isEmpty()) return false
         if (coordinates.size < 4 || coordinates.size % 2 != 0 || !coordinates.hasValidLatLonPairs(2)) return false
         if (!roadWidth.isFinite() || roadWidth <= 0.0 || !borderWidth.isFinite() || borderWidth < 0.0) return false
+        // Replace semantics, validated before touching the existing road:
+        // a rejected command preserves current state. Mirrors the legacy
+        // drawRoad#manually handler (drawRoadLines removes the old road).
+        roads.remove(roadId)?.remove()
         val points = coordinates.asList().chunked(2).map { it[0] to it[1] }
         drawRoadLines(
             roadId = roadId,
@@ -1148,10 +1304,13 @@ internal class MapscoreMapSession(
         return true
     }
 
+    /// Legacy wire order used by both the Dart legacy payload and the
+    /// generated shape route: [red, blue, green, alpha]. The mapscore
+    /// decoder (MapscoreColorHelper.legacyWireToArgb) reads this order.
     private fun Int.toArgbList(): List<Int> = listOf(
         android.graphics.Color.red(this),
-        android.graphics.Color.green(this),
         android.graphics.Color.blue(this),
+        android.graphics.Color.green(this),
         android.graphics.Color.alpha(this),
     )
 
@@ -1221,15 +1380,32 @@ internal class MapscoreMapSession(
         )
     }
 
+    override fun configureZoom(
+        initZoom: Double,
+        minZoomLevel: Double,
+        maxZoomLevel: Double,
+        stepZoom: Double,
+    ): Boolean {
+        // Session fields apply unconditionally (legacy parity); min/max
+        // clamps need the camera, which may not exist before initialization.
+        this.stepZoom = stepZoom
+        this.initZoom = initZoom
+        val camera = mapView?.getCamera() ?: return false
+        camera.setMinZoom(MapscoreConstants.osmZoomToMapscore(minZoomLevel))
+        camera.setMaxZoom(MapscoreConstants.osmZoomToMapscore(maxZoomLevel))
+        return true
+    }
+
     private fun configZoomMap(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as HashMap<*, *>
-        val camera = mapView?.getCamera()
-        val minZoom = (args["minZoomLevel"] as Double)
-        val maxZoom = (args["maxZoomLevel"] as Double)
-        camera?.setMinZoom(MapscoreConstants.osmZoomToMapscore(minZoom))
-        camera?.setMaxZoom(MapscoreConstants.osmZoomToMapscore(maxZoom))
-        stepZoom = args["stepZoom"] as Double
-        initZoom = args["initZoom"] as Double
+        // Legacy never fails this command: fields are stored, camera clamps
+        // apply when the camera exists.
+        configureZoom(
+            initZoom = (args["initZoom"] as Double),
+            minZoomLevel = (args["minZoomLevel"] as Double),
+            maxZoomLevel = (args["maxZoomLevel"] as Double),
+            stepZoom = (args["stepZoom"] as Double),
+        )
         result.success(200)
     }
 
@@ -1251,21 +1427,61 @@ internal class MapscoreMapSession(
         result.success(null)
     }
 
+    override fun zoomToBoundingBox(
+        north: Double,
+        south: Double,
+        east: Double,
+        west: Double,
+        paddingInPixel: Int,
+    ): Boolean {
+        val camera = mapView?.getCamera() ?: return false
+        // Mapscore's moveToBoundingBox expects WGS84 coordinates and converts internally.
+        val topLeft = latLonToCoord(north, west)
+        val bottomRight = latLonToCoord(south, east)
+        val rect = RectCoord(topLeft, bottomRight)
+        val padding = paddingInPixel.toFloat() / 1000f
+        camera.moveToBoundingBox(rect, padding.coerceIn(0.0f, 0.5f), true, null, null)
+        return true
+    }
+
     private fun zoomingMapToBoundingBox(call: MethodCall, result: MethodChannel.Result) {
         val args = call.arguments as Map<String, Any>
-        // Mapscore's moveToBoundingBox expects WGS84 coordinates and converts internally.
-        val topLeft = latLonToCoord(args["north"]!! as Double, args["west"]!! as Double)
-        val bottomRight = latLonToCoord(args["south"]!! as Double, args["east"]!! as Double)
-        val rect = RectCoord(topLeft, bottomRight)
-        val padding = (args["padding"] as? Int ?: 64).toFloat() / 1000f
-        mapView?.getCamera()?.moveToBoundingBox(rect, padding.coerceIn(0.0f, 0.5f), true, null, null)
+        // Legacy never fails this command: a missing camera made the native
+        // call a no-op and still succeeded.
+        zoomToBoundingBox(
+            north = args["north"]!! as Double,
+            south = args["south"]!! as Double,
+            east = args["east"]!! as Double,
+            west = args["west"]!! as Double,
+            paddingInPixel = (args["padding"] as? Int ?: 64),
+        )
         result.success(null)
     }
 
+    override fun getBoundsSnapshot(): DoubleArray? {
+        val helper = mapView?.getCoordinateConversionHelper() ?: return null
+        val rect = mapView?.getCamera()?.getVisibleRect() ?: return null
+        val bounds = rect.toHashMap(helper)
+        return doubleArrayOf(
+            bounds["north"] ?: return null,
+            bounds["south"] ?: return null,
+            bounds["east"] ?: return null,
+            bounds["west"] ?: return null,
+        )
+    }
+
     private fun getMapBounds(result: MethodChannel.Result) {
-        val helper = mapView?.getCoordinateConversionHelper()
-        val rect = mapView?.getCamera()?.getVisibleRect()
-        result.success(rect?.toHashMap(helper!!))
+        result.success(getBoundsSnapshot()?.let(::boundsToLegacyMap))
+    }
+
+    private fun boundsToLegacyMap(bounds: DoubleArray): HashMap<String, Double> {
+        // [north, south, east, west] -> legacy map shape.
+        return hashMapOf(
+            "north" to bounds[0],
+            "south" to bounds[1],
+            "east" to bounds[2],
+            "west" to bounds[3],
+        )
     }
 
     private fun initPosition(call: MethodCall, result: MethodChannel.Result) {
@@ -1284,25 +1500,41 @@ internal class MapscoreMapSession(
         result.success(null)
     }
 
+    override fun setBoundsLimit(
+        north: Double,
+        east: Double,
+        south: Double,
+        west: Double,
+    ): Boolean {
+        val helper = mapView?.getCoordinateConversionHelper() ?: return false
+        val camera = mapView?.getCamera() ?: return false
+        val topLeft = latLonToRender(helper, north, west)
+        val bottomRight = latLonToRender(helper, south, east)
+        camera.setBounds(RectCoord(topLeft, bottomRight))
+        camera.setBoundsRestrictWholeVisibleRect(true)
+        return true
+    }
+
+    override fun removeBoundsLimit(): Boolean {
+        val helper = mapView?.getCoordinateConversionHelper() ?: return false
+        val topLeft = latLonToRender(helper, 85.0, -180.0)
+        val bottomRight = latLonToRender(helper, -85.0, 180.0)
+        mapView?.getCamera()?.setBounds(RectCoord(topLeft, bottomRight))
+        return true
+    }
+
     private fun limitCameraArea(call: MethodCall, result: MethodChannel.Result) {
         val list = call.arguments as List<Double>
-        val helper = mapView?.getCoordinateConversionHelper() ?: return result.success(200)
         // list = [latNorth, lonEast, latSouth, lonWest]
-        val topLeft = latLonToRender(helper, list[0], list[3])
-        val bottomRight = latLonToRender(helper, list[2], list[1])
-        val camera = mapView?.getCamera()
-        camera?.setBounds(RectCoord(topLeft, bottomRight))
-        camera?.setBoundsRestrictWholeVisibleRect(true)
+        if (!setBoundsLimit(list[0], list[1], list[2], list[3])) {
+            result.success(200)
+            return
+        }
         result.success(200)
     }
 
     private fun removeLimitCameraArea(result: MethodChannel.Result) {
-        val helper = mapView?.getCoordinateConversionHelper()
-        if (helper != null) {
-            val topLeft = latLonToRender(helper, 85.0, -180.0)
-            val bottomRight = latLonToRender(helper, -85.0, 180.0)
-            mapView?.getCamera()?.setBounds(RectCoord(topLeft, bottomRight))
-        }
+        removeBoundsLimit()
         result.success(200)
     }
 
@@ -1370,38 +1602,140 @@ internal class MapscoreMapSession(
     }
 
     private fun requestUserLocation(result: MethodChannel.Result) {
-        if (isLocationServiceEnabled()) {
-            getUserLocation(result)
+        requestLocationFix(result.asLocationFixListener())
+    }
+
+    private val settingsHandler = Handler(Looper.getMainLooper())
+
+    private fun MethodChannel.Result.asLocationFixListener() =
+        MapSession.LocationFixListener { outcome ->
+            when (outcome) {
+                is MapSession.LocationFixOutcome.Fixed ->
+                    success(hashMapOf("lat" to outcome.latitude, "lon" to outcome.longitude))
+                is MapSession.LocationFixOutcome.Failed -> error(outcome.code, outcome.message ?: "", null)
+            }
+        }
+
+    /** Deadline runnable bounding the settings round trip. */
+    private val locationSettingsTimeout = Runnable {
+        val listener = settingsGate.markDraining() ?: return@Runnable
+        // Keep draining occupancy: the settings screen is still open and
+        // its result must not be mistaken for a newer attempt's.
+        listener.onOutcome(
+            MapSession.LocationFixOutcome.Failed(
+                code = "location_timeout",
+                message = "Timed out waiting for the location settings round trip.",
+            )
+        )
+    }
+
+    override fun requestLocationFix(listener: MapSession.LocationFixListener) {
+        // One ownership guard across settings and acquisition: a provider
+        // state transition must not start a second request while a first
+        // one is still pending (typed or legacy), and a drained settings
+        // attempt must not let a new request reuse the settings code while
+        // the stale result is still in flight.
+        if (settingsGate.occupied || locationNewOverlay.hasPendingPositionRequest) {
+            listener.onOutcome(
+                MapSession.LocationFixOutcome.Failed(
+                    code = "location_request_in_progress",
+                    message = "Another location request is already pending for this map.",
+                )
+            )
             return
         }
-        if (pendingUserPositionResult != null) {
-            result.error(
-                "location_request_in_progress",
-                "Another location settings request is already pending for this map.",
-                null,
-            )
+        if (isLocationServiceEnabled()) {
+            locationNewOverlay.currentUserPosition(listener)
             return
         }
         val currentActivity = activity
         if (currentActivity == null) {
-            result.error(
-                "activity_unavailable",
-                "A foreground Activity is required to open location settings.",
-                null,
+            listener.onOutcome(
+                MapSession.LocationFixOutcome.Failed(
+                    code = "activity_unavailable",
+                    message = "A foreground Activity is required to open location settings.",
+                )
             )
             return
         }
-        pendingUserPositionResult = result
+        settingsGate.acquire(listener)
+        settingsHandler.postDelayed(locationSettingsTimeout, locationSettingsTimeoutMillis)
         openSettingLocation(locationRequestCodes.getUserLocation, currentActivity)
     }
 
-    private fun getUserLocation(result: MethodChannel.Result) {
-        locationNewOverlay.currentUserPosition(result)
+    override fun startLocationUpdates(listener: MapSession.LocationCommandListener) {
+        if (released || !::locationNewOverlay.isInitialized) {
+            listener.onComplete("location_unavailable", "The map session cannot start location updates.")
+            return
+        }
+        if (!isLocationServiceEnabled()) {
+            listener.onComplete("location_service_disabled", "Location services are disabled.")
+            return
+        }
+        locationNewOverlay.startLocationUpdating()
+        listener.onComplete(null, null)
+    }
+
+    override fun stopLocationUpdates() {
+        if (!::locationNewOverlay.isInitialized) return
+        // Consumer-aware stop: pending one-shot fixes and tracking keep
+        // running; never prompts, idempotent.
+        locationNewOverlay.stopUpdatesConsumer()
+    }
+
+    override fun enableTracking(
+        stopFollowInDrag: Boolean,
+        disableMarkerRotation: Boolean,
+        useDirectionMarker: Boolean,
+        anchor: List<Double>,
+        listener: MapSession.LocationCommandListener,
+    ) {
+        if (released || !::locationNewOverlay.isInitialized) {
+            listener.onComplete("location_unavailable", "The map session cannot enable tracking.")
+            return
+        }
+        if (!isLocationServiceEnabled()) {
+            listener.onComplete("location_service_disabled", "Location services are disabled.")
+            return
+        }
+        locationNewOverlay.setAnchor(anchor)
+        trackUserLocation(
+            enableStopFollow = stopFollowInDrag,
+            useDirectionMarker = useDirectionMarker,
+            disableRotation = disableMarkerRotation,
+        )
+        listener.onComplete(null, null)
+    }
+
+    override fun disableTracking() {
+        if (!::locationNewOverlay.isInitialized) return
+        // Consumer-aware stop: pending one-shot fixes and continuous
+        // updates keep running; never prompts, idempotent.
+        isTracking = false
+        locationNewOverlay.useDirectionMarker = false
+        locationNewOverlay.stopTrackingConsumer()
+        // The my-location layer flag stays truthful when another consumer
+        // (continuous updates) keeps the shared subscription running.
+        isEnabled = locationNewOverlay.mIsLocationEnabled
+    }
+
+    override fun enableUserLocationLayer(): Boolean {
+        if (isLocationServiceEnabled()) {
+            enableUserLocation()
+            return true
+        }
+        val currentActivity = activity ?: return false
+        pendingEnableLocationSettings = true
+        openSettingLocation(locationRequestCodes.currentUserLocation, currentActivity)
+        return true
     }
 
     private fun cancelPendingActivityLocationRequest(code: String, message: String) {
-        pendingUserPositionResult?.error(code, message, null)
-        pendingUserPositionResult = null
+        settingsHandler.removeCallbacks(locationSettingsTimeout)
+        // Draining ownership survives detachment: sessions survive
+        // configuration detach/reattach, and the stale result must not be
+        // mistaken for a newer attempt. Only disposal resets the gate.
+        settingsGate.detach()?.onOutcome(MapSession.LocationFixOutcome.Failed(code, message))
         pendingEnableLocationSettings = false
     }
 
@@ -1409,7 +1743,7 @@ internal class MapscoreMapSession(
         enableStopFollow: Boolean,
         useDirectionMarker: Boolean,
         disableRotation: Boolean,
-        result: MethodChannel.Result
+        result: MethodChannel.Result? = null
     ) {
         try {
             homeMarker?.let { markers.remove(it.identifier); it.remove() }
@@ -1417,9 +1751,13 @@ internal class MapscoreMapSession(
             locationNewOverlay.useDirectionMarker = useDirectionMarker
             locationNewOverlay.toggleFollow(enableStopFollow)
             isTracking = locationNewOverlay.mIsFollowing
-            result.success(if (locationNewOverlay.mIsFollowing) true else null)
+            result?.success(if (locationNewOverlay.mIsFollowing) true else null)
         } catch (e: Exception) {
-            result.error("400", e.stackTraceToString(), "")
+            if (result != null) {
+                result.error("400", e.stackTraceToString(), "")
+            } else {
+                throw e
+            }
         }
     }
 
@@ -1779,7 +2117,7 @@ internal class MapscoreMapSession(
             val texBmp = bitmap
             val iconInfo = if (texBmp != null && !texBmp.isRecycled) {
                 val source =
-                    if (geoPoint.angle > 0.0) texBmp.rotate((geoPoint.angle * 180.0 / PI).toFloat()) else texBmp
+                    if (geoPoint.angle != 0.0) texBmp.rotate((geoPoint.angle * 180.0 / PI).toFloat()) else texBmp
                 val (holder, size) = source.toTextureHolder()
                 io.openmobilemaps.mapscore.shared.map.layers.icon.IconFactory.createIconWithAnchor(
                     identifier = "static_${id}_$index",
@@ -1837,6 +2175,8 @@ internal class MapscoreMapSession(
             code = "location_request_cancelled",
             message = "The map session was disposed before the location request completed.",
         )
+        // Disposal is final: no late result can arrive for this session.
+        settingsGate.release()
         if (::locationNewOverlay.isInitialized) {
             locationNewOverlay.onDestroy()
         }
@@ -1846,6 +2186,23 @@ internal class MapscoreMapSession(
         job = null
         val activeEventSink = eventSink
         activeEventSink.close()
+        pigeonCameraBridge?.unregister(binaryMessenger, id)
+        pigeonCameraBridge = null
+        pigeonMarkersBridge?.unregister(binaryMessenger, id)
+        pigeonMarkersBridge = null
+        pigeonLayersBridge?.unregister(binaryMessenger, id)
+        pigeonLayersBridge = null
+        pigeonShapesBridge?.unregister(binaryMessenger, id)
+        pigeonShapesBridge = null
+        pigeonRoadsBridge?.unregister(binaryMessenger, id)
+        pigeonRoadsBridge = null
+        pigeonLocationBridge?.unregister(binaryMessenger, id)
+        pigeonLocationBridge = null
+        pigeonLocationUpdatesBridge?.unregister(binaryMessenger, id)
+        pigeonLocationUpdatesBridge = null
+
+        pigeonTrackingBridge?.unregister(binaryMessenger, id)
+        pigeonTrackingBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -1895,14 +2252,59 @@ internal class MapscoreMapSession(
             viewId = id,
             dispatch = ::handleLegacyCommand,
             typedDispatch = ::handleTypedChannelCommand,
+            bootstrapProvider = ::pigeonBootstrapInfo,
         )
         if (eventSink === NoopMapEventSink) {
             eventSink = legacyChannel
         }
+        // Generated camera endpoints live alongside the legacy ones; they
+        // never replace them (C1 skeleton: registered, not yet routed).
+        val bridge = PigeonNativeCameraBridge(this, sessionToken, generation)
+        bridge.register(binaryMessenger, id)
+        pigeonCameraBridge = bridge
+        // Generated markers endpoints live alongside the legacy ones too.
+        val markersBridge = PigeonNativeMarkersBridge(this, sessionToken, generation)
+        markersBridge.register(binaryMessenger, id)
+        pigeonMarkersBridge = markersBridge
+        // Generated layers endpoints (tile sources, overlay visibility) live
+        // alongside the legacy ones as well.
+        val layersBridge = PigeonNativeLayersBridge(this, sessionToken, generation)
+        layersBridge.register(binaryMessenger, id)
+        pigeonLayersBridge = layersBridge
+        // Generated shapes endpoints (circles, rectangles) live alongside
+        // the legacy ones as well.
+        val shapesBridge = PigeonNativeShapesBridge(this, sessionToken, generation)
+        shapesBridge.register(binaryMessenger, id)
+        pigeonShapesBridge = shapesBridge
+        // Generated roads endpoints (manual drawing, removal, clearing)
+        // live alongside the legacy ones as well.
+        val roadsBridge = PigeonNativeRoadsBridge(this, sessionToken, generation)
+        roadsBridge.register(binaryMessenger, id)
+        pigeonRoadsBridge = roadsBridge
+        // Generated location endpoints (my-location layer, single-shot
+        // fixes) share the legacy pending slots; both never run in
+        // parallel by accident.
+        val locationBridge = PigeonNativeLocationBridge(this, sessionToken, generation)
+        locationBridge.register(binaryMessenger, id)
+        pigeonLocationBridge = locationBridge
+        // Generated continuous-updates endpoints share the manager's
+        // subscription with the legacy route.
+        val locationUpdatesBridge = PigeonNativeLocationUpdatesBridge(this, sessionToken, generation)
+        locationUpdatesBridge.register(binaryMessenger, id)
+        pigeonLocationUpdatesBridge = locationUpdatesBridge
+
+        // Generated follow-me tracking endpoints share the manager's
+        // subscription with the legacy route.
+        val trackingBridge = PigeonNativeTrackingBridge(this, sessionToken, generation)
+        trackingBridge.register(binaryMessenger, id)
+        pigeonTrackingBridge = trackingBridge
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")
     }
+
+    private fun pigeonBootstrapInfo(): Map<String, Any?> =
+        PigeonNativeCameraBridge.bootstrapPayload(sessionToken, generation)
 
     internal fun onResume() {
         locationNewOverlay.onResume()
@@ -1920,15 +2322,23 @@ internal class MapscoreMapSession(
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         when (requestCode) {
             locationRequestCodes.getUserLocation -> {
-                val pendingResult = pendingUserPositionResult ?: return false
-                pendingUserPositionResult = null
+                // A timed-out attempt keeps occupancy until its result
+                // drains: discard the stale result and hold the guard so a
+                // newer request cannot consume it.
+                if (settingsGate.drain()) {
+                    return true
+                }
+                val pendingListener = settingsGate.current() ?: return false
+                settingsHandler.removeCallbacks(locationSettingsTimeout)
+                settingsGate.release()
                 if (isLocationServiceEnabled()) {
-                    getUserLocation(pendingResult)
+                    locationNewOverlay.currentUserPosition(pendingListener)
                 } else {
-                    pendingResult.error(
-                        "location_service_disabled",
-                        "Location services are still disabled.",
-                        null,
+                    pendingListener.onOutcome(
+                        MapSession.LocationFixOutcome.Failed(
+                            code = "location_service_disabled",
+                            message = "Location services are still disabled.",
+                        )
                     )
                 }
                 return true

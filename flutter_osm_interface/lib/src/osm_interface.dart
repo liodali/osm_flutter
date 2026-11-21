@@ -2,6 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'channel/osm_method_channel.dart';
+import 'channel/pigeon/native_camera_bootstrap.dart';
+import 'channel/pigeon/native_camera_client.dart';
+import 'channel/pigeon/native_markers_client.dart';
 import 'common/osm_event.dart';
 import 'types/types.dart';
 
@@ -42,6 +45,93 @@ abstract class OSMPlatform extends PlatformInterface {
   );
 
   void close(int idOSM);
+
+  /// Read-only attach-time probe of the generated-channel protocol.
+  /// Must not initialize or mutate the map; implementations run it on the
+  /// legacy channel before routing decisions are frozen.
+  Future<NativeProtocolProbeResult> probeNativeProtocol(int idOSM);
+
+  /// Freezes the camera routing decision for one map attachment.
+  /// Called once after [init] and before the first mutation; the decision
+  /// never changes for the life of the attachment (no protocol replay).
+  Future<CameraRouteSelection> attachCameraRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the markers routing decision for one map attachment.
+  /// Same contract as [attachCameraRoute]: one probe, one decision, frozen
+  /// before the first mutation.
+  Future<CameraRouteSelection> attachMarkersRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the layers routing decision for one map attachment (tile
+  /// sources and overlay visibility). Same contract as [attachCameraRoute]:
+  /// one probe, one decision, frozen before the first mutation. Hosts
+  /// without the `layers` capability keep these commands on the legacy
+  /// route.
+  Future<CameraRouteSelection> attachLayersRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the shapes routing decision for one map attachment (circles
+  /// and rectangles). Same contract as [attachCameraRoute]: one probe, one
+  /// decision, frozen before the first mutation. Hosts without the
+  /// `shapes` capability keep these commands on the legacy route.
+  Future<CameraRouteSelection> attachShapesRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the roads routing decision for one map attachment (manual
+  /// road drawing, removal by id, clearing). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the first
+  /// mutation. Hosts without the `roads` capability keep these commands on
+  /// the legacy route. Route fetching/calculation is unaffected: it stays
+  /// asynchronous in Dart.
+  Future<CameraRouteSelection> attachRoadsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the location routing decision for one map attachment (the
+  /// my-location layer and single-shot fixes). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the first
+  /// mutation. Hosts without the `location` capability keep these commands
+  /// on the legacy route. Permission ownership stays with the host
+  /// application; continuous updates and tracking stay on their existing
+  /// channels.
+  Future<CameraRouteSelection> attachLocationRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the continuous-updates routing decision for one map
+  /// attachment (start/stop location updates). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the first
+  /// mutation. Hosts without the `location.updates` capability keep these
+  /// commands on the legacy route. Location events keep flowing on their
+  /// existing channel; stop never prompts and preserves pending one-shot
+  /// fixes and tracking.
+  Future<CameraRouteSelection> attachLocationUpdatesRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the follow-me tracking routing decision for one map
+  /// attachment (enable/disable tracking). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the
+  /// first mutation. Hosts without the `location.tracking` capability
+  /// keep these commands on the legacy route. Permission ownership stays
+  /// with the host application; stopping tracking preserves continuous
+  /// updates and pending one-shot fixes.
+  Future<CameraRouteSelection> attachTrackingRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {
