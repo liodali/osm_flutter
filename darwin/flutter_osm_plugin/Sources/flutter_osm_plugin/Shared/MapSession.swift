@@ -50,6 +50,7 @@ class MapSession: NSObject {
     private(set) var roadsBridge: PigeonRoadsBridge?
     private(set) var locationBridge: PigeonLocationBridge?
     private(set) var locationUpdatesBridge: PigeonLocationUpdatesBridge?
+    private(set) var trackingBridge: PigeonTrackingBridge?
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -94,6 +95,17 @@ class MapSession: NSObject {
             if !self.mapOSM.locationManager.isTrackingEnabled() {
                 self.mapOSM.locationManager.toggleTracking(
                     configuration: TrackConfiguration(moveMap: true, controlUserMarker: false))
+            } else {
+                // The framework is already armed by follow-me tracking:
+                // reconcile updates semantics (no framework marker
+                // control) through the stop-and-retoggle cycle instead of
+                // skipping configuration entirely.
+                let updatesConfiguration = TrackConfiguration(
+                    moveMap: true, controlUserMarker: false)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: updatesConfiguration)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: updatesConfiguration)
             }
         } else {
             self.mapOSM.locationManager.stopLocation()
@@ -104,6 +116,82 @@ class MapSession: NSObject {
     /// the real CLLocationManager; tests install a no-op.
     internal(set) lazy var locationSingleShotRequest: () -> Void = { [weak self] in
         self?.mapOSM.locationManager.requestSingleLocation()
+    }
+
+    /// Test seam over the framework enable-location entry (authorization
+    /// prompt + my-location layer). Default drives the real
+    /// CLLocationManager; tests install a no-op.
+    internal(set) lazy var locationEnableRequest: () -> Void = { [weak self] in
+        self?.mapOSM.locationManager.requestEnableLocation()
+    }
+
+    /// Test seam over the user-location icon anchor configuration. The
+    /// default closure drives the framework's icon configuration; tests
+    /// install a no-op (the framework rejects configuration in idle
+    /// phase).
+    internal(set) lazy var trackingAnchorConfigurator: (Double, Double) -> Void = { [weak self] x, y in
+        guard let self = self else { return }
+        let markerAnchor = AnchorGeoPoint(anchor: (x: x, y: y)).compute()
+        let icons = self.mapOSM.locationManager.userLocationIconConfiguration
+        self.mapOSM.locationManager.setUserLocationIcons(
+            userLocationIcons: icons.copyWith(
+                userIcon: icons.userIcon.copyWith(anchor: markerAnchor),
+                directionIcon: icons.directionIcon?.copyWith(anchor: markerAnchor)))
+    }
+
+    /// Tracking configuration captured by the typed start; the framework
+    /// toggle seam reads it when it arms tracking.
+    var trackingDisableMarkerRotation = false
+    var trackingUseDirectionMarker = false
+
+    /// Test seam over the framework tracking toggle. The default closure
+    /// drives the real CLLocationManager with the captured tracking
+    /// configuration; session tests install a recorder/stateful fake so
+    /// no authorization prompt is ever raised and no live GPS is used.
+    /// The stop side reconciles consumers: continuous updates and pending
+    /// one-shot fixes keep the manager running (shared subscription).
+    internal(set) lazy var trackingToggle: (Bool) -> Void = { [weak self] start in
+        guard let self = self else { return }
+        if start {
+            if !self.mapOSM.locationManager.isTrackingEnabled() {
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: TrackConfiguration(
+                        moveMap: true,
+                        useDirectionMarker: self.trackingUseDirectionMarker,
+                        disableMarkerRotation: self.trackingDisableMarkerRotation))
+            } else {
+                // The framework is already armed by continuous updates.
+                // Its marker fields are private and toggleTracking
+                // early-outs (stops) while armed, so the only
+                // reconfiguration surface is a stop-and-retoggle cycle:
+                // the first call stops the stream, the second restarts it
+                // (authorization is guaranteed - the framework was
+                // armed) applying tracking's marker configuration.
+                let trackingConfiguration = TrackConfiguration(
+                    moveMap: true,
+                    useDirectionMarker: self.trackingUseDirectionMarker,
+                    disableMarkerRotation: self.trackingDisableMarkerRotation)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: trackingConfiguration)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: trackingConfiguration)
+            }
+        } else {
+            if self.updatesActive {
+                // Continuous updates keep the stream: restore their
+                // marker semantics (no direction marker, no framework
+                // marker control) through the same stop-and-retoggle
+                // cycle instead of stopping the subscription outright.
+                let updatesConfiguration = TrackConfiguration(
+                    moveMap: true, controlUserMarker: false)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: updatesConfiguration)
+                self.mapOSM.locationManager.toggleTracking(
+                    configuration: updatesConfiguration)
+            } else if !self.hasPendingLocationRequest {
+                self.mapOSM.locationManager.stopLocation()
+            }
+        }
     }
 
     /// Continuous-updates consumer ownership (typed and legacy routes).
@@ -330,6 +418,9 @@ class MapSession: NSObject {
         let updates = PigeonLocationUpdatesBridge(session: self)
         updates.register(messenger: binaryMessenger, viewId: viewId)
         locationUpdatesBridge = updates
+        let tracking = PigeonTrackingBridge(session: self)
+        tracking.register(messenger: binaryMessenger, viewId: viewId)
+        trackingBridge = tracking
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -457,6 +548,8 @@ class MapSession: NSObject {
         locationBridge = nil
         locationUpdatesBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
         locationUpdatesBridge = nil
+        trackingBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        trackingBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil
@@ -467,8 +560,11 @@ class MapSession: NSObject {
         // Disposal completes any pending location request (typed or
         // legacy) exactly once; deferred stops are moot afterwards.
         stopUpdatesWhenFixCompletes = false
+        stopTrackingWhenFixCompletes = false
         updatesActive = false
+        trackMeActive = false
         startingUpdatesCompletion = nil
+        startingTrackingCompletion = nil
         failPendingLocationRequest(code: "disposed", message: "map was disposed")
         let pendingRoads = outstandingRoadResults
         outstandingRoadResults.removeAll()
@@ -553,6 +649,7 @@ class MapSession: NSObject {
             result(geoMap)
             resultFlutter = nil
             endDeferredUpdatesStopIfNeeded()
+            endDeferredTrackingStopIfNeeded()
         }
     }
 
@@ -582,6 +679,15 @@ class MapSession: NSObject {
             if let startCompletion = startingUpdatesCompletion {
                 startingUpdatesCompletion = nil
                 startCompletion("permission_denied", "location permission was not granted")
+            }
+            // 3b. An in-flight tracking start completes with
+            //     permission_denied and rolls back its ownership;
+            //     tracking ownership resets unconditionally because
+            //     permission is a prerequisite for tracking at all.
+            trackMeActive = false
+            if let trackingStart = startingTrackingCompletion {
+                startingTrackingCompletion = nil
+                trackingStart("permission_denied", "location permission was not granted")
             }
             failPendingLocationRequest(
                 code: "permission_denied",
@@ -667,6 +773,7 @@ class MapSession: NSObject {
                     message: message ?? "",
                     details: nil))
             endDeferredUpdatesStopIfNeeded()
+            endDeferredTrackingStopIfNeeded()
             return true
         }
         return false
@@ -723,6 +830,78 @@ class MapSession: NSObject {
         }
     }
 
+    /// Pending tracking start completion: only armed around the
+    /// synchronous toggle call so a denial reported through the
+    /// permission callback routes to the start completion, not to a fix.
+    var startingTrackingCompletion: LocationCommandCompletion?
+
+    /// Starts follow-me tracking. Idempotent; completes exactly once.
+    /// Mirrors legacy `trackMe`: without stop-follow-on-drag the gesture
+    /// skip resets and the enable-location entry runs (authorization
+    /// prompt included), both user and direction icons take the anchor,
+    /// and the framework toggle arms the captured configuration. A
+    /// synchronous denial routes through the permission callback and the
+    /// completion carries `permission_denied`; a prompt flow reports
+    /// initiated.
+    func typedEnableTracking(
+        stopFollowInDrag: Bool,
+        disableMarkerRotation: Bool,
+        useDirectionMarker: Bool,
+        anchorX: Double,
+        anchorY: Double,
+        completion: @escaping LocationCommandCompletion
+    ) {
+        // Idempotent: tracking already owns the manager.
+        if trackMeActive {
+            completion(nil, nil)
+            return
+        }
+        if !stopFollowInDrag {
+            canSkipFollow = false
+            locationEnableRequest()
+        }
+        trackingAnchorConfigurator(anchorX, anchorY)
+        trackingDisableMarkerRotation = disableMarkerRotation
+        trackingUseDirectionMarker = useDirectionMarker
+        trackMeActive = true
+        startingTrackingCompletion = completion
+        trackingToggle(true)
+        // A synchronous denial was routed by handlePermission and cleared
+        // the slot; otherwise the flow is initiated.
+        if let pending = startingTrackingCompletion {
+            startingTrackingCompletion = nil
+            pending(nil, nil)
+        }
+    }
+
+    /// Whether a typed tracking stop is waiting behind a pending one-shot
+    /// fix. The fix keeps the manager running to deliver its result; the
+    /// now-unowned tracking ends when the request completes.
+    var stopTrackingWhenFixCompletes = false
+
+    /// Ends follow-me tracking. Idempotent, never prompts, never fails.
+    /// Continuous updates and pending one-shot fixes keep the manager
+    /// running: while a fix is pending the stop is deferred until it
+    /// completes or cancels, and updates keep the framework armed.
+    func typedDisableTracking() {
+        trackMeActive = false
+        if hasPendingLocationRequest {
+            stopTrackingWhenFixCompletes = true
+        } else {
+            trackingToggle(false)
+        }
+    }
+
+    /// Finishes a deferred tracking stop once the preserved request has
+    /// completed. Late calls and re-owned managers are no-ops.
+    func endDeferredTrackingStopIfNeeded() {
+        guard stopTrackingWhenFixCompletes else { return }
+        stopTrackingWhenFixCompletes = false
+        if !updatesActive && !trackMeActive && !hasPendingLocationRequest {
+            trackingToggle(false)
+        }
+    }
+
     /// Whether a typed stop is waiting behind a pending one-shot fix.
     /// The fix keeps the manager running to deliver its fix; the
     /// now-unowned updates end when the request completes.
@@ -764,6 +943,7 @@ class MapSession: NSObject {
         locationFixTimeoutWorkItem = nil
         completion(outcome)
         endDeferredUpdatesStopIfNeeded()
+        endDeferredTrackingStopIfNeeded()
     }
 
     func onMarkerSingleTap(location: CLLocationCoordinate2D) {

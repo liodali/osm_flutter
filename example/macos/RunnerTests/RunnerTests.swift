@@ -137,7 +137,7 @@ class RunnerTests: XCTestCase {
       // remove by id, two kind clears, full clear) and the three generated
       // road channels (draw, remove, clear) — alongside, never replacing
       // legacy endpoints.
-      XCTAssertEqual(messenger.handlers.count, 72)
+      XCTAssertEqual(messenger.handlers.count, 76)
       host = nil
     }
     // AppKit autoreleases views and the framework can have queued callbacks.
@@ -149,7 +149,7 @@ class RunnerTests: XCTestCase {
     // Disposal removes exactly this session's legacy channel and its
     // generated camera, marker, layer, shape and road channels; the other
     // live map keeps its full set.
-    XCTAssertEqual(messenger.handlers.count, 36)
+    XCTAssertEqual(messenger.handlers.count, 38)
     XCTAssertEqual(messenger.handlers.keys.filter { $0.hasPrefix("map_") }, ["map_2"])
     XCTAssertFalse(
       messenger.handlers.keys.contains { $0.contains(".view_1") },
@@ -1096,6 +1096,254 @@ class RunnerTests: XCTestCase {
     try await bridge.startLocationUpdates(session: wire)
     XCTAssertTrue(frameworkTracking)
     XCTAssertEqual(toggles, [true, false, true])
+  }
+
+  // MARK: - Follow-me tracking (generated route)
+
+  /// Stateful shared fake over both framework toggle seams: one flag
+  /// models the real CLLocationManager tracking state. Starts skip while
+  /// armed (the stale-flag bug signature), stops clear it only when no
+  /// other consumer (updates, pending fix) owns it.
+  /// Stateful shared fake over both framework toggle seams: one flag
+  /// models the real CLLocationManager tracking state. Starts skip while
+  /// armed (the stale-flag bug signature), stops clear it only when no
+  /// other consumer (updates, pending fix) owns it. `grantPermission()`
+  /// re-arms the reconciling tracking toggle after a denial-routing test
+  /// replacement, modeling the authorization prompt being accepted.
+  @MainActor
+  private final class FrameworkFake {
+    let entries: [String] = []
+    var recording: [String] { _recording }
+    private var _recording: [String] = []
+    private var frameworkTracking = false
+    private weak var map: MapSession?
+
+    func install(into map: MapSession) {
+      self.map = map
+      // Never touch the real location stack in tests.
+      map.locationEnableRequest = {}
+      map.trackingAnchorConfigurator = { _, _ in }
+      map.locationUpdatesToggle = { [weak self] start in
+        guard let self = self else { return }
+        if start {
+          if self.frameworkTracking { return }
+          self.frameworkTracking = true
+          self._recording.append("updates:start")
+        } else {
+          self.frameworkTracking = false
+          self._recording.append("updates:stop")
+        }
+      }
+      installTrackingToggle()
+    }
+
+    /// Re-arms the reconciling tracking toggle (permission granted).
+    func grantPermission() {
+      installTrackingToggle()
+    }
+
+    private func installTrackingToggle() {
+      guard let map = map else { return }
+      map.trackingToggle = { [weak self] start in
+        guard let self = self else { return }
+        if start {
+          if self.frameworkTracking { return }
+          self.frameworkTracking = true
+          self._recording.append("tracking:start")
+        } else {
+          if map.updatesActive || map.hasPendingLocationRequest {
+            return // updates or a pending fix keep the manager armed
+          }
+          if self.frameworkTracking {
+            self.frameworkTracking = false
+            self._recording.append("tracking:stop")
+          }
+        }
+      }
+    }
+  }
+
+  @MainActor
+  private func installSharedFrameworkFake(_ map: MapSession) -> FrameworkFake {
+    let fake = FrameworkFake()
+    fake.install(into: map)
+    return fake
+  }
+
+  private func trackingConfig(
+    stopFollowInDrag: Bool = false,
+    disableMarkerRotation: Bool = false,
+    useDirectionMarker: Bool = true,
+    anchorX: Double = 0.5,
+    anchorY: Double = 0.5
+  ) -> NativeTrackingConfiguration {
+    NativeTrackingConfiguration(
+      stopFollowInDrag: stopFollowInDrag,
+      disableMarkerRotation: disableMarkerRotation,
+      useDirectionMarker: useDirectionMarker,
+      anchor: NativeMarkerAnchor(x: anchorX, y: anchorY))
+  }
+
+  @MainActor
+  func testTrackingEnableDisableAreSafeAndIdempotent() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.trackingBridge)
+    let wire = cameraWireSession(map)
+    let fake = installSharedFrameworkFake(map)
+
+    // Enable completes exactly once; repeated enables stay idempotent.
+    try await bridge.enableTracking(session: wire, configuration: trackingConfig())
+    XCTAssertTrue(map.trackMeActive)
+    XCTAssertEqual(fake.recording, ["tracking:start"])
+    try await bridge.enableTracking(session: wire, configuration: trackingConfig())
+    XCTAssertTrue(map.trackMeActive)
+    XCTAssertEqual(fake.recording, ["tracking:start"])
+
+    // Disable is idempotent: the framework stops exactly once.
+    try await bridge.disableTracking(session: wire)
+    XCTAssertFalse(map.trackMeActive)
+    XCTAssertEqual(fake.recording, ["tracking:start", "tracking:stop"])
+    try await bridge.disableTracking(session: wire)
+    XCTAssertEqual(fake.recording, ["tracking:start", "tracking:stop"])
+  }
+
+  @MainActor
+  func testUpdatesAndTrackingReconcileOnTheSharedFramework() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let updatesBridge = try XCTUnwrap(map.locationUpdatesBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    let wire = cameraWireSession(map)
+    let fake = installSharedFrameworkFake(map)
+
+    // Updates start arms the framework; tracking start then skips the
+    // native toggle (already armed) and still owns the follow consumer.
+    // The tracking configuration is captured for the in-place mode
+    // reconcile (the armed framework gets its marker fields applied
+    // without stopping the shared subscription).
+    try await updatesBridge.startLocationUpdates(session: wire)
+    try await trackingBridge.enableTracking(
+      session: wire,
+      configuration: trackingConfig(
+        stopFollowInDrag: true,
+        disableMarkerRotation: true,
+        useDirectionMarker: true))
+    XCTAssertTrue(map.updatesActive)
+    XCTAssertTrue(map.trackMeActive)
+    XCTAssertTrue(map.trackingUseDirectionMarker)
+    XCTAssertTrue(map.trackingDisableMarkerRotation)
+    XCTAssertEqual(fake.recording, ["updates:start"])
+
+    // Stopping tracking preserves the continuous updates consumer.
+    try await trackingBridge.disableTracking(session: wire)
+    XCTAssertFalse(map.trackMeActive)
+    XCTAssertTrue(map.updatesActive)
+    XCTAssertEqual(fake.recording, ["updates:start"])
+
+    // Stopping updates with tracking re-enabled: tracking keeps the
+    // framework armed (the shared subscription survives).
+    try await trackingBridge.enableTracking(session: wire, configuration: trackingConfig())
+    try await updatesBridge.stopLocationUpdates(session: wire)
+    XCTAssertFalse(map.updatesActive)
+    XCTAssertTrue(map.trackMeActive)
+    XCTAssertEqual(fake.recording, ["updates:start"])
+
+    // Stopping tracking then releases the framework exactly once.
+    try await trackingBridge.disableTracking(session: wire)
+    XCTAssertEqual(fake.recording, ["updates:start", "tracking:stop"])
+    XCTAssertFalse(map.trackMeActive)
+  }
+
+  @MainActor
+  func testPendingFixSurvivesTrackingStop() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    let wire = cameraWireSession(map)
+    let fake = installSharedFrameworkFake(map)
+
+    try await trackingBridge.enableTracking(session: wire, configuration: trackingConfig())
+
+    // A pending one-shot fix pins the framework: the tracking stop is
+    // reconciled, the fix still completes at the fixed Zurich coordinates,
+    // and the manager releases only afterwards.
+    var completions = 0
+    map.pendingLocationFixCompletion = { _ in completions += 1 }
+    try await trackingBridge.disableTracking(session: wire)
+    XCTAssertFalse(map.trackMeActive)
+    XCTAssertTrue(map.hasPendingLocationRequest)
+    XCTAssertEqual(fake.recording, ["tracking:start"])
+
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.3769, longitude: 8.5417),
+      heading: 0)
+    XCTAssertEqual(completions, 1)
+    XCTAssertNil(map.pendingLocationFixCompletion)
+    // The deferred reconciliation fires with the fix completed.
+    XCTAssertEqual(fake.recording, ["tracking:start", "tracking:stop"])
+  }
+
+  @MainActor
+  func testTrackingDenialRollsBackOwnershipAndFramework() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    let wire = cameraWireSession(map)
+    let fake = installSharedFrameworkFake(map)
+
+    // A synchronous framework denial routes through handlePermission:
+    // the armed tracking start completes with permission_denied, the
+    // ownership rolls back and the framework flag resets.
+    map.trackingToggle = { [weak map] start in
+      if start, let map = map {
+        map.handlePermission(state: OSMFlutterFramework.LocationPermission.NotGranted)
+        return
+      }
+    }
+    var startCode: String?
+    do {
+      try await trackingBridge.enableTracking(session: wire, configuration: trackingConfig())
+    } catch let error as PigeonError {
+      startCode = error.code
+    } catch {
+      // Diagnose suite-order poison: which error escapes the bridge?
+      XCTFail("FIRST-CALL-DIAG \(type(of: error)) \(error)")
+      return
+    }
+    XCTAssertEqual(startCode, "permission_denied")
+    XCTAssertFalse(map.trackMeActive)
+    XCTAssertNil(map.startingTrackingCompletion)
+    // The denial reset flows through the updates seam (shared flag).
+    XCTAssertEqual(fake.recording, ["updates:stop"])
+
+    // The prompt is then accepted: the reconciling tracking toggle is
+    // re-armed and the retry runs the native toggle again.
+    fake.grantPermission()
+    try await trackingBridge.enableTracking(session: wire, configuration: trackingConfig())
+    XCTAssertTrue(map.trackMeActive)
+    XCTAssertEqual(fake.recording, ["updates:stop", "tracking:start"])
+  }
+
+  @MainActor
+  func testTrackingDisposalKeepsOtherSessionAlive() async throws {
+    let first = session(RecordingMessenger(), id: 1)
+    let second = session(RecordingMessenger(), id: 2)
+    defer { second.dispose() }
+    let firstBridge = try XCTUnwrap(first.trackingBridge)
+    let secondBridge = try XCTUnwrap(second.trackingBridge)
+    let firstWire = cameraWireSession(first)
+    let secondWire = cameraWireSession(second)
+    installSharedFrameworkFake(first)
+    installSharedFrameworkFake(second)
+
+    try await firstBridge.enableTracking(session: firstWire, configuration: trackingConfig())
+    // Disposal of the first session must not disturb the second's
+    // tracking route; a recreated map works too (fresh session).
+    first.dispose()
+    try await secondBridge.enableTracking(session: secondWire, configuration: trackingConfig())
+    try await secondBridge.disableTracking(session: secondWire)
+    XCTAssertFalse(second.trackMeActive)
   }
 
   @MainActor

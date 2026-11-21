@@ -772,6 +772,64 @@ struct NativeLocationFix: Hashable, CustomStringConvertible {
   }
 }
 
+/// Follow-me tracking configuration, mirroring the legacy `trackMe`
+/// arguments.
+///
+/// `stopFollowInDrag` lets an ending user drag release the follow camera;
+/// `disableMarkerRotation` pins the user marker orientation;
+/// `useDirectionMarker` swaps the marker for a directional arrow;
+/// `anchor` is the normalized icon pivot applied to both markers.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct NativeTrackingConfiguration: Hashable, CustomStringConvertible {
+  var stopFollowInDrag: Bool
+  var disableMarkerRotation: Bool
+  var useDirectionMarker: Bool
+  var anchor: NativeMarkerAnchor
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeTrackingConfiguration? {
+    let stopFollowInDrag = pigeonVar_list[0] as! Bool
+    let disableMarkerRotation = pigeonVar_list[1] as! Bool
+    let useDirectionMarker = pigeonVar_list[2] as! Bool
+    let anchor = pigeonVar_list[3] as! NativeMarkerAnchor
+
+    return NativeTrackingConfiguration(
+      stopFollowInDrag: stopFollowInDrag,
+      disableMarkerRotation: disableMarkerRotation,
+      useDirectionMarker: useDirectionMarker,
+      anchor: anchor
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      stopFollowInDrag,
+      disableMarkerRotation,
+      useDirectionMarker,
+      anchor,
+    ]
+  }
+  static func == (lhs: NativeTrackingConfiguration, rhs: NativeTrackingConfiguration) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.stopFollowInDrag, rhs.stopFollowInDrag) && NativeMapCameraPigeonInternal.deepEquals(lhs.disableMarkerRotation, rhs.disableMarkerRotation) && NativeMapCameraPigeonInternal.deepEquals(lhs.useDirectionMarker, rhs.useDirectionMarker) && NativeMapCameraPigeonInternal.deepEquals(lhs.anchor, rhs.anchor)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeTrackingConfiguration")
+    NativeMapCameraPigeonInternal.deepHash(value: stopFollowInDrag, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: disableMarkerRotation, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: useDirectionMarker, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: anchor, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeTrackingConfiguration(stopFollowInDrag: \(String(describing: stopFollowInDrag)), disableMarkerRotation: \(String(describing: disableMarkerRotation)), useDirectionMarker: \(String(describing: useDirectionMarker)), anchor: \(String(describing: anchor)))"
+  }
+}
+
 private class NativeMapCameraPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -797,6 +855,8 @@ private class NativeMapCameraPigeonCodecReader: FlutterStandardReader {
       return NativeRoadStyle.fromList(self.readValue() as! [Any?])
     case 139:
       return NativeLocationFix.fromList(self.readValue() as! [Any?])
+    case 140:
+      return NativeTrackingConfiguration.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -837,6 +897,9 @@ private class NativeMapCameraPigeonCodecWriter: FlutterStandardWriter {
       super.writeValue(value.toList())
     } else if let value = value as? NativeLocationFix {
       super.writeByte(139)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeTrackingConfiguration {
+      super.writeByte(140)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -1514,6 +1577,78 @@ class NativeMapLocationUpdatesApiSetup {
       }
     } else {
       stopLocationUpdatesChannel.setMessageHandler(nil)
+    }
+  }
+}
+/// Generated follow-me tracking route for one map session.
+///
+/// The host advertises the `location.tracking` capability only when it
+/// implements this surface; older hosts keep `trackMe` /
+/// `deactivateTrackMe` on their legacy routes. Permission ownership
+/// stays with the host application. Tracking shares the location
+/// subscription with continuous updates and one-shot fixes: starting
+/// tracking never disturbs them, and stopping tracking preserves both.
+///
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol NativeMapTrackingApi {
+  /// Starts follow-me tracking; idempotent, completes exactly once with
+  /// `location_service_disabled` when the platform reports the provider
+  /// off.
+  func enableTracking(session: NativeCameraSession, configuration: NativeTrackingConfiguration) async throws
+  /// Ends follow-me tracking; idempotent, never prompts, never fails.
+  /// Continuous updates and pending one-shot fixes keep running. Async so
+  /// the Dart facade awaits native session validation and completion
+  /// (stale sessions surface instead of firing into the void).
+  func disableTracking(session: NativeCameraSession) async throws
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class NativeMapTrackingApiSetup {
+  static var codec: FlutterStandardMessageCodec { NativeMapCameraPigeonCodec.shared }
+  /// Sets up an instance of `NativeMapTrackingApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: NativeMapTrackingApi?, messageChannelSuffix: String = "") {
+    let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    /// Starts follow-me tracking; idempotent, completes exactly once with
+    /// `location_service_disabled` when the platform reports the provider
+    /// off.
+    let enableTrackingChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapTrackingApi.enableTracking\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      enableTrackingChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        let configurationArg = args[1] as! NativeTrackingConfiguration
+        Task { @MainActor in
+          do {
+            try await api.enableTracking(session: sessionArg, configuration: configurationArg)
+            reply(wrapResult(nil))
+          } catch {
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      enableTrackingChannel.setMessageHandler(nil)
+    }
+    /// Ends follow-me tracking; idempotent, never prompts, never fails.
+    /// Continuous updates and pending one-shot fixes keep running. Async so
+    /// the Dart facade awaits native session validation and completion
+    /// (stale sessions surface instead of firing into the void).
+    let disableTrackingChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_osm_interface.NativeMapTrackingApi.disableTracking\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      disableTrackingChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sessionArg = args[0] as! NativeCameraSession
+        Task { @MainActor in
+          do {
+            try await api.disableTracking(session: sessionArg)
+            reply(wrapResult(nil))
+          } catch {
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      disableTrackingChannel.setMessageHandler(nil)
     }
   }
 }
