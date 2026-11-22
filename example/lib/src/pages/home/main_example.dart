@@ -697,6 +697,11 @@ class Map extends StatelessWidget {
         // Exercise the typed generated-camera channel on this page: probe
         // decides at attach; hosts without support keep the legacy route.
         useTypedCameraRoute: true,
+        // Exercise the typed user-location icon channel with per-icon
+        // anchors: the person icon keeps its center pivot while the
+        // direction arrow is pinned by its tip. Hosts without the
+        // `location.icons` capability keep the legacy icon route.
+        useTypedLocationIcons: true,
         zoomOption: const ZoomOption(
           initZoom: 16,
           minZoomLevel: 3,
@@ -706,6 +711,8 @@ class Map extends StatelessWidget {
         // Distinct person (red) and direction (blue) markers for the built-in
         // user-location layer.
         userLocationMarker: UserLocationMaker(
+          personAnchor: IconAnchor(anchor: Anchor.center),
+          directionAnchor: IconAnchor(anchor: Anchor.top),
           personMarker: const MarkerIcon(
             icon: Icon(
               Icons.directions_walk,
