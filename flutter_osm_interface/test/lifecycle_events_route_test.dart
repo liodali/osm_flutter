@@ -291,6 +291,145 @@ void main() {
     });
   });
 
+  group('uncertain negotiation outcomes', () {
+    test('selection timeout with a confirmed rollback keeps legacy delivery',
+        () async {
+      final selections = <String>[];
+      await mockLegacy((call) async {
+        if (call.method == bootstrapMethod) return lifecycleBootstrap;
+        if (call.method == routeMethod) {
+          final route = (call.arguments as Map)['route'] as String;
+          selections.add(route);
+          if (route == 'pigeon') {
+            // The reply is lost: Dart times out while the host may already
+            // have processed the switch.
+            return Completer<Object?>().future;
+          }
+          return true; // rollback confirmed
+        }
+        return null;
+      });
+      final osm = MethodChannelOSM();
+      osm.lifecycleRouteSelectionTimeout = const Duration(milliseconds: 30);
+      await osm.init(7);
+      expect(
+        await osm.attachLifecycleEventsRoute(7, optIn: true),
+        CameraRouteSelection.legacy,
+      );
+      // The rollback rode the same channel after the pending selection.
+      expect(selections, ['pigeon', 'legacy']);
+      expect(osm.lifecycleEventsClientFor(7), isNull);
+
+      // Handlers were deactivated: pigeon callbacks deliver nothing while
+      // the confirmed legacy plane keeps delivering readiness.
+      final ready = <EventOSM>[];
+      final sub = osm.onMapIsReady(7).listen(ready.add);
+      await emitNativeReady(7, true);
+      await emitLegacy('map#init', true);
+      await Future<void>.delayed(Duration.zero);
+      expect(ready.map((e) => e.value), [true]);
+      await sub.cancel();
+      osm.close(7);
+    });
+
+    test('an unconfirmed rollback aborts attachment without freezing a route',
+        () async {
+      var hostResponsive = false;
+      await mockLegacy((call) async {
+        if (call.method == bootstrapMethod) return lifecycleBootstrap;
+        if (call.method == routeMethod) {
+          if (!hostResponsive) return Completer<Object?>().future;
+          return true;
+        }
+        return null;
+      });
+      final osm = MethodChannelOSM();
+      osm.lifecycleRouteSelectionTimeout = const Duration(milliseconds: 30);
+      await osm.init(7);
+      await expectLater(
+        osm.attachLifecycleEventsRoute(7, optIn: true),
+        throwsA(isA<LifecycleRouteUncertainException>()),
+      );
+      expect(osm.lifecycleEventsClientFor(7), isNull);
+
+      // The pending client was deactivated: a pigeon callback finds no
+      // handler while the host's route is unknown.
+      final ready = <EventOSM>[];
+      final sub = osm.onMapIsReady(7).listen(ready.add);
+      await emitNativeReady(7, true);
+      await Future<void>.delayed(Duration.zero);
+      expect(ready, isEmpty);
+
+      // No decision was frozen: once the host answers, a retry negotiates
+      // and delivers normally.
+      hostResponsive = true;
+      expect(
+        await osm.attachLifecycleEventsRoute(7, optIn: true),
+        CameraRouteSelection.generated,
+      );
+      await emitNativeReady(7, true);
+      await Future<void>.delayed(Duration.zero);
+      expect(ready.map((e) => e.value), [true]);
+      await sub.cancel();
+      osm.close(7);
+    });
+
+    test('a rejected rollback aborts attachment', () async {
+      await mockLegacy((call) async {
+        if (call.method == bootstrapMethod) return lifecycleBootstrap;
+        if (call.method == routeMethod) {
+          final route = (call.arguments as Map)['route'] as String;
+          if (route == 'pigeon') return Completer<Object?>().future;
+          throw PlatformException(code: 'disposed');
+        }
+        return null;
+      });
+      final osm = MethodChannelOSM();
+      osm.lifecycleRouteSelectionTimeout = const Duration(milliseconds: 30);
+      await osm.init(7);
+      await expectLater(
+        osm.attachLifecycleEventsRoute(7, optIn: true),
+        throwsA(isA<LifecycleRouteUncertainException>()),
+      );
+      expect(osm.lifecycleEventsClientFor(7), isNull);
+      osm.close(7);
+    });
+
+    test('close during an uncertain selection discards instead of aborting',
+        () async {
+      final gate = Completer<Object?>();
+      await mockLegacy((call) async {
+        if (call.method == bootstrapMethod) return lifecycleBootstrap;
+        // Neither the selection nor the rollback ever answers.
+        if (call.method == routeMethod) return gate.future;
+        return null;
+      });
+      final osm = MethodChannelOSM();
+      osm.lifecycleRouteSelectionTimeout = const Duration(milliseconds: 30);
+      await osm.init(7);
+      final pending = osm.attachLifecycleEventsRoute(7, optIn: true);
+      await Future<void>.delayed(Duration.zero);
+      osm.close(7);
+      // The attachment is gone: the stale uncertain outcome is discarded,
+      // not surfaced as an abort, and nothing is frozen.
+      expect(await pending, CameraRouteSelection.legacy);
+      expect(osm.lifecycleEventsClientFor(7), isNull);
+
+      await mockLegacy((call) async {
+        if (call.method == bootstrapMethod) {
+          return {...lifecycleBootstrap, 'sessionToken': 'token-7-new'};
+        }
+        return true;
+      });
+      await osm.init(7);
+      expect(
+        await osm.attachLifecycleEventsRoute(7, optIn: true),
+        CameraRouteSelection.generated,
+      );
+      osm.close(7);
+    });
+  });
+
   group('exactly-once readiness on the generated route', () {
     late MethodChannelOSM osm;
     late List<EventOSM> readyEvents;
@@ -596,6 +735,52 @@ void main() {
         await osm.attachLifecycleEventsRoute(7, optIn: true),
         CameraRouteSelection.generated,
       );
+      final ready = <EventOSM>[];
+      final sub = osm.onMapIsReady(7).listen(ready.add);
+      await emitNativeReady(7, true, token: 'token-7-new');
+      await Future<void>.delayed(Duration.zero);
+      expect(ready.map((e) => e.value), [true]);
+      await sub.cancel();
+      osm.close(7);
+    });
+
+    test('a failed stale negotiation never overwrites the replacement',
+        () async {
+      final selectionGate = Completer<Object?>();
+      var token = 'token-7';
+      await mockLegacy((call) async {
+        if (call.method == bootstrapMethod) {
+          return {...lifecycleBootstrap, 'sessionToken': token};
+        }
+        if (call.method == routeMethod) {
+          final args = call.arguments as Map;
+          if (args['sessionToken'] == 'token-7') return selectionGate.future;
+          return true;
+        }
+        return null;
+      });
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      final pending = osm.attachLifecycleEventsRoute(7, optIn: true);
+      await Future<void>.delayed(Duration.zero);
+      osm.close(7);
+
+      // The replacement attaches and freezes the generated route first.
+      token = 'token-7-new';
+      await osm.init(7);
+      expect(
+        await osm.attachLifecycleEventsRoute(7, optIn: true),
+        CameraRouteSelection.generated,
+      );
+      final replacement = osm.lifecycleEventsClientFor(7);
+      expect(replacement, isNotNull);
+
+      // The stale negotiation now fails: it must discard its decision
+      // without unfreezing the replacement's route.
+      selectionGate.completeError(PlatformException(code: 'stale_session'));
+      expect(await pending, CameraRouteSelection.legacy);
+      expect(identical(osm.lifecycleEventsClientFor(7), replacement), isTrue);
+
       final ready = <EventOSM>[];
       final sub = osm.onMapIsReady(7).listen(ready.add);
       await emitNativeReady(7, true, token: 'token-7-new');

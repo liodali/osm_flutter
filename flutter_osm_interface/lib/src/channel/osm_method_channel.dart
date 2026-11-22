@@ -87,6 +87,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// route selection. Exactly one delivery route is active per attachment.
   final Map<int, PigeonLifecycleEventsClient?> _lifecycleEventsRoutes = {};
 
+  /// Bound for the lifecycle route selection and its rollback confirmation.
+  /// Injectable so tests can drive the uncertain-outcome paths without
+  /// real-time waits.
+  @visibleForTesting
+  Duration lifecycleRouteSelectionTimeout = const Duration(seconds: 2);
+
   /// Host capabilities seen by the last successful attach-time probe, per
   /// map. Runs only when some family opted in; without any opt-in no probe
   /// happened and legacy payload shapes stay the historical ones.
@@ -563,8 +569,16 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   /// Tells the host which lifecycle delivery route this attachment uses.
   /// Runs on the legacy channel before any map mutation; a host that
-  /// rejects the selection (stale session, unknown route, channel failure)
+  /// rejects the selection (stale session, unknown route, missing endpoint)
   /// keeps the legacy route and the caller deactivates the pending client.
+  ///
+  /// A timeout is an uncertain outcome: the host may still process the
+  /// selection after Dart stopped waiting. One channel's messages are
+  /// handled in order, so a confirmed legacy rollback supersedes the pending
+  /// pigeon selection and makes the legacy fallback safe. Without that
+  /// confirmation the attachment is aborted
+  /// ([LifecycleRouteUncertainException]) instead of removing the handlers
+  /// while the host might emit on the generated route.
   Future<void> _selectNativeLifecycleEventsRoute(
     int idOSM,
     NativeProtocolBootstrap bootstrap,
@@ -573,14 +587,29 @@ class MethodChannelOSM extends MobileOSMPlatform {
     if (channel == null) {
       throw StateError('map $idOSM is not attached');
     }
-    await channel.invokeMethod<Object?>(
-      kNativeLifecycleEventsRouteMethod,
-      <String, Object?>{
-        'sessionToken': bootstrap.sessionToken,
-        'generation': bootstrap.generation,
-        'route': kLifecycleEventsRoutePigeon,
-      },
-    ).timeout(const Duration(seconds: 2));
+    final identity = <String, Object?>{
+      'sessionToken': bootstrap.sessionToken,
+      'generation': bootstrap.generation,
+    };
+    try {
+      await channel.invokeMethod<Object?>(
+        kNativeLifecycleEventsRouteMethod,
+        {...identity, 'route': kLifecycleEventsRoutePigeon},
+      ).timeout(lifecycleRouteSelectionTimeout);
+    } on TimeoutException {
+      try {
+        await channel.invokeMethod<Object?>(
+          kNativeLifecycleEventsRouteMethod,
+          {...identity, 'route': kLifecycleEventsRouteLegacy},
+        ).timeout(lifecycleRouteSelectionTimeout);
+      } catch (_) {
+        // The host's delivery route is unknown: never guess legacy.
+        throw const LifecycleRouteUncertainException();
+      }
+      // Rollback confirmed: the host is definitely on the legacy route,
+      // so the definite-rejection fallback below cannot lose events.
+      rethrow;
+    }
   }
 
   /// Active generated client for [idOSM]'s markers family, or null when the
@@ -626,9 +655,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// in-flight probe per id+family, disposal-epoch invalidation.
   ///
   /// [activate] optionally completes the negotiation after the client is
-  /// created (e.g. the lifecycle event route selection); a failure there
-  /// keeps the legacy route and runs [deactivate] on the pending client.
-  /// Both run before the decision is frozen and before any map mutation.
+  /// created (e.g. the lifecycle event route selection); a definite failure
+  /// keeps the legacy route and runs [deactivate] on the pending client, an
+  /// uncertain outcome ([LifecycleRouteUncertainException]) aborts the
+  /// attachment after [deactivate] without freezing a decision. Both run
+  /// before the decision is frozen and before any map mutation.
   Future<CameraRouteSelection> _attachRoute<C extends Object>({
     required int idOSM,
     required bool optIn,
@@ -721,10 +752,26 @@ class MethodChannelOSM extends MobileOSMPlatform {
         if (activate != null) {
           try {
             await activate(client);
-          } catch (_) {
-            // Negotiation failed before any mutation: the host kept (or
-            // returned to) the legacy route; drop the pending client.
+          } catch (error) {
+            // Negotiation failed before any mutation: drop the pending
+            // client either way.
             deactivate?.call(client);
+            final changedDuringActivation = !_channels.containsKey(idOSM) ||
+                (_cameraRouteEpochs[idOSM] ?? 0) != epoch;
+            if (changedDuringActivation) {
+              // Disposed/replaced while negotiating: never store a decision
+              // for a dead attachment — a null write here would overwrite
+              // the replacement's frozen route. It decides freshly.
+              return CameraRouteSelection.legacy;
+            }
+            if (error is LifecycleRouteUncertainException) {
+              // The host's delivery route is unknown: freezing legacy could
+              // silently lose every lifecycle event. Abort the attachment
+              // without freezing a decision; a retry re-negotiates.
+              rethrow;
+            }
+            // Definite rejection: the host kept (or confirmed) the legacy
+            // route.
             routes[idOSM] = null;
             return CameraRouteSelection.legacy;
           }

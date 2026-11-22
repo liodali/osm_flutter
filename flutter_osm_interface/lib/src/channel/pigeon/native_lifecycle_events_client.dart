@@ -22,6 +22,21 @@ import 'native_map_camera.g.dart' as generated;
 
 import 'native_camera_bootstrap.dart';
 
+/// Thrown when the lifecycle route negotiation ends in an uncertain state:
+/// the selection timed out and a rollback to the legacy route could not be
+/// confirmed. The host may already have switched to the generated route, so
+/// silently falling back to legacy would unregister the callbacks and lose
+/// every readiness/restoration event. Attachment is aborted instead; the
+/// caller may retry, which re-negotiates from a clean state.
+class LifecycleRouteUncertainException implements Exception {
+  const LifecycleRouteUncertainException();
+
+  @override
+  String toString() => 'LifecycleRouteUncertainException: '
+      'the lifecycle event route could not be negotiated safely; '
+      'attachment was aborted rather than risking lost readiness events';
+}
+
 /// Selected generated lifecycle-event route for one map attachment.
 ///
 /// Registers the generated FlutterApi handlers for the map's per-view
