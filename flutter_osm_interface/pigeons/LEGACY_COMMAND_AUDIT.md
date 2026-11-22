@@ -119,4 +119,8 @@ hosts and the delivery plane for attachments that do not opt in.
 - Readiness is a transition signal: repeated identical values are coalesced
   by the Dart client, so one initialization yields exactly one delivery.
 - Public streams (`onMapIsReady`, `onMapRestored`) are unchanged; both
-  routes feed the same event broadcast.
+  routes feed the same event broadcast. Lifecycle events emitted during
+  attachment (e.g. Android flushing a buffered restoration while answering
+  the selection) arrive before the controller subscribes, so they are
+  buffered per map and replayed to the first listener instead of being
+  dropped by the broadcast stream. Disposal clears any unreplayed buffer.
