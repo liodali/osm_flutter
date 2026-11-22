@@ -19,6 +19,7 @@ import 'package:flutter_osm_interface/src/channel/pigeon/native_shapes_client.da
 import 'package:flutter_osm_interface/src/channel/pigeon/native_location_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_location_updates_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_tracking_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_user_location_icons_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_roads_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
@@ -71,6 +72,17 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// rules: follow-me start/stop stays legacy unless the host negotiated
   /// the `location.tracking` capability at attach time.
   final Map<int, PigeonTrackingClient?> _trackingRoutes = {};
+
+  /// Frozen user-location icon route decision (null = legacy), same
+  /// lifecycle rules: person/direction icon replacement stays legacy
+  /// unless the host negotiated the `location.icons` capability at attach
+  /// time.
+  final Map<int, PigeonUserLocationIconsClient?> _locationIconsRoutes = {};
+
+  /// Host capabilities seen by the last successful attach-time probe, per
+  /// map. Runs only when some family opted in; without any opt-in no probe
+  /// happened and legacy payload shapes stay the historical ones.
+  final Map<int, NativeProtocolBootstrap> _hostProtocols = {};
 
   /// GeoPoint key → typed marker ids for maps frozen on the generated
   /// markers route. The legacy public API addresses markers by position;
@@ -242,6 +254,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _routeAttachJobs.remove('$idOSM:$kLocationCapability');
     _routeAttachJobs.remove('$idOSM:$kLocationUpdatesCapability');
     _routeAttachJobs.remove('$idOSM:$kTrackingCapability');
+    _routeAttachJobs.remove('$idOSM:$kLocationIconsCapability');
+    _hostProtocols.remove(idOSM);
     _cameraRoutes.remove(idOSM);
     _markersRoutes.remove(idOSM);
     _layersRoutes.remove(idOSM);
@@ -250,6 +264,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _locationRoutes.remove(idOSM);
     _locationUpdatesRoutes.remove(idOSM);
     _trackingRoutes.remove(idOSM);
+    _locationIconsRoutes.remove(idOSM);
     _typedMarkerKeys.remove(idOSM);
     _typedMarkerSequences.remove(idOSM);
     _typedMarkerOrder.remove(idOSM);
@@ -465,6 +480,29 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @visibleForTesting
   PigeonTrackingClient? trackingClientFor(int idOSM) => _trackingRoutes[idOSM];
 
+  @override
+  Future<CameraRouteSelection> attachUserLocationIconsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonUserLocationIconsClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kLocationIconsCapability,
+      routes: _locationIconsRoutes,
+      createClient: (bootstrap) => PigeonUserLocationIconsClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+      ),
+    );
+  }
+
+  /// Active generated client for [idOSM]'s user-location icon family, or
+  /// null when the frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonUserLocationIconsClient? userLocationIconsClientFor(int idOSM) =>
+      _locationIconsRoutes[idOSM];
+
   /// Active generated client for [idOSM]'s markers family, or null when the
   /// frozen decision selected the legacy route.
   @visibleForTesting
@@ -582,10 +620,15 @@ class MethodChannelOSM extends MobileOSMPlatform {
     }
     if (probe is NativeProtocolSupported &&
         probe.bootstrap.isSupportedRevision &&
-        probe.bootstrap.schemaId == kNativeCameraSchemaId &&
-        probe.bootstrap.advertises(capability)) {
-      routes[idOSM] = createClient(probe.bootstrap);
-      return CameraRouteSelection.generated;
+        probe.bootstrap.schemaId == kNativeCameraSchemaId) {
+      // Remember the host's capabilities beyond this family: cross-family
+      // wire-shape decisions (e.g. optional tracking anchors on the legacy
+      // route) depend on them.
+      _hostProtocols[idOSM] = probe.bootstrap;
+      if (probe.bootstrap.advertises(capability)) {
+        routes[idOSM] = createClient(probe.bootstrap);
+        return CameraRouteSelection.generated;
+      }
     }
     routes[idOSM] = null;
     return CameraRouteSelection.legacy;
@@ -766,21 +809,37 @@ class MethodChannelOSM extends MobileOSMPlatform {
     int idOSM, {
     bool stopFollowInDrag = false,
     bool disableMarkerRotation = false,
-    Anchor anchor = Anchor.center,
+    Anchor? anchor,
     bool useDirectionMarker = false,
   }) async {
     final client = _trackingRoutes[idOSM];
     if (client != null) {
+      // Null anchors need a host whose generated schema accepts them; older
+      // hosts decode the generated configuration with a non-null cast.
+      final optionalAnchor =
+          client.bootstrap.advertises(kTrackingOptionalAnchorCapability);
       try {
         await client.enableTracking(
           generated.NativeTrackingConfiguration(
             stopFollowInDrag: stopFollowInDrag,
             disableMarkerRotation: disableMarkerRotation,
             useDirectionMarker: useDirectionMarker,
-            anchor: generated.NativeMarkerAnchor(
-              x: anchor.value.$1,
-              y: anchor.value.$2,
-            ),
+            // A null anchor keeps the pivots the icon configuration already
+            // has, so starting tracking never re-centers icons the
+            // application configured itself. Hosts without the capability
+            // keep the historical centered default.
+            anchor: () {
+              final resolved = _resolvedTrackingAnchor(
+                anchor,
+                optionalAnchor: optionalAnchor,
+              );
+              return resolved == null
+                  ? null
+                  : generated.NativeMarkerAnchor(
+                      x: resolved.value.$1,
+                      y: resolved.value.$2,
+                    );
+            }(),
           ),
         );
       } on LocationFailure catch (e) {
@@ -794,12 +853,34 @@ class MethodChannelOSM extends MobileOSMPlatform {
       stopFollowInDrag,
       disableMarkerRotation,
       useDirectionMarker,
-      anchor.toMap()
+      // A null slot means "no override" — but only for hosts that advertise
+      // optional-anchor support: older legacy handlers cast the slot to a
+      // list and crash on null. Without a known capability (no family opted
+      // in, or an old host) the historical centered payload is sent.
+      _resolvedTrackingAnchor(
+        anchor,
+        optionalAnchor:
+            _hostProtocols[idOSM]?.advertises(kTrackingOptionalAnchorCapability) ??
+                false,
+      )?.toMap(),
     ];
     await _channels[idOSM]?.invokeMethod(
       'trackMe',
       args,
     );
+  }
+
+  /// Resolves the tracking anchor for the wire: an explicit override always
+  /// wins; a missing override becomes null (keep the configured pivots) only
+  /// for hosts that accept it, and the centered default otherwise.
+  Anchor? _resolvedTrackingAnchor(
+    Anchor? anchor, {
+    required bool optionalAnchor,
+  }) {
+    if (anchor != null || optionalAnchor) {
+      return anchor;
+    }
+    return Anchor.center;
   }
 
   @override
@@ -1159,8 +1240,39 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> customUserLocationMarker(
     int idOSM,
     GlobalKey personGlobalKey,
-    GlobalKey directionArrowGlobalKey,
-  ) async {
+    GlobalKey directionArrowGlobalKey, {
+    IconAnchor? personAnchor,
+    IconAnchor? directionAnchor,
+  }) async {
+    final client = _locationIconsRoutes[idOSM];
+    if (client != null) {
+      // Flutter widget rendering stays asynchronous here: both icons are
+      // captured before anything crosses the typed channel. The capture can
+      // outlive a close(), so identity-check the attachment before sending.
+      final (personBytes, personSize) = await _captureWidgetIcon(personGlobalKey);
+      final (directionBytes, directionSize) =
+          await _captureWidgetIcon(directionArrowGlobalKey);
+      if (!identical(_locationIconsRoutes[idOSM], client)) return;
+      try {
+        await client.setUserLocationIcons(
+          generated.NativeUserLocationIcons(
+            person: generated.NativeUserLocationIcon(
+              iconBytes: personBytes,
+              logicalSize: personSize?.toGeneratedSize(),
+              anchor: personAnchor?.toGenerated(),
+            ),
+            direction: generated.NativeUserLocationIcon(
+              iconBytes: directionBytes,
+              logicalSize: directionSize?.toGeneratedSize(),
+              anchor: directionAnchor?.toGenerated(),
+            ),
+          ),
+        );
+      } on StaleMapSessionException {
+        throw GeoPointException(msg: 'the map session was replaced or disposed');
+      }
+      return;
+    }
     final iconPerson = await _capturePng(personGlobalKey);
     final iconArrowDirection = await _capturePng(directionArrowGlobalKey);
     HashMap<String, dynamic> args = HashMap();

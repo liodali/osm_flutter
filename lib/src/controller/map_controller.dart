@@ -305,11 +305,14 @@ class MapController extends BaseMapController {
   /// To disable the rotation of user marker,
   /// change [disableUserMarkerRotation] to true (default : false)
   ///
+  /// [anchor] re-pivots the user markers; leave it null to keep the pivots
+  /// the configured `UserLocationMaker` anchors (or the platform default)
+  /// already have.
   ///
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableUserMarkerRotation = false,
-    Anchor anchor = Anchor.center,
+    Anchor? anchor,
     bool useDirectionMarker = false,
   }) async {
     await osmBaseController.enableTracking(

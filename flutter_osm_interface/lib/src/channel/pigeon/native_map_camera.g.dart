@@ -790,13 +790,16 @@ class NativeLocationFix {
 /// `stopFollowInDrag` lets an ending user drag release the follow camera;
 /// `disableMarkerRotation` pins the user marker orientation;
 /// `useDirectionMarker` swaps the marker for a directional arrow;
-/// `anchor` is the normalized icon pivot applied to both markers.
+/// `anchor` is the normalized icon pivot. A null `anchor` keeps the pivots
+/// the live icon configuration already has (per icon), so starting tracking
+/// without an explicit override never re-centers icons the application
+/// configured itself.
 class NativeTrackingConfiguration {
   NativeTrackingConfiguration({
     required this.stopFollowInDrag,
     required this.disableMarkerRotation,
     required this.useDirectionMarker,
-    required this.anchor,
+    this.anchor,
   });
 
   bool stopFollowInDrag;
@@ -805,7 +808,7 @@ class NativeTrackingConfiguration {
 
   bool useDirectionMarker;
 
-  NativeMarkerAnchor anchor;
+  NativeMarkerAnchor? anchor;
 
   List<Object?> _toList() {
     return <Object?>[
@@ -825,7 +828,7 @@ class NativeTrackingConfiguration {
       stopFollowInDrag: result[0]! as bool,
       disableMarkerRotation: result[1]! as bool,
       useDirectionMarker: result[2]! as bool,
-      anchor: result[3]! as NativeMarkerAnchor,
+      anchor: result[3] as NativeMarkerAnchor?,
     );
   }
 
@@ -848,6 +851,128 @@ class NativeTrackingConfiguration {
   @override
   String toString() {
     return 'NativeTrackingConfiguration(stopFollowInDrag: $stopFollowInDrag, disableMarkerRotation: $disableMarkerRotation, useDirectionMarker: $useDirectionMarker, anchor: $anchor)';
+  }
+}
+
+/// One user-location icon prepared in Dart.
+///
+/// The application supplies the icon as a Flutter widget; the Dart side
+/// renders it (asynchronously, with the capture rules the legacy
+/// `user#locationMarkers` route uses) and only the encoded PNG bytes, the
+/// logical (pre-scale) widget dimensions and the normalized anchor cross
+/// this channel. Hosts combine the logical size with their own display
+/// scale, exactly like the typed marker icon contract.
+///
+/// `anchor` is a normalized icon pivot: `(0.5, 0.5)` centers the icon on the
+/// user coordinate and `(0.5, 1.0)` pins a pin tip. A null anchor preserves
+/// the anchor the live configuration already has, so replacing icon bytes
+/// never moves an active marker.
+class NativeUserLocationIcon {
+  NativeUserLocationIcon({
+    required this.iconBytes,
+    this.logicalSize,
+    this.anchor,
+  });
+
+  Uint8List iconBytes;
+
+  NativeMarkerSize? logicalSize;
+
+  NativeMarkerAnchor? anchor;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      iconBytes,
+      logicalSize,
+      anchor,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeUserLocationIcon decode(Object result) {
+    result as List<Object?>;
+    return NativeUserLocationIcon(
+      iconBytes: result[0]! as Uint8List,
+      logicalSize: result[1] as NativeMarkerSize?,
+      anchor: result[2] as NativeMarkerAnchor?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeUserLocationIcon || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(iconBytes, other.iconBytes) && _deepEquals(logicalSize, other.logicalSize) && _deepEquals(anchor, other.anchor);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeUserLocationIcon(iconBytes: $iconBytes, logicalSize: $logicalSize, anchor: $anchor)';
+  }
+}
+
+/// The person + direction icon pair of the my-location layer.
+///
+/// Both icons are captured from their widgets, mirroring the legacy
+/// `user#locationMarkers` payload that always carries the two images.
+class NativeUserLocationIcons {
+  NativeUserLocationIcons({
+    required this.person,
+    required this.direction,
+  });
+
+  NativeUserLocationIcon person;
+
+  NativeUserLocationIcon direction;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      person,
+      direction,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeUserLocationIcons decode(Object result) {
+    result as List<Object?>;
+    return NativeUserLocationIcons(
+      person: result[0]! as NativeUserLocationIcon,
+      direction: result[1]! as NativeUserLocationIcon,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeUserLocationIcons || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(person, other.person) && _deepEquals(direction, other.direction);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeUserLocationIcons(person: $person, direction: $direction)';
   }
 }
 
@@ -895,6 +1020,12 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is NativeTrackingConfiguration) {
       buffer.putUint8(140);
       writeValue(buffer, value.encode());
+    }    else if (value is NativeUserLocationIcon) {
+      buffer.putUint8(141);
+      writeValue(buffer, value.encode());
+    }    else if (value is NativeUserLocationIcons) {
+      buffer.putUint8(142);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -927,6 +1058,10 @@ class _PigeonCodec extends StandardMessageCodec {
         return NativeLocationFix.decode(readValue(buffer)!);
       case 140:
         return NativeTrackingConfiguration.decode(readValue(buffer)!);
+      case 141:
+        return NativeUserLocationIcon.decode(readValue(buffer)!);
+      case 142:
+        return NativeUserLocationIcons.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -1840,6 +1975,59 @@ class NativeMapMarkersApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, markerIds]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+}
+
+/// Generated user-location icon route for one map session.
+///
+/// The host advertises the `location.icons` capability only when it
+/// implements this surface; older hosts keep the person/direction icon
+/// replacement on their legacy `user#locationMarkers` route.
+///
+/// Completion contract: the call only swaps the layer icons, so it never
+/// starts, stops or restarts the location subscription. Follow-me tracking,
+/// continuous updates and pending one-shot fixes keep running untouched
+/// (their markers are re-rendered in place), and denial/permission flows are
+/// never triggered. A null configuration restores the platform default
+/// icons and the default center anchor, mirroring the reset semantics of
+/// the typed layers route.
+class NativeMapUserLocationIconsApi {
+  /// Constructor for [NativeMapUserLocationIconsApi]. The [binaryMessenger] named argument is
+  /// available for dependency injection. If it is left null, the default
+  /// BinaryMessenger will be used which routes to the host platform.
+  NativeMapUserLocationIconsApi({
+      BinaryMessenger? binaryMessenger, 
+      String messageChannelSuffix = '', 
+      })
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+
+  final BinaryMessenger? pigeonVar_binaryMessenger;
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  final String pigeonVar_messageChannelSuffix;
+
+
+  /// Replaces the person and direction icons of the my-location layer.
+  ///
+  /// `icons` null restores the platform defaults. Android keeps one pivot
+  /// for both icons: the person anchor wins, falling back to the direction
+  /// anchor when the person anchor is null.
+  Future<void> setUserLocationIcons(NativeCameraSession session, NativeUserLocationIcons? icons) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_osm_interface.NativeMapUserLocationIconsApi.setUserLocationIcons$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[session, icons]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
     _extractReplyValueOrThrow(
         pigeonVar_replyList,

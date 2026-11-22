@@ -40,6 +40,7 @@ class OSMOption {
     this.useTypedLocation = false,
     this.useTypedLocationUpdates = false,
     this.useTypedTracking = false,
+    this.useTypedLocationIcons = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -93,6 +94,13 @@ class OSMOption {
   /// `location.tracking` capability at attachment time. Default keeps the
   /// legacy route.
   final bool useTypedTracking;
+
+  /// Opt-in routing of the person/direction user-location icon replacement
+  /// through the typed generated channel when the native host advertises
+  /// the `location.icons` capability at attachment time. Default keeps the
+  /// legacy `user#locationMarkers` route. Widget rendering stays
+  /// asynchronous in Dart: only prepared PNG bytes cross the channel.
+  final bool useTypedLocationIcons;
 }
 
 /// [ZoomOption]

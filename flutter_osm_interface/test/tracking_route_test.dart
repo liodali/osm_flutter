@@ -20,8 +20,19 @@ String pigeonChannel(String method) =>
 
 const bootstrapMethod = 'map#bootstrap#protocol';
 
-/// Host advertising the tracking capability.
+/// Host advertising the tracking capability (current schema generation:
+/// tracking also accepts omitted anchors).
 final Map<Object?, Object?> trackingBootstrap = {
+  'revision': 1,
+  'schemaId': 'flutter_osm.native.camera.v1',
+  'capabilities': ['camera', 'location.tracking', 'location.tracking.anchor'],
+  'sessionToken': 'token-7',
+  'generation': 0,
+};
+
+/// Older tracking host: the generated schema and the legacy `trackMe` decode
+/// both require a non-null anchor. Clients must send the centered payload.
+final Map<Object?, Object?> olderTrackingBootstrap = {
   'revision': 1,
   'schemaId': 'flutter_osm.native.camera.v1',
   'capabilities': ['camera', 'location.tracking'],
@@ -91,6 +102,14 @@ void main() {
       const MethodChannel(legacyChannelName),
       (call) async => handler(call),
     );
+  }
+
+  Future<void> mockPigeonMessage(
+    String channel,
+    ByteData? Function(ByteData? message) respond,
+  ) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMessageHandler(channel, (ByteData? message) async => respond(message));
   }
 
   Future<void> mockPigeon(
@@ -243,8 +262,148 @@ void main() {
       expect(wireConfig!.disableMarkerRotation, isTrue);
       expect(wireConfig!.useDirectionMarker, isTrue);
       // Anchor.bottomRight encodes the legacy enum value (0, 0).
-      expect(wireConfig!.anchor.x, 0);
-      expect(wireConfig!.anchor.y, 0);
+      expect(wireConfig!.anchor!.x, 0);
+      expect(wireConfig!.anchor!.y, 0);
+    });
+
+    test('starting tracking without an anchor keeps the live pivots',
+        () async {
+      generated.NativeTrackingConfiguration? wireConfig;
+      await mockLegacy((call) async => trackingBootstrap);
+      await mockPigeon('enableTracking', (message) {
+        final args =
+            const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+        wireConfig = args[1] as generated.NativeTrackingConfiguration;
+        return pigeonReply(null);
+      });
+
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachTrackingRoute(7, optIn: true);
+
+      // No explicit override: the wire anchor stays null so the host never
+      // re-centers anchors the application configured for its own icons.
+      await osm.enableTracking(7);
+      expect(wireConfig!.anchor, isNull);
+    });
+
+    test('legacy trackMe keeps the centered payload without a known host',
+        () async {
+      // No family opted in, so no probe ran and the host's capabilities are
+      // unknown: the historical payload shape must be preserved for hosts
+      // that cast the anchor slot to a list.
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}:${call.arguments}');
+        return null;
+      });
+
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachTrackingRoute(7, optIn: false);
+
+      await osm.enableTracking(7);
+      expect(
+        invocations.any(
+          (m) => m.startsWith('legacy:trackMe:[false, false, false, [0.5, 0.5]]'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('older hosts never receive a null tracking anchor', () async {
+      // Generated route: the older schema decodes the configuration with a
+      // non-null anchor cast.
+      await mockLegacy((call) async => olderTrackingBootstrap);
+      generated.NativeTrackingConfiguration? wireConfig;
+      await mockPigeon('enableTracking', (message) {
+        final args =
+            const _TestPigeonCodec().decodeMessage(message)! as List<Object?>;
+        wireConfig = args[1] as generated.NativeTrackingConfiguration;
+        return pigeonReply(null);
+      });
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachTrackingRoute(7, optIn: true);
+
+      await osm.enableTracking(7);
+      expect(wireConfig!.anchor, isNotNull);
+      expect(wireConfig!.anchor!.x, 0.5);
+      expect(wireConfig!.anchor!.y, 0.5);
+    });
+
+    test('older hosts keep the centered legacy trackMe payload', () async {
+      // Probed-but-older host (another family opted in, tracking stays
+      // legacy): the anchor slot stays a list.
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}:${call.arguments}');
+        if (call.method == bootstrapMethod) return cameraOnlyBootstrap;
+        return null;
+      });
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachCameraRoute(7, optIn: true);
+      await osm.attachTrackingRoute(7, optIn: false);
+
+      await osm.enableTracking(7);
+      expect(
+        invocations.any(
+          (m) => m.startsWith('legacy:trackMe:[false, false, false, [0.5, 0.5]]'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('mixed route: typed icons with legacy tracking keep the anchors',
+        () async {
+      // The example configuration: the icon family is routed through the
+      // generated channel while follow-me tracking stays on its legacy
+      // route. Starting tracking must not re-center the applied pivots.
+      await mockLegacy((call) async {
+        invocations.add('legacy:${call.method}:${call.arguments}');
+        if (call.method == bootstrapMethod) {
+          return {
+            ...cameraOnlyBootstrap,
+            'capabilities': [
+              'camera',
+              'location.icons',
+              'location.tracking.anchor',
+            ],
+          };
+        }
+        return null;
+      });
+      await mockPigeonMessage(
+        'dev.flutter.pigeon.flutter_osm_interface.'
+        'NativeMapUserLocationIconsApi.setUserLocationIcons.view_7',
+        (_) => pigeonReply(null),
+      );
+
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      expect(
+        await osm.attachUserLocationIconsRoute(7, optIn: true),
+        CameraRouteSelection.generated,
+      );
+      expect(
+        await osm.attachTrackingRoute(7, optIn: false),
+        CameraRouteSelection.legacy,
+      );
+
+      await osm.enableTracking(7);
+      expect(
+        invocations.any(
+          (m) => m.startsWith('legacy:trackMe:[false, false, false, null]'),
+        ),
+        isTrue,
+      );
+      invocations.clear();
+      await osm.enableTracking(7, anchor: Anchor.top);
+      expect(
+        invocations.any(
+          (m) => m.startsWith('legacy:trackMe:[false, false, false, [0.5, 1.0]]'),
+        ),
+        isTrue,
+      );
     });
 
     test('legacy trackMe keeps the positional payload', () async {

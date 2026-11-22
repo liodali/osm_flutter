@@ -58,6 +58,19 @@ const String kLocationUpdatesCapability = 'location.updates';
 /// legacy routes.
 const String kTrackingCapability = 'location.tracking';
 
+/// Capability family carried by the user-location icon schema (person and
+/// direction marker replacement). Hosts without this capability keep icon
+/// replacement on their legacy `user#locationMarkers` route.
+const String kLocationIconsCapability = 'location.icons';
+
+/// Capability for optional tracking anchors. Hosts that advertise it accept
+/// a null tracking anchor (keep the pivots the icon configuration already
+/// has) on both the generated tracking route and the legacy `trackMe`
+/// payload. Older hosts require a non-null anchor there — a null list slot
+/// crashes their legacy decode and a null generated anchor fails their wire
+/// decode — so clients fall back to the centered payload for them.
+const String kTrackingOptionalAnchorCapability = 'location.tracking.anchor';
+
 /// Capability family carried by the markers schema.
 const String kMarkersCapability = 'markers';
 

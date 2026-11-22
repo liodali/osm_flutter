@@ -132,6 +132,18 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM, {
     bool optIn = false,
   });
+
+  /// Freezes the user-location icon routing decision for one map attachment
+  /// (person and direction marker replacement). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the first
+  /// mutation. Hosts without the `location.icons` capability keep icon
+  /// replacement on the legacy `user#locationMarkers` route. Icon rendering
+  /// stays asynchronous in Dart: only prepared PNG bytes cross the typed
+  /// channel.
+  Future<CameraRouteSelection> attachUserLocationIconsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {
@@ -164,14 +176,18 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   Future<void> customUserLocationMarker(
     int idOSM,
     GlobalKey personGlobalKey,
-    GlobalKey directionArrowGlobalKey,
-  );
+    GlobalKey directionArrowGlobalKey, {
+    IconAnchor? personAnchor,
+    IconAnchor? directionAnchor,
+  });
 
+  /// A null [anchor] keeps the pivots the user-location icon configuration
+  /// already has; hosts without a live pivot keep their default (centered).
   Future<void> enableTracking(
     int idOSM, {
     bool stopFollowInDrag = false,
     bool disableMarkerRotation = false,
-    Anchor anchor = Anchor.center,
+    Anchor? anchor,
     bool useDirectionMarker = false,
   });
 

@@ -125,6 +125,16 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
+  Future<CameraRouteSelection> attachUserLocationIconsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop routes; native user-location icon routing
+    // does not apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
     return _events(idMap).whereType<SingleTapEvent>();
   }

@@ -24,6 +24,17 @@ class _RecordingMarkersPlatform extends MethodChannelOSM {
   final markerOptIns = <int, bool>{};
   final layersOptIns = <int, bool>{};
   final trackingOptIns = <int, bool>{};
+  final locationIconsOptIns = <int, bool>{};
+
+  /// User-location icon requests captured through the platform contract.
+  final iconRequests = <
+      ({
+        int id,
+        GlobalKey personKey,
+        GlobalKey directionKey,
+        IconAnchor? personAnchor,
+        IconAnchor? directionAnchor,
+      })>[];
 
   @override
   Future<CameraRouteSelection> attachCameraRoute(
@@ -64,6 +75,49 @@ class _RecordingMarkersPlatform extends MethodChannelOSM {
     trackingOptIns[idOSM] = optIn;
     return CameraRouteSelection.legacy;
   }
+
+  @override
+  Future<CameraRouteSelection> attachUserLocationIconsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    events.add('icons:$optIn');
+    locationIconsOptIns[idOSM] = optIn;
+    return CameraRouteSelection.legacy;
+  }
+
+  /// Tracking starts requested by the controller, in call order.
+  final trackingStarts = <({bool stopFollow, Anchor? anchor})>[];
+
+  @override
+  Future<void> enableTracking(
+    int idOSM, {
+    bool stopFollowInDrag = false,
+    bool disableMarkerRotation = false,
+    Anchor? anchor,
+    bool useDirectionMarker = false,
+  }) async {
+    events.add('enableTracking:$idOSM');
+    trackingStarts.add((stopFollow: stopFollowInDrag, anchor: anchor));
+  }
+
+  @override
+  Future<void> customUserLocationMarker(
+    int idOSM,
+    GlobalKey personGlobalKey,
+    GlobalKey directionArrowGlobalKey, {
+    IconAnchor? personAnchor,
+    IconAnchor? directionAnchor,
+  }) async {
+    events.add('userLocationMarker:$idOSM');
+    iconRequests.add((
+      id: idOSM,
+      personKey: personGlobalKey,
+      directionKey: directionArrowGlobalKey,
+      personAnchor: personAnchor,
+      directionAnchor: directionAnchor,
+    ));
+  }
 }
 
 void main() {
@@ -77,6 +131,8 @@ void main() {
     bool useTypedMarkers = false,
     bool useTypedLayers = false,
     bool useTypedTracking = false,
+    bool useTypedLocationIcons = false,
+    UserLocationMaker? userLocationMarker,
   }) async {
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -103,6 +159,8 @@ void main() {
         useTypedMarkers: useTypedMarkers,
         useTypedLayers: useTypedLayers,
         useTypedTracking: useTypedTracking,
+        useTypedLocationIcons: useTypedLocationIcons,
+        userLocationMarker: userLocationMarker,
       ),
     ));
     await tester.pump();
@@ -137,7 +195,13 @@ void main() {
     expect(platform.markerOptIns[7], isTrue);
     expect(
       platform.events,
-      ['camera:false', 'markers:true', 'layers:false', 'tracking:false'],
+      [
+        'camera:false',
+        'markers:true',
+        'layers:false',
+        'tracking:false',
+        'icons:false',
+      ],
     );
 
     await tester.pumpWidget(const SizedBox());
@@ -201,7 +265,13 @@ void main() {
     expect(platform.layersOptIns[7], isTrue);
     expect(
       platform.events,
-      ['camera:false', 'markers:false', 'layers:true', 'tracking:false'],
+      [
+        'camera:false',
+        'markers:false',
+        'layers:true',
+        'tracking:false',
+        'icons:false',
+      ],
     );
 
     await tester.pumpWidget(const SizedBox());
@@ -238,8 +308,119 @@ void main() {
     expect(platform.trackingOptIns[7], isTrue);
     expect(
       platform.events,
-      ['camera:false', 'markers:false', 'layers:false', 'tracking:true'],
+      [
+        'camera:false',
+        'markers:false',
+        'layers:false',
+        'tracking:true',
+        'icons:false',
+      ],
     );
+
+    await tester.pumpWidget(const SizedBox());
+    ready.dispose();
+    marker.dispose();
+  });
+
+  testWidgets(
+      'useTypedLocationIcons freezes the icon route and forwards anchors',
+      (tester) async {
+    final previous = MobileOSMController.osmPlatform;
+    final platform = _RecordingMarkersPlatform();
+    MobileOSMController.osmPlatform = platform;
+    addTearDown(() {
+      MobileOSMController.osmPlatform = previous;
+    });
+
+    final ready = ValueNotifier<bool>(false);
+    final marker = ValueNotifier<Widget?>(null);
+    final stateKey = GlobalKey<MobileOsmFlutterState>();
+    final state = await pumpMap(
+      tester,
+      ready: ready,
+      marker: marker,
+      stateKey: stateKey,
+      useTypedLocationIcons: true,
+      userLocationMarker: UserLocationMaker(
+        personMarker: MarkerIcon(icon: const SizedBox(width: 12, height: 20)),
+        directionArrowMarker:
+            MarkerIcon(icon: const SizedBox(width: 8, height: 14)),
+        personAnchor: IconAnchor(anchor: Anchor.bottom),
+        directionAnchor: IconAnchor(anchor: Anchor.center),
+      ),
+    );
+
+    // The icon family must attach before initialization, or icon
+    // replacement would silently stay on the legacy route even with the
+    // opt-in set.
+    final controller = await MobileOSMController.init(7, state);
+    addTearDown(() => platform.close(7));
+
+    expect(platform.locationIconsOptIns[7], isTrue);
+    expect(platform.events, [
+      'camera:false',
+      'markers:false',
+      'layers:false',
+      'tracking:false',
+      'icons:true',
+    ]);
+
+    // The prepared widget keys and the per-icon anchors reach the platform
+    // contract unchanged; rendering itself stays in the interface package.
+    await controller.initMap(null, null, false, null, null);
+    expect(platform.iconRequests, hasLength(1));
+    final request = platform.iconRequests.single;
+    expect(request.id, 7);
+    expect(request.personKey, state.personIconMarkerKey);
+    expect(request.directionKey, state.arrowDirectionMarkerKey);
+    // Legacy `Anchor.bottom` encodes (0.5, 0), `Anchor.center` (0.5, 0.5).
+    expect(request.personAnchor!.anchor.value.$1, 0.5);
+    expect(request.personAnchor!.anchor.value.$2, 0.0);
+    expect(request.directionAnchor!.anchor.value.$1, 0.5);
+    expect(request.directionAnchor!.anchor.value.$2, 0.5);
+
+    // Initial tracking must not override the configured pivots: the
+    // controller starts tracking without an anchor override, so the host
+    // keeps the per-icon anchors applied above. Apple's permission path is
+    // a no-op in the harness, so no platform permission call is issued.
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    await controller.enableTracking(enableStopFollow: true);
+    expect(platform.trackingStarts, hasLength(1));
+    expect(platform.trackingStarts.single.anchor, isNull);
+    expect(platform.trackingStarts.single.stopFollow, isTrue);
+
+    await tester.pumpWidget(const SizedBox());
+    ready.dispose();
+    marker.dispose();
+  });
+
+  testWidgets('an explicit tracking anchor still overrides the icon pivots',
+      (tester) async {
+    final previous = MobileOSMController.osmPlatform;
+    final platform = _RecordingMarkersPlatform();
+    MobileOSMController.osmPlatform = platform;
+    addTearDown(() {
+      MobileOSMController.osmPlatform = previous;
+    });
+
+    final ready = ValueNotifier<bool>(false);
+    final marker = ValueNotifier<Widget?>(null);
+    final stateKey = GlobalKey<MobileOsmFlutterState>();
+    final state = await pumpMap(
+      tester,
+      ready: ready,
+      marker: marker,
+      stateKey: stateKey,
+    );
+
+    final controller = await MobileOSMController.init(11, state);
+    addTearDown(() => platform.close(11));
+
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    await controller.enableTracking(anchor: Anchor.left);
+    expect(platform.trackingStarts.single.anchor, Anchor.left);
 
     await tester.pumpWidget(const SizedBox());
     ready.dispose();

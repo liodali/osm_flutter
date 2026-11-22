@@ -72,6 +72,10 @@ final class MobileOSMController extends IBaseOSMController {
       id,
       optIn: osmState.widget.useTypedTracking,
     );
+    await osmPlatform.attachUserLocationIconsRoute(
+      id,
+      optIn: osmState.widget.useTypedLocationIcons,
+    );
     return MobileOSMController._(id, osmState);
   }
 
@@ -290,10 +294,13 @@ final class MobileOSMController extends IBaseOSMController {
 
     /// change user person Icon and arrow Icon
     if (_osmFlutterState.widget.userLocationMarker != null) {
+      final userLocationMarker = _osmFlutterState.widget.userLocationMarker!;
       await osmPlatform.customUserLocationMarker(
         _idMap,
         _osmFlutterState.personIconMarkerKey,
         _osmFlutterState.arrowDirectionMarkerKey,
+        personAnchor: userLocationMarker.personAnchor,
+        directionAnchor: userLocationMarker.directionAnchor,
       );
     }
 
@@ -329,6 +336,9 @@ final class MobileOSMController extends IBaseOSMController {
           await startLocationUpdating();
           break;
         case false:
+          // No anchor override: the user-location icon route already applied
+          // the configured per-icon pivots (or the platform default), and an
+          // override here would re-center them.
           await enableTracking(enableStopFollow: userTrackOption.unFollowUser);
           break;
       }
@@ -524,7 +534,7 @@ final class MobileOSMController extends IBaseOSMController {
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableMarkerRotation = false,
-    Anchor anchor = Anchor.center,
+    Anchor? anchor,
     bool useDirectionMarker = false,
   }) async {
     /// make in native when is enabled ,nothing is happen

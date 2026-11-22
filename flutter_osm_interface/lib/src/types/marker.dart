@@ -100,9 +100,23 @@ class UserLocationMaker {
   final MarkerIcon personMarker;
   final MarkerIcon directionArrowMarker;
 
+  /// Optional normalized pivot for the person icon applied by the typed
+  /// `location.icons` route. Null keeps the pivot the native layer already
+  /// has, so replacing icon bytes never moves an active marker. The legacy
+  /// `user#locationMarkers` route carries no anchor and ignores both
+  /// anchors.
+  final IconAnchor? personAnchor;
+
+  /// Optional normalized pivot for the direction icon, same rules as
+  /// [personAnchor]. Android keeps one pivot for both icons, so
+  /// [personAnchor] wins there when both are supplied.
+  final IconAnchor? directionAnchor;
+
   UserLocationMaker({
     required this.personMarker,
     required this.directionArrowMarker,
+    this.personAnchor,
+    this.directionAnchor,
   });
 }
 

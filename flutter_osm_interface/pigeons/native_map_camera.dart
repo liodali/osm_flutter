@@ -8,9 +8,10 @@
 // Scope: camera family + markers family (typed, stable ids) + layers family
 // (tile sources, overlay visibility) + shapes family (circles, rectangles)
 // + roads family (manual drawing, removal, clearing) + location family
-// (my-location layer, single-shot fixes), session-scoped. Continuous
-// updates, tracking, custom icons and typed event callbacks are later
-// phases; events and location streams stay on their existing channels.
+// (my-location layer, single-shot fixes) + location updates + follow-me
+// tracking + user-location icons, session-scoped. Typed event callbacks are
+// a later phase; events and location streams stay on their existing
+// channels.
 // Note: the Apple host advertises [camera, markers, layers]; its typed
 // marker ops live in `PigeonMarkersBridge` and its tile/layer ops in
 // `PigeonLayersBridge` on the shared darwin session.
@@ -423,12 +424,15 @@ abstract class NativeMapLocationUpdatesApi {
 /// `stopFollowInDrag` lets an ending user drag release the follow camera;
 /// `disableMarkerRotation` pins the user marker orientation;
 /// `useDirectionMarker` swaps the marker for a directional arrow;
-/// `anchor` is the normalized icon pivot applied to both markers.
+/// `anchor` is the normalized icon pivot. A null `anchor` keeps the pivots
+/// the live icon configuration already has (per icon), so starting tracking
+/// without an explicit override never re-centers icons the application
+/// configured itself.
 class NativeTrackingConfiguration {
   final bool stopFollowInDrag;
   final bool disableMarkerRotation;
   final bool useDirectionMarker;
-  final NativeMarkerAnchor anchor;
+  final NativeMarkerAnchor? anchor;
 
   const NativeTrackingConfiguration({
     required this.stopFollowInDrag,
@@ -548,4 +552,69 @@ abstract class NativeMapMarkersApi {
 
   /// Removes many markers by stable ids.
   void removeMarkers(NativeCameraSession session, List<String> markerIds);
+}
+
+/// One user-location icon prepared in Dart.
+///
+/// The application supplies the icon as a Flutter widget; the Dart side
+/// renders it (asynchronously, with the capture rules the legacy
+/// `user#locationMarkers` route uses) and only the encoded PNG bytes, the
+/// logical (pre-scale) widget dimensions and the normalized anchor cross
+/// this channel. Hosts combine the logical size with their own display
+/// scale, exactly like the typed marker icon contract.
+///
+/// `anchor` is a normalized icon pivot: `(0.5, 0.5)` centers the icon on the
+/// user coordinate and `(0.5, 1.0)` pins a pin tip. A null anchor preserves
+/// the anchor the live configuration already has, so replacing icon bytes
+/// never moves an active marker.
+class NativeUserLocationIcon {
+  final Uint8List iconBytes;
+  final NativeMarkerSize? logicalSize;
+  final NativeMarkerAnchor? anchor;
+
+  const NativeUserLocationIcon({
+    required this.iconBytes,
+    this.logicalSize,
+    this.anchor,
+  });
+}
+
+/// The person + direction icon pair of the my-location layer.
+///
+/// Both icons are captured from their widgets, mirroring the legacy
+/// `user#locationMarkers` payload that always carries the two images.
+class NativeUserLocationIcons {
+  final NativeUserLocationIcon person;
+  final NativeUserLocationIcon direction;
+
+  const NativeUserLocationIcons({
+    required this.person,
+    required this.direction,
+  });
+}
+
+/// Generated user-location icon route for one map session.
+///
+/// The host advertises the `location.icons` capability only when it
+/// implements this surface; older hosts keep the person/direction icon
+/// replacement on their legacy `user#locationMarkers` route.
+///
+/// Completion contract: the call only swaps the layer icons, so it never
+/// starts, stops or restarts the location subscription. Follow-me tracking,
+/// continuous updates and pending one-shot fixes keep running untouched
+/// (their markers are re-rendered in place), and denial/permission flows are
+/// never triggered. A null configuration restores the platform default
+/// icons and the default center anchor, mirroring the reset semantics of
+/// the typed layers route.
+@HostApi()
+abstract class NativeMapUserLocationIconsApi {
+  /// Replaces the person and direction icons of the my-location layer.
+  ///
+  /// `icons` null restores the platform defaults. Android keeps one pivot
+  /// for both icons: the person anchor wins, falling back to the direction
+  /// anchor when the person anchor is null.
+  void setUserLocationIcons(
+    NativeCameraSession session,
+    NativeUserLocationIcons? icons,
+  );
 }
