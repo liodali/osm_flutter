@@ -51,8 +51,10 @@ final class PigeonTrackingBridge: NativeMapTrackingApi {
                     stopFollowInDrag: configuration.stopFollowInDrag,
                     disableMarkerRotation: configuration.disableMarkerRotation,
                     useDirectionMarker: configuration.useDirectionMarker,
-                    anchorX: configuration.anchor.x,
-                    anchorY: configuration.anchor.y) { failureCode, failureMessage in
+                    // Null keeps the live pivots: starting tracking must not
+                    // re-center icons the application configured itself.
+                    anchorX: configuration.anchor?.x,
+                    anchorY: configuration.anchor?.y) { failureCode, failureMessage in
                     if let failureCode = failureCode {
                         deliver(.failure(
                             PigeonError(code: failureCode, message: failureMessage, details: nil)))

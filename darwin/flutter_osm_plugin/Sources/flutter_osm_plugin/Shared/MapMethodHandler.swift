@@ -533,38 +533,49 @@ extension MapSession {
     }
     func configureUserLocation(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
-        #if os(macOS)
-        // Remember the arguments to re-apply the icons when the window moves
-        // between displays with a different backing scale.
-        lastUserLocationMarkersArgs = args
-        #endif
-        var personMarkerIcon: OSMPlatformImage = OSMPlatformImage()
-        var directionMarkerIcon: OSMPlatformImage?
-        var personIconConfig: MarkerConfiguration!
-        if let personIconString = args["personIcon"] {
-            let iconArg = personIconString as! [String: Any]
-            personMarkerIcon = convertImage(codeImage: iconArg["icon"] as! String) ?? OSMPlatformImage()
-            let personIconSize = (iconArg["size"] as? [Int])?.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
-            personIconConfig = MarkerConfiguration(
-                icon: personMarkerIcon, iconSize: personIconSize, angle: nil, anchor: nil)
 
+        // Legacy decoding only: the applied state goes through the shared
+        // typed seam, so the legacy and generated routes agree on behavior.
+        // The legacy payload carries no anchor and historically rebuilt the
+        // configuration without a pivot; `reset` keeps that exact behavior.
+        guard let personIconArg = args["personIcon"] as? [String: Any],
+            let personIcon = convertImage(codeImage: personIconArg["icon"] as! String),
+            let directionIconArg = args["arrowDirectionIcon"] as? [String: Any],
+            let directionIcon = convertImage(codeImage: directionIconArg["icon"] as! String)
+        else {
+            return
         }
-        var directionMarkerConfiguration: MarkerConfiguration? = nil
-        if let arrowDirectionIconString = args["arrowDirectionIcon"] {
-            let iconArg = arrowDirectionIconString as! [String: Any]
-            directionMarkerIcon = convertImage(codeImage: iconArg["icon"] as! String)
-            let directionIconSize = (iconArg["size"] as? [Int])?.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
-            directionMarkerConfiguration = MarkerConfiguration(
-                icon: directionMarkerIcon!,
-                iconSize: directionIconSize,
-                angle: nil,
-                anchor: nil)
-        }
-        let userLocationConfig = UserLocationConfiguration(
-            userIcon: personIconConfig, directionIcon: directionMarkerConfiguration)
-        self.mapOSM.locationManager.setUserLocationIcons(userLocationIcons: userLocationConfig)
-
+        let personSize = (personIconArg["size"] as? [Int])
+        let directionSize = (directionIconArg["size"] as? [Int])
+        self.typedSetUserLocationIcons(
+            MapSession.UserLocationIconsRender(
+                person: MapSession.UserLocationIconRender(
+                    image: personIcon,
+                    pngData: Data(
+                        base64Encoded: personIconArg["icon"] as! String) ?? Data(),
+                    logicalSize: personSize,
+                    pivot: .reset),
+                direction: MapSession.UserLocationIconRender(
+                    image: directionIcon,
+                    pngData: Data(
+                        base64Encoded: directionIconArg["icon"] as! String) ?? Data(),
+                    logicalSize: directionSize,
+                    pivot: .reset)))
     }
+    /// Applies the legacy `trackMe` anchor slot.
+    ///
+    /// A null slot means the application did not request an override, so the
+    /// pivots the icons were configured with stay untouched — this is the
+    /// mixed case of typed location icons with legacy tracking. Tracking
+    /// takes plugin marker ownership at its start, so an override re-pivots
+    /// the plugin-owned icons in place.
+    func applyLegacyTrackingAnchor(_ anchor: [Double]?) {
+        guard let anchor = anchor, anchor.count >= 2,
+            ownsUserLocationMarker
+        else { return }
+        updateOwnedUserLocationMarkerAnchor(x: anchor.first!, y: anchor.last!)
+    }
+
     func startTrackUser(args: [Any]) {
         let enableStopFollowInDrag = args.first as? Bool ?? false
         if !enableStopFollowInDrag {
@@ -573,33 +584,35 @@ extension MapSession {
         }
         let disableRotation = args[1] as? Bool ?? false
         let useDirectionMarker = args[2] as? Bool ?? false
-        let anchor = args[3] as? [Double] ?? [0.5, 0.5]
-
-        let markerAnchor = AnchorGeoPoint(anchor: (x: anchor.first!, y: anchor.last!)).compute()
-        let userIconLoc = self.mapOSM.locationManager.userLocationIconConfiguration.userIcon
-        let directionIconLoc = self.mapOSM.locationManager.userLocationIconConfiguration
-            .directionIcon
-        let userLocConfig = self.mapOSM.locationManager.userLocationIconConfiguration.copyWith(
-            userIcon: userIconLoc.copyWith(
-                anchor: markerAnchor
-            ),
-            directionIcon: directionIconLoc?.copyWith(
-                anchor: markerAnchor
-            )
-        )
-        self.mapOSM.locationManager.setUserLocationIcons(userLocationIcons: userLocConfig)
+        // The plugin renders the my-location marker from this arm on, with
+        // the platform defaults until the application configures its own
+        // icons; the framework arm never takes marker control.
+        if !ownsUserLocationMarker {
+            ownedUserLocationIcons = resolvedUserLocationMarkerIcons(nil)
+        }
+        // A missing anchor keeps the pivots the icons were configured with;
+        // the legacy payload used to fall back to the centered default and
+        // silently re-centered application-configured icons.
+        applyLegacyTrackingAnchor(args[3] as? [Double])
+        trackingDisableMarkerRotation = disableRotation
+        trackingUseDirectionMarker = useDirectionMarker
         //self.mapOSM.enableRotation(enable: !disableRotation)
         if !self.mapOSM.locationManager.isTrackingEnabled() {
             self.mapOSM.locationManager.toggleTracking(
                 configuration: TrackConfiguration(
                     moveMap: true,
                     useDirectionMarker: useDirectionMarker,
-                    disableMarkerRotation: disableRotation
+                    disableMarkerRotation: disableRotation,
+                    controlUserMarker: false
                 ))
         }
         trackMeActive = true
+        refreshOwnedUserLocationMarker()
     }
     func stopTracking() {
+        // Location stops here: the plugin-owned marker goes with it. Consumer
+        // ownership flags are reconciled by the individual handlers.
+        clearOwnedUserLocationMarker()
         self.mapOSM.locationManager.stopLocation()
     }
     private func getGeoPoints(_ result: FlutterResult) {

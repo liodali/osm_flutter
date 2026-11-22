@@ -51,6 +51,9 @@ class MapSession: NSObject {
     private(set) var locationBridge: PigeonLocationBridge?
     private(set) var locationUpdatesBridge: PigeonLocationUpdatesBridge?
     private(set) var trackingBridge: PigeonTrackingBridge?
+    /// Generated user-location icon route living alongside the legacy
+    /// channel handler.
+    private(set) var userLocationIconsBridge: PigeonUserLocationIconsBridge?
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -125,24 +128,265 @@ class MapSession: NSObject {
         self?.mapOSM.locationManager.requestEnableLocation()
     }
 
-    /// Test seam over the user-location icon anchor configuration. The
-    /// default closure drives the framework's icon configuration; tests
-    /// install a no-op (the framework rejects configuration in idle
-    /// phase).
-    internal(set) lazy var trackingAnchorConfigurator: (Double, Double) -> Void = { [weak self] x, y in
-        guard let self = self else { return }
-        let markerAnchor = AnchorGeoPoint(anchor: (x: x, y: y)).compute()
-        let icons = self.mapOSM.locationManager.userLocationIconConfiguration
-        self.mapOSM.locationManager.setUserLocationIcons(
-            userLocationIcons: icons.copyWith(
-                userIcon: icons.userIcon.copyWith(anchor: markerAnchor),
-                directionIcon: icons.directionIcon?.copyWith(anchor: markerAnchor)))
-    }
-
     /// Tracking configuration captured by the typed start; the framework
     /// toggle seam reads it when it arms tracking.
     var trackingDisableMarkerRotation = false
     var trackingUseDirectionMarker = false
+
+    // MARK: - User-location icons (typed and legacy routes)
+
+    /// One prepared icon render request: the decoded image, the encoded
+    /// bytes it came from (identity, so repeated identical requests are
+    /// dropped), the logical (pre-scale) widget dimensions and the pivot
+    /// policy.
+    struct UserLocationIconRender {
+        /// Normalized pivot handling for one icon.
+        enum Pivot {
+            /// Keep the live configuration's pivot, so replacing icon bytes
+            /// never moves an active marker (typed route, null anchor).
+            case preserve
+            /// Rebuild the configuration without a pivot, exactly like the
+            /// legacy `user#locationMarkers` decode.
+            case reset
+            /// Apply an explicit normalized pivot.
+            case normalized(x: Double, y: Double)
+        }
+
+        let image: OSMPlatformImage
+        let pngData: Data
+        let logicalSize: [Int]?
+        let pivot: Pivot
+    }
+
+    /// Person + direction icon pair prepared in Dart.
+    struct UserLocationIconsRender {
+        let person: UserLocationIconRender
+        let direction: UserLocationIconRender
+    }
+
+    /// Icons the framework installed at view creation, restored by the
+    /// typed reset route. The framework keeps its defaults private, so the
+    /// session captures them once instead of rebuilding them.
+    private(set) var defaultUserLocationIcons: UserLocationConfiguration?
+
+    /// Last configuration applied by the plugin, used to drop repeated
+    /// identical requests (an unnecessary redraw of the marker).
+    private var appliedUserLocationIcons: AppliedUserLocationIcons?
+
+    /// What was last applied: the platform defaults or a prepared pair.
+    private enum AppliedUserLocationIcons {
+        case defaults
+        case icons(UserLocationIconsRender)
+    }
+
+    /// Icons of the plugin-rendered my-location marker. Non-nil once the
+    /// application configured its own icons: from then on the plugin draws
+    /// the marker in place (see `UserLocationMarkerService`) and the
+    /// framework's destructively refreshed marker stays off.
+    internal(set) var ownedUserLocationIcons: UserLocationMarkerIcons?
+
+    /// True while the plugin, not the framework, renders the marker. Drives
+    /// the framework's `controlUserMarker` flag so exactly one is drawn.
+    var ownsUserLocationMarker: Bool {
+        ownedUserLocationIcons != nil
+    }
+
+    /// True while the framework's user-icon configuration holds the
+    /// transparent placeholder (the plugin owns the marker, so the
+    /// framework's own marker must stay invisible).
+    internal(set) var frameworkIconConfigIsPlaceholder = false
+
+    /// Last anchor a tracking arm applied to the FRAMEWORK markers. Every
+    /// framework pivoting path goes through this session, so at an ownership
+    /// takeover this is the live pivot `.preserve` must keep — the
+    /// framework's configuration fields are not readable from the plugin.
+    internal(set) var lastTrackingAnchor: MarkerAnchor? = nil
+
+    /// Heading of the last delivered fix, retained so a redraw keeps the
+    /// marker's rotation.
+    private(set) var latestUserLocationHeading: Double = 0
+
+    /// Test seam over the framework user-location icon configuration. The
+    /// default closure applies the prepared configuration (or restores the
+    /// captured defaults for a nil render); session tests install a
+    /// recorder.
+    ///
+    /// While the plugin owns the marker this configuration is unused by the
+    /// framework (`controlUserMarker` is off for new arms), so a fully
+    /// transparent placeholder is installed instead: a framework marker
+    /// armed before the takeover disappears on its next refresh and never
+    /// visibly rebuilds — no location consumer is restarted.
+    internal(set) lazy var userLocationIconsRenderer: (UserLocationIconsRender?) -> Void = {
+        [weak self] render in
+        guard let self = self else { return }
+        if self.frameworkIconConfigIsPlaceholder {
+            self.mapOSM.locationManager.setUserLocationIcons(
+                userLocationIcons: Self.placeholderUserLocationIcons())
+            return
+        }
+        guard let render = render else {
+            if let defaults = self.defaultUserLocationIcons {
+                self.mapOSM.locationManager.setUserLocationIcons(
+                    userLocationIcons: defaults)
+            }
+            return
+        }
+        let live = self.mapOSM.locationManager.userLocationIconConfiguration
+        let person = Self.markerConfiguration(
+            for: render.person, live: live.userIcon, displayScale: self.displayScale)
+        let direction = Self.markerConfiguration(
+            for: render.direction, live: live.directionIcon, displayScale: self.displayScale)
+        self.mapOSM.locationManager.setUserLocationIcons(
+            userLocationIcons: UserLocationConfiguration(
+                userIcon: person, directionIcon: direction))
+    }
+
+    /// Test seam over the painting surface of the plugin-owned marker. The
+    /// default painter drives the framework POI layer; session tests install
+    /// a recording fake to assert the pinned-POI call sequence.
+    internal(set) lazy var userLocationMarkerPainter: UserLocationMarkerPainting =
+        PoisUserLocationMarkerPainter(poisManager: self.mapOSM.poisManager)
+
+    /// Test seam over the plugin-owned marker layer. The default closure
+    /// bakes the pivot and heading into the texture and paints it in place;
+    /// session tests install a recorder to assert the render intent.
+    internal(set) lazy var userLocationMarkerRenderer: (UserLocationMarkerRender?) -> Void = {
+        [weak self] render in
+        guard let self = self else { return }
+        let painter = self.userLocationMarkerPainter
+        let poiId = MapSession.userLocationMarkerPoiId
+        guard let render = render else {
+            painter.removeMarker(id: poiId)
+            return
+        }
+        let baked = Self.bakedUserLocationMarker(render, displayScale: self.displayScale)
+        // Create the marker on first use, then position and RE-APPLY the
+        // icon: the pinned POI rebuilds its markers from the icon frozen at
+        // creation, so a positioning call alone would revert a replaced
+        // texture to the first image — on every redraw, not just the first.
+        if !painter.isInstalled {
+            painter.installIcon(id: poiId, image: baked.image, size: baked.size)
+        }
+        painter.setPositions(id: poiId, location: render.location)
+        painter.installIcon(id: poiId, image: baked.image, size: baked.size)
+    }
+
+    /// Current backing scale of the hosting view.
+    var displayScale: CGFloat {
+        ApplePlatformUtilities.displayScale(for: mapOSM)
+    }
+
+    /// Resolves one prepared icon against the live configuration.
+    private static func markerConfiguration(
+        for icon: UserLocationIconRender,
+        live: MarkerConfiguration?,
+        displayScale: CGFloat
+    ) -> MarkerConfiguration {
+        let size = icon.logicalSize?.toMarkerSize(displayScale: displayScale)
+        switch icon.pivot {
+        case .preserve:
+            if let live = live {
+                // `copyWith` keeps the live pivot when the anchor is nil.
+                return live.copyWith(icon: icon.image, iconSize: size)
+            }
+            return MarkerConfiguration(
+                icon: icon.image, iconSize: size, angle: nil, anchor: nil)
+        case .reset:
+            return MarkerConfiguration(
+                icon: icon.image, iconSize: size, angle: nil, anchor: nil)
+        case .normalized(let x, let y):
+            let anchor = AnchorGeoPoint(anchor: (x: x, y: y)).compute()
+            if let live = live {
+                return live.copyWith(icon: icon.image, iconSize: size, anchor: anchor)
+            }
+            return MarkerConfiguration(
+                icon: icon.image, iconSize: size, angle: nil, anchor: anchor)
+        }
+    }
+
+    /// Applies a prepared icon pair (typed route) or restores the platform
+    /// defaults when [icons] is nil.
+    ///
+    /// Only the rendered icons change: the shared subscription, the follow
+    /// flag and pending one-shot fixes keep running, so tracking and
+    /// continuous updates survive an icon swap and no permission flow is
+    /// triggered.
+    func typedSetUserLocationIcons(_ icons: UserLocationIconsRender?) {
+        applyUserLocationIcons(icons, force: false)
+    }
+
+    /// Hands [icons] to the framework and bookkeeps the marker refresh.
+    ///
+    /// [force] re-applies an identical configuration (the backing-scale
+    /// refresh) instead of dropping it. Repeated identical requests are
+    /// dropped on purpose: the framework's refresh is destructive, so every
+    /// re-application costs one hidden marker pass.
+    func applyUserLocationIcons(_ icons: UserLocationIconsRender?, force: Bool) {
+        if !force && isAppliedUserLocationIcons(icons) {
+            return
+        }
+        // Ownership first: the framework configuration seam must already see
+        // it (it installs the transparent placeholder for the takeover).
+        ownedUserLocationIcons = resolvedUserLocationMarkerIcons(icons)
+        frameworkIconConfigIsPlaceholder = ownsUserLocationMarker
+        userLocationIconsRenderer(icons)
+        appliedUserLocationIcons = icons.map(AppliedUserLocationIcons.icons) ?? .defaults
+        if trackMeActive {
+            // Pure in-place redraw: the plugin has owned the marker since
+            // the first tracking start (default icons), so replacing the
+            // icons touches nothing but the marker itself — no location
+            // start/stop, no extra fix, no second renderer.
+            refreshOwnedUserLocationMarker()
+        }
+        #if os(macOS)
+        recordUserLocationIconsRender(icons)
+        #endif
+    }
+
+    /// True when [icons] matches what the framework already holds.
+    private func isAppliedUserLocationIcons(_ icons: UserLocationIconsRender?) -> Bool {
+        switch (appliedUserLocationIcons, icons) {
+        case (.defaults, nil):
+            return true
+        case (.icons(let applied), .some(let requested)):
+            return Self.sameUserLocationIcon(applied.person, requested.person)
+                && Self.sameUserLocationIcon(applied.direction, requested.direction)
+        default:
+            return false
+        }
+    }
+
+    private static func sameUserLocationIcon(
+        _ lhs: UserLocationIconRender, _ rhs: UserLocationIconRender
+    ) -> Bool {
+        lhs.pngData == rhs.pngData && lhs.logicalSize == rhs.logicalSize
+            && sameUserLocationPivot(lhs.pivot, rhs.pivot)
+    }
+
+    private static func sameUserLocationPivot(
+        _ lhs: UserLocationIconRender.Pivot, _ rhs: UserLocationIconRender.Pivot
+    ) -> Bool {
+        switch (lhs, rhs) {
+        case (.preserve, .preserve), (.reset, .reset):
+            return true
+        case let (.normalized(lx, ly), .normalized(rx, ry)):
+            return lx == rx && ly == ry
+        default:
+            return false
+        }
+    }
+
+    /// Draws the plugin-owned marker for one delivered fix.
+    ///
+    /// A pending one-shot fix is skipped: the framework does not update its
+    /// marker for those passes either, so the marker keeps its last position
+    /// until a tracking update arrives.
+    private func updateOwnedUserLocationMarker(userLocation: CLLocationCoordinate2D, heading: Double) {
+        guard ownsUserLocationMarker, trackMeActive, !hasPendingLocationRequest else {
+            return
+        }
+        renderOwnedUserLocationMarker(location: userLocation, heading: heading)
+    }
 
     /// Test seam over the framework tracking toggle. The default closure
     /// drives the real CLLocationManager with the captured tracking
@@ -158,7 +402,10 @@ class MapSession: NSObject {
                     configuration: TrackConfiguration(
                         moveMap: true,
                         useDirectionMarker: self.trackingUseDirectionMarker,
-                        disableMarkerRotation: self.trackingDisableMarkerRotation))
+                        disableMarkerRotation: self.trackingDisableMarkerRotation,
+                        // The plugin renders the my-location marker itself;
+                        // the framework arm never takes marker control.
+                        controlUserMarker: false))
             } else {
                 // The framework is already armed by continuous updates.
                 // Its marker fields are private and toggleTracking
@@ -170,7 +417,8 @@ class MapSession: NSObject {
                 let trackingConfiguration = TrackConfiguration(
                     moveMap: true,
                     useDirectionMarker: self.trackingUseDirectionMarker,
-                    disableMarkerRotation: self.trackingDisableMarkerRotation)
+                    disableMarkerRotation: self.trackingDisableMarkerRotation,
+                    controlUserMarker: false)
                 self.mapOSM.locationManager.toggleTracking(
                     configuration: trackingConfiguration)
                 self.mapOSM.locationManager.toggleTracking(
@@ -229,10 +477,17 @@ class MapSession: NSObject {
     /// collectively on disposal so the Dart futures can never hang.
     private var outstandingRoadResults: [(id: String, result: FlutterResult)] = []
     #if os(macOS)
-    /// Arguments of the last `user#locationMarkers` call, retained for the
-    /// logical (pre-scale) icon sizes; refreshed together with all other
-    /// scale-dependent icons when the hosting window changes displays.
-    var lastUserLocationMarkersArgs: [String: Any]? = nil
+    /// Last user-location icon render, replayed when the hosting window moves
+    /// between displays: `logicalSize` is pre-scale, so re-applying the render
+    /// recomputes pixel sizes at the new backing scale while keeping the icon,
+    /// pivot and the rest of the live configuration. Both the typed and the
+    /// legacy route feed it; a typed reset drops it (the restored defaults
+    /// carry no Dart-side sizes).
+    private(set) var lastUserLocationIconsRender: UserLocationIconsRender? = nil
+    /// Retains the last render for the backing-scale refresh.
+    func recordUserLocationIconsRender(_ render: UserLocationIconsRender?) {
+        lastUserLocationIconsRender = render
+    }
     /// Logical (Dart-side, pre-scale) data retained to re-apply pixel sizes
     /// of regular markers when the hosting window moves between displays.
     /// The dictionary key is only a rounded lookup key; the exact coordinate
@@ -394,6 +649,9 @@ class MapSession: NSObject {
         self.channel = channel
         self.viewId = viewId
         super.init()
+        // Capture the framework's user-location icons before any route can
+        // replace them: the typed reset route restores exactly these.
+        self.defaultUserLocationIcons = self.mapOSM.locationManager.userLocationIconConfiguration
         self.mapOSM.enableRotation(enable: enableRotationGesture)
         // Generated camera and markers endpoints live alongside the legacy
         // channel handler; they never replace it.
@@ -421,6 +679,9 @@ class MapSession: NSObject {
         let tracking = PigeonTrackingBridge(session: self)
         tracking.register(messenger: binaryMessenger, viewId: viewId)
         trackingBridge = tracking
+        let userLocationIcons = PigeonUserLocationIconsBridge(session: self)
+        userLocationIcons.register(messenger: binaryMessenger, viewId: viewId)
+        userLocationIconsBridge = userLocationIcons
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -475,22 +736,18 @@ class MapSession: NSObject {
         }
         let displayScale = ApplePlatformUtilities.displayScale(for: mapOSM)
 
-        // 1. User-location icons: recompute pixel sizes from the last logical
-        //    sizes while keeping every other setting of the live configuration.
-        if let userLocationArgs = lastUserLocationMarkersArgs {
-            let personLogical =
-                (userLocationArgs["personIcon"] as? [String: Any])?["size"] as? [Int]
-            let directionLogical =
-                (userLocationArgs["arrowDirectionIcon"] as? [String: Any])?["size"] as? [Int]
-            let current = mapOSM.locationManager.userLocationIconConfiguration
-            let person = current.userIcon.copyWith(
-                iconSize: personLogical?.toMarkerSize(displayScale: displayScale))
-            let direction = current.directionIcon?.copyWith(
-                iconSize: directionLogical?.toMarkerSize(displayScale: displayScale))
-            mapOSM.locationManager.setUserLocationIcons(
-                userLocationIcons: UserLocationConfiguration(
-                    userIcon: person, directionIcon: direction))
+        // 1. User-location icons: replay the last render so the pre-scale
+        //    logical sizes are recomputed at the new backing scale, keeping the
+        //    icons, pivots and the rest of the live configuration. Both routes
+        //    feed this record.
+        if let render = lastUserLocationIconsRender {
+            // Forced: the render is identical but the pixel sizes it
+            // resolves to depend on the new backing scale.
+            applyUserLocationIcons(render, force: true)
         }
+        // The plugin-rendered marker re-derives its pixel size from the new
+        // scale; the framework marker takes the replayed configuration.
+        refreshOwnedUserLocationMarker()
 
         // 2. Static POI icons: `setOrCreateIconPoi` updates existing POIs
         //    in place, so replaying the stored icon arguments is enough.
@@ -550,6 +807,8 @@ class MapSession: NSObject {
         locationUpdatesBridge = nil
         trackingBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
         trackingBridge = nil
+        userLocationIconsBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
+        userLocationIconsBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil
@@ -631,6 +890,8 @@ class MapSession: NSObject {
         let geoMap = userLocation.toUserLocation(heading: heading)
         latestUserLocation = userLocation
         channel.invokeMethod("receiveUserLocation", arguments: geoMap)
+        latestUserLocationHeading = heading
+        updateOwnedUserLocationMarker(userLocation: userLocation, heading: heading)
         if (!isMovedToLocation || !canSkipFollow) && !userLocationWithoutControl && mapInitialized {
             self.mapOSM.locationManager.moveToUserLocation(animated: true)
         }
@@ -838,17 +1099,17 @@ class MapSession: NSObject {
     /// Starts follow-me tracking. Idempotent; completes exactly once.
     /// Mirrors legacy `trackMe`: without stop-follow-on-drag the gesture
     /// skip resets and the enable-location entry runs (authorization
-    /// prompt included), both user and direction icons take the anchor,
-    /// and the framework toggle arms the captured configuration. A
-    /// synchronous denial routes through the permission callback and the
-    /// completion carries `permission_denied`; a prompt flow reports
-    /// initiated.
+    /// prompt included), both user and direction icons take the requested
+    /// anchor when one is supplied, and the framework toggle arms the
+    /// captured configuration. A synchronous denial routes through the
+    /// permission callback and the completion carries `permission_denied`;
+    /// a prompt flow reports initiated.
     func typedEnableTracking(
         stopFollowInDrag: Bool,
         disableMarkerRotation: Bool,
         useDirectionMarker: Bool,
-        anchorX: Double,
-        anchorY: Double,
+        anchorX: Double?,
+        anchorY: Double?,
         completion: @escaping LocationCommandCompletion
     ) {
         // Idempotent: tracking already owns the manager.
@@ -860,7 +1121,20 @@ class MapSession: NSObject {
             canSkipFollow = false
             locationEnableRequest()
         }
-        trackingAnchorConfigurator(anchorX, anchorY)
+        // The plugin renders the my-location marker from this arm on, with
+        // the platform default icons until the application configures its
+        // own. The framework arm therefore never takes marker control, so a
+        // later icon replacement is an in-place redraw — never a renderer
+        // handoff.
+        if !ownsUserLocationMarker {
+            ownedUserLocationIcons = resolvedUserLocationMarkerIcons(nil)
+        }
+        // No override keeps the pivots the icons were configured with (or
+        // the platform default), so configured per-icon anchors survive the
+        // tracking start.
+        if let anchorX = anchorX, let anchorY = anchorY {
+            updateOwnedUserLocationMarkerAnchor(x: anchorX, y: anchorY)
+        }
         trackingDisableMarkerRotation = disableMarkerRotation
         trackingUseDirectionMarker = useDirectionMarker
         trackMeActive = true
@@ -871,6 +1145,11 @@ class MapSession: NSObject {
         if let pending = startingTrackingCompletion {
             startingTrackingCompletion = nil
             pending(nil, nil)
+        }
+        // Draw once the arm holds (a denial rolled tracking back, so no
+        // marker appears); the first fix paints it otherwise.
+        if trackMeActive {
+            refreshOwnedUserLocationMarker()
         }
     }
 
@@ -885,6 +1164,7 @@ class MapSession: NSObject {
     /// completes or cancels, and updates keep the framework armed.
     func typedDisableTracking() {
         trackMeActive = false
+        clearOwnedUserLocationMarker()
         if hasPendingLocationRequest {
             stopTrackingWhenFixCompletes = true
         } else {

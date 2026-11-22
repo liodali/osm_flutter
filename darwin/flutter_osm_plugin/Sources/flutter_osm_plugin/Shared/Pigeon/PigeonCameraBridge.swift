@@ -185,6 +185,12 @@ final class PigeonCameraBridge: NativeMapCameraApi {
     /// Follow-me tracking surface: enable/disable tracking.
     static let capabilityTracking = "location.tracking"
 
+    /// User-location icons surface: person/direction icon replacement.
+    static let capabilityLocationIcons = "location.icons"
+
+    /// Tracking accepts omitted anchors (keep the configured pivots).
+    static let capabilityTrackingOptionalAnchor = "location.tracking.anchor"
+
     static func viewChannelSuffix(_ viewId: Int64) -> String {
         "view_\(viewId)"
     }
@@ -205,7 +211,8 @@ final class PigeonCameraBridge: NativeMapCameraApi {
                 capabilityCamera, capabilityMarkers, capabilityCameraConfig,
                 capabilityLayers, capabilityShapes, capabilityRoads,
                 capabilityLocation, capabilityLocationUpdates,
-                capabilityTracking,
+                capabilityTracking, capabilityLocationIcons,
+                capabilityTrackingOptionalAnchor,
             ],
             "sessionToken": sessionToken,
             "generation": generation,

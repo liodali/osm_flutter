@@ -134,10 +134,10 @@ class RunnerTests: XCTestCase {
       // zoom-configuration operations), the ten generated marker channels,
       // the two generated layer channels (tile sources, overlay
       // visibility), the six generated shape channels (circle, rectangle,
-      // remove by id, two kind clears, full clear) and the three generated
-      // road channels (draw, remove, clear) — alongside, never replacing
-      // legacy endpoints.
-      XCTAssertEqual(messenger.handlers.count, 76)
+      // remove by id, two kind clears, full clear), the three generated
+      // road channels (draw, remove, clear) and the generated user-location
+      // icon channel — alongside, never replacing legacy endpoints.
+      XCTAssertEqual(messenger.handlers.count, 78)
       host = nil
     }
     // AppKit autoreleases views and the framework can have queued callbacks.
@@ -149,7 +149,7 @@ class RunnerTests: XCTestCase {
     // Disposal removes exactly this session's legacy channel and its
     // generated camera, marker, layer, shape and road channels; the other
     // live map keeps its full set.
-    XCTAssertEqual(messenger.handlers.count, 38)
+    XCTAssertEqual(messenger.handlers.count, 39)
     XCTAssertEqual(messenger.handlers.keys.filter { $0.hasPrefix("map_") }, ["map_2"])
     XCTAssertFalse(
       messenger.handlers.keys.contains { $0.contains(".view_1") },
@@ -797,6 +797,10 @@ class RunnerTests: XCTestCase {
   func testLegacySuccessCancelsDeadlineAndStaleTimerIsBoundToIdentity() async throws {
     let map = session(RecordingMessenger())
     defer { map.dispose() }
+    // Never touch the real location stack in tests: a live single-shot fix
+    // arrives on its own schedule and would consume the pending slot this
+    // test drives by hand.
+    map.locationSingleShotRequest = {}
 
     // Legacy request arms a deadline; a successful fix must cancel it.
     var legacyReply: Any?
@@ -1122,7 +1126,6 @@ class RunnerTests: XCTestCase {
       self.map = map
       // Never touch the real location stack in tests.
       map.locationEnableRequest = {}
-      map.trackingAnchorConfigurator = { _, _ in }
       map.locationUpdatesToggle = { [weak self] start in
         guard let self = self else { return }
         if start {
@@ -1174,14 +1177,14 @@ class RunnerTests: XCTestCase {
     stopFollowInDrag: Bool = false,
     disableMarkerRotation: Bool = false,
     useDirectionMarker: Bool = true,
-    anchorX: Double = 0.5,
-    anchorY: Double = 0.5
+    anchorX: Double? = 0.5,
+    anchorY: Double? = 0.5
   ) -> NativeTrackingConfiguration {
     NativeTrackingConfiguration(
       stopFollowInDrag: stopFollowInDrag,
       disableMarkerRotation: disableMarkerRotation,
       useDirectionMarker: useDirectionMarker,
-      anchor: NativeMarkerAnchor(x: anchorX, y: anchorY))
+      anchor: anchorX.flatMap { x in anchorY.map { y in NativeMarkerAnchor(x: x, y: y) } })
   }
 
   @MainActor
@@ -1795,6 +1798,951 @@ class RunnerTests: XCTestCase {
       XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
     }
     XCTAssertTrue(map.typedMarkerCoordinates.isEmpty)
+  }
+
+  // MARK: - User-location icons (typed route)
+
+  /// Records the prepared icon renders the session hands to the framework.
+  private final class IconRenderRecorder {
+    var renders: [MapSession.UserLocationIconsRender?] = []
+    weak var map: MapSession?
+
+    @MainActor
+    func install(into map: MapSession) {
+      self.map = map
+      map.userLocationIconsRenderer = { [weak self] render in
+        self?.renders.append(render)
+      }
+    }
+  }
+
+  @MainActor
+  private func iconRenderRecorder(_ map: MapSession) -> IconRenderRecorder {
+    let recorder = IconRenderRecorder()
+    recorder.install(into: map)
+    return recorder
+  }
+
+  private func userLocationIcons(
+    personAnchor: NativeMarkerAnchor? = nil,
+    directionAnchor: NativeMarkerAnchor? = nil,
+    personSize: NativeMarkerSize? = NativeMarkerSize(width: 12, height: 20),
+    directionSize: NativeMarkerSize? = NativeMarkerSize(width: 8, height: 14)
+  ) -> NativeUserLocationIcons {
+    NativeUserLocationIcons(
+      person: NativeUserLocationIcon(
+        iconBytes: FlutterStandardTypedData(bytes: pngIconData()),
+        logicalSize: personSize,
+        anchor: personAnchor),
+      direction: NativeUserLocationIcon(
+        iconBytes: FlutterStandardTypedData(bytes: pngIconData()),
+        logicalSize: directionSize,
+        anchor: directionAnchor))
+  }
+
+  @MainActor
+  func testTypedUserLocationIconsBridgeAppliesPreparedIcons() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let recorder = iconRenderRecorder(map)
+    let png = pngIconData()
+
+    try bridge.setUserLocationIcons(
+      session: cameraWireSession(map),
+      icons: userLocationIcons(
+        personAnchor: NativeMarkerAnchor(x: 0.5, y: 1.0),
+        directionAnchor: NativeMarkerAnchor(x: 0.0, y: 0.5)))
+
+    let render = try XCTUnwrap(recorder.renders.last ?? nil)
+    // The prepared PNG bytes cross unchanged; logical widget sizes are kept
+    // for display scaling and the anchors are applied per icon.
+    XCTAssertEqual(render.person.pngData, png)
+    XCTAssertEqual(render.direction.pngData, png)
+    XCTAssertEqual(render.person.logicalSize, [12, 20])
+    XCTAssertEqual(render.direction.logicalSize, [8, 14])
+    guard case .normalized(let personX, let personY) = render.person.pivot else {
+      return XCTFail("person anchor was not applied")
+    }
+    XCTAssertEqual(personX, 0.5)
+    XCTAssertEqual(personY, 1.0)
+    guard case .normalized(let directionX, let directionY) = render.direction.pivot else {
+      return XCTFail("direction anchor was not applied")
+    }
+    XCTAssertEqual(directionX, 0.0)
+    XCTAssertEqual(directionY, 0.5)
+  }
+
+  @MainActor
+  func testTypedUserLocationIconsPreserveLiveAnchorsWhenOmitted() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let recorder = iconRenderRecorder(map)
+
+    try bridge.setUserLocationIcons(
+      session: cameraWireSession(map), icons: userLocationIcons())
+
+    let render = try XCTUnwrap(recorder.renders.last ?? nil)
+    // A null anchor keeps the pivot the live configuration already has, so
+    // replacing icon bytes never moves an active marker.
+    guard case .preserve = render.person.pivot else {
+      return XCTFail("person pivot should be preserved")
+    }
+    guard case .preserve = render.direction.pivot else {
+      return XCTFail("direction pivot should be preserved")
+    }
+    // Without anchors the render is still retained for the backing-scale
+    // refresh, with its pre-scale logical sizes.
+    XCTAssertEqual(map.lastUserLocationIconsRender?.person.logicalSize, [12, 20])
+    XCTAssertEqual(map.lastUserLocationIconsRender?.direction.logicalSize, [8, 14])
+  }
+
+  @MainActor
+  func testTypedUserLocationIconsResetRestoresCapturedDefaults() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let recorder = iconRenderRecorder(map)
+
+    // The framework's own default icons are captured at view creation.
+    XCTAssertNotNil(map.defaultUserLocationIcons)
+
+    try bridge.setUserLocationIcons(session: cameraWireSession(map), icons: nil)
+
+    XCTAssertEqual(recorder.renders.count, 1)
+    XCTAssertNil(recorder.renders[0] ?? nil)
+    // The restored defaults carry no Dart-side sizes, so nothing is replayed
+    // on a backing-scale change.
+    XCTAssertNil(map.lastUserLocationIconsRender)
+  }
+
+  @MainActor
+  func testTypedUserLocationIconsKeepTrackingUpdatesAndPendingFixes() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    let updatesBridge = try XCTUnwrap(map.locationUpdatesBridge)
+    let recorder = iconRenderRecorder(map)
+    let fake = installSharedFrameworkFake(map)
+    let wire = cameraWireSession(map)
+
+    try await trackingBridge.enableTracking(
+      session: wire, configuration: trackingConfig())
+    try await updatesBridge.startLocationUpdates(session: wire)
+    map.pendingLocationFixCompletion = { _ in }
+    XCTAssertTrue(map.trackMeActive)
+    XCTAssertTrue(map.updatesActive)
+    XCTAssertTrue(map.hasPendingLocationRequest)
+    let frameworkBefore = fake.recording
+
+    try bridge.setUserLocationIcons(
+      session: wire, icons: userLocationIcons())
+
+    // Icon replacement only reconfigures the icons: no consumer is started,
+    // stopped or restarted and the pending fix survives.
+    XCTAssertEqual(recorder.renders.count, 1)
+    XCTAssertTrue(map.trackMeActive)
+    XCTAssertTrue(map.updatesActive)
+    XCTAssertTrue(map.hasPendingLocationRequest)
+    XCTAssertEqual(fake.recording, frameworkBefore)
+  }
+
+  @MainActor
+  func testTypedUserLocationIconsRejectUndecodableBytes() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let recorder = iconRenderRecorder(map)
+
+    let broken = NativeUserLocationIcons(
+      person: NativeUserLocationIcon(
+        iconBytes: FlutterStandardTypedData(bytes: Data([1, 2, 3])),
+        logicalSize: nil, anchor: nil),
+      direction: NativeUserLocationIcon(
+        iconBytes: FlutterStandardTypedData(bytes: pngIconData()),
+        logicalSize: nil, anchor: nil))
+
+    XCTAssertThrowsError(
+      try bridge.setUserLocationIcons(
+        session: cameraWireSession(map), icons: broken)
+    ) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "icons_not_ready")
+    }
+    XCTAssertTrue(recorder.renders.isEmpty)
+  }
+
+  @MainActor
+  func testTypedUserLocationIconsRejectStaleSessions() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let recorder = iconRenderRecorder(map)
+    let stale = NativeCameraSession(sessionToken: "wrong", generation: 0)
+
+    XCTAssertThrowsError(
+      try bridge.setUserLocationIcons(
+        session: stale, icons: userLocationIcons())
+    ) { error in
+      XCTAssertEqual((error as? PigeonError)?.code, "stale_session")
+    }
+    XCTAssertTrue(recorder.renders.isEmpty)
+  }
+
+  @MainActor
+  func testTypedUserLocationIconsAreIsolatedPerSessionAndSurviveDisposal() throws {
+    let first = session(RecordingMessenger(), id: 1)
+    let second = session(RecordingMessenger(), id: 2)
+    defer { second.dispose() }
+    let firstBridge = try XCTUnwrap(first.userLocationIconsBridge)
+    let secondBridge = try XCTUnwrap(second.userLocationIconsBridge)
+    let firstRecorder = iconRenderRecorder(first)
+    let secondRecorder = iconRenderRecorder(second)
+    let firstWire = cameraWireSession(first)
+    let secondWire = cameraWireSession(second)
+
+    try firstBridge.setUserLocationIcons(
+      session: firstWire, icons: userLocationIcons())
+    first.dispose()
+
+    // The disposed session's bridge is unregistered and its icons are gone;
+    // the second map still applies its own icons, and a recreated session
+    // gets a fresh bridge.
+    XCTAssertEqual(firstRecorder.renders.count, 1)
+    XCTAssertTrue(secondRecorder.renders.isEmpty)
+
+    try secondBridge.setUserLocationIcons(
+      session: secondWire, icons: userLocationIcons())
+    XCTAssertEqual(secondRecorder.renders.count, 1)
+
+    let recreated = session(RecordingMessenger(), id: 3)
+    defer { recreated.dispose() }
+    let recreatedBridge = try XCTUnwrap(recreated.userLocationIconsBridge)
+    let recreatedRecorder = iconRenderRecorder(recreated)
+    try recreatedBridge.setUserLocationIcons(
+      session: cameraWireSession(recreated), icons: nil)
+    XCTAssertEqual(recreatedRecorder.renders.count, 1)
+  }
+
+  /// Recorder for the plugin-owned my-location marker draws.
+  private final class UserLocationMarkerRecorder {
+    var renders: [MapSession.UserLocationMarkerRender?] = []
+
+    @MainActor
+    func install(into map: MapSession) {
+      map.userLocationMarkerRenderer = { [weak self] render in
+        self?.renders.append(render)
+      }
+    }
+  }
+
+  @MainActor
+  private func markerRecorder(_ map: MapSession) -> UserLocationMarkerRecorder {
+    let recorder = UserLocationMarkerRecorder()
+    recorder.install(into: map)
+    return recorder
+  }
+
+  @MainActor
+  func testTypedUserLocationIconsRenderInPlaceWithoutRestartingConsumers() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    let fake = installSharedFrameworkFake(map)
+    let recorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+    let png = pngIconData()
+    let fix = CLLocationCoordinate2D(latitude: 47.3769, longitude: 8.5417)
+
+    try iconsBridge.setUserLocationIcons(
+      session: wire,
+      icons: userLocationIcons(
+        personAnchor: NativeMarkerAnchor(x: 0.5, y: 1.0)))
+    // The plugin owns the marker from the first icon application on, so the
+    // framework's destructively refreshed marker stays off.
+    XCTAssertTrue(map.ownsUserLocationMarker)
+    XCTAssertTrue(recorder.renders.isEmpty)
+
+    try await trackingBridge.enableTracking(
+      session: wire,
+      configuration: trackingConfig(
+        useDirectionMarker: false, anchorX: nil, anchorY: nil))
+    XCTAssertTrue(recorder.renders.isEmpty, "no marker before the first fix")
+
+    map.locationChanged(userLocation: fix, heading: 0)
+    let first = try XCTUnwrap(recorder.renders.last ?? nil)
+    XCTAssertEqual(first.pngData, png)
+    XCTAssertEqual(first.logicalSize, [12, 20])
+    XCTAssertEqual(first.anchor?.x, 0.5)
+    XCTAssertEqual(first.anchor?.y, 1.0)
+    XCTAssertNil(first.angleDegrees)
+    XCTAssertEqual(first.location.latitude, fix.latitude)
+
+    // An icon swap is an in-place redraw: same location, new bytes, and the
+    // location consumers are never stopped or restarted.
+    let before = recorder.renders.count
+    let frameworkBefore = fake.recording
+    try iconsBridge.setUserLocationIcons(
+      session: wire,
+      icons: userLocationIcons(
+        personAnchor: NativeMarkerAnchor(x: 0.0, y: 1.0),
+        personSize: NativeMarkerSize(width: 24, height: 40)))
+    XCTAssertEqual(recorder.renders.count, before + 1)
+    let swapped = try XCTUnwrap(recorder.renders.last ?? nil)
+    XCTAssertEqual(swapped.pngData, png)
+    XCTAssertEqual(swapped.logicalSize, [24, 40])
+    XCTAssertEqual(swapped.anchor?.x, 0.0)
+    XCTAssertEqual(swapped.location.latitude, fix.latitude)
+    XCTAssertEqual(fake.recording, frameworkBefore)
+  }
+
+  @MainActor
+  func testOwnedUserLocationMarkerFollowsFixesAndHeading() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    installSharedFrameworkFake(map)
+    let recorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+    let png = pngIconData()
+
+    try iconsBridge.setUserLocationIcons(
+      session: wire, icons: userLocationIcons())
+    try await trackingBridge.enableTracking(
+      session: wire, configuration: trackingConfig(anchorX: nil, anchorY: nil))
+
+    // A heading-bearing fix rotates the direction icon; moving the map
+    // position keeps the same texture.
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.5, longitude: 8.6),
+      heading: 45)
+    let rotated = try XCTUnwrap(recorder.renders.last ?? nil)
+    XCTAssertEqual(rotated.pngData, png)
+    XCTAssertEqual(rotated.angleDegrees, 45)
+    XCTAssertEqual(rotated.location.latitude, 47.5)
+
+    // Rotation disabled: the person icon is drawn unrotated.
+    map.trackingDisableMarkerRotation = true
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.6, longitude: 8.7),
+      heading: 90)
+    let unrotated = try XCTUnwrap(recorder.renders.last ?? nil)
+    XCTAssertNil(unrotated.angleDegrees)
+    XCTAssertEqual(unrotated.location.latitude, 47.6)
+  }
+
+  @MainActor
+  func testPendingFixPassKeepsTheOwnedMarkerStill() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    installSharedFrameworkFake(map)
+    let recorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+
+    try iconsBridge.setUserLocationIcons(
+      session: wire, icons: userLocationIcons())
+    try await trackingBridge.enableTracking(
+      session: wire, configuration: trackingConfig(anchorX: nil, anchorY: nil))
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.1, longitude: 8.1),
+      heading: 0)
+    let renderedBefore = recorder.renders.count
+
+    // The framework keeps its marker still for one-shot passes; the plugin
+    // marker follows the same rule.
+    var completions = 0
+    map.pendingLocationFixCompletion = { _ in completions += 1 }
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.2, longitude: 8.2),
+      heading: 0)
+    XCTAssertEqual(completions, 1)
+    XCTAssertEqual(recorder.renders.count, renderedBefore)
+
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.3, longitude: 8.3),
+      heading: 0)
+    XCTAssertEqual(recorder.renders.count, renderedBefore + 1)
+  }
+
+  @MainActor
+  func testStoppingTrackingRemovesTheOwnedMarker() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    installSharedFrameworkFake(map)
+    let recorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+
+    try iconsBridge.setUserLocationIcons(
+      session: wire, icons: userLocationIcons())
+    try await trackingBridge.enableTracking(
+      session: wire, configuration: trackingConfig(anchorX: nil, anchorY: nil))
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47, longitude: 8), heading: 0)
+    XCTAssertNotNil(recorder.renders.last ?? nil)
+
+    try await trackingBridge.disableTracking(session: wire)
+    // The removal uses the same atomic POI replace (no marker at all).
+    XCTAssertNil(recorder.renders.last ?? nil)
+  }
+
+  @MainActor
+  func testIconReplacementPreservesTheTrackingAppliedPivot() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    installSharedFrameworkFake(map)
+    let recorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+
+    // A tracking arm with a non-center anchor pivots the plugin-owned
+    // default icons. Person-icon drawing so the assertions track one icon.
+    try await trackingBridge.enableTracking(
+      session: wire,
+      configuration: trackingConfig(
+        useDirectionMarker: false, anchorX: 0.0, anchorY: 0.5))
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47, longitude: 8), heading: 0)
+
+    // Replacing the icons WITHOUT anchors preserves that live pivot instead
+    // of re-centering the markers.
+    try iconsBridge.setUserLocationIcons(session: wire, icons: userLocationIcons())
+    XCTAssertTrue(map.ownsUserLocationMarker)
+    XCTAssertEqual(map.ownedUserLocationIcons?.person.anchor?.x, 0.0)
+    XCTAssertEqual(map.ownedUserLocationIcons?.person.anchor?.y, 0.5)
+    XCTAssertEqual(map.ownedUserLocationIcons?.direction.anchor?.x, 0.0)
+    XCTAssertEqual(map.ownedUserLocationIcons?.direction.anchor?.y, 0.5)
+    let drawn = try XCTUnwrap(recorder.renders.last ?? nil)
+    XCTAssertEqual(drawn.anchor?.x, 0.0)
+    XCTAssertEqual(drawn.anchor?.y, 0.5)
+
+    // Once ownership exists, .preserve keeps the PLUGIN pivots (a later
+    // swap without anchors still never re-centers).
+    try iconsBridge.setUserLocationIcons(
+      session: wire,
+      icons: userLocationIcons(personAnchor: NativeMarkerAnchor(x: 1.0, y: 1.0)))
+    XCTAssertEqual(map.ownedUserLocationIcons?.person.anchor?.x, 1.0)
+    XCTAssertEqual(map.ownedUserLocationIcons?.person.anchor?.y, 1.0)
+    // The direction icon keeps the seeded pivot: this swap sent no
+    // direction anchor.
+    XCTAssertEqual(map.ownedUserLocationIcons?.direction.anchor?.y, 0.5)
+    let reswapped = try XCTUnwrap(recorder.renders.last ?? nil)
+    XCTAssertEqual(reswapped.anchor?.x, 1.0)
+    XCTAssertEqual(reswapped.anchor?.y, 1.0)
+  }
+
+  @MainActor
+  func testAnchorOverrideThenResetThenReplacementStaysCentered() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    installSharedFrameworkFake(map)
+    let recorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+
+    // 1. An explicit tracking anchor pivots the plugin-owned defaults.
+    try await trackingBridge.enableTracking(
+      session: wire,
+      configuration: trackingConfig(
+        useDirectionMarker: false, anchorX: 0.0, anchorY: 0.5))
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47, longitude: 8), heading: 0)
+    XCTAssertEqual(map.ownedUserLocationIcons?.person.anchor?.y, 0.5)
+
+    // 2. Reset to the platform defaults: the owned configuration carries NO
+    // pivot anymore.
+    try iconsBridge.setUserLocationIcons(session: wire, icons: nil)
+    XCTAssertNil(map.ownedUserLocationIcons?.person.anchor)
+    let reset = try XCTUnwrap(recorder.renders.last ?? nil)
+    XCTAssertNil(reset.anchor)
+
+    // 3. Replacing the icons without an anchor preserves that reset CENTER —
+    // the earlier tracking pivot must not come back. Person-icon drawing.
+    try iconsBridge.setUserLocationIcons(session: wire, icons: userLocationIcons())
+    XCTAssertNil(map.ownedUserLocationIcons?.person.anchor)
+    XCTAssertNil(map.ownedUserLocationIcons?.direction.anchor)
+    let replaced = try XCTUnwrap(recorder.renders.last ?? nil)
+    XCTAssertNil(replaced.anchor, "stale tracking pivot must not be restored")
+  }
+
+  @MainActor
+  func testIconReplacementWithoutAnyTrackingAnchorStaysCentered() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    installSharedFrameworkFake(map)
+    let recorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+
+    // Tracking without an anchor override: no pivot was ever applied, so a
+    // takeover without anchors keeps the framework default (centered).
+    try await trackingBridge.enableTracking(
+      session: wire,
+      configuration: trackingConfig(anchorX: nil, anchorY: nil))
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47, longitude: 8), heading: 0)
+    try iconsBridge.setUserLocationIcons(session: wire, icons: userLocationIcons())
+    XCTAssertNil(map.ownedUserLocationIcons?.person.anchor)
+    let drawn = try XCTUnwrap(recorder.renders.last ?? nil)
+    XCTAssertNil(drawn.anchor)
+  }
+
+  @MainActor
+  func testTrackingRendersTheDefaultIconsThroughThePluginFromTheStart() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    let fake = installSharedFrameworkFake(map)
+    let recorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+
+    XCTAssertFalse(map.ownsUserLocationMarker)
+    try await trackingBridge.enableTracking(
+      session: wire, configuration: trackingConfig(anchorX: nil, anchorY: nil))
+    // The plugin takes marker ownership at the FIRST tracking start, with
+    // the platform default icons — the framework arm never draws.
+    XCTAssertTrue(map.ownsUserLocationMarker)
+    XCTAssertEqual(fake.recording, ["tracking:start"])
+    XCTAssertTrue(recorder.renders.isEmpty, "no marker before the first fix")
+
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47, longitude: 8), heading: 0)
+    XCTAssertEqual(recorder.renders.count, 1)
+    let drawn = try XCTUnwrap(recorder.renders.last ?? nil)
+    // Default configuration draws the direction icon (useDirectionMarker).
+    XCTAssertEqual(drawn.pngData, Data("direction".utf8))
+    XCTAssertEqual(drawn.location.latitude, 47)
+    XCTAssertNil(drawn.anchor, "default icons are centered")
+    // The stream was armed exactly once: no start/stop churn.
+    XCTAssertEqual(fake.recording, ["tracking:start"])
+  }
+
+
+  @MainActor
+  func testTrackingAnchorOverrideRepivotsTheOwnedMarkerInPlace() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    installSharedFrameworkFake(map)
+    let recorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+
+    try iconsBridge.setUserLocationIcons(
+      session: wire,
+      icons: userLocationIcons(personAnchor: NativeMarkerAnchor(x: 0.5, y: 1.0)))
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47, longitude: 8), heading: 0)
+    try await trackingBridge.enableTracking(
+      session: wire,
+      configuration: trackingConfig(anchorX: 0.0, anchorY: 0.0))
+
+    // The anchor override re-pivots both icons without a new fix and without
+    // re-centering to the legacy default.
+    let rendered = try XCTUnwrap(recorder.renders.last ?? nil)
+    XCTAssertEqual(rendered.anchor?.x, 0.0)
+    XCTAssertEqual(rendered.anchor?.y, 0.0)
+    XCTAssertEqual(rendered.location.latitude, 47)
+  }
+
+  @MainActor
+  func testLegacyTrackingAnchorSlotKeepsConfiguredPivots() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let recorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+
+    // Mixed route: typed icons applied with per-icon pivots, then a legacy
+    // tracking start.
+    try iconsBridge.setUserLocationIcons(
+      session: wire,
+      icons: userLocationIcons(
+        personAnchor: NativeMarkerAnchor(x: 0.5, y: 1.0),
+        directionAnchor: NativeMarkerAnchor(x: 0.5, y: 0.0)))
+    XCTAssertTrue(map.ownsUserLocationMarker)
+
+    // A null anchor slot is "no override": the applied pivots stay.
+    map.applyLegacyTrackingAnchor(nil)
+    XCTAssertEqual(map.ownedUserLocationIcons?.person.anchor?.y, 1.0)
+    XCTAssertEqual(map.ownedUserLocationIcons?.direction.anchor?.y, 0.0)
+    XCTAssertTrue(recorder.renders.isEmpty)
+
+    // An explicit legacy override still re-pivots both icons.
+    map.applyLegacyTrackingAnchor([0.0, 0.5])
+    XCTAssertEqual(map.ownedUserLocationIcons?.person.anchor?.x, 0.0)
+    XCTAssertEqual(map.ownedUserLocationIcons?.person.anchor?.y, 0.5)
+    XCTAssertEqual(map.ownedUserLocationIcons?.direction.anchor?.x, 0.0)
+    XCTAssertEqual(map.ownedUserLocationIcons?.direction.anchor?.y, 0.5)
+  }
+
+  @MainActor
+  func testLegacyTrackingAnchorNeverReappliesTheFrameworkIconConfig() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let configRecorder = iconRenderRecorder(map)
+    let markerRecorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+
+    try iconsBridge.setUserLocationIcons(
+      session: wire, icons: userLocationIcons())
+    XCTAssertEqual(configRecorder.renders.count, 1)
+
+    // With the plugin owning the marker, an anchor override (or its absence)
+    // is an icon-only, in-place change: the framework's icon configuration is
+    // never re-applied, so its destructive marker refresh is never armed.
+    map.applyLegacyTrackingAnchor(nil)
+    map.applyLegacyTrackingAnchor([0.5, 1.0])
+    XCTAssertEqual(configRecorder.renders.count, 1)
+    // Both icons took the override; the marker redraw only happens once a
+    // location is known.
+    XCTAssertEqual(map.ownedUserLocationIcons?.person.anchor?.y, 1.0)
+    XCTAssertTrue(markerRecorder.renders.isEmpty)
+  }
+
+  /// Records the painting calls the plugin makes against the POI layer.
+  private final class MarkerPainterSpy: MapSession.UserLocationMarkerPainting {
+    struct Call: CustomStringConvertible {
+      let name: String
+      var image: OSMPlatformImage?
+      var size: MarkerIconSize?
+      var description: String { name }
+    }
+
+    var calls: [Call] = []
+    var isInstalled: Bool {
+      calls.contains { $0.name == "install" }
+    }
+
+    func installIcon(id: String, image: OSMPlatformImage, size: MarkerIconSize?) {
+      calls.append(Call(name: "install", image: image, size: size))
+    }
+
+    func setPositions(id: String, location: CLLocationCoordinate2D) {
+      calls.append(Call(name: "position", image: nil, size: nil))
+    }
+
+    func removeMarker(id: String) {
+      calls.append(Call(name: "remove", image: nil, size: nil))
+    }
+  }
+
+  @MainActor
+  private func painterSpy(_ map: MapSession) -> MarkerPainterSpy {
+    let spy = MarkerPainterSpy()
+    map.userLocationMarkerPainter = spy
+    return spy
+  }
+
+  /// Small solid test image at an exact pixel size.
+  private func solidImage(width: Int, height: Int) -> OSMPlatformImage {
+    let cg = CGContext(
+      data: nil, width: width, height: height, bitsPerComponent: 8,
+      bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    cg.setFillColor(NSColor.red.cgColor)
+    cg.fill(CGRect(x: 0, y: 0, width: width, height: height))
+    return OSMPlatformImage(
+      cgImage: cg.makeImage()!, size: NSSize(width: width, height: height))
+  }
+
+  @MainActor
+  func testOwnedMarkerPainterReappliesTheIconAfterPositioning() throws {
+    // The pinned POI rebuilds its markers from the icon frozen at creation,
+    // so every positioning call must be FOLLOWED by an icon re-application —
+    // otherwise a replaced texture reverts to the first image.
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let spy = painterSpy(map)
+    let wire = cameraWireSession(map)
+    let png = pngIconData()
+
+    func draw(image: OSMPlatformImage, logical: (Int, Int)) {
+      map.userLocationMarkerRenderer(
+        MapSession.UserLocationMarkerRender(
+          location: CLLocationCoordinate2D(latitude: 47, longitude: 8),
+          image: image,
+          pngData: png,
+          logicalSize: [logical.0, logical.1],
+          anchor: nil,
+          angleDegrees: nil))
+    }
+
+    let first = solidImage(width: 16, height: 16)
+    draw(image: first, logical: (8, 8))
+    XCTAssertEqual(spy.calls.map(\.name), ["install", "position", "install"])
+
+    // A redraw with a DIFFERENT texture must re-apply it after positioning,
+    // on every redraw (not only the first) — no redundant ensure-install.
+    let second = solidImage(width: 24, height: 24)
+    draw(image: second, logical: (12, 12))
+    XCTAssertEqual(
+      spy.calls.map(\.name),
+      ["install", "position", "install", "position", "install"])
+    // The re-application after positioning carries the CURRENT baked
+    // texture, never the stale creation icon: the canvas follows the newest
+    // content size (16px for the 8×8 icon, 24px for the 12×12 one).
+    let installs = spy.calls.filter { $0.name == "install" }
+    // install[0]/[1] belong to the first draw, install[2] re-applies the
+    // second texture after positioning.
+    XCTAssertEqual(installs.count, 3)
+    XCTAssertEqual(PluginImageBaking.cgImage(installs[0].image!)?.width, 16)
+    XCTAssertEqual(PluginImageBaking.cgImage(installs[2].image!)?.width, 24)
+    XCTAssertNotIdentical(installs[0].image, installs[2].image)
+    // Removal paints a removal only.
+    map.userLocationMarkerRenderer(nil)
+    XCTAssertEqual(spy.calls.last?.name, "remove")
+  }
+
+  func testBakedUserLocationMarkerLayoutMath() {
+    typealias Layout = MapSession.BakedUserLocationMarkerLayout
+    func layout(
+      _ w: Double, _ h: Double, ax: Double, ay: Double, angle: Double
+    ) -> Layout {
+      MapSession.bakedUserLocationMarkerLayout(
+        logicalSize: CGSize(width: w, height: h),
+        anchorX: ax, anchorY: ay, angleDegrees: angle)
+    }
+
+    // A centered pivot on an unrotated icon is identity.
+    var l = layout(12, 20, ax: 0.5, ay: 0.5, angle: 0)
+    XCTAssertEqual(l.paddedSize, CGSize(width: 12, height: 20))
+    XCTAssertEqual(l.contentOffset, CGPoint(x: 0, y: 0))
+    XCTAssertEqual(l.rotatedSize, CGSize(width: 12, height: 20))
+
+    // A bottom-tip pivot pads the bottom half so the tip sits at the center.
+    l = layout(12, 20, ax: 0.5, ay: 1.0, angle: 0)
+    XCTAssertEqual(l.paddedSize, CGSize(width: 12, height: 40))
+    XCTAssertEqual(l.contentOffset, CGPoint(x: 0, y: 0))
+    XCTAssertEqual(l.rotatedSize, CGSize(width: 12, height: 40))
+
+    // A top pivot pads the bottom: content occupies the lower half.
+    l = layout(12, 20, ax: 0.5, ay: 0.0, angle: 0)
+    XCTAssertEqual(l.paddedSize, CGSize(width: 12, height: 40))
+    XCTAssertEqual(l.contentOffset, CGPoint(x: 0, y: 20))
+
+    // Rotation grows the canvas to the rotated bounding box.
+    func approx(_ a: CGSize, _ b: CGSize) {
+      XCTAssertEqual(a.width, b.width, accuracy: 0.001)
+      XCTAssertEqual(a.height, b.height, accuracy: 0.001)
+    }
+    l = layout(12, 12, ax: 0.5, ay: 0.5, angle: 90)
+    approx(l.rotatedSize, CGSize(width: 12, height: 12))
+    l = layout(12, 20, ax: 0.5, ay: 0.5, angle: 90)
+    approx(l.rotatedSize, CGSize(width: 20, height: 12))
+
+    // Out-of-range anchors clamp instead of producing negative padding.
+    l = layout(12, 20, ax: 1.5, ay: -0.5, angle: 0)
+    XCTAssertEqual(l.paddedSize, CGSize(width: 24, height: 40))
+  }
+
+  @MainActor
+  func testBakedUserLocationMarkerTextureCarriesPivotAndRotation() throws {
+    // 8×8 content, pivot at the bottom tip: the baked texture is twice as
+    // tall, and a 90° heading swaps the canvas dimensions.
+    let render = MapSession.UserLocationMarkerRender(
+      location: CLLocationCoordinate2D(latitude: 47, longitude: 8),
+      image: solidImage(width: 16, height: 16),
+      pngData: pngIconData(),
+      logicalSize: [8, 8],
+      anchor: MarkerAnchor(x: 0.5, y: 1.0),
+      angleDegrees: nil)
+    let baked = MapSession.bakedUserLocationMarker(render, displayScale: 2)
+    XCTAssertEqual(baked.size.x, 16)
+    XCTAssertEqual(baked.size.y, 32)
+    // The texture itself carries the pivot: at 2 source pixels per logical
+    // point the 16px content sits in a 16×32px canvas (padding below it).
+    let pixels = PluginImageBaking.cgImage(baked.image)
+    XCTAssertEqual(pixels?.width, 16)
+    XCTAssertEqual(pixels?.height, 32)
+
+    let rotatedBaked = MapSession.bakedUserLocationMarker(
+      MapSession.UserLocationMarkerRender(
+        location: render.location,
+        image: render.image,
+        pngData: render.pngData,
+        logicalSize: render.logicalSize,
+        anchor: render.anchor,
+        angleDegrees: 90),
+      displayScale: 2)
+    XCTAssertEqual(rotatedBaked.size.x, 32)
+    XCTAssertEqual(rotatedBaked.size.y, 16)
+  }
+
+  @MainActor
+  func testIconReplacementDuringTrackingNeverTouchesTheLocationStream() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    let fake = installSharedFrameworkFake(map)
+    let markerRecorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+    let png = pngIconData()
+
+    // Tracking runs on the plugin-rendered default icons.
+    try await trackingBridge.enableTracking(
+      session: wire, configuration: trackingConfig(anchorX: nil, anchorY: nil))
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47, longitude: 8), heading: 0)
+    XCTAssertEqual(markerRecorder.renders.count, 1)
+
+    // Replacing the icons is a pure in-place redraw: the new bytes are
+    // visible immediately from the last known location, and NO additional
+    // location start/stop happens.
+    try iconsBridge.setUserLocationIcons(session: wire, icons: userLocationIcons())
+    XCTAssertTrue(map.frameworkIconConfigIsPlaceholder)
+    XCTAssertEqual(markerRecorder.renders.count, 2)
+    let replaced = try XCTUnwrap(markerRecorder.renders.last ?? nil)
+    XCTAssertEqual(replaced.pngData, png)
+    XCTAssertEqual(replaced.location.latitude, 47)
+    XCTAssertEqual(fake.recording, ["tracking:start"])
+
+    // Fixes keep flowing into the same single marker; another swap stays
+    // in-place and the stream is still untouched.
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.1, longitude: 8.1), heading: 0)
+    XCTAssertEqual(markerRecorder.renders.count, 3)
+    try iconsBridge.setUserLocationIcons(
+      session: wire,
+      icons: userLocationIcons(personSize: NativeMarkerSize(width: 24, height: 40)))
+    XCTAssertEqual(markerRecorder.renders.count, 4)
+    XCTAssertEqual(fake.recording, ["tracking:start"])
+  }
+
+
+  @MainActor
+  func testIconReplacementDuringAPendingFixStaysInPlace() async throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let iconsBridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let trackingBridge = try XCTUnwrap(map.trackingBridge)
+    let fake = installSharedFrameworkFake(map)
+    let markerRecorder = markerRecorder(map)
+    let wire = cameraWireSession(map)
+
+    try await trackingBridge.enableTracking(
+      session: wire, configuration: trackingConfig(anchorX: nil, anchorY: nil))
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47, longitude: 8), heading: 0)
+    XCTAssertEqual(markerRecorder.renders.count, 1)
+
+    // A one-shot fix holds the single location slot; the plugin marker is
+    // independent of it, so the replacement still redraws in place — the
+    // pending pass completes the fix without painting the marker.
+    var completions = 0
+    map.pendingLocationFixCompletion = { _ in completions += 1 }
+    try iconsBridge.setUserLocationIcons(session: wire, icons: userLocationIcons())
+    XCTAssertEqual(markerRecorder.renders.count, 2)
+    XCTAssertEqual(fake.recording, ["tracking:start"])
+
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.1, longitude: 8.1), heading: 0)
+    XCTAssertEqual(completions, 1)
+    XCTAssertEqual(markerRecorder.renders.count, 2, "pending pass keeps the marker still")
+
+    map.locationChanged(
+      userLocation: CLLocationCoordinate2D(latitude: 47.2, longitude: 8.2), heading: 0)
+    XCTAssertEqual(markerRecorder.renders.count, 3)
+    let drawn = try XCTUnwrap(markerRecorder.renders.last ?? nil)
+    XCTAssertEqual(drawn.location.latitude, 47.2)
+    XCTAssertEqual(fake.recording, ["tracking:start"])
+  }
+
+
+
+  @MainActor
+  func testTypedUserLocationIconsSkipIdenticalReapplication() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.userLocationIconsBridge)
+    let recorder = iconRenderRecorder(map)
+    let wire = cameraWireSession(map)
+
+    try bridge.setUserLocationIcons(session: wire, icons: userLocationIcons())
+    XCTAssertEqual(recorder.renders.count, 1)
+
+    // Identical bytes, sizes and pivots: dropped, because every framework
+    // refresh costs one hidden marker pass.
+    try bridge.setUserLocationIcons(session: wire, icons: userLocationIcons())
+    XCTAssertEqual(recorder.renders.count, 1)
+
+    try bridge.setUserLocationIcons(session: wire, icons: nil)
+    XCTAssertEqual(recorder.renders.count, 2)
+    try bridge.setUserLocationIcons(session: wire, icons: nil)
+    XCTAssertEqual(recorder.renders.count, 2)
+
+    // A real change always applies.
+    try bridge.setUserLocationIcons(
+      session: wire,
+      icons: userLocationIcons(personSize: NativeMarkerSize(width: 24, height: 40)))
+    XCTAssertEqual(recorder.renders.count, 3)
+  }
+
+  @MainActor
+  func testLegacyUserLocationIconRouteUsesTheTypedSeam() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let recorder = iconRenderRecorder(map)
+    let png = pngIconData()
+
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(
+        methodName: "user#locationMarkers",
+        arguments: [
+          "personIcon": ["icon": png.base64EncodedString(), "size": [12, 20]],
+          "arrowDirectionIcon": [
+            "icon": png.base64EncodedString(), "size": [8, 14],
+          ],
+        ]
+      )
+    ) { _ in }
+
+    // The legacy route keeps its exact configuration semantics: it rebuilds
+    // both icons without a pivot.
+    let render = try XCTUnwrap(recorder.renders.last ?? nil)
+    guard case .reset = render.person.pivot else {
+      return XCTFail("legacy person pivot should reset")
+    }
+    guard case .reset = render.direction.pivot else {
+      return XCTFail("legacy direction pivot should reset")
+    }
+    XCTAssertEqual(render.person.logicalSize, [12, 20])
+    XCTAssertEqual(render.direction.logicalSize, [8, 14])
+
+    // The legacy render feeds the same backing-scale refresh record.
+    XCTAssertEqual(map.lastUserLocationIconsRender?.person.logicalSize, [12, 20])
+    map.handleDisplayScaleChanged()
+    XCTAssertEqual(recorder.renders.count, 2)
+  }
+
+  @MainActor
+  func testTypedUserLocationIconsFeedTheBackingScaleRefresh() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.userLocationIconsBridge)
+
+    try bridge.setUserLocationIcons(
+      session: cameraWireSession(map),
+      icons: userLocationIcons(
+        personSize: nil,
+        directionSize: NativeMarkerSize(width: 8, height: 14)))
+
+    // An icon without a logical size is replayed as-is, so the refresh keeps
+    // the live pixel size for it while re-scaling the other icon.
+    XCTAssertNil(map.lastUserLocationIconsRender?.person.logicalSize)
+    XCTAssertEqual(map.lastUserLocationIconsRender?.direction.logicalSize, [8, 14])
+    map.handleDisplayScaleChanged()
   }
 
   @MainActor
