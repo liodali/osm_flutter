@@ -55,6 +55,10 @@ private func wrapError(_ error: Any) -> [Any?] {
   ]
 }
 
+private func createConnectionError(withChannelName channelName: String) -> PigeonError {
+  return PigeonError(code: "channel-error", message: "Unable to establish connection on channel: '\(channelName)'.", details: "")
+}
+
 enum NativeMapCameraPigeonInternal {
   static func isNullish(_ value: Any?) -> Bool {
     guard let innerValue = value else {
@@ -2061,6 +2065,93 @@ class NativeMapUserLocationIconsApiSetup {
       }
     } else {
       setUserLocationIconsChannel.setMessageHandler(nil)
+    }
+  }
+}
+
+/// Generated native-to-Dart lifecycle event route for one map session.
+///
+/// The host advertises the `events.lifecycle` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#lifecycle#route` selection: the
+/// host defaults to the legacy event plane (`map#init` / `map#restored`
+/// method-channel messages) and switches lifecycle delivery to these
+/// callbacks only after a selection validated against the session identity.
+/// Exactly one delivery route is active per attachment: once switched, the
+/// host never emits lifecycle events on the legacy plane, and attachments
+/// that never select this route (older hosts, non-opt-in, JNI command
+/// planes) keep the legacy plane untouched.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to; clients
+/// drop callbacks whose token/generation does not match the attachment
+/// (stale sessions after view replacement or disposal).
+///
+/// Delivery contract: readiness reports state transitions — hosts emit once
+/// per initialization outcome and clients coalesce repeated identical
+/// values, so one initialization produces exactly one readiness delivery.
+/// Restoration is a discrete event emitted when the host restores a saved
+/// map state (Android activity recreation); hosts without a restoration
+/// concept (Apple) never emit it.
+///
+/// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
+protocol NativeMapLifecycleEventsApiProtocol {
+  /// Map readiness transition for the session (`true` after a successful
+  /// initialization, `false` when readiness is lost).
+  @MainActor func onMapReady(session sessionArg: NativeCameraSession, isReady isReadyArg: Bool) async throws
+  /// The host restored the session's saved map state.
+  @MainActor func onMapRestored(session sessionArg: NativeCameraSession) async throws
+}
+class NativeMapLifecycleEventsApi: NativeMapLifecycleEventsApiProtocol {
+  private let binaryMessenger: FlutterBinaryMessenger
+  private let messageChannelSuffix: String
+  init(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String = "") {
+    self.binaryMessenger = binaryMessenger
+    self.messageChannelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+  }
+  var codec: NativeMapCameraPigeonCodec {
+    return NativeMapCameraPigeonCodec.shared
+  }
+  /// Map readiness transition for the session (`true` after a successful
+  /// initialization, `false` when readiness is lost).
+  @MainActor func onMapReady(session sessionArg: NativeCameraSession, isReady isReadyArg: Bool) async throws {
+    return try await withCheckedThrowingContinuation { continuation in
+      let channelName: String = "dev.flutter.pigeon.flutter_osm_interface.NativeMapLifecycleEventsApi.onMapReady\(messageChannelSuffix)"
+      let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+      channel.sendMessage([sessionArg, isReadyArg] as [Any?]) { response in
+        guard let listResponse = response as? [Any?] else {
+          continuation.resume(throwing: createConnectionError(withChannelName: channelName))
+          return
+        }
+        if listResponse.count > 1 {
+          let code: String = listResponse[0] as! String
+          let message: String? = nilOrValue(listResponse[1])
+          let details: String? = nilOrValue(listResponse[2])
+          continuation.resume(throwing: PigeonError(code: code, message: message, details: details))
+        } else {
+          continuation.resume()
+        }
+      }
+    }
+  }
+  /// The host restored the session's saved map state.
+  @MainActor func onMapRestored(session sessionArg: NativeCameraSession) async throws {
+    return try await withCheckedThrowingContinuation { continuation in
+      let channelName: String = "dev.flutter.pigeon.flutter_osm_interface.NativeMapLifecycleEventsApi.onMapRestored\(messageChannelSuffix)"
+      let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+      channel.sendMessage([sessionArg] as [Any?]) { response in
+        guard let listResponse = response as? [Any?] else {
+          continuation.resume(throwing: createConnectionError(withChannelName: channelName))
+          return
+        }
+        if listResponse.count > 1 {
+          let code: String = listResponse[0] as! String
+          let message: String? = nilOrValue(listResponse[1])
+          let details: String? = nilOrValue(listResponse[2])
+          continuation.resume(throwing: PigeonError(code: code, message: message, details: details))
+        } else {
+          continuation.resume()
+        }
+      }
     }
   }
 }

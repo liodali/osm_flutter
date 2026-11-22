@@ -28,6 +28,31 @@ extension MapSession {
             // gets notImplemented, which the probe maps to legacy routing.
             result(PigeonCameraBridge.bootstrapPayload(
                 sessionToken: sessionToken, generation: generation))
+        case "map#events#lifecycle#route":
+            // Lifecycle event route selection: negotiated before
+            // initialization so exactly one delivery route is active per
+            // attachment. The session validates the identity and switches
+            // readiness delivery; every other event keeps the legacy plane.
+            guard let args = call.arguments as? [String: Any],
+                  let token = args["sessionToken"] as? String,
+                  let generation = (args["generation"] as? NSNumber)?.int64Value,
+                  let route = args["route"] as? String
+            else {
+                result(FlutterError(
+                    code: "invalid_route",
+                    message: "malformed lifecycle route selection",
+                    details: nil))
+                return
+            }
+            if let errorCode = selectLifecycleEventRoute(
+                sessionToken: token, generation: generation, route: route) {
+                result(FlutterError(
+                    code: errorCode,
+                    message: "lifecycle event route rejected",
+                    details: nil))
+            } else {
+                result(200)
+            }
         case "init#ios#map":
             //channel.invokeMethod("map#init", arguments: true)
             if let tile = customTiles {
@@ -305,7 +330,7 @@ extension MapSession {
         let location = CLLocationCoordinate2D(
             latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
         self.mapOSM.moveTo(location: location, zoom: zoomConfig.initZoom, animated: false)
-        self.channel.invokeMethod("map#init", arguments: true)
+        self.emitMapReady(true)
         result(200)
 
     }

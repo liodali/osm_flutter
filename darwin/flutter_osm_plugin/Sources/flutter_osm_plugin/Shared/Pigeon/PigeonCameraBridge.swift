@@ -191,6 +191,12 @@ final class PigeonCameraBridge: NativeMapCameraApi {
     /// Tracking accepts omitted anchors (keep the configured pivots).
     static let capabilityTrackingOptionalAnchor = "location.tracking.anchor"
 
+    /// Native-to-Dart lifecycle callbacks: readiness (and restoration on
+    /// hosts with a restoration concept). Advertised only because
+    /// `PigeonLifecycleEventsBridge` and the `map#events#lifecycle#route`
+    /// selection are implemented.
+    static let capabilityLifecycleEvents = "events.lifecycle"
+
     static func viewChannelSuffix(_ viewId: Int64) -> String {
         "view_\(viewId)"
     }
@@ -212,7 +218,7 @@ final class PigeonCameraBridge: NativeMapCameraApi {
                 capabilityLayers, capabilityShapes, capabilityRoads,
                 capabilityLocation, capabilityLocationUpdates,
                 capabilityTracking, capabilityLocationIcons,
-                capabilityTrackingOptionalAnchor,
+                capabilityTrackingOptionalAnchor, capabilityLifecycleEvents,
             ],
             "sessionToken": sessionToken,
             "generation": generation,

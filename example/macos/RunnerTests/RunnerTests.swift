@@ -2787,16 +2787,205 @@ class RunnerTests: XCTestCase {
     XCTAssertEqual(map.typedMarkerCoordinates.count, 0)
     XCTAssertEqual(map.mapOSM.markerManager.getAllMarkers().count, 0)
   }
+
+  // MARK: lifecycle event route (readiness/restoration callbacks)
+
+  @MainActor
+  func testLifecycleRouteSelectionValidatesSessionIdentity() throws {
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+
+    var replies: [Any?] = []
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(
+        methodName: "map#events#lifecycle#route",
+        arguments: [
+          "sessionToken": map.sessionToken, "generation": map.generation,
+          "route": "pigeon",
+        ] as [String: Any])
+    ) { replies.append($0) }
+    XCTAssertEqual(replies.count, 1)
+    XCTAssertEqual(replies[0] as? Int, 200)
+
+    // A stale identity never switches another attachment's route.
+    var stale: [Any?] = []
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(
+        methodName: "map#events#lifecycle#route",
+        arguments: [
+          "sessionToken": "wrong", "generation": map.generation,
+          "route": "pigeon",
+        ] as [String: Any])
+    ) { stale.append($0) }
+    XCTAssertEqual((stale.first as? FlutterError)?.code, "stale_session")
+
+    // Unknown route values and malformed payloads are rejected.
+    var invalid: [Any?] = []
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(
+        methodName: "map#events#lifecycle#route",
+        arguments: [
+          "sessionToken": map.sessionToken, "generation": map.generation,
+          "route": "carrier-pigeon",
+        ] as [String: Any])
+    ) { invalid.append($0) }
+    XCTAssertEqual((invalid.first as? FlutterError)?.code, "invalid_route")
+
+    var malformed: [Any?] = []
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(
+        methodName: "map#events#lifecycle#route", arguments: ["route": "pigeon"])
+    ) { malformed.append($0) }
+    XCTAssertEqual((malformed.first as? FlutterError)?.code, "invalid_route")
+  }
+
+  @MainActor
+  func testLifecycleReadinessUsesExactlyOneDeliveryRoute() async throws {
+    let messenger = RecordingMessenger()
+    let map = session(messenger)
+    defer { map.dispose() }
+
+    // Before negotiation: readiness flows on the legacy event plane.
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(
+        methodName: "initMap", arguments: ["lat": 47.0, "lon": 8.0])
+    ) { _ in }
+    let legacyBefore = legacyLifecycleMessages(messenger, channel: "map_1")
+    XCTAssertEqual(legacyBefore.count, 1)
+    XCTAssertEqual(legacyBefore.first?.method, "map#init")
+    XCTAssertEqual(legacyBefore.first?.arguments as? Bool, true)
+
+    // Negotiate the typed route, then re-initialize: readiness must arrive
+    // only on the generated per-view channel, never on the legacy plane.
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(
+        methodName: "map#events#lifecycle#route",
+        arguments: [
+          "sessionToken": map.sessionToken, "generation": map.generation,
+          "route": "pigeon",
+        ] as [String: Any])
+    ) { _ in }
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(
+        methodName: "initMap", arguments: ["lat": 47.0, "lon": 8.0])
+    ) { _ in }
+    try await waitForSentMessages(messenger, count: 2)
+
+    XCTAssertEqual(legacyLifecycleMessages(messenger, channel: "map_1").count, 1)
+    let pigeon = pigeonLifecycleMessages(messenger, viewId: 1)
+    XCTAssertEqual(pigeon.count, 1)
+    XCTAssertTrue(pigeon[0].channel.hasSuffix(".onMapReady.view_1"))
+    let args = try XCTUnwrap(
+      sessionTestCodec.decode(pigeon[0].message!) as? [Any?])
+    let wire = try XCTUnwrap(args[0] as? [Any?])
+    XCTAssertEqual(wire[0] as? String, map.sessionToken)
+    XCTAssertEqual((wire[1] as? NSNumber)?.int64Value, map.generation)
+    XCTAssertEqual(args[1] as? Bool, true)
+
+    // Selecting legacy again returns delivery to the legacy plane.
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(
+        methodName: "map#events#lifecycle#route",
+        arguments: [
+          "sessionToken": map.sessionToken, "generation": map.generation,
+          "route": "legacy",
+        ] as [String: Any])
+    ) { _ in }
+    map.emitMapReady(false)
+    let legacyAfter = legacyLifecycleMessages(messenger, channel: "map_1")
+    XCTAssertEqual(legacyAfter.count, 2)
+    XCTAssertEqual(legacyAfter.last?.arguments as? Bool, false)
+    XCTAssertEqual(pigeonLifecycleMessages(messenger, viewId: 1).count, 1)
+  }
+
+  @MainActor
+  func testLifecycleCallbacksIsolateTwoMapsAndStopAfterDisposal() async throws {
+    let firstMessenger = RecordingMessenger()
+    let secondMessenger = RecordingMessenger()
+    let first = session(firstMessenger, id: 1)
+    let second = session(secondMessenger, id: 2)
+    defer {
+      first.dispose()
+      second.dispose()
+    }
+    for map in [first, second] {
+      map.onListenMethodChannel(
+        call: FlutterMethodCall(
+          methodName: "map#events#lifecycle#route",
+          arguments: [
+            "sessionToken": map.sessionToken, "generation": map.generation,
+            "route": "pigeon",
+          ] as [String: Any])
+      ) { _ in }
+    }
+
+    second.emitMapReady(true)
+    try await waitForSentMessages(secondMessenger, count: 1)
+    XCTAssertTrue(firstMessenger.sent.isEmpty)
+    let pigeon = pigeonLifecycleMessages(secondMessenger, viewId: 2)
+    XCTAssertEqual(pigeon.count, 1)
+    XCTAssertTrue(pigeon[0].channel.hasSuffix(".onMapReady.view_2"))
+    let args = try XCTUnwrap(
+      sessionTestCodec.decode(pigeon[0].message!) as? [Any?])
+    let wire = try XCTUnwrap(args[0] as? [Any?])
+    XCTAssertEqual(wire[0] as? String, second.sessionToken)
+
+    // Disposal closes the bridge: late emissions are dropped, never
+    // rerouted through the legacy plane.
+    let bridge = try XCTUnwrap(second.lifecycleEventsBridge)
+    second.dispose()
+    bridge.emitReady(true)
+    bridge.emitRestored()
+    try await Task.sleep(nanoseconds: 50_000_000)
+    XCTAssertEqual(pigeonLifecycleMessages(secondMessenger, viewId: 2).count, 1)
+    XCTAssertTrue(legacyLifecycleMessages(secondMessenger, channel: "map_2").isEmpty)
+  }
+
+  private func legacyLifecycleMessages(
+    _ messenger: RecordingMessenger, channel: String
+  ) -> [FlutterMethodCall] {
+    messenger.sent.filter { $0.channel == channel }.compactMap { entry in
+      guard let data = entry.message,
+            let call = FlutterStandardMethodCodec.sharedInstance().decodeMethodCall(data)
+                as? FlutterMethodCall,
+            call.method == "map#init" || call.method == "map#restored"
+      else { return nil }
+      return call
+    }
+  }
+
+  private func pigeonLifecycleMessages(
+    _ messenger: RecordingMessenger, viewId: Int64
+  ) -> [(channel: String, message: Data?)] {
+    let prefix = "dev.flutter.pigeon.flutter_osm_interface.NativeMapLifecycleEventsApi."
+    return messenger.sent.filter {
+      $0.channel.hasPrefix(prefix) && $0.channel.hasSuffix(".view_\(viewId)")
+    }
+  }
+
+  private func waitForSentMessages(
+    _ messenger: RecordingMessenger, count: Int
+  ) async throws {
+    for _ in 0..<200 {
+      if messenger.sent.count >= count { return }
+      try await Task.sleep(nanoseconds: 5_000_000)
+    }
+    XCTFail("timed out waiting for \(count) sent messages")
+  }
 }
 
 // Captures real FlutterMethodChannel registration without starting a Dart engine
 // or contacting location services. Tests drive session callbacks explicitly.
 private final class RecordingMessenger: NSObject, FlutterBinaryMessenger {
   var handlers: [String: FlutterBinaryMessageHandler] = [:]
+  var sent: [(channel: String, message: Data?)] = []
   private var connections: [String: FlutterBinaryMessengerConnection] = [:]
   private var nextConnection: FlutterBinaryMessengerConnection = 0
-  func send(onChannel channel: String, message: Data?) {}
+  func send(onChannel channel: String, message: Data?) {
+    sent.append((channel, message))
+  }
   func send(onChannel channel: String, message: Data?, binaryReply callback: FlutterBinaryReply?) {
+    sent.append((channel, message))
     callback?(nil)
   }
   func setMessageHandlerOnChannel(_ channel: String, binaryMessageHandler handler: FlutterBinaryMessageHandler?) -> FlutterBinaryMessengerConnection {
@@ -2811,3 +3000,21 @@ private final class RecordingMessenger: NSObject, FlutterBinaryMessenger {
     handlers.removeValue(forKey: channel)
   }
 }
+
+/// Test replica of the generated private codec: unwraps the session
+/// envelope (129) so lifecycle payloads can be asserted.
+private final class SessionTestReader: FlutterStandardReader {
+  override func readValue(ofType type: UInt8) -> Any? {
+    if type == 129 { return readValue() }
+    return super.readValue(ofType: type)
+  }
+}
+
+private final class SessionTestReaderWriter: FlutterStandardReaderWriter {
+  override func reader(with data: Data) -> FlutterStandardReader {
+    SessionTestReader(data: data)
+  }
+}
+
+private let sessionTestCodec = FlutterStandardMessageCodec(
+  readerWriter: SessionTestReaderWriter())

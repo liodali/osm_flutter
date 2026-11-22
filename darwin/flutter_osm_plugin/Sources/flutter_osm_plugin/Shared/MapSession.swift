@@ -54,6 +54,14 @@ class MapSession: NSObject {
     /// Generated user-location icon route living alongside the legacy
     /// channel handler.
     private(set) var userLocationIconsBridge: PigeonUserLocationIconsBridge?
+    /// Generated lifecycle event route (readiness/restoration callbacks)
+    /// living alongside the legacy event plane.
+    private(set) var lifecycleEventsBridge: PigeonLifecycleEventsBridge?
+    /// Frozen lifecycle delivery route for this attachment: false keeps the
+    /// legacy `map#init` event plane (the default); true delivers readiness
+    /// through the generated Pigeon callbacks. Switched only by the
+    /// validated pre-initialization selection, never by a map command.
+    private var lifecycleEventsUsePigeon = false
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -682,6 +690,12 @@ class MapSession: NSObject {
         let userLocationIcons = PigeonUserLocationIconsBridge(session: self)
         userLocationIcons.register(messenger: binaryMessenger, viewId: viewId)
         userLocationIconsBridge = userLocationIcons
+        // Generated lifecycle callbacks (readiness) live alongside the
+        // legacy event plane; delivery switches only after the validated
+        // pre-initialization route selection.
+        lifecycleEventsBridge = PigeonLifecycleEventsBridge(
+            messenger: binaryMessenger, viewId: viewId,
+            sessionToken: sessionToken, generation: generation)
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -783,6 +797,40 @@ class MapSession: NSObject {
         #endif
     }
 
+    /// Emits one readiness transition through the attachment's single
+    /// negotiated delivery route: the generated Pigeon callbacks when the
+    /// pre-initialization selection switched this session, the legacy
+    /// `map#init` event plane otherwise.
+    func emitMapReady(_ isReady: Bool) {
+        if lifecycleEventsUsePigeon, let bridge = lifecycleEventsBridge {
+            bridge.emitReady(isReady)
+        } else {
+            channel.invokeMethod("map#init", arguments: isReady)
+        }
+    }
+
+    /// Attach-time lifecycle event route selection. Validates the session
+    /// identity so a stale selection can never switch another attachment's
+    /// delivery route. Returns nil on success, a typed error code otherwise.
+    func selectLifecycleEventRoute(
+        sessionToken: String, generation: Int64, route: String
+    ) -> String? {
+        if isDisposed { return "disposed" }
+        if sessionToken != self.sessionToken || generation != self.generation {
+            return "stale_session"
+        }
+        switch route {
+        case "pigeon":
+            lifecycleEventsUsePigeon = true
+            return nil
+        case "legacy":
+            lifecycleEventsUsePigeon = false
+            return nil
+        default:
+            return "invalid_route"
+        }
+    }
+
     /// Tears down the session: stops the method-channel handler, detaches every
     /// framework delegate, stops location work and fails any pending result.
     /// Safe to call more than once (from the platform wrapper and from deinit).
@@ -809,6 +857,8 @@ class MapSession: NSObject {
         trackingBridge = nil
         userLocationIconsBridge?.unregister(messenger: binaryMessenger, viewId: viewId)
         userLocationIconsBridge = nil
+        lifecycleEventsBridge?.close()
+        lifecycleEventsBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil
