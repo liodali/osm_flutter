@@ -77,6 +77,7 @@ import io.openmobilemaps.mapscore.shared.map.layers.line.LineStyle
 import io.openmobilemaps.mapscore.shared.map.layers.polygon.PolygonLayerInterface
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeCameraBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLayersBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLifecycleEventsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationUpdatesBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeTrackingBridge
@@ -134,6 +135,17 @@ internal class MapscoreMapSession(
     private var pigeonTrackingBridge: PigeonNativeTrackingBridge? = null
 
     private var pigeonUserLocationIconsBridge: PigeonNativeUserLocationIconsBridge? = null
+
+    private var pigeonLifecycleEventsBridge: PigeonNativeLifecycleEventsBridge? = null
+
+    /**
+     * Frozen lifecycle delivery route for this attachment: false keeps the
+     * legacy `map#init` / `map#restored` event plane (the default, and the
+     * only route JNI attachments ever use); true delivers readiness and
+     * restoration through the generated Pigeon callbacks. Switched only by
+     * the validated pre-initialization selection, never by a command.
+     */
+    private var lifecycleEventsPigeon = false
 
     /** Minted per session; guards generated routes against reused view ids. */
     internal val sessionToken: String = UUID.randomUUID().toString()
@@ -887,7 +899,54 @@ internal class MapscoreMapSession(
     }
 
     override fun emitReady(isReady: Boolean) {
-        eventSink.emit("map#init", isReady)
+        // Exactly one delivery route per attachment: the negotiated
+        // lifecycle route owns readiness; everything else keeps the
+        // existing event plane.
+        val lifecycleBridge = pigeonLifecycleEventsBridge
+        if (lifecycleEventsPigeon && lifecycleBridge != null) {
+            lifecycleBridge.emitReady(isReady)
+        } else {
+            eventSink.emit("map#init", isReady)
+        }
+    }
+
+    /**
+     * Restoration emission (saved map state restored after activity
+     * recreation). Delivered only on the negotiated typed route: the
+     * legacy event plane keeps its historical behavior unchanged.
+     */
+    private fun emitRestored() {
+        val lifecycleBridge = pigeonLifecycleEventsBridge
+        if (lifecycleEventsPigeon && lifecycleBridge != null) {
+            lifecycleBridge.emitRestored()
+        }
+    }
+
+    /**
+     * Attach-time lifecycle event route selection. Validates the session
+     * identity so a stale selection can never switch another attachment's
+     * delivery route. Returns null on success, a typed error code otherwise.
+     */
+    internal fun selectLifecycleEventRoute(
+        sessionToken: String,
+        generation: Long,
+        route: String,
+    ): String? {
+        if (released) return "disposed"
+        if (sessionToken != this.sessionToken || generation != this.generation) {
+            return "stale_session"
+        }
+        return when (route) {
+            "pigeon" -> {
+                lifecycleEventsPigeon = true
+                null
+            }
+            "legacy" -> {
+                lifecycleEventsPigeon = false
+                null
+            }
+            else -> "invalid_route"
+        }
     }
 
     override fun setZoom(
@@ -2261,6 +2320,8 @@ internal class MapscoreMapSession(
 
         pigeonUserLocationIconsBridge?.unregister(binaryMessenger, id)
         pigeonUserLocationIconsBridge = null
+        pigeonLifecycleEventsBridge?.close()
+        pigeonLifecycleEventsBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -2302,7 +2363,11 @@ internal class MapscoreMapSession(
         }
     }
 
-    internal fun onRestoreInstanceState(bundle: Bundle?) {}
+    internal fun onRestoreInstanceState(bundle: Bundle?) {
+        if (bundle != null) {
+            emitRestored()
+        }
+    }
 
     internal fun onCreate(owner: LifecycleOwner) {
         legacyChannel = LegacyMethodChannelAdapter(
@@ -2311,6 +2376,7 @@ internal class MapscoreMapSession(
             dispatch = ::handleLegacyCommand,
             typedDispatch = ::handleTypedChannelCommand,
             bootstrapProvider = ::pigeonBootstrapInfo,
+            lifecycleRouteSelector = ::selectLifecycleEventRoute,
         )
         if (eventSink === NoopMapEventSink) {
             eventSink = legacyChannel
@@ -2363,6 +2429,15 @@ internal class MapscoreMapSession(
             PigeonNativeUserLocationIconsBridge(this, sessionToken, generation)
         userLocationIconsBridge.register(binaryMessenger, id)
         pigeonUserLocationIconsBridge = userLocationIconsBridge
+        // Generated lifecycle callbacks (readiness/restoration) live
+        // alongside the legacy event plane; delivery switches only after
+        // the validated pre-initialization route selection.
+        pigeonLifecycleEventsBridge = PigeonNativeLifecycleEventsBridge(
+            messenger = binaryMessenger,
+            viewId = id,
+            sessionToken = sessionToken,
+            generation = generation,
+        )
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")

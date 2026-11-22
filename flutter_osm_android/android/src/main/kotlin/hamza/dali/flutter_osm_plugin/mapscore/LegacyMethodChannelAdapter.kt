@@ -108,6 +108,7 @@ internal class LegacyMethodChannelAdapter(
     private val dispatch: (LegacyMapCommand, MethodCall, MethodChannel.Result) -> Unit,
     private val typedDispatch: (TypedMapCommand, MethodCall, MethodChannel.Result) -> Unit,
     private val bootstrapProvider: (() -> Map<String, Any?>)? = null,
+    private val lifecycleRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
 ) : MapEventSink, MethodChannel.MethodCallHandler {
     private val channel = MethodChannel(messenger, "plugins.dali.hamza/osmview_$viewId")
     private val eventSink = MethodChannelMapEventSink(channel)
@@ -126,6 +127,28 @@ internal class LegacyMethodChannelAdapter(
                 result.notImplemented()
             } else {
                 result.success(payload)
+            }
+            return
+        }
+        if (call.method == NATIVE_LIFECYCLE_ROUTE_METHOD) {
+            // Lifecycle event route selection: negotiated before
+            // initialization so exactly one delivery route is active per
+            // attachment. The selector validates the session identity and
+            // returns null on success or a typed error code.
+            val selector = lifecycleRouteSelector
+            val args = call.arguments as? Map<*, *>
+            val token = args?.get("sessionToken") as? String
+            val generation = (args?.get("generation") as? Number)?.toLong()
+            val route = args?.get("route") as? String
+            if (selector == null || token == null || generation == null || route == null) {
+                result.error("invalid_route", "malformed lifecycle route selection", null)
+                return
+            }
+            val errorCode = selector(token, generation, route)
+            if (errorCode == null) {
+                result.success(true)
+            } else {
+                result.error(errorCode, "lifecycle event route rejected", null)
             }
             return
         }
@@ -154,5 +177,8 @@ internal class LegacyMethodChannelAdapter(
     companion object {
         /** Read-only attach-time probe. Additive; legacy commands are untouched. */
         const val NATIVE_BOOTSTRAP_METHOD = "map#bootstrap#protocol"
+
+        /** Attach-time lifecycle event route selection (before initialization). */
+        const val NATIVE_LIFECYCLE_ROUTE_METHOD = "map#events#lifecycle#route"
     }
 }

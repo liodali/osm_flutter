@@ -195,6 +195,11 @@ internal class PigeonNativeCameraBridge(
         /** Tracking accepts omitted anchors (keep the configured pivots). */
         const val CAPABILITY_TRACKING_OPTIONAL_ANCHOR = "location.tracking.anchor"
 
+        /// Native-to-Dart lifecycle callbacks: readiness and restoration.
+        /// Advertised only because `PigeonNativeLifecycleEventsBridge` and
+        /// the `map#events#lifecycle#route` selection are implemented.
+        const val CAPABILITY_LIFECYCLE_EVENTS = "events.lifecycle"
+
         /** Typed error code for the markers family. */
         const val CODE_MARKERS_NOT_READY = "markers_not_ready"
 
@@ -223,6 +228,7 @@ internal class PigeonNativeCameraBridge(
                 CAPABILITY_TRACKING,
                 CAPABILITY_LOCATION_ICONS,
                 CAPABILITY_TRACKING_OPTIONAL_ANCHOR,
+                CAPABILITY_LIFECYCLE_EVENTS,
             ),
             "sessionToken" to sessionToken,
             "generation" to generation,

@@ -21,6 +21,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 private object NativeMapCameraPigeonUtils {
 
+  fun createConnectionError(channelName: String): FlutterError {
+    return FlutterError("channel-error",  "Unable to establish connection on channel: '$channelName'.", "")  }
+
   fun wrapResult(result: Any?): List<Any?> {
     return listOf(result)
   }
@@ -2257,6 +2260,84 @@ interface NativeMapUserLocationIconsApi {
         } else {
           channel.setMessageHandler(null)
         }
+      }
+    }
+  }
+}
+/**
+ * Generated native-to-Dart lifecycle event route for one map session.
+ *
+ * The host advertises the `events.lifecycle` capability only when it
+ * implements this surface. The route is negotiated before initialization
+ * through the legacy-channel `map#events#lifecycle#route` selection: the
+ * host defaults to the legacy event plane (`map#init` / `map#restored`
+ * method-channel messages) and switches lifecycle delivery to these
+ * callbacks only after a selection validated against the session identity.
+ * Exactly one delivery route is active per attachment: once switched, the
+ * host never emits lifecycle events on the legacy plane, and attachments
+ * that never select this route (older hosts, non-opt-in, JNI command
+ * planes) keep the legacy plane untouched.
+ *
+ * Every callback carries the [NativeCameraSession] it belongs to; clients
+ * drop callbacks whose token/generation does not match the attachment
+ * (stale sessions after view replacement or disposal).
+ *
+ * Delivery contract: readiness reports state transitions — hosts emit once
+ * per initialization outcome and clients coalesce repeated identical
+ * values, so one initialization produces exactly one readiness delivery.
+ * Restoration is a discrete event emitted when the host restores a saved
+ * map state (Android activity recreation); hosts without a restoration
+ * concept (Apple) never emit it.
+ *
+ * Generated class from Pigeon that represents Flutter messages that can be called from Kotlin.
+ */
+class NativeMapLifecycleEventsApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+  companion object {
+    /** The codec used by NativeMapLifecycleEventsApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      NativeMapCameraPigeonCodec()
+    }
+  }
+  /**
+   * Map readiness transition for the session (`true` after a successful
+   * initialization, `false` when readiness is lost).
+   */
+  suspend fun onMapReady(sessionArg: NativeCameraSession, isReadyArg: Boolean)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.flutter_osm_interface.NativeMapLifecycleEventsApi.onMapReady$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(sessionArg, isReadyArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
+        } else {
+          continuation.resumeWithException(NativeMapCameraPigeonUtils.createConnectionError(channelName))
+        } 
+      }
+    }
+  }
+  /** The host restored the session's saved map state. */
+  suspend fun onMapRestored(sessionArg: NativeCameraSession)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.flutter_osm_interface.NativeMapLifecycleEventsApi.onMapRestored$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(sessionArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
+        } else {
+          continuation.resumeWithException(NativeMapCameraPigeonUtils.createConnectionError(channelName))
+        } 
       }
     }
   }
