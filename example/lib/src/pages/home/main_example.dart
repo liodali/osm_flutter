@@ -702,6 +702,11 @@ class Map extends StatelessWidget {
         // direction arrow is pinned by its tip. Hosts without the
         // `location.icons` capability keep the legacy icon route.
         useTypedLocationIcons: true,
+        // Exercise the typed lifecycle event callbacks: readiness (and
+        // restoration on Android recreation) is negotiated before
+        // initialization; hosts without `events.lifecycle` keep the legacy
+        // event plane. The public onMapIsReady stream is unchanged.
+        useTypedLifecycleEvents: true,
         zoomOption: const ZoomOption(
           initZoom: 16,
           minZoomLevel: 3,
