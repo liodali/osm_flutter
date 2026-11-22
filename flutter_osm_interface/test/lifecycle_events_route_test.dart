@@ -840,4 +840,123 @@ void main() {
       osm.close(7);
     });
   });
+
+  group('lifecycle replay before subscription', () {
+    test('restoration flushed during selection replays to a late subscriber',
+        () async {
+      await mockLegacy((call) async {
+        if (call.method == bootstrapMethod) return lifecycleBootstrap;
+        if (call.method == routeMethod) {
+          // Android flushes a buffered restoration while answering the
+          // selection, before the controller has subscribed.
+          await emitNativeRestored(7);
+          return true;
+        }
+        return null;
+      });
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: true);
+      // Subscribe only after attachment returns (the controller's ordering).
+      final restored = <EventOSM>[];
+      final sub = osm.onMapRestored(7).listen(restored.add);
+      await Future<void>.delayed(Duration.zero);
+      expect(restored.length, 1);
+      expect(restored.single.mapId, 7);
+      await sub.cancel();
+      osm.close(7);
+    });
+
+    test('readiness emitted during attachment replays to a late subscriber',
+        () async {
+      await mockLegacy((call) async {
+        if (call.method == bootstrapMethod) return lifecycleBootstrap;
+        if (call.method == routeMethod) {
+          await emitNativeReady(7, true);
+          return true;
+        }
+        return null;
+      });
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: true);
+      final ready = <EventOSM>[];
+      final sub = osm.onMapIsReady(7).listen(ready.add);
+      await Future<void>.delayed(Duration.zero);
+      expect(ready.map((e) => e.value), [true]);
+      await sub.cancel();
+      osm.close(7);
+    });
+
+    test('replayed restoration is not redelivered; live events flow once',
+        () async {
+      await mockLegacy((call) async {
+        if (call.method == bootstrapMethod) return lifecycleBootstrap;
+        if (call.method == routeMethod) {
+          await emitNativeRestored(7);
+          return true;
+        }
+        return null;
+      });
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: true);
+      final restored = <EventOSM>[];
+      final sub = osm.onMapRestored(7).listen(restored.add);
+      await Future<void>.delayed(Duration.zero);
+      expect(restored.length, 1);
+      // A new restoration after subscription flows live, exactly once.
+      await emitNativeRestored(7);
+      await Future<void>.delayed(Duration.zero);
+      expect(restored.length, 2);
+      await sub.cancel();
+      osm.close(7);
+    });
+
+    test('buffered events are dropped on close, not leaked to a replacement',
+        () async {
+      await mockLegacy((call) async {
+        if (call.method == bootstrapMethod) return lifecycleBootstrap;
+        if (call.method == routeMethod) {
+          await emitNativeRestored(7);
+          return true;
+        }
+        return null;
+      });
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: true);
+      // Dispose before anyone subscribes: the buffered restoration must not
+      // leak into the replacement attachment.
+      osm.close(7);
+      // Replacement host does not flush a restoration during selection.
+      await mockLegacy((call) async {
+        if (call.method == bootstrapMethod) return lifecycleBootstrap;
+        return true;
+      });
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: true);
+      final restored = <EventOSM>[];
+      final sub = osm.onMapRestored(7).listen(restored.add);
+      await Future<void>.delayed(Duration.zero);
+      expect(restored, isEmpty);
+      await sub.cancel();
+      osm.close(7);
+    });
+
+    test('legacy restoration emitted before subscription is replayed',
+        () async {
+      await mockLegacy((call) async => null);
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: false);
+      await emitLegacy('map#restored', null); // no listener yet
+      final restored = <EventOSM>[];
+      final sub = osm.onMapRestored(7).listen(restored.add);
+      await Future<void>.delayed(Duration.zero);
+      expect(restored.length, 1);
+      await sub.cancel();
+      osm.close(7);
+    });
+  });
 }

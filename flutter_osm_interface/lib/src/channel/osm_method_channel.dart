@@ -132,6 +132,37 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Stream<EventOSM> _events(int mapId) =>
       _streamController.stream.where((event) => event.mapId == mapId);
 
+  /// Lifecycle events (readiness/restoration) can be emitted by the host
+  /// during route selection — before the controller installs its
+  /// subscriptions (Android flushes a buffered restoration while answering
+  /// the selection). A broadcast stream drops events with no listener, so
+  /// buffer them per map and replay when the lifecycle stream gains its
+  /// first listener. Other event types keep the plain broadcast behavior.
+  final Map<int, List<MapInitialization>> _readyReplay = {};
+  final Map<int, List<MapRestoration>> _restoredReplay = {};
+  final Map<int, bool> _readyListened = {};
+  final Map<int, bool> _restoredListened = {};
+
+  void _emitMapReady(int idMap, bool isReady) {
+    if (_streamController.isClosed) return;
+    final event = MapInitialization(idMap, isReady);
+    if (_readyListened[idMap] == true) {
+      _streamController.add(event);
+    } else {
+      (_readyReplay[idMap] ??= []).add(event);
+    }
+  }
+
+  void _emitMapRestored(int idMap) {
+    if (_streamController.isClosed) return;
+    final event = MapRestoration(idMap);
+    if (_restoredListened[idMap] == true) {
+      _streamController.add(event);
+    } else {
+      (_restoredReplay[idMap] ??= []).add(event);
+    }
+  }
+
   @override
   Future<void> init(int idOSM) async {
     if (!_channels.containsKey(idOSM)) {
@@ -151,12 +182,54 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Stream<MapInitialization> onMapIsReady(int idMap) {
-    return _events(idMap).whereType<MapInitialization>();
+    return _replayLifecycle<MapInitialization>(
+      idMap,
+      _events(idMap).whereType<MapInitialization>(),
+      _readyReplay,
+      _readyListened,
+    );
   }
 
   @override
   Stream<MapRestoration> onMapRestored(int idMap) {
-    return _events(idMap).whereType<MapRestoration>();
+    return _replayLifecycle<MapRestoration>(
+      idMap,
+      _events(idMap).whereType<MapRestoration>(),
+      _restoredReplay,
+      _restoredListened,
+    );
+  }
+
+  /// Broadcast lifecycle view that replays events buffered before the first
+  /// listener, then forwards the live stream. Once listened, later events
+  /// flow straight through the shared controller (no further buffering).
+  Stream<T> _replayLifecycle<T extends EventOSM>(
+    int idMap,
+    Stream<T> live,
+    Map<int, List<T>> replay,
+    Map<int, bool> listened,
+  ) {
+    final buffer = replay[idMap] ??= [];
+    late StreamController<T> controller;
+    StreamSubscription<T>? subscription;
+    controller = StreamController<T>.broadcast(
+      onListen: () {
+        listened[idMap] = true;
+        subscription ??=
+            live.listen(controller.add, onError: controller.addError);
+        if (buffer.isNotEmpty) {
+          for (final event in buffer) {
+            controller.add(event);
+          }
+          buffer.clear();
+        }
+      },
+      onCancel: () {
+        subscription?.cancel();
+        subscription = null;
+      },
+    );
+    return controller.stream;
   }
 
   @override
@@ -208,11 +281,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
           // or duplicated host emissions) are dropped, never re-delivered.
           if (_lifecycleEventsRoutes[idMap] != null) break;
           final result = call.arguments as bool;
-          _streamController.add(MapInitialization(idMap, result));
+          _emitMapReady(idMap, result);
           break;
         case "map#restored":
           if (_lifecycleEventsRoutes[idMap] != null) break;
-          _streamController.add(MapRestoration(idMap));
+          _emitMapRestored(idMap);
           break;
         case "receiveLongPress":
           final result = call.arguments;
@@ -288,6 +361,12 @@ class MethodChannelOSM extends MobileOSMPlatform {
     // Unregister the generated lifecycle handlers before a replacement
     // attachment can register its own on the same per-view channels.
     _lifecycleEventsRoutes.remove(idOSM)?.dispose();
+    // Drop any lifecycle events buffered before a listener arrived, and the
+    // listened flags, so a replacement attachment starts from a clean slate.
+    _readyReplay.remove(idOSM);
+    _restoredReplay.remove(idOSM);
+    _readyListened.remove(idOSM);
+    _restoredListened.remove(idOSM);
     _typedMarkerKeys.remove(idOSM);
     _typedMarkerSequences.remove(idOSM);
     _typedMarkerOrder.remove(idOSM);
@@ -539,16 +618,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
       createClient: (bootstrap) => PigeonLifecycleEventsClient(
         viewId: idOSM,
         bootstrap: bootstrap,
-        onReady: (isReady) {
-          if (!_streamController.isClosed) {
-            _streamController.add(MapInitialization(idOSM, isReady));
-          }
-        },
-        onRestored: () {
-          if (!_streamController.isClosed) {
-            _streamController.add(MapRestoration(idOSM));
-          }
-        },
+        onReady: (isReady) => _emitMapReady(idOSM, isReady),
+        onRestored: () => _emitMapRestored(idOSM),
       ),
       // Negotiate the delivery route with the host before initialization:
       // the host switches lifecycle emission to the generated callbacks
