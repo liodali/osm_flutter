@@ -53,6 +53,7 @@ class const MobileOsmFlutter({
   this.useTypedLocationUpdates = false,
   this.useTypedTracking = false,
   this.useTypedLocationIcons = false,
+  this.useTypedLifecycleEvents = false,
 }) extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -98,6 +99,11 @@ class const MobileOsmFlutter({
   /// through the generated channel when the native host advertises the
   /// `location.icons` capability.
   final bool useTypedLocationIcons;
+
+  /// Opt-in routing of the native-to-Dart lifecycle events (readiness and
+  /// restoration) through the generated callbacks when the native host
+  /// advertises the `events.lifecycle` capability.
+  final bool useTypedLifecycleEvents;
   final ZoomOption zoomOption;
   @override
   MobileOsmFlutterState createState() => MobileOsmFlutterState();

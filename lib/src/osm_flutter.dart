@@ -175,6 +175,8 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         useTypedTracking: widget.osmOption.useTypedTracking,
                         useTypedLocationIcons:
                             widget.osmOption.useTypedLocationIcons,
+                        useTypedLifecycleEvents:
+                            widget.osmOption.useTypedLifecycleEvents,
                       ),
                     ),
                     Positioned.fill(
@@ -234,6 +236,8 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   useTypedTracking: widget.osmOption.useTypedTracking,
                   useTypedLocationIcons:
                       widget.osmOption.useTypedLocationIcons,
+                  useTypedLifecycleEvents:
+                      widget.osmOption.useTypedLifecycleEvents,
                 ),
         ),
         if (widget.osmOption.showContributorBadgeForOSM && !kIsWeb) ...[

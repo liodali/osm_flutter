@@ -74,6 +74,31 @@ const String kTrackingOptionalAnchorCapability = 'location.tracking.anchor';
 /// Capability family carried by the markers schema.
 const String kMarkersCapability = 'markers';
 
+/// Capability family carried by the native-to-Dart lifecycle event schema
+/// (map readiness and restoration callbacks). Hosts without this capability
+/// keep lifecycle events on the legacy `map#init` / `map#restored` method
+/// channel messages. Attachments that never negotiate this route — older
+/// hosts, non-opt-in applications and the JNI command plane — keep the
+/// legacy event plane untouched.
+const String kLifecycleEventsCapability = 'events.lifecycle';
+
+/// Legacy-channel method name of the lifecycle event route selection.
+///
+/// Sent by the client during attachment, before initialization, only after
+/// the bootstrap probe advertised [kLifecycleEventsCapability]. The payload
+/// is `{sessionToken, generation, route}` with `route` one of
+/// [kLifecycleEventsRoutePigeon] / [kLifecycleEventsRouteLegacy]; hosts
+/// validate the session identity and answer `true`, or fail with
+/// `stale_session` / `invalid_route`. Hosts default to the legacy route, so
+/// exactly one delivery route is active per attachment.
+const String kNativeLifecycleEventsRouteMethod = 'map#events#lifecycle#route';
+
+/// Route value selecting the generated Pigeon lifecycle callbacks.
+const String kLifecycleEventsRoutePigeon = 'pigeon';
+
+/// Route value selecting the legacy method-channel lifecycle events.
+const String kLifecycleEventsRouteLegacy = 'legacy';
+
 /// Per-map message-channel suffix for generated Pigeon routes.
 ///
 /// Generated channel names become

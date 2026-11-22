@@ -41,6 +41,7 @@ class OSMOption {
     this.useTypedLocationUpdates = false,
     this.useTypedTracking = false,
     this.useTypedLocationIcons = false,
+    this.useTypedLifecycleEvents = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -101,6 +102,15 @@ class OSMOption {
   /// legacy `user#locationMarkers` route. Widget rendering stays
   /// asynchronous in Dart: only prepared PNG bytes cross the channel.
   final bool useTypedLocationIcons;
+
+  /// Opt-in routing of the native-to-Dart lifecycle events (map readiness
+  /// and restoration) through the typed generated callbacks when the native
+  /// host advertises the `events.lifecycle` capability at attachment time.
+  /// The route is negotiated before initialization and exactly one delivery
+  /// route stays active per attachment. Default keeps the legacy
+  /// `map#init` / `map#restored` event plane; the public `onMapIsReady`
+  /// stream is unchanged either way.
+  final bool useTypedLifecycleEvents;
 }
 
 /// [ZoomOption]

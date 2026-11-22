@@ -76,6 +76,13 @@ final class MobileOSMController extends IBaseOSMController {
       id,
       optIn: osmState.widget.useTypedLocationIcons,
     );
+    // Negotiate the lifecycle event delivery route before initialization:
+    // exactly one route (generated callbacks or the legacy event plane)
+    // delivers readiness/restoration for this attachment.
+    await osmPlatform.attachLifecycleEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedLifecycleEvents,
+    );
     return MobileOSMController._(id, osmState);
   }
 

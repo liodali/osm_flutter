@@ -144,6 +144,20 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM, {
     bool optIn = false,
   });
+
+  /// Freezes the lifecycle-event routing decision for one map attachment
+  /// (native-to-Dart map readiness and restoration callbacks). Same contract
+  /// as [attachCameraRoute]: one probe, one decision, frozen before the
+  /// first mutation — the selection is negotiated with the host before
+  /// initialization so exactly one delivery route is active per attachment.
+  /// Hosts without the `events.lifecycle` capability keep lifecycle events
+  /// on the legacy `map#init` / `map#restored` messages. The public
+  /// [onMapIsReady] stream is unchanged either way; the legacy event plane
+  /// used by JNI attachments is never switched by this route.
+  Future<CameraRouteSelection> attachLifecycleEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {

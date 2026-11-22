@@ -34,6 +34,16 @@ Object? _extractReplyValueOrThrow(
   return replyList.firstOrNull;
 }
 
+
+List<Object?> wrapResponse({Object? result, PlatformException? error, bool empty = false}) {
+  if (empty) {
+    return <Object?>[];
+  }
+  if (error == null) {
+    return <Object?>[result];
+  }
+  return <Object?>[error.code, error.message, error.details];
+}
 bool _deepEquals(Object? a, Object? b) {
   if (identical(a, b)) {
     return true;
@@ -2035,5 +2045,90 @@ class NativeMapUserLocationIconsApi {
         isNullValid: true,
     )
     ;
+  }
+}
+
+/// Generated native-to-Dart lifecycle event route for one map session.
+///
+/// The host advertises the `events.lifecycle` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#lifecycle#route` selection: the
+/// host defaults to the legacy event plane (`map#init` / `map#restored`
+/// method-channel messages) and switches lifecycle delivery to these
+/// callbacks only after a selection validated against the session identity.
+/// Exactly one delivery route is active per attachment: once switched, the
+/// host never emits lifecycle events on the legacy plane, and attachments
+/// that never select this route (older hosts, non-opt-in, JNI command
+/// planes) keep the legacy plane untouched.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to; clients
+/// drop callbacks whose token/generation does not match the attachment
+/// (stale sessions after view replacement or disposal).
+///
+/// Delivery contract: readiness reports state transitions — hosts emit once
+/// per initialization outcome and clients coalesce repeated identical
+/// values, so one initialization produces exactly one readiness delivery.
+/// Restoration is a discrete event emitted when the host restores a saved
+/// map state (Android activity recreation); hosts without a restoration
+/// concept (Apple) never emit it.
+abstract class NativeMapLifecycleEventsApi {
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  /// Map readiness transition for the session (`true` after a successful
+  /// initialization, `false` when readiness is lost).
+  void onMapReady(NativeCameraSession session, bool isReady);
+
+  /// The host restored the session's saved map state.
+  void onMapRestored(NativeCameraSession session);
+
+  static void setUp(NativeMapLifecycleEventsApi? api, {
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) 
+{
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.flutter_osm_interface.NativeMapLifecycleEventsApi.onMapReady$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final NativeCameraSession arg_session = args[0]! as NativeCameraSession;
+          final bool arg_isReady = args[1]! as bool;
+          try {
+            api.onMapReady(arg_session, arg_isReady);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.flutter_osm_interface.NativeMapLifecycleEventsApi.onMapRestored$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final NativeCameraSession arg_session = args[0]! as NativeCameraSession;
+          try {
+            api.onMapRestored(arg_session);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
   }
 }

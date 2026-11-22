@@ -20,6 +20,7 @@ import 'package:flutter_osm_interface/src/channel/pigeon/native_location_client.
 import 'package:flutter_osm_interface/src/channel/pigeon/native_location_updates_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_tracking_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_user_location_icons_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_lifecycle_events_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_roads_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
@@ -78,6 +79,13 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// unless the host negotiated the `location.icons` capability at attach
   /// time.
   final Map<int, PigeonUserLocationIconsClient?> _locationIconsRoutes = {};
+
+  /// Frozen lifecycle-event route decision (null = legacy), same lifecycle
+  /// rules: native-to-Dart readiness/restoration callbacks stay on the
+  /// legacy `map#init` / `map#restored` messages unless the host negotiated
+  /// the `events.lifecycle` capability and accepted the pre-initialization
+  /// route selection. Exactly one delivery route is active per attachment.
+  final Map<int, PigeonLifecycleEventsClient?> _lifecycleEventsRoutes = {};
 
   /// Host capabilities seen by the last successful attach-time probe, per
   /// map. Runs only when some family opted in; without any opt-in no probe
@@ -189,10 +197,15 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _channels[idMap]!.setMethodCallHandler((call) async {
       switch (call.method) {
         case "map#init":
+          // Exactly one delivery route per attachment: while the generated
+          // lifecycle route owns this map, legacy lifecycle messages (stale
+          // or duplicated host emissions) are dropped, never re-delivered.
+          if (_lifecycleEventsRoutes[idMap] != null) break;
           final result = call.arguments as bool;
           _streamController.add(MapInitialization(idMap, result));
           break;
         case "map#restored":
+          if (_lifecycleEventsRoutes[idMap] != null) break;
           _streamController.add(MapRestoration(idMap));
           break;
         case "receiveLongPress":
@@ -255,6 +268,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _routeAttachJobs.remove('$idOSM:$kLocationUpdatesCapability');
     _routeAttachJobs.remove('$idOSM:$kTrackingCapability');
     _routeAttachJobs.remove('$idOSM:$kLocationIconsCapability');
+    _routeAttachJobs.remove('$idOSM:$kLifecycleEventsCapability');
     _hostProtocols.remove(idOSM);
     _cameraRoutes.remove(idOSM);
     _markersRoutes.remove(idOSM);
@@ -265,6 +279,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _locationUpdatesRoutes.remove(idOSM);
     _trackingRoutes.remove(idOSM);
     _locationIconsRoutes.remove(idOSM);
+    // Unregister the generated lifecycle handlers before a replacement
+    // attachment can register its own on the same per-view channels.
+    _lifecycleEventsRoutes.remove(idOSM)?.dispose();
     _typedMarkerKeys.remove(idOSM);
     _typedMarkerSequences.remove(idOSM);
     _typedMarkerOrder.remove(idOSM);
@@ -503,6 +520,69 @@ class MethodChannelOSM extends MobileOSMPlatform {
   PigeonUserLocationIconsClient? userLocationIconsClientFor(int idOSM) =>
       _locationIconsRoutes[idOSM];
 
+  @override
+  Future<CameraRouteSelection> attachLifecycleEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonLifecycleEventsClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kLifecycleEventsCapability,
+      routes: _lifecycleEventsRoutes,
+      createClient: (bootstrap) => PigeonLifecycleEventsClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+        onReady: (isReady) {
+          if (!_streamController.isClosed) {
+            _streamController.add(MapInitialization(idOSM, isReady));
+          }
+        },
+        onRestored: () {
+          if (!_streamController.isClosed) {
+            _streamController.add(MapRestoration(idOSM));
+          }
+        },
+      ),
+      // Negotiate the delivery route with the host before initialization:
+      // the host switches lifecycle emission to the generated callbacks
+      // only after this selection succeeds, so exactly one route delivers.
+      activate: (client) => _selectNativeLifecycleEventsRoute(
+        idOSM,
+        client.bootstrap,
+      ),
+      deactivate: (client) => client.dispose(),
+    );
+  }
+
+  /// Active generated lifecycle-event client for [idOSM], or null when the
+  /// frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonLifecycleEventsClient? lifecycleEventsClientFor(int idOSM) =>
+      _lifecycleEventsRoutes[idOSM];
+
+  /// Tells the host which lifecycle delivery route this attachment uses.
+  /// Runs on the legacy channel before any map mutation; a host that
+  /// rejects the selection (stale session, unknown route, channel failure)
+  /// keeps the legacy route and the caller deactivates the pending client.
+  Future<void> _selectNativeLifecycleEventsRoute(
+    int idOSM,
+    NativeProtocolBootstrap bootstrap,
+  ) async {
+    final channel = _channels[idOSM];
+    if (channel == null) {
+      throw StateError('map $idOSM is not attached');
+    }
+    await channel.invokeMethod<Object?>(
+      kNativeLifecycleEventsRouteMethod,
+      <String, Object?>{
+        'sessionToken': bootstrap.sessionToken,
+        'generation': bootstrap.generation,
+        'route': kLifecycleEventsRoutePigeon,
+      },
+    ).timeout(const Duration(seconds: 2));
+  }
+
   /// Active generated client for [idOSM]'s markers family, or null when the
   /// frozen decision selected the legacy route.
   @visibleForTesting
@@ -544,12 +624,19 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   /// Shared attach machinery: freeze-once per attachment+family, single
   /// in-flight probe per id+family, disposal-epoch invalidation.
+  ///
+  /// [activate] optionally completes the negotiation after the client is
+  /// created (e.g. the lifecycle event route selection); a failure there
+  /// keeps the legacy route and runs [deactivate] on the pending client.
+  /// Both run before the decision is frozen and before any map mutation.
   Future<CameraRouteSelection> _attachRoute<C extends Object>({
     required int idOSM,
     required bool optIn,
     required String capability,
     required Map<int, C?> routes,
     required C Function(NativeProtocolBootstrap bootstrap) createClient,
+    Future<void> Function(C client)? activate,
+    void Function(C client)? deactivate,
   }) {
     final jobKey = '$idOSM:$capability';
     // Decision already frozen for this attachment: never re-decide.
@@ -569,6 +656,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
       capability: capability,
       routes: routes,
       createClient: createClient,
+      activate: activate,
+      deactivate: deactivate,
     );
     _routeAttachJobs[jobKey] = job;
     return job.whenComplete(() {
@@ -587,6 +676,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
     required String capability,
     required Map<int, C?> routes,
     required C Function(NativeProtocolBootstrap bootstrap) createClient,
+    Future<void> Function(C client)? activate,
+    void Function(C client)? deactivate,
   }) async {
     if (!_channels.containsKey(idOSM)) {
       return CameraRouteSelection.legacy;
@@ -626,7 +717,27 @@ class MethodChannelOSM extends MobileOSMPlatform {
       // route) depend on them.
       _hostProtocols[idOSM] = probe.bootstrap;
       if (probe.bootstrap.advertises(capability)) {
-        routes[idOSM] = createClient(probe.bootstrap);
+        final client = createClient(probe.bootstrap);
+        if (activate != null) {
+          try {
+            await activate(client);
+          } catch (_) {
+            // Negotiation failed before any mutation: the host kept (or
+            // returned to) the legacy route; drop the pending client.
+            deactivate?.call(client);
+            routes[idOSM] = null;
+            return CameraRouteSelection.legacy;
+          }
+          final changedDuringActivation = !_channels.containsKey(idOSM) ||
+              (_cameraRouteEpochs[idOSM] ?? 0) != epoch;
+          if (changedDuringActivation) {
+            // Disposed/replaced while negotiating: never store a client
+            // for a dead attachment; the replacement decides freshly.
+            deactivate?.call(client);
+            return CameraRouteSelection.legacy;
+          }
+        }
+        routes[idOSM] = client;
         return CameraRouteSelection.generated;
       }
     }

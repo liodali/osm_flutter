@@ -60,6 +60,7 @@ class const OSMMapWidget({
   this.useTypedLocationUpdates = false,
   this.useTypedTracking = false,
   this.useTypedLocationIcons = false,
+  this.useTypedLifecycleEvents = false,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -98,6 +99,10 @@ class const OSMMapWidget({
   /// Accepted for signature compatibility; native generated routes do not
   /// apply to this platform.
   final bool useTypedLocationIcons;
+
+  /// Accepted for signature compatibility; native generated routes do not
+  /// apply to this platform.
+  final bool useTypedLifecycleEvents;
 
   @override
   Widget build(BuildContext context) {

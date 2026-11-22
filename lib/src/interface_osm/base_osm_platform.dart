@@ -83,6 +83,7 @@ class OSMMap extends StatefulWidget {
     this.useTypedLocationUpdates = false,
     this.useTypedTracking = false,
     this.useTypedLocationIcons = false,
+    this.useTypedLifecycleEvents = false,
   });
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -123,6 +124,9 @@ class OSMMap extends StatefulWidget {
   final bool useTypedTracking;
   /// Opt-in routing of the person/direction icon replacement.
   final bool useTypedLocationIcons;
+  /// Opt-in routing of the native-to-Dart lifecycle events (readiness,
+  /// restoration).
+  final bool useTypedLifecycleEvents;
 
   @override
   State<StatefulWidget> createState() => _OSMMapState();
@@ -168,6 +172,7 @@ class _OSMMapState extends State<OSMMap> {
       useTypedLocationUpdates: widget.useTypedLocationUpdates,
       useTypedTracking: widget.useTypedTracking,
       useTypedLocationIcons: widget.useTypedLocationIcons,
+      useTypedLifecycleEvents: widget.useTypedLifecycleEvents,
     );
   }
 }

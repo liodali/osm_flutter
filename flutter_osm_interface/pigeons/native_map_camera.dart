@@ -9,9 +9,12 @@
 // (tile sources, overlay visibility) + shapes family (circles, rectangles)
 // + roads family (manual drawing, removal, clearing) + location family
 // (my-location layer, single-shot fixes) + location updates + follow-me
-// tracking + user-location icons, session-scoped. Typed event callbacks are
-// a later phase; events and location streams stay on their existing
-// channels.
+// tracking + user-location icons, session-scoped, plus the first
+// native-to-Dart callback family: map readiness and restoration
+// (`events.lifecycle`). All other events (taps, road taps, user location,
+// region changes) and the Apple init sequencing stay on their existing
+// legacy channels; the legacy event plane also remains the delivery route
+// for JNI attachments, which never negotiate the typed event route.
 // Note: the Apple host advertises [camera, markers, layers]; its typed
 // marker ops live in `PigeonMarkersBridge` and its tile/layer ops in
 // `PigeonLayersBridge` on the shared darwin session.
@@ -617,4 +620,37 @@ abstract class NativeMapUserLocationIconsApi {
     NativeCameraSession session,
     NativeUserLocationIcons? icons,
   );
+}
+
+/// Generated native-to-Dart lifecycle event route for one map session.
+///
+/// The host advertises the `events.lifecycle` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#lifecycle#route` selection: the
+/// host defaults to the legacy event plane (`map#init` / `map#restored`
+/// method-channel messages) and switches lifecycle delivery to these
+/// callbacks only after a selection validated against the session identity.
+/// Exactly one delivery route is active per attachment: once switched, the
+/// host never emits lifecycle events on the legacy plane, and attachments
+/// that never select this route (older hosts, non-opt-in, JNI command
+/// planes) keep the legacy plane untouched.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to; clients
+/// drop callbacks whose token/generation does not match the attachment
+/// (stale sessions after view replacement or disposal).
+///
+/// Delivery contract: readiness reports state transitions — hosts emit once
+/// per initialization outcome and clients coalesce repeated identical
+/// values, so one initialization produces exactly one readiness delivery.
+/// Restoration is a discrete event emitted when the host restores a saved
+/// map state (Android activity recreation); hosts without a restoration
+/// concept (Apple) never emit it.
+@FlutterApi()
+abstract class NativeMapLifecycleEventsApi {
+  /// Map readiness transition for the session (`true` after a successful
+  /// initialization, `false` when readiness is lost).
+  void onMapReady(NativeCameraSession session, bool isReady);
+
+  /// The host restored the session's saved map state.
+  void onMapRestored(NativeCameraSession session);
 }

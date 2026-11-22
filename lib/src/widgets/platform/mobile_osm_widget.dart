@@ -34,6 +34,7 @@ Widget getWidget({
   bool useTypedLocationUpdates = false,
   bool useTypedTracking = false,
   bool useTypedLocationIcons = false,
+  bool useTypedLifecycleEvents = false,
 }) => MobileOsmFlutter(
   controller: controller,
   userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
@@ -64,6 +65,7 @@ Widget getWidget({
   useTypedLocationUpdates: useTypedLocationUpdates,
   useTypedTracking: useTypedTracking,
   useTypedLocationIcons: useTypedLocationIcons,
+  useTypedLifecycleEvents: useTypedLifecycleEvents,
 );
 
 class const OSMMapWidget({
@@ -97,6 +99,7 @@ class const OSMMapWidget({
     this.useTypedLocationUpdates = false,
     this.useTypedTracking = false,
     this.useTypedLocationIcons = false,
+    this.useTypedLifecycleEvents = false,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -127,6 +130,7 @@ class const OSMMapWidget({
   final bool useTypedLocationUpdates;
   final bool useTypedTracking;
   final bool useTypedLocationIcons;
+  final bool useTypedLifecycleEvents;
   @override
   Widget build(BuildContext context) {
     return MobileOsmFlutter(
@@ -160,6 +164,7 @@ class const OSMMapWidget({
       useTypedLocationUpdates: useTypedLocationUpdates,
       useTypedTracking: useTypedTracking,
       useTypedLocationIcons: useTypedLocationIcons,
+      useTypedLifecycleEvents: useTypedLifecycleEvents,
     );
   }
 }
