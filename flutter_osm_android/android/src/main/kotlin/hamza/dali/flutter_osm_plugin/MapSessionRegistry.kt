@@ -50,6 +50,9 @@ class MapSessionRegistry {
         activityBinding?.let { binding ->
             view.setActivity(binding.activity)
             binding.addActivityResultListener(view)
+            if (view is ActivityPluginBinding.OnSaveInstanceStateListener) {
+                binding.addOnSaveStateListener(view)
+            }
         }
     }
 
@@ -58,6 +61,9 @@ class MapSessionRegistry {
     fun unregister(viewId: Int, session: MapSession) {
         if (sessions[viewId] === session && sessions.remove(viewId, session)) {
             activityBinding?.removeActivityResultListener(session)
+            if (session is ActivityPluginBinding.OnSaveInstanceStateListener) {
+                activityBinding?.removeOnSaveStateListener(session)
+            }
             session.setActivity(null)
         }
     }
@@ -69,6 +75,9 @@ class MapSessionRegistry {
         sessions.values.forEach { view ->
             view.setActivity(activity)
             binding.addActivityResultListener(view)
+            if (view is ActivityPluginBinding.OnSaveInstanceStateListener) {
+                binding.addOnSaveStateListener(view)
+            }
         }
     }
 
@@ -76,6 +85,9 @@ class MapSessionRegistry {
         val binding = activityBinding ?: return
         sessions.values.forEach { view ->
             binding.removeActivityResultListener(view)
+            if (view is ActivityPluginBinding.OnSaveInstanceStateListener) {
+                binding.removeOnSaveStateListener(view)
+            }
             view.setActivity(null)
         }
         activityBinding = null

@@ -2,13 +2,17 @@ package hamza.dali.flutter_osm_plugin
 
 import android.app.Activity
 import android.content.Intent
+import android.os.Bundle
 import hamza.dali.flutter_osm_plugin.mapscore.MapEventSink
 import hamza.dali.flutter_osm_plugin.mapscore.MapSession
 import hamza.dali.flutter_osm_plugin.mapscore.models.Anchor
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import io.flutter.plugin.common.PluginRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MapSessionRegistryTest {
@@ -149,9 +153,84 @@ class MapSessionRegistryTest {
         assertEquals(1, second.disposeCount)
         assertEquals(0, registry.size)
     }
+
+    @Test
+    fun `attachActivity wires save and restore for sessions that support it`() {
+        val session = SaveRestoreFakeSession(viewId = 1)
+        val plain = FakeMapSession(viewId = 2)
+        val registry = MapSessionRegistry()
+        registry.register(session)
+        registry.register(plain)
+        val binding = FakeActivityBinding()
+
+        registry.attachActivity(binding)
+
+        assertEquals(listOf(session), binding.saveStateListeners)
+        assertEquals(2, binding.activityResultListeners.size)
+    }
+
+    @Test
+    fun `sessions registered while attached get save and restore wiring`() {
+        val registry = MapSessionRegistry()
+        val binding = FakeActivityBinding()
+        registry.attachActivity(binding)
+
+        val session = SaveRestoreFakeSession(viewId = 3)
+        registry.register(session)
+
+        assertTrue(binding.saveStateListeners.contains(session))
+        assertTrue(binding.activityResultListeners.contains(session))
+    }
+
+    @Test
+    fun `detachActivity removes save and restore listeners`() {
+        val session = SaveRestoreFakeSession(viewId = 1)
+        val registry = MapSessionRegistry()
+        registry.register(session)
+        val binding = FakeActivityBinding()
+        registry.attachActivity(binding)
+
+        registry.detachActivity()
+
+        assertTrue(binding.saveStateListeners.isEmpty())
+        assertTrue(binding.activityResultListeners.isEmpty())
+    }
+
+    @Test
+    fun `unregister removes only that session's save and restore listener`() {
+        val first = SaveRestoreFakeSession(viewId = 1)
+        val second = SaveRestoreFakeSession(viewId = 2)
+        val registry = MapSessionRegistry()
+        registry.register(first)
+        registry.register(second)
+        val binding = FakeActivityBinding()
+        registry.attachActivity(binding)
+
+        registry.unregister(first.viewId, first)
+        // A stale unregister must not touch the live session's wiring.
+        registry.unregister(first.viewId, first)
+
+        assertEquals(listOf(second), binding.saveStateListeners)
+    }
+
+    @Test
+    fun `reattachment moves save and restore listeners to the new binding`() {
+        val session = SaveRestoreFakeSession(viewId = 1)
+        val registry = MapSessionRegistry()
+        registry.register(session)
+        val first = FakeActivityBinding()
+        val second = FakeActivityBinding()
+
+        registry.attachActivity(first)
+        registry.attachActivity(second)
+
+        assertTrue(first.saveStateListeners.isEmpty())
+        assertTrue(first.activityResultListeners.isEmpty())
+        assertEquals(listOf(session), second.saveStateListeners)
+    }
 }
 
-private class FakeMapSession(
+private open class FakeMapSession(
     override val viewId: Int,
 ) : MapSession {
     var lastLatitude: Double? = null
@@ -377,4 +456,45 @@ private class FakeMapSession(
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean = false
+}
+
+/** Session that also owns activity save/restore, like MapscoreMapSession. */
+private class SaveRestoreFakeSession(viewId: Int) :
+    FakeMapSession(viewId), ActivityPluginBinding.OnSaveInstanceStateListener {
+    override fun onSaveInstanceState(bundle: Bundle) = Unit
+    override fun onRestoreInstanceState(bundle: Bundle?) = Unit
+}
+
+/** Records listener registration; the activity itself is never touched. */
+private class FakeActivityBinding : ActivityPluginBinding {
+    val activityResultListeners = mutableListOf<PluginRegistry.ActivityResultListener>()
+    val saveStateListeners = mutableListOf<ActivityPluginBinding.OnSaveInstanceStateListener>()
+
+    override fun getActivity(): Activity = Activity()
+    override fun getLifecycle(): Any = Any()
+
+    override fun addActivityResultListener(listener: PluginRegistry.ActivityResultListener) {
+        activityResultListeners += listener
+    }
+
+    override fun removeActivityResultListener(listener: PluginRegistry.ActivityResultListener) {
+        activityResultListeners -= listener
+    }
+
+    override fun addOnSaveStateListener(listener: ActivityPluginBinding.OnSaveInstanceStateListener) {
+        saveStateListeners += listener
+    }
+
+    override fun removeOnSaveStateListener(listener: ActivityPluginBinding.OnSaveInstanceStateListener) {
+        saveStateListeners -= listener
+    }
+
+    override fun addRequestPermissionsResultListener(listener: PluginRegistry.RequestPermissionsResultListener) = Unit
+    override fun removeRequestPermissionsResultListener(listener: PluginRegistry.RequestPermissionsResultListener) = Unit
+    override fun addOnNewIntentListener(listener: PluginRegistry.NewIntentListener) = Unit
+    override fun removeOnNewIntentListener(listener: PluginRegistry.NewIntentListener) = Unit
+    override fun addOnUserLeaveHintListener(listener: PluginRegistry.UserLeaveHintListener) = Unit
+    override fun removeOnUserLeaveHintListener(listener: PluginRegistry.UserLeaveHintListener) = Unit
+    override fun addOnWindowFocusChangedListener(listener: PluginRegistry.WindowFocusChangedListener) = Unit
+    override fun removeOnWindowFocusChangedListener(listener: PluginRegistry.WindowFocusChangedListener) = Unit
 }

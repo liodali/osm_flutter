@@ -19,6 +19,7 @@ import android.widget.FrameLayout
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import hamza.dali.flutter_osm_plugin.models.CustomTile
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import hamza.dali.flutter_osm_plugin.mapscore.models.Anchor
 import hamza.dali.flutter_osm_plugin.mapscore.models.FlutterMarker
 import hamza.dali.flutter_osm_plugin.mapscore.models.FlutterRoad
@@ -111,7 +112,7 @@ internal class MapscoreMapSession(
     private val isEnabledRotationGesture: Boolean = false,
     private val isStaticMap: Boolean = false,
     private val onDisposed: (MapSession) -> Unit = {},
-) : MapSession {
+) : MapSession, ActivityPluginBinding.OnSaveInstanceStateListener {
 
     private var mapView: MapView? = null
     private var rasterLayer: TiledRasterLayer? = null
@@ -139,13 +140,16 @@ internal class MapscoreMapSession(
     private var pigeonLifecycleEventsBridge: PigeonNativeLifecycleEventsBridge? = null
 
     /**
-     * Frozen lifecycle delivery route for this attachment: false keeps the
-     * legacy `map#init` / `map#restored` event plane (the default, and the
-     * only route JNI attachments ever use); true delivers readiness and
-     * restoration through the generated Pigeon callbacks. Switched only by
-     * the validated pre-initialization selection, never by a command.
+     * Frozen lifecycle delivery route for this attachment: the default
+     * keeps the legacy `map#init` event plane (the only route JNI
+     * attachments ever use); the validated pre-initialization selection
+     * switches readiness and restoration to the generated Pigeon
+     * callbacks. Restoration arriving before the selection is buffered
+     * until the route is resolved (see [LifecycleEventRoute]).
      */
-    private var lifecycleEventsPigeon = false
+    private val lifecycleRoute = LifecycleEventRoute(
+        emitTypedRestored = { pigeonLifecycleEventsBridge?.emitRestored() },
+    )
 
     /** Minted per session; guards generated routes against reused view ids. */
     internal val sessionToken: String = UUID.randomUUID().toString()
@@ -900,25 +904,14 @@ internal class MapscoreMapSession(
 
     override fun emitReady(isReady: Boolean) {
         // Exactly one delivery route per attachment: the negotiated
-        // lifecycle route owns readiness; everything else keeps the
-        // existing event plane.
+        // lifecycle route owns readiness; attachments that never negotiate
+        // (JNI, opt-out) resolve the implicit legacy route here.
+        lifecycleRoute.notifyReadiness()
         val lifecycleBridge = pigeonLifecycleEventsBridge
-        if (lifecycleEventsPigeon && lifecycleBridge != null) {
+        if (lifecycleRoute.usePigeon && lifecycleBridge != null) {
             lifecycleBridge.emitReady(isReady)
         } else {
             eventSink.emit("map#init", isReady)
-        }
-    }
-
-    /**
-     * Restoration emission (saved map state restored after activity
-     * recreation). Delivered only on the negotiated typed route: the
-     * legacy event plane keeps its historical behavior unchanged.
-     */
-    private fun emitRestored() {
-        val lifecycleBridge = pigeonLifecycleEventsBridge
-        if (lifecycleEventsPigeon && lifecycleBridge != null) {
-            lifecycleBridge.emitRestored()
         }
     }
 
@@ -938,11 +931,11 @@ internal class MapscoreMapSession(
         }
         return when (route) {
             "pigeon" -> {
-                lifecycleEventsPigeon = true
+                lifecycleRoute.select(usePigeon = true)
                 null
             }
             "legacy" -> {
-                lifecycleEventsPigeon = false
+                lifecycleRoute.select(usePigeon = false)
                 null
             }
             else -> "invalid_route"
@@ -2351,7 +2344,7 @@ internal class MapscoreMapSession(
         customMarkerIcon = null
     }
 
-    internal fun onSaveInstanceState(bundle: Bundle) {
+    override fun onSaveInstanceState(bundle: Bundle) {
         try {
             val center = mapView?.getCamera()?.getCenterPosition()
             val zoom = mapView?.getCamera()?.getZoom()
@@ -2363,9 +2356,9 @@ internal class MapscoreMapSession(
         }
     }
 
-    internal fun onRestoreInstanceState(bundle: Bundle?) {
-        if (bundle != null) {
-            emitRestored()
+    override fun onRestoreInstanceState(bundle: Bundle?) {
+        if (bundle != null && !released) {
+            lifecycleRoute.restored()
         }
     }
 
