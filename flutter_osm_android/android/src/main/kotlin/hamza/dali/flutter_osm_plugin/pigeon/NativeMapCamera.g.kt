@@ -811,7 +811,10 @@ data class NativeLocationFix (
  * `stopFollowInDrag` lets an ending user drag release the follow camera;
  * `disableMarkerRotation` pins the user marker orientation;
  * `useDirectionMarker` swaps the marker for a directional arrow;
- * `anchor` is the normalized icon pivot applied to both markers.
+ * `anchor` is the normalized icon pivot. A null `anchor` keeps the pivots
+ * the live icon configuration already has (per icon), so starting tracking
+ * without an explicit override never re-centers icons the application
+ * configured itself.
  *
  * Generated class from Pigeon that represents data sent in messages.
  */
@@ -819,7 +822,7 @@ data class NativeTrackingConfiguration (
   val stopFollowInDrag: Boolean,
   val disableMarkerRotation: Boolean,
   val useDirectionMarker: Boolean,
-  val anchor: NativeMarkerAnchor
+  val anchor: NativeMarkerAnchor? = null
 )
  {
   companion object {
@@ -827,7 +830,7 @@ data class NativeTrackingConfiguration (
       val stopFollowInDrag = pigeonVar_list[0] as Boolean
       val disableMarkerRotation = pigeonVar_list[1] as Boolean
       val useDirectionMarker = pigeonVar_list[2] as Boolean
-      val anchor = pigeonVar_list[3] as NativeMarkerAnchor
+      val anchor = pigeonVar_list[3] as NativeMarkerAnchor?
       return NativeTrackingConfiguration(stopFollowInDrag, disableMarkerRotation, useDirectionMarker, anchor)
     }
   }
@@ -860,6 +863,115 @@ data class NativeTrackingConfiguration (
   }
   override fun toString(): String {
     return "NativeTrackingConfiguration(stopFollowInDrag=$stopFollowInDrag, disableMarkerRotation=$disableMarkerRotation, useDirectionMarker=$useDirectionMarker, anchor=$anchor)"
+  }
+}
+
+/**
+ * One user-location icon prepared in Dart.
+ *
+ * The application supplies the icon as a Flutter widget; the Dart side
+ * renders it (asynchronously, with the capture rules the legacy
+ * `user#locationMarkers` route uses) and only the encoded PNG bytes, the
+ * logical (pre-scale) widget dimensions and the normalized anchor cross
+ * this channel. Hosts combine the logical size with their own display
+ * scale, exactly like the typed marker icon contract.
+ *
+ * `anchor` is a normalized icon pivot: `(0.5, 0.5)` centers the icon on the
+ * user coordinate and `(0.5, 1.0)` pins a pin tip. A null anchor preserves
+ * the anchor the live configuration already has, so replacing icon bytes
+ * never moves an active marker.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class NativeUserLocationIcon (
+  val iconBytes: ByteArray,
+  val logicalSize: NativeMarkerSize? = null,
+  val anchor: NativeMarkerAnchor? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): NativeUserLocationIcon {
+      val iconBytes = pigeonVar_list[0] as ByteArray
+      val logicalSize = pigeonVar_list[1] as NativeMarkerSize?
+      val anchor = pigeonVar_list[2] as NativeMarkerAnchor?
+      return NativeUserLocationIcon(iconBytes, logicalSize, anchor)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      iconBytes,
+      logicalSize,
+      anchor,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as NativeUserLocationIcon
+    return NativeMapCameraPigeonUtils.deepEquals(this.iconBytes, other.iconBytes) && NativeMapCameraPigeonUtils.deepEquals(this.logicalSize, other.logicalSize) && NativeMapCameraPigeonUtils.deepEquals(this.anchor, other.anchor)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.iconBytes)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.logicalSize)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.anchor)
+    return result
+  }
+  override fun toString(): String {
+    return "NativeUserLocationIcon(iconBytes=${iconBytes.contentToString()}, logicalSize=$logicalSize, anchor=$anchor)"
+  }
+}
+
+/**
+ * The person + direction icon pair of the my-location layer.
+ *
+ * Both icons are captured from their widgets, mirroring the legacy
+ * `user#locationMarkers` payload that always carries the two images.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class NativeUserLocationIcons (
+  val person: NativeUserLocationIcon,
+  val direction: NativeUserLocationIcon
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): NativeUserLocationIcons {
+      val person = pigeonVar_list[0] as NativeUserLocationIcon
+      val direction = pigeonVar_list[1] as NativeUserLocationIcon
+      return NativeUserLocationIcons(person, direction)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      person,
+      direction,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as NativeUserLocationIcons
+    return NativeMapCameraPigeonUtils.deepEquals(this.person, other.person) && NativeMapCameraPigeonUtils.deepEquals(this.direction, other.direction)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.person)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.direction)
+    return result
+  }
+  override fun toString(): String {
+    return "NativeUserLocationIcons(person=$person, direction=$direction)"
   }
 }
 private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
@@ -925,6 +1037,16 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
           NativeTrackingConfiguration.fromList(it)
         }
       }
+      141.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          NativeUserLocationIcon.fromList(it)
+        }
+      }
+      142.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          NativeUserLocationIcons.fromList(it)
+        }
+      }
       else -> super.readValueOfType(type, buffer)
     }
   }
@@ -976,6 +1098,14 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
       }
       is NativeTrackingConfiguration -> {
         stream.write(140)
+        writeValue(stream, value.toList())
+      }
+      is NativeUserLocationIcon -> {
+        stream.write(141)
+        writeValue(stream, value.toList())
+      }
+      is NativeUserLocationIcons -> {
+        stream.write(142)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -2060,6 +2190,64 @@ interface NativeMapMarkersApi {
             val markerIdsArg = args[1] as List<String>
             val wrapped: List<Any?> = try {
               api.removeMarkers(sessionArg, markerIdsArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              NativeMapCameraPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+    }
+  }
+}
+/**
+ * Generated user-location icon route for one map session.
+ *
+ * The host advertises the `location.icons` capability only when it
+ * implements this surface; older hosts keep the person/direction icon
+ * replacement on their legacy `user#locationMarkers` route.
+ *
+ * Completion contract: the call only swaps the layer icons, so it never
+ * starts, stops or restarts the location subscription. Follow-me tracking,
+ * continuous updates and pending one-shot fixes keep running untouched
+ * (their markers are re-rendered in place), and denial/permission flows are
+ * never triggered. A null configuration restores the platform default
+ * icons and the default center anchor, mirroring the reset semantics of
+ * the typed layers route.
+ *
+ * Generated interface from Pigeon that represents a handler of messages from Flutter.
+ */
+interface NativeMapUserLocationIconsApi {
+  /**
+   * Replaces the person and direction icons of the my-location layer.
+   *
+   * `icons` null restores the platform defaults. Android keeps one pivot
+   * for both icons: the person anchor wins, falling back to the direction
+   * anchor when the person anchor is null.
+   */
+  fun setUserLocationIcons(session: NativeCameraSession, icons: NativeUserLocationIcons?)
+
+  companion object {
+    /** The codec used by NativeMapUserLocationIconsApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      NativeMapCameraPigeonCodec()
+    }
+    /** Sets up an instance of `NativeMapUserLocationIconsApi` to handle messages through the `binaryMessenger`. */
+    @JvmOverloads
+    fun setUp(binaryMessenger: BinaryMessenger, api: NativeMapUserLocationIconsApi?, messageChannelSuffix: String = "") {
+      val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_osm_interface.NativeMapUserLocationIconsApi.setUserLocationIcons$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val sessionArg = args[0] as NativeCameraSession
+            val iconsArg = args[1] as NativeUserLocationIcons?
+            val wrapped: List<Any?> = try {
+              api.setUserLocationIcons(sessionArg, iconsArg)
               listOf(null)
             } catch (exception: Throwable) {
               NativeMapCameraPigeonUtils.wrapError(exception)

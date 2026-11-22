@@ -12,6 +12,7 @@ import androidx.core.graphics.scale
 import hamza.dali.flutter_osm_plugin.R
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.latLonToCoord
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.rotate
+import hamza.dali.flutter_osm_plugin.mapscore.utilities.screenDensity
 import hamza.dali.flutter_osm_plugin.mapscore.utilities.toTextureHolder
 import io.flutter.plugin.common.MethodChannel
 import io.openmobilemaps.mapscore.map.view.MapView
@@ -22,6 +23,7 @@ import io.openmobilemaps.mapscore.shared.map.layers.icon.IconInfoInterface
 import io.openmobilemaps.mapscore.shared.map.layers.icon.IconLayerInterface
 import io.openmobilemaps.mapscore.shared.map.layers.icon.IconType
 import java.util.LinkedList
+import kotlin.math.roundToInt
 
 typealias OnChangedLocationMapscore = (lat: Double, lon: Double, heading: Double) -> Unit
 
@@ -80,6 +82,19 @@ class CustomLocationManager(
 
     private var personBitmap: Bitmap? = null
     private var directionBitmap: Bitmap? = null
+
+    /**
+     * Pre-scale (Dart logical) icon sizes of the current bitmaps. The PNG
+     * captures render at the device pixel ratio, so the raw pixels do not
+     * describe the intended display size; null keeps the bitmap pixels
+     * (platform defaults and the legacy icon route).
+     */
+    private var personLogicalSize: List<Int>? = null
+    private var directionLogicalSize: List<Int>? = null
+
+    /** Platform default icons, restored by [resetMarkerIcons]. */
+    private val defaultPersonBitmap: Bitmap?
+    private val defaultDirectionBitmap: Bitmap?
     private var personIcon: IconInfoInterface? = null
     private var directionIcon: IconInfoInterface? = null
     private var showingDirection = false
@@ -91,12 +106,14 @@ class CustomLocationManager(
 
     init {
         provider.onLocation = { loc -> onLocationChanged(loc) }
-        personBitmap = ResourcesCompat.getDrawable(
+        defaultPersonBitmap = ResourcesCompat.getDrawable(
             context.resources, R.drawable.ic_location_on_red_24dp, context.theme
         )?.toBitmap()?.scale(56, 56)
-        directionBitmap = ResourcesCompat.getDrawable(
+        defaultDirectionBitmap = ResourcesCompat.getDrawable(
             context.resources, R.drawable.baseline_navigation_24, context.theme
         )?.toBitmap()?.scale(56, 56)
+        personBitmap = defaultPersonBitmap
+        directionBitmap = defaultDirectionBitmap
     }
 
     fun enableMyLocation() {
@@ -180,14 +197,33 @@ class CustomLocationManager(
         clearMarkerIcons()
     }
 
-    fun setMarkerIcon(personIconBmp: Bitmap?, directionIconBmp: Bitmap?) {
+    /**
+     * Replaces the layer icons in place, optionally re-pivoting and re-scaling
+     * them.
+     *
+     * Only the rendered icons change: the shared location subscription, the
+     * follow flag and any pending fix keep running untouched, so tracking and
+     * continuous updates survive an icon swap. A null [anchor] preserves the
+     * current pivot, so replacing icon bytes never moves an active marker.
+     * Null logical sizes keep the bitmap pixel dimensions.
+     */
+    fun setMarkerIcon(
+        personIconBmp: Bitmap?,
+        directionIconBmp: Bitmap?,
+        anchor: List<Double>? = null,
+        personSize: List<Int>? = null,
+        directionSize: List<Int>? = null,
+    ) {
+        applyAnchor(anchor)
         if (personIconBmp != null && !personIconBmp.isRecycled) {
             personBitmap = personIconBmp
+            personLogicalSize = personSize
             personIcon?.let { iconLayer.remove(it) }
             personIcon = null
         }
         if (directionIconBmp != null && !directionIconBmp.isRecycled) {
             directionBitmap = directionIconBmp
+            directionLogicalSize = directionSize
             directionIcon?.let { iconLayer.remove(it) }
             directionIcon = null
             showingDirection = false
@@ -196,15 +232,35 @@ class CustomLocationManager(
         currentLocation?.let { updateMarker(it, mIsFollowing) }
     }
 
+    /** Restores the platform default icons and the default center anchor. */
+    fun resetMarkerIcons() {
+        iconAnchor = Vec2F(0.5f, 0.5f)
+        personBitmap = defaultPersonBitmap
+        directionBitmap = defaultDirectionBitmap
+        personLogicalSize = null
+        directionLogicalSize = null
+        clearMarkerIcons()
+        currentLocation?.let { updateMarker(it, mIsFollowing) }
+    }
+
     fun setAnchor(anchor: List<Double>) {
-        if (anchor.size < 2) return
+        if (!applyAnchor(anchor)) return
+        clearMarkerIcons()
+        currentLocation?.takeUnless { controlMapFromOutSide }
+            ?.let { updateMarker(it, mIsFollowing) }
+    }
+
+    /**
+     * Applies a normalized icon pivot without re-rendering.
+     * Returns false when [anchor] is absent or malformed (nothing applied).
+     */
+    private fun applyAnchor(anchor: List<Double>?): Boolean {
+        if (anchor == null || anchor.size < 2) return false
         iconAnchor = Vec2F(
             anchor.first().toFloat().coerceIn(0f, 1f),
             anchor.last().toFloat().coerceIn(0f, 1f),
         )
-        clearMarkerIcons()
-        currentLocation?.takeUnless { controlMapFromOutSide }
-            ?.let { updateMarker(it, mIsFollowing) }
+        return true
     }
 
     fun onChangedLocation(cb: OnChangedLocationMapscore) {
@@ -374,6 +430,7 @@ class CustomLocationManager(
                     directionBitmap,
                     coordinate,
                     rotation,
+                    directionLogicalSize,
                 )
                 directionRotation = rotation
                 showingDirection = directionIcon != null
@@ -388,7 +445,12 @@ class CustomLocationManager(
                 directionRotation = null
             }
             if (personIcon == null) {
-                personIcon = createAndAddIcon("osm_user_person", personBitmap, coordinate)
+                personIcon = createAndAddIcon(
+                    "osm_user_person",
+                    personBitmap,
+                    coordinate,
+                    logicalSize = personLogicalSize,
+                )
             } else {
                 personIcon?.setCoordinate(coordinate)
             }
@@ -421,9 +483,11 @@ class CustomLocationManager(
         bitmap: Bitmap?,
         coord: io.openmobilemaps.mapscore.shared.map.coordinates.Coord,
         rotation: Float = 0f,
+        logicalSize: List<Int>? = null,
     ): IconInfoInterface? {
         if (bitmap == null || bitmap.isRecycled) return null
-        val source = if (rotation == 0f) bitmap else bitmap.rotate(rotation)
+        val rotated = if (rotation == 0f) bitmap else bitmap.rotate(rotation)
+        val source = scaleToLogicalSize(rotated, logicalSize)
         val (holder, size) = source.toTextureHolder()
         val icon = IconFactory.createIconWithAnchor(
             identifier = identifier,
@@ -443,7 +507,31 @@ class CustomLocationManager(
         enabled = e
     }
 
-    private companion object {
+    /**
+     * Re-renders [bitmap] at its intended display size: the Dart capture is
+     * logical (pre-scale) and the raw PNG pixels are device-pixel-ratio
+     * scaled, so a higher-resolution capture would otherwise draw oversized.
+     */
+    private fun scaleToLogicalSize(bitmap: Bitmap, logicalSize: List<Int>?): Bitmap {
+        val (width, height) = targetIconSize(logicalSize, screenDensity(context)) ?: return bitmap
+        if (width == bitmap.width && height == bitmap.height) return bitmap
+        return bitmap.scale(width, height)
+    }
+
+    companion object {
         const val LOCATION_FIX_TIMEOUT_MILLIS = 15_000L
+
+        /**
+         * Pixel size for an icon from its logical (pre-scale) Dart size and
+         * the display density. Returns null when the size is absent or
+         * unusable, in which case the bitmap pixels are used as they are.
+         */
+        fun targetIconSize(logicalSize: List<Int>?, density: Float): Pair<Int, Int>? {
+            if (logicalSize == null || logicalSize.size < 2 || density <= 0f) return null
+            val width = (logicalSize[0] * density).roundToInt()
+            val height = (logicalSize[1] * density).roundToInt()
+            if (width <= 0 || height <= 0) return null
+            return width to height
+        }
     }
 }

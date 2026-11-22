@@ -189,6 +189,12 @@ internal class PigeonNativeCameraBridge(
         /** Follow-me tracking: enable/disable through the generated route. */
         const val CAPABILITY_TRACKING = "location.tracking"
 
+        /** User-location icons: person/direction replacement. */
+        const val CAPABILITY_LOCATION_ICONS = "location.icons"
+
+        /** Tracking accepts omitted anchors (keep the configured pivots). */
+        const val CAPABILITY_TRACKING_OPTIONAL_ANCHOR = "location.tracking.anchor"
+
         /** Typed error code for the markers family. */
         const val CODE_MARKERS_NOT_READY = "markers_not_ready"
 
@@ -215,6 +221,8 @@ internal class PigeonNativeCameraBridge(
                 CAPABILITY_LOCATION,
                 CAPABILITY_LOCATION_UPDATES,
                 CAPABILITY_TRACKING,
+                CAPABILITY_LOCATION_ICONS,
+                CAPABILITY_TRACKING_OPTIONAL_ANCHOR,
             ),
             "sessionToken" to sessionToken,
             "generation" to generation,

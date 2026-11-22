@@ -80,6 +80,7 @@ import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLayersBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationUpdatesBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeTrackingBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeUserLocationIconsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeRoadsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeShapesBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeMarkersBridge
@@ -131,6 +132,8 @@ internal class MapscoreMapSession(
     private var pigeonLocationUpdatesBridge: PigeonNativeLocationUpdatesBridge? = null
 
     private var pigeonTrackingBridge: PigeonNativeTrackingBridge? = null
+
+    private var pigeonUserLocationIconsBridge: PigeonNativeUserLocationIconsBridge? = null
 
     /** Minted per session; guards generated routes against reused view ids. */
     internal val sessionToken: String = UUID.randomUUID().toString()
@@ -530,8 +533,12 @@ internal class MapscoreMapSession(
                     val enableStopFollow = args.first() as Boolean
                     val disableRotation = args[1] as Boolean
                     val useDirectionMarker = args[2] as Boolean
-                    val anchor = args.last() as List<Double>
-                    locationNewOverlay.setAnchor(anchor)
+                    // A null slot means "no override": the pivot applied by
+                    // the icon route stays, so custom per-icon anchors
+                    // survive a legacy tracking start.
+                    LegacyTrackMeArguments.anchor(args)?.let {
+                        locationNewOverlay.setAnchor(it)
+                    }
                     trackUserLocation(enableStopFollow, useDirectionMarker, disableRotation, result)
                 }
 
@@ -1687,7 +1694,7 @@ internal class MapscoreMapSession(
         stopFollowInDrag: Boolean,
         disableMarkerRotation: Boolean,
         useDirectionMarker: Boolean,
-        anchor: List<Double>,
+        anchor: List<Double>?,
         listener: MapSession.LocationCommandListener,
     ) {
         if (released || !::locationNewOverlay.isInitialized) {
@@ -1698,7 +1705,10 @@ internal class MapscoreMapSession(
             listener.onComplete("location_service_disabled", "Location services are disabled.")
             return
         }
-        locationNewOverlay.setAnchor(anchor)
+        // No override keeps the pivot the icon route applied (or the
+        // platform default), so configured per-icon anchors survive the
+        // initial tracking start.
+        anchor?.let { locationNewOverlay.setAnchor(it) }
         trackUserLocation(
             enableStopFollow = stopFollowInDrag,
             useDirectionMarker = useDirectionMarker,
@@ -1774,16 +1784,61 @@ internal class MapscoreMapSession(
     }
 
     private fun changeLocationMarkers(call: MethodCall, result: MethodChannel.Result) {
+        // Legacy decoding only: the applied state goes through the shared
+        // typed seam, so the legacy and generated routes agree on behavior.
         val args = call.arguments as HashMap<String, Any>
         try {
-            customPersonMarkerIcon = (args["personIcon"] as ByteArray).toBitmap()
-            customArrowMarkerIcon = (args["arrowDirectionIcon"] as ByteArray).toBitmap()
-            locationNewOverlay.setMarkerIcon(customPersonMarkerIcon, customArrowMarkerIcon)
+            setUserLocationIcons(
+                personIcon = args["personIcon"] as ByteArray,
+                directionIcon = args["arrowDirectionIcon"] as ByteArray,
+                personAnchor = null,
+                directionAnchor = null,
+                // The legacy payload carries no logical sizes: it keeps the
+                // PNG pixel dimensions.
+                personLogicalSize = null,
+                directionLogicalSize = null,
+            )
             result.success(null)
         } catch (e: Exception) {
             e.printStackTrace()
             result.success(e.message)
         }
+    }
+
+    override fun setUserLocationIcons(
+        personIcon: ByteArray,
+        directionIcon: ByteArray,
+        personAnchor: List<Double>?,
+        directionAnchor: List<Double>?,
+        personLogicalSize: List<Int>?,
+        directionLogicalSize: List<Int>?,
+    ): Boolean {
+        if (released || !::locationNewOverlay.isInitialized) return false
+        val person = personIcon.toBitmap()
+        val direction = directionIcon.toBitmap()
+        customPersonMarkerIcon = person
+        customArrowMarkerIcon = direction
+        // The overlay keeps a single pivot for both icons: the person anchor
+        // wins, falling back to the direction anchor. Null keeps the live
+        // pivot so an icon swap never moves an active marker. The logical
+        // sizes are re-applied with the display density so a
+        // device-pixel-ratio capture keeps its intended size.
+        locationNewOverlay.setMarkerIcon(
+            customPersonMarkerIcon,
+            customArrowMarkerIcon,
+            personAnchor ?: directionAnchor,
+            personLogicalSize,
+            directionLogicalSize,
+        )
+        return true
+    }
+
+    override fun resetUserLocationIcons(): Boolean {
+        if (released || !::locationNewOverlay.isInitialized) return false
+        customPersonMarkerIcon = null
+        customArrowMarkerIcon = null
+        locationNewOverlay.resetMarkerIcons()
+        return true
     }
 
     private fun addMarker(
@@ -2203,6 +2258,9 @@ internal class MapscoreMapSession(
 
         pigeonTrackingBridge?.unregister(binaryMessenger, id)
         pigeonTrackingBridge = null
+
+        pigeonUserLocationIconsBridge?.unregister(binaryMessenger, id)
+        pigeonUserLocationIconsBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -2298,6 +2356,13 @@ internal class MapscoreMapSession(
         val trackingBridge = PigeonNativeTrackingBridge(this, sessionToken, generation)
         trackingBridge.register(binaryMessenger, id)
         pigeonTrackingBridge = trackingBridge
+
+        // Generated user-location icon endpoints share the overlay with the
+        // legacy route: an icon swap never touches the subscription.
+        val userLocationIconsBridge =
+            PigeonNativeUserLocationIconsBridge(this, sessionToken, generation)
+        userLocationIconsBridge.register(binaryMessenger, id)
+        pigeonUserLocationIconsBridge = userLocationIconsBridge
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")

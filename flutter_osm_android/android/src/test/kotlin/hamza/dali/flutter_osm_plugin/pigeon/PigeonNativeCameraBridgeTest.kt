@@ -4,6 +4,7 @@ import hamza.dali.flutter_osm_plugin.mapscore.MapEventSink
 import hamza.dali.flutter_osm_plugin.mapscore.MapSession
 import hamza.dali.flutter_osm_plugin.mapscore.models.Anchor
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -184,7 +185,7 @@ class PigeonNativeCameraBridgeTest {
             stopFollowInDrag: Boolean,
             disableMarkerRotation: Boolean,
             useDirectionMarker: Boolean,
-            anchor: List<Double>,
+            anchor: List<Double>?,
             listener: MapSession.LocationCommandListener,
         ) {
             calls += "enableTracking"
@@ -194,6 +195,17 @@ class PigeonNativeCameraBridgeTest {
         override fun disableTracking() {
             calls += "disableTracking"
         }
+
+        override fun setUserLocationIcons(
+            personIcon: ByteArray,
+            directionIcon: ByteArray,
+            personAnchor: List<Double>?,
+            directionAnchor: List<Double>?,
+            personLogicalSize: List<Int>?,
+            directionLogicalSize: List<Int>?,
+        ) = true
+
+        override fun resetUserLocationIcons() = true
 
         override fun emitAcknowledgement(requestId: String, operation: String) = Unit
 
@@ -208,6 +220,17 @@ class PigeonNativeCameraBridgeTest {
 
     private fun bridge(session: MapSession) =
         PigeonNativeCameraBridge(session, sessionToken = "token-5", generation = 2L)
+
+    @Test
+    fun `bootstrap advertises the optional tracking anchor capability`() {
+        // Clients gate null tracking anchors on this capability: older hosts
+        // must not receive them.
+        val payload = PigeonNativeCameraBridge.bootstrapPayload("token-5", 2L)
+        val capabilities = payload["capabilities"] as List<*>
+        assertTrue(capabilities.contains(PigeonNativeCameraBridge.CAPABILITY_TRACKING_OPTIONAL_ANCHOR))
+        assertTrue(capabilities.contains(PigeonNativeCameraBridge.CAPABILITY_TRACKING))
+        assertTrue(capabilities.contains(PigeonNativeCameraBridge.CAPABILITY_LOCATION_ICONS))
+    }
 
     @Test
     fun `bounds query maps the snapshot to the wire shape`() {

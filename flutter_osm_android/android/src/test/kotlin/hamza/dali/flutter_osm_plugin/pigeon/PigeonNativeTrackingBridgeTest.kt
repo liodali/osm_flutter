@@ -5,6 +5,7 @@ import hamza.dali.flutter_osm_plugin.mapscore.MapSession
 import hamza.dali.flutter_osm_plugin.mapscore.models.Anchor
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -37,7 +38,7 @@ class PigeonNativeTrackingBridgeTest {
             stopFollowInDrag: Boolean,
             disableMarkerRotation: Boolean,
             useDirectionMarker: Boolean,
-            anchor: List<Double>,
+            anchor: List<Double>?,
             listener: MapSession.LocationCommandListener,
         ) {
             calls += "enableTracking"
@@ -51,6 +52,17 @@ class PigeonNativeTrackingBridgeTest {
         override fun disableTracking() {
             calls += "disableTracking"
         }
+
+        override fun setUserLocationIcons(
+            personIcon: ByteArray,
+            directionIcon: ByteArray,
+            personAnchor: List<Double>?,
+            directionAnchor: List<Double>?,
+            personLogicalSize: List<Int>?,
+            directionLogicalSize: List<Int>?,
+        ) = true
+
+        override fun resetUserLocationIcons() = true
 
         override fun setActivity(activity: android.app.Activity?) = Unit
 
@@ -215,13 +227,17 @@ class PigeonNativeTrackingBridgeTest {
         stopFollowInDrag: Boolean = true,
         disableMarkerRotation: Boolean = false,
         useDirectionMarker: Boolean = true,
-        anchorX: Double = 0.5,
-        anchorY: Double = 1.0,
+        anchorX: Double? = 0.5,
+        anchorY: Double? = 1.0,
     ) = NativeTrackingConfiguration(
         stopFollowInDrag = stopFollowInDrag,
         disableMarkerRotation = disableMarkerRotation,
         useDirectionMarker = useDirectionMarker,
-        anchor = NativeMarkerAnchor(x = anchorX, y = anchorY),
+        anchor = if (anchorX == null || anchorY == null) {
+            null
+        } else {
+            NativeMarkerAnchor(x = anchorX, y = anchorY)
+        },
     )
 
     private fun bridge(session: MapSession) =
@@ -236,6 +252,16 @@ class PigeonNativeTrackingBridgeTest {
         assertEquals(true, session.lastStopFollowInDrag)
         assertEquals(false, session.lastDisableRotation)
         assertEquals(true, session.lastUseDirectionMarker)
+    }
+
+    @Test
+    fun `an omitted anchor keeps the live icon pivot`() = runBlocking {
+        // Starting tracking without an explicit override must not re-center
+        // anchors the application configured for its own icons.
+        val session = RecordingMapSession()
+        bridge(session).enableTracking(wireSession(), config(anchorX = null, anchorY = null))
+        assertEquals(listOf("enableTracking"), session.calls)
+        assertNull(session.lastAnchor)
     }
 
     @Test

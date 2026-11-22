@@ -37,7 +37,9 @@ internal class PigeonNativeTrackingBridge(
                 stopFollowInDrag = configuration.stopFollowInDrag,
                 disableMarkerRotation = configuration.disableMarkerRotation,
                 useDirectionMarker = configuration.useDirectionMarker,
-                anchor = listOf(configuration.anchor.x, configuration.anchor.y),
+                // Null keeps the live pivots: starting tracking must not
+                // re-center anchors the application configured itself.
+                anchor = configuration.anchor?.let { listOf(it.x, it.y) },
             ) { failureCode, failureMessage ->
                 // Exactly-once guard: late callbacks stay no-ops.
                 if (resumed) return@enableTracking

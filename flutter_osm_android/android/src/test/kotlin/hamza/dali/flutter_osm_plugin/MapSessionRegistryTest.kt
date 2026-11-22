@@ -342,13 +342,24 @@ private class FakeMapSession(
         stopFollowInDrag: Boolean,
         disableMarkerRotation: Boolean,
         useDirectionMarker: Boolean,
-        anchor: List<Double>,
+        anchor: List<Double>?,
         listener: MapSession.LocationCommandListener,
     ) {
         listener.onComplete(null, null)
     }
 
     override fun disableTracking() = Unit
+
+    override fun setUserLocationIcons(
+        personIcon: ByteArray,
+        directionIcon: ByteArray,
+        personAnchor: List<Double>?,
+        directionAnchor: List<Double>?,
+        personLogicalSize: List<Int>?,
+        directionLogicalSize: List<Int>?,
+    ) = true
+
+    override fun resetUserLocationIcons() = true
 
     override fun emitAcknowledgement(requestId: String, operation: String) = Unit
 

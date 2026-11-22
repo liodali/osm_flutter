@@ -228,12 +228,16 @@ interface MapSession : PluginRegistry.ActivityResultListener {
      * Idempotent; completes exactly once with `location_service_disabled`
      * when the platform reports the provider off (permission ownership
      * stays with the host application).
+     *
+     * A null [anchor] keeps the live icon pivot, so starting tracking without
+     * an explicit override never re-centers icons the application configured
+     * itself.
      */
     fun enableTracking(
         stopFollowInDrag: Boolean,
         disableMarkerRotation: Boolean,
         useDirectionMarker: Boolean,
-        anchor: List<Double>,
+        anchor: List<Double>?,
         listener: LocationCommandListener,
     )
 
@@ -244,6 +248,37 @@ interface MapSession : PluginRegistry.ActivityResultListener {
      * ownership checks.
      */
     fun disableTracking()
+
+    /**
+     * Replaces the person and direction icons of the my-location layer from
+     * prepared PNG bytes.
+     *
+     * Only the rendered icons change: the shared subscription, the follow
+     * flag and pending one-shot fixes keep running, so tracking and
+     * continuous updates survive an icon swap and no permission flow is
+     * triggered. Anchors are normalized pivots; the overlay keeps one pivot
+     * for both icons (Android), so [personAnchor] wins and
+     * [directionAnchor] is only used when the person anchor is absent. A
+     * null anchor preserves the live pivot. Logical sizes are the pre-scale
+     * Dart widget dimensions used to re-render the images at their intended
+     * display size (null keeps the PNG pixel dimensions). Returns false when
+     * the layer cannot accept icons yet.
+     */
+    fun setUserLocationIcons(
+        personIcon: ByteArray,
+        directionIcon: ByteArray,
+        personAnchor: List<Double>?,
+        directionAnchor: List<Double>?,
+        personLogicalSize: List<Int>?,
+        directionLogicalSize: List<Int>?,
+    ): Boolean
+
+    /**
+     * Restores the platform default user-location icons and the default
+     * center anchor. The shared subscription, tracking state and pending
+     * one-shot fixes are untouched.
+     */
+    fun resetUserLocationIcons(): Boolean
 
 
     fun emitAcknowledgement(requestId: String, operation: String)

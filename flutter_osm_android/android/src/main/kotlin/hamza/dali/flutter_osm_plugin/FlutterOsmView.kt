@@ -414,8 +414,10 @@ class FlutterOsmView(
                     val enableStopFollow = args.first() as Boolean
                     val disableRotation = args[1] as Boolean
                     val useDirectionMarker = args[2] as Boolean
-                    val anchor = args.last() as List<Double>
-                    locationNewOverlay.setAnchor(anchor)
+                    // A null slot means "no override": keep the live pivot.
+                    (args.getOrNull(3) as? List<Double>)?.let {
+                        locationNewOverlay.setAnchor(it)
+                    }
                     trackUserLocation(enableStopFollow, useDirectionMarker, disableRotation, result)
                 }
 
