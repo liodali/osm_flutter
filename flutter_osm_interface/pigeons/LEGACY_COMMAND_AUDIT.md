@@ -86,14 +86,30 @@ hosts and the delivery plane for attachments that do not opt in.
     `events.lifecycle` route (Android activity recreation). Apple hosts
     have no restoration concept and never emit `onMapRestored`. This keeps
     the legacy event plane byte-for-byte unchanged for non-opt-in users.
+    On Android the session is registered as the activity
+    `OnSaveInstanceStateListener`; restoration arriving before route
+    negotiation (or before any selection for JNI/opt-out attachments) is
+    buffered and flushed once the route resolves, so it is never lost to
+    the recreation/selection race.
 
 ## Lifecycle event routing rules (this phase)
 
 - Negotiation happens during attachment, **before initialization**: probe
   (`events.lifecycle` capability) → Dart registers the per-view FlutterApi
   handlers → Dart sends `map#events#lifecycle#route` with the session
-  identity → host validates and switches delivery. Failure at any step
-  keeps the legacy route; the decision is frozen for the attachment.
+  identity → host validates and switches delivery. A **definite** rejection
+  (stale session, unknown route, missing endpoint) keeps the legacy route;
+  the decision is frozen for the attachment.
+- A selection **timeout** is an uncertain outcome: the host may already
+  have switched to the generated route while the reply was lost. Dart
+  confirms a rollback to `legacy` on the same ordered channel before
+  allowing the legacy fallback; if the rollback cannot be confirmed it
+  aborts attachment (`LifecycleRouteUncertainException`) rather than
+  unregistering handlers while the host might still emit on Pigeon. No
+  decision is frozen on abort, so a retry re-negotiates cleanly.
+- A failed negotiation for a disposed/replaced attachment never writes a
+  decision: the epoch guard discards it so it cannot overwrite the
+  replacement's frozen route.
 - Exactly one delivery route per attachment: a switched host never emits
   `map#init`/`map#restored` on the legacy plane, and the Dart channel drops
   legacy lifecycle messages for maps whose generated route is active.
