@@ -694,19 +694,42 @@ class Map extends StatelessWidget {
       },
       osmOption: OSMOption(
         enableRotationByGesture: true,
-        // Exercise the typed generated-camera channel on this page: probe
-        // decides at attach; hosts without support keep the legacy route.
+        // Combined typed-routes configuration: every generated (Pigeon) route
+        // the plugin can negotiate, enabled together on one attachment for
+        // combined testing (see TYPED_ROUTES_VALIDATION.md). Each family
+        // decides independently at attach time — command families probe the
+        // host and freeze per family, event families additionally negotiate
+        // their delivery route before initialization — so a host that
+        // advertises only part of the list keeps the rest on the legacy
+        // plane and the same configuration doubles as the older-host
+        // compatibility check. The other pages of this example opt into
+        // nothing and stay on the legacy plane for side-by-side parity.
+        //
+        // Command families.
         useTypedCameraRoute: true,
-        // Exercise the typed user-location icon channel with per-icon
-        // anchors: the person icon keeps its center pivot while the
-        // direction arrow is pinned by its tip. Hosts without the
-        // `location.icons` capability keep the legacy icon route.
+        useTypedMarkers: true,
+        useTypedLayers: true,
+        useTypedShapes: true,
+        useTypedRoads: true,
+        useTypedLocation: true,
+        useTypedLocationUpdates: true,
+        useTypedTracking: true,
+        // Person/direction icons with per-icon anchors: the person icon
+        // keeps its center pivot while the direction arrow is pinned by its
+        // tip.
         useTypedLocationIcons: true,
-        // Exercise the typed lifecycle event callbacks: readiness (and
-        // restoration on Android recreation) is negotiated before
-        // initialization; hosts without `events.lifecycle` keep the legacy
-        // event plane. The public onMapIsReady stream is unchanged.
+        // Event families. Public streams are unchanged on either route.
+        // Readiness (and restoration on Android recreation).
         useTypedLifecycleEvents: true,
+        // Single/long presses on the map and on markers.
+        useTypedInteractionEvents: true,
+        useTypedMarkerEvents: true,
+        // Road taps (typed payload mirrors the legacy field for field).
+        useTypedRoadEvents: true,
+        // User-location fixes (host rate and coalescing preserved).
+        useTypedLocationEvents: true,
+        // Visible-region changes (host rate and coalescing preserved).
+        useTypedRegionEvents: true,
         zoomOption: const ZoomOption(
           initZoom: 16,
           minZoomLevel: 3,
