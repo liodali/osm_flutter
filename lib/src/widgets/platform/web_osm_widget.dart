@@ -80,6 +80,8 @@ class const OSMMapWidget({
   this.useTypedLocationIcons = false,
   this.useTypedLifecycleEvents = false,
   this.useTypedInteractionEvents = false,
+  this.useTypedMarkerEvents = false,
+  this.useTypedRoadEvents = false,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -124,6 +126,14 @@ class const OSMMapWidget({
   /// Accepted for signature compatibility; native generated routes do not
   /// apply to this platform.
   final bool useTypedInteractionEvents;
+
+  /// Accepted for signature compatibility; native generated routes do not
+  /// apply to this platform.
+  final bool useTypedMarkerEvents;
+
+  /// Accepted for signature compatibility; native generated routes do not
+  /// apply to this platform.
+  final bool useTypedRoadEvents;
 
   @override
   Widget build(BuildContext context) {

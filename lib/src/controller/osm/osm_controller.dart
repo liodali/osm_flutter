@@ -89,6 +89,15 @@ final class MobileOSMController extends IBaseOSMController {
       id,
       optIn: osmState.widget.useTypedInteractionEvents,
     );
+    // Negotiate the marker and road event delivery routes likewise.
+    await osmPlatform.attachMarkerEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedMarkerEvents,
+    );
+    await osmPlatform.attachRoadEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedRoadEvents,
+    );
     return MobileOSMController._(id, osmState);
   }
 

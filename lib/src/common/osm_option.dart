@@ -43,6 +43,8 @@ class OSMOption {
     this.useTypedLocationIcons = false,
     this.useTypedLifecycleEvents = false,
     this.useTypedInteractionEvents = false,
+    this.useTypedMarkerEvents = false,
+    this.useTypedRoadEvents = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -122,6 +124,21 @@ class OSMOption {
   /// `onSinglePressMapClickListener` / `onLongPressMapClickListener`
   /// streams are unchanged either way.
   final bool useTypedInteractionEvents;
+
+  /// Opt-in routing of the native-to-Dart marker interactions (marker
+  /// single presses and long presses) through the typed generated callbacks
+  /// when the native host advertises the `events.markers` capability at
+  /// attachment time. Same negotiation contract as the interaction events;
+  /// default keeps the legacy `receiveGeoPoint` /
+  /// `receiveGeoPointLongPress` event plane.
+  final bool useTypedMarkerEvents;
+
+  /// Opt-in routing of the native-to-Dart road taps through the typed
+  /// generated callback when the native host advertises the `events.roads`
+  /// capability at attachment time. The typed payload mirrors the legacy
+  /// `receiveRoad` payload field for field. Same negotiation contract as
+  /// the interaction events; default keeps the legacy event plane.
+  final bool useTypedRoadEvents;
 }
 
 /// [ZoomOption]
