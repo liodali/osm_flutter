@@ -153,22 +153,24 @@ class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, bool> _readyListened = {};
   final Map<int, bool> _restoredListened = {};
 
-  /// Attachment epoch for the lifecycle replay wrappers. Bumped by [close]
-  /// so a wrapper minted by a disposed attachment is recognized as stale:
+  /// Attachment epoch for the attachment-scoped event stream wrappers
+  /// (lifecycle replay views and interaction views). Bumped by [close] so
+  /// a wrapper minted by a disposed attachment is recognized as stale:
   /// listening to it later neither replays its captured buffer nor marks
   /// the replacement attachment as listened.
-  final Map<int, int> _lifecycleEpochs = {};
+  final Map<int, int> _eventStreamEpochs = {};
 
-  /// Queues captured by outstanding lifecycle wrappers, per map. [close]
-  /// empties them so a stream obtained before disposal holds no buffered
-  /// event of the disposed attachment, even before its epoch is consulted.
-  final Map<int, Set<List<EventOSM>>> _capturedLifecycleQueues = {};
+  /// Queues captured by outstanding event stream wrappers, per map.
+  /// [close] empties them so a stream obtained before disposal holds no
+  /// buffered event of the disposed attachment, even before its epoch is
+  /// consulted.
+  final Map<int, Set<List<EventOSM>>> _capturedEventQueues = {};
 
   /// Closers of the wrappers minted by each attachment. [close] invokes
   /// them so a subscription that is still active at disposal completes
   /// instead of lingering on the shared source stream (kept open while
   /// other maps live) and receiving the replacement attachment's events.
-  final Map<int, List<void Function()>> _lifecycleWrapperTeardowns = {};
+  final Map<int, List<void Function()>> _eventStreamTeardowns = {};
 
   void _emitMapReady(int idMap, bool isReady) {
     if (_streamController.isClosed) return;
@@ -239,36 +241,43 @@ class MethodChannelOSM extends MobileOSMPlatform {
     );
   }
 
-  /// Broadcast lifecycle view that replays events buffered before the first
-  /// listener, then forwards the live stream. Once listened, later events
-  /// flow straight through the shared controller (no further buffering).
+  /// Broadcast view of an attachment-scoped event stream.
   ///
   /// The wrapper is bound to the attachment epoch captured when the stream
-  /// was minted. [close] bumps that epoch and empties every captured queue,
-  /// so a stream obtained before disposal cannot replay a disposed
-  /// attachment's buffered events into a replacement, and the wrapper
-  /// completes when its live source completes instead of staying open.
-  Stream<T> _replayLifecycle<T extends EventOSM>(
+  /// was minted. [close] bumps that epoch, empties every captured queue and
+  /// closes the wrappers this attachment minted, so a stream obtained
+  /// before disposal cannot replay a disposed attachment's buffered events
+  /// into a replacement, an already-active subscription completes at
+  /// disposal, and the wrapper completes when its live source completes.
+  ///
+  /// When [replay]/[listened] are given (the lifecycle views), events
+  /// buffered before the first listener are replayed once it arrives, then
+  /// later events flow straight through the shared controller (no further
+  /// buffering). Without them (interaction views) the wrapper is a plain
+  /// attachment-scoped forwarder: discrete events are never buffered.
+  Stream<T> _attachmentScoped<T extends EventOSM>(
     int idMap,
-    Stream<T> live,
-    Map<int, List<T>> replay,
-    Map<int, bool> listened,
-  ) {
-    final epoch = _lifecycleEpochs[idMap] ?? 0;
-    final buffer = replay[idMap] ??= [];
-    (_capturedLifecycleQueues[idMap] ??= {}).add(buffer);
+    Stream<T> live, {
+    Map<int, List<T>>? replay,
+    Map<int, bool>? listened,
+  }) {
+    final epoch = _eventStreamEpochs[idMap] ?? 0;
+    final buffer = replay == null ? null : (replay[idMap] ??= []);
+    if (buffer != null) {
+      (_capturedEventQueues[idMap] ??= {}).add(buffer);
+    }
     late StreamController<T> controller;
     StreamSubscription<T>? subscription;
     controller = StreamController<T>.broadcast(
       onListen: () {
-        if ((_lifecycleEpochs[idMap] ?? 0) != epoch) {
+        if ((_eventStreamEpochs[idMap] ?? 0) != epoch) {
           // The attachment this stream was minted for has been closed.
           // Replaying the captured buffer (or marking the replacement
           // listened) would leak disposed state into the new attachment.
           controller.close();
           return;
         }
-        listened[idMap] = true;
+        listened?[idMap] = true;
         subscription ??= live.listen(
           // The wrapper may have been closed by disposal while an event was
           // already in flight; dropping it here must not throw.
@@ -280,7 +289,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
           },
           onDone: controller.close,
         );
-        if (buffer.isNotEmpty) {
+        if (buffer != null && buffer.isNotEmpty) {
           for (final event in buffer) {
             controller.add(event);
           }
@@ -295,18 +304,40 @@ class MethodChannelOSM extends MobileOSMPlatform {
     // The wrapper is attachment-owned: disposal closes it so subscriptions
     // still active at close time complete instead of forwarding the
     // replacement attachment's live events.
-    (_lifecycleWrapperTeardowns[idMap] ??= []).add(controller.close);
+    (_eventStreamTeardowns[idMap] ??= []).add(controller.close);
     return controller.stream;
+  }
+
+  /// Broadcast lifecycle view that replays events buffered before the first
+  /// listener, then forwards the live stream.
+  Stream<T> _replayLifecycle<T extends EventOSM>(
+    int idMap,
+    Stream<T> live,
+    Map<int, List<T>> replay,
+    Map<int, bool> listened,
+  ) {
+    return _attachmentScoped<T>(
+      idMap,
+      live,
+      replay: replay,
+      listened: listened,
+    );
   }
 
   @override
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
-    return _events(idMap).whereType<SingleTapEvent>();
+    return _attachmentScoped<SingleTapEvent>(
+      idMap,
+      _events(idMap).whereType<SingleTapEvent>(),
+    );
   }
 
   @override
   Stream<LongTapEvent> onLongPressMapClickListener(int idMap) {
-    return _events(idMap).whereType<LongTapEvent>();
+    return _attachmentScoped<LongTapEvent>(
+      idMap,
+      _events(idMap).whereType<LongTapEvent>(),
+    );
   }
 
   @override
@@ -443,18 +474,19 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _restoredReplay.remove(idOSM);
     _readyListened.remove(idOSM);
     _restoredListened.remove(idOSM);
-    // Invalidate lifecycle replay wrappers minted by this attachment: bump
-    // the epoch so late listeners refuse to replay, empty the queues they
-    // captured, and close the wrappers themselves so subscriptions that are
-    // still active complete now rather than receiving the replacement's
-    // live events through the shared source (open while other maps live).
-    _lifecycleEpochs[idOSM] = (_lifecycleEpochs[idOSM] ?? 0) + 1;
+    // Invalidate event stream wrappers minted by this attachment (lifecycle
+    // replay views and interaction views): bump the epoch so late listeners
+    // refuse to replay, empty the queues they captured, and close the
+    // wrappers themselves so subscriptions that are still active complete
+    // now rather than receiving the replacement's live events through the
+    // shared source (open while other maps live).
+    _eventStreamEpochs[idOSM] = (_eventStreamEpochs[idOSM] ?? 0) + 1;
     for (final queue
-        in _capturedLifecycleQueues.remove(idOSM) ?? const <List<EventOSM>>[]) {
+        in _capturedEventQueues.remove(idOSM) ?? const <List<EventOSM>>[]) {
       queue.clear();
     }
     for (final teardown
-        in _lifecycleWrapperTeardowns.remove(idOSM) ?? const <void Function()>[]) {
+        in _eventStreamTeardowns.remove(idOSM) ?? const <void Function()>[]) {
       teardown();
     }
     _typedMarkerKeys.remove(idOSM);

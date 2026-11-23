@@ -678,6 +678,92 @@ void main() {
   });
 
   group('recreation and disposal', () {
+    test('an active tap subscription of a disposed map never receives the '
+        'recreated map\'s taps while another map keeps the source open',
+        () async {
+      await mockLegacy((call) async => null);
+      await mockLegacy((call) async => null, channel: legacyChannelName8);
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.init(8); // keeps the shared source open across close(7)
+      await osm.attachInteractionEventsRoute(7, optIn: false);
+      await osm.attachInteractionEventsRoute(8, optIn: false);
+
+      final oldTaps = <SingleTapEvent>[];
+      var oldDone = false;
+      final oldSub = osm.onSinglePressMapClickListener(7).listen(
+        oldTaps.add,
+        onDone: () => oldDone = true,
+      );
+      await emitLegacyPress('receiveSinglePress', 47.0, -1.0);
+      await Future<void>.delayed(Duration.zero);
+      expect(oldTaps.length, 1);
+
+      // Dispose map 7 only: map 8 keeps the shared source stream open, so
+      // nothing else would complete the old tap subscription.
+      osm.close(7);
+      await Future<void>.delayed(Duration.zero);
+      expect(oldDone, isTrue,
+          reason: 'disposal must complete the attachment-owned tap wrapper');
+
+      // Recreated map 7 with its own listener: the new tap reaches only it.
+      await mockLegacy((call) async => null);
+      await osm.init(7);
+      await osm.attachInteractionEventsRoute(7, optIn: false);
+      final newTaps = <SingleTapEvent>[];
+      final newSub = osm.onSinglePressMapClickListener(7).listen(newTaps.add);
+      await emitLegacyPress('receiveSinglePress', 48.0, -2.0);
+      await Future<void>.delayed(Duration.zero);
+      expect(newTaps.length, 1,
+          reason: 'the recreated map\'s own subscriber receives its tap');
+      expect(newTaps.single.value.latitude, 48.0);
+      expect(oldTaps.length, 1,
+          reason: 'the disposed subscription must not see the replacement');
+      expect(oldDone, isTrue);
+
+      // Map 8 is untouched by map 7's disposal cycle.
+      final taps8 = <SingleTapEvent>[];
+      final sub8 = osm.onSinglePressMapClickListener(8).listen(taps8.add);
+      await emitLegacyPress('receiveSinglePress', 8.0, 8.0,
+          channel: legacyChannelName8);
+      await Future<void>.delayed(Duration.zero);
+      expect(taps8.length, 1);
+
+      await oldSub.cancel();
+      await newSub.cancel();
+      await sub8.cancel();
+      osm.close(7);
+      osm.close(8);
+    });
+
+    test('a tap stream minted before disposal completes instead of '
+        'forwarding the replacement', () async {
+      await mockLegacy((call) async => null);
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.init(8);
+      await osm.attachInteractionEventsRoute(7, optIn: false);
+      final oldStream = osm.onLongPressMapClickListener(7);
+      osm.close(7);
+
+      await osm.init(7);
+      await osm.attachInteractionEventsRoute(7, optIn: false);
+      final stale = <LongTapEvent>[];
+      var staleDone = false;
+      final sub = oldStream.listen(
+        stale.add,
+        onDone: () => staleDone = true,
+      );
+      await emitLegacyPress('receiveLongPress', 47.0, -1.0);
+      await Future<void>.delayed(Duration.zero);
+      expect(stale, isEmpty);
+      expect(staleDone, isTrue,
+          reason: 'a stream minted by the disposed attachment is invalidated');
+      await sub.cancel();
+      osm.close(7);
+      osm.close(8);
+    });
+
     test('disposal unregisters handlers; late callbacks deliver nothing',
         () async {
       await mockLegacy((call) async {
