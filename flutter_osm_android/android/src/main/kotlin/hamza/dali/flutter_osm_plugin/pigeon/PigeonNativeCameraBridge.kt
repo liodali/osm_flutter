@@ -216,6 +216,11 @@ internal class PigeonNativeCameraBridge(
         /// `map#events#roads#route` selection are implemented.
         const val CAPABILITY_ROAD_EVENTS = "events.roads"
 
+        /// Native-to-Dart user-location callback (continuous fixes with
+        /// heading). Advertised only because `PigeonNativeLocationEventsBridge`
+        /// and the `map#events#location#route` selection are implemented.
+        const val CAPABILITY_LOCATION_EVENTS = "events.location"
+
         /** Typed error code for the markers family. */
         const val CODE_MARKERS_NOT_READY = "markers_not_ready"
 
@@ -248,6 +253,7 @@ internal class PigeonNativeCameraBridge(
                 CAPABILITY_INTERACTION_EVENTS,
                 CAPABILITY_MARKER_EVENTS,
                 CAPABILITY_ROAD_EVENTS,
+                CAPABILITY_LOCATION_EVENTS,
             ),
             "sessionToken" to sessionToken,
             "generation" to generation,

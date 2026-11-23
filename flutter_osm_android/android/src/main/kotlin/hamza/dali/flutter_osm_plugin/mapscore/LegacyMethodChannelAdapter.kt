@@ -112,6 +112,7 @@ internal class LegacyMethodChannelAdapter(
     private val interactionRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
     private val markerRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
     private val roadRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
+    private val locationRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
 ) : MapEventSink, MethodChannel.MethodCallHandler {
     private val channel = MethodChannel(messenger, "plugins.dali.hamza/osmview_$viewId")
     private val eventSink = MethodChannelMapEventSink(channel)
@@ -168,6 +169,15 @@ internal class LegacyMethodChannelAdapter(
                 result,
                 selector = roadRouteSelector,
                 family = "road",
+            )
+            return
+        }
+        if (call.method == NATIVE_LOCATION_ROUTE_METHOD) {
+            handleEventRouteSelection(
+                call,
+                result,
+                selector = locationRouteSelector,
+                family = "location",
             )
             return
         }
@@ -235,5 +245,8 @@ internal class LegacyMethodChannelAdapter(
 
         /** Attach-time road event route selection (before initialization). */
         const val NATIVE_ROAD_ROUTE_METHOD = "map#events#roads#route"
+
+        /** Attach-time user-location event route selection (before initialization). */
+        const val NATIVE_LOCATION_ROUTE_METHOD = "map#events#location#route"
     }
 }

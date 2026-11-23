@@ -2669,3 +2669,60 @@ class NativeMapRoadEventsApi(private val binaryMessenger: BinaryMessenger, priva
     }
   }
 }
+
+/**
+ * Generated native-to-Dart user-location event route for one map session.
+ *
+ * The host advertises the `events.location` capability only when it
+ * implements this surface. The route is negotiated before initialization
+ * through the legacy-channel `map#events#location#route` selection with the
+ * same contract as the interaction family: the host defaults to the legacy
+ * event plane (the `receiveUserLocation` method-channel message) and
+ * switches user-location delivery to this callback only after a selection
+ * validated against the session identity. Exactly one delivery route is
+ * active per attachment.
+ *
+ * The callback carries the [NativeCameraSession] it belongs to and the
+ * fix as raw doubles: the position in degrees and the `heading` in degrees
+ * clockwise from true north, exactly the value the legacy payload carried
+ * (no normalization or unit conversion). Clients drop callbacks whose
+ * token/generation does not match the attachment.
+ *
+ * Delivery contract: the callback inherits the host's location rate and
+ * coalescing unchanged — each fix the host would have emitted on the legacy
+ * plane is delivered once, on time, through exactly one route. Consumers
+ * that start the location flow (continuous updates, follow-me tracking,
+ * typed or legacy) share it; this route only changes where fixes travel.
+ */
+class NativeMapLocationEventsApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+  companion object {
+    /** The codec used by NativeMapLocationEventsApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      NativeMapCameraPigeonCodec()
+    }
+  }
+  /**
+   * A user-location fix: the position in degrees and the heading in
+   * degrees clockwise from true north (0 when unknown), all with the
+   * host's full double precision.
+   */
+  suspend fun onLocationChanged(sessionArg: NativeCameraSession, latitudeArg: Double, longitudeArg: Double, headingArg: Double)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationEventsApi.onLocationChanged$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(sessionArg, latitudeArg, longitudeArg, headingArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
+        } else {
+          continuation.resumeWithException(NativeMapCameraPigeonUtils.createConnectionError(channelName))
+        } 
+      }
+    }
+  }
+}

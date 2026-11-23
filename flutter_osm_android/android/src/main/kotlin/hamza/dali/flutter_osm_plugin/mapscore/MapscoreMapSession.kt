@@ -85,6 +85,7 @@ import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeRoadEventsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.NativeTappedRoad
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationUpdatesBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationEventsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeTrackingBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeUserLocationIconsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeRoadsBridge
@@ -149,6 +150,8 @@ internal class MapscoreMapSession(
 
     private var pigeonRoadEventsBridge: PigeonNativeRoadEventsBridge? = null
 
+    private var pigeonLocationEventsBridge: PigeonNativeLocationEventsBridge? = null
+
     /**
      * Frozen interaction delivery route for this attachment: the default
      * keeps the legacy `receiveSinglePress` / `receiveLongPress` event
@@ -184,6 +187,22 @@ internal class MapscoreMapSession(
         emitTypedRestored = { pigeonLifecycleEventsBridge?.emitRestored() },
     )
 
+    /**
+     * Frozen user-location delivery route for this attachment: the default
+     * keeps the legacy `receiveUserLocation` event plane (the only route JNI
+     * attachments ever use); the validated pre-initialization selection
+     * switches fixes to the generated Pigeon callback. Fixes always pass
+     * through the event coalescer first, so both routes share the legacy
+     * plane's rate and newest-wins coalescing. Location flows only after
+     * initialization, so no pre-selection buffering is needed.
+     */
+    private val userLocationRoute = UserLocationEventRoute(
+        emitLegacy = { fix -> eventSink.emit(LOCATION_EVENT_METHOD, fix.toLegacyPayload()) },
+        emitTyped = { fix ->
+            pigeonLocationEventsBridge?.emitLocationChanged(fix.latitude, fix.longitude, fix.heading)
+        },
+    )
+
     /** Minted per session; guards generated routes against reused view ids. */
     internal val sessionToken: String = UUID.randomUUID().toString()
 
@@ -193,11 +212,11 @@ internal class MapscoreMapSession(
     private val eventCoalescer = MapEventCoalescer(
         intervalsMillis = mapOf(
             "receiveRegionIsChanging" to REGION_EVENT_INTERVAL_MILLIS,
-            "receiveUserLocation" to LOCATION_EVENT_INTERVAL_MILLIS,
+            LOCATION_EVENT_METHOD to LOCATION_EVENT_INTERVAL_MILLIS,
         ),
         clockMillis = SystemClock::elapsedRealtime,
         scheduler = HandlerMapEventScheduler(Handler(Looper.getMainLooper())),
-        emitter = { method, arguments -> eventSink.emit(method, arguments) },
+        emitter = ::emitCoalescedEvent,
     )
     private var released = false
     @Volatile private var zoomSnapshot: Double? = null
@@ -360,13 +379,26 @@ internal class MapscoreMapSession(
         locationNewOverlay = CustomLocationManager(context, map, userIconLayer)
         locationNewOverlay.onChangedLocation { lat, lon, heading ->
             scope?.launch(Dispatchers.Main) {
-                val map2 = HashMap<String, Any>()
-                map2["lat"] = lat
-                map2["lon"] = lon
-                map2["heading"] = heading
-                eventCoalescer.emit("receiveUserLocation", map2)
+                // The coalescer owns the rate; the frozen route owns where
+                // the flushed fix goes (see [emitCoalescedEvent]).
+                eventCoalescer.emit(LOCATION_EVENT_METHOD, UserLocationFix(lat, lon, heading))
             }
         }
+    }
+
+    /**
+     * Delivers one coalesced event on the route frozen for its family. The
+     * coalescer decides when (first event immediately, then the newest
+     * payload per interval); this decides where: user-location fixes go to
+     * the generated callback when the attachment negotiated it and to the
+     * legacy sink otherwise, with the same interval on either route.
+     */
+    private fun emitCoalescedEvent(method: String, arguments: Any?) {
+        if (method == LOCATION_EVENT_METHOD) {
+            userLocationRoute.emit(arguments as UserLocationFix)
+            return
+        }
+        eventSink.emit(method, arguments)
     }
 
     private fun createRasterLayer(): TiledRasterLayer {
@@ -1097,6 +1129,34 @@ internal class MapscoreMapSession(
             }
             "legacy" -> {
                 roadEventsUsePigeon = false
+                null
+            }
+            else -> "invalid_route"
+        }
+    }
+
+    /**
+     * Attach-time user-location event route selection. Validates the
+     * session identity so a stale selection can never switch another
+     * attachment's delivery route. Returns null on success, a typed error
+     * code otherwise.
+     */
+    internal fun selectLocationEventRoute(
+        sessionToken: String,
+        generation: Long,
+        route: String,
+    ): String? {
+        if (released) return "disposed"
+        if (sessionToken != this.sessionToken || generation != this.generation) {
+            return "stale_session"
+        }
+        return when (route) {
+            "pigeon" -> {
+                userLocationRoute.select(usePigeon = true)
+                null
+            }
+            "legacy" -> {
+                userLocationRoute.select(usePigeon = false)
                 null
             }
             else -> "invalid_route"
@@ -2482,6 +2542,8 @@ internal class MapscoreMapSession(
         pigeonMarkerEventsBridge = null
         pigeonRoadEventsBridge?.close()
         pigeonRoadEventsBridge = null
+        pigeonLocationEventsBridge?.close()
+        pigeonLocationEventsBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -2540,6 +2602,7 @@ internal class MapscoreMapSession(
             interactionRouteSelector = ::selectInteractionEventRoute,
             markerRouteSelector = ::selectMarkerEventRoute,
             roadRouteSelector = ::selectRoadEventRoute,
+            locationRouteSelector = ::selectLocationEventRoute,
         )
         if (eventSink === NoopMapEventSink) {
             eventSink = legacyChannel
@@ -2626,6 +2689,15 @@ internal class MapscoreMapSession(
             sessionToken = sessionToken,
             generation = generation,
         )
+        // Generated user-location callbacks likewise; fixes reach the
+        // bridge only through the event coalescer, so the generated route
+        // keeps the legacy plane's rate.
+        pigeonLocationEventsBridge = PigeonNativeLocationEventsBridge(
+            messenger = binaryMessenger,
+            viewId = id,
+            sessionToken = sessionToken,
+            generation = generation,
+        )
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")
@@ -2687,5 +2759,8 @@ internal class MapscoreMapSession(
         const val DEFAULT_OSM_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         private const val REGION_EVENT_INTERVAL_MILLIS = 100L
         private const val LOCATION_EVENT_INTERVAL_MILLIS = 1_000L
+
+        /** Coalescer key and legacy method name of user-location fixes. */
+        private const val LOCATION_EVENT_METHOD = "receiveUserLocation"
     }
 }
