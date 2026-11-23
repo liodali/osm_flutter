@@ -6,26 +6,27 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * User-location route dispatch behind the event coalescer: the generated
- * route inherits the legacy plane's rate and newest-wins coalescing (same
- * interval, one coalescing state), every flushed fix goes to exactly one
- * route, and the legacy payload shape is unchanged.
+ * Coalesced event route dispatch behind the event coalescer, driven with
+ * user-location fixes: the generated route inherits the legacy plane's
+ * rate and newest-wins coalescing (same interval, one coalescing state),
+ * every flushed payload goes to exactly one route, and the legacy payload
+ * shape is unchanged.
  */
-class UserLocationEventRouteTest {
+class CoalescedEventRouteTest {
 
     private val legacy = mutableListOf<Map<String, Any>>()
     private val typed = mutableListOf<UserLocationFix>()
     private val scheduler = FakeMapEventScheduler()
 
-    private fun coalescer(route: UserLocationEventRoute) = MapEventCoalescer(
+    private fun coalescer(route: CoalescedEventRoute<UserLocationFix>) = MapEventCoalescer(
         intervalsMillis = mapOf("receiveUserLocation" to 1_000L),
         clockMillis = scheduler::now,
         scheduler = scheduler,
         emitter = { _, arguments -> route.emit(arguments as UserLocationFix) },
     )
 
-    private fun route(usePigeon: Boolean = false): UserLocationEventRoute =
-        UserLocationEventRoute(
+    private fun route(usePigeon: Boolean = false): CoalescedEventRoute<UserLocationFix> =
+        CoalescedEventRoute<UserLocationFix>(
             emitLegacy = { fix -> legacy += fix.toLegacyPayload() },
             emitTyped = { fix -> typed += fix },
         ).apply { select(usePigeon) }

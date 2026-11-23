@@ -196,7 +196,7 @@ internal class MapscoreMapSession(
      * plane's rate and newest-wins coalescing. Location flows only after
      * initialization, so no pre-selection buffering is needed.
      */
-    private val userLocationRoute = UserLocationEventRoute(
+    private val userLocationRoute = CoalescedEventRoute<UserLocationFix>(
         emitLegacy = { fix -> eventSink.emit(LOCATION_EVENT_METHOD, fix.toLegacyPayload()) },
         emitTyped = { fix ->
             pigeonLocationEventsBridge?.emitLocationChanged(fix.latitude, fix.longitude, fix.heading)
