@@ -60,6 +60,12 @@ class MapSession: NSObject {
     /// Generated interaction event route (single/long-press callbacks)
     /// living alongside the legacy event plane.
     private(set) var interactionEventsBridge: PigeonInteractionEventsBridge?
+    /// Generated marker interaction event route (marker single/long-press
+    /// callbacks) living alongside the legacy event plane.
+    private(set) var markerEventsBridge: PigeonMarkerEventsBridge?
+    /// Generated road tap event route living alongside the legacy event
+    /// plane.
+    private(set) var roadEventsBridge: PigeonRoadEventsBridge?
     /// Frozen lifecycle delivery route for this attachment: false keeps the
     /// legacy `map#init` event plane (the default); true delivers readiness
     /// through the generated Pigeon callbacks. Switched only by the
@@ -73,6 +79,12 @@ class MapSession: NSObject {
     /// Interactions are discrete user events that can only occur after
     /// initialization, so no pre-selection buffering is needed.
     private var interactionEventsUsePigeon = false
+    /// Frozen marker interaction delivery route for this attachment, with
+    /// the same contract as the interaction route.
+    private var markerEventsUsePigeon = false
+    /// Frozen road tap delivery route for this attachment, with the same
+    /// contract as the interaction route.
+    private var roadEventsUsePigeon = false
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -713,6 +725,16 @@ class MapSession: NSObject {
         interactionEventsBridge = PigeonInteractionEventsBridge(
             messenger: binaryMessenger, viewId: viewId,
             sessionToken: sessionToken, generation: generation)
+        // Generated marker interaction callbacks live alongside the legacy
+        // event plane; delivery switches only after the validated
+        // pre-initialization route selection.
+        markerEventsBridge = PigeonMarkerEventsBridge(
+            messenger: binaryMessenger, viewId: viewId,
+            sessionToken: sessionToken, generation: generation)
+        // Generated road tap callbacks likewise.
+        roadEventsBridge = PigeonRoadEventsBridge(
+            messenger: binaryMessenger, viewId: viewId,
+            sessionToken: sessionToken, generation: generation)
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -870,6 +892,49 @@ class MapSession: NSObject {
         }
     }
 
+    /// Attach-time marker event route selection. Validates the session
+    /// identity so a stale selection can never switch another attachment's
+    /// delivery route. Returns nil on success, a typed error code otherwise.
+    func selectMarkerEventRoute(
+        sessionToken: String, generation: Int64, route: String
+    ) -> String? {
+        if isDisposed { return "disposed" }
+        if sessionToken != self.sessionToken || generation != self.generation {
+            return "stale_session"
+        }
+        switch route {
+        case "pigeon":
+            markerEventsUsePigeon = true
+            return nil
+        case "legacy":
+            markerEventsUsePigeon = false
+            return nil
+        default:
+            return "invalid_route"
+        }
+    }
+
+    /// Attach-time road event route selection. Same contract as the marker
+    /// selection, scoped to road taps.
+    func selectRoadEventRoute(
+        sessionToken: String, generation: Int64, route: String
+    ) -> String? {
+        if isDisposed { return "disposed" }
+        if sessionToken != self.sessionToken || generation != self.generation {
+            return "stale_session"
+        }
+        switch route {
+        case "pigeon":
+            roadEventsUsePigeon = true
+            return nil
+        case "legacy":
+            roadEventsUsePigeon = false
+            return nil
+        default:
+            return "invalid_route"
+        }
+    }
+
     /// Tears down the session: stops the method-channel handler, detaches every
     /// framework delegate, stops location work and fails any pending result.
     /// Safe to call more than once (from the platform wrapper and from deinit).
@@ -900,6 +965,10 @@ class MapSession: NSObject {
         lifecycleEventsBridge = nil
         interactionEventsBridge?.close()
         interactionEventsBridge = nil
+        markerEventsBridge?.close()
+        markerEventsBridge = nil
+        roadEventsBridge?.close()
+        roadEventsBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil
@@ -937,6 +1006,34 @@ class MapSession: NSObject {
     // MARK: - Framework event forwarding
 
     func onTap(roadId: String) {
+        // Exactly one delivery route per attachment: the negotiated road
+        // route owns road taps and carries the legacy payload field for
+        // field; every other attachment keeps the legacy plane.
+        if roadEventsUsePigeon, let bridge = roadEventsBridge {
+            let roadSelected = storedRoads[roadId]
+            let tappedRoad: NativeTappedRoad
+            if let road = roadSelected {
+                tappedRoad = NativeTappedRoad(
+                    key: roadId,
+                    distance: road.roadInformation?.distance,
+                    duration: road.roadInformation?.seconds,
+                    routePoints: road.roadInformation?.encodedRoute,
+                    instructions: road.instructions.map { instruction in
+                        NativeRoadInstruction(
+                            instruction: instruction.instruction,
+                            latitude: instruction.location.latitude,
+                            longitude: instruction.location.longitude)
+                    })
+            } else {
+                // Unknown road: the legacy plane sent only the key, and the
+                // typed payload mirrors that (all optional fields null).
+                tappedRoad = NativeTappedRoad(
+                    key: roadId, distance: nil, duration: nil,
+                    routePoints: nil, instructions: nil)
+            }
+            bridge.emitRoadTap(tappedRoad)
+            return
+        }
         DispatchQueue.main.async {
             let roadSelected = self.storedRoads[roadId]
             if let road = roadSelected {
@@ -1318,12 +1415,23 @@ class MapSession: NSObject {
     }
 
     func onMarkerSingleTap(location: CLLocationCoordinate2D) {
+        // Exactly one delivery route per attachment: the negotiated marker
+        // route owns marker presses and forwards the host's raw doubles;
+        // every other attachment keeps the legacy plane.
+        if markerEventsUsePigeon, let bridge = markerEventsBridge {
+            bridge.emitSinglePress(latitude: location.latitude, longitude: location.longitude)
+            return
+        }
         DispatchQueue.main.async {
             self.channel.invokeMethod("receiveGeoPoint", arguments: location.toGeoPoint())
         }
     }
 
     func onMarkerLongPress(location: CLLocationCoordinate2D) {
+        if markerEventsUsePigeon, let bridge = markerEventsBridge {
+            bridge.emitLongPress(latitude: location.latitude, longitude: location.longitude)
+            return
+        }
         DispatchQueue.main.async {
             self.channel.invokeMethod("receiveGeoPointLongPress", arguments: location.toGeoPoint())
         }

@@ -202,6 +202,17 @@ final class PigeonCameraBridge: NativeMapCameraApi {
     /// `map#events#interaction#route` selection are implemented.
     static let capabilityInteractionEvents = "events.interaction"
 
+    /// Native-to-Dart marker interaction callbacks: marker single press
+    /// and long press. Advertised only because
+    /// `PigeonMarkerEventsBridge` and the `map#events#markers#route`
+    /// selection are implemented.
+    static let capabilityMarkerEvents = "events.markers"
+
+    /// Native-to-Dart road tap callback. Advertised only because
+    /// `PigeonRoadEventsBridge` and the `map#events#roads#route`
+    /// selection are implemented.
+    static let capabilityRoadEvents = "events.roads"
+
     static func viewChannelSuffix(_ viewId: Int64) -> String {
         "view_\(viewId)"
     }
@@ -224,7 +235,8 @@ final class PigeonCameraBridge: NativeMapCameraApi {
                 capabilityLocation, capabilityLocationUpdates,
                 capabilityTracking, capabilityLocationIcons,
                 capabilityTrackingOptionalAnchor, capabilityLifecycleEvents,
-                capabilityInteractionEvents,
+                capabilityInteractionEvents, capabilityMarkerEvents,
+                capabilityRoadEvents,
             ],
             "sessionToken": sessionToken,
             "generation": generation,

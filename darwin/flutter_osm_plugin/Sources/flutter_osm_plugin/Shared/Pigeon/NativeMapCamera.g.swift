@@ -972,6 +972,10 @@ private class NativeMapCameraPigeonCodecReader: FlutterStandardReader {
       return NativeUserLocationIcon.fromList(self.readValue() as! [Any?])
     case 142:
       return NativeUserLocationIcons.fromList(self.readValue() as! [Any?])
+    case 143:
+      return NativeRoadInstruction.fromList(self.readValue() as! [Any?])
+    case 144:
+      return NativeTappedRoad.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -1021,6 +1025,12 @@ private class NativeMapCameraPigeonCodecWriter: FlutterStandardWriter {
       super.writeValue(value.toList())
     } else if let value = value as? NativeUserLocationIcons {
       super.writeByte(142)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeRoadInstruction {
+      super.writeByte(143)
+      super.writeValue(value.toList())
+    } else if let value = value as? NativeTappedRoad {
+      super.writeByte(144)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -2235,6 +2245,244 @@ class NativeMapInteractionEventsApi: NativeMapInteractionEventsApiProtocol {
       let channelName: String = "dev.flutter.pigeon.flutter_osm_interface.NativeMapInteractionEventsApi.onLongPress\(messageChannelSuffix)"
       let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
       channel.sendMessage([sessionArg, latitudeArg, longitudeArg] as [Any?]) { response in
+        guard let listResponse = response as? [Any?] else {
+          continuation.resume(throwing: createConnectionError(withChannelName: channelName))
+          return
+        }
+        if listResponse.count > 1 {
+          let code: String = listResponse[0] as! String
+          let message: String? = nilOrValue(listResponse[1])
+          let details: String? = nilOrValue(listResponse[2])
+          continuation.resume(throwing: PigeonError(code: code, message: message, details: details))
+        } else {
+          continuation.resume()
+        }
+      }
+    }
+  }
+}
+
+/// One navigation instruction of a tapped road, anchored at its geographic
+/// position with the host's full double precision.
+struct NativeRoadInstruction: Hashable, CustomStringConvertible {
+  var instruction: String
+  var latitude: Double
+  var longitude: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeRoadInstruction? {
+    let instruction = pigeonVar_list[0] as! String
+    let latitude = pigeonVar_list[1] as! Double
+    let longitude = pigeonVar_list[2] as! Double
+
+    return NativeRoadInstruction(
+      instruction: instruction,
+      latitude: latitude,
+      longitude: longitude
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      instruction,
+      latitude,
+      longitude,
+    ]
+  }
+  static func == (lhs: NativeRoadInstruction, rhs: NativeRoadInstruction) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.instruction, rhs.instruction) && NativeMapCameraPigeonInternal.deepEquals(lhs.latitude, rhs.latitude) && NativeMapCameraPigeonInternal.deepEquals(lhs.longitude, rhs.longitude)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeRoadInstruction")
+    NativeMapCameraPigeonInternal.deepHash(value: instruction, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: latitude, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: longitude, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeRoadInstruction(instruction: \(String(describing: instruction)), latitude: \(String(describing: latitude)), longitude: \(String(describing: longitude)))"
+  }
+}
+
+/// The tapped road's information, carrying the legacy `receiveRoad` payload
+/// unchanged: the road key, optional distance/duration, the optional encoded
+/// route polyline and the optional turn-by-turn instructions. A null
+/// `routePoints` decodes to an empty route, matching hosts that do not keep
+/// an encoded polyline for manually drawn roads.
+struct NativeTappedRoad: Hashable, CustomStringConvertible {
+  var key: String
+  var distance: Double?
+  var duration: Double?
+  var routePoints: String?
+  var instructions: [NativeRoadInstruction?]?
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> NativeTappedRoad? {
+    let key = pigeonVar_list[0] as! String
+    let distance = pigeonVar_list[1] as? Double
+    let duration = pigeonVar_list[2] as? Double
+    let routePoints = pigeonVar_list[3] as? String
+    let instructions = pigeonVar_list[4] as? [NativeRoadInstruction?]
+
+    return NativeTappedRoad(
+      key: key,
+      distance: distance,
+      duration: duration,
+      routePoints: routePoints,
+      instructions: instructions
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      key,
+      distance,
+      duration,
+      routePoints,
+      instructions,
+    ]
+  }
+  static func == (lhs: NativeTappedRoad, rhs: NativeTappedRoad) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return NativeMapCameraPigeonInternal.deepEquals(lhs.key, rhs.key) && NativeMapCameraPigeonInternal.deepEquals(lhs.distance, rhs.distance) && NativeMapCameraPigeonInternal.deepEquals(lhs.duration, rhs.duration) && NativeMapCameraPigeonInternal.deepEquals(lhs.routePoints, rhs.routePoints) && NativeMapCameraPigeonInternal.deepEquals(lhs.instructions, rhs.instructions)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("NativeTappedRoad")
+    NativeMapCameraPigeonInternal.deepHash(value: key, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: distance, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: duration, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: routePoints, hasher: &hasher)
+    NativeMapCameraPigeonInternal.deepHash(value: instructions, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "NativeTappedRoad(key: \(String(describing: key)), distance: \(String(describing: distance)), duration: \(String(describing: duration)), routePoints: \(String(describing: routePoints)), instructions: \(String(describing: instructions)))"
+  }
+}
+
+/// Generated native-to-Dart marker interaction event route for one map
+/// session.
+///
+/// The host advertises the `events.markers` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#markers#route` selection with the
+/// same contract as the interaction family: the host defaults to the legacy
+/// event plane (`receiveGeoPoint` / `receiveGeoPointLongPress`
+/// method-channel messages carrying the marker position) and switches
+/// marker interaction delivery to these callbacks only after a selection
+/// validated against the session identity. Exactly one delivery route is
+/// active per attachment.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to and the
+/// marker's geographic position as raw doubles (full host precision);
+/// clients drop callbacks whose token/generation does not match the
+/// attachment. Marker interactions are discrete: each occurrence delivers
+/// exactly once and repeats are never coalesced.
+///
+/// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
+protocol NativeMapMarkerEventsApiProtocol {
+  /// The user single-pressed the marker at the geographic coordinate.
+  @MainActor func onMarkerSinglePress(session sessionArg: NativeCameraSession, latitude latitudeArg: Double, longitude longitudeArg: Double) async throws
+  /// The user long-pressed the marker at the geographic coordinate.
+  @MainActor func onMarkerLongPress(session sessionArg: NativeCameraSession, latitude latitudeArg: Double, longitude longitudeArg: Double) async throws
+}
+class NativeMapMarkerEventsApi: NativeMapMarkerEventsApiProtocol {
+  private let binaryMessenger: FlutterBinaryMessenger
+  private let messageChannelSuffix: String
+  init(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String = "") {
+    self.binaryMessenger = binaryMessenger
+    self.messageChannelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+  }
+  var codec: NativeMapCameraPigeonCodec {
+    return NativeMapCameraPigeonCodec.shared
+  }
+  /// The user single-pressed the marker at the geographic coordinate.
+  @MainActor func onMarkerSinglePress(session sessionArg: NativeCameraSession, latitude latitudeArg: Double, longitude longitudeArg: Double) async throws {
+    return try await withCheckedThrowingContinuation { continuation in
+      let channelName: String = "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkerEventsApi.onMarkerSinglePress\(messageChannelSuffix)"
+      let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+      channel.sendMessage([sessionArg, latitudeArg, longitudeArg] as [Any?]) { response in
+        guard let listResponse = response as? [Any?] else {
+          continuation.resume(throwing: createConnectionError(withChannelName: channelName))
+          return
+        }
+        if listResponse.count > 1 {
+          let code: String = listResponse[0] as! String
+          let message: String? = nilOrValue(listResponse[1])
+          let details: String? = nilOrValue(listResponse[2])
+          continuation.resume(throwing: PigeonError(code: code, message: message, details: details))
+        } else {
+          continuation.resume()
+        }
+      }
+    }
+  }
+  /// The user long-pressed the marker at the geographic coordinate.
+  @MainActor func onMarkerLongPress(session sessionArg: NativeCameraSession, latitude latitudeArg: Double, longitude longitudeArg: Double) async throws {
+    return try await withCheckedThrowingContinuation { continuation in
+      let channelName: String = "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkerEventsApi.onMarkerLongPress\(messageChannelSuffix)"
+      let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+      channel.sendMessage([sessionArg, latitudeArg, longitudeArg] as [Any?]) { response in
+        guard let listResponse = response as? [Any?] else {
+          continuation.resume(throwing: createConnectionError(withChannelName: channelName))
+          return
+        }
+        if listResponse.count > 1 {
+          let code: String = listResponse[0] as! String
+          let message: String? = nilOrValue(listResponse[1])
+          let details: String? = nilOrValue(listResponse[2])
+          continuation.resume(throwing: PigeonError(code: code, message: message, details: details))
+        } else {
+          continuation.resume()
+        }
+      }
+    }
+  }
+}
+
+/// Generated native-to-Dart road tap event route for one map session.
+///
+/// The host advertises the `events.roads` capability only when it implements
+/// this surface. The route is negotiated before initialization through the
+/// legacy-channel `map#events#roads#route` selection with the same contract
+/// as the interaction family: the host defaults to the legacy event plane
+/// (the `receiveRoad` method-channel message) and switches road tap delivery
+/// to this callback only after a selection validated against the session
+/// identity. Exactly one delivery route is active per attachment.
+///
+/// The callback carries the [NativeCameraSession] it belongs to and the
+/// tapped road's [NativeTappedRoad] payload, which the client maps into the
+/// public road tap event exactly as the legacy payload decoded — no field is
+/// gained or lost. Road taps are discrete: each occurrence delivers once.
+///
+/// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
+protocol NativeMapRoadEventsApiProtocol {
+  /// The user tapped the road identified by the payload's key.
+  @MainActor func onRoadTap(session sessionArg: NativeCameraSession, road roadArg: NativeTappedRoad) async throws
+}
+class NativeMapRoadEventsApi: NativeMapRoadEventsApiProtocol {
+  private let binaryMessenger: FlutterBinaryMessenger
+  private let messageChannelSuffix: String
+  init(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String = "") {
+    self.binaryMessenger = binaryMessenger
+    self.messageChannelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+  }
+  var codec: NativeMapCameraPigeonCodec {
+    return NativeMapCameraPigeonCodec.shared
+  }
+  /// The user tapped the road identified by the payload's key.
+  @MainActor func onRoadTap(session sessionArg: NativeCameraSession, road roadArg: NativeTappedRoad) async throws {
+    return try await withCheckedThrowingContinuation { continuation in
+      let channelName: String = "dev.flutter.pigeon.flutter_osm_interface.NativeMapRoadEventsApi.onRoadTap\(messageChannelSuffix)"
+      let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+      channel.sendMessage([sessionArg, roadArg] as [Any?]) { response in
         guard let listResponse = response as? [Any?] else {
           continuation.resume(throwing: createConnectionError(withChannelName: channelName))
           return
