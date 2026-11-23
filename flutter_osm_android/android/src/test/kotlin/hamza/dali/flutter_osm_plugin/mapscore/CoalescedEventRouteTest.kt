@@ -110,4 +110,89 @@ class CoalescedEventRouteTest {
         assertEquals(listOf(1.0), typed.map(UserLocationFix::latitude))
         assertEquals(listOf(2.0), legacy.map { it["lat"] })
     }
+
+    // ---- visible-region changes (100 ms interval) ----
+
+    private val legacyRegions = mutableListOf<Map<String, Any?>>()
+    private val typedRegions = mutableListOf<RegionChange>()
+
+    private fun regionCoalescer(route: CoalescedEventRoute<RegionChange>) = MapEventCoalescer(
+        intervalsMillis = mapOf("receiveRegionIsChanging" to 100L),
+        clockMillis = scheduler::now,
+        scheduler = scheduler,
+        emitter = { _, arguments -> route.emit(arguments as RegionChange) },
+    )
+
+    private fun regionRoute(
+        usePigeon: Boolean = false,
+        typed: (RegionChange) -> Unit = { typedRegions += it },
+    ): CoalescedEventRoute<RegionChange> = CoalescedEventRoute<RegionChange>(
+        emitLegacy = { change -> legacyRegions += change.toLegacyPayload() },
+        emitTyped = typed,
+    ).apply { select(usePigeon) }
+
+    private val bounding = mapOf("north" to 48.0, "east" to 9.0, "south" to 47.0, "west" to 8.0)
+
+    private fun change(lat: Double, zoom: Double = 10.0) = RegionChange(
+        bounding = bounding,
+        center = mapOf("lat" to lat, "lon" to -1.0),
+        zoom = zoom,
+    )
+
+    @Test
+    fun `region default route keeps the legacy payload shape`() {
+        regionRoute().emit(change(47.5))
+
+        assertEquals(
+            listOf<Map<String, Any?>>(mapOf("bounding" to bounding, "center" to mapOf("lat" to 47.5, "lon" to -1.0))),
+            legacyRegions,
+        )
+        assertTrue(typedRegions.isEmpty())
+    }
+
+    @Test
+    fun `region pigeon route delivers the captured payload and the camera-family zoom`() {
+        regionRoute(usePigeon = true).emit(change(47.218071429999996, zoom = 12.345678901234567))
+
+        assertTrue(legacyRegions.isEmpty())
+        assertEquals(1, typedRegions.size)
+        assertEquals(47.218071429999996, typedRegions.single().center?.get("lat"))
+        assertEquals(bounding, typedRegions.single().bounding)
+        assertEquals(12.345678901234567, typedRegions.single().zoom, 0.0)
+    }
+
+    @Test
+    fun `region trailing delivery, the typed route sits behind the same 100 ms interval`() {
+        val coalescer = regionCoalescer(regionRoute(usePigeon = true))
+        coalescer.emit("receiveRegionIsChanging", change(1.0, zoom = 10.0))
+        scheduler.advanceBy(30)
+        coalescer.emit("receiveRegionIsChanging", change(2.0, zoom = 11.0))
+        scheduler.advanceBy(30)
+        coalescer.emit("receiveRegionIsChanging", change(3.0, zoom = 12.0))
+
+        // First immediately; the intermediate change is superseded and the
+        // newest is delivered once the interval elapsed — identical to the
+        // legacy plane's behavior, zoom included.
+        assertEquals(listOf(1.0), typedRegions.map { it.center?.get("lat") })
+        scheduler.advanceBy(39)
+        assertEquals(listOf(1.0), typedRegions.map { it.center?.get("lat") })
+        scheduler.advanceBy(1)
+        assertEquals(listOf(1.0, 3.0), typedRegions.map { it.center?.get("lat") })
+        assertEquals(listOf(10.0, 12.0), typedRegions.map { it.zoom })
+        assertTrue(legacyRegions.isEmpty())
+    }
+
+    @Test
+    fun `region legacy plane observes the same rate, every flushed change hits exactly one route`() {
+        val typedCoalescer = regionCoalescer(regionRoute(usePigeon = true))
+        val legacyCoalescer = regionCoalescer(regionRoute())
+        repeat(5) { typedCoalescer.emit("receiveRegionIsChanging", change(it.toDouble())) }
+        repeat(5) { legacyCoalescer.emit("receiveRegionIsChanging", change(10.0 + it)) }
+
+        assertEquals(1, typedRegions.size)
+        assertEquals(1, legacyRegions.size)
+        scheduler.advanceBy(100)
+        assertEquals(listOf(0.0, 4.0), typedRegions.map { it.center?.get("lat") })
+        assertEquals(listOf(10.0, 14.0), legacyRegions.map { (it["center"] as Map<*, *>)["lat"] })
+    }
 }

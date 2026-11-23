@@ -86,6 +86,7 @@ import hamza.dali.flutter_osm_plugin.pigeon.NativeTappedRoad
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationUpdatesBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationEventsBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeRegionEventsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeTrackingBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeUserLocationIconsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeRoadsBridge
@@ -152,6 +153,8 @@ internal class MapscoreMapSession(
 
     private var pigeonLocationEventsBridge: PigeonNativeLocationEventsBridge? = null
 
+    private var pigeonRegionEventsBridge: PigeonNativeRegionEventsBridge? = null
+
     /**
      * Frozen interaction delivery route for this attachment: the default
      * keeps the legacy `receiveSinglePress` / `receiveLongPress` event
@@ -203,6 +206,34 @@ internal class MapscoreMapSession(
         },
     )
 
+    /**
+     * Frozen visible-region delivery route for this attachment, with the
+     * same contract as the user-location route: changes pass through the
+     * event coalescer first (legacy `receiveRegionIsChanging` interval), so
+     * both routes share the legacy plane's rate and newest-wins coalescing.
+     * A change without a center (camera not ready) cannot be expressed on
+     * the typed route and is dropped there; the legacy payload keeps its
+     * historical null `center`.
+     */
+    private val regionRoute = CoalescedEventRoute<RegionChange>(
+        emitLegacy = { change -> eventSink.emit(REGION_EVENT_METHOD, change.toLegacyPayload()) },
+        emitTyped = { change ->
+            val center = change.center
+            val bridge = pigeonRegionEventsBridge
+            if (center != null && bridge != null) {
+                bridge.emitRegionChanged(
+                    centerLatitude = center.getValue("lat"),
+                    centerLongitude = center.getValue("lon"),
+                    north = change.bounding.getValue("north"),
+                    east = change.bounding.getValue("east"),
+                    south = change.bounding.getValue("south"),
+                    west = change.bounding.getValue("west"),
+                    zoom = change.zoom,
+                )
+            }
+        },
+    )
+
     /** Minted per session; guards generated routes against reused view ids. */
     internal val sessionToken: String = UUID.randomUUID().toString()
 
@@ -211,7 +242,7 @@ internal class MapscoreMapSession(
     private var eventSink: MapEventSink = NoopMapEventSink
     private val eventCoalescer = MapEventCoalescer(
         intervalsMillis = mapOf(
-            "receiveRegionIsChanging" to REGION_EVENT_INTERVAL_MILLIS,
+            REGION_EVENT_METHOD to REGION_EVENT_INTERVAL_MILLIS,
             LOCATION_EVENT_METHOD to LOCATION_EVENT_INTERVAL_MILLIS,
         ),
         clockMillis = SystemClock::elapsedRealtime,
@@ -394,11 +425,11 @@ internal class MapscoreMapSession(
      * legacy sink otherwise, with the same interval on either route.
      */
     private fun emitCoalescedEvent(method: String, arguments: Any?) {
-        if (method == LOCATION_EVENT_METHOD) {
-            userLocationRoute.emit(arguments as UserLocationFix)
-            return
+        when (method) {
+            LOCATION_EVENT_METHOD -> userLocationRoute.emit(arguments as UserLocationFix)
+            REGION_EVENT_METHOD -> regionRoute.emit(arguments as RegionChange)
+            else -> eventSink.emit(method, arguments)
         }
-        eventSink.emit(method, arguments)
     }
 
     private fun createRasterLayer(): TiledRasterLayer {
@@ -529,14 +560,21 @@ internal class MapscoreMapSession(
         val camera = mapView?.getCamera() ?: return
         camera.addListener(object : MapCameraListenerInterface() {
             override fun onVisibleBoundsChanged(visibleBounds: RectCoord, zoom: Double) {
-                zoomSnapshot = MapscoreConstants.mapscoreToOsmZoom(zoom)
+                val osmZoom = MapscoreConstants.mapscoreToOsmZoom(zoom)
+                zoomSnapshot = osmZoom
                 val helper = mapView?.getCoordinateConversionHelper() ?: return
-                val h = HashMap<String, Any?>()
-                h["bounding"] = visibleBounds.toHashMap(helper)
-                val center = mapView?.getCamera()?.getCenterPosition()
-                h["center"] = center?.toHashMap(helper)
+                val center = mapView?.getCamera()?.getCenterPosition()?.toHashMap(helper)
+                // The payload (converted bounds, center and zoom) is captured
+                // now, as the legacy plane always did; the coalescer then
+                // owns the rate and the frozen route owns where the flushed
+                // change goes (see [emitCoalescedEvent]).
+                val change = RegionChange(
+                    bounding = visibleBounds.toHashMap(helper),
+                    center = center,
+                    zoom = osmZoom,
+                )
                 scope?.launch(Dispatchers.Main) {
-                    eventCoalescer.emit("receiveRegionIsChanging", h)
+                    eventCoalescer.emit(REGION_EVENT_METHOD, change)
                 }
             }
 
@@ -1157,6 +1195,32 @@ internal class MapscoreMapSession(
             }
             "legacy" -> {
                 userLocationRoute.select(usePigeon = false)
+                null
+            }
+            else -> "invalid_route"
+        }
+    }
+
+    /**
+     * Attach-time visible-region event route selection. Same contract as
+     * the user-location selection, scoped to region changes.
+     */
+    internal fun selectRegionEventRoute(
+        sessionToken: String,
+        generation: Long,
+        route: String,
+    ): String? {
+        if (released) return "disposed"
+        if (sessionToken != this.sessionToken || generation != this.generation) {
+            return "stale_session"
+        }
+        return when (route) {
+            "pigeon" -> {
+                regionRoute.select(usePigeon = true)
+                null
+            }
+            "legacy" -> {
+                regionRoute.select(usePigeon = false)
                 null
             }
             else -> "invalid_route"
@@ -2544,6 +2608,8 @@ internal class MapscoreMapSession(
         pigeonRoadEventsBridge = null
         pigeonLocationEventsBridge?.close()
         pigeonLocationEventsBridge = null
+        pigeonRegionEventsBridge?.close()
+        pigeonRegionEventsBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -2603,6 +2669,7 @@ internal class MapscoreMapSession(
             markerRouteSelector = ::selectMarkerEventRoute,
             roadRouteSelector = ::selectRoadEventRoute,
             locationRouteSelector = ::selectLocationEventRoute,
+            regionRouteSelector = ::selectRegionEventRoute,
         )
         if (eventSink === NoopMapEventSink) {
             eventSink = legacyChannel
@@ -2698,6 +2765,13 @@ internal class MapscoreMapSession(
             sessionToken = sessionToken,
             generation = generation,
         )
+        // Generated visible-region callbacks likewise, behind the coalescer.
+        pigeonRegionEventsBridge = PigeonNativeRegionEventsBridge(
+            messenger = binaryMessenger,
+            viewId = id,
+            sessionToken = sessionToken,
+            generation = generation,
+        )
         scope = owner.lifecycle.coroutineScope
         initMap(owner.lifecycle)
         Log.e("osm", "mapscore flutter plugin create")
@@ -2762,5 +2836,8 @@ internal class MapscoreMapSession(
 
         /** Coalescer key and legacy method name of user-location fixes. */
         private const val LOCATION_EVENT_METHOD = "receiveUserLocation"
+
+        /** Coalescer key and legacy method name of visible-region changes. */
+        private const val REGION_EVENT_METHOD = "receiveRegionIsChanging"
     }
 }

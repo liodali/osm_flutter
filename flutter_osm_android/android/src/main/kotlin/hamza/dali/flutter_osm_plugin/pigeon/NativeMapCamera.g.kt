@@ -2726,3 +2726,58 @@ class NativeMapLocationEventsApi(private val binaryMessenger: BinaryMessenger, p
     }
   }
 }
+
+/**
+ * Generated native-to-Dart visible-region event route for one map session.
+ *
+ * The host advertises the `events.region` capability only when it
+ * implements this surface. The route is negotiated before initialization
+ * through the legacy-channel `map#events#region#route` selection with the
+ * same contract as the interaction family: the host defaults to the legacy
+ * event plane (the `receiveRegionIsChanging` method-channel message) and
+ * switches region-change delivery to this callback only after a selection
+ * validated against the session identity. Exactly one delivery route is
+ * active per attachment.
+ *
+ * The callback carries the [NativeCameraSession] it belongs to, the
+ * visible region's center and bounding box in degrees as raw doubles with
+ * the host's full precision, and the current `zoom` level in the units of
+ * the camera family's `getZoom`. Clients drop callbacks whose
+ * token/generation does not match the attachment.
+ *
+ * Delivery contract: the callback inherits the host's region-event rate
+ * and coalescing unchanged — each change the host would have emitted on
+ * the legacy plane (first immediately, then the newest payload per
+ * interval on hosts that coalesce) is delivered once, in order, through
+ * exactly one route. This route only changes where changes travel.
+ */
+class NativeMapRegionEventsApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+  companion object {
+    /** The codec used by NativeMapRegionEventsApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      NativeMapCameraPigeonCodec()
+    }
+  }
+  /**
+   * The visible region changed to the centered bounding box at [zoom].
+   */
+  suspend fun onRegionChanged(sessionArg: NativeCameraSession, centerLatitudeArg: Double, centerLongitudeArg: Double, boundsArg: NativeBounds, zoomArg: Double)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.flutter_osm_interface.NativeMapRegionEventsApi.onRegionChanged$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(sessionArg, centerLatitudeArg, centerLongitudeArg, boundsArg, zoomArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
+        } else {
+          continuation.resumeWithException(NativeMapCameraPigeonUtils.createConnectionError(channelName))
+        } 
+      }
+    }
+  }
+}
