@@ -2564,3 +2564,64 @@ class NativeMapLocationEventsApi: NativeMapLocationEventsApiProtocol {
     }
   }
 }
+
+/// Generated native-to-Dart visible-region event route for one map session.
+///
+/// The host advertises the `events.region` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#region#route` selection with the
+/// same contract as the interaction family: the host defaults to the legacy
+/// event plane (the `receiveRegionIsChanging` method-channel message) and
+/// switches region-change delivery to this callback only after a selection
+/// validated against the session identity. Exactly one delivery route is
+/// active per attachment.
+///
+/// The callback carries the [NativeCameraSession] it belongs to, the
+/// visible region's center and bounding box in degrees as raw doubles with
+/// the host's full precision, and the current `zoom` level in the units of
+/// the camera family's `getZoom`. Clients drop callbacks whose
+/// token/generation does not match the attachment.
+///
+/// Delivery contract: the callback inherits the host's region-event rate
+/// and coalescing unchanged — each change the host would have emitted on
+/// the legacy plane (first immediately, then the newest payload per
+/// interval on hosts that coalesce) is delivered once, in order, through
+/// exactly one route. This route only changes where changes travel.
+///
+/// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
+protocol NativeMapRegionEventsApiProtocol {
+  /// The visible region changed to the centered bounding box at [zoom].
+  @MainActor func onRegionChanged(session sessionArg: NativeCameraSession, centerLatitude centerLatitudeArg: Double, centerLongitude centerLongitudeArg: Double, bounds boundsArg: NativeBounds, zoom zoomArg: Double) async throws
+}
+class NativeMapRegionEventsApi: NativeMapRegionEventsApiProtocol {
+  private let binaryMessenger: FlutterBinaryMessenger
+  private let messageChannelSuffix: String
+  init(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String = "") {
+    self.binaryMessenger = binaryMessenger
+    self.messageChannelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+  }
+  var codec: NativeMapCameraPigeonCodec {
+    return NativeMapCameraPigeonCodec.shared
+  }
+  /// The visible region changed to the centered bounding box at [zoom].
+  @MainActor func onRegionChanged(session sessionArg: NativeCameraSession, centerLatitude centerLatitudeArg: Double, centerLongitude centerLongitudeArg: Double, bounds boundsArg: NativeBounds, zoom zoomArg: Double) async throws {
+    return try await withCheckedThrowingContinuation { continuation in
+      let channelName: String = "dev.flutter.pigeon.flutter_osm_interface.NativeMapRegionEventsApi.onRegionChanged\(messageChannelSuffix)"
+      let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+      channel.sendMessage([sessionArg, centerLatitudeArg, centerLongitudeArg, boundsArg, zoomArg] as [Any?]) { response in
+        guard let listResponse = response as? [Any?] else {
+          continuation.resume(throwing: createConnectionError(withChannelName: channelName))
+          return
+        }
+        if listResponse.count > 1 {
+          let code: String = listResponse[0] as! String
+          let message: String? = nilOrValue(listResponse[1])
+          let details: String? = nilOrValue(listResponse[2])
+          continuation.resume(throwing: PigeonError(code: code, message: message, details: details))
+        } else {
+          continuation.resume()
+        }
+      }
+    }
+  }
+}

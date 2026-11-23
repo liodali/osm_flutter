@@ -69,6 +69,9 @@ class MapSession: NSObject {
     /// Generated user-location event route (continuous fixes with heading)
     /// living alongside the legacy event plane.
     private(set) var locationEventsBridge: PigeonLocationEventsBridge?
+    /// Generated visible-region event route (center, bounds, zoom) living
+    /// alongside the legacy event plane.
+    private(set) var regionEventsBridge: PigeonRegionEventsBridge?
     /// Frozen lifecycle delivery route for this attachment: false keeps the
     /// legacy `map#init` event plane (the default); true delivers readiness
     /// through the generated Pigeon callbacks. Switched only by the
@@ -92,6 +95,10 @@ class MapSession: NSObject {
     /// same contract as the interaction route. Fixes keep the platform's
     /// CoreLocation rate on either route; only where they travel changes.
     private var locationEventsUsePigeon = false
+    /// Frozen visible-region delivery route for this attachment, with the
+    /// same contract as the interaction route. Changes keep the framework's
+    /// map-move rate on either route; only where they travel changes.
+    private var regionEventsUsePigeon = false
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -746,6 +753,10 @@ class MapSession: NSObject {
         locationEventsBridge = PigeonLocationEventsBridge(
             messenger: binaryMessenger, viewId: viewId,
             sessionToken: sessionToken, generation: generation)
+        // Generated visible-region callbacks likewise.
+        regionEventsBridge = PigeonRegionEventsBridge(
+            messenger: binaryMessenger, viewId: viewId,
+            sessionToken: sessionToken, generation: generation)
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -967,6 +978,27 @@ class MapSession: NSObject {
         }
     }
 
+    /// Attach-time visible-region event route selection. Same contract as
+    /// the location selection, scoped to region changes.
+    func selectRegionEventRoute(
+        sessionToken: String, generation: Int64, route: String
+    ) -> String? {
+        if isDisposed { return "disposed" }
+        if sessionToken != self.sessionToken || generation != self.generation {
+            return "stale_session"
+        }
+        switch route {
+        case "pigeon":
+            regionEventsUsePigeon = true
+            return nil
+        case "legacy":
+            regionEventsUsePigeon = false
+            return nil
+        default:
+            return "invalid_route"
+        }
+    }
+
     /// Tears down the session: stops the method-channel handler, detaches every
     /// framework delegate, stops location work and fails any pending result.
     /// Safe to call more than once (from the platform wrapper and from deinit).
@@ -1003,6 +1035,8 @@ class MapSession: NSObject {
         roadEventsBridge = nil
         locationEventsBridge?.close()
         locationEventsBridge = nil
+        regionEventsBridge?.close()
+        regionEventsBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil
@@ -1082,14 +1116,28 @@ class MapSession: NSObject {
     }
 
     func onMove(center: CLLocationCoordinate2D, bounds: BoundingBox, zoom: Double) {
-        let data: [String: Any] = [
-            "center": center.toGeoPoint(), "bounding": bounds.toMap(), "zoomLevel": zoom,
-        ]
         if self.mapOSM.locationManager.isTrackingEnabled() && !isMovedToLocation
             && latestUserLocation != nil && latestUserLocation! - center
         {
             isMovedToLocation = true
         }
+        // Exactly one delivery route per attachment: the negotiated
+        // region route forwards the host's raw doubles (center, bounds and
+        // the framework zoom the camera family's getZoom reports) once per
+        // map-move callback, no coalescing — the legacy plane's behavior;
+        // every other attachment keeps the legacy plane with its unchanged
+        // payload, zoomLevel included.
+        if regionEventsUsePigeon, let bridge = regionEventsBridge {
+            bridge.emitRegionChanged(
+                centerLatitude: center.latitude, centerLongitude: center.longitude,
+                north: bounds.north, east: bounds.east,
+                south: bounds.south, west: bounds.west,
+                zoom: zoom)
+            return
+        }
+        let data: [String: Any] = [
+            "center": center.toGeoPoint(), "bounding": bounds.toMap(), "zoomLevel": zoom,
+        ]
         DispatchQueue.main.async {
             self.channel.invokeMethod("receiveRegionIsChanging", arguments: data)
         }
