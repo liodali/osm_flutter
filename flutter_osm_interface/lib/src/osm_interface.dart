@@ -218,6 +218,22 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM, {
     bool optIn = false,
   });
+
+  /// Freezes the visible-region event routing decision for one map
+  /// attachment (native-to-Dart region changes carrying the center, the
+  /// bounding box and the zoom level). Same contract as
+  /// [attachLifecycleEventsRoute]: negotiated before initialization so
+  /// exactly one delivery route is active per attachment. Hosts without
+  /// the `events.region` capability keep region changes on the legacy
+  /// `receiveRegionIsChanging` message. The callback inherits the host's
+  /// region-event rate and coalescing unchanged and only changes where
+  /// changes travel. The public [onRegionIsChangingListener] stream is
+  /// unchanged either way; the legacy event plane used by JNI attachments
+  /// is never switched by this route.
+  Future<CameraRouteSelection> attachRegionEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {

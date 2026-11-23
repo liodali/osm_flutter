@@ -19,6 +19,7 @@ import 'package:flutter_osm_interface/src/channel/pigeon/native_shapes_client.da
 import 'package:flutter_osm_interface/src/channel/pigeon/native_location_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_location_updates_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_location_events_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_region_events_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_tracking_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_user_location_icons_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_lifecycle_events_client.dart';
@@ -122,6 +123,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// selection. Exactly one delivery route is active per attachment; the
   /// host's location rate and coalescing are the same on either route.
   final Map<int, PigeonLocationEventsClient?> _locationEventsRoutes = {};
+
+  /// Frozen visible-region event route decision (null = legacy), same
+  /// lifecycle rules: native-to-Dart region changes stay on the legacy
+  /// `receiveRegionIsChanging` message unless the host negotiated the
+  /// `events.region` capability and accepted the pre-initialization route
+  /// selection. Exactly one delivery route is active per attachment; the
+  /// host's region-event rate and coalescing are the same on either route.
+  final Map<int, PigeonRegionEventsClient?> _regionEventsRoutes = {};
 
   /// Bound for the lifecycle route selection and its rollback confirmation.
   /// Injectable so tests can drive the uncertain-outcome paths without
@@ -283,6 +292,36 @@ class MethodChannelOSM extends MobileOSMPlatform {
       UserLocationEvent(
         idMap,
         UserLocation.fromMap({'lat': latitude, 'lon': longitude, 'heading': heading}),
+      ),
+    );
+  }
+
+  /// Maps the typed region into the public event exactly as the legacy
+  /// `receiveRegionIsChanging` message decoded (same `Region.fromMap`
+  /// path), so neither center nor bounding box is gained, lost or rounded
+  /// on either delivery route. The typed zoom travels with the payload but
+  /// the public [Region] never carried it, exactly like the Apple host's
+  /// legacy `zoomLevel` field the decode never read.
+  void _emitRegionChanged(
+    int idMap,
+    double centerLatitude,
+    double centerLongitude,
+    generated.NativeBounds bounds,
+    double zoom,
+  ) {
+    if (_streamController.isClosed) return;
+    _streamController.add(
+      RegionIsChangingEvent(
+        idMap,
+        Region.fromMap({
+          'center': {'lat': centerLatitude, 'lon': centerLongitude},
+          'bounding': {
+            'north': bounds.north,
+            'east': bounds.east,
+            'south': bounds.south,
+            'west': bounds.west,
+          },
+        }),
       ),
     );
   }
@@ -449,7 +488,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Stream<RegionIsChangingEvent> onRegionIsChangingListener(int idMap) {
-    return _events(idMap).whereType<RegionIsChangingEvent>();
+    return _attachmentScoped<RegionIsChangingEvent>(
+      idMap,
+      _events(idMap).whereType<RegionIsChangingEvent>(),
+    );
   }
 
   @override
@@ -526,6 +568,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
               .add(UserLocationEvent(idMap, UserLocation.fromMap(result)));
           break;
         case "receiveRegionIsChanging":
+          // Exactly one delivery route per attachment: while the generated
+          // region event route owns this map, legacy region messages are
+          // dropped, never re-delivered.
+          if (_regionEventsRoutes[idMap] != null) break;
           final result = call.arguments;
           _streamController
               .add(RegionIsChangingEvent(idMap, Region.fromMap(result)));
@@ -563,6 +609,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _routeAttachJobs.remove('$idOSM:$kMarkerEventsCapability');
     _routeAttachJobs.remove('$idOSM:$kRoadEventsCapability');
     _routeAttachJobs.remove('$idOSM:$kLocationEventsCapability');
+    _routeAttachJobs.remove('$idOSM:$kRegionEventsCapability');
     _hostProtocols.remove(idOSM);
     _cameraRoutes.remove(idOSM);
     _markersRoutes.remove(idOSM);
@@ -584,6 +631,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _roadEventsRoutes.remove(idOSM)?.dispose();
     // Unregister the generated user-location event handler likewise.
     _locationEventsRoutes.remove(idOSM)?.dispose();
+    // Unregister the generated visible-region event handler likewise.
+    _regionEventsRoutes.remove(idOSM)?.dispose();
     // Drop any lifecycle events buffered before a listener arrived, and the
     // listened flags, so a replacement attachment starts from a clean slate.
     _readyReplay.remove(idOSM);
@@ -1026,6 +1075,43 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @visibleForTesting
   PigeonLocationEventsClient? locationEventsClientFor(int idOSM) =>
       _locationEventsRoutes[idOSM];
+
+  @override
+  Future<CameraRouteSelection> attachRegionEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonRegionEventsClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kRegionEventsCapability,
+      routes: _regionEventsRoutes,
+      createClient: (bootstrap) => PigeonRegionEventsClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+        onRegionChanged: (centerLatitude, centerLongitude, bounds, zoom) =>
+            _emitRegionChanged(idOSM, centerLatitude, centerLongitude, bounds, zoom),
+      ),
+      // Negotiate the delivery route with the host before initialization:
+      // the host switches region changes to the generated callback only
+      // after this selection succeeds, so exactly one route delivers.
+      activate: (client) => _selectNativeEventRoute(
+        idOSM: idOSM,
+        bootstrap: client.bootstrap,
+        routeMethod: kNativeRegionEventsRouteMethod,
+        pigeonRoute: kRegionEventsRoutePigeon,
+        legacyRoute: kRegionEventsRouteLegacy,
+        uncertain: () => const RegionRouteUncertainException(),
+      ),
+      deactivate: (client) => client.dispose(),
+    );
+  }
+
+  /// Active generated visible-region event client for [idOSM], or null
+  /// when the frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonRegionEventsClient? regionEventsClientFor(int idOSM) =>
+      _regionEventsRoutes[idOSM];
 
   /// Tells the host which lifecycle delivery route this attachment uses.
   /// Runs on the legacy channel before any map mutation; a host that

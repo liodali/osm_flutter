@@ -184,6 +184,28 @@ const String kLocationEventsRoutePigeon = 'pigeon';
 /// Route value selecting the legacy method-channel user-location events.
 const String kLocationEventsRouteLegacy = 'legacy';
 
+/// Capability family carried by the native-to-Dart visible-region event
+/// schema (center, bounding box and zoom of the visible region). Hosts
+/// without this capability keep region changes on the legacy
+/// `receiveRegionIsChanging` method-channel message. Attachments that never
+/// negotiate this route — older hosts, non-opt-in applications and the JNI
+/// command plane — keep the legacy event plane untouched. The callback
+/// inherits the host's region-event rate and coalescing; it only changes
+/// where changes travel.
+const String kRegionEventsCapability = 'events.region';
+
+/// Legacy-channel method name of the visible-region event route selection.
+///
+/// Same contract as [kNativeLifecycleEventsRouteMethod], scoped to the
+/// `events.region` family.
+const String kNativeRegionEventsRouteMethod = 'map#events#region#route';
+
+/// Route value selecting the generated Pigeon visible-region callback.
+const String kRegionEventsRoutePigeon = 'pigeon';
+
+/// Route value selecting the legacy method-channel visible-region events.
+const String kRegionEventsRouteLegacy = 'legacy';
+
 /// Base of the event-route selection failures whose outcome is uncertain:
 /// the selection timed out and a rollback to the legacy route could not be
 /// confirmed, so the host's active delivery route is unknown. Freezing

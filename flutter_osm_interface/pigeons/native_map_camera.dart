@@ -12,9 +12,9 @@
 // tracking + user-location icons, session-scoped, plus the first
 // native-to-Dart callback family: map readiness and restoration
 // (`events.lifecycle`), map interactions (`events.interaction`), marker
-// interactions (`events.markers`), road taps (`events.roads`) and user
-// location updates (`events.location`). All other events (region changes)
-// and the Apple init sequencing stay
+// interactions (`events.markers`), road taps (`events.roads`), user
+// location updates (`events.location`) and visible-region changes
+// (`events.region`). All other events and the Apple init sequencing stay
 // on their existing legacy channels; the legacy event plane also remains the
 // delivery route for JNI attachments, which never negotiate the typed event
 // route.
@@ -829,5 +829,45 @@ abstract class NativeMapLocationEventsApi {
     double latitude,
     double longitude,
     double heading,
+  );
+}
+
+/// Generated native-to-Dart visible-region event route for one map
+/// session.
+///
+/// The host advertises the `events.region` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#region#route` selection with the
+/// same contract as the interaction family: the host defaults to the legacy
+/// event plane (the `receiveRegionIsChanging` method-channel message) and
+/// switches region-change delivery to this callback only after a selection
+/// validated against the session identity. Exactly one delivery route is
+/// active per attachment.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to, the
+/// visible region's center and bounding box in degrees as raw doubles with
+/// the host's full precision, and the current `zoom` level in the units of
+/// the camera family's `getZoom`. Clients drop callbacks whose
+/// token/generation does not match the attachment.
+///
+/// Delivery contract: the callback inherits the host's region-event rate
+/// and coalescing unchanged — each change the host would have emitted on
+/// the legacy plane (first immediately, then the newest payload per
+/// interval on hosts that coalesce) is delivered once, in order, through
+/// exactly one route. This route only changes where changes travel.
+@FlutterApi()
+abstract class NativeMapRegionEventsApi {
+  /// The visible region changed to the centered bounding box at [zoom].
+  ///
+  /// `centerLatitude` / `centerLongitude` are the map center in degrees,
+  /// `bounds` the visible bounding box in degrees, and `zoom` the current
+  /// zoom level in the camera family's `getZoom` units, all with the host's
+  /// full double precision.
+  void onRegionChanged(
+    NativeCameraSession session,
+    double centerLatitude,
+    double centerLongitude,
+    NativeBounds bounds,
+    double zoom,
   );
 }

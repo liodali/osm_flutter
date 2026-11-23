@@ -2558,3 +2558,71 @@ abstract class NativeMapLocationEventsApi {
     }
   }
 }
+
+/// Generated native-to-Dart visible-region event route for one map
+/// session.
+///
+/// The host advertises the `events.region` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#region#route` selection with the
+/// same contract as the interaction family: the host defaults to the legacy
+/// event plane (the `receiveRegionIsChanging` method-channel message) and
+/// switches region-change delivery to this callback only after a selection
+/// validated against the session identity. Exactly one delivery route is
+/// active per attachment.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to, the
+/// visible region's center and bounding box in degrees as raw doubles with
+/// the host's full precision, and the current `zoom` level in the units of
+/// the camera family's `getZoom`. Clients drop callbacks whose
+/// token/generation does not match the attachment.
+///
+/// Delivery contract: the callback inherits the host's region-event rate
+/// and coalescing unchanged — each change the host would have emitted on
+/// the legacy plane (first immediately, then the newest payload per
+/// interval on hosts that coalesce) is delivered once, in order, through
+/// exactly one route. This route only changes where changes travel.
+abstract class NativeMapRegionEventsApi {
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  /// The visible region changed to the centered bounding box at [zoom].
+  ///
+  /// `centerLatitude` / `centerLongitude` are the map center in degrees,
+  /// `bounds` the visible bounding box in degrees, and `zoom` the current
+  /// zoom level in the camera family's `getZoom` units, all with the host's
+  /// full double precision.
+  void onRegionChanged(NativeCameraSession session, double centerLatitude, double centerLongitude, NativeBounds bounds, double zoom);
+
+  static void setUp(NativeMapRegionEventsApi? api, {
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) 
+{
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.flutter_osm_interface.NativeMapRegionEventsApi.onRegionChanged$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final NativeCameraSession arg_session = args[0]! as NativeCameraSession;
+          final double arg_centerLatitude = args[1]! as double;
+          final double arg_centerLongitude = args[2]! as double;
+          final NativeBounds arg_bounds = args[3]! as NativeBounds;
+          final double arg_zoom = args[4]! as double;
+          try {
+            api.onRegionChanged(arg_session, arg_centerLatitude, arg_centerLongitude, arg_bounds, arg_zoom);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+  }
+}
