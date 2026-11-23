@@ -98,6 +98,12 @@ final class MobileOSMController extends IBaseOSMController {
       id,
       optIn: osmState.widget.useTypedRoadEvents,
     );
+    // Negotiate the user-location event delivery route likewise: exactly
+    // one route delivers location fixes, at the host's own rate.
+    await osmPlatform.attachLocationEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedLocationEvents,
+    );
     return MobileOSMController._(id, osmState);
   }
 

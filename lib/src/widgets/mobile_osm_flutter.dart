@@ -57,6 +57,7 @@ class const MobileOsmFlutter({
   this.useTypedInteractionEvents = false,
   this.useTypedMarkerEvents = false,
   this.useTypedRoadEvents = false,
+  this.useTypedLocationEvents = false,
 }) extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -122,6 +123,12 @@ class const MobileOsmFlutter({
   /// callback when the native host advertises the `events.roads`
   /// capability.
   final bool useTypedRoadEvents;
+
+  /// Opt-in routing of the native-to-Dart user-location fixes through the
+  /// generated callback when the native host advertises the
+  /// `events.location` capability. The host's location rate and coalescing
+  /// are unchanged on either route.
+  final bool useTypedLocationEvents;
   final ZoomOption zoomOption;
   @override
   MobileOsmFlutterState createState() => MobileOsmFlutterState();

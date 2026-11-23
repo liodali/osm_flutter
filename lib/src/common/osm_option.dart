@@ -45,6 +45,7 @@ class OSMOption {
     this.useTypedInteractionEvents = false,
     this.useTypedMarkerEvents = false,
     this.useTypedRoadEvents = false,
+    this.useTypedLocationEvents = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -139,6 +140,17 @@ class OSMOption {
   /// `receiveRoad` payload field for field. Same negotiation contract as
   /// the interaction events; default keeps the legacy event plane.
   final bool useTypedRoadEvents;
+
+  /// Opt-in routing of the native-to-Dart user-location fixes through the
+  /// typed generated callback when the native host advertises the
+  /// `events.location` capability at attachment time. The callback carries
+  /// the position and heading as raw doubles and inherits the host's
+  /// location rate and coalescing unchanged, whichever consumer started the
+  /// flow (continuous updates, follow-me tracking). Same negotiation
+  /// contract as the interaction events; default keeps the legacy
+  /// `receiveUserLocation` event plane and the public
+  /// `onUserPositionListener` stream is unchanged either way.
+  final bool useTypedLocationEvents;
 }
 
 /// [ZoomOption]

@@ -38,6 +38,7 @@ Widget getWidget({
   bool useTypedInteractionEvents = false,
   bool useTypedMarkerEvents = false,
   bool useTypedRoadEvents = false,
+  bool useTypedLocationEvents = false,
 }) => MobileOsmFlutter(
   controller: controller,
   userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
@@ -72,6 +73,7 @@ Widget getWidget({
   useTypedInteractionEvents: useTypedInteractionEvents,
   useTypedMarkerEvents: useTypedMarkerEvents,
   useTypedRoadEvents: useTypedRoadEvents,
+  useTypedLocationEvents: useTypedLocationEvents,
 );
 
 class const OSMMapWidget({
@@ -109,6 +111,7 @@ class const OSMMapWidget({
     this.useTypedInteractionEvents = false,
     this.useTypedMarkerEvents = false,
     this.useTypedRoadEvents = false,
+    this.useTypedLocationEvents = false,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -143,6 +146,7 @@ class const OSMMapWidget({
   final bool useTypedInteractionEvents;
   final bool useTypedMarkerEvents;
   final bool useTypedRoadEvents;
+  final bool useTypedLocationEvents;
   @override
   Widget build(BuildContext context) {
     return MobileOsmFlutter(
@@ -180,6 +184,7 @@ class const OSMMapWidget({
       useTypedInteractionEvents: useTypedInteractionEvents,
       useTypedMarkerEvents: useTypedMarkerEvents,
       useTypedRoadEvents: useTypedRoadEvents,
+      useTypedLocationEvents: useTypedLocationEvents,
     );
   }
 }
