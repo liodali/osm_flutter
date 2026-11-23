@@ -143,6 +143,23 @@ class MethodChannelOSM extends MobileOSMPlatform {
   final Map<int, bool> _readyListened = {};
   final Map<int, bool> _restoredListened = {};
 
+  /// Attachment epoch for the lifecycle replay wrappers. Bumped by [close]
+  /// so a wrapper minted by a disposed attachment is recognized as stale:
+  /// listening to it later neither replays its captured buffer nor marks
+  /// the replacement attachment as listened.
+  final Map<int, int> _lifecycleEpochs = {};
+
+  /// Queues captured by outstanding lifecycle wrappers, per map. [close]
+  /// empties them so a stream obtained before disposal holds no buffered
+  /// event of the disposed attachment, even before its epoch is consulted.
+  final Map<int, Set<List<EventOSM>>> _capturedLifecycleQueues = {};
+
+  /// Closers of the wrappers minted by each attachment. [close] invokes
+  /// them so a subscription that is still active at disposal completes
+  /// instead of lingering on the shared source stream (kept open while
+  /// other maps live) and receiving the replacement attachment's events.
+  final Map<int, List<void Function()>> _lifecycleWrapperTeardowns = {};
+
   void _emitMapReady(int idMap, bool isReady) {
     if (_streamController.isClosed) return;
     final event = MapInitialization(idMap, isReady);
@@ -203,20 +220,44 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// Broadcast lifecycle view that replays events buffered before the first
   /// listener, then forwards the live stream. Once listened, later events
   /// flow straight through the shared controller (no further buffering).
+  ///
+  /// The wrapper is bound to the attachment epoch captured when the stream
+  /// was minted. [close] bumps that epoch and empties every captured queue,
+  /// so a stream obtained before disposal cannot replay a disposed
+  /// attachment's buffered events into a replacement, and the wrapper
+  /// completes when its live source completes instead of staying open.
   Stream<T> _replayLifecycle<T extends EventOSM>(
     int idMap,
     Stream<T> live,
     Map<int, List<T>> replay,
     Map<int, bool> listened,
   ) {
+    final epoch = _lifecycleEpochs[idMap] ?? 0;
     final buffer = replay[idMap] ??= [];
+    (_capturedLifecycleQueues[idMap] ??= {}).add(buffer);
     late StreamController<T> controller;
     StreamSubscription<T>? subscription;
     controller = StreamController<T>.broadcast(
       onListen: () {
+        if ((_lifecycleEpochs[idMap] ?? 0) != epoch) {
+          // The attachment this stream was minted for has been closed.
+          // Replaying the captured buffer (or marking the replacement
+          // listened) would leak disposed state into the new attachment.
+          controller.close();
+          return;
+        }
         listened[idMap] = true;
-        subscription ??=
-            live.listen(controller.add, onError: controller.addError);
+        subscription ??= live.listen(
+          // The wrapper may have been closed by disposal while an event was
+          // already in flight; dropping it here must not throw.
+          (event) {
+            if (!controller.isClosed) controller.add(event);
+          },
+          onError: (Object error, StackTrace stackTrace) {
+            if (!controller.isClosed) controller.addError(error, stackTrace);
+          },
+          onDone: controller.close,
+        );
         if (buffer.isNotEmpty) {
           for (final event in buffer) {
             controller.add(event);
@@ -229,6 +270,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
         subscription = null;
       },
     );
+    // The wrapper is attachment-owned: disposal closes it so subscriptions
+    // still active at close time complete instead of forwarding the
+    // replacement attachment's live events.
+    (_lifecycleWrapperTeardowns[idMap] ??= []).add(controller.close);
     return controller.stream;
   }
 
@@ -367,6 +412,20 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _restoredReplay.remove(idOSM);
     _readyListened.remove(idOSM);
     _restoredListened.remove(idOSM);
+    // Invalidate lifecycle replay wrappers minted by this attachment: bump
+    // the epoch so late listeners refuse to replay, empty the queues they
+    // captured, and close the wrappers themselves so subscriptions that are
+    // still active complete now rather than receiving the replacement's
+    // live events through the shared source (open while other maps live).
+    _lifecycleEpochs[idOSM] = (_lifecycleEpochs[idOSM] ?? 0) + 1;
+    for (final queue
+        in _capturedLifecycleQueues.remove(idOSM) ?? const <List<EventOSM>>[]) {
+      queue.clear();
+    }
+    for (final teardown
+        in _lifecycleWrapperTeardowns.remove(idOSM) ?? const <void Function()>[]) {
+      teardown();
+    }
     _typedMarkerKeys.remove(idOSM);
     _typedMarkerSequences.remove(idOSM);
     _typedMarkerOrder.remove(idOSM);

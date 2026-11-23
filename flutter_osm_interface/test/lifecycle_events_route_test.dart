@@ -584,6 +584,63 @@ void main() {
       osm.close(8);
     });
 
+    test('a disposed map\'s active subscription is closed, not forwarded the '
+        'replacement events while another map keeps the source open',
+        () async {
+      await mockLegacy((call) async => null);
+      await mockLegacy((call) async => null, channel: legacyChannelName8);
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.init(8); // keeps the shared source open across close(7)
+      await osm.attachLifecycleEventsRoute(7, optIn: false);
+      await osm.attachLifecycleEventsRoute(8, optIn: false);
+
+      final oldRestored = <EventOSM>[];
+      var oldDone = false;
+      final oldSub = osm.onMapRestored(7).listen(
+        oldRestored.add,
+        onDone: () => oldDone = true,
+      );
+      await emitLegacy('map#restored', null); // live to the active listener
+      await Future<void>.delayed(Duration.zero);
+      expect(oldRestored.length, 1);
+
+      // Dispose map 7 only: map 8 keeps the shared source stream open, so
+      // nothing else would complete the old subscription.
+      osm.close(7);
+      await Future<void>.delayed(Duration.zero);
+      expect(oldDone, isTrue,
+          reason: 'disposal must complete the attachment-owned wrapper');
+
+      // Replacement attachment for the same view id, with its own listener.
+      await mockLegacy((call) async => null);
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: false);
+      final newRestored = <EventOSM>[];
+      final newSub = osm.onMapRestored(7).listen(newRestored.add);
+      await emitLegacy('map#restored', null);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(newRestored.length, 1,
+          reason: 'the replacement\'s own subscriber receives its event');
+      expect(oldRestored.length, 1,
+          reason: 'the disposed subscription must not see the replacement');
+      expect(oldDone, isTrue);
+
+      // Map 8 is untouched by map 7's disposal cycle.
+      final restored8 = <EventOSM>[];
+      final sub8 = osm.onMapRestored(8).listen(restored8.add);
+      await emitLegacy('map#restored', null, channel: legacyChannelName8);
+      await Future<void>.delayed(Duration.zero);
+      expect(restored8.length, 1);
+
+      await oldSub.cancel();
+      await newSub.cancel();
+      await sub8.cancel();
+      osm.close(7);
+      osm.close(8);
+    });
+
     test('mixed routes: generated map drops legacy, legacy map keeps it',
         () async {
       await mockLegacy((call) async {
@@ -942,6 +999,82 @@ void main() {
       expect(restored, isEmpty);
       await sub.cancel();
       osm.close(7);
+    });
+
+    test('a stream minted before disposal never replays stale restoration',
+        () async {
+      await mockLegacy((call) async => null);
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: false);
+      // A restoration is buffered while nobody listens.
+      await emitLegacy('map#restored', null);
+      // Grab the stream before disposal; it captures the buffer above.
+      final oldStream = osm.onMapRestored(7);
+      osm.close(7);
+      // Replacement attachment with the same view id.
+      await mockLegacy((call) async => null);
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: false);
+      final stale = <EventOSM>[];
+      var staleDone = false;
+      final sub = oldStream.listen(stale.add, onDone: () => staleDone = true);
+      await Future<void>.delayed(Duration.zero);
+      expect(stale, isEmpty);
+      expect(staleDone, isTrue);
+      await sub.cancel();
+      osm.close(7);
+    });
+
+    test('a stale stream does not mark the replacement attachment listened',
+        () async {
+      await mockLegacy((call) async => null);
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: false);
+      final oldStream = osm.onMapRestored(7);
+      osm.close(7);
+      await mockLegacy((call) async => null);
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: false);
+      // Listening to the disposed attachment's stream must not flip the
+      // replacement's listened flag.
+      final sub = oldStream.listen((_) {});
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
+      // The replacement therefore still buffers for its own late listener.
+      await emitLegacy('map#restored', null);
+      final restored = <EventOSM>[];
+      final sub2 = osm.onMapRestored(7).listen(restored.add);
+      await Future<void>.delayed(Duration.zero);
+      expect(restored.length, 1);
+      await sub2.cancel();
+      osm.close(7);
+    });
+
+    test('closing the last map completes the lifecycle streams', () async {
+      await mockLegacy((call) async => null);
+      final osm = MethodChannelOSM();
+      await osm.init(7);
+      await osm.attachLifecycleEventsRoute(7, optIn: false);
+      var restoredDone = false;
+      var readyDone = false;
+      final restoredSub = osm.onMapRestored(7).listen(
+        (_) {},
+        onDone: () => restoredDone = true,
+      );
+      final readySub = osm.onMapIsReady(7).listen(
+        (_) {},
+        onDone: () => readyDone = true,
+      );
+      osm.close(7);
+      await Future<void>.delayed(Duration.zero);
+      expect(restoredDone, isTrue,
+          reason: 'restoration wrapper must close with its source');
+      expect(readyDone, isTrue,
+          reason: 'readiness wrapper must close with its source');
+      await restoredSub.cancel();
+      await readySub.cancel();
     });
 
     test('legacy restoration emitted before subscription is replayed',
