@@ -145,6 +145,16 @@ class FlutterOsmPluginWeb extends OsmWebPlatform {
   }
 
   @override
+  Future<CameraRouteSelection> attachInteractionEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) async {
+    // Web keeps its JS interop event plane; native interaction callback
+    // routing does not apply.
+    return CameraRouteSelection.legacy;
+  }
+
+  @override
   Stream<SingleTapEvent> onSinglePressMapClickListener(int idMap) {
     return _events(idMap).whereType<SingleTapEvent>();
   }

@@ -54,6 +54,7 @@ class const MobileOsmFlutter({
   this.useTypedTracking = false,
   this.useTypedLocationIcons = false,
   this.useTypedLifecycleEvents = false,
+  this.useTypedInteractionEvents = false,
 }) extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -104,6 +105,11 @@ class const MobileOsmFlutter({
   /// restoration) through the generated callbacks when the native host
   /// advertises the `events.lifecycle` capability.
   final bool useTypedLifecycleEvents;
+
+  /// Opt-in routing of the native-to-Dart map interactions (single presses
+  /// and long presses) through the generated callbacks when the native host
+  /// advertises the `events.interaction` capability.
+  final bool useTypedInteractionEvents;
   final ZoomOption zoomOption;
   @override
   MobileOsmFlutterState createState() => MobileOsmFlutterState();

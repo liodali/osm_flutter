@@ -42,6 +42,7 @@ class OSMOption {
     this.useTypedTracking = false,
     this.useTypedLocationIcons = false,
     this.useTypedLifecycleEvents = false,
+    this.useTypedInteractionEvents = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -111,6 +112,16 @@ class OSMOption {
   /// `map#init` / `map#restored` event plane; the public `onMapIsReady`
   /// stream is unchanged either way.
   final bool useTypedLifecycleEvents;
+
+  /// Opt-in routing of the native-to-Dart map interactions (single presses
+  /// and long presses) through the typed generated callbacks when the native
+  /// host advertises the `events.interaction` capability at attachment
+  /// time. The route is negotiated before initialization and exactly one
+  /// delivery route stays active per attachment. Default keeps the legacy
+  /// `receiveSinglePress` / `receiveLongPress` event plane; the public
+  /// `onSinglePressMapClickListener` / `onLongPressMapClickListener`
+  /// streams are unchanged either way.
+  final bool useTypedInteractionEvents;
 }
 
 /// [ZoomOption]

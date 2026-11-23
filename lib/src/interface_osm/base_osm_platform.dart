@@ -84,6 +84,7 @@ class OSMMap extends StatefulWidget {
     this.useTypedTracking = false,
     this.useTypedLocationIcons = false,
     this.useTypedLifecycleEvents = false,
+    this.useTypedInteractionEvents = false,
   });
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -127,6 +128,9 @@ class OSMMap extends StatefulWidget {
   /// Opt-in routing of the native-to-Dart lifecycle events (readiness,
   /// restoration).
   final bool useTypedLifecycleEvents;
+  /// Opt-in routing of the native-to-Dart map interactions (single presses,
+  /// long presses).
+  final bool useTypedInteractionEvents;
 
   @override
   State<StatefulWidget> createState() => _OSMMapState();
@@ -173,6 +177,7 @@ class _OSMMapState extends State<OSMMap> {
       useTypedTracking: widget.useTypedTracking,
       useTypedLocationIcons: widget.useTypedLocationIcons,
       useTypedLifecycleEvents: widget.useTypedLifecycleEvents,
+      useTypedInteractionEvents: widget.useTypedInteractionEvents,
     );
   }
 }

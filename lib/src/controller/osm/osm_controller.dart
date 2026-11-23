@@ -83,6 +83,12 @@ final class MobileOSMController extends IBaseOSMController {
       id,
       optIn: osmState.widget.useTypedLifecycleEvents,
     );
+    // Negotiate the interaction event delivery route likewise: exactly one
+    // route delivers single presses and long presses for this attachment.
+    await osmPlatform.attachInteractionEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedInteractionEvents,
+    );
     return MobileOSMController._(id, osmState);
   }
 
