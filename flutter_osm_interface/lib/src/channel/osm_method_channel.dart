@@ -22,6 +22,8 @@ import 'package:flutter_osm_interface/src/channel/pigeon/native_tracking_client.
 import 'package:flutter_osm_interface/src/channel/pigeon/native_user_location_icons_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_lifecycle_events_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_interaction_events_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_marker_events_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_road_events_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_roads_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
@@ -96,6 +98,21 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// route is active per attachment.
   final Map<int, PigeonInteractionEventsClient?> _interactionEventsRoutes =
       {};
+
+  /// Frozen marker-event route decision (null = legacy), same lifecycle
+  /// rules: native-to-Dart marker single-press and long-press callbacks
+  /// stay on the legacy `receiveGeoPoint` / `receiveGeoPointLongPress`
+  /// messages unless the host negotiated the `events.markers` capability
+  /// and accepted the pre-initialization route selection. Exactly one
+  /// delivery route is active per attachment.
+  final Map<int, PigeonMarkerEventsClient?> _markerEventsRoutes = {};
+
+  /// Frozen road-event route decision (null = legacy), same lifecycle
+  /// rules: native-to-Dart road tap callbacks stay on the legacy
+  /// `receiveRoad` message unless the host negotiated the `events.roads`
+  /// capability and accepted the pre-initialization route selection.
+  /// Exactly one delivery route is active per attachment.
+  final Map<int, PigeonRoadEventsClient?> _roadEventsRoutes = {};
 
   /// Bound for the lifecycle route selection and its rollback confirmation.
   /// Injectable so tests can drive the uncertain-outcome paths without
@@ -202,6 +219,44 @@ class MethodChannelOSM extends MobileOSMPlatform {
     if (_streamController.isClosed) return;
     _streamController
         .add(LongTapEvent(idMap, GeoPoint(latitude: latitude, longitude: longitude)));
+  }
+
+  void _emitMarkerSinglePress(int idMap, double latitude, double longitude) {
+    if (_streamController.isClosed) return;
+    _streamController
+        .add(GeoPointEvent(idMap, GeoPoint(latitude: latitude, longitude: longitude)));
+  }
+
+  void _emitMarkerLongPress(int idMap, double latitude, double longitude) {
+    if (_streamController.isClosed) return;
+    _streamController.add(
+        GeoPointLongPressEvent(idMap, GeoPoint(latitude: latitude, longitude: longitude)));
+  }
+
+  /// Maps the typed road payload into the public event exactly as the
+  /// legacy `receiveRoad` message decoded, so no field is gained or lost
+  /// on either delivery route.
+  void _emitRoadTap(int idMap, generated.NativeTappedRoad road) {
+    if (_streamController.isClosed) return;
+    final payload = <String, Object?>{
+      'key': road.key,
+      'distance': road.distance,
+      'duration': road.duration,
+      if (road.routePoints != null) 'routePoints': road.routePoints,
+      if (road.instructions != null)
+        'instructions': [
+          for (final instruction in road.instructions!)
+            if (instruction != null)
+              {
+                'instruction': instruction.instruction,
+                'geoPoint': {
+                  'lat': instruction.latitude,
+                  'lon': instruction.longitude,
+                },
+              },
+        ],
+    };
+    _streamController.add(RoadTapEvent(idMap, RoadInfo.fromMap(payload)));
   }
 
   @override
@@ -342,12 +397,18 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Stream<GeoPointEvent> onGeoPointClickListener(int idMap) {
-    return _events(idMap).whereType<GeoPointEvent>();
+    return _attachmentScoped<GeoPointEvent>(
+      idMap,
+      _events(idMap).whereType<GeoPointEvent>(),
+    );
   }
 
   @override
   Stream<GeoPointLongPressEvent> onGeoPointLongPressListener(int idMap) {
-    return _events(idMap).whereType<GeoPointLongPressEvent>();
+    return _attachmentScoped<GeoPointLongPressEvent>(
+      idMap,
+      _events(idMap).whereType<GeoPointLongPressEvent>(),
+    );
   }
 
   @override
@@ -362,7 +423,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Stream<RoadTapEvent> onRoadMapClickListener(int idMap) {
-    return _events(idMap).whereType<RoadTapEvent>();
+    return _attachmentScoped<RoadTapEvent>(
+      idMap,
+      _events(idMap).whereType<RoadTapEvent>(),
+    );
   }
 
   @override
@@ -400,14 +464,23 @@ class MethodChannelOSM extends MobileOSMPlatform {
               .add(SingleTapEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveRoad":
+          // Exactly one delivery route per attachment: while the generated
+          // road event route owns this map, legacy road tap messages are
+          // dropped, never re-delivered.
+          if (_roadEventsRoutes[idMap] != null) break;
           final result = call.arguments;
           _streamController.add(RoadTapEvent(idMap, RoadInfo.fromMap(result)));
           break;
         case "receiveGeoPoint":
+          // Exactly one delivery route per attachment: while the generated
+          // marker event route owns this map, legacy marker tap messages
+          // are dropped, never re-delivered.
+          if (_markerEventsRoutes[idMap] != null) break;
           final result = call.arguments;
           _streamController.add(GeoPointEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveGeoPointLongPress":
+          if (_markerEventsRoutes[idMap] != null) break;
           final result = call.arguments;
           _streamController
               .add(GeoPointLongPressEvent(idMap, GeoPoint.fromMap(result)));
@@ -452,6 +525,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _routeAttachJobs.remove('$idOSM:$kLocationIconsCapability');
     _routeAttachJobs.remove('$idOSM:$kLifecycleEventsCapability');
     _routeAttachJobs.remove('$idOSM:$kInteractionEventsCapability');
+    _routeAttachJobs.remove('$idOSM:$kMarkerEventsCapability');
+    _routeAttachJobs.remove('$idOSM:$kRoadEventsCapability');
     _hostProtocols.remove(idOSM);
     _cameraRoutes.remove(idOSM);
     _markersRoutes.remove(idOSM);
@@ -468,6 +543,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     // Unregister the generated interaction handlers likewise; late
     // callbacks then find no handler and the replacement registers cleanly.
     _interactionEventsRoutes.remove(idOSM)?.dispose();
+    // Unregister the generated marker and road event handlers likewise.
+    _markerEventsRoutes.remove(idOSM)?.dispose();
+    _roadEventsRoutes.remove(idOSM)?.dispose();
     // Drop any lifecycle events buffered before a listener arrived, and the
     // listened flags, so a replacement attachment starts from a clean slate.
     _readyReplay.remove(idOSM);
@@ -798,6 +876,81 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @visibleForTesting
   PigeonInteractionEventsClient? interactionEventsClientFor(int idOSM) =>
       _interactionEventsRoutes[idOSM];
+
+  @override
+  Future<CameraRouteSelection> attachMarkerEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonMarkerEventsClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kMarkerEventsCapability,
+      routes: _markerEventsRoutes,
+      createClient: (bootstrap) => PigeonMarkerEventsClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+        onSinglePress: (latitude, longitude) =>
+            _emitMarkerSinglePress(idOSM, latitude, longitude),
+        onLongPress: (latitude, longitude) =>
+            _emitMarkerLongPress(idOSM, latitude, longitude),
+      ),
+      // Negotiate the delivery route with the host before initialization:
+      // the host switches marker interaction emission to the generated
+      // callbacks only after this selection succeeds.
+      activate: (client) => _selectNativeEventRoute(
+        idOSM: idOSM,
+        bootstrap: client.bootstrap,
+        routeMethod: kNativeMarkerEventsRouteMethod,
+        pigeonRoute: kMarkerEventsRoutePigeon,
+        legacyRoute: kMarkerEventsRouteLegacy,
+        uncertain: () => const MarkerRouteUncertainException(),
+      ),
+      deactivate: (client) => client.dispose(),
+    );
+  }
+
+  /// Active generated marker-event client for [idOSM], or null when the
+  /// frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonMarkerEventsClient? markerEventsClientFor(int idOSM) =>
+      _markerEventsRoutes[idOSM];
+
+  @override
+  Future<CameraRouteSelection> attachRoadEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonRoadEventsClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kRoadEventsCapability,
+      routes: _roadEventsRoutes,
+      createClient: (bootstrap) => PigeonRoadEventsClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+        onRoadTap: (road) => _emitRoadTap(idOSM, road),
+      ),
+      // Negotiate the delivery route with the host before initialization:
+      // the host switches road tap emission to the generated callback only
+      // after this selection succeeds.
+      activate: (client) => _selectNativeEventRoute(
+        idOSM: idOSM,
+        bootstrap: client.bootstrap,
+        routeMethod: kNativeRoadEventsRouteMethod,
+        pigeonRoute: kRoadEventsRoutePigeon,
+        legacyRoute: kRoadEventsRouteLegacy,
+        uncertain: () => const RoadRouteUncertainException(),
+      ),
+      deactivate: (client) => client.dispose(),
+    );
+  }
+
+  /// Active generated road-event client for [idOSM], or null when the
+  /// frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonRoadEventsClient? roadEventsClientFor(int idOSM) =>
+      _roadEventsRoutes[idOSM];
 
   /// Tells the host which lifecycle delivery route this attachment uses.
   /// Runs on the legacy channel before any map mutation; a host that

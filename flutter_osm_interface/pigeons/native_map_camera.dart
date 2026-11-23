@@ -11,10 +11,12 @@
 // (my-location layer, single-shot fixes) + location updates + follow-me
 // tracking + user-location icons, session-scoped, plus the first
 // native-to-Dart callback family: map readiness and restoration
-// (`events.lifecycle`). All other events (taps, road taps, user location,
-// region changes) and the Apple init sequencing stay on their existing
-// legacy channels; the legacy event plane also remains the delivery route
-// for JNI attachments, which never negotiate the typed event route.
+// (`events.lifecycle`), map interactions (`events.interaction`), marker
+// interactions (`events.markers`) and road taps (`events.roads`). All other
+// events (user location, region changes) and the Apple init sequencing stay
+// on their existing legacy channels; the legacy event plane also remains the
+// delivery route for JNI attachments, which never negotiate the typed event
+// route.
 // Note: the Apple host advertises [camera, markers, layers]; its typed
 // marker ops live in `PigeonMarkersBridge` and its tile/layer ops in
 // `PigeonLayersBridge` on the shared darwin session.
@@ -699,5 +701,97 @@ abstract class NativeMapInteractionEventsApi {
     NativeCameraSession session,
     double latitude,
     double longitude,
+  );
+}
+
+/// Generated native-to-Dart marker interaction event route for one map
+/// session.
+///
+/// The host advertises the `events.markers` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#markers#route` selection with the
+/// same contract as the interaction family: the host defaults to the legacy
+/// event plane (`receiveGeoPoint` / `receiveGeoPointLongPress`
+/// method-channel messages carrying the marker position) and switches
+/// marker interaction delivery to these callbacks only after a selection
+/// validated against the session identity. Exactly one delivery route is
+/// active per attachment.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to and the
+/// marker's geographic position as raw doubles (full host precision);
+/// clients drop callbacks whose token/generation does not match the
+/// attachment. Marker interactions are discrete: each occurrence delivers
+/// exactly once and repeats are never coalesced.
+@FlutterApi()
+abstract class NativeMapMarkerEventsApi {
+  /// The user single-pressed the marker at the geographic coordinate.
+  void onMarkerSinglePress(
+    NativeCameraSession session,
+    double latitude,
+    double longitude,
+  );
+  /// The user long-pressed the marker at the geographic coordinate.
+  void onMarkerLongPress(
+    NativeCameraSession session,
+    double latitude,
+    double longitude,
+  );
+}
+
+/// One navigation instruction of a tapped road, anchored at its geographic
+/// position with the host's full double precision.
+class NativeRoadInstruction {
+  final String instruction;
+  final double latitude;
+  final double longitude;
+
+  const NativeRoadInstruction({
+    required this.instruction,
+    required this.latitude,
+    required this.longitude,
+  });
+}
+
+/// The tapped road's information, carrying the legacy `receiveRoad` payload
+/// unchanged: the road key, optional distance/duration, the optional encoded
+/// route polyline and the optional turn-by-turn instructions. A null
+/// `routePoints` decodes to an empty route, matching hosts that do not keep
+/// an encoded polyline for manually drawn roads.
+class NativeTappedRoad {
+  final String key;
+  final double? distance;
+  final double? duration;
+  final String? routePoints;
+  final List<NativeRoadInstruction?>? instructions;
+
+  const NativeTappedRoad({
+    required this.key,
+    this.distance,
+    this.duration,
+    this.routePoints,
+    this.instructions,
+  });
+}
+
+/// Generated native-to-Dart road tap event route for one map session.
+///
+/// The host advertises the `events.roads` capability only when it implements
+/// this surface. The route is negotiated before initialization through the
+/// legacy-channel `map#events#roads#route` selection with the same contract
+/// as the interaction family: the host defaults to the legacy event plane
+/// (the `receiveRoad` method-channel message) and switches road tap delivery
+/// to this callback only after a selection validated against the session
+/// identity. Exactly one delivery route is active per attachment.
+///
+/// The callback carries the [NativeCameraSession] it belongs to and the
+/// tapped road's [NativeTappedRoad] payload, which the client maps into the
+/// public [RoadTapEvent] exactly as the legacy payload decoded — no field is
+/// gained or lost. Road taps are discrete: each occurrence delivers once.
+@FlutterApi()
+abstract class NativeMapRoadEventsApi {
+  /// The user tapped the road identified by the payload's key.
+  void onRoadTap(
+    NativeCameraSession session,
+    NativeTappedRoad road,
   );
 }

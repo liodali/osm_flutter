@@ -123,6 +123,46 @@ const String kInteractionEventsRoutePigeon = 'pigeon';
 /// Route value selecting the legacy method-channel interaction events.
 const String kInteractionEventsRouteLegacy = 'legacy';
 
+/// Capability family carried by the native-to-Dart marker interaction
+/// event schema (marker single-press and long-press callbacks). Hosts
+/// without this capability keep marker interactions on the legacy
+/// `receiveGeoPoint` / `receiveGeoPointLongPress` method-channel messages.
+/// Attachments that never negotiate this route — older hosts, non-opt-in
+/// applications and the JNI command plane — keep the legacy event plane
+/// untouched.
+const String kMarkerEventsCapability = 'events.markers';
+
+/// Legacy-channel method name of the marker interaction route selection.
+///
+/// Same contract as [kNativeLifecycleEventsRouteMethod], scoped to the
+/// `events.markers` family.
+const String kNativeMarkerEventsRouteMethod = 'map#events#markers#route';
+
+/// Route value selecting the generated Pigeon marker callbacks.
+const String kMarkerEventsRoutePigeon = 'pigeon';
+
+/// Route value selecting the legacy method-channel marker events.
+const String kMarkerEventsRouteLegacy = 'legacy';
+
+/// Capability family carried by the native-to-Dart road tap event schema.
+/// Hosts without this capability keep road taps on the legacy `receiveRoad`
+/// method-channel message. Attachments that never negotiate this route —
+/// older hosts, non-opt-in applications and the JNI command plane — keep
+/// the legacy event plane untouched.
+const String kRoadEventsCapability = 'events.roads';
+
+/// Legacy-channel method name of the road tap route selection.
+///
+/// Same contract as [kNativeLifecycleEventsRouteMethod], scoped to the
+/// `events.roads` family.
+const String kNativeRoadEventsRouteMethod = 'map#events#roads#route';
+
+/// Route value selecting the generated Pigeon road tap callback.
+const String kRoadEventsRoutePigeon = 'pigeon';
+
+/// Route value selecting the legacy method-channel road tap event.
+const String kRoadEventsRouteLegacy = 'legacy';
+
 /// Base of the event-route selection failures whose outcome is uncertain:
 /// the selection timed out and a rollback to the legacy route could not be
 /// confirmed, so the host's active delivery route is unknown. Freezing

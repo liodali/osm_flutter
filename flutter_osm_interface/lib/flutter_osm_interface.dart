@@ -8,6 +8,10 @@ export 'src/channel/pigeon/native_lifecycle_events_client.dart'
     show LifecycleRouteUncertainException;
 export 'src/channel/pigeon/native_interaction_events_client.dart'
     show InteractionRouteUncertainException;
+export 'src/channel/pigeon/native_marker_events_client.dart'
+    show MarkerRouteUncertainException;
+export 'src/channel/pigeon/native_road_events_client.dart'
+    show RoadRouteUncertainException;
 export 'src/channel/pigeon/native_markers_client.dart';
 export 'src/osm_interface.dart';
 export 'src/map_controller/base_map_controller.dart';

@@ -173,6 +173,35 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM, {
     bool optIn = false,
   });
+
+  /// Freezes the marker-event routing decision for one map attachment
+  /// (native-to-Dart marker single-press and long-press callbacks). Same
+  /// contract as [attachLifecycleEventsRoute]: negotiated before
+  /// initialization so exactly one delivery route is active per attachment.
+  /// Hosts without the `events.markers` capability keep marker interactions
+  /// on the legacy `receiveGeoPoint` / `receiveGeoPointLongPress` messages.
+  /// The public [onGeoPointClickListener] /
+  /// [onGeoPointLongPressListener] streams are unchanged either way; the
+  /// legacy event plane used by JNI attachments is never switched by this
+  /// route.
+  Future<CameraRouteSelection> attachMarkerEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the road-event routing decision for one map attachment
+  /// (native-to-Dart road tap callback). Same contract as
+  /// [attachLifecycleEventsRoute]: negotiated before initialization so
+  /// exactly one delivery route is active per attachment. Hosts without
+  /// the `events.roads` capability keep road taps on the legacy
+  /// `receiveRoad` message, and the typed payload mirrors it field for
+  /// field. The public [onRoadMapClickListener] stream is unchanged either
+  /// way; the legacy event plane used by JNI attachments is never switched
+  /// by this route.
+  Future<CameraRouteSelection> attachRoadEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {

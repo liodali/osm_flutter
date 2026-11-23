@@ -1036,6 +1036,12 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is NativeUserLocationIcons) {
       buffer.putUint8(142);
       writeValue(buffer, value.encode());
+    }    else if (value is NativeRoadInstruction) {
+      buffer.putUint8(143);
+      writeValue(buffer, value.encode());
+    }    else if (value is NativeTappedRoad) {
+      buffer.putUint8(144);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -1072,6 +1078,10 @@ class _PigeonCodec extends StandardMessageCodec {
         return NativeUserLocationIcon.decode(readValue(buffer)!);
       case 142:
         return NativeUserLocationIcons.decode(readValue(buffer)!);
+      case 143:
+        return NativeRoadInstruction.decode(readValue(buffer)!);
+      case 144:
+        return NativeTappedRoad.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -2214,6 +2224,266 @@ abstract class NativeMapInteractionEventsApi {
           final double arg_longitude = args[2]! as double;
           try {
             api.onLongPress(arg_session, arg_latitude, arg_longitude);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+  }
+}
+
+/// One navigation instruction of a tapped road, anchored at its geographic
+/// position with the host's full double precision.
+class NativeRoadInstruction {
+  NativeRoadInstruction({
+    required this.instruction,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  String instruction;
+
+  double latitude;
+
+  double longitude;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      instruction,
+      latitude,
+      longitude,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeRoadInstruction decode(Object result) {
+    result as List<Object?>;
+    return NativeRoadInstruction(
+      instruction: result[0]! as String,
+      latitude: result[1]! as double,
+      longitude: result[2]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeRoadInstruction || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(instruction, other.instruction) && _deepEquals(latitude, other.latitude) && _deepEquals(longitude, other.longitude);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeRoadInstruction(instruction: $instruction, latitude: $latitude, longitude: $longitude)';
+  }
+}
+
+/// The tapped road's information, carrying the legacy `receiveRoad` payload
+/// unchanged: the road key, optional distance/duration, the optional encoded
+/// route polyline and the optional turn-by-turn instructions. A null
+/// `routePoints` decodes to an empty route, matching hosts that do not keep
+/// an encoded polyline for manually drawn roads.
+class NativeTappedRoad {
+  NativeTappedRoad({
+    required this.key,
+    this.distance,
+    this.duration,
+    this.routePoints,
+    this.instructions,
+  });
+
+  String key;
+
+  double? distance;
+
+  double? duration;
+
+  String? routePoints;
+
+  List<NativeRoadInstruction?>? instructions;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      key,
+      distance,
+      duration,
+      routePoints,
+      instructions,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static NativeTappedRoad decode(Object result) {
+    result as List<Object?>;
+    return NativeTappedRoad(
+      key: result[0]! as String,
+      distance: result[1] as double?,
+      duration: result[2] as double?,
+      routePoints: result[3] as String?,
+      instructions: (result[4] as List<Object?>?)?.cast<NativeRoadInstruction?>(),
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! NativeTappedRoad || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(key, other.key) && _deepEquals(distance, other.distance) && _deepEquals(duration, other.duration) && _deepEquals(routePoints, other.routePoints) && _deepEquals(instructions, other.instructions);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'NativeTappedRoad(key: $key, distance: $distance, duration: $duration, routePoints: $routePoints, instructions: $instructions)';
+  }
+}
+
+/// Generated native-to-Dart marker interaction event route for one map
+/// session.
+///
+/// The host advertises the `events.markers` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#markers#route` selection with the
+/// same contract as the interaction family: the host defaults to the legacy
+/// event plane (`receiveGeoPoint` / `receiveGeoPointLongPress`
+/// method-channel messages carrying the marker position) and switches
+/// marker interaction delivery to these callbacks only after a selection
+/// validated against the session identity. Exactly one delivery route is
+/// active per attachment.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to and the
+/// marker's geographic position as raw doubles (full host precision);
+/// clients drop callbacks whose token/generation does not match the
+/// attachment. Marker interactions are discrete: each occurrence delivers
+/// exactly once and repeats are never coalesced.
+abstract class NativeMapMarkerEventsApi {
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  /// The user single-pressed the marker at the geographic coordinate.
+  void onMarkerSinglePress(NativeCameraSession session, double latitude, double longitude);
+
+  /// The user long-pressed the marker at the geographic coordinate.
+  void onMarkerLongPress(NativeCameraSession session, double latitude, double longitude);
+
+  static void setUp(NativeMapMarkerEventsApi? api, {
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) 
+{
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkerEventsApi.onMarkerSinglePress$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final NativeCameraSession arg_session = args[0]! as NativeCameraSession;
+          final double arg_latitude = args[1]! as double;
+          final double arg_longitude = args[2]! as double;
+          try {
+            api.onMarkerSinglePress(arg_session, arg_latitude, arg_longitude);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkerEventsApi.onMarkerLongPress$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final NativeCameraSession arg_session = args[0]! as NativeCameraSession;
+          final double arg_latitude = args[1]! as double;
+          final double arg_longitude = args[2]! as double;
+          try {
+            api.onMarkerLongPress(arg_session, arg_latitude, arg_longitude);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+  }
+}
+
+/// Generated native-to-Dart road tap event route for one map session.
+///
+/// The host advertises the `events.roads` capability only when it implements
+/// this surface. The route is negotiated before initialization through the
+/// legacy-channel `map#events#roads#route` selection with the same contract
+/// as the interaction family: the host defaults to the legacy event plane
+/// (the `receiveRoad` method-channel message) and switches road tap delivery
+/// to this callback only after a selection validated against the session
+/// identity. Exactly one delivery route is active per attachment.
+///
+/// The callback carries the [NativeCameraSession] it belongs to and the
+/// tapped road's [NativeTappedRoad] payload, which the client maps into the
+/// public road tap event exactly as the legacy payload decoded — no field is
+/// gained or lost. Road taps are discrete: each occurrence delivers once.
+abstract class NativeMapRoadEventsApi {
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  /// The user tapped the road identified by the payload's key.
+  void onRoadTap(NativeCameraSession session, NativeTappedRoad road);
+
+  static void setUp(NativeMapRoadEventsApi? api, {
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) 
+{
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.flutter_osm_interface.NativeMapRoadEventsApi.onRoadTap$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final NativeCameraSession arg_session = args[0]! as NativeCameraSession;
+          final NativeTappedRoad arg_road = args[1]! as NativeTappedRoad;
+          try {
+            api.onRoadTap(arg_session, arg_road);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
