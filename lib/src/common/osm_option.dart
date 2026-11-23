@@ -46,6 +46,7 @@ class OSMOption {
     this.useTypedMarkerEvents = false,
     this.useTypedRoadEvents = false,
     this.useTypedLocationEvents = false,
+    this.useTypedRegionEvents = false,
   });
   final bool showZoomController;
   final List<StaticPositionGeoPoint> staticPoints;
@@ -151,6 +152,16 @@ class OSMOption {
   /// `receiveUserLocation` event plane and the public
   /// `onUserPositionListener` stream is unchanged either way.
   final bool useTypedLocationEvents;
+
+  /// Opt-in routing of the native-to-Dart visible-region changes through
+  /// the typed generated callback when the native host advertises the
+  /// `events.region` capability at attachment time. The callback carries
+  /// the center, the bounding box and the zoom level as raw doubles and
+  /// inherits the host's region-event rate and coalescing unchanged. Same
+  /// negotiation contract as the interaction events; default keeps the
+  /// legacy `receiveRegionIsChanging` event plane and the public
+  /// `onRegionIsChangingListener` stream is unchanged either way.
+  final bool useTypedRegionEvents;
 }
 
 /// [ZoomOption]

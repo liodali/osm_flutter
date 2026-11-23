@@ -58,6 +58,7 @@ class const MobileOsmFlutter({
   this.useTypedMarkerEvents = false,
   this.useTypedRoadEvents = false,
   this.useTypedLocationEvents = false,
+  this.useTypedRegionEvents = false,
 }) extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -129,6 +130,12 @@ class const MobileOsmFlutter({
   /// `events.location` capability. The host's location rate and coalescing
   /// are unchanged on either route.
   final bool useTypedLocationEvents;
+
+  /// Opt-in routing of the native-to-Dart visible-region changes through
+  /// the generated callback when the native host advertises the
+  /// `events.region` capability. The host's region-event rate and
+  /// coalescing are unchanged on either route.
+  final bool useTypedRegionEvents;
   final ZoomOption zoomOption;
   @override
   MobileOsmFlutterState createState() => MobileOsmFlutterState();

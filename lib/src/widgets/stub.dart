@@ -65,6 +65,7 @@ class const OSMMapWidget({
   this.useTypedMarkerEvents = false,
   this.useTypedRoadEvents = false,
   this.useTypedLocationEvents = false,
+  this.useTypedRegionEvents = false,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -111,6 +112,7 @@ class const OSMMapWidget({
   final bool useTypedMarkerEvents;
   final bool useTypedRoadEvents;
   final bool useTypedLocationEvents;
+  final bool useTypedRegionEvents;
 
   @override
   Widget build(BuildContext context) {

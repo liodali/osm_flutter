@@ -104,6 +104,12 @@ final class MobileOSMController extends IBaseOSMController {
       id,
       optIn: osmState.widget.useTypedLocationEvents,
     );
+    // Negotiate the visible-region event delivery route likewise: exactly
+    // one route delivers region changes, at the host's own rate.
+    await osmPlatform.attachRegionEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedRegionEvents,
+    );
     return MobileOSMController._(id, osmState);
   }
 

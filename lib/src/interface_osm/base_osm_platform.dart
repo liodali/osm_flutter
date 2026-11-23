@@ -88,6 +88,7 @@ class OSMMap extends StatefulWidget {
     this.useTypedMarkerEvents = false,
     this.useTypedRoadEvents = false,
     this.useTypedLocationEvents = false,
+    this.useTypedRegionEvents = false,
   });
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -140,6 +141,8 @@ class OSMMap extends StatefulWidget {
   final bool useTypedRoadEvents;
   /// Opt-in routing of the native-to-Dart user-location fixes.
   final bool useTypedLocationEvents;
+  /// Opt-in routing of the native-to-Dart visible-region changes.
+  final bool useTypedRegionEvents;
 
   @override
   State<StatefulWidget> createState() => _OSMMapState();
@@ -190,6 +193,7 @@ class _OSMMapState extends State<OSMMap> {
       useTypedMarkerEvents: widget.useTypedMarkerEvents,
       useTypedRoadEvents: widget.useTypedRoadEvents,
       useTypedLocationEvents: widget.useTypedLocationEvents,
+      useTypedRegionEvents: widget.useTypedRegionEvents,
     );
   }
 }

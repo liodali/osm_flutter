@@ -185,6 +185,8 @@ class _OSMFlutterState extends State<OSMFlutter> {
                             widget.osmOption.useTypedRoadEvents,
                         useTypedLocationEvents:
                             widget.osmOption.useTypedLocationEvents,
+                        useTypedRegionEvents:
+                            widget.osmOption.useTypedRegionEvents,
                       ),
                     ),
                     Positioned.fill(
@@ -254,6 +256,8 @@ class _OSMFlutterState extends State<OSMFlutter> {
                       widget.osmOption.useTypedRoadEvents,
                   useTypedLocationEvents:
                       widget.osmOption.useTypedLocationEvents,
+                  useTypedRegionEvents:
+                      widget.osmOption.useTypedRegionEvents,
                 ),
         ),
         if (widget.osmOption.showContributorBadgeForOSM && !kIsWeb) ...[
