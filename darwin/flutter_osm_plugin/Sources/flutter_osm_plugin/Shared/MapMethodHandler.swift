@@ -53,6 +53,31 @@ extension MapSession {
             } else {
                 result(200)
             }
+        case "map#events#interaction#route":
+            // Interaction event route selection: same contract as the
+            // lifecycle selection, scoped to single/long presses. The
+            // session validates the identity and switches press delivery;
+            // every other event keeps the legacy plane.
+            guard let args = call.arguments as? [String: Any],
+                  let token = args["sessionToken"] as? String,
+                  let generation = (args["generation"] as? NSNumber)?.int64Value,
+                  let route = args["route"] as? String
+            else {
+                result(FlutterError(
+                    code: "invalid_route",
+                    message: "malformed interaction route selection",
+                    details: nil))
+                return
+            }
+            if let errorCode = selectInteractionEventRoute(
+                sessionToken: token, generation: generation, route: route) {
+                result(FlutterError(
+                    code: errorCode,
+                    message: "interaction event route rejected",
+                    details: nil))
+            } else {
+                result(200)
+            }
         case "init#ios#map":
             //channel.invokeMethod("map#init", arguments: true)
             if let tile = customTiles {

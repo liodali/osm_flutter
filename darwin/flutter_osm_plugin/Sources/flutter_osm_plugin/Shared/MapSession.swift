@@ -57,11 +57,22 @@ class MapSession: NSObject {
     /// Generated lifecycle event route (readiness/restoration callbacks)
     /// living alongside the legacy event plane.
     private(set) var lifecycleEventsBridge: PigeonLifecycleEventsBridge?
+    /// Generated interaction event route (single/long-press callbacks)
+    /// living alongside the legacy event plane.
+    private(set) var interactionEventsBridge: PigeonInteractionEventsBridge?
     /// Frozen lifecycle delivery route for this attachment: false keeps the
     /// legacy `map#init` event plane (the default); true delivers readiness
     /// through the generated Pigeon callbacks. Switched only by the
     /// validated pre-initialization selection, never by a map command.
     private var lifecycleEventsUsePigeon = false
+    /// Frozen interaction delivery route for this attachment: false keeps
+    /// the legacy `receiveSinglePress` / `receiveLongPress` event plane (the
+    /// default, and the only route JNI attachments ever use); true delivers
+    /// presses through the generated Pigeon callbacks. Switched only by the
+    /// validated pre-initialization selection, never by a map command.
+    /// Interactions are discrete user events that can only occur after
+    /// initialization, so no pre-selection buffering is needed.
+    private var interactionEventsUsePigeon = false
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -696,6 +707,12 @@ class MapSession: NSObject {
         lifecycleEventsBridge = PigeonLifecycleEventsBridge(
             messenger: binaryMessenger, viewId: viewId,
             sessionToken: sessionToken, generation: generation)
+        // Generated interaction callbacks (single/long presses) live
+        // alongside the legacy event plane; delivery switches only after
+        // the validated pre-initialization route selection.
+        interactionEventsBridge = PigeonInteractionEventsBridge(
+            messenger: binaryMessenger, viewId: viewId,
+            sessionToken: sessionToken, generation: generation)
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -831,6 +848,28 @@ class MapSession: NSObject {
         }
     }
 
+    /// Attach-time interaction event route selection. Validates the session
+    /// identity so a stale selection can never switch another attachment's
+    /// delivery route. Returns nil on success, a typed error code otherwise.
+    func selectInteractionEventRoute(
+        sessionToken: String, generation: Int64, route: String
+    ) -> String? {
+        if isDisposed { return "disposed" }
+        if sessionToken != self.sessionToken || generation != self.generation {
+            return "stale_session"
+        }
+        switch route {
+        case "pigeon":
+            interactionEventsUsePigeon = true
+            return nil
+        case "legacy":
+            interactionEventsUsePigeon = false
+            return nil
+        default:
+            return "invalid_route"
+        }
+    }
+
     /// Tears down the session: stops the method-channel handler, detaches every
     /// framework delegate, stops location work and fails any pending result.
     /// Safe to call more than once (from the platform wrapper and from deinit).
@@ -859,6 +898,8 @@ class MapSession: NSObject {
         userLocationIconsBridge = nil
         lifecycleEventsBridge?.close()
         lifecycleEventsBridge = nil
+        interactionEventsBridge?.close()
+        interactionEventsBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil
@@ -1289,6 +1330,14 @@ class MapSession: NSObject {
     }
 
     func onSingleTap(location: CLLocationCoordinate2D) {
+        // Exactly one delivery route per attachment: the negotiated
+        // interaction route owns presses and forwards the host's raw
+        // doubles (full precision, no map round-trip); every other
+        // attachment (JNI, opt-out) keeps the legacy plane.
+        if interactionEventsUsePigeon, let bridge = interactionEventsBridge {
+            bridge.emitSinglePress(latitude: location.latitude, longitude: location.longitude)
+            return
+        }
         DispatchQueue.main.async {
             self.channel.invokeMethod("receiveSinglePress", arguments: location.toGeoPoint())
         }
@@ -1296,6 +1345,10 @@ class MapSession: NSObject {
     }
 
     func onLongTap(location: CLLocationCoordinate2D) {
+        if interactionEventsUsePigeon, let bridge = interactionEventsBridge {
+            bridge.emitLongPress(latitude: location.latitude, longitude: location.longitude)
+            return
+        }
         DispatchQueue.main.async {
             self.channel.invokeMethod("receiveLongPress", arguments: location.toGeoPoint())
         }

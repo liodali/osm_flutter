@@ -2155,3 +2155,99 @@ class NativeMapLifecycleEventsApi: NativeMapLifecycleEventsApiProtocol {
     }
   }
 }
+
+/// Generated native-to-Dart map-interaction event route for one map session.
+///
+/// The host advertises the `events.interaction` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#interaction#route` selection: the
+/// host defaults to the legacy event plane (`receiveSinglePress` /
+/// `receiveLongPress` method-channel messages) and switches interaction
+/// delivery to these callbacks only after a selection validated against
+/// the session identity. Exactly one delivery route is active per
+/// attachment: once switched, the host never emits interaction events on
+/// the legacy plane, and attachments that never select this route (older
+/// hosts, non-opt-in, JNI command planes) keep the legacy plane untouched.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to; clients
+/// drop callbacks whose token/generation does not match the attachment
+/// (stale sessions after view replacement or disposal).
+///
+/// Delivery contract: single presses and long presses are discrete user
+/// interactions. Each occurrence delivers exactly once through exactly one
+/// route, and repeats are never coalesced — two identical taps deliver two
+/// events. Coordinates travel as wire doubles, preserving the host's full
+/// precision without a map round-trip.
+///
+/// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
+protocol NativeMapInteractionEventsApiProtocol {
+  /// The user single-pressed the map at the geographic coordinate.
+  ///
+  /// `latitude` / `longitude` are the press position in degrees with the
+  /// host's full double precision.
+  @MainActor func onSinglePress(session sessionArg: NativeCameraSession, latitude latitudeArg: Double, longitude longitudeArg: Double) async throws
+  /// The user long-pressed the map at the geographic coordinate.
+  ///
+  /// `latitude` / `longitude` are the press position in degrees with the
+  /// host's full double precision.
+  @MainActor func onLongPress(session sessionArg: NativeCameraSession, latitude latitudeArg: Double, longitude longitudeArg: Double) async throws
+}
+class NativeMapInteractionEventsApi: NativeMapInteractionEventsApiProtocol {
+  private let binaryMessenger: FlutterBinaryMessenger
+  private let messageChannelSuffix: String
+  init(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String = "") {
+    self.binaryMessenger = binaryMessenger
+    self.messageChannelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+  }
+  var codec: NativeMapCameraPigeonCodec {
+    return NativeMapCameraPigeonCodec.shared
+  }
+  /// The user single-pressed the map at the geographic coordinate.
+  ///
+  /// `latitude` / `longitude` are the press position in degrees with the
+  /// host's full double precision.
+  @MainActor func onSinglePress(session sessionArg: NativeCameraSession, latitude latitudeArg: Double, longitude longitudeArg: Double) async throws {
+    return try await withCheckedThrowingContinuation { continuation in
+      let channelName: String = "dev.flutter.pigeon.flutter_osm_interface.NativeMapInteractionEventsApi.onSinglePress\(messageChannelSuffix)"
+      let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+      channel.sendMessage([sessionArg, latitudeArg, longitudeArg] as [Any?]) { response in
+        guard let listResponse = response as? [Any?] else {
+          continuation.resume(throwing: createConnectionError(withChannelName: channelName))
+          return
+        }
+        if listResponse.count > 1 {
+          let code: String = listResponse[0] as! String
+          let message: String? = nilOrValue(listResponse[1])
+          let details: String? = nilOrValue(listResponse[2])
+          continuation.resume(throwing: PigeonError(code: code, message: message, details: details))
+        } else {
+          continuation.resume()
+        }
+      }
+    }
+  }
+  /// The user long-pressed the map at the geographic coordinate.
+  ///
+  /// `latitude` / `longitude` are the press position in degrees with the
+  /// host's full double precision.
+  @MainActor func onLongPress(session sessionArg: NativeCameraSession, latitude latitudeArg: Double, longitude longitudeArg: Double) async throws {
+    return try await withCheckedThrowingContinuation { continuation in
+      let channelName: String = "dev.flutter.pigeon.flutter_osm_interface.NativeMapInteractionEventsApi.onLongPress\(messageChannelSuffix)"
+      let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+      channel.sendMessage([sessionArg, latitudeArg, longitudeArg] as [Any?]) { response in
+        guard let listResponse = response as? [Any?] else {
+          continuation.resume(throwing: createConnectionError(withChannelName: channelName))
+          return
+        }
+        if listResponse.count > 1 {
+          let code: String = listResponse[0] as! String
+          let message: String? = nilOrValue(listResponse[1])
+          let details: String? = nilOrValue(listResponse[2])
+          continuation.resume(throwing: PigeonError(code: code, message: message, details: details))
+        } else {
+          continuation.resume()
+        }
+      }
+    }
+  }
+}
