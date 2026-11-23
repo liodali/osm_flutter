@@ -80,6 +80,9 @@ import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeCameraBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLayersBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLifecycleEventsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeInteractionEventsBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeMarkerEventsBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeRoadEventsBridge
+import hamza.dali.flutter_osm_plugin.pigeon.NativeTappedRoad
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationUpdatesBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeTrackingBridge
@@ -142,6 +145,10 @@ internal class MapscoreMapSession(
 
     private var pigeonInteractionEventsBridge: PigeonNativeInteractionEventsBridge? = null
 
+    private var pigeonMarkerEventsBridge: PigeonNativeMarkerEventsBridge? = null
+
+    private var pigeonRoadEventsBridge: PigeonNativeRoadEventsBridge? = null
+
     /**
      * Frozen interaction delivery route for this attachment: the default
      * keeps the legacy `receiveSinglePress` / `receiveLongPress` event
@@ -152,6 +159,18 @@ internal class MapscoreMapSession(
      * needed (unlike the lifecycle route).
      */
     @Volatile private var interactionEventsUsePigeon = false
+
+    /**
+     * Frozen marker interaction delivery route for this attachment, with
+     * the same contract as the interaction route.
+     */
+    @Volatile private var markerEventsUsePigeon = false
+
+    /**
+     * Frozen road tap delivery route for this attachment, with the same
+     * contract as the interaction route.
+     */
+    @Volatile private var roadEventsUsePigeon = false
 
     /**
      * Frozen lifecycle delivery route for this attachment: the default
@@ -394,10 +413,20 @@ internal class MapscoreMapSession(
                         it.iconInfo?.getIdentifier() == icon.getIdentifier()
                     }?.identifier
                     scope?.launch(Dispatchers.Main) {
-                        // Preserve the legacy callback while giving the typed
-                        // Android controller stable marker identity.
-                        eventSink.emit("receiveGeoPoint", h)
-                        markerId?.let { emitMarkerTap(it, lat, lon) }
+                        // Exactly one delivery route per attachment: the
+                        // negotiated marker route owns marker presses and
+                        // forwards the host's raw doubles; the typed Android
+                        // controller's marker-tap plane is untouched either
+                        // way.
+                        val markerBridge = pigeonMarkerEventsBridge
+                        if (markerEventsUsePigeon && markerBridge != null) {
+                            markerBridge.emitSinglePress(lat, lon)
+                        } else {
+                            // Preserve the legacy callback while giving the
+                            // typed Android controller stable marker identity.
+                            eventSink.emit("receiveGeoPoint", h)
+                            markerId?.let { emitMarkerTap(it, lat, lon) }
+                        }
                     }
                 }
                 return true
@@ -411,7 +440,12 @@ internal class MapscoreMapSession(
                     h["lat"] = lat
                     h["lon"] = lon
                     scope?.launch(Dispatchers.Main) {
-                        eventSink.emit("receiveGeoPointLongPress", h)
+                        val markerBridge = pigeonMarkerEventsBridge
+                        if (markerEventsUsePigeon && markerBridge != null) {
+                            markerBridge.emitLongPress(lat, lon)
+                        } else {
+                            eventSink.emit("receiveGeoPointLongPress", h)
+                        }
                     }
                 }
                 return true
@@ -429,6 +463,25 @@ internal class MapscoreMapSession(
                         it.matchesIdentifier(identifier)
                     } ?: return@launch
                     val helper = mapView?.getCoordinateConversionHelper() ?: return@launch
+                    // Exactly one delivery route per attachment: the
+                    // negotiated road route owns road taps and carries the
+                    // legacy payload field for field (key, distance,
+                    // duration; the legacy `roadPoints` list was never
+                    // decoded by the client, so the typed payload omits it
+                    // and the public route stays empty exactly as before).
+                    val roadBridge = pigeonRoadEventsBridge
+                    if (roadEventsUsePigeon && roadBridge != null) {
+                        roadBridge.emitRoadTap(
+                            NativeTappedRoad(
+                                key = road.idRoad,
+                                distance = road.roadDistance,
+                                duration = road.roadDuration,
+                                routePoints = null,
+                                instructions = null,
+                            ),
+                        )
+                        return@launch
+                    }
                     val map = HashMap<String, Any>()
                     map["roadPoints"] = road.coordinates.map { it.toHashMap(helper) }
                     map["distance"] = road.roadDistance
@@ -991,6 +1044,59 @@ internal class MapscoreMapSession(
             }
             "legacy" -> {
                 interactionEventsUsePigeon = false
+                null
+            }
+            else -> "invalid_route"
+        }
+    }
+
+    /**
+     * Attach-time marker event route selection. Validates the session
+     * identity so a stale selection can never switch another attachment's
+     * delivery route. Returns null on success, a typed error code otherwise.
+     */
+    internal fun selectMarkerEventRoute(
+        sessionToken: String,
+        generation: Long,
+        route: String,
+    ): String? {
+        if (released) return "disposed"
+        if (sessionToken != this.sessionToken || generation != this.generation) {
+            return "stale_session"
+        }
+        return when (route) {
+            "pigeon" -> {
+                markerEventsUsePigeon = true
+                null
+            }
+            "legacy" -> {
+                markerEventsUsePigeon = false
+                null
+            }
+            else -> "invalid_route"
+        }
+    }
+
+    /**
+     * Attach-time road event route selection. Same contract as the marker
+     * selection, scoped to road taps.
+     */
+    internal fun selectRoadEventRoute(
+        sessionToken: String,
+        generation: Long,
+        route: String,
+    ): String? {
+        if (released) return "disposed"
+        if (sessionToken != this.sessionToken || generation != this.generation) {
+            return "stale_session"
+        }
+        return when (route) {
+            "pigeon" -> {
+                roadEventsUsePigeon = true
+                null
+            }
+            "legacy" -> {
+                roadEventsUsePigeon = false
                 null
             }
             else -> "invalid_route"
@@ -2372,6 +2478,10 @@ internal class MapscoreMapSession(
         pigeonLifecycleEventsBridge = null
         pigeonInteractionEventsBridge?.close()
         pigeonInteractionEventsBridge = null
+        pigeonMarkerEventsBridge?.close()
+        pigeonMarkerEventsBridge = null
+        pigeonRoadEventsBridge?.close()
+        pigeonRoadEventsBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -2428,6 +2538,8 @@ internal class MapscoreMapSession(
             bootstrapProvider = ::pigeonBootstrapInfo,
             lifecycleRouteSelector = ::selectLifecycleEventRoute,
             interactionRouteSelector = ::selectInteractionEventRoute,
+            markerRouteSelector = ::selectMarkerEventRoute,
+            roadRouteSelector = ::selectRoadEventRoute,
         )
         if (eventSink === NoopMapEventSink) {
             eventSink = legacyChannel
@@ -2493,6 +2605,22 @@ internal class MapscoreMapSession(
         // alongside the legacy event plane; delivery switches only after
         // the validated pre-initialization route selection.
         pigeonInteractionEventsBridge = PigeonNativeInteractionEventsBridge(
+            messenger = binaryMessenger,
+            viewId = id,
+            sessionToken = sessionToken,
+            generation = generation,
+        )
+        // Generated marker interaction callbacks live alongside the legacy
+        // event plane; delivery switches only after the validated
+        // pre-initialization route selection.
+        pigeonMarkerEventsBridge = PigeonNativeMarkerEventsBridge(
+            messenger = binaryMessenger,
+            viewId = id,
+            sessionToken = sessionToken,
+            generation = generation,
+        )
+        // Generated road tap callbacks likewise.
+        pigeonRoadEventsBridge = PigeonNativeRoadEventsBridge(
             messenger = binaryMessenger,
             viewId = id,
             sessionToken = sessionToken,

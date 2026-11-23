@@ -1050,6 +1050,16 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
           NativeUserLocationIcons.fromList(it)
         }
       }
+      143.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          NativeRoadInstruction.fromList(it)
+        }
+      }
+      144.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          NativeTappedRoad.fromList(it)
+        }
+      }
       else -> super.readValueOfType(type, buffer)
     }
   }
@@ -1109,6 +1119,14 @@ private open class NativeMapCameraPigeonCodec : StandardMessageCodec() {
       }
       is NativeUserLocationIcons -> {
         stream.write(142)
+        writeValue(stream, value.toList())
+      }
+      is NativeRoadInstruction -> {
+        stream.write(143)
+        writeValue(stream, value.toList())
+      }
+      is NativeTappedRoad -> {
+        stream.write(144)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -2412,6 +2430,232 @@ class NativeMapInteractionEventsApi(private val binaryMessenger: BinaryMessenger
       val channelName = "dev.flutter.pigeon.flutter_osm_interface.NativeMapInteractionEventsApi.onLongPress$separatedMessageChannelSuffix"
       val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
       channel.send(listOf(sessionArg, latitudeArg, longitudeArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
+        } else {
+          continuation.resumeWithException(NativeMapCameraPigeonUtils.createConnectionError(channelName))
+        } 
+      }
+    }
+  }
+}
+/**
+ * One navigation instruction of a tapped road, anchored at its geographic
+ * position with the host's full double precision.
+ */
+data class NativeRoadInstruction (
+  val instruction: String,
+  val latitude: Double,
+  val longitude: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): NativeRoadInstruction {
+      val instruction = pigeonVar_list[0] as String
+      val latitude = pigeonVar_list[1] as Double
+      val longitude = pigeonVar_list[2] as Double
+      return NativeRoadInstruction(instruction, latitude, longitude)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      instruction,
+      latitude,
+      longitude,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as NativeRoadInstruction
+    return NativeMapCameraPigeonUtils.deepEquals(this.instruction, other.instruction) && NativeMapCameraPigeonUtils.deepEquals(this.latitude, other.latitude) && NativeMapCameraPigeonUtils.deepEquals(this.longitude, other.longitude)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.instruction)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.latitude)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.longitude)
+    return result
+  }
+  override fun toString(): String {
+    return "NativeRoadInstruction(instruction=$instruction, latitude=$latitude, longitude=$longitude)"
+  }
+}
+
+/**
+ * The tapped road's information, carrying the legacy `receiveRoad` payload
+ * unchanged: the road key, optional distance/duration, the optional encoded
+ * route polyline and the optional turn-by-turn instructions. A null
+ * `routePoints` decodes to an empty route, matching hosts that do not keep
+ * an encoded polyline for manually drawn roads.
+ */
+data class NativeTappedRoad (
+  val key: String,
+  val distance: Double?,
+  val duration: Double?,
+  val routePoints: String?,
+  val instructions: List<NativeRoadInstruction?>?
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): NativeTappedRoad {
+      val key = pigeonVar_list[0] as String
+      val distance = pigeonVar_list[1] as Double?
+      val duration = pigeonVar_list[2] as Double?
+      val routePoints = pigeonVar_list[3] as String?
+      val instructions = pigeonVar_list[4] as List<NativeRoadInstruction?>?
+      return NativeTappedRoad(key, distance, duration, routePoints, instructions)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      key,
+      distance,
+      duration,
+      routePoints,
+      instructions,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as NativeTappedRoad
+    return NativeMapCameraPigeonUtils.deepEquals(this.key, other.key) && NativeMapCameraPigeonUtils.deepEquals(this.distance, other.distance) && NativeMapCameraPigeonUtils.deepEquals(this.duration, other.duration) && NativeMapCameraPigeonUtils.deepEquals(this.routePoints, other.routePoints) && NativeMapCameraPigeonUtils.deepEquals(this.instructions, other.instructions)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.key)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.distance)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.duration)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.routePoints)
+    result = 31 * result + NativeMapCameraPigeonUtils.deepHash(this.instructions)
+    return result
+  }
+  override fun toString(): String {
+    return "NativeTappedRoad(key=$key, distance=$distance, duration=$duration, routePoints=$routePoints, instructions=$instructions)"
+  }
+}
+
+/**
+ * Generated native-to-Dart marker interaction event route for one map
+ * session.
+ *
+ * The host advertises the `events.markers` capability only when it
+ * implements this surface. The route is negotiated before initialization
+ * through the legacy-channel `map#events#markers#route` selection with the
+ * same contract as the interaction family: the host defaults to the legacy
+ * event plane (`receiveGeoPoint` / `receiveGeoPointLongPress`
+ * method-channel messages carrying the marker position) and switches
+ * marker interaction delivery to these callbacks only after a selection
+ * validated against the session identity. Exactly one delivery route is
+ * active per attachment.
+ *
+ * Every callback carries the [NativeCameraSession] it belongs to and the
+ * marker's geographic position as raw doubles (full host precision);
+ * clients drop callbacks whose token/generation does not match the
+ * attachment. Marker interactions are discrete: each occurrence delivers
+ * exactly once and repeats are never coalesced.
+ */
+class NativeMapMarkerEventsApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+  companion object {
+    /** The codec used by NativeMapMarkerEventsApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      NativeMapCameraPigeonCodec()
+    }
+  }
+  /**
+   * The user single-pressed the marker at the geographic coordinate.
+   */
+  suspend fun onMarkerSinglePress(sessionArg: NativeCameraSession, latitudeArg: Double, longitudeArg: Double)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkerEventsApi.onMarkerSinglePress$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(sessionArg, latitudeArg, longitudeArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
+        } else {
+          continuation.resumeWithException(NativeMapCameraPigeonUtils.createConnectionError(channelName))
+        } 
+      }
+    }
+  }
+  /**
+   * The user long-pressed the marker at the geographic coordinate.
+   */
+  suspend fun onMarkerLongPress(sessionArg: NativeCameraSession, latitudeArg: Double, longitudeArg: Double)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.flutter_osm_interface.NativeMapMarkerEventsApi.onMarkerLongPress$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(sessionArg, latitudeArg, longitudeArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
+        } else {
+          continuation.resumeWithException(NativeMapCameraPigeonUtils.createConnectionError(channelName))
+        } 
+      }
+    }
+  }
+}
+
+/**
+ * Generated native-to-Dart road tap event route for one map session.
+ *
+ * The host advertises the `events.roads` capability only when it implements
+ * this surface. The route is negotiated before initialization through the
+ * legacy-channel `map#events#roads#route` selection with the same contract
+ * as the interaction family: the host defaults to the legacy event plane
+ * (the `receiveRoad` method-channel message) and switches road tap delivery
+ * to this callback only after a selection validated against the session
+ * identity. Exactly one delivery route is active per attachment.
+ *
+ * The callback carries the [NativeCameraSession] it belongs to and the
+ * tapped road's [NativeTappedRoad] payload, which the client maps into the
+ * public road tap event exactly as the legacy payload decoded — no field is
+ * gained or lost. Road taps are discrete: each occurrence delivers once.
+ */
+class NativeMapRoadEventsApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+  companion object {
+    /** The codec used by NativeMapRoadEventsApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      NativeMapCameraPigeonCodec()
+    }
+  }
+  /**
+   * The user tapped the road identified by the payload's key.
+   */
+  suspend fun onRoadTap(sessionArg: NativeCameraSession, roadArg: NativeTappedRoad)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.flutter_osm_interface.NativeMapRoadEventsApi.onRoadTap$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(sessionArg, roadArg)) {
         if (it is List<*>) {
           if (it.size > 1) {
             continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))

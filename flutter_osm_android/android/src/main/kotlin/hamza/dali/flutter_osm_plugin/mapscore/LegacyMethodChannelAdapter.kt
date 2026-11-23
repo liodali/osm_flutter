@@ -110,6 +110,8 @@ internal class LegacyMethodChannelAdapter(
     private val bootstrapProvider: (() -> Map<String, Any?>)? = null,
     private val lifecycleRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
     private val interactionRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
+    private val markerRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
+    private val roadRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
 ) : MapEventSink, MethodChannel.MethodCallHandler {
     private val channel = MethodChannel(messenger, "plugins.dali.hamza/osmview_$viewId")
     private val eventSink = MethodChannelMapEventSink(channel)
@@ -132,45 +134,41 @@ internal class LegacyMethodChannelAdapter(
             return
         }
         if (call.method == NATIVE_LIFECYCLE_ROUTE_METHOD) {
-            // Lifecycle event route selection: negotiated before
-            // initialization so exactly one delivery route is active per
-            // attachment. The selector validates the session identity and
-            // returns null on success or a typed error code.
-            val selector = lifecycleRouteSelector
-            val args = call.arguments as? Map<*, *>
-            val token = args?.get("sessionToken") as? String
-            val generation = (args?.get("generation") as? Number)?.toLong()
-            val route = args?.get("route") as? String
-            if (selector == null || token == null || generation == null || route == null) {
-                result.error("invalid_route", "malformed lifecycle route selection", null)
-                return
-            }
-            val errorCode = selector(token, generation, route)
-            if (errorCode == null) {
-                result.success(true)
-            } else {
-                result.error(errorCode, "lifecycle event route rejected", null)
-            }
+            // Event route selections are negotiated before initialization so
+            // exactly one delivery route is active per attachment.
+            handleEventRouteSelection(
+                call,
+                result,
+                selector = lifecycleRouteSelector,
+                family = "lifecycle",
+            )
             return
         }
         if (call.method == NATIVE_INTERACTION_ROUTE_METHOD) {
-            // Interaction event route selection: same contract as the
-            // lifecycle selection, scoped to single/long presses.
-            val selector = interactionRouteSelector
-            val args = call.arguments as? Map<*, *>
-            val token = args?.get("sessionToken") as? String
-            val generation = (args?.get("generation") as? Number)?.toLong()
-            val route = args?.get("route") as? String
-            if (selector == null || token == null || generation == null || route == null) {
-                result.error("invalid_route", "malformed interaction route selection", null)
-                return
-            }
-            val errorCode = selector(token, generation, route)
-            if (errorCode == null) {
-                result.success(true)
-            } else {
-                result.error(errorCode, "interaction event route rejected", null)
-            }
+            handleEventRouteSelection(
+                call,
+                result,
+                selector = interactionRouteSelector,
+                family = "interaction",
+            )
+            return
+        }
+        if (call.method == NATIVE_MARKER_ROUTE_METHOD) {
+            handleEventRouteSelection(
+                call,
+                result,
+                selector = markerRouteSelector,
+                family = "marker",
+            )
+            return
+        }
+        if (call.method == NATIVE_ROAD_ROUTE_METHOD) {
+            handleEventRouteSelection(
+                call,
+                result,
+                selector = roadRouteSelector,
+                family = "road",
+            )
             return
         }
         val command = LegacyMapCommand.fromMethodName(call.method)
@@ -190,6 +188,33 @@ internal class LegacyMethodChannelAdapter(
         eventSink.emit(method, arguments)
     }
 
+    /**
+     * Shared event-route selection handling: the payload is validated, the
+     * session selector decides, and typed error codes reach the Dart
+     * client verbatim. Returns null on success or a typed error code.
+     */
+    private fun handleEventRouteSelection(
+        call: MethodCall,
+        result: MethodChannel.Result,
+        selector: ((sessionToken: String, generation: Long, route: String) -> String?)?,
+        family: String,
+    ) {
+        val args = call.arguments as? Map<*, *>
+        val token = args?.get("sessionToken") as? String
+        val generation = (args?.get("generation") as? Number)?.toLong()
+        val route = args?.get("route") as? String
+        if (selector == null || token == null || generation == null || route == null) {
+            result.error("invalid_route", "malformed $family route selection", null)
+            return
+        }
+        val errorCode = selector(token, generation, route)
+        if (errorCode == null) {
+            result.success(true)
+        } else {
+            result.error(errorCode, "$family event route rejected", null)
+        }
+    }
+
     override fun close() {
         eventSink.close()
         channel.setMethodCallHandler(null)
@@ -204,5 +229,11 @@ internal class LegacyMethodChannelAdapter(
 
         /** Attach-time interaction event route selection (before initialization). */
         const val NATIVE_INTERACTION_ROUTE_METHOD = "map#events#interaction#route"
+
+        /** Attach-time marker event route selection (before initialization). */
+        const val NATIVE_MARKER_ROUTE_METHOD = "map#events#markers#route"
+
+        /** Attach-time road event route selection (before initialization). */
+        const val NATIVE_ROAD_ROUTE_METHOD = "map#events#roads#route"
     }
 }
