@@ -200,6 +200,11 @@ internal class PigeonNativeCameraBridge(
         /// the `map#events#lifecycle#route` selection are implemented.
         const val CAPABILITY_LIFECYCLE_EVENTS = "events.lifecycle"
 
+        /// Native-to-Dart interaction callbacks: single and long presses.
+        /// Advertised only because `PigeonNativeInteractionEventsBridge`
+        /// and the `map#events#interaction#route` selection are implemented.
+        const val CAPABILITY_INTERACTION_EVENTS = "events.interaction"
+
         /** Typed error code for the markers family. */
         const val CODE_MARKERS_NOT_READY = "markers_not_ready"
 
@@ -229,6 +234,7 @@ internal class PigeonNativeCameraBridge(
                 CAPABILITY_LOCATION_ICONS,
                 CAPABILITY_TRACKING_OPTIONAL_ANCHOR,
                 CAPABILITY_LIFECYCLE_EVENTS,
+                CAPABILITY_INTERACTION_EVENTS,
             ),
             "sessionToken" to sessionToken,
             "generation" to generation,

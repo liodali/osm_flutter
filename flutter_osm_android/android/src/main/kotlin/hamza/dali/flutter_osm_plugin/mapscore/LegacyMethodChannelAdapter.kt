@@ -109,6 +109,7 @@ internal class LegacyMethodChannelAdapter(
     private val typedDispatch: (TypedMapCommand, MethodCall, MethodChannel.Result) -> Unit,
     private val bootstrapProvider: (() -> Map<String, Any?>)? = null,
     private val lifecycleRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
+    private val interactionRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
 ) : MapEventSink, MethodChannel.MethodCallHandler {
     private val channel = MethodChannel(messenger, "plugins.dali.hamza/osmview_$viewId")
     private val eventSink = MethodChannelMapEventSink(channel)
@@ -152,6 +153,26 @@ internal class LegacyMethodChannelAdapter(
             }
             return
         }
+        if (call.method == NATIVE_INTERACTION_ROUTE_METHOD) {
+            // Interaction event route selection: same contract as the
+            // lifecycle selection, scoped to single/long presses.
+            val selector = interactionRouteSelector
+            val args = call.arguments as? Map<*, *>
+            val token = args?.get("sessionToken") as? String
+            val generation = (args?.get("generation") as? Number)?.toLong()
+            val route = args?.get("route") as? String
+            if (selector == null || token == null || generation == null || route == null) {
+                result.error("invalid_route", "malformed interaction route selection", null)
+                return
+            }
+            val errorCode = selector(token, generation, route)
+            if (errorCode == null) {
+                result.success(true)
+            } else {
+                result.error(errorCode, "interaction event route rejected", null)
+            }
+            return
+        }
         val command = LegacyMapCommand.fromMethodName(call.method)
         if (command != null) {
             dispatch(command, call, result)
@@ -180,5 +201,8 @@ internal class LegacyMethodChannelAdapter(
 
         /** Attach-time lifecycle event route selection (before initialization). */
         const val NATIVE_LIFECYCLE_ROUTE_METHOD = "map#events#lifecycle#route"
+
+        /** Attach-time interaction event route selection (before initialization). */
+        const val NATIVE_INTERACTION_ROUTE_METHOD = "map#events#interaction#route"
     }
 }

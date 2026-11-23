@@ -79,6 +79,7 @@ import io.openmobilemaps.mapscore.shared.map.layers.polygon.PolygonLayerInterfac
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeCameraBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLayersBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLifecycleEventsBridge
+import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeInteractionEventsBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeLocationUpdatesBridge
 import hamza.dali.flutter_osm_plugin.pigeon.PigeonNativeTrackingBridge
@@ -138,6 +139,19 @@ internal class MapscoreMapSession(
     private var pigeonUserLocationIconsBridge: PigeonNativeUserLocationIconsBridge? = null
 
     private var pigeonLifecycleEventsBridge: PigeonNativeLifecycleEventsBridge? = null
+
+    private var pigeonInteractionEventsBridge: PigeonNativeInteractionEventsBridge? = null
+
+    /**
+     * Frozen interaction delivery route for this attachment: the default
+     * keeps the legacy `receiveSinglePress` / `receiveLongPress` event
+     * plane (the only route JNI attachments ever use); the validated
+     * pre-initialization selection switches presses to the generated
+     * Pigeon callbacks. Interactions are discrete user events that can
+     * only occur after initialization, so no pre-selection buffering is
+     * needed (unlike the lifecycle route).
+     */
+    @Volatile private var interactionEventsUsePigeon = false
 
     /**
      * Frozen lifecycle delivery route for this attachment: the default
@@ -467,6 +481,20 @@ internal class MapscoreMapSession(
             val helper = map.getCoordinateConversionHelper()
             val coord = map.getCamera().coordFromScreenPosition(Vec2F(x, y))
             val (lat, lon) = coord.toLatLon(helper)
+            // Exactly one delivery route per attachment: the negotiated
+            // interaction route owns presses and forwards the host's raw
+            // doubles (full precision, no map round-trip); every other
+            // attachment (JNI, opt-out) keeps the legacy plane. The bridge
+            // itself is fire-and-forget on the main thread.
+            val interactionBridge = pigeonInteractionEventsBridge
+            if (interactionEventsUsePigeon && interactionBridge != null) {
+                if (longPress) {
+                    interactionBridge.emitLongPress(lat, lon)
+                } else {
+                    interactionBridge.emitSinglePress(lat, lon)
+                }
+                return
+            }
             val h = HashMap<String, Double>()
             h["lat"] = lat
             h["lon"] = lon
@@ -936,6 +964,33 @@ internal class MapscoreMapSession(
             }
             "legacy" -> {
                 lifecycleRoute.select(usePigeon = false)
+                null
+            }
+            else -> "invalid_route"
+        }
+    }
+
+    /**
+     * Attach-time interaction event route selection. Validates the session
+     * identity so a stale selection can never switch another attachment's
+     * delivery route. Returns null on success, a typed error code otherwise.
+     */
+    internal fun selectInteractionEventRoute(
+        sessionToken: String,
+        generation: Long,
+        route: String,
+    ): String? {
+        if (released) return "disposed"
+        if (sessionToken != this.sessionToken || generation != this.generation) {
+            return "stale_session"
+        }
+        return when (route) {
+            "pigeon" -> {
+                interactionEventsUsePigeon = true
+                null
+            }
+            "legacy" -> {
+                interactionEventsUsePigeon = false
                 null
             }
             else -> "invalid_route"
@@ -2315,6 +2370,8 @@ internal class MapscoreMapSession(
         pigeonUserLocationIconsBridge = null
         pigeonLifecycleEventsBridge?.close()
         pigeonLifecycleEventsBridge = null
+        pigeonInteractionEventsBridge?.close()
+        pigeonInteractionEventsBridge = null
         if (::legacyChannel.isInitialized && activeEventSink !== legacyChannel) {
             legacyChannel.close()
         }
@@ -2370,6 +2427,7 @@ internal class MapscoreMapSession(
             typedDispatch = ::handleTypedChannelCommand,
             bootstrapProvider = ::pigeonBootstrapInfo,
             lifecycleRouteSelector = ::selectLifecycleEventRoute,
+            interactionRouteSelector = ::selectInteractionEventRoute,
         )
         if (eventSink === NoopMapEventSink) {
             eventSink = legacyChannel
@@ -2426,6 +2484,15 @@ internal class MapscoreMapSession(
         // alongside the legacy event plane; delivery switches only after
         // the validated pre-initialization route selection.
         pigeonLifecycleEventsBridge = PigeonNativeLifecycleEventsBridge(
+            messenger = binaryMessenger,
+            viewId = id,
+            sessionToken = sessionToken,
+            generation = generation,
+        )
+        // Generated interaction callbacks (single/long presses) live
+        // alongside the legacy event plane; delivery switches only after
+        // the validated pre-initialization route selection.
+        pigeonInteractionEventsBridge = PigeonNativeInteractionEventsBridge(
             messenger = binaryMessenger,
             viewId = id,
             sessionToken = sessionToken,
