@@ -158,6 +158,21 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM, {
     bool optIn = false,
   });
+
+  /// Freezes the interaction-event routing decision for one map attachment
+  /// (native-to-Dart single-press and long-press callbacks). Same contract
+  /// as [attachLifecycleEventsRoute]: the selection is negotiated with the
+  /// host before initialization so exactly one delivery route is active per
+  /// attachment. Hosts without the `events.interaction` capability keep
+  /// interactions on the legacy `receiveSinglePress` /
+  /// `receiveLongPress` messages. The public
+  /// [onSinglePressMapClickListener] / [onLongPressMapClickListener]
+  /// streams are unchanged either way; the legacy event plane used by JNI
+  /// attachments is never switched by this route.
+  Future<CameraRouteSelection> attachInteractionEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {

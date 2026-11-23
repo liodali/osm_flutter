@@ -6,6 +6,8 @@ export 'src/channel/pigeon/native_camera_bootstrap.dart';
 export 'src/channel/pigeon/native_camera_client.dart';
 export 'src/channel/pigeon/native_lifecycle_events_client.dart'
     show LifecycleRouteUncertainException;
+export 'src/channel/pigeon/native_interaction_events_client.dart'
+    show InteractionRouteUncertainException;
 export 'src/channel/pigeon/native_markers_client.dart';
 export 'src/osm_interface.dart';
 export 'src/map_controller/base_map_controller.dart';

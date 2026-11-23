@@ -99,6 +99,39 @@ const String kLifecycleEventsRoutePigeon = 'pigeon';
 /// Route value selecting the legacy method-channel lifecycle events.
 const String kLifecycleEventsRouteLegacy = 'legacy';
 
+/// Capability family carried by the native-to-Dart map-interaction event
+/// schema (single-press and long-press callbacks). Hosts without this
+/// capability keep interaction events on the legacy `receiveSinglePress` /
+/// `receiveLongPress` method-channel messages. Attachments that never
+/// negotiate this route — older hosts, non-opt-in applications and the JNI
+/// command plane — keep the legacy event plane untouched.
+const String kInteractionEventsCapability = 'events.interaction';
+
+/// Legacy-channel method name of the interaction event route selection.
+///
+/// Same contract as [kNativeLifecycleEventsRouteMethod], scoped to the
+/// `events.interaction` family: sent during attachment, before
+/// initialization, only after the bootstrap probe advertised
+/// [kInteractionEventsCapability]. The payload is
+/// `{sessionToken, generation, route}` with `route` one of
+/// [kInteractionEventsRoutePigeon] / [kInteractionEventsRouteLegacy].
+const String kNativeInteractionEventsRouteMethod = 'map#events#interaction#route';
+
+/// Route value selecting the generated Pigeon interaction callbacks.
+const String kInteractionEventsRoutePigeon = 'pigeon';
+
+/// Route value selecting the legacy method-channel interaction events.
+const String kInteractionEventsRouteLegacy = 'legacy';
+
+/// Base of the event-route selection failures whose outcome is uncertain:
+/// the selection timed out and a rollback to the legacy route could not be
+/// confirmed, so the host's active delivery route is unknown. Freezing
+/// either route could silently lose events, so attachment is aborted
+/// instead; the caller may retry, which re-negotiates from a clean state.
+abstract class RouteSelectionUncertainException implements Exception {
+  const RouteSelectionUncertainException();
+}
+
 /// Per-map message-channel suffix for generated Pigeon routes.
 ///
 /// Generated channel names become

@@ -654,3 +654,50 @@ abstract class NativeMapLifecycleEventsApi {
   /// The host restored the session's saved map state.
   void onMapRestored(NativeCameraSession session);
 }
+
+/// Generated native-to-Dart map-interaction event route for one map
+/// session.
+///
+/// The host advertises the `events.interaction` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#interaction#route` selection: the
+/// host defaults to the legacy event plane (`receiveSinglePress` /
+/// `receiveLongPress` method-channel messages) and switches interaction
+/// delivery to these callbacks only after a selection validated against
+/// the session identity. Exactly one delivery route is active per
+/// attachment: once switched, the host never emits interaction events on
+/// the legacy plane, and attachments that never select this route (older
+/// hosts, non-opt-in applications and the JNI command plane) keep the
+/// legacy event plane untouched.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to; clients
+/// drop callbacks whose token/generation does not match the attachment
+/// (stale sessions after view replacement or disposal).
+///
+/// Delivery contract: single presses and long presses are discrete user
+/// interactions. Each occurrence delivers exactly once through exactly one
+/// route, and repeats are never coalesced — two identical taps deliver two
+/// events. Coordinates travel as wire doubles, preserving the host's full
+/// precision without a map round-trip.
+@FlutterApi()
+abstract class NativeMapInteractionEventsApi {
+  /// The user single-pressed the map at the geographic coordinate.
+  ///
+  /// `latitude` / `longitude` are the press position in degrees with the
+  /// host's full double precision.
+  void onSinglePress(
+    NativeCameraSession session,
+    double latitude,
+    double longitude,
+  );
+
+  /// The user long-pressed the map at the geographic coordinate.
+  ///
+  /// `latitude` / `longitude` are the press position in degrees with the
+  /// host's full double precision.
+  void onLongPress(
+    NativeCameraSession session,
+    double latitude,
+    double longitude,
+  );
+}

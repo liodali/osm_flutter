@@ -21,6 +21,7 @@ import 'package:flutter_osm_interface/src/channel/pigeon/native_location_updates
 import 'package:flutter_osm_interface/src/channel/pigeon/native_tracking_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_user_location_icons_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_lifecycle_events_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_interaction_events_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_roads_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_markers_client.dart';
 import 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
@@ -86,6 +87,15 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// the `events.lifecycle` capability and accepted the pre-initialization
   /// route selection. Exactly one delivery route is active per attachment.
   final Map<int, PigeonLifecycleEventsClient?> _lifecycleEventsRoutes = {};
+
+  /// Frozen interaction-event route decision (null = legacy), same
+  /// lifecycle rules: native-to-Dart single-press and long-press callbacks
+  /// stay on the legacy `receiveSinglePress` / `receiveLongPress` messages
+  /// unless the host negotiated the `events.interaction` capability and
+  /// accepted the pre-initialization route selection. Exactly one delivery
+  /// route is active per attachment.
+  final Map<int, PigeonInteractionEventsClient?> _interactionEventsRoutes =
+      {};
 
   /// Bound for the lifecycle route selection and its rollback confirmation.
   /// Injectable so tests can drive the uncertain-outcome paths without
@@ -178,6 +188,18 @@ class MethodChannelOSM extends MobileOSMPlatform {
     } else {
       (_restoredReplay[idMap] ??= []).add(event);
     }
+  }
+
+  void _emitSinglePress(int idMap, double latitude, double longitude) {
+    if (_streamController.isClosed) return;
+    _streamController
+        .add(SingleTapEvent(idMap, GeoPoint(latitude: latitude, longitude: longitude)));
+  }
+
+  void _emitLongPress(int idMap, double latitude, double longitude) {
+    if (_streamController.isClosed) return;
+    _streamController
+        .add(LongTapEvent(idMap, GeoPoint(latitude: latitude, longitude: longitude)));
   }
 
   @override
@@ -333,10 +355,15 @@ class MethodChannelOSM extends MobileOSMPlatform {
           _emitMapRestored(idMap);
           break;
         case "receiveLongPress":
+          // Exactly one delivery route per attachment: while the generated
+          // interaction route owns this map, legacy tap messages (stale or
+          // duplicated host emissions) are dropped, never re-delivered.
+          if (_interactionEventsRoutes[idMap] != null) break;
           final result = call.arguments;
           _streamController.add(LongTapEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveSinglePress":
+          if (_interactionEventsRoutes[idMap] != null) break;
           final result = call.arguments;
           _streamController
               .add(SingleTapEvent(idMap, GeoPoint.fromMap(result)));
@@ -393,6 +420,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _routeAttachJobs.remove('$idOSM:$kTrackingCapability');
     _routeAttachJobs.remove('$idOSM:$kLocationIconsCapability');
     _routeAttachJobs.remove('$idOSM:$kLifecycleEventsCapability');
+    _routeAttachJobs.remove('$idOSM:$kInteractionEventsCapability');
     _hostProtocols.remove(idOSM);
     _cameraRoutes.remove(idOSM);
     _markersRoutes.remove(idOSM);
@@ -406,6 +434,9 @@ class MethodChannelOSM extends MobileOSMPlatform {
     // Unregister the generated lifecycle handlers before a replacement
     // attachment can register its own on the same per-view channels.
     _lifecycleEventsRoutes.remove(idOSM)?.dispose();
+    // Unregister the generated interaction handlers likewise; late
+    // callbacks then find no handler and the replacement registers cleanly.
+    _interactionEventsRoutes.remove(idOSM)?.dispose();
     // Drop any lifecycle events buffered before a listener arrived, and the
     // listened flags, so a replacement attachment starts from a clean slate.
     _readyReplay.remove(idOSM);
@@ -697,6 +728,45 @@ class MethodChannelOSM extends MobileOSMPlatform {
   PigeonLifecycleEventsClient? lifecycleEventsClientFor(int idOSM) =>
       _lifecycleEventsRoutes[idOSM];
 
+  @override
+  Future<CameraRouteSelection> attachInteractionEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonInteractionEventsClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kInteractionEventsCapability,
+      routes: _interactionEventsRoutes,
+      createClient: (bootstrap) => PigeonInteractionEventsClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+        onSinglePress: (latitude, longitude) =>
+            _emitSinglePress(idOSM, latitude, longitude),
+        onLongPress: (latitude, longitude) =>
+            _emitLongPress(idOSM, latitude, longitude),
+      ),
+      // Negotiate the delivery route with the host before initialization:
+      // the host switches interaction emission to the generated callbacks
+      // only after this selection succeeds, so exactly one route delivers.
+      activate: (client) => _selectNativeEventRoute(
+        idOSM: idOSM,
+        bootstrap: client.bootstrap,
+        routeMethod: kNativeInteractionEventsRouteMethod,
+        pigeonRoute: kInteractionEventsRoutePigeon,
+        legacyRoute: kInteractionEventsRouteLegacy,
+        uncertain: () => const InteractionRouteUncertainException(),
+      ),
+      deactivate: (client) => client.dispose(),
+    );
+  }
+
+  /// Active generated interaction-event client for [idOSM], or null when
+  /// the frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonInteractionEventsClient? interactionEventsClientFor(int idOSM) =>
+      _interactionEventsRoutes[idOSM];
+
   /// Tells the host which lifecycle delivery route this attachment uses.
   /// Runs on the legacy channel before any map mutation; a host that
   /// rejects the selection (stale session, unknown route, missing endpoint)
@@ -712,7 +782,34 @@ class MethodChannelOSM extends MobileOSMPlatform {
   Future<void> _selectNativeLifecycleEventsRoute(
     int idOSM,
     NativeProtocolBootstrap bootstrap,
-  ) async {
+  ) {
+    return _selectNativeEventRoute(
+      idOSM: idOSM,
+      bootstrap: bootstrap,
+      routeMethod: kNativeLifecycleEventsRouteMethod,
+      pigeonRoute: kLifecycleEventsRoutePigeon,
+      legacyRoute: kLifecycleEventsRouteLegacy,
+      uncertain: () => const LifecycleRouteUncertainException(),
+    );
+  }
+
+  /// Shared event-route selection: sends the pigeon selection on the
+  /// legacy channel, and on a timeout attempts a legacy rollback first.
+  ///
+  /// A confirmed rollback supersedes the pending pigeon selection (one
+  /// channel's messages are handled in order), so the original timeout is
+  /// rethrown and the caller keeps the legacy route. A rollback that itself
+  /// cannot be confirmed leaves the host's delivery route unknown: freezing
+  /// either route could silently lose events, so [uncertain] is thrown and
+  /// the attachment aborts without freezing a decision.
+  Future<void> _selectNativeEventRoute({
+    required int idOSM,
+    required NativeProtocolBootstrap bootstrap,
+    required String routeMethod,
+    required String pigeonRoute,
+    required String legacyRoute,
+    required RouteSelectionUncertainException Function() uncertain,
+  }) async {
     final channel = _channels[idOSM];
     if (channel == null) {
       throw StateError('map $idOSM is not attached');
@@ -723,18 +820,18 @@ class MethodChannelOSM extends MobileOSMPlatform {
     };
     try {
       await channel.invokeMethod<Object?>(
-        kNativeLifecycleEventsRouteMethod,
-        {...identity, 'route': kLifecycleEventsRoutePigeon},
+        routeMethod,
+        {...identity, 'route': pigeonRoute},
       ).timeout(lifecycleRouteSelectionTimeout);
     } on TimeoutException {
       try {
         await channel.invokeMethod<Object?>(
-          kNativeLifecycleEventsRouteMethod,
-          {...identity, 'route': kLifecycleEventsRouteLegacy},
+          routeMethod,
+          {...identity, 'route': legacyRoute},
         ).timeout(lifecycleRouteSelectionTimeout);
       } catch (_) {
         // The host's delivery route is unknown: never guess legacy.
-        throw const LifecycleRouteUncertainException();
+        throw uncertain();
       }
       // Rollback confirmed: the host is definitely on the legacy route,
       // so the definite-rejection fallback below cannot lose events.
@@ -894,10 +991,11 @@ class MethodChannelOSM extends MobileOSMPlatform {
               // the replacement's frozen route. It decides freshly.
               return CameraRouteSelection.legacy;
             }
-            if (error is LifecycleRouteUncertainException) {
+            if (error is RouteSelectionUncertainException) {
               // The host's delivery route is unknown: freezing legacy could
-              // silently lose every lifecycle event. Abort the attachment
-              // without freezing a decision; a retry re-negotiates.
+              // silently lose every event of this family. Abort the
+              // attachment without freezing a decision; a retry
+              // re-negotiates.
               rethrow;
             }
             // Definite rejection: the host kept (or confirmed) the legacy

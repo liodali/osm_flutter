@@ -28,7 +28,8 @@ import 'native_camera_bootstrap.dart';
 /// silently falling back to legacy would unregister the callbacks and lose
 /// every readiness/restoration event. Attachment is aborted instead; the
 /// caller may retry, which re-negotiates from a clean state.
-class LifecycleRouteUncertainException implements Exception {
+class LifecycleRouteUncertainException
+    extends RouteSelectionUncertainException {
   const LifecycleRouteUncertainException();
 
   @override
