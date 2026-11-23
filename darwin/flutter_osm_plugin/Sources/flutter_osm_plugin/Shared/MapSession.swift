@@ -66,6 +66,9 @@ class MapSession: NSObject {
     /// Generated road tap event route living alongside the legacy event
     /// plane.
     private(set) var roadEventsBridge: PigeonRoadEventsBridge?
+    /// Generated user-location event route (continuous fixes with heading)
+    /// living alongside the legacy event plane.
+    private(set) var locationEventsBridge: PigeonLocationEventsBridge?
     /// Frozen lifecycle delivery route for this attachment: false keeps the
     /// legacy `map#init` event plane (the default); true delivers readiness
     /// through the generated Pigeon callbacks. Switched only by the
@@ -85,6 +88,10 @@ class MapSession: NSObject {
     /// Frozen road tap delivery route for this attachment, with the same
     /// contract as the interaction route.
     private var roadEventsUsePigeon = false
+    /// Frozen user-location delivery route for this attachment, with the
+    /// same contract as the interaction route. Fixes keep the platform's
+    /// CoreLocation rate on either route; only where they travel changes.
+    private var locationEventsUsePigeon = false
     var zoomConfig: ZoomConfiguration = ZoomConfiguration(
         initZoom: 8, minZoom: 2, maxZoom: 19, step: 1)
     lazy var roadManager: OSMRoadManager = OSMRoadManager()
@@ -735,6 +742,10 @@ class MapSession: NSObject {
         roadEventsBridge = PigeonRoadEventsBridge(
             messenger: binaryMessenger, viewId: viewId,
             sessionToken: sessionToken, generation: generation)
+        // Generated user-location callbacks likewise.
+        locationEventsBridge = PigeonLocationEventsBridge(
+            messenger: binaryMessenger, viewId: viewId,
+            sessionToken: sessionToken, generation: generation)
         channel.setMethodCallHandler({ [weak self]
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             // The default Flutter channel uses the platform thread. Assert that
@@ -935,6 +946,27 @@ class MapSession: NSObject {
         }
     }
 
+    /// Attach-time user-location event route selection. Same contract as the
+    /// marker selection, scoped to location fixes.
+    func selectLocationEventRoute(
+        sessionToken: String, generation: Int64, route: String
+    ) -> String? {
+        if isDisposed { return "disposed" }
+        if sessionToken != self.sessionToken || generation != self.generation {
+            return "stale_session"
+        }
+        switch route {
+        case "pigeon":
+            locationEventsUsePigeon = true
+            return nil
+        case "legacy":
+            locationEventsUsePigeon = false
+            return nil
+        default:
+            return "invalid_route"
+        }
+    }
+
     /// Tears down the session: stops the method-channel handler, detaches every
     /// framework delegate, stops location work and fails any pending result.
     /// Safe to call more than once (from the platform wrapper and from deinit).
@@ -969,6 +1001,8 @@ class MapSession: NSObject {
         markerEventsBridge = nil
         roadEventsBridge?.close()
         roadEventsBridge = nil
+        locationEventsBridge?.close()
+        locationEventsBridge = nil
         channel.setMethodCallHandler(nil)
         mapOSM.onMapGestureDelegate = nil
         mapOSM.mapHandlerDelegate = nil
@@ -1077,7 +1111,19 @@ class MapSession: NSObject {
     func locationChanged(userLocation: CLLocationCoordinate2D, heading: Double) {
         let geoMap = userLocation.toUserLocation(heading: heading)
         latestUserLocation = userLocation
-        channel.invokeMethod("receiveUserLocation", arguments: geoMap)
+        // Exactly one delivery route per attachment: the negotiated
+        // user-location route forwards the host's raw doubles at the
+        // platform's own rate (one callback per delegate fix, no
+        // coalescing — the legacy plane's behavior); every other
+        // attachment keeps the legacy plane with its unchanged payload.
+        if locationEventsUsePigeon, let bridge = locationEventsBridge {
+            bridge.emitLocationChanged(
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+                heading: heading)
+        } else {
+            channel.invokeMethod("receiveUserLocation", arguments: geoMap)
+        }
         latestUserLocationHeading = heading
         updateOwnedUserLocationMarker(userLocation: userLocation, heading: heading)
         if (!isMovedToLocation || !canSkipFollow) && !userLocationWithoutControl && mapInitialized {

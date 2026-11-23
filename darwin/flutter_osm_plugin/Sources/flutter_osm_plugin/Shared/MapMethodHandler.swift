@@ -124,6 +124,29 @@ extension MapSession {
             } else {
                 result(200)
             }
+        case "map#events#location#route":
+            // User-location event route selection: same contract as the
+            // lifecycle selection, scoped to location fixes.
+            guard let args = call.arguments as? [String: Any],
+                  let token = args["sessionToken"] as? String,
+                  let generation = (args["generation"] as? NSNumber)?.int64Value,
+                  let route = args["route"] as? String
+            else {
+                result(FlutterError(
+                    code: "invalid_route",
+                    message: "malformed location route selection",
+                    details: nil))
+                return
+            }
+            if let errorCode = selectLocationEventRoute(
+                sessionToken: token, generation: generation, route: route) {
+                result(FlutterError(
+                    code: errorCode,
+                    message: "location event route rejected",
+                    details: nil))
+            } else {
+                result(200)
+            }
         case "init#ios#map":
             //channel.invokeMethod("map#init", arguments: true)
             if let tile = customTiles {
