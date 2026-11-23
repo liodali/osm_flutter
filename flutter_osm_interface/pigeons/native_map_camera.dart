@@ -12,8 +12,9 @@
 // tracking + user-location icons, session-scoped, plus the first
 // native-to-Dart callback family: map readiness and restoration
 // (`events.lifecycle`), map interactions (`events.interaction`), marker
-// interactions (`events.markers`) and road taps (`events.roads`). All other
-// events (user location, region changes) and the Apple init sequencing stay
+// interactions (`events.markers`), road taps (`events.roads`) and user
+// location updates (`events.location`). All other events (region changes)
+// and the Apple init sequencing stay
 // on their existing legacy channels; the legacy event plane also remains the
 // delivery route for JNI attachments, which never negotiate the typed event
 // route.
@@ -793,5 +794,40 @@ abstract class NativeMapRoadEventsApi {
   void onRoadTap(
     NativeCameraSession session,
     NativeTappedRoad road,
+  );
+}
+
+/// Generated native-to-Dart user-location event route for one map session.
+///
+/// The host advertises the `events.location` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#location#route` selection with the
+/// same contract as the interaction family: the host defaults to the legacy
+/// event plane (the `receiveUserLocation` method-channel message) and
+/// switches user-location delivery to this callback only after a selection
+/// validated against the session identity. Exactly one delivery route is
+/// active per attachment.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to and the
+/// fix as raw doubles: the position in degrees and the `heading` in degrees
+/// clockwise from true north, exactly the value the legacy payload carried
+/// (no normalization or unit conversion). Clients drop callbacks whose
+/// token/generation does not match the attachment.
+///
+/// Delivery contract: the callback inherits the host's location rate and
+/// coalescing unchanged — each fix the host would have emitted on the legacy
+/// plane is delivered once, on time, through exactly one route. Consumers
+/// that start the location flow (continuous updates, follow-me tracking,
+/// typed or legacy) share it; this route only changes where fixes travel.
+@FlutterApi()
+abstract class NativeMapLocationEventsApi {
+  /// A user-location fix: the position in degrees and the heading in
+  /// degrees clockwise from true north (0 when unknown), all with the
+  /// host's full double precision.
+  void onLocationChanged(
+    NativeCameraSession session,
+    double latitude,
+    double longitude,
+    double heading,
   );
 }

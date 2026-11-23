@@ -12,6 +12,8 @@ export 'src/channel/pigeon/native_marker_events_client.dart'
     show MarkerRouteUncertainException;
 export 'src/channel/pigeon/native_road_events_client.dart'
     show RoadRouteUncertainException;
+export 'src/channel/pigeon/native_location_events_client.dart'
+    show LocationRouteUncertainException;
 export 'src/channel/pigeon/native_markers_client.dart';
 export 'src/osm_interface.dart';
 export 'src/map_controller/base_map_controller.dart';

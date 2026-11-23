@@ -163,6 +163,27 @@ const String kRoadEventsRoutePigeon = 'pigeon';
 /// Route value selecting the legacy method-channel road tap event.
 const String kRoadEventsRouteLegacy = 'legacy';
 
+/// Capability family carried by the native-to-Dart user-location event
+/// schema (continuous location fixes with heading). Hosts without this
+/// capability keep fixes on the legacy `receiveUserLocation` method-channel
+/// message. Attachments that never negotiate this route — older hosts,
+/// non-opt-in applications and the JNI command plane — keep the legacy
+/// event plane untouched. The callback inherits the host's location rate
+/// and coalescing; it only changes where fixes travel.
+const String kLocationEventsCapability = 'events.location';
+
+/// Legacy-channel method name of the user-location event route selection.
+///
+/// Same contract as [kNativeLifecycleEventsRouteMethod], scoped to the
+/// `events.location` family.
+const String kNativeLocationEventsRouteMethod = 'map#events#location#route';
+
+/// Route value selecting the generated Pigeon user-location callback.
+const String kLocationEventsRoutePigeon = 'pigeon';
+
+/// Route value selecting the legacy method-channel user-location events.
+const String kLocationEventsRouteLegacy = 'legacy';
+
 /// Base of the event-route selection failures whose outcome is uncertain:
 /// the selection timed out and a rollback to the legacy route could not be
 /// confirmed, so the host's active delivery route is unknown. Freezing

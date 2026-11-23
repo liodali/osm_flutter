@@ -2495,3 +2495,66 @@ abstract class NativeMapRoadEventsApi {
     }
   }
 }
+
+/// Generated native-to-Dart user-location event route for one map session.
+///
+/// The host advertises the `events.location` capability only when it
+/// implements this surface. The route is negotiated before initialization
+/// through the legacy-channel `map#events#location#route` selection with the
+/// same contract as the interaction family: the host defaults to the legacy
+/// event plane (the `receiveUserLocation` method-channel message) and
+/// switches user-location delivery to this callback only after a selection
+/// validated against the session identity. Exactly one delivery route is
+/// active per attachment.
+///
+/// Every callback carries the [NativeCameraSession] it belongs to and the
+/// fix as raw doubles: the position in degrees and the `heading` in degrees
+/// clockwise from true north, exactly the value the legacy payload carried
+/// (no normalization or unit conversion). Clients drop callbacks whose
+/// token/generation does not match the attachment.
+///
+/// Delivery contract: the callback inherits the host's location rate and
+/// coalescing unchanged — each fix the host would have emitted on the legacy
+/// plane is delivered once, on time, through exactly one route. Consumers
+/// that start the location flow (continuous updates, follow-me tracking,
+/// typed or legacy) share it; this route only changes where fixes travel.
+abstract class NativeMapLocationEventsApi {
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  /// A user-location fix: the position in degrees and the heading in
+  /// degrees clockwise from true north (0 when unknown), all with the
+  /// host's full double precision.
+  void onLocationChanged(NativeCameraSession session, double latitude, double longitude, double heading);
+
+  static void setUp(NativeMapLocationEventsApi? api, {
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) 
+{
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.flutter_osm_interface.NativeMapLocationEventsApi.onLocationChanged$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final NativeCameraSession arg_session = args[0]! as NativeCameraSession;
+          final double arg_latitude = args[1]! as double;
+          final double arg_longitude = args[2]! as double;
+          final double arg_heading = args[3]! as double;
+          try {
+            api.onLocationChanged(arg_session, arg_latitude, arg_longitude, arg_heading);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+  }
+}

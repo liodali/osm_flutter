@@ -202,6 +202,22 @@ abstract class OSMPlatform extends PlatformInterface {
     int idOSM, {
     bool optIn = false,
   });
+
+  /// Freezes the user-location event routing decision for one map attachment
+  /// (native-to-Dart continuous location fixes with heading). Same contract
+  /// as [attachLifecycleEventsRoute]: negotiated before initialization so
+  /// exactly one delivery route is active per attachment. Hosts without
+  /// the `events.location` capability keep fixes on the legacy
+  /// `receiveUserLocation` message. The callback carries the position and
+  /// heading as raw doubles and inherits the host's location rate and
+  /// coalescing unchanged, whichever consumer started the flow (continuous
+  /// updates, follow-me tracking, typed or legacy). The public
+  /// [onUserPositionListener] stream is unchanged either way; the legacy
+  /// event plane used by JNI attachments is never switched by this route.
+  Future<CameraRouteSelection> attachLocationEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {

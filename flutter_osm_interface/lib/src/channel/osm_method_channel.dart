@@ -18,6 +18,7 @@ import 'package:flutter_osm_interface/src/channel/pigeon/native_layers_client.da
 import 'package:flutter_osm_interface/src/channel/pigeon/native_shapes_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_location_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_location_updates_client.dart';
+import 'package:flutter_osm_interface/src/channel/pigeon/native_location_events_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_tracking_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_user_location_icons_client.dart';
 import 'package:flutter_osm_interface/src/channel/pigeon/native_lifecycle_events_client.dart';
@@ -113,6 +114,14 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// capability and accepted the pre-initialization route selection.
   /// Exactly one delivery route is active per attachment.
   final Map<int, PigeonRoadEventsClient?> _roadEventsRoutes = {};
+
+  /// Frozen user-location event route decision (null = legacy), same
+  /// lifecycle rules: native-to-Dart location fixes stay on the legacy
+  /// `receiveUserLocation` message unless the host negotiated the
+  /// `events.location` capability and accepted the pre-initialization route
+  /// selection. Exactly one delivery route is active per attachment; the
+  /// host's location rate and coalescing are the same on either route.
+  final Map<int, PigeonLocationEventsClient?> _locationEventsRoutes = {};
 
   /// Bound for the lifecycle route selection and its rollback confirmation.
   /// Injectable so tests can drive the uncertain-outcome paths without
@@ -257,6 +266,25 @@ class MethodChannelOSM extends MobileOSMPlatform {
         ],
     };
     _streamController.add(RoadTapEvent(idMap, RoadInfo.fromMap(payload)));
+  }
+
+  /// Maps the typed fix into the public event exactly as the legacy
+  /// `receiveUserLocation` message decoded (same `UserLocation.fromMap`
+  /// path, raw heading preserved), so no value is gained, lost or converted
+  /// on either delivery route.
+  void _emitUserLocation(
+    int idMap,
+    double latitude,
+    double longitude,
+    double heading,
+  ) {
+    if (_streamController.isClosed) return;
+    _streamController.add(
+      UserLocationEvent(
+        idMap,
+        UserLocation.fromMap({'lat': latitude, 'lon': longitude, 'heading': heading}),
+      ),
+    );
   }
 
   @override
@@ -413,7 +441,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
 
   @override
   Stream<UserLocationEvent> onUserPositionListener(int idMap) {
-    return _events(idMap).whereType<UserLocationEvent>();
+    return _attachmentScoped<UserLocationEvent>(
+      idMap,
+      _events(idMap).whereType<UserLocationEvent>(),
+    );
   }
 
   @override
@@ -486,6 +517,10 @@ class MethodChannelOSM extends MobileOSMPlatform {
               .add(GeoPointLongPressEvent(idMap, GeoPoint.fromMap(result)));
           break;
         case "receiveUserLocation":
+          // Exactly one delivery route per attachment: while the generated
+          // user-location route owns this map, legacy fix messages are
+          // dropped, never re-delivered.
+          if (_locationEventsRoutes[idMap] != null) break;
           final result = call.arguments;
           _streamController
               .add(UserLocationEvent(idMap, UserLocation.fromMap(result)));
@@ -527,6 +562,7 @@ class MethodChannelOSM extends MobileOSMPlatform {
     _routeAttachJobs.remove('$idOSM:$kInteractionEventsCapability');
     _routeAttachJobs.remove('$idOSM:$kMarkerEventsCapability');
     _routeAttachJobs.remove('$idOSM:$kRoadEventsCapability');
+    _routeAttachJobs.remove('$idOSM:$kLocationEventsCapability');
     _hostProtocols.remove(idOSM);
     _cameraRoutes.remove(idOSM);
     _markersRoutes.remove(idOSM);
@@ -546,6 +582,8 @@ class MethodChannelOSM extends MobileOSMPlatform {
     // Unregister the generated marker and road event handlers likewise.
     _markerEventsRoutes.remove(idOSM)?.dispose();
     _roadEventsRoutes.remove(idOSM)?.dispose();
+    // Unregister the generated user-location event handler likewise.
+    _locationEventsRoutes.remove(idOSM)?.dispose();
     // Drop any lifecycle events buffered before a listener arrived, and the
     // listened flags, so a replacement attachment starts from a clean slate.
     _readyReplay.remove(idOSM);
@@ -951,6 +989,43 @@ class MethodChannelOSM extends MobileOSMPlatform {
   @visibleForTesting
   PigeonRoadEventsClient? roadEventsClientFor(int idOSM) =>
       _roadEventsRoutes[idOSM];
+
+  @override
+  Future<CameraRouteSelection> attachLocationEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  }) {
+    return _attachRoute<PigeonLocationEventsClient>(
+      idOSM: idOSM,
+      optIn: optIn,
+      capability: kLocationEventsCapability,
+      routes: _locationEventsRoutes,
+      createClient: (bootstrap) => PigeonLocationEventsClient(
+        viewId: idOSM,
+        bootstrap: bootstrap,
+        onLocationChanged: (latitude, longitude, heading) =>
+            _emitUserLocation(idOSM, latitude, longitude, heading),
+      ),
+      // Negotiate the delivery route with the host before initialization:
+      // the host switches location fixes to the generated callback only
+      // after this selection succeeds, so exactly one route delivers.
+      activate: (client) => _selectNativeEventRoute(
+        idOSM: idOSM,
+        bootstrap: client.bootstrap,
+        routeMethod: kNativeLocationEventsRouteMethod,
+        pigeonRoute: kLocationEventsRoutePigeon,
+        legacyRoute: kLocationEventsRouteLegacy,
+        uncertain: () => const LocationRouteUncertainException(),
+      ),
+      deactivate: (client) => client.dispose(),
+    );
+  }
+
+  /// Active generated user-location event client for [idOSM], or null when
+  /// the frozen decision selected the legacy route.
+  @visibleForTesting
+  PigeonLocationEventsClient? locationEventsClientFor(int idOSM) =>
+      _locationEventsRoutes[idOSM];
 
   /// Tells the host which lifecycle delivery route this attachment uses.
   /// Runs on the legacy channel before any map mutation; a host that
