@@ -44,21 +44,21 @@ class const MobileOsmFlutter({
   this.onMapIsReady,
   this.userLocationMarker,
   this.enableRotationByGesture = false,
-  this.useTypedCameraRoute = false,
-  this.useTypedMarkers = false,
-  this.useTypedLayers = false,
-  this.useTypedShapes = false,
-  this.useTypedRoads = false,
-  this.useTypedLocation = false,
-  this.useTypedLocationUpdates = false,
-  this.useTypedTracking = false,
-  this.useTypedLocationIcons = false,
-  this.useTypedLifecycleEvents = false,
-  this.useTypedInteractionEvents = false,
-  this.useTypedMarkerEvents = false,
-  this.useTypedRoadEvents = false,
-  this.useTypedLocationEvents = false,
-  this.useTypedRegionEvents = false,
+  this.useTypedCameraRoute = true,
+  this.useTypedMarkers = true,
+  this.useTypedLayers = true,
+  this.useTypedShapes = true,
+  this.useTypedRoads = true,
+  this.useTypedLocation = true,
+  this.useTypedLocationUpdates = true,
+  this.useTypedTracking = true,
+  this.useTypedLocationIcons = true,
+  this.useTypedLifecycleEvents = true,
+  this.useTypedInteractionEvents = true,
+  this.useTypedMarkerEvents = true,
+  this.useTypedRoadEvents = true,
+  this.useTypedLocationEvents = true,
+  this.useTypedRegionEvents = true,
 }) extends StatefulWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -80,61 +80,70 @@ class const MobileOsmFlutter({
   final Function(bool)? onMapIsReady;
   final UserLocationMaker? userLocationMarker;
   final bool enableRotationByGesture;
-  /// Opt-in routing of camera commands through the typed generated channel.
+  /// Typed routing of camera commands through the typed generated channel (the
+  /// default; `false` keeps the legacy route).
   final bool useTypedCameraRoute;
-  /// Opt-in routing of marker commands through the typed generated channel.
+  /// Typed routing of marker commands through the typed generated channel (the
+  /// default; `false` keeps the legacy route).
   final bool useTypedMarkers;
-  /// Opt-in routing of layer commands through the typed generated channel.
+  /// Typed routing of layer commands through the typed generated channel (the
+  /// default; `false` keeps the legacy route).
   final bool useTypedLayers;
-  /// Opt-in routing of shape commands through the typed generated channel.
+  /// Typed routing of shape commands through the typed generated channel (the
+  /// default; `false` keeps the legacy route).
   final bool useTypedShapes;
-  /// Opt-in routing of road commands through the typed generated channel.
+  /// Typed routing of road commands through the typed generated channel (the
+  /// default; `false` keeps the legacy route).
   final bool useTypedRoads;
-  /// Opt-in routing of location commands through the typed generated channel.
+  /// Typed routing of location commands through the typed generated channel
+  /// (the default; `false` keeps the legacy route).
   final bool useTypedLocation;
-  /// Opt-in routing of continuous-updates commands through the typed
-  /// generated channel.
+  /// Typed routing of continuous-updates commands through the typed generated
+  /// channel (the default; `false` keeps the legacy route).
   final bool useTypedLocationUpdates;
 
-  /// Opt-in routing of follow-me tracking through the generated channel
-  /// when the native host advertises the `location.tracking` capability.
+  /// Typed routing of follow-me tracking through the generated channel when the
+  /// native host advertises the `location.tracking` capability (the default;
+  /// `false` keeps the legacy route).
   final bool useTypedTracking;
 
-  /// Opt-in routing of the person/direction user-location icon replacement
+  /// Typed routing of the person/direction user-location icon replacement
   /// through the generated channel when the native host advertises the
-  /// `location.icons` capability.
+  /// `location.icons` capability (the default; `false` keeps the legacy route).
   final bool useTypedLocationIcons;
 
-  /// Opt-in routing of the native-to-Dart lifecycle events (readiness and
+  /// Typed routing of the native-to-Dart lifecycle events (readiness and
   /// restoration) through the generated callbacks when the native host
-  /// advertises the `events.lifecycle` capability.
+  /// advertises the `events.lifecycle` capability (the default; `false` keeps
+  /// the legacy route).
   final bool useTypedLifecycleEvents;
 
-  /// Opt-in routing of the native-to-Dart map interactions (single presses
-  /// and long presses) through the generated callbacks when the native host
-  /// advertises the `events.interaction` capability.
+  /// Typed routing of the native-to-Dart map interactions (single presses and
+  /// long presses) through the generated callbacks when the native host
+  /// advertises the `events.interaction` capability (the default; `false` keeps
+  /// the legacy route).
   final bool useTypedInteractionEvents;
 
-  /// Opt-in routing of the native-to-Dart marker interactions through the
-  /// generated callbacks when the native host advertises the
-  /// `events.markers` capability.
+  /// Typed routing of the native-to-Dart marker interactions through the
+  /// generated callbacks when the native host advertises the `events.markers`
+  /// capability (the default; `false` keeps the legacy route).
   final bool useTypedMarkerEvents;
 
-  /// Opt-in routing of the native-to-Dart road taps through the generated
-  /// callback when the native host advertises the `events.roads`
-  /// capability.
+  /// Typed routing of the native-to-Dart road taps through the generated
+  /// callback when the native host advertises the `events.roads` capability
+  /// (the default; `false` keeps the legacy route).
   final bool useTypedRoadEvents;
 
-  /// Opt-in routing of the native-to-Dart user-location fixes through the
-  /// generated callback when the native host advertises the
-  /// `events.location` capability. The host's location rate and coalescing
-  /// are unchanged on either route.
+  /// Typed routing of the native-to-Dart user-location fixes through the
+  /// generated callback when the native host advertises the `events.location`
+  /// capability. The host's location rate and coalescing are unchanged on
+  /// either route (the default; `false` keeps the legacy route).
   final bool useTypedLocationEvents;
 
-  /// Opt-in routing of the native-to-Dart visible-region changes through
-  /// the generated callback when the native host advertises the
-  /// `events.region` capability. The host's region-event rate and
-  /// coalescing are unchanged on either route.
+  /// Typed routing of the native-to-Dart visible-region changes through the
+  /// generated callback when the native host advertises the `events.region`
+  /// capability. The host's region-event rate and coalescing are unchanged on
+  /// either route (the default; `false` keeps the legacy route).
   final bool useTypedRegionEvents;
   final ZoomOption zoomOption;
   @override

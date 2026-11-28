@@ -5,6 +5,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/src/common/legacy_routes.dart';
 import 'package:flutter_osm_plugin_example/src/common/router_config.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
@@ -374,7 +375,8 @@ class _MainExampleState extends State<OldMainExample>
         children: [
           OSMFlutter(
             controller: controller,
-            osmOption: OSMOption(
+            // Legacy baseline: every typed route explicitly off.
+            osmOption: legacyOsmOption(
               enableRotationByGesture: true,
               zoomOption: const ZoomOption(
                 initZoom: 8,

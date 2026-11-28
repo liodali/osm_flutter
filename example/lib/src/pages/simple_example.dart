@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/src/common/legacy_routes.dart';
 
 class SimpleExample extends StatefulWidget {
   const SimpleExample({super.key});
@@ -86,7 +87,7 @@ class SimpleOSMState extends State<SimpleOSM>
     super.build(context);
     return OSMFlutter(
       controller: controller,
-      osmOption: const OSMOption(),
+      osmOption: legacyOsmOption(),
     );
   }
 

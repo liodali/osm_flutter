@@ -23,6 +23,8 @@ extension MapSession {
     /// Draws (or replaces) one road from full-precision coordinates.
     /// `zoomInto` fits the camera to the road, mirroring the legacy
     /// `zoomIntoRegion` behavior. Colors are packed `0xAARRGGBB` ints.
+    /// The road becomes "the last road" for `delete#road` without a key
+    /// (`removeLastRoad()`), like every other add path.
     func typedDrawRoad(
         id: String,
         coordinates: [CLLocationCoordinate2D],
@@ -41,6 +43,7 @@ extension MapSession {
             dotted: dotted)
         mapOSM.roadManager.addRoad(
             id: id, polylines: coordinates, configuration: configuration)
+        lastRoadKey = id
         if zoomInto {
             let box = coordinates.toBounds()
             mapOSM.moveToByBoundingBox(bounds: box, animated: true)
@@ -54,6 +57,9 @@ extension MapSession {
     func typedRemoveRoad(id: String) {
         mapOSM.roadManager.removeRoad(id: id)
         storedRoads.removeValue(forKey: id)
+        if lastRoadKey == id {
+            lastRoadKey = nil
+        }
     }
 
     /// Removes every road and wipes the stored tap metadata, mirroring the
@@ -61,6 +67,7 @@ extension MapSession {
     func typedClearRoads() {
         mapOSM.roadManager.removeAllRoads()
         storedRoads.removeAll()
+        lastRoadKey = nil
     }
 
     /// Builds the framework road configuration from the generated wire

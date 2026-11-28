@@ -112,101 +112,107 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPickerLocation(
-      controller: controller,
-      showDefaultMarkerPickWidget: true,
-      topWidgetPicker: Padding(
-        padding: const EdgeInsets.only(
-          top: 56,
-          left: 8,
-          right: 8,
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                PointerInterceptor(
-                  child: TextButton(
-                    style: TextButton.styleFrom(),
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Icon(
-                      Icons.arrow_back_ios,
+    // The picker no longer provides a Material scaffold: the page hosts
+    // it, so its Material widgets (the search field) find an ancestor.
+    return Scaffold(
+      body: CustomPickerLocation(
+        controller: controller,
+        showDefaultMarkerPickWidget: true,
+        topWidgetPicker: Padding(
+          padding: const EdgeInsets.only(
+            top: 56,
+            left: 8,
+            right: 8,
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  PointerInterceptor(
+                    child: TextButton(
+                      style: TextButton.styleFrom(),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Icon(
+                        Icons.arrow_back_ios,
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: PointerInterceptor(
-                    child: TextField(
-                      controller: textEditingController,
-                      onEditingComplete: () async {
-                        FocusScope.of(context).requestFocus(FocusNode());
-                      },
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Colors.black,
-                        ),
-                        suffix: ValueListenableBuilder<TextEditingValue>(
-                          valueListenable: textEditingController,
-                          builder: (ctx, text, child) {
-                            if (text.text.isNotEmpty) {
-                              return child!;
-                            }
-                            return const SizedBox.shrink();
-                          },
-                          child: InkWell(
-                            focusNode: FocusNode(),
-                            onTap: () {
-                              textEditingController.clear();
-                              controller.setSearchableText("");
-                              FocusScope.of(context).requestFocus(FocusNode());
+                  Expanded(
+                    child: PointerInterceptor(
+                      child: TextField(
+                        controller: textEditingController,
+                        onEditingComplete: () async {
+                          FocusScope.of(context).requestFocus(FocusNode());
+                        },
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.black,
+                          ),
+                          suffix: ValueListenableBuilder<TextEditingValue>(
+                            valueListenable: textEditingController,
+                            builder: (ctx, text, child) {
+                              if (text.text.isNotEmpty) {
+                                return child!;
+                              }
+                              return const SizedBox.shrink();
                             },
-                            child: const Icon(
-                              Icons.close,
-                              size: 16,
-                              color: Colors.black,
+                            child: InkWell(
+                              focusNode: FocusNode(),
+                              onTap: () {
+                                textEditingController.clear();
+                                controller.setSearchableText("");
+                                FocusScope.of(
+                                  context,
+                                ).requestFocus(FocusNode());
+                              },
+                              child: const Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
-                        ),
-                        focusColor: Colors.black,
-                        filled: true,
-                        hintText: "search",
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        fillColor: Colors.grey[300],
-                        errorBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red),
+                          focusColor: Colors.black,
+                          filled: true,
+                          hintText: "search",
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          fillColor: Colors.grey[300],
+                          errorBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            const TopSearchWidget(),
-          ],
-        ),
-      ),
-      bottomWidgetPicker: Positioned(
-        bottom: 12,
-        right: 8,
-        child: PointerInterceptor(
-          child: FloatingActionButton(
-            onPressed: () async {
-              GeoPoint p = await controller.selectAdvancedPositionPicker();
-              if (!context.mounted) return;
-              Navigator.pop(context, p);
-            },
-            child: const Icon(Icons.arrow_forward),
+                ],
+              ),
+              const SizedBox(
+                height: 8,
+              ),
+              const TopSearchWidget(),
+            ],
           ),
         ),
-      ),
-      pickerConfig: const CustomPickerLocationConfig(
-        zoomOption: ZoomOption(
-          initZoom: 8,
+        bottomWidgetPicker: Positioned(
+          bottom: 12,
+          right: 8,
+          child: PointerInterceptor(
+            child: FloatingActionButton(
+              onPressed: () async {
+                GeoPoint p = await controller.selectAdvancedPositionPicker();
+                if (!context.mounted) return;
+                Navigator.pop(context, p);
+              },
+              child: const Icon(Icons.arrow_forward),
+            ),
+          ),
+        ),
+        pickerConfig: const CustomPickerLocationConfig(
+          zoomOption: ZoomOption(
+            initZoom: 8,
+          ),
         ),
       ),
     );

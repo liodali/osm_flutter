@@ -74,21 +74,21 @@ class OSMMap extends StatefulWidget {
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
     this.enableRotationByGesture = false,
-    this.useTypedCameraRoute = false,
-    this.useTypedMarkers = false,
-    this.useTypedLayers = false,
-    this.useTypedShapes = false,
-    this.useTypedRoads = false,
-    this.useTypedLocation = false,
-    this.useTypedLocationUpdates = false,
-    this.useTypedTracking = false,
-    this.useTypedLocationIcons = false,
-    this.useTypedLifecycleEvents = false,
-    this.useTypedInteractionEvents = false,
-    this.useTypedMarkerEvents = false,
-    this.useTypedRoadEvents = false,
-    this.useTypedLocationEvents = false,
-    this.useTypedRegionEvents = false,
+    this.useTypedCameraRoute = true,
+    this.useTypedMarkers = true,
+    this.useTypedLayers = true,
+    this.useTypedShapes = true,
+    this.useTypedRoads = true,
+    this.useTypedLocation = true,
+    this.useTypedLocationUpdates = true,
+    this.useTypedTracking = true,
+    this.useTypedLocationIcons = true,
+    this.useTypedLifecycleEvents = true,
+    this.useTypedInteractionEvents = true,
+    this.useTypedMarkerEvents = true,
+    this.useTypedRoadEvents = true,
+    this.useTypedLocationEvents = true,
+    this.useTypedRegionEvents = true,
   });
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -111,37 +111,50 @@ class OSMMap extends StatefulWidget {
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final bool enableRotationByGesture;
-  /// Opt-in routing of camera commands through the typed generated channel.
+  /// Typed routing of camera commands through the typed generated channel (the
+  /// default; `false` keeps the legacy route).
   final bool useTypedCameraRoute;
-  /// Opt-in routing of marker commands through the typed generated channel.
+  /// Typed routing of marker commands through the typed generated channel (the
+  /// default; `false` keeps the legacy route).
   final bool useTypedMarkers;
-  /// Opt-in routing of layer commands (tile sources, overlay visibility).
+  /// Typed routing of layer commands (tile sources, overlay visibility) (the
+  /// default; `false` keeps the legacy route).
   final bool useTypedLayers;
-  /// Opt-in routing of shape commands (circles, rectangles).
+  /// Typed routing of shape commands (circles, rectangles) (the default;
+  /// `false` keeps the legacy route).
   final bool useTypedShapes;
-  /// Opt-in routing of road commands (drawing, removal, clearing).
+  /// Typed routing of road commands (drawing, removal, clearing) (the default;
+  /// `false` keeps the legacy route).
   final bool useTypedRoads;
-  /// Opt-in routing of location commands (my-location layer, fixes).
+  /// Typed routing of location commands (my-location layer, fixes) (the
+  /// default; `false` keeps the legacy route).
   final bool useTypedLocation;
-  /// Opt-in routing of continuous-updates commands (start/stop).
+  /// Typed routing of continuous-updates commands (start/stop) (the default;
+  /// `false` keeps the legacy route).
   final bool useTypedLocationUpdates;
-  /// Opt-in routing of follow-me tracking commands (enable/disable).
+  /// Typed routing of follow-me tracking commands (enable/disable) (the
+  /// default; `false` keeps the legacy route).
   final bool useTypedTracking;
-  /// Opt-in routing of the person/direction icon replacement.
+  /// Typed routing of the person/direction icon replacement (the default;
+  /// `false` keeps the legacy route).
   final bool useTypedLocationIcons;
-  /// Opt-in routing of the native-to-Dart lifecycle events (readiness,
-  /// restoration).
+  /// Typed routing of the native-to-Dart lifecycle events (readiness,
+  /// restoration) (the default; `false` keeps the legacy route).
   final bool useTypedLifecycleEvents;
-  /// Opt-in routing of the native-to-Dart map interactions (single presses,
-  /// long presses).
+  /// Typed routing of the native-to-Dart map interactions (single presses, long
+  /// presses) (the default; `false` keeps the legacy route).
   final bool useTypedInteractionEvents;
-  /// Opt-in routing of the native-to-Dart marker interactions.
+  /// Typed routing of the native-to-Dart marker interactions (the default;
+  /// `false` keeps the legacy route).
   final bool useTypedMarkerEvents;
-  /// Opt-in routing of the native-to-Dart road taps.
+  /// Typed routing of the native-to-Dart road taps (the default; `false` keeps
+  /// the legacy route).
   final bool useTypedRoadEvents;
-  /// Opt-in routing of the native-to-Dart user-location fixes.
+  /// Typed routing of the native-to-Dart user-location fixes (the default;
+  /// `false` keeps the legacy route).
   final bool useTypedLocationEvents;
-  /// Opt-in routing of the native-to-Dart visible-region changes.
+  /// Typed routing of the native-to-Dart visible-region changes (the default;
+  /// `false` keeps the legacy route).
   final bool useTypedRegionEvents;
 
   @override

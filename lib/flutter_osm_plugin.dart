@@ -10,6 +10,24 @@ export 'package:flutter_osm_interface/src/types/types.dart';
 export 'package:flutter_osm_interface/src/common/geo_point_exception.dart';
 export 'package:flutter_osm_interface/src/common/road_exception.dart';
 
+/// Typed-route negotiation failures whose outcome is uncertain (see the
+/// README's "Typed routes" section): the base type and the subtype of each
+/// event family, thrown while a map attaches.
+export 'package:flutter_osm_interface/src/channel/pigeon/native_camera_bootstrap.dart'
+    show RouteSelectionUncertainException;
+export 'package:flutter_osm_interface/src/channel/pigeon/native_lifecycle_events_client.dart'
+    show LifecycleRouteUncertainException;
+export 'package:flutter_osm_interface/src/channel/pigeon/native_interaction_events_client.dart'
+    show InteractionRouteUncertainException;
+export 'package:flutter_osm_interface/src/channel/pigeon/native_marker_events_client.dart'
+    show MarkerRouteUncertainException;
+export 'package:flutter_osm_interface/src/channel/pigeon/native_road_events_client.dart'
+    show RoadRouteUncertainException;
+export 'package:flutter_osm_interface/src/channel/pigeon/native_location_events_client.dart'
+    show LocationRouteUncertainException;
+export 'package:flutter_osm_interface/src/channel/pigeon/native_region_events_client.dart'
+    show RegionRouteUncertainException;
+
 export 'src/common/utilities.dart';
 export 'src/controller/map_controller.dart';
 export 'src/controller/picker_map_controller.dart';

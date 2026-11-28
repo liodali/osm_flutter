@@ -523,6 +523,92 @@ class RunnerTests: XCTestCase {
   }
 
   @MainActor
+  func testLegacyShapeAndOverlayCommandsAlwaysReply() {
+    // Regression: `clear#shapes` and `toggle#Alllayer` applied their effect
+    // but never answered, so the Dart `removeAllShapes()` / `toggleLayer()`
+    // futures hung forever on Apple hosts while the typed shapes and layers
+    // routes replied. Every legacy command must complete its result.
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    for call in [
+      FlutterMethodCall(methodName: "clear#shapes", arguments: nil),
+      FlutterMethodCall(methodName: "toggle#Alllayer", arguments: true),
+      FlutterMethodCall(methodName: "toggle#Alllayer", arguments: false),
+    ] {
+      var replied = false
+      map.onListenMethodChannel(call: call) { value in
+        replied = true
+        XCTAssertEqual(value as? Int, 200)
+      }
+      XCTAssertTrue(replied, "\(call.method) must reply")
+    }
+  }
+
+  @MainActor
+  func testLegacyDeleteLastRoadRemovesTheMostRecentlyDrawnRoad() throws {
+    // Regression: `removeLastRoad()` was a no-op on Apple for every road an
+    // application draws. Manual roads (typed or legacy) never became "the
+    // last road", and since route fetching moved to Dart neither did
+    // `MapController.drawRoad`. Every add path records the last road now,
+    // and `delete#road` without a key consumes it exactly once.
+    let map = session(RecordingMessenger())
+    defer { map.dispose() }
+    let bridge = try XCTUnwrap(map.roadsBridge)
+    let wire = cameraWireSession(map)
+    let coordinates = Data(
+      ([47.0, 8.0, 47.1, 8.1] as [Double]).withUnsafeBytes { Data($0) })
+    let style = NativeRoadStyle(
+      roadColorArgb: 0xFF0000FF, roadWidth: 5.0,
+      borderColorArgb: nil, borderWidth: nil, dotted: false)
+    let manual: [String: Any] = [
+      "key": "legacy-1", "road": "_p~iF~pspU", "roadWidth": 5.0,
+      "isDotted": false, "zoomIntoRegion": false,
+    ]
+
+    try bridge.drawRoad(
+      session: wire, roadId: "typed-1",
+      coordinates: FlutterStandardTypedData(float64: coordinates),
+      style: style, zoomInto: false)
+    XCTAssertEqual(map.lastRoadKey, "typed-1")
+
+    var legacyReply: Any?
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(methodName: "drawRoad#manually", arguments: manual)
+    ) { legacyReply = $0 }
+    XCTAssertEqual((legacyReply as? Int), 200)
+    XCTAssertEqual(map.lastRoadKey, "legacy-1")
+
+    // Removing by key drops the "last road" when it was that road.
+    try bridge.removeRoad(session: wire, roadId: "legacy-1")
+    XCTAssertNil(map.lastRoadKey)
+
+    // An undecodable manual road answers instead of leaving the caller
+    // without a reply.
+    var undecodableReplied = false
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(
+        methodName: "drawRoad#manually",
+        arguments: manual.merging(["key": "legacy-2", "road": "not-a-polyline"] as [String: Any]) { $1 })
+    ) { _ in undecodableReplied = true }
+    XCTAssertTrue(undecodableReplied)
+    XCTAssertNil(map.lastRoadKey)
+
+    try bridge.drawRoad(
+      session: wire, roadId: "typed-2",
+      coordinates: FlutterStandardTypedData(float64: coordinates),
+      style: style, zoomInto: false)
+    map.storedRoads["typed-2"] = StoredRoad(
+      id: "typed-2", roadInformation: nil, instructions: [])
+    var deleteReply: Any?
+    map.onListenMethodChannel(
+      call: FlutterMethodCall(methodName: "delete#road", arguments: nil)
+    ) { deleteReply = $0 }
+    XCTAssertEqual((deleteReply as? Int), 200)
+    XCTAssertNil(map.lastRoadKey)
+    XCTAssertTrue(map.storedRoads.isEmpty)
+  }
+
+  @MainActor
   func testLegacyClearRoadsRoutesThroughTypedService() throws {
     let map = session(RecordingMessenger())
     defer { map.dispose() }

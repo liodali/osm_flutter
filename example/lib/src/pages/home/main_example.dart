@@ -695,15 +695,19 @@ class Map extends StatelessWidget {
       osmOption: OSMOption(
         enableRotationByGesture: true,
         // Combined typed-routes configuration: every generated (Pigeon) route
-        // the plugin can negotiate, enabled together on one attachment for
-        // combined testing (see TYPED_ROUTES_VALIDATION.md). Each family
+        // the plugin can negotiate, enabled together on one attachment. These
+        // are the plugin's defaults; the home page states them explicitly as
+        // the reference configuration (see TYPED_ROUTES_VALIDATION.md). Each
+        // family
         // decides independently at attach time — command families probe the
         // host and freeze per family, event families additionally negotiate
         // their delivery route before initialization — so a host that
         // advertises only part of the list keeps the rest on the legacy
         // plane and the same configuration doubles as the older-host
-        // compatibility check. The other pages of this example opt into
-        // nothing and stay on the legacy plane for side-by-side parity.
+        // compatibility check. The `old-home`, `simple` and `hook` pages opt
+        // out explicitly (`legacyOsmOption`) and stay on the legacy plane for
+        // side-by-side parity; pages that build their options inside plugin
+        // widgets follow the typed defaults.
         //
         // Command families.
         useTypedCameraRoute: true,

@@ -1705,12 +1705,46 @@ class MethodChannelOSM extends MobileOSMPlatform {
   /// dimensions. Typed routes need the raw bytes so each host applies its
   /// own display scaling; the legacy {_capturePng} wrapper serializes the
   /// same capture into the legacy channel contract (Apple base64 + size).
-  Future<(Uint8List, List<int>?)> _captureWidgetIcon(GlobalKey globalKey) async {
-    if (globalKey.currentContext == null) {
-      throw Exception("Error to draw you custom icon");
+  /// How long an icon capture waits for its widget to be mounted and
+  /// painted.
+  ///
+  /// Callers publish the icon widget and wait a fixed delay before the
+  /// capture. While a map is still initializing — the static map's home
+  /// marker on macOS — no frame runs in that delay, and capturing at once
+  /// lost the icon for good on both routes. Tests shorten it.
+  static Duration iconMountTimeout = const Duration(seconds: 10);
+
+  /// Waits, frame by frame and bounded by [timeout], until the widget
+  /// registered under [globalKey] is mounted and painted, and returns its
+  /// repaint boundary. Throws when it never is. [waitForFrame] and [now]
+  /// default to the scheduler's next frame and the wall clock.
+  @visibleForTesting
+  static Future<RenderRepaintBoundary> awaitPaintedIcon(
+    GlobalKey globalKey, {
+    required Duration timeout,
+    Future<void> Function()? waitForFrame,
+    DateTime Function()? now,
+  }) async {
+    final binding = WidgetsBinding.instance;
+    final frame = waitForFrame ?? (() => binding.endOfFrame);
+    final currentTime = now ?? DateTime.now;
+    final deadline = currentTime().add(timeout);
+    while (true) {
+      final object = globalKey.currentContext?.findRenderObject();
+      if (object is RenderRepaintBoundary && !object.debugNeedsPaint) {
+        return object;
+      }
+      if (!currentTime().isBefore(deadline)) {
+        throw Exception("Error to draw you custom icon");
+      }
+      await frame();
     }
-    RenderRepaintBoundary boundary =
-        globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+  }
+
+  Future<(Uint8List, List<int>?)> _captureWidgetIcon(GlobalKey globalKey) async {
+    final boundary =
+        await awaitPaintedIcon(globalKey, timeout: iconMountTimeout);
+    final logicalSize = globalKey.currentContext?.size;
 
     ui.Image image;
     if (defaultTargetPlatform == TargetPlatform.iOS ||
@@ -1724,7 +1758,6 @@ class MethodChannelOSM extends MobileOSMPlatform {
     ByteData byteData =
         (await (image.toByteData(format: ui.ImageByteFormat.png)))!;
     Uint8List pngBytes = byteData.buffer.asUint8List();
-    final logicalSize = globalKey.currentContext?.size;
     return (
       pngBytes,
       logicalSize == null

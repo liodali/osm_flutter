@@ -409,6 +409,10 @@ extension MapSession {
         case "toggle#Alllayer":
             let isVisible = call.arguments as! Bool
             self.typedSetOverlaysVisible(isVisible)
+            // Every legacy command answers: without a reply the Dart future
+            // never completes (the typed layers route always answers).
+            result(200)
+            break
         case "draw#rect":
             drawShape(args: call.arguments, result: result, shapeType: ShapeTypes.Rect)
             break
@@ -435,6 +439,10 @@ extension MapSession {
             break
         case "clear#shapes":
             self.mapOSM.shapeManager.deleteAllShapes()
+            // Every legacy command answers: without a reply the Dart
+            // `removeAllShapes()` future never completes (the typed shapes
+            // route always answers).
+            result(200)
             break
         default:
             result(nil)
@@ -883,8 +891,14 @@ extension MapSession {
                 let box = route.coordinates!.toBounds()
                 self.mapOSM.moveToByBoundingBox(bounds: box, animated: true)
             }
+            // A manual road is "the last road" for `delete#road` without a
+            // key, exactly like a fetched route.
+            lastRoadKey = roadKey
+            result(200)
+        } else {
+            // Every legacy command answers.
+            result(FlutterError(code: "400", message: "unable to decode the road", details: nil))
         }
-        result(200)
     }
 
     func drawMultiRoad(
@@ -949,13 +963,20 @@ extension MapSession {
     private func deleteRoad(call: FlutterMethodCall, result: FlutterResult) {
 
         let roadKey = call.arguments as! String?
-        if roadKey == nil && lastRoadKey != nil {
-            self.mapOSM.roadManager.removeRoad(id: lastRoadKey!)
-            self.storedRoads.removeValue(forKey: lastRoadKey!)
+        if roadKey == nil, let lastRoadKey {
+            // `removeLastRoad()`: the most recently drawn road, whichever
+            // route drew it. Consumed here so a repeat cannot remove an
+            // older road by accident.
+            self.mapOSM.roadManager.removeRoad(id: lastRoadKey)
+            self.storedRoads.removeValue(forKey: lastRoadKey)
+            self.lastRoadKey = nil
         }
         if let key = roadKey {
             self.mapOSM.roadManager.removeRoad(id: key)
             self.storedRoads.removeValue(forKey: key)
+            if lastRoadKey == key {
+                lastRoadKey = nil
+            }
         }
         result(200)
     }
