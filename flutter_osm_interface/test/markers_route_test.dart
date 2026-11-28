@@ -677,6 +677,12 @@ void main() {
 
       // A context-less key makes the icon capture throw after the movement
       // succeeded — the identity table must already reflect the new position.
+      // The capture normally waits (frame by frame) for a late-mounted icon;
+      // this test is about the ordering, so it does not wait.
+      MethodChannelOSM.iconMountTimeout = Duration.zero;
+      addTearDown(
+        () => MethodChannelOSM.iconMountTimeout = const Duration(seconds: 10),
+      );
       final staleKey = GlobalKey();
       await expectLater(
         osm.changeMarker(
