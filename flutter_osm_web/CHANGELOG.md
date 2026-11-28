@@ -1,5 +1,12 @@
 # ChangeLog
 
+## Unreleased
+
+- Implement the platform interface's typed-route negotiation members
+  (`probeNativeProtocol`, `attach*Route`) as no-ops: the web engine keeps its
+  JS interop routes, and the native generated-channel protocol does not
+  apply.
+
 ## 2.2.0
 
 - Use the canonical OSM raster endpoint, send an explicit browser referrer

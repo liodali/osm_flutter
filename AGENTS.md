@@ -134,7 +134,7 @@ osm_flutter/
 ### iOS (shared Darwin)
 - **Flutter baseline**: 3.47.0+ for the main plugin and example; validated with 3.47.1
 - **Language**: Swift
-- **Map Engine**: OSMFlutterFramework (SPM, pinned `OSMMapCoreIOSFramework` 0.9.1 / MapCore 4.0.0)
+- **Map Engine**: OSMFlutterFramework (SPM, pinned `OSMMapCoreIOSFramework` 0.9.2 / MapCore 4.0.0)
 - **Min iOS**: 15.6 (framework requires iOS 14)
 - **Toolchain**: Xcode 26+ / Swift 6.2+ (framework uses `swift-tools-version:6.2`)
 - **Location**: `darwin/flutter_osm_plugin/` (one SPM package, selected by
@@ -163,6 +163,8 @@ osm_flutter/
 5. **Fallback safety**: Select JNI/MethodChannel during attach. Never replay a state-changing command through another backend after initialization starts.
 6. **Path vs published deps**: During development, packages use `path:` dependencies. For release, switch to caret (`^`) constraints.
 7. **Asset loading**: Web assets (JS/HTML) are loaded from `packages/flutter_osm_web/src/asset/` via Flutter asset system.
+8. **Typed routes are the default**: every `OSMOption.useTyped*` flag (and its widget-shim default) is `true`. Keep the legacy `MethodChannel` route intact — older hosts, explicit opt-outs and JNI attachments depend on it. A new platform method follows the negotiation contract (probe → freeze per command family; select the delivery route before initialization for event families; never replay a command through the other route). Changing a default needs a conscious update of the harness guard in `example/integration_test/typed_routes_parity_test.dart` and of `TYPED_ROUTES_VALIDATION.md`. The harness records the negotiated route per attachment and covers the command families; tap events need real touches and run through `example/lib/typed_routes_tap_probe.dart` + `example/tool/typed_routes_tap_injector.py` (`flutter test` cannot deliver them to the platform view).
+9. **Example parity baseline**: the `old-home`, `simple` and `hook` pages opt out via `legacyOsmOption` (`example/lib/src/common/legacy_routes.dart`); the home page states the typed flags explicitly. Keep both sides when touching example options.
 
 ## Release Scripts
 

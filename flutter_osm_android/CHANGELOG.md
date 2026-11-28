@@ -1,4 +1,17 @@
-## 0.4.1
+## Unreleased
+
+- Generated (Pigeon) bridges for the typed route families — camera, markers,
+  layers, shapes, roads, location, location updates, tracking, user-location
+  icons and the six event families — advertised through the attach-time
+  capability probe (`map#bootstrap#protocol`). Every family stays available
+  on the legacy `MethodChannel`: an attachment uses a generated route only
+  after the plugin negotiates it, a switched host stops emitting that
+  family's legacy message, and the `MapEventCoalescer` rate state is shared
+  by both routes.
+- Activity restoration is emitted on the typed lifecycle route and buffered
+  across the recreation/route-selection race; the legacy event plane is
+  unchanged for attachments that do not negotiate.
+
 
 - Align `flutter_osm_interface` dependency with the 1.9.0 release
   (`RoadOption.roadGradientColors`, ignored by this Android host).
