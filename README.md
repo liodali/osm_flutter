@@ -13,7 +13,7 @@
 | supported :heavy_check_mark: | supported :heavy_check_mark: (min iOS supported : 15.6) | supported :heavy_check_mark: (min macOS supported : 12.0) | supported :heavy_check_mark: |
 
 > **macOS (native):** runs on the shared Darwin implementation with iOS (SPM
-> package `darwin/flutter_osm_plugin`, `OSMFlutterFramework` 0.9.1). See
+> package `darwin/flutter_osm_plugin`, `OSMFlutterFramework` 0.9.2). See
 > [macOS Integration](#macos-integration) for requirements, host-app setup and
 > the current capability limits.
 
@@ -62,6 +62,7 @@
 - [Platform Support](#platform-support)
 - [Screenshots](#screenshots)
 - [Installing](#installing)
+- [Typed routes](#typed-routes-generated-channel) (default transport, compatibility, opt-out)
 - [Android Integration](#android-integration) (endorsed package, typed controller, JNI opt-in)
 - [Integration with Hooks](#integration-with-hooks)
 - [Migrations](#migration-to-300) (3.0.0, 2.1.0, 2.0.0)
@@ -94,9 +95,78 @@ Requires **Flutter 3.47.0+**. Add the following to your `pubspec.yaml` file:
 > legacy **0.8.x** engine (maps-core 3.7.x) and **will not be updated anymore**.
 > The plugin is **SPM-only** going forward — the native iOS integration ships
 > via `darwin/flutter_osm_plugin/Package.swift` (shared Darwin source, pinned to
-> `OSMMapCoreIOSFramework` 0.9.1). The frozen podspec and a never-edit source
+> `OSMMapCoreIOSFramework` 0.9.2). The frozen podspec and a never-edit source
 > snapshot remain under `ios/` for legacy CocoaPods consumers (see
 > `ios/README.md`); they should plan a migration to Swift Package Manager.
+
+## Typed routes (generated channel)
+
+Since **4.2.0**, `OSMFlutter` routes map commands and native events through
+**typed, generated channels** (Pigeon) on Android, iOS and macOS. This is the
+default — there is nothing to enable. Public APIs do not change: `MapController`,
+every stream (`onMapIsReady`, `onRegionIsChangingListener`, …) and every payload
+are identical on either route; the generated route only changes *where* bytes
+travel.
+
+### What is negotiated, and when
+
+Each map attachment decides its routes **once, before any map mutation**:
+
+- **Command families** — camera, camera configuration, markers, layers,
+  shapes, roads, location, continuous updates, follow-me tracking and
+  user-location icons. The plugin probes the host once and uses the generated
+  route only when the host advertises the family.
+- **Event families** — lifecycle (readiness/restoration), map interactions,
+  marker interactions, road taps, user-location fixes and visible-region
+  changes. The plugin additionally selects the delivery route with the host
+  before initialization, so **exactly one route delivers** each family per map.
+- A decision is frozen for the life of the attachment and never replayed
+  through the other route after a failure. Two live maps never share a route.
+
+Rates are the host's on both routes: on Android, region changes are coalesced
+at 100 ms and location fixes at 1 s (first immediate, newest wins); on Apple
+platforms every callback is forwarded.
+
+### Compatibility
+
+- **Older Android hosts** (`flutter_osm_android` 0.4.1 and earlier) predate the
+  capability probe: every family stays on the legacy `MethodChannel` exactly as
+  before and no route selection is sent. A newer `flutter_osm_plugin` keeps
+  working with them.
+- **JNI attachments** (`flutter_osm_android_jni`) keep the legacy event plane;
+  they never negotiate typed event routes.
+- **Web** ignores the route flags (accepted for signature compatibility).
+- **Permissions** are unchanged: location permission stays in Dart
+  (`permission_handler`) on Android and in native authorization checks on
+  Apple platforms; there is no typed permission API.
+
+### Opting out
+
+Set any `useTyped*` flag on `OSMOption` to `false` to keep that family on the
+legacy `MethodChannel`. Families are independent, so an attachment may mix
+typed and legacy families:
+
+```dart
+OSMFlutter(
+  controller: controller,
+  osmOption: OSMOption(useTypedRegionEvents: false, useTypedLocation: false),
+)
+```
+
+### Uncertain-outcome abort
+
+Route selection is confirmed on an ordered channel. If a selection times out
+and the rollback to the legacy route cannot be confirmed, the plugin aborts the
+attachment with a `RouteSelectionUncertainException` (one subtype per event
+family, e.g. `RegionRouteUncertainException`) instead of guessing which route
+the host is using, so no event is silently lost. The error surfaces as an
+unhandled asynchronous exception while the map initializes and
+`onMapIsReady` never reports `true`. Nothing is frozen in that case: disposing
+the widget and attaching again negotiates from a clean state. See
+[TYPED_ROUTES_VALIDATION.md](TYPED_ROUTES_VALIDATION.md) for the
+per-platform validation record and
+[the legacy command audit](flutter_osm_interface/pigeons/LEGACY_COMMAND_AUDIT.md)
+for the per-family inventory of what stays legacy by design.
 
 ## Android Integration
 
@@ -246,7 +316,7 @@ Notes:
 
 `flutter_osm_plugin` supports native macOS through the **same shared Darwin
 implementation as iOS** (`darwin/flutter_osm_plugin`, Swift Package Manager,
-`OSMFlutterFramework` 0.9.1 / MapCore 4.0.1-spm.2). Commands, payloads and events are
+`OSMFlutterFramework` 0.9.2 / MapCore 4.0.1-spm.2). Commands, payloads and events are
 identical to the iOS wire protocol.
 
 **Requirements**

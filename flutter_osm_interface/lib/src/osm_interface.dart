@@ -2,6 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'channel/osm_method_channel.dart';
+import 'channel/pigeon/native_camera_bootstrap.dart';
+import 'channel/pigeon/native_camera_client.dart';
+import 'channel/pigeon/native_markers_client.dart';
 import 'common/osm_event.dart';
 import 'types/types.dart';
 
@@ -42,6 +45,195 @@ abstract class OSMPlatform extends PlatformInterface {
   );
 
   void close(int idOSM);
+
+  /// Read-only attach-time probe of the generated-channel protocol.
+  /// Must not initialize or mutate the map; implementations run it on the
+  /// legacy channel before routing decisions are frozen.
+  Future<NativeProtocolProbeResult> probeNativeProtocol(int idOSM);
+
+  /// Freezes the camera routing decision for one map attachment.
+  /// Called once after [init] and before the first mutation; the decision
+  /// never changes for the life of the attachment (no protocol replay).
+  Future<CameraRouteSelection> attachCameraRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the markers routing decision for one map attachment.
+  /// Same contract as [attachCameraRoute]: one probe, one decision, frozen
+  /// before the first mutation.
+  Future<CameraRouteSelection> attachMarkersRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the layers routing decision for one map attachment (tile
+  /// sources and overlay visibility). Same contract as [attachCameraRoute]:
+  /// one probe, one decision, frozen before the first mutation. Hosts
+  /// without the `layers` capability keep these commands on the legacy
+  /// route.
+  Future<CameraRouteSelection> attachLayersRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the shapes routing decision for one map attachment (circles
+  /// and rectangles). Same contract as [attachCameraRoute]: one probe, one
+  /// decision, frozen before the first mutation. Hosts without the
+  /// `shapes` capability keep these commands on the legacy route.
+  Future<CameraRouteSelection> attachShapesRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the roads routing decision for one map attachment (manual
+  /// road drawing, removal by id, clearing). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the first
+  /// mutation. Hosts without the `roads` capability keep these commands on
+  /// the legacy route. Route fetching/calculation is unaffected: it stays
+  /// asynchronous in Dart.
+  Future<CameraRouteSelection> attachRoadsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the location routing decision for one map attachment (the
+  /// my-location layer and single-shot fixes). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the first
+  /// mutation. Hosts without the `location` capability keep these commands
+  /// on the legacy route. Permission ownership stays with the host
+  /// application; continuous updates and tracking stay on their existing
+  /// channels.
+  Future<CameraRouteSelection> attachLocationRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the continuous-updates routing decision for one map
+  /// attachment (start/stop location updates). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the first
+  /// mutation. Hosts without the `location.updates` capability keep these
+  /// commands on the legacy route. Location events keep flowing on their
+  /// existing channel; stop never prompts and preserves pending one-shot
+  /// fixes and tracking.
+  Future<CameraRouteSelection> attachLocationUpdatesRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the follow-me tracking routing decision for one map
+  /// attachment (enable/disable tracking). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the
+  /// first mutation. Hosts without the `location.tracking` capability
+  /// keep these commands on the legacy route. Permission ownership stays
+  /// with the host application; stopping tracking preserves continuous
+  /// updates and pending one-shot fixes.
+  Future<CameraRouteSelection> attachTrackingRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the user-location icon routing decision for one map attachment
+  /// (person and direction marker replacement). Same contract as
+  /// [attachCameraRoute]: one probe, one decision, frozen before the first
+  /// mutation. Hosts without the `location.icons` capability keep icon
+  /// replacement on the legacy `user#locationMarkers` route. Icon rendering
+  /// stays asynchronous in Dart: only prepared PNG bytes cross the typed
+  /// channel.
+  Future<CameraRouteSelection> attachUserLocationIconsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the lifecycle-event routing decision for one map attachment
+  /// (native-to-Dart map readiness and restoration callbacks). Same contract
+  /// as [attachCameraRoute]: one probe, one decision, frozen before the
+  /// first mutation — the selection is negotiated with the host before
+  /// initialization so exactly one delivery route is active per attachment.
+  /// Hosts without the `events.lifecycle` capability keep lifecycle events
+  /// on the legacy `map#init` / `map#restored` messages. The public
+  /// [onMapIsReady] stream is unchanged either way; the legacy event plane
+  /// used by JNI attachments is never switched by this route.
+  Future<CameraRouteSelection> attachLifecycleEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the interaction-event routing decision for one map attachment
+  /// (native-to-Dart single-press and long-press callbacks). Same contract
+  /// as [attachLifecycleEventsRoute]: the selection is negotiated with the
+  /// host before initialization so exactly one delivery route is active per
+  /// attachment. Hosts without the `events.interaction` capability keep
+  /// interactions on the legacy `receiveSinglePress` /
+  /// `receiveLongPress` messages. The public
+  /// [onSinglePressMapClickListener] / [onLongPressMapClickListener]
+  /// streams are unchanged either way; the legacy event plane used by JNI
+  /// attachments is never switched by this route.
+  Future<CameraRouteSelection> attachInteractionEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the marker-event routing decision for one map attachment
+  /// (native-to-Dart marker single-press and long-press callbacks). Same
+  /// contract as [attachLifecycleEventsRoute]: negotiated before
+  /// initialization so exactly one delivery route is active per attachment.
+  /// Hosts without the `events.markers` capability keep marker interactions
+  /// on the legacy `receiveGeoPoint` / `receiveGeoPointLongPress` messages.
+  /// The public [onGeoPointClickListener] /
+  /// [onGeoPointLongPressListener] streams are unchanged either way; the
+  /// legacy event plane used by JNI attachments is never switched by this
+  /// route.
+  Future<CameraRouteSelection> attachMarkerEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the road-event routing decision for one map attachment
+  /// (native-to-Dart road tap callback). Same contract as
+  /// [attachLifecycleEventsRoute]: negotiated before initialization so
+  /// exactly one delivery route is active per attachment. Hosts without
+  /// the `events.roads` capability keep road taps on the legacy
+  /// `receiveRoad` message, and the typed payload mirrors it field for
+  /// field. The public [onRoadMapClickListener] stream is unchanged either
+  /// way; the legacy event plane used by JNI attachments is never switched
+  /// by this route.
+  Future<CameraRouteSelection> attachRoadEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the user-location event routing decision for one map attachment
+  /// (native-to-Dart continuous location fixes with heading). Same contract
+  /// as [attachLifecycleEventsRoute]: negotiated before initialization so
+  /// exactly one delivery route is active per attachment. Hosts without
+  /// the `events.location` capability keep fixes on the legacy
+  /// `receiveUserLocation` message. The callback carries the position and
+  /// heading as raw doubles and inherits the host's location rate and
+  /// coalescing unchanged, whichever consumer started the flow (continuous
+  /// updates, follow-me tracking, typed or legacy). The public
+  /// [onUserPositionListener] stream is unchanged either way; the legacy
+  /// event plane used by JNI attachments is never switched by this route.
+  Future<CameraRouteSelection> attachLocationEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
+
+  /// Freezes the visible-region event routing decision for one map
+  /// attachment (native-to-Dart region changes carrying the center, the
+  /// bounding box and the zoom level). Same contract as
+  /// [attachLifecycleEventsRoute]: negotiated before initialization so
+  /// exactly one delivery route is active per attachment. Hosts without
+  /// the `events.region` capability keep region changes on the legacy
+  /// `receiveRegionIsChanging` message. The callback inherits the host's
+  /// region-event rate and coalescing unchanged and only changes where
+  /// changes travel. The public [onRegionIsChangingListener] stream is
+  /// unchanged either way; the legacy event plane used by JNI attachments
+  /// is never switched by this route.
+  Future<CameraRouteSelection> attachRegionEventsRoute(
+    int idOSM, {
+    bool optIn = false,
+  });
 }
 
 abstract class MobileOSMPlatform extends OSMPlatform {
@@ -74,14 +266,18 @@ abstract class MobileOSMPlatform extends OSMPlatform {
   Future<void> customUserLocationMarker(
     int idOSM,
     GlobalKey personGlobalKey,
-    GlobalKey directionArrowGlobalKey,
-  );
+    GlobalKey directionArrowGlobalKey, {
+    IconAnchor? personAnchor,
+    IconAnchor? directionAnchor,
+  });
 
+  /// A null [anchor] keeps the pivots the user-location icon configuration
+  /// already has; hosts without a live pivot keep their default (centered).
   Future<void> enableTracking(
     int idOSM, {
     bool stopFollowInDrag = false,
     bool disableMarkerRotation = false,
-    Anchor anchor = Anchor.center,
+    Anchor? anchor,
     bool useDirectionMarker = false,
   });
 

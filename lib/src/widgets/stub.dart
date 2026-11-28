@@ -51,6 +51,21 @@ class const OSMMapWidget({
   this.isPicker = false,
   this.showContributorBadgeForOSM = false,
   this.enableRotationByGesture = false,
+  this.useTypedCameraRoute = true,
+  this.useTypedMarkers = true,
+  this.useTypedLayers = true,
+  this.useTypedShapes = true,
+  this.useTypedRoads = true,
+  this.useTypedLocation = true,
+  this.useTypedLocationUpdates = true,
+  this.useTypedTracking = true,
+  this.useTypedLocationIcons = true,
+  this.useTypedLifecycleEvents = true,
+  this.useTypedInteractionEvents = true,
+  this.useTypedMarkerEvents = true,
+  this.useTypedRoadEvents = true,
+  this.useTypedLocationEvents = true,
+  this.useTypedRegionEvents = true,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -74,6 +89,30 @@ class const OSMMapWidget({
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final bool enableRotationByGesture;
+  /// Accepted for signature compatibility; native generated routes do not
+  /// apply to this platform.
+  final bool useTypedCameraRoute;
+  /// Accepted for signature compatibility; native generated routes do not
+  /// apply to this platform.
+  final bool useTypedMarkers;
+  final bool useTypedLayers;
+  final bool useTypedShapes;
+  final bool useTypedRoads;
+  final bool useTypedLocation;
+  final bool useTypedLocationUpdates;
+  final bool useTypedTracking;
+  /// Accepted for signature compatibility; native generated routes do not
+  /// apply to this platform.
+  final bool useTypedLocationIcons;
+
+  /// Accepted for signature compatibility; native generated routes do not
+  /// apply to this platform.
+  final bool useTypedLifecycleEvents;
+  final bool useTypedInteractionEvents;
+  final bool useTypedMarkerEvents;
+  final bool useTypedRoadEvents;
+  final bool useTypedLocationEvents;
+  final bool useTypedRegionEvents;
 
   @override
   Widget build(BuildContext context) {

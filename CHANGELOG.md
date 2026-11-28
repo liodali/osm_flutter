@@ -1,3 +1,56 @@
+## 4.2.0
+
+- **Typed routes are the default.** `OSMFlutter` now routes map commands and
+  native events through the generated (Pigeon) channels on Android, iOS and
+  macOS. Each family is negotiated once per map attachment, before any map
+  mutation, and stays on the legacy `MethodChannel` when the host does not
+  advertise it. Public APIs, streams, payloads and event rates are identical
+  on either route.
+- Older Android hosts (`flutter_osm_android` 0.4.1 and earlier) keep working:
+  they predate the capability probe, so every family falls back to the legacy
+  route and no route selection is sent. JNI attachments keep the legacy event
+  plane, and web ignores the route flags.
+- New `OSMOption` flags let an application keep a family on the legacy route:
+  `useTypedCameraRoute`, `useTypedMarkers`, `useTypedLayers`, `useTypedShapes`,
+  `useTypedRoads`, `useTypedLocation`, `useTypedLocationUpdates`,
+  `useTypedTracking`, `useTypedLocationIcons`, `useTypedLifecycleEvents`,
+  `useTypedInteractionEvents`, `useTypedMarkerEvents`, `useTypedRoadEvents`,
+  `useTypedLocationEvents`, `useTypedRegionEvents` (all default to `true`).
+- A route selection whose outcome cannot be confirmed aborts the attachment
+  with a `RouteSelectionUncertainException` (one subtype per event family)
+  instead of risking silently lost events; the exception types are now
+  exported by the plugin.
+- iOS/macOS: pin OSMFlutterFramework 0.9.2 to correct visible bounds,
+  latitude/longitude assignment, viewport initialization and startup zoom.
+- Example: compile `SceneDelegate.swift` into the iOS Runner target. The
+  UIScene manifest referenced a class that was never built, so the example
+  from the repository showed a black screen on iOS.
+- iOS/macOS: the legacy-plane `removeAllShapes()` and `toggleLayer()` calls
+  now complete — two legacy handlers in the shared Darwin host applied their
+  effect but never answered.
+- iOS/macOS: `removeLastRoad()` removes the most recently drawn road again,
+  manual or computed. It had removed nothing since route calculation moved
+  to Dart.
+- A custom marker icon is captured once its widget is mounted and painted
+  (waiting a bounded time) instead of after a fixed delay. On macOS the
+  static map (`OSMViewer`) lost its home marker with
+  `Error to draw you custom icon` while the map was still initializing.
+- Example: the Search page hosts the picker in a `Scaffold`. It had shown an
+  error screen on every platform since 4.0.0, when the picker stopped
+  providing Material itself.
+- Example: the `old-home`, `simple` and `hook` pages opt out of the typed routes
+  explicitly (`legacyOsmOption`) and remain the side-by-side legacy baseline;
+  the home page states the typed defaults explicitly. The typed-routes
+  parity harness (`example/integration_test/typed_routes_parity_test.dart`)
+  runs on the shipped defaults, opts its baselines out explicitly, tells a
+  current host from an older one by two independent signals and requires a
+  generated client for every family on the former and none on the latter,
+  starts a real location flow on both planes and requires fresh fixes on
+  both before comparing callback counts, and can exercise the remaining
+  command families (`TYPED_ROUTES_FAMILIES=true`). Tap events
+  need real touches: `example/lib/typed_routes_tap_probe.dart` with
+  `example/tool/typed_routes_tap_injector.py` runs them on both planes.
+
 ## 4.1.0
 
 - **Breaking**: `OSMOption.useWebMapLibre` is removed; web rendering is

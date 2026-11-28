@@ -25,6 +25,21 @@ Widget getWidget({
   UserLocationMaker? userLocationMarker,
   Function(bool)? onMapIsReady,
   bool enableRotationByGesture = false,
+  bool useTypedCameraRoute = true,
+  bool useTypedMarkers = true,
+  bool useTypedLayers = true,
+  bool useTypedShapes = true,
+  bool useTypedRoads = true,
+  bool useTypedLocation = true,
+  bool useTypedLocationUpdates = true,
+  bool useTypedTracking = true,
+  bool useTypedLocationIcons = true,
+  bool useTypedLifecycleEvents = true,
+  bool useTypedInteractionEvents = true,
+  bool useTypedMarkerEvents = true,
+  bool useTypedRoadEvents = true,
+  bool useTypedLocationEvents = true,
+  bool useTypedRegionEvents = true,
 }) => MobileOsmFlutter(
   controller: controller,
   userTrackingOption: userTrackingOption ?? controller.initMapWithUserPosition,
@@ -47,6 +62,20 @@ Widget getWidget({
   userLocationMarker: userLocationMarker,
   zoomOption: zoomOption,
   enableRotationByGesture: enableRotationByGesture,
+  useTypedMarkers: useTypedMarkers,
+  useTypedLayers: useTypedLayers,
+  useTypedShapes: useTypedShapes,
+  useTypedRoads: useTypedRoads,
+  useTypedLocation: useTypedLocation,
+  useTypedLocationUpdates: useTypedLocationUpdates,
+  useTypedTracking: useTypedTracking,
+  useTypedLocationIcons: useTypedLocationIcons,
+  useTypedLifecycleEvents: useTypedLifecycleEvents,
+  useTypedInteractionEvents: useTypedInteractionEvents,
+  useTypedMarkerEvents: useTypedMarkerEvents,
+  useTypedRoadEvents: useTypedRoadEvents,
+  useTypedLocationEvents: useTypedLocationEvents,
+  useTypedRegionEvents: useTypedRegionEvents,
 );
 
 class const OSMMapWidget({
@@ -71,6 +100,21 @@ class const OSMMapWidget({
   this.isPicker = false,
   this.showContributorBadgeForOSM = false,
   this.enableRotationByGesture = false,
+    this.useTypedCameraRoute = true,
+    this.useTypedMarkers = true,
+    this.useTypedLayers = true,
+    this.useTypedShapes = true,
+    this.useTypedRoads = true,
+    this.useTypedLocation = true,
+    this.useTypedLocationUpdates = true,
+    this.useTypedTracking = true,
+    this.useTypedLocationIcons = true,
+    this.useTypedLifecycleEvents = true,
+    this.useTypedInteractionEvents = true,
+    this.useTypedMarkerEvents = true,
+    this.useTypedRoadEvents = true,
+    this.useTypedLocationEvents = true,
+    this.useTypedRegionEvents = true,
 }) extends StatelessWidget {
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -92,6 +136,21 @@ class const OSMMapWidget({
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final bool enableRotationByGesture;
+  final bool useTypedCameraRoute;
+  final bool useTypedMarkers;
+  final bool useTypedLayers;
+  final bool useTypedShapes;
+  final bool useTypedRoads;
+  final bool useTypedLocation;
+  final bool useTypedLocationUpdates;
+  final bool useTypedTracking;
+  final bool useTypedLocationIcons;
+  final bool useTypedLifecycleEvents;
+  final bool useTypedInteractionEvents;
+  final bool useTypedMarkerEvents;
+  final bool useTypedRoadEvents;
+  final bool useTypedLocationEvents;
+  final bool useTypedRegionEvents;
   @override
   Widget build(BuildContext context) {
     return MobileOsmFlutter(
@@ -116,6 +175,21 @@ class const OSMMapWidget({
       userLocationMarker: userLocationMarker,
       zoomOption: zoomOption,
       enableRotationByGesture: enableRotationByGesture,
+      useTypedCameraRoute: useTypedCameraRoute,
+      useTypedMarkers: useTypedMarkers,
+      useTypedLayers: useTypedLayers,
+      useTypedShapes: useTypedShapes,
+      useTypedRoads: useTypedRoads,
+      useTypedLocation: useTypedLocation,
+      useTypedLocationUpdates: useTypedLocationUpdates,
+      useTypedTracking: useTypedTracking,
+      useTypedLocationIcons: useTypedLocationIcons,
+      useTypedLifecycleEvents: useTypedLifecycleEvents,
+      useTypedInteractionEvents: useTypedInteractionEvents,
+      useTypedMarkerEvents: useTypedMarkerEvents,
+      useTypedRoadEvents: useTypedRoadEvents,
+      useTypedLocationEvents: useTypedLocationEvents,
+      useTypedRegionEvents: useTypedRegionEvents,
     );
   }
 }

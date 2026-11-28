@@ -37,6 +37,79 @@ final class MobileOSMController extends IBaseOSMController {
     MobileOsmFlutterState osmState,
   ) async {
     await osmPlatform.init(id);
+    // Freeze both routing decisions before any map mutation happens:
+    // the probes run on the legacy channel and the selections never change
+    // for the life of this attachment (no protocol replay after failures).
+    await osmPlatform.attachCameraRoute(
+      id,
+      optIn: osmState.widget.useTypedCameraRoute,
+    );
+    await osmPlatform.attachMarkersRoute(
+      id,
+      optIn: osmState.widget.useTypedMarkers,
+    );
+    await osmPlatform.attachLayersRoute(
+      id,
+      optIn: osmState.widget.useTypedLayers,
+    );
+    await osmPlatform.attachShapesRoute(
+      id,
+      optIn: osmState.widget.useTypedShapes,
+    );
+    await osmPlatform.attachRoadsRoute(
+      id,
+      optIn: osmState.widget.useTypedRoads,
+    );
+    await osmPlatform.attachLocationRoute(
+      id,
+      optIn: osmState.widget.useTypedLocation,
+    );
+    await osmPlatform.attachLocationUpdatesRoute(
+      id,
+      optIn: osmState.widget.useTypedLocationUpdates,
+    );
+    await osmPlatform.attachTrackingRoute(
+      id,
+      optIn: osmState.widget.useTypedTracking,
+    );
+    await osmPlatform.attachUserLocationIconsRoute(
+      id,
+      optIn: osmState.widget.useTypedLocationIcons,
+    );
+    // Negotiate the lifecycle event delivery route before initialization:
+    // exactly one route (generated callbacks or the legacy event plane)
+    // delivers readiness/restoration for this attachment.
+    await osmPlatform.attachLifecycleEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedLifecycleEvents,
+    );
+    // Negotiate the interaction event delivery route likewise: exactly one
+    // route delivers single presses and long presses for this attachment.
+    await osmPlatform.attachInteractionEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedInteractionEvents,
+    );
+    // Negotiate the marker and road event delivery routes likewise.
+    await osmPlatform.attachMarkerEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedMarkerEvents,
+    );
+    await osmPlatform.attachRoadEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedRoadEvents,
+    );
+    // Negotiate the user-location event delivery route likewise: exactly
+    // one route delivers location fixes, at the host's own rate.
+    await osmPlatform.attachLocationEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedLocationEvents,
+    );
+    // Negotiate the visible-region event delivery route likewise: exactly
+    // one route delivers region changes, at the host's own rate.
+    await osmPlatform.attachRegionEventsRoute(
+      id,
+      optIn: osmState.widget.useTypedRegionEvents,
+    );
     return MobileOSMController._(id, osmState);
   }
 
@@ -255,10 +328,13 @@ final class MobileOSMController extends IBaseOSMController {
 
     /// change user person Icon and arrow Icon
     if (_osmFlutterState.widget.userLocationMarker != null) {
+      final userLocationMarker = _osmFlutterState.widget.userLocationMarker!;
       await osmPlatform.customUserLocationMarker(
         _idMap,
         _osmFlutterState.personIconMarkerKey,
         _osmFlutterState.arrowDirectionMarkerKey,
+        personAnchor: userLocationMarker.personAnchor,
+        directionAnchor: userLocationMarker.directionAnchor,
       );
     }
 
@@ -294,6 +370,9 @@ final class MobileOSMController extends IBaseOSMController {
           await startLocationUpdating();
           break;
         case false:
+          // No anchor override: the user-location icon route already applied
+          // the configured per-icon pivots (or the platform default), and an
+          // override here would re-center them.
           await enableTracking(enableStopFollow: userTrackOption.unFollowUser);
           break;
       }
@@ -489,7 +568,7 @@ final class MobileOSMController extends IBaseOSMController {
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableMarkerRotation = false,
-    Anchor anchor = Anchor.center,
+    Anchor? anchor,
     bool useDirectionMarker = false,
   }) async {
     /// make in native when is enabled ,nothing is happen

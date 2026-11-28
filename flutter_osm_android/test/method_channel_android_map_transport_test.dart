@@ -66,6 +66,54 @@ void main() {
     );
   });
 
+  test('movement, rotation, and anchors use dedicated typed commands',
+      () async {
+    const markerId = MarkerId('m-1');
+
+    await transport.moveMarker(markerId, GeoPoint(latitude: 1, longitude: 2));
+    await transport.rotateMarker(markerId, 45.5);
+    await transport.setMarkerAnchor(markerId, IconAnchor(anchor: Anchor.bottom));
+
+    expect(calls.map((call) => call.method), [
+      'android#marker#move',
+      'android#marker#rotate',
+      'android#marker#anchor',
+    ]);
+    expect(calls[0].arguments, {
+      'markerId': 'm-1',
+      'lat': 1.0,
+      'lon': 2.0,
+    });
+    expect(calls[1].arguments, {'markerId': 'm-1', 'angle': 45.5});
+    expect(calls[2].arguments, {
+      'markerId': 'm-1',
+      'iconAnchor': [0.5, 0.0],
+    });
+  });
+
+  test('addMarker carries degrees and anchor beside the icon bytes',
+      () async {
+    final icon = Uint8List.fromList([1, 2, 3]);
+
+    await transport.addMarker(
+      const MarkerId('m-1'),
+      GeoPoint(latitude: 48.85, longitude: 2.35),
+      iconBytes: icon,
+      angleDegrees: 90,
+      anchor: IconAnchor(anchor: Anchor.left),
+    );
+
+    expect(calls.single.method, 'android#marker#add');
+    expect(calls.single.arguments, {
+      'markerId': 'm-1',
+      'lat': 48.85,
+      'lon': 2.35,
+      'icon': icon,
+      'angle': 90.0,
+      'iconAnchor': [1.0, 0.5],
+    });
+  });
+
   test('keeps typed location commands on MethodChannel', () async {
     await transport.showCurrentLocation();
     final location = await transport.getCurrentLocation();

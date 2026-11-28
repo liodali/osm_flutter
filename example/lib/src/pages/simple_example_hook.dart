@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_osm_plugin_example/src/common/legacy_routes.dart';
 //import 'package:osm_flutter_hooks/osm_flutter_hooks.dart';
 
 class SimpleHookExample extends StatefulWidget {
@@ -50,7 +51,7 @@ class _InnerSimpleOSM extends HookWidget {
     );*/
     return OSMFlutter(
       controller: MapController.withUserPosition(),
-      osmOption: const OSMOption(),
+      osmOption: legacyOsmOption(),
     );
   }
 }

@@ -124,17 +124,20 @@ mixin WebMixin {
   Future<void> enableTracking({
     bool enableStopFollow = false,
     bool disableMarkerRotation = false,
-    Anchor anchor = Anchor.center,
+    Anchor? anchor,
     bool useDirectionMarker = false,
   }) async {
+    // The JS bridge always carries an anchor; a missing override keeps the
+    // historical centered default.
+    final effectiveAnchor = anchor ?? Anchor.center;
     await interop
         .enableTracking(
           mapIdMixin.toJS,
           enableStopFollow.toJS,
           useDirectionMarker.toJS,
           IconAnchorJS(
-            x: anchor.value.$1,
-            y: anchor.value.$2,
+            x: effectiveAnchor.value.$1,
+            y: effectiveAnchor.value.$2,
           ),
           //anchor.toPlatformMap(),
         )

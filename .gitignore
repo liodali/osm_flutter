@@ -82,3 +82,6 @@ __pycache__
 jenkins
 .commandcode
 old_android
+
+# Dev-only local package resolution (path overrides during development)
+pubspec_overrides.yaml

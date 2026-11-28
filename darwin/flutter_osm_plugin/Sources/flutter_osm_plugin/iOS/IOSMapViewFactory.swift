@@ -36,7 +36,9 @@ public class IOSMapViewFactory: NSObject, FlutterPlatformViewFactory {
             )
             return IOSMapView(
                 session: MapSession(
-                    frame, viewId: viewId, channel: channel, args: args, defaultPin: defaultPinPath))
+                    frame, viewId: viewId, channel: channel,
+                    binaryMessenger: self.messenger, args: args,
+                    defaultPin: defaultPinPath))
         }
     }
 

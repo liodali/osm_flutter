@@ -694,6 +694,46 @@ class Map extends StatelessWidget {
       },
       osmOption: OSMOption(
         enableRotationByGesture: true,
+        // Combined typed-routes configuration: every generated (Pigeon) route
+        // the plugin can negotiate, enabled together on one attachment. These
+        // are the plugin's defaults; the home page states them explicitly as
+        // the reference configuration (see TYPED_ROUTES_VALIDATION.md). Each
+        // family
+        // decides independently at attach time — command families probe the
+        // host and freeze per family, event families additionally negotiate
+        // their delivery route before initialization — so a host that
+        // advertises only part of the list keeps the rest on the legacy
+        // plane and the same configuration doubles as the older-host
+        // compatibility check. The `old-home`, `simple` and `hook` pages opt
+        // out explicitly (`legacyOsmOption`) and stay on the legacy plane for
+        // side-by-side parity; pages that build their options inside plugin
+        // widgets follow the typed defaults.
+        //
+        // Command families.
+        useTypedCameraRoute: true,
+        useTypedMarkers: true,
+        useTypedLayers: true,
+        useTypedShapes: true,
+        useTypedRoads: true,
+        useTypedLocation: true,
+        useTypedLocationUpdates: true,
+        useTypedTracking: true,
+        // Person/direction icons with per-icon anchors: the person icon
+        // keeps its center pivot while the direction arrow is pinned by its
+        // tip.
+        useTypedLocationIcons: true,
+        // Event families. Public streams are unchanged on either route.
+        // Readiness (and restoration on Android recreation).
+        useTypedLifecycleEvents: true,
+        // Single/long presses on the map and on markers.
+        useTypedInteractionEvents: true,
+        useTypedMarkerEvents: true,
+        // Road taps (typed payload mirrors the legacy field for field).
+        useTypedRoadEvents: true,
+        // User-location fixes (host rate and coalescing preserved).
+        useTypedLocationEvents: true,
+        // Visible-region changes (host rate and coalescing preserved).
+        useTypedRegionEvents: true,
         zoomOption: const ZoomOption(
           initZoom: 16,
           minZoomLevel: 3,
@@ -703,6 +743,8 @@ class Map extends StatelessWidget {
         // Distinct person (red) and direction (blue) markers for the built-in
         // user-location layer.
         userLocationMarker: UserLocationMaker(
+          personAnchor: IconAnchor(anchor: Anchor.center),
+          directionAnchor: IconAnchor(anchor: Anchor.top),
           personMarker: const MarkerIcon(
             icon: Icon(
               Icons.directions_walk,

@@ -1,23 +1,23 @@
 package hamza.dali.flutter_osm_plugin.mapscore
 
-import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import hamza.dali.flutter_osm_plugin.ProviderLifecycle
-import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding.OnSaveInstanceStateListener
 import io.flutter.plugin.platform.PlatformView
 
 /**
  * Thin Android platform-view wrapper around one [MapscoreMapSession].
  *
  * This class owns Flutter view embedding and lifecycle observation only. Map
- * state, commands, events, and activity results belong to [session].
+ * state, commands, events, activity results, and activity save/restore
+ * belong to [session] (registered with the activity binding by the
+ * session registry).
  */
 internal class MapscoreFlutterOsmView(
     internal val session: MapscoreMapSession,
     providerLifecycle: ProviderLifecycle,
-) : OnSaveInstanceStateListener, PlatformView, DefaultLifecycleObserver {
+) : PlatformView, DefaultLifecycleObserver {
     private val lifecycle = providerLifecycle.getOSMLifecycle()
     private var released = false
 
@@ -44,14 +44,6 @@ internal class MapscoreFlutterOsmView(
 
     override fun onFlutterViewDetached() {
         session.onFlutterViewDetached()
-    }
-
-    override fun onSaveInstanceState(bundle: Bundle) {
-        session.onSaveInstanceState(bundle)
-    }
-
-    override fun onRestoreInstanceState(bundle: Bundle?) {
-        session.onRestoreInstanceState(bundle)
     }
 
     override fun onCreate(owner: LifecycleOwner) {

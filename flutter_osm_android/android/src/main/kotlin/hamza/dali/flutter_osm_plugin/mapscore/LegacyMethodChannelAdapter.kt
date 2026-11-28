@@ -64,6 +64,9 @@ internal enum class TypedMapCommand(val methodName: String) {
     ADD_MARKER("android#marker#add"),
     ADD_MARKERS("android#marker#addAll"),
     UPDATE_MARKER_ICON("android#marker#icon"),
+    MOVE_MARKER("android#marker#move"),
+    ROTATE_MARKER("android#marker#rotate"),
+    SET_MARKER_ANCHOR("android#marker#anchor"),
     REMOVE_MARKER("android#marker#remove"),
     REMOVE_MARKERS("android#marker#removeAll"),
     ADD_CIRCLE("android#shape#circle"),
@@ -104,6 +107,13 @@ internal class LegacyMethodChannelAdapter(
     viewId: Int,
     private val dispatch: (LegacyMapCommand, MethodCall, MethodChannel.Result) -> Unit,
     private val typedDispatch: (TypedMapCommand, MethodCall, MethodChannel.Result) -> Unit,
+    private val bootstrapProvider: (() -> Map<String, Any?>)? = null,
+    private val lifecycleRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
+    private val interactionRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
+    private val markerRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
+    private val roadRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
+    private val locationRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
+    private val regionRouteSelector: ((sessionToken: String, generation: Long, route: String) -> String?)? = null,
 ) : MapEventSink, MethodChannel.MethodCallHandler {
     private val channel = MethodChannel(messenger, "plugins.dali.hamza/osmview_$viewId")
     private val eventSink = MethodChannelMapEventSink(channel)
@@ -113,6 +123,74 @@ internal class LegacyMethodChannelAdapter(
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        if (call.method == NATIVE_BOOTSTRAP_METHOD) {
+            // Read-only protocol probe: answered before any map mutation so
+            // the Dart side can freeze the routing table during attach. An
+            // old host without the probe stays at notImplemented.
+            val payload = bootstrapProvider?.invoke()
+            if (payload == null) {
+                result.notImplemented()
+            } else {
+                result.success(payload)
+            }
+            return
+        }
+        if (call.method == NATIVE_LIFECYCLE_ROUTE_METHOD) {
+            // Event route selections are negotiated before initialization so
+            // exactly one delivery route is active per attachment.
+            handleEventRouteSelection(
+                call,
+                result,
+                selector = lifecycleRouteSelector,
+                family = "lifecycle",
+            )
+            return
+        }
+        if (call.method == NATIVE_INTERACTION_ROUTE_METHOD) {
+            handleEventRouteSelection(
+                call,
+                result,
+                selector = interactionRouteSelector,
+                family = "interaction",
+            )
+            return
+        }
+        if (call.method == NATIVE_MARKER_ROUTE_METHOD) {
+            handleEventRouteSelection(
+                call,
+                result,
+                selector = markerRouteSelector,
+                family = "marker",
+            )
+            return
+        }
+        if (call.method == NATIVE_ROAD_ROUTE_METHOD) {
+            handleEventRouteSelection(
+                call,
+                result,
+                selector = roadRouteSelector,
+                family = "road",
+            )
+            return
+        }
+        if (call.method == NATIVE_LOCATION_ROUTE_METHOD) {
+            handleEventRouteSelection(
+                call,
+                result,
+                selector = locationRouteSelector,
+                family = "location",
+            )
+            return
+        }
+        if (call.method == NATIVE_REGION_ROUTE_METHOD) {
+            handleEventRouteSelection(
+                call,
+                result,
+                selector = regionRouteSelector,
+                family = "region",
+            )
+            return
+        }
         val command = LegacyMapCommand.fromMethodName(call.method)
         if (command != null) {
             dispatch(command, call, result)
@@ -130,8 +208,58 @@ internal class LegacyMethodChannelAdapter(
         eventSink.emit(method, arguments)
     }
 
+    /**
+     * Shared event-route selection handling: the payload is validated, the
+     * session selector decides, and typed error codes reach the Dart
+     * client verbatim. Returns null on success or a typed error code.
+     */
+    private fun handleEventRouteSelection(
+        call: MethodCall,
+        result: MethodChannel.Result,
+        selector: ((sessionToken: String, generation: Long, route: String) -> String?)?,
+        family: String,
+    ) {
+        val args = call.arguments as? Map<*, *>
+        val token = args?.get("sessionToken") as? String
+        val generation = (args?.get("generation") as? Number)?.toLong()
+        val route = args?.get("route") as? String
+        if (selector == null || token == null || generation == null || route == null) {
+            result.error("invalid_route", "malformed $family route selection", null)
+            return
+        }
+        val errorCode = selector(token, generation, route)
+        if (errorCode == null) {
+            result.success(true)
+        } else {
+            result.error(errorCode, "$family event route rejected", null)
+        }
+    }
+
     override fun close() {
         eventSink.close()
         channel.setMethodCallHandler(null)
+    }
+
+    companion object {
+        /** Read-only attach-time probe. Additive; legacy commands are untouched. */
+        const val NATIVE_BOOTSTRAP_METHOD = "map#bootstrap#protocol"
+
+        /** Attach-time lifecycle event route selection (before initialization). */
+        const val NATIVE_LIFECYCLE_ROUTE_METHOD = "map#events#lifecycle#route"
+
+        /** Attach-time interaction event route selection (before initialization). */
+        const val NATIVE_INTERACTION_ROUTE_METHOD = "map#events#interaction#route"
+
+        /** Attach-time marker event route selection (before initialization). */
+        const val NATIVE_MARKER_ROUTE_METHOD = "map#events#markers#route"
+
+        /** Attach-time road event route selection (before initialization). */
+        const val NATIVE_ROAD_ROUTE_METHOD = "map#events#roads#route"
+
+        /** Attach-time user-location event route selection (before initialization). */
+        const val NATIVE_LOCATION_ROUTE_METHOD = "map#events#location#route"
+
+        /** Attach-time visible-region event route selection (before initialization). */
+        const val NATIVE_REGION_ROUTE_METHOD = "map#events#region#route"
     }
 }

@@ -74,6 +74,21 @@ class OSMMap extends StatefulWidget {
     this.isPicker = false,
     this.showContributorBadgeForOSM = false,
     this.enableRotationByGesture = false,
+    this.useTypedCameraRoute = true,
+    this.useTypedMarkers = true,
+    this.useTypedLayers = true,
+    this.useTypedShapes = true,
+    this.useTypedRoads = true,
+    this.useTypedLocation = true,
+    this.useTypedLocationUpdates = true,
+    this.useTypedTracking = true,
+    this.useTypedLocationIcons = true,
+    this.useTypedLifecycleEvents = true,
+    this.useTypedInteractionEvents = true,
+    this.useTypedMarkerEvents = true,
+    this.useTypedRoadEvents = true,
+    this.useTypedLocationEvents = true,
+    this.useTypedRegionEvents = true,
   });
   final BaseMapController controller;
   final UserTrackingOption? userTrackingOption;
@@ -96,6 +111,51 @@ class OSMMap extends StatefulWidget {
   final bool isPicker;
   final bool showContributorBadgeForOSM;
   final bool enableRotationByGesture;
+  /// Typed routing of camera commands through the typed generated channel (the
+  /// default; `false` keeps the legacy route).
+  final bool useTypedCameraRoute;
+  /// Typed routing of marker commands through the typed generated channel (the
+  /// default; `false` keeps the legacy route).
+  final bool useTypedMarkers;
+  /// Typed routing of layer commands (tile sources, overlay visibility) (the
+  /// default; `false` keeps the legacy route).
+  final bool useTypedLayers;
+  /// Typed routing of shape commands (circles, rectangles) (the default;
+  /// `false` keeps the legacy route).
+  final bool useTypedShapes;
+  /// Typed routing of road commands (drawing, removal, clearing) (the default;
+  /// `false` keeps the legacy route).
+  final bool useTypedRoads;
+  /// Typed routing of location commands (my-location layer, fixes) (the
+  /// default; `false` keeps the legacy route).
+  final bool useTypedLocation;
+  /// Typed routing of continuous-updates commands (start/stop) (the default;
+  /// `false` keeps the legacy route).
+  final bool useTypedLocationUpdates;
+  /// Typed routing of follow-me tracking commands (enable/disable) (the
+  /// default; `false` keeps the legacy route).
+  final bool useTypedTracking;
+  /// Typed routing of the person/direction icon replacement (the default;
+  /// `false` keeps the legacy route).
+  final bool useTypedLocationIcons;
+  /// Typed routing of the native-to-Dart lifecycle events (readiness,
+  /// restoration) (the default; `false` keeps the legacy route).
+  final bool useTypedLifecycleEvents;
+  /// Typed routing of the native-to-Dart map interactions (single presses, long
+  /// presses) (the default; `false` keeps the legacy route).
+  final bool useTypedInteractionEvents;
+  /// Typed routing of the native-to-Dart marker interactions (the default;
+  /// `false` keeps the legacy route).
+  final bool useTypedMarkerEvents;
+  /// Typed routing of the native-to-Dart road taps (the default; `false` keeps
+  /// the legacy route).
+  final bool useTypedRoadEvents;
+  /// Typed routing of the native-to-Dart user-location fixes (the default;
+  /// `false` keeps the legacy route).
+  final bool useTypedLocationEvents;
+  /// Typed routing of the native-to-Dart visible-region changes (the default;
+  /// `false` keeps the legacy route).
+  final bool useTypedRegionEvents;
 
   @override
   State<StatefulWidget> createState() => _OSMMapState();
@@ -132,6 +192,21 @@ class _OSMMapState extends State<OSMMap> {
       userLocationMarker: widget.userLocationMarker,
       userTrackingOption: widget.userTrackingOption,
       enableRotationByGesture: widget.enableRotationByGesture,
+      useTypedCameraRoute: widget.useTypedCameraRoute,
+      useTypedMarkers: widget.useTypedMarkers,
+      useTypedLayers: widget.useTypedLayers,
+      useTypedShapes: widget.useTypedShapes,
+      useTypedRoads: widget.useTypedRoads,
+      useTypedLocation: widget.useTypedLocation,
+      useTypedLocationUpdates: widget.useTypedLocationUpdates,
+      useTypedTracking: widget.useTypedTracking,
+      useTypedLocationIcons: widget.useTypedLocationIcons,
+      useTypedLifecycleEvents: widget.useTypedLifecycleEvents,
+      useTypedInteractionEvents: widget.useTypedInteractionEvents,
+      useTypedMarkerEvents: widget.useTypedMarkerEvents,
+      useTypedRoadEvents: widget.useTypedRoadEvents,
+      useTypedLocationEvents: widget.useTypedLocationEvents,
+      useTypedRegionEvents: widget.useTypedRegionEvents,
     );
   }
 }

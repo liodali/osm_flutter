@@ -21,6 +21,155 @@ extension MapSession {
     func onListenMethodChannel(call: FlutterMethodCall, result: @escaping FlutterResult) {
         print(call.method)
         switch call.method {
+        case "map#bootstrap#protocol":
+            // Read-only protocol probe answered before any map mutation so
+            // the Dart side can freeze the routing table during attach. An
+            // old Dart client never sends it; a new client on an old host
+            // gets notImplemented, which the probe maps to legacy routing.
+            result(PigeonCameraBridge.bootstrapPayload(
+                sessionToken: sessionToken, generation: generation))
+        case "map#events#lifecycle#route":
+            // Lifecycle event route selection: negotiated before
+            // initialization so exactly one delivery route is active per
+            // attachment. The session validates the identity and switches
+            // readiness delivery; every other event keeps the legacy plane.
+            guard let args = call.arguments as? [String: Any],
+                  let token = args["sessionToken"] as? String,
+                  let generation = (args["generation"] as? NSNumber)?.int64Value,
+                  let route = args["route"] as? String
+            else {
+                result(FlutterError(
+                    code: "invalid_route",
+                    message: "malformed lifecycle route selection",
+                    details: nil))
+                return
+            }
+            if let errorCode = selectLifecycleEventRoute(
+                sessionToken: token, generation: generation, route: route) {
+                result(FlutterError(
+                    code: errorCode,
+                    message: "lifecycle event route rejected",
+                    details: nil))
+            } else {
+                result(200)
+            }
+        case "map#events#interaction#route":
+            // Interaction event route selection: same contract as the
+            // lifecycle selection, scoped to single/long presses. The
+            // session validates the identity and switches press delivery;
+            // every other event keeps the legacy plane.
+            guard let args = call.arguments as? [String: Any],
+                  let token = args["sessionToken"] as? String,
+                  let generation = (args["generation"] as? NSNumber)?.int64Value,
+                  let route = args["route"] as? String
+            else {
+                result(FlutterError(
+                    code: "invalid_route",
+                    message: "malformed interaction route selection",
+                    details: nil))
+                return
+            }
+            if let errorCode = selectInteractionEventRoute(
+                sessionToken: token, generation: generation, route: route) {
+                result(FlutterError(
+                    code: errorCode,
+                    message: "interaction event route rejected",
+                    details: nil))
+            } else {
+                result(200)
+            }
+        case "map#events#markers#route":
+            // Marker interaction event route selection: same contract as the
+            // lifecycle selection, scoped to marker single/long presses.
+            guard let args = call.arguments as? [String: Any],
+                  let token = args["sessionToken"] as? String,
+                  let generation = (args["generation"] as? NSNumber)?.int64Value,
+                  let route = args["route"] as? String
+            else {
+                result(FlutterError(
+                    code: "invalid_route",
+                    message: "malformed marker route selection",
+                    details: nil))
+                return
+            }
+            if let errorCode = selectMarkerEventRoute(
+                sessionToken: token, generation: generation, route: route) {
+                result(FlutterError(
+                    code: errorCode,
+                    message: "marker event route rejected",
+                    details: nil))
+            } else {
+                result(200)
+            }
+        case "map#events#roads#route":
+            // Road tap event route selection: same contract as the
+            // lifecycle selection, scoped to road taps.
+            guard let args = call.arguments as? [String: Any],
+                  let token = args["sessionToken"] as? String,
+                  let generation = (args["generation"] as? NSNumber)?.int64Value,
+                  let route = args["route"] as? String
+            else {
+                result(FlutterError(
+                    code: "invalid_route",
+                    message: "malformed road route selection",
+                    details: nil))
+                return
+            }
+            if let errorCode = selectRoadEventRoute(
+                sessionToken: token, generation: generation, route: route) {
+                result(FlutterError(
+                    code: errorCode,
+                    message: "road event route rejected",
+                    details: nil))
+            } else {
+                result(200)
+            }
+        case "map#events#location#route":
+            // User-location event route selection: same contract as the
+            // lifecycle selection, scoped to location fixes.
+            guard let args = call.arguments as? [String: Any],
+                  let token = args["sessionToken"] as? String,
+                  let generation = (args["generation"] as? NSNumber)?.int64Value,
+                  let route = args["route"] as? String
+            else {
+                result(FlutterError(
+                    code: "invalid_route",
+                    message: "malformed location route selection",
+                    details: nil))
+                return
+            }
+            if let errorCode = selectLocationEventRoute(
+                sessionToken: token, generation: generation, route: route) {
+                result(FlutterError(
+                    code: errorCode,
+                    message: "location event route rejected",
+                    details: nil))
+            } else {
+                result(200)
+            }
+        case "map#events#region#route":
+            // Visible-region event route selection: same contract as the
+            // lifecycle selection, scoped to region changes.
+            guard let args = call.arguments as? [String: Any],
+                  let token = args["sessionToken"] as? String,
+                  let generation = (args["generation"] as? NSNumber)?.int64Value,
+                  let route = args["route"] as? String
+            else {
+                result(FlutterError(
+                    code: "invalid_route",
+                    message: "malformed region route selection",
+                    details: nil))
+                return
+            }
+            if let errorCode = selectRegionEventRoute(
+                sessionToken: token, generation: generation, route: route) {
+                result(FlutterError(
+                    code: errorCode,
+                    message: "region event route rejected",
+                    details: nil))
+            } else {
+                result(200)
+            }
         case "init#ios#map":
             //channel.invokeMethod("map#init", arguments: true)
             if let tile = customTiles {
@@ -31,11 +180,12 @@ extension MapSession {
             result(200)
             break
         case "change#tile":
+            // Same native operations as the generated layers route
+            // (`LayersTypedService`); the legacy payload keeps its raw map
+            // decoding and its ignore-on-null behavior for Apple hosts.
             let args = call.arguments as! [String: Any]?
-
             if let customTileArgs = args {
-                let tile = CustomTiles(customTileArgs)
-                self.mapOSM.setCustomTile(tile: tile)
+                self.typedChangeLegacyTileMap(customTileArgs)
             }
 
             result(200)
@@ -74,8 +224,11 @@ extension MapSession {
             result(200)
             break
         case "user#position":
-            self.mapOSM.locationManager.requestSingleLocation()
-            resultFlutter = result
+            // Shared ownership with the generated location route: the
+            // guard rejects overlap explicitly, the deadline covers the
+            // legacy wait, and the stash only happens after the guard
+            // passes.
+            self.beginLegacyLocationFix(result)
             break
         case "moveTo#position":
             moveToSpecificLocation(call: call, result: result)
@@ -88,11 +241,13 @@ extension MapSession {
             result(200)
             break
         case "deactivateTrackMe":
+            trackMeActive = false
             stopTracking()
             result(200)
             break
         case "startLocationUpdating":
             userLocationWithoutControl = true
+            updatesActive = true
             if !self.mapOSM.locationManager.isTrackingEnabled() {
                 self.mapOSM.locationManager.toggleTracking(
                     configuration: TrackConfiguration(moveMap: false, controlUserMarker: false))
@@ -100,7 +255,10 @@ extension MapSession {
             result(200)
             break
         case "stopLocationUpdating":
+            // Legacy byte parity: unconditional stop (the historical
+            // behavior), and the updates consumer ownership ends with it.
             userLocationWithoutControl = false
+            updatesActive = false
             stopTracking()
             result(200)
             break
@@ -109,7 +267,7 @@ extension MapSession {
             result(200)
             break
         case "get#Zoom":
-            result(self.mapOSM.zoom())
+            result(self.typedZoom())
             break
         case "change#stepZoom":
 
@@ -216,7 +374,9 @@ extension MapSession {
             deleteRoad(call: call, result: result)
             break
         case "clear#roads":
-            self.mapOSM.roadManager.removeAllRoads()
+            // Same bookkeeping as the generated roads route: the stored
+            // tap metadata drops with the roads themselves.
+            self.typedClearRoads()
             result(200)
             break
         case "map#orientation":
@@ -248,11 +408,11 @@ extension MapSession {
             break
         case "toggle#Alllayer":
             let isVisible = call.arguments as! Bool
-            if isVisible {
-                self.mapOSM.showAllLayers()
-            } else {
-                self.mapOSM.hideAllLayers()
-            }
+            self.typedSetOverlaysVisible(isVisible)
+            // Every legacy command answers: without a reply the Dart future
+            // never completes (the typed layers route always answers).
+            result(200)
+            break
         case "draw#rect":
             drawShape(args: call.arguments, result: result, shapeType: ShapeTypes.Rect)
             break
@@ -279,6 +439,10 @@ extension MapSession {
             break
         case "clear#shapes":
             self.mapOSM.shapeManager.deleteAllShapes()
+            // Every legacy command answers: without a reply the Dart
+            // `removeAllShapes()` future never completes (the typed shapes
+            // route always answers).
+            result(200)
             break
         default:
             result(nil)
@@ -291,25 +455,21 @@ extension MapSession {
         let location = CLLocationCoordinate2D(
             latitude: pointInit["lat"]!, longitude: pointInit["lon"]!)
         self.mapOSM.moveTo(location: location, zoom: zoomConfig.initZoom, animated: false)
-        self.channel.invokeMethod("map#init", arguments: true)
+        self.emitMapReady(true)
         result(200)
 
     }
     func moveToSpecificLocation(call: FlutterMethodCall, result: FlutterResult) {
         let args = call.arguments as! [String: Any]
-        let point = CLLocationCoordinate2D(
-            latitude: args["lat"] as! Double, longitude: args["lon"] as! Double)
-        let animate = args["animate"] as! Bool? ?? false
-        var currentZoom = self.mapOSM.zoom()
-        if currentZoom == 0 || !mapInitialized {
-            currentZoom = zoomConfig.initZoom
-        }
-        self.mapOSM.moveTo(location: point, zoom: currentZoom, animated: animate)
+        self.typedMoveTo(
+            latitude: args["lat"] as! Double,
+            longitude: args["lon"] as! Double,
+            animated: args["animate"] as! Bool? ?? false)
         result(200)
     }
     func rotateMap(call: FlutterMethodCall) {
         let angle = call.arguments as! Double
-        self.mapOSM.setRotation(angle: angle)
+        self.typedSetRotation(angle, animated: false)
     }
     private func addMarkerManually(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
@@ -319,7 +479,6 @@ extension MapSession {
             let iconArg = args["icon"] as! [String: Any]
             iconSizeArg = iconArg["size"] as? [Int]
             icon = convertImage(codeImage: iconArg["icon"] as! String)
-
         }
         if defaultMarker != nil && icon == nil {
             icon =
@@ -334,26 +493,23 @@ extension MapSession {
 
         let sizeIcon = iconSizeArg!.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
         var angle = Float(0.0)
-        var anchor: AnchorGeoPoint? = nil
         if let _angle = point["angle"] {
             angle = Float(_angle)
         }
+        var anchor: MarkerAnchor? = nil
         if let _anchor = args["iconAnchor"] {
-            anchor = AnchorGeoPoint(anchorMap: _anchor as! [String: Any])
+            anchor = AnchorGeoPoint(anchorMap: _anchor as! [String: Any]).compute()
         }
-        let configuration = MarkerConfiguration(
-            icon: icon!, iconSize: sizeIcon, angle: angle, anchor: anchor?.compute(),
-            scaleType: MarkerScaleType.invariant)
-        let marker = Marker(location: coordinate, markerConfiguration: configuration)
-        self.mapOSM.markerManager.addMarker(marker: marker)
-        #if os(macOS)
-        recordMarkerScale(
+        // Legacy additions join the same typed registry (UUID id), so the
+        // legacy and generated routes share one coordinate-based identity.
+        _ = typedAddMarker(
+            id: UUID().uuidString,
             coordinate: coordinate,
-            iconBase64: (args["icon"] as? [String: Any])?["icon"] as? String,
+            icon: icon,
             logicalSize: iconSizeArg,
-            angle: angle,
-            anchorArgs: args["iconAnchor"] as? [String: Any])
-        #endif
+            angleRadians: angle,
+            anchor: anchor,
+            iconBase64ForScaleRefresh: (args["icon"] as? [String: Any])?["icon"] as? String)
     }
     private func changePositionMarker(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
@@ -362,7 +518,7 @@ extension MapSession {
         var icon: OSMPlatformImage? = nil
         var iconSize: MarkerIconSize? = nil
         var angle = Float(0.0)
-        var anchor: AnchorGeoPoint? = nil
+        var anchor: MarkerAnchor? = nil
         if let iconStr = args["new_icon"] as? [String: Any] {
             icon = convertImage(codeImage: iconStr["icon"] as! String)
             iconSize = (iconStr["size"] as? [Int])!.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
@@ -371,59 +527,59 @@ extension MapSession {
             angle = Float(_angle)
         }
         if let _anchor = args["iconAnchor"] {
-            anchor = AnchorGeoPoint(anchorMap: _anchor as! [String: Any])
+            anchor = AnchorGeoPoint(anchorMap: _anchor as! [String: Any]).compute()
         }
-        self.mapOSM.markerManager.updateMarker(
-            oldlocation: coordinate_old, newlocation: coordinate_new,
+        let newIconArg = args["new_icon"] as? [String: Any]
+        // Legacy change resets the rotation to 0 when no angle is provided;
+        // keep that exact behavior instead of preserving the old angle.
+        _ = typedChangeMarker(
+            at: coordinate_old,
+            to: coordinate_new,
             icon: icon,
             iconSize: iconSize,
-            angle: Float(angle), anchor: anchor?.compute())
-        #if os(macOS)
-        let newIconArg = args["new_icon"] as? [String: Any]
-        moveMarkerScaleRecord(
-            from: coordinate_old, to: coordinate_new,
-            iconBase64: newIconArg?["icon"] as? String,
-            logicalSize: newIconArg?["size"] as? [Int],
-            angle: Float(args["angle"] as? Double ?? 0),
-            anchorArgs: args["iconAnchor"] as? [String: Any])
-        #endif
+            angleRadians: Float(args["angle"] as? Double ?? 0),
+            anchor: anchor,
+            iconBase64ForScaleRefresh: newIconArg?["icon"] as? String,
+            logicalSizeForScaleRefresh: newIconArg?["size"] as? [Int])
     }
     func updateMarkerIcon(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
         var icon: OSMPlatformImage?
         var iconSize: MarkerIconSize?
+        var iconBase64: String? = nil
         if args.keys.contains("icon") {
             let iconArg = args["icon"] as! [String: Any]
             icon = convertImage(codeImage: iconArg["icon"] as! String)
             iconSize = (iconArg["size"] as? [Int])!.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
-
+            iconBase64 = iconArg["icon"] as? String
         }
         let coordinate = (args["point"] as! GeoPoint).toLocationCoordinate()
-        self.mapOSM.markerManager.updateMarker(
-            oldlocation: coordinate, newlocation: coordinate, icon: icon, iconSize: iconSize)
-        #if os(macOS)
-        let iconArg = args["icon"] as? [String: Any]
-        updateMarkerScaleRecord(
-            at: coordinate,
-            iconBase64: iconArg?["icon"] as? String,
-            logicalSize: iconArg?["size"] as? [Int])
-        #endif
+        // Legacy update without an "icon" key is a no-op (nil icon keeps the
+        // existing configuration), so nothing to resolve or apply.
+        guard let icon = icon, let id = typedMarkerId(at: coordinate) else {
+            return
+        }
+        _ = typedUpdateMarkerIcon(
+            id: id,
+            icon: icon,
+            logicalSize: iconBase64 != nil
+                ? (args["icon"] as? [String: Any])?["size"] as? [Int]
+                : nil,
+            iconBase64ForScaleRefresh: iconBase64)
     }
     func deleteMarkers(call: FlutterMethodCall) {
         let geoPoints = (call.arguments as! [GeoPoint]).map { point -> CLLocationCoordinate2D in
             point.toLocationCoordinate()
         }
-        self.mapOSM.markerManager.removeMarkers(locations: geoPoints)
-        #if os(macOS)
-        geoPoints.forEach { removeMarkerScaleRecord(at: $0) }
-        #endif
+        // Every marker registered at each coordinate (duplicate adds share a
+        // coordinate) is removed through the shared service.
+        let ids = geoPoints.flatMap { typedMarkerIds(at: $0) }
+        _ = typedRemoveMarkers(ids: ids)
     }
     func deleteMarker(call: FlutterMethodCall) {
         let location = (call.arguments as! GeoPoint).toLocationCoordinate()
-        self.mapOSM.markerManager.removeMarker(location: location)
-        #if os(macOS)
-        removeMarkerScaleRecord(at: location)
-        #endif
+        let ids = typedMarkerIds(at: location)
+        _ = typedRemoveMarkers(ids: ids)
     }
     func changePosition(args: Any?, result: @escaping FlutterResult) {
         result(200)
@@ -446,13 +602,17 @@ extension MapSession {
         } else {
             let levelZoom = args["zoomLevel"] as! Double
 
-            self.mapOSM.setZoom(zoom: Int(levelZoom))
+            self.typedSetZoom(levelZoom, animated: false)
 
         }
     }
     func configZoomMap(call: FlutterMethodCall) {
-        let zoomArgs = (call.arguments as! [String: Double]).mapValues(Int.init)
-        self.zoomConfig = ZoomConfiguration(zoomArgs)
+        let zoomArgs = call.arguments as! [String: Double]
+        typedConfigureZoom(
+            initZoom: zoomArgs["initZoom"] ?? 8,
+            minZoomLevel: zoomArgs["minZoomLevel"] ?? 2,
+            maxZoomLevel: zoomArgs["maxZoomLevel"] ?? 19,
+            stepZoom: zoomArgs["stepZoom"] ?? 1)
     }
     func getMapBounds(result: @escaping FlutterResult) {
         let boundingBox = self.mapOSM.getBoundingBox()
@@ -463,17 +623,19 @@ extension MapSession {
     }
     func zoomMapToBoundingBox(call: FlutterMethodCall) {
         let bbox = call.arguments as! [String: Double]
-        let boundingBox = BoundingBox(
-            north: bbox["north"]!, west: bbox["west"]!, east: bbox["east"]!, south: bbox["south"]!)
-        self.mapOSM.moveToByBoundingBox(bounds: boundingBox, animated: true)
+        typedZoomToBoundingBox(
+            north: bbox["north"]!, south: bbox["south"]!,
+            east: bbox["east"]!, west: bbox["west"]!,
+            paddingInPixel: Int(bbox["padding"] ?? 0))
     }
     func setCameraAreaLimit(call: FlutterMethodCall) {
         let bbox = call.arguments as! [Double]
-        let bounds = BoundingBox(boundingBoxs: bbox)
-        self.mapOSM.setBoundingBox(bounds: bounds)
+        // Legacy list order: [north, east, south, west].
+        typedSetBoundsLimit(
+            north: bbox[0], east: bbox[1], south: bbox[2], west: bbox[3])
     }
     func removeCameraAreaLimit(result: @escaping FlutterResult) {
-        self.mapOSM.setBoundingBox(bounds: BoundingBox())
+        typedRemoveBoundsLimit()
         result(200)
     }
     func setMarkerStaticGeoPIcon(call: FlutterMethodCall) {
@@ -521,38 +683,49 @@ extension MapSession {
     }
     func configureUserLocation(call: FlutterMethodCall) {
         let args = call.arguments as! [String: Any]
-        #if os(macOS)
-        // Remember the arguments to re-apply the icons when the window moves
-        // between displays with a different backing scale.
-        lastUserLocationMarkersArgs = args
-        #endif
-        var personMarkerIcon: OSMPlatformImage = OSMPlatformImage()
-        var directionMarkerIcon: OSMPlatformImage?
-        var personIconConfig: MarkerConfiguration!
-        if let personIconString = args["personIcon"] {
-            let iconArg = personIconString as! [String: Any]
-            personMarkerIcon = convertImage(codeImage: iconArg["icon"] as! String) ?? OSMPlatformImage()
-            let personIconSize = (iconArg["size"] as? [Int])?.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
-            personIconConfig = MarkerConfiguration(
-                icon: personMarkerIcon, iconSize: personIconSize, angle: nil, anchor: nil)
 
+        // Legacy decoding only: the applied state goes through the shared
+        // typed seam, so the legacy and generated routes agree on behavior.
+        // The legacy payload carries no anchor and historically rebuilt the
+        // configuration without a pivot; `reset` keeps that exact behavior.
+        guard let personIconArg = args["personIcon"] as? [String: Any],
+            let personIcon = convertImage(codeImage: personIconArg["icon"] as! String),
+            let directionIconArg = args["arrowDirectionIcon"] as? [String: Any],
+            let directionIcon = convertImage(codeImage: directionIconArg["icon"] as! String)
+        else {
+            return
         }
-        var directionMarkerConfiguration: MarkerConfiguration? = nil
-        if let arrowDirectionIconString = args["arrowDirectionIcon"] {
-            let iconArg = arrowDirectionIconString as! [String: Any]
-            directionMarkerIcon = convertImage(codeImage: iconArg["icon"] as! String)
-            let directionIconSize = (iconArg["size"] as? [Int])?.toMarkerSize(displayScale: ApplePlatformUtilities.displayScale(for: mapOSM))
-            directionMarkerConfiguration = MarkerConfiguration(
-                icon: directionMarkerIcon!,
-                iconSize: directionIconSize,
-                angle: nil,
-                anchor: nil)
-        }
-        let userLocationConfig = UserLocationConfiguration(
-            userIcon: personIconConfig, directionIcon: directionMarkerConfiguration)
-        self.mapOSM.locationManager.setUserLocationIcons(userLocationIcons: userLocationConfig)
-
+        let personSize = (personIconArg["size"] as? [Int])
+        let directionSize = (directionIconArg["size"] as? [Int])
+        self.typedSetUserLocationIcons(
+            MapSession.UserLocationIconsRender(
+                person: MapSession.UserLocationIconRender(
+                    image: personIcon,
+                    pngData: Data(
+                        base64Encoded: personIconArg["icon"] as! String) ?? Data(),
+                    logicalSize: personSize,
+                    pivot: .reset),
+                direction: MapSession.UserLocationIconRender(
+                    image: directionIcon,
+                    pngData: Data(
+                        base64Encoded: directionIconArg["icon"] as! String) ?? Data(),
+                    logicalSize: directionSize,
+                    pivot: .reset)))
     }
+    /// Applies the legacy `trackMe` anchor slot.
+    ///
+    /// A null slot means the application did not request an override, so the
+    /// pivots the icons were configured with stay untouched — this is the
+    /// mixed case of typed location icons with legacy tracking. Tracking
+    /// takes plugin marker ownership at its start, so an override re-pivots
+    /// the plugin-owned icons in place.
+    func applyLegacyTrackingAnchor(_ anchor: [Double]?) {
+        guard let anchor = anchor, anchor.count >= 2,
+            ownsUserLocationMarker
+        else { return }
+        updateOwnedUserLocationMarkerAnchor(x: anchor.first!, y: anchor.last!)
+    }
+
     func startTrackUser(args: [Any]) {
         let enableStopFollowInDrag = args.first as? Bool ?? false
         if !enableStopFollowInDrag {
@@ -561,32 +734,35 @@ extension MapSession {
         }
         let disableRotation = args[1] as? Bool ?? false
         let useDirectionMarker = args[2] as? Bool ?? false
-        let anchor = args[3] as? [Double] ?? [0.5, 0.5]
-
-        let markerAnchor = AnchorGeoPoint(anchor: (x: anchor.first!, y: anchor.last!)).compute()
-        let userIconLoc = self.mapOSM.locationManager.userLocationIconConfiguration.userIcon
-        let directionIconLoc = self.mapOSM.locationManager.userLocationIconConfiguration
-            .directionIcon
-        let userLocConfig = self.mapOSM.locationManager.userLocationIconConfiguration.copyWith(
-            userIcon: userIconLoc.copyWith(
-                anchor: markerAnchor
-            ),
-            directionIcon: directionIconLoc?.copyWith(
-                anchor: markerAnchor
-            )
-        )
-        self.mapOSM.locationManager.setUserLocationIcons(userLocationIcons: userLocConfig)
+        // The plugin renders the my-location marker from this arm on, with
+        // the platform defaults until the application configures its own
+        // icons; the framework arm never takes marker control.
+        if !ownsUserLocationMarker {
+            ownedUserLocationIcons = resolvedUserLocationMarkerIcons(nil)
+        }
+        // A missing anchor keeps the pivots the icons were configured with;
+        // the legacy payload used to fall back to the centered default and
+        // silently re-centered application-configured icons.
+        applyLegacyTrackingAnchor(args[3] as? [Double])
+        trackingDisableMarkerRotation = disableRotation
+        trackingUseDirectionMarker = useDirectionMarker
         //self.mapOSM.enableRotation(enable: !disableRotation)
         if !self.mapOSM.locationManager.isTrackingEnabled() {
             self.mapOSM.locationManager.toggleTracking(
                 configuration: TrackConfiguration(
                     moveMap: true,
                     useDirectionMarker: useDirectionMarker,
-                    disableMarkerRotation: disableRotation
+                    disableMarkerRotation: disableRotation,
+                    controlUserMarker: false
                 ))
         }
+        trackMeActive = true
+        refreshOwnedUserLocationMarker()
     }
     func stopTracking() {
+        // Location stops here: the plugin-owned marker goes with it. Consumer
+        // ownership flags are reconciled by the individual handlers.
+        clearOwnedUserLocationMarker()
         self.mapOSM.locationManager.stopLocation()
     }
     private func getGeoPoints(_ result: FlutterResult) {
@@ -715,8 +891,14 @@ extension MapSession {
                 let box = route.coordinates!.toBounds()
                 self.mapOSM.moveToByBoundingBox(bounds: box, animated: true)
             }
+            // A manual road is "the last road" for `delete#road` without a
+            // key, exactly like a fetched route.
+            lastRoadKey = roadKey
+            result(200)
+        } else {
+            // Every legacy command answers.
+            result(FlutterError(code: "400", message: "unable to decode the road", details: nil))
         }
-        result(200)
     }
 
     func drawMultiRoad(
@@ -781,13 +963,20 @@ extension MapSession {
     private func deleteRoad(call: FlutterMethodCall, result: FlutterResult) {
 
         let roadKey = call.arguments as! String?
-        if roadKey == nil && lastRoadKey != nil {
-            self.mapOSM.roadManager.removeRoad(id: lastRoadKey!)
-            self.storedRoads.removeValue(forKey: lastRoadKey!)
+        if roadKey == nil, let lastRoadKey {
+            // `removeLastRoad()`: the most recently drawn road, whichever
+            // route drew it. Consumed here so a repeat cannot remove an
+            // older road by accident.
+            self.mapOSM.roadManager.removeRoad(id: lastRoadKey)
+            self.storedRoads.removeValue(forKey: lastRoadKey)
+            self.lastRoadKey = nil
         }
         if let key = roadKey {
             self.mapOSM.roadManager.removeRoad(id: key)
             self.storedRoads.removeValue(forKey: key)
+            if lastRoadKey == key {
+                lastRoadKey = nil
+            }
         }
         result(200)
     }

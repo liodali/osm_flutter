@@ -1,4 +1,34 @@
-## 1.9.0
+## Unreleased
+
+- Typed (generated Pigeon) route contracts on `OSMPlatform`, negotiated per
+  map attachment and frozen before any map mutation:
+  - Command families: `attachCameraRoute`, `attachMarkersRoute`,
+    `attachLayersRoute`, `attachShapesRoute`, `attachRoadsRoute`,
+    `attachLocationRoute`, `attachLocationUpdatesRoute`, `attachTrackingRoute`
+    and `attachUserLocationIconsRoute` probe the host
+    (`probeNativeProtocol`) and activate the generated client only when the
+    application opted in and the host advertises the family.
+  - Event families: `attachLifecycleEventsRoute`, `attachInteractionEventsRoute`,
+    `attachMarkerEventsRoute`, `attachRoadEventsRoute`,
+    `attachLocationEventsRoute` and `attachRegionEventsRoute` additionally
+    select the delivery route with the host before initialization, so exactly
+    one route delivers per attachment; the host's rate and coalescing are
+    preserved on either route.
+- `RouteSelectionUncertainException` and one subtype per event family
+  (`LifecycleRouteUncertainException`, `InteractionRouteUncertainException`,
+  `MarkerRouteUncertainException`, `RoadRouteUncertainException`,
+  `LocationRouteUncertainException`, `RegionRouteUncertainException`): a
+  route selection whose outcome cannot be confirmed aborts the attachment
+  instead of risking lost events.
+- Custom icon capture (`MethodChannelOSM`) waits — frame by frame, for a
+  bounded `iconMountTimeout` — until the icon widget is mounted and painted
+  instead of failing at once when its key has no context. A marker published
+  while a map is still initializing (the static map's home marker on macOS)
+  used to be lost with `Error to draw you custom icon`.
+- Lifecycle events emitted before the first subscription are replayed to it;
+  every other event stream is scoped to its attachment, so a subscription that
+  outlives its map completes instead of receiving a replacement map's events.
+
 
 - `RoadOption` gains optional `roadGradientColors` (at least 2 colors):
   draws the road with a start-to-end color gradient across the line.

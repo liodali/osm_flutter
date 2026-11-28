@@ -162,6 +162,31 @@ class _OSMFlutterState extends State<OSMFlutter> {
                         onMapIsReady: widget.onMapIsReady,
                         enableRotationByGesture:
                             widget.osmOption.enableRotationByGesture,
+                        useTypedCameraRoute:
+                            widget.osmOption.useTypedCameraRoute,
+                        useTypedMarkers:
+                            widget.osmOption.useTypedMarkers,
+                        useTypedLayers: widget.osmOption.useTypedLayers,
+                        useTypedShapes: widget.osmOption.useTypedShapes,
+                        useTypedRoads: widget.osmOption.useTypedRoads,
+                        useTypedLocation: widget.osmOption.useTypedLocation,
+                        useTypedLocationUpdates:
+                            widget.osmOption.useTypedLocationUpdates,
+                        useTypedTracking: widget.osmOption.useTypedTracking,
+                        useTypedLocationIcons:
+                            widget.osmOption.useTypedLocationIcons,
+                        useTypedLifecycleEvents:
+                            widget.osmOption.useTypedLifecycleEvents,
+                        useTypedInteractionEvents:
+                            widget.osmOption.useTypedInteractionEvents,
+                        useTypedMarkerEvents:
+                            widget.osmOption.useTypedMarkerEvents,
+                        useTypedRoadEvents:
+                            widget.osmOption.useTypedRoadEvents,
+                        useTypedLocationEvents:
+                            widget.osmOption.useTypedLocationEvents,
+                        useTypedRegionEvents:
+                            widget.osmOption.useTypedRegionEvents,
                       ),
                     ),
                     Positioned.fill(
@@ -210,6 +235,29 @@ class _OSMFlutterState extends State<OSMFlutter> {
                   onMapIsReady: widget.onMapIsReady,
                   enableRotationByGesture:
                       widget.osmOption.enableRotationByGesture,
+                  useTypedCameraRoute:
+                      widget.osmOption.useTypedCameraRoute,
+                  useTypedMarkers: widget.osmOption.useTypedMarkers,
+                  useTypedLayers: widget.osmOption.useTypedLayers,
+                  useTypedShapes: widget.osmOption.useTypedShapes,
+                  useTypedRoads: widget.osmOption.useTypedRoads,
+                  useTypedLocation: widget.osmOption.useTypedLocation,
+                  useTypedLocationUpdates: widget.osmOption.useTypedLocationUpdates,
+                  useTypedTracking: widget.osmOption.useTypedTracking,
+                  useTypedLocationIcons:
+                      widget.osmOption.useTypedLocationIcons,
+                  useTypedLifecycleEvents:
+                      widget.osmOption.useTypedLifecycleEvents,
+                  useTypedInteractionEvents:
+                      widget.osmOption.useTypedInteractionEvents,
+                  useTypedMarkerEvents:
+                      widget.osmOption.useTypedMarkerEvents,
+                  useTypedRoadEvents:
+                      widget.osmOption.useTypedRoadEvents,
+                  useTypedLocationEvents:
+                      widget.osmOption.useTypedLocationEvents,
+                  useTypedRegionEvents:
+                      widget.osmOption.useTypedRegionEvents,
                 ),
         ),
         if (widget.osmOption.showContributorBadgeForOSM && !kIsWeb) ...[

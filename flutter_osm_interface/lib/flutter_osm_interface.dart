@@ -2,6 +2,21 @@ library flutter_osm_interface;
 
 export 'src/android/android.dart';
 export 'src/channel/osm_method_channel.dart' show MethodChannelOSM, ConfigExt;
+export 'src/channel/pigeon/native_camera_bootstrap.dart';
+export 'src/channel/pigeon/native_camera_client.dart';
+export 'src/channel/pigeon/native_lifecycle_events_client.dart'
+    show LifecycleRouteUncertainException;
+export 'src/channel/pigeon/native_interaction_events_client.dart'
+    show InteractionRouteUncertainException;
+export 'src/channel/pigeon/native_marker_events_client.dart'
+    show MarkerRouteUncertainException;
+export 'src/channel/pigeon/native_road_events_client.dart'
+    show RoadRouteUncertainException;
+export 'src/channel/pigeon/native_location_events_client.dart'
+    show LocationRouteUncertainException;
+export 'src/channel/pigeon/native_region_events_client.dart'
+    show RegionRouteUncertainException;
+export 'src/channel/pigeon/native_markers_client.dart';
 export 'src/osm_interface.dart';
 export 'src/map_controller/base_map_controller.dart';
 export 'src/types/types.dart';

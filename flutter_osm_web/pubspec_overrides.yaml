@@ -1,0 +1,4 @@
+# Dev-only local resolution for this checkout; never committed.
+dependency_overrides:
+  flutter_osm_interface:
+    path: ../flutter_osm_interface
